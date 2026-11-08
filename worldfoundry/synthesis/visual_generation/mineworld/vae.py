@@ -1,8 +1,8 @@
+import diffusers
 import torch
 import torch.nn as nn
-import diffusers
 from safetensors.torch import load_file as load_safetensors
-from utils import print0, get_valid_paths, tensor_to_uint8
+from utils import get_valid_paths, print0, tensor_to_uint8
 
 
 class VAE(nn.Module):

@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-from ..base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.dreamzero.runtime import (
     DreamZeroRuntimeConfig,
     build_server_command,
@@ -21,6 +20,9 @@ from worldfoundry.synthesis.action_generation.dreamzero.runtime import (
     run_default_client_demo,
     select_dreamzero_checkpoint,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 class DreamZeroSynthesis(ActionModelSynthesis):
@@ -76,7 +78,7 @@ class DreamZeroSynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "DreamZeroSynthesis":
+    ) -> DreamZeroSynthesis:
         """Create a DreamZero wrapper without importing model-heavy deps.
 
         This factory method simplifies the creation of a DreamZeroSynthesis instance by

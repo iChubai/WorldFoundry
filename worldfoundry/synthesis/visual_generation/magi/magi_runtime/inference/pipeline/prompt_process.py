@@ -20,10 +20,10 @@ from typing import List
 
 import numpy as np
 import torch
-
-import worldfoundry.core.distributed.model_parallel.groups as mpu
 from inference.common.config import MagiConfig
 from inference.model.t5 import T5Embedder
+
+import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import env_is_true, is_last_tp_cp_rank
 from worldfoundry.core.distributed.runtime.logging import distributed_logger as magi_logger
 
@@ -75,7 +75,7 @@ for i, token in enumerate(DURATION_TOKEN_LIST):
     SPECIAL_TOKEN_DICT[f"DURATION_TOKEN_{i + 1}"] = token
 
 
-def pad_duration_token_keys(special_token_keys: List[str]) -> List[str]:
+def pad_duration_token_keys(special_token_keys: list[str]) -> list[str]:
     if "DURATION_TOKEN" in set(special_token_keys):
         return special_token_keys
 
@@ -84,7 +84,7 @@ def pad_duration_token_keys(special_token_keys: List[str]) -> List[str]:
     return special_token_keys
 
 
-def get_special_token_keys() -> List[str]:
+def get_special_token_keys() -> list[str]:
     special_token_keys = []
     if env_is_true("PAD_STATIC"):
         special_token_keys.append("STATIC_FIRST_FRAMES_TOKEN")
@@ -103,7 +103,7 @@ def get_special_token_keys() -> List[str]:
     return special_token_keys
 
 
-def get_negative_special_token_keys() -> List[str]:
+def get_negative_special_token_keys() -> list[str]:
     if env_is_true("NEG_PROMPT"):
         return ["CAPTION_TOKEN", "LOGO_TOKEN", "TRANS_TOKEN", "BORDERNESS_TOKEN"]
     return None
@@ -121,7 +121,7 @@ def _pad_special_token(special_token: torch.Tensor, txt_feat: torch.Tensor, attn
     return txt_feat, attn_mask
 
 
-def pad_special_token(special_token_keys: List[str], caption_embs: torch.Tensor, emb_masks: torch.Tensor):
+def pad_special_token(special_token_keys: list[str], caption_embs: torch.Tensor, emb_masks: torch.Tensor):
     device = f"cuda:{torch.cuda.current_device()}"
     if not special_token_keys:
         return caption_embs, emb_masks
@@ -165,7 +165,7 @@ def _t5(model_cache_dir, model_device, model_max_length) -> T5Embedder:
     return _t5_cache
 
 
-def prepare_prompt_embeddings(prompts: List[str], model_cache_dir, model_device, model_max_length):
+def prepare_prompt_embeddings(prompts: list[str], model_cache_dir, model_device, model_max_length):
     magi_logger.info("Precompute validation prompt embeddings")
     cur_rank = torch.distributed.get_rank() if torch.distributed.is_initialized() else 0
     magi_logger.debug(

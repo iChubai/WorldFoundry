@@ -17,10 +17,10 @@ import logging
 from typing import Any, Tuple
 
 import torch
+import tree
 from torch import nn
 from transformers import AutoConfig, AutoModel, PreTrainedModel
 from transformers.feature_extraction_utils import BatchFeature
-import tree
 
 from .config import Gr00tN1d7Config
 from .dit import AlternateVLDiT, DiT, SelfAttentionTransformer
@@ -28,7 +28,6 @@ from .embodiment_mlp import (
     CategorySpecificMLP,
     MultiEmbodimentActionEncoder,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -360,7 +359,7 @@ class Gr00tN1d7(PreTrainedModel):
         self.requires_grad_(False)
         self.eval()
 
-    def prepare_input(self, inputs: dict) -> Tuple[BatchFeature, BatchFeature]:
+    def prepare_input(self, inputs: dict) -> tuple[BatchFeature, BatchFeature]:
         """Prepare inputs for backbone and action head."""
 
         # NOTE -- currently the eval code doesn't use collator, so we need to add it here

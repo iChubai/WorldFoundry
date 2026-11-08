@@ -12,14 +12,13 @@ from typing import Dict, Optional, Union
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
-from torch.nn import Conv1d, ConvTranspose1d
-from torch.nn.utils.parametrizations import weight_norm
-from torch.nn.utils.parametrize import remove_parametrizations
-
 from mmaudio.ext.bigvgan_v2 import activations
 from mmaudio.ext.bigvgan_v2.alias_free_activation.torch.act import Activation1d as TorchActivation1d
 from mmaudio.ext.bigvgan_v2.env import AttrDict
 from mmaudio.ext.bigvgan_v2.utils import get_padding, init_weights
+from torch.nn import Conv1d, ConvTranspose1d
+from torch.nn.utils.parametrizations import weight_norm
+from torch.nn.utils.parametrize import remove_parametrizations
 
 
 def load_hparams_from_json(path) -> AttrDict:
@@ -119,7 +118,7 @@ class AMPBlock1(torch.nn.Module):
 
     def forward(self, x):
         acts1, acts2 = self.activations[::2], self.activations[1::2]
-        for c1, c2, a1, a2 in zip(self.convs1, self.convs2, acts1, acts2):
+        for c1, c2, a1, a2 in zip(self.convs1, self.convs2, acts1, acts2, strict=False):
             xt = a1(x)
             xt = c1(xt)
             xt = a2(xt)
@@ -208,7 +207,7 @@ class AMPBlock2(torch.nn.Module):
             )
 
     def forward(self, x):
-        for c, a in zip(self.convs, self.activations):
+        for c, a in zip(self.convs, self.activations, strict=False):
             xt = a(x)
             xt = c(xt)
             x = xt + x
@@ -271,7 +270,7 @@ class BigVGAN(
 
         # Transposed conv-based upsamplers. does not apply anti-aliasing
         self.ups = nn.ModuleList()
-        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes)):
+        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes, strict=False)):
             self.ups.append(
                 nn.ModuleList(
                     [
@@ -292,7 +291,7 @@ class BigVGAN(
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
-            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes, strict=False)):
                 self.resblocks.append(resblock_class(h, ch, k, d, activation=h.activation))
 
         # Post-conv
@@ -360,7 +359,6 @@ class BigVGAN(
             remove_parametrizations(self.conv_post, "weight")
         except ValueError:
             print("[INFO] Model already removed weight norm. Skipping!")
-            pass
 
     # Additional methods for huggingface_hub support
     def _save_pretrained(self, save_directory: Path) -> None:
@@ -381,10 +379,10 @@ class BigVGAN(
         revision: str,
         cache_dir: str,
         force_download: bool,
-        proxies: Optional[Dict] = None,
+        proxies: dict | None = None,
         resume_download: bool = False,
         local_files_only: bool,
-        token: Union[str, bool, None],
+        token: str | bool | None,
         map_location: str = "cpu",  # Additional argument
         strict: bool = False,  # Additional argument
         use_cuda_kernel: bool = False,
@@ -425,13 +423,13 @@ class BigVGAN(
         # instantiate BigVGAN using h
         if use_cuda_kernel:
             print(
-                f"[WARNING] You have specified use_cuda_kernel=True during BigVGAN.from_pretrained(). Only inference is supported (training is not implemented)!"
+                "[WARNING] You have specified use_cuda_kernel=True during BigVGAN.from_pretrained(). Only inference is supported (training is not implemented)!"
             )
             print(
-                f"[WARNING] You need nvcc and ninja installed in your system that matches your PyTorch build is using to build the kernel. If not, the model will fail to initialize or generate incorrect waveform!"
+                "[WARNING] You need nvcc and ninja installed in your system that matches your PyTorch build is using to build the kernel. If not, the model will fail to initialize or generate incorrect waveform!"
             )
             print(
-                f"[WARNING] For detail, see the official GitHub repository: https://github.com/NVIDIA/BigVGAN?tab=readme-ov-file#using-custom-cuda-kernel-for-synthesis"
+                "[WARNING] For detail, see the official GitHub repository: https://github.com/NVIDIA/BigVGAN?tab=readme-ov-file#using-custom-cuda-kernel-for-synthesis"
             )
         model = cls(h, use_cuda_kernel=use_cuda_kernel)
 
@@ -453,7 +451,7 @@ class BigVGAN(
             model.load_state_dict(checkpoint_dict["generator"])
         except RuntimeError:
             print(
-                f"[INFO] the pretrained checkpoint does not contain weight norm. Loading the checkpoint after removing weight norm!"
+                "[INFO] the pretrained checkpoint does not contain weight norm. Loading the checkpoint after removing weight norm!"
             )
             model.remove_weight_norm()
             model.load_state_dict(checkpoint_dict["generator"])

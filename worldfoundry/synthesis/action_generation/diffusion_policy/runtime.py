@@ -8,9 +8,10 @@ to output WorldFoundry-compatible action traces.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
@@ -250,9 +251,11 @@ class DiffusionPolicyRuntime:
             return self._policy
 
         import copy
+
         import hydra
         import torch
         from omegaconf import OmegaConf
+
         from worldfoundry.core.model_loading.checkpoints.file import load_torch_checkpoint
 
         # Official workspace checkpoints use dill and can execute arbitrary code while

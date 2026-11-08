@@ -2,39 +2,37 @@
 Processor class for MolmoAct2.
 """
 
-from typing import Optional, Union
 import dataclasses
+from typing import Optional, Union
 
 import numpy as np
-
+from transformers import AutoTokenizer
+from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import ImageInput
-from transformers.video_utils import VideoInput
 from transformers.processing_utils import (
-    Unpack,
     ProcessingKwargs,
     ProcessorMixin,
+    Unpack,
 )
-from transformers.feature_extraction_utils import BatchFeature
-from transformers.tokenization_utils_base import TextInput, PreTokenizedInput
+from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
 from transformers.utils import logging
+from transformers.video_utils import VideoInput
 
-from transformers import AutoTokenizer
-from .image_processing_molmoact2 import MolmoAct2ImagesKwargs, MolmoAct2ImageProcessor
-from .video_processing_molmoact2 import MolmoAct2VideoProcessorKwargs, MolmoAct2VideoProcessor
-
+from .image_processing_molmoact2 import MolmoAct2ImageProcessor, MolmoAct2ImagesKwargs
+from .video_processing_molmoact2 import MolmoAct2VideoProcessor, MolmoAct2VideoProcessorKwargs
 
 logger = logging.get_logger(__name__)
 
 
 # Special tokens, these should be present in any tokenizer we use since the preprocessor uses them
-IMAGE_PATCH_TOKEN = f"<im_patch>"  # Where to insert high-res tokens
-IMAGE_LOW_RES_TOKEN = f"<im_low>"  # Where to insert low-res tokens
-IM_START_TOKEN = f"<im_start>"
-LOW_RES_IMAGE_START_TOKEN = f"<low_res_im_start>"
-FRAME_START_TOKEN = f"<frame_start>"
-IM_END_TOKEN = f"<im_end>"
-FRAME_END_TOKEN = f"<frame_end>"
-IM_COL_TOKEN = f"<im_col>"
+IMAGE_PATCH_TOKEN = "<im_patch>"  # Where to insert high-res tokens
+IMAGE_LOW_RES_TOKEN = "<im_low>"  # Where to insert low-res tokens
+IM_START_TOKEN = "<im_start>"
+LOW_RES_IMAGE_START_TOKEN = "<low_res_im_start>"
+FRAME_START_TOKEN = "<frame_start>"
+IM_END_TOKEN = "<im_end>"
+FRAME_END_TOKEN = "<frame_end>"
+IM_COL_TOKEN = "<im_col>"
 IMAGE_PROMPT = "<|image|>"
 VIDEO_PROMPT = "<|video|>"
 
@@ -84,12 +82,12 @@ class MolmoAct2Processor(ProcessorMixin):
         image_processor: MolmoAct2ImageProcessor = None,
         video_processor: MolmoAct2VideoProcessor = None,
         tokenizer: AutoTokenizer = None,
-        chat_template: Optional[str] = None,
-        image_use_col_tokens: Optional[bool] = True,
-        use_single_crop_col_tokens: Optional[bool] = None,
-        use_single_crop_start_token: Optional[bool] = True,
-        video_use_col_tokens: Optional[bool] = False,
-        use_frame_special_tokens: Optional[bool] = True,
+        chat_template: str | None = None,
+        image_use_col_tokens: bool | None = True,
+        use_single_crop_col_tokens: bool | None = None,
+        use_single_crop_start_token: bool | None = True,
+        video_use_col_tokens: bool | None = False,
+        use_frame_special_tokens: bool | None = True,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -252,7 +250,7 @@ class MolmoAct2Processor(ProcessorMixin):
 
     def __call__(
         self,
-        text: Union[TextInput, PreTokenizedInput, list[TextInput], list[PreTokenizedInput]] = None,
+        text: TextInput | PreTokenizedInput | list[TextInput] | list[PreTokenizedInput] = None,
         images: ImageInput = None,
         videos: VideoInput = None,
         **kwargs: Unpack[MolmoAct2ProcessorKwargs],
@@ -344,7 +342,7 @@ class MolmoAct2Processor(ProcessorMixin):
                 assert num_videos in {0, 1}, "At most one video is supported for now"
                 video_grids_i = video_grids[index : index + num_videos]
                 metadata_i = video_metadata[index : index + num_videos]
-                for video_grid, metadata in zip(video_grids_i, metadata_i):
+                for video_grid, metadata in zip(video_grids_i, metadata_i, strict=False):
                     video_string = self.get_video_string(
                         video_grid,
                         metadata.timestamps,

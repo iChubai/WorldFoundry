@@ -1,13 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 import math
 import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from einops import rearrange
-from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
+
 from worldfoundry.core import autocast_context
+from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
 
 from .checkpoint import auto_grad_checkpoint
 
@@ -34,6 +35,7 @@ except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
 import warnings
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = ["WanModel"]
@@ -283,7 +285,7 @@ def flash_attention(
         q = half(q.flatten(0, 1))
         q_lens = torch.tensor([lq] * b, dtype=torch.int32).to(device=q.device, non_blocking=True)
     else:
-        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens)]))
+        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens, strict=False)]))
 
     # preprocess key, value
     if k_lens is None:
@@ -291,8 +293,8 @@ def flash_attention(
         v = half(v.flatten(0, 1))
         k_lens = torch.tensor([lk] * b, dtype=torch.int32).to(device=k.device, non_blocking=True)
     else:
-        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens)]))
-        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens)]))
+        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens, strict=False)]))
+        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens, strict=False)]))
 
     q = q.to(v.dtype)
     k = k.to(v.dtype)
@@ -1123,7 +1125,7 @@ class WanModel(nn.Module):
 
         if self.model_type == "i2v" and image_cond is not None:
             # image_cond = image_cond.to(dtype)
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, image_cond)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, image_cond, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]  # fp32 -> bf16
@@ -1252,10 +1254,10 @@ class WanModel(nn.Module):
 
         c = self.out_channels
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

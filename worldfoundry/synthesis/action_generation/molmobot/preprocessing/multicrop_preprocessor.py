@@ -1,17 +1,16 @@
 import dataclasses
-from typing import List, Union, Tuple, Dict, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
-import PIL
-from PIL import ImageFile
-from einops import einops
-from ..config import BaseConfig
-
-from .image_preprocessor import ImagePreprocessor
-from .preprocessor_utils import TokenizedVisionData, batch_pixels_to_patches, TensorSpec
-from ..tokenizer import HfTokenizerWrapper
 import numpy as np
-
+import PIL
+from einops import einops
+from PIL import ImageFile
 from transformers.image_utils import ImageInput
+
+from ..config import BaseConfig
+from ..tokenizer import HfTokenizerWrapper
+from .image_preprocessor import ImagePreprocessor
+from .preprocessor_utils import TensorSpec, TokenizedVisionData, batch_pixels_to_patches
 
 
 def setup_pil():
@@ -37,12 +36,12 @@ class MultiCropConfig(BaseConfig):
     p_high_res: float = 0
     pooling_w: int = 2
     pooling_h: int = 2
-    overlap_margins: Tuple[int, int] = (4, 4)
-    max_images: Optional[int] = None
+    overlap_margins: tuple[int, int] = (4, 4)
+    max_images: int | None = None
     max_multi_image_crops: int = 4
     multi_image_pooling_w: int = 2
     multi_image_pooling_h: int = 2
-    use_single_crop_col_tokens: Optional[bool] = None
+    use_single_crop_col_tokens: bool | None = None
     use_single_crop_start_token: bool = False
     single_frame: bool = True
 
@@ -98,15 +97,15 @@ class MultiCropImagePreprocessor:
     p_high_res: float = 0.0
     image_pooling_w: int = 2
     image_pooling_h: int = 2
-    image_padding_mask: Union[bool, int] = False
-    overlap_margins: Tuple[int, int] = (4, 4)
+    image_padding_mask: bool | int = False
+    overlap_margins: tuple[int, int] = (4, 4)
 
-    use_single_crop_col_tokens: Optional[bool] = None
+    use_single_crop_col_tokens: bool | None = None
     use_single_crop_start_token: bool = False
 
     single_frame: bool = True
 
-    def get_output_shapes(self) -> Dict[str, TensorSpec]:
+    def get_output_shapes(self) -> dict[str, TensorSpec]:
         """Return the maximumly sized output shapes this preprocessor could produce"""
         if self.crop_mode == "resize":
             height, width = self.image_preprocessor.base_image_input_size
@@ -254,7 +253,7 @@ class MultiImagePreprocessor:
     image_preprocessor: MultiCropImagePreprocessor
     max_images: int
 
-    def get_output_shapes(self) -> Dict[str, TensorSpec]:
+    def get_output_shapes(self) -> dict[str, TensorSpec]:
         image_shapes = self.image_preprocessor.get_output_shapes()
         tokens_shape = image_shapes.pop("tokens") * self.max_images
         tokens_shape = tokens_shape.extend(
@@ -273,7 +272,7 @@ class MultiImagePreprocessor:
         images,
         is_training=False,
         rng=None,
-    ) -> List[TokenizedVisionData]:
+    ) -> list[TokenizedVisionData]:
         if is_training:
             raise ValueError("MolmoBot's multi-image preprocessor supports inference only.")
         tokenized_images = []

@@ -3,8 +3,9 @@ from __future__ import annotations
 import contextlib
 import inspect
 import os
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -18,7 +19,6 @@ from .runtime_env import (
     resolve_neoverse_reconstructor_path,
     runtime_root,
 )
-
 
 DEFAULT_PROMPT = (
     "A smooth video with complete scene content. Inpaint any missing regions or margins naturally "
@@ -40,7 +40,7 @@ class NeoVerseOfficialRuntime:
         *,
         model_dir: str,
         reconstructor_path: str,
-        lora_path: Optional[str],
+        lora_path: str | None,
         device: str = "cuda",
         weight_dtype: torch.dtype = torch.bfloat16,
         default_prompt: str = DEFAULT_PROMPT,
@@ -72,21 +72,21 @@ class NeoVerseOfficialRuntime:
         cls,
         pretrained_model_path: str = DEFAULT_NEOVERSE_REPO,
         args=None,
-        device: Optional[str] = None,
+        device: str | None = None,
         weight_dtype: torch.dtype = torch.bfloat16,
-        reconstructor_path: Optional[str] = None,
-        lora_path: Optional[str] = None,
+        reconstructor_path: str | None = None,
+        lora_path: str | None = None,
         disable_lora: bool = False,
         lora_alpha: float = 1.0,
         enable_vram_management: bool = False,
         default_prompt: str = DEFAULT_PROMPT,
         default_negative_prompt: str = "",
-        cfg_scale: Optional[float] = None,
-        num_inference_steps: Optional[int] = None,
+        cfg_scale: float | None = None,
+        num_inference_steps: int | None = None,
         height: int = 336,
         width: int = 560,
         **kwargs,
-    ) -> "NeoVerseOfficialRuntime":
+    ) -> NeoVerseOfficialRuntime:
         del args, kwargs
         ensure_neoverse_runtime()
         from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (
@@ -103,13 +103,17 @@ class NeoVerseOfficialRuntime:
             NeoVerseControlBranch,
             NeoVerseControlBranchDictConverter,
         )
+        from worldfoundry.core.model_loading import hash_state_dict_keys, load_model, load_state_dict
         from worldfoundry.synthesis.visual_generation.neoverse.native.worldmirror import (
             NeoVerseWorldMirror,
         )
-        from worldfoundry.core.model_loading import hash_state_dict_keys, load_model, load_state_dict
+
+        # isort: split
         from worldfoundry.synthesis.visual_generation.neoverse.native.depth_anything_reconstructor import (
             DepthAnything3Reconstructor,
         )
+
+        # isort: split
         from worldfoundry.synthesis.visual_generation.neoverse.native.pipeline import (
             WanVideoNeoVersePipeline,
         )
@@ -253,16 +257,16 @@ class NeoVerseOfficialRuntime:
         self,
         *,
         keyframes=None,
-        predefined_trajectory: Optional[str] = None,
-        num_frames: Optional[int] = None,
-        trajectory_file: Optional[str] = None,
+        predefined_trajectory: str | None = None,
+        num_frames: int | None = None,
+        trajectory_file: str | None = None,
         trajectory_data=None,
         trajectory_mode: str = "relative",
         trajectory_name: str = "neoverse_trajectory",
         zoom_ratio: float = 1.0,
-        angle: Optional[float] = None,
-        distance: Optional[float] = None,
-        orbit_radius: Optional[float] = None,
+        angle: float | None = None,
+        distance: float | None = None,
+        orbit_radius: float | None = None,
         use_first_frame: bool = True,
     ):
         ensure_neoverse_runtime()
@@ -362,24 +366,24 @@ class NeoVerseOfficialRuntime:
         images,
         prompt: str = "",
         keyframes=None,
-        predefined_trajectory: Optional[str] = None,
-        num_frames: Optional[int] = None,
-        trajectory_file: Optional[str] = None,
+        predefined_trajectory: str | None = None,
+        num_frames: int | None = None,
+        trajectory_file: str | None = None,
         trajectory_data=None,
         trajectory_mode: str = "relative",
         trajectory_name: str = "neoverse_trajectory",
         zoom_ratio: float = 1.0,
-        angle: Optional[float] = None,
-        distance: Optional[float] = None,
-        orbit_radius: Optional[float] = None,
+        angle: float | None = None,
+        distance: float | None = None,
+        orbit_radius: float | None = None,
         use_first_frame: bool = True,
-        negative_prompt: Optional[str] = None,
+        negative_prompt: str | None = None,
         alpha_threshold: float = 1.0,
         seed: int = 42,
-        cfg_scale: Optional[float] = None,
-        num_inference_steps: Optional[int] = None,
-        static_scene: Optional[bool] = None,
-        save_root: Optional[str] = None,
+        cfg_scale: float | None = None,
+        num_inference_steps: int | None = None,
+        static_scene: bool | None = None,
+        save_root: str | None = None,
         return_dict: bool = False,
         **kwargs,
     ):

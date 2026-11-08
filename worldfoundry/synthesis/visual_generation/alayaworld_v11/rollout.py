@@ -619,7 +619,7 @@ class AlayaV11Rollout:
             )
         decoded_chunks: list[torch.Tensor] = []
         stride = int(self.cfg.sample.temporal_stride)
-        for index, (nearby, chunk) in enumerate(zip(nearby_latents, chunks)):
+        for index, (nearby, chunk) in enumerate(zip(nearby_latents, chunks, strict=False)):
             if nearby is None or int(nearby.shape[2]) <= 0:
                 raise ValueError(f"i2v rollout chunk {index} requires a non-empty decoder prefix")
             prefix_latents = int(nearby.shape[2])
@@ -2446,7 +2446,7 @@ class AlayaV11Rollout:
     def _active_output_latent_frames(self) -> list[int]:
         pairs = [
             (int(k), float(p))
-            for (k, p) in zip(self.cfg.layout.output.latent_frames, self.cfg.layout.output.probs)
+            for (k, p) in zip(self.cfg.layout.output.latent_frames, self.cfg.layout.output.probs, strict=False)
             if float(p) > 0.0
         ]
         if not pairs:

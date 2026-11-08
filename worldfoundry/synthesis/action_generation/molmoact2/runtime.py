@@ -11,10 +11,11 @@ from __future__ import annotations
 import json
 import threading
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     project_root,

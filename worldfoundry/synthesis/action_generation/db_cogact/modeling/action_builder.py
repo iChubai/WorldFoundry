@@ -1,6 +1,6 @@
 # Inference-only DB-CogACT source retained in-tree.
-from .configuration import require_config_keys
 from .action import ActionModel, LinearModel
+from .configuration import require_config_keys
 
 
 @require_config_keys(["action_model_type", "hidden_size", "action_dim", "chunk_size"])

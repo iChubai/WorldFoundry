@@ -14,7 +14,6 @@ from typing import Optional
 
 from worldfoundry.core.io.paths import package_module_root as package_root
 
-
 DEFAULT_ITTAKESTWO_CONFIG_RELATIVE_PATH = "ittakestwo/configs/inference_480P_toy.yaml"
 DEFAULT_ITTAKESTWO_CHECKPOINT_RELATIVE_PATH = "checkpoints/multiworld_480p_toydata.safetensors"
 DEFAULT_MULTIWORLD_HF_REPO_ID = "Haoyuwu/MultiWorldCheckpoint"
@@ -53,7 +52,7 @@ def project_root() -> Path:
     return current.parents[6]
 
 
-def _candidate_runtime_root(path_value: Path) -> Optional[Path]:
+def _candidate_runtime_root(path_value: Path) -> Path | None:
     """
     Checks if a given path (or a nested 'MultiWorld' directory within it) qualifies
     as a valid MultiWorld runtime root by checking for the presence of sentinel files.
@@ -100,7 +99,7 @@ def local_runtime_candidates() -> list[Path]:
     return candidates
 
 
-def default_runtime_root() -> Optional[Path]:
+def default_runtime_root() -> Path | None:
     """
     Attempts to find and validate the default MultiWorld runtime root.
 
@@ -119,7 +118,7 @@ def default_runtime_root() -> Optional[Path]:
     return None
 
 
-def resolve_runtime_root(runtime_root: Optional[str | Path]) -> str:
+def resolve_runtime_root(runtime_root: str | Path | None) -> str:
     """
     Resolves the MultiWorld runtime root path.
 
@@ -156,7 +155,7 @@ def resolve_runtime_root(runtime_root: Optional[str | Path]) -> str:
     return str(resolved.resolve())
 
 
-def _resolve_existing_file(path_value: str | Path, runtime_root: str | Path) -> Optional[Path]:
+def _resolve_existing_file(path_value: str | Path, runtime_root: str | Path) -> Path | None:
     """
     Resolves an existing file path, checking both the direct path and a path
     relative to the MultiWorld runtime root.
@@ -181,7 +180,7 @@ def _resolve_existing_file(path_value: str | Path, runtime_root: str | Path) -> 
     return None
 
 
-def _resolve_data_config_file(path_value: str | Path) -> Optional[Path]:
+def _resolve_data_config_file(path_value: str | Path) -> Path | None:
     candidate = Path(str(path_value)).expanduser()
     if candidate.is_file():
         return candidate.resolve()
@@ -192,7 +191,7 @@ def _resolve_data_config_file(path_value: str | Path) -> Optional[Path]:
     return None
 
 
-def resolve_config_path(config_path: Optional[str | Path], runtime_root: str | Path) -> str:
+def resolve_config_path(config_path: str | Path | None, runtime_root: str | Path) -> str:
     """
     Resolves the full path to the ItTakesTwo configuration file.
 
@@ -238,7 +237,7 @@ def _checkpoint_roots() -> list[Path]:
     return roots
 
 
-def _valid_wan_ti2v_root(path_value: Path) -> Optional[Path]:
+def _valid_wan_ti2v_root(path_value: Path) -> Path | None:
     path_value = path_value.expanduser()
     if all((path_value / filename).is_file() for filename in WAN_TI2V_REQUIRED_FILENAMES):
         return path_value.resolve()
@@ -268,7 +267,7 @@ def _candidate_wan_ti2v_roots() -> list[Path]:
     return expanded
 
 
-def resolve_wan_ti2v_root(path_value: Optional[str | Path] = None) -> str:
+def resolve_wan_ti2v_root(path_value: str | Path | None = None) -> str:
     """Resolve the official Wan2.2-TI2V-5B root used by MultiWorld."""
     if path_value is not None and str(path_value).strip():
         resolved = _valid_wan_ti2v_root(Path(path_value))
@@ -330,7 +329,7 @@ def _candidate_checkpoint_paths(runtime_root: str | Path) -> list[Path]:
     return expanded
 
 
-def _resolve_default_checkpoint(runtime_root: str | Path) -> Optional[Path]:
+def _resolve_default_checkpoint(runtime_root: str | Path) -> Path | None:
     for path in _candidate_checkpoint_paths(runtime_root):
         if path.is_file():
             return path.resolve()
@@ -346,7 +345,7 @@ def _resolve_default_checkpoint(runtime_root: str | Path) -> Optional[Path]:
     return path.resolve() if path.is_file() else None
 
 
-def resolve_checkpoint_path(checkpoint_path: Optional[str | Path], runtime_root: str | Path) -> str:
+def resolve_checkpoint_path(checkpoint_path: str | Path | None, runtime_root: str | Path) -> str:
     """
     Resolves the full path to the ItTakesTwo checkpoint file.
 
@@ -414,6 +413,7 @@ __all__ = [
     "DEFAULT_ITTAKESTWO_CHECKPOINT_RELATIVE_PATH",
     "DEFAULT_ITTAKESTWO_CONFIG_RELATIVE_PATH",
     "MULTIWORLD_CONFIG_DIR",
+    "WAN_TI2V_DIT_FILENAMES",
     "build_subprocess_env",
     "default_runtime_root",
     "local_runtime_candidates",
@@ -422,5 +422,4 @@ __all__ = [
     "resolve_config_path",
     "resolve_runtime_root",
     "resolve_wan_ti2v_root",
-    "WAN_TI2V_DIT_FILENAMES",
 ]

@@ -1,13 +1,14 @@
 import os
 import socket
-import torch
+
 import numpy as np
+import torch
 from diffusers.video_processor import VideoProcessor
 
 from worldfoundry.base_models.diffusion_model.recipes.wan_configs.wan22 import (
-    WAN_CONFIGS,
-    SIZE_CONFIGS,
     MAX_AREA_CONFIGS,
+    SIZE_CONFIGS,
+    WAN_CONFIGS,
 )
 from worldfoundry.synthesis.visual_generation.yume.yume_runtime.yume_1p5 import Yume1p5TI2V
 

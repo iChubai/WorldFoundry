@@ -1,19 +1,18 @@
 import os
-import imageio
-import numpy as np
 from typing import Union
 
+import imageio
+import numpy as np
 import torch
-import torchvision
 import torch.distributed as dist
-
+import torchvision
+from einops import rearrange
 from huggingface_hub import snapshot_download
 from safetensors import safe_open
 from tqdm import tqdm
-from einops import rearrange
-from .convert_from_ckpt import convert_ldm_unet_checkpoint, convert_ldm_clip_checkpoint, convert_ldm_vae_checkpoint
-from .convert_lora_safetensor_to_diffusers import convert_lora, load_diffusers_lora
 
+from .convert_from_ckpt import convert_ldm_clip_checkpoint, convert_ldm_unet_checkpoint, convert_ldm_vae_checkpoint
+from .convert_lora_safetensor_to_diffusers import convert_lora, load_diffusers_lora
 
 MOTION_MODULES = [
     "mm_sd_v14.ckpt",
@@ -123,7 +122,7 @@ def load_weights(
         )
         # filter parameters
         for name, param in motion_module_state_dict.items():
-            if not "motion_modules." in name:
+            if "motion_modules." not in name:
                 continue
             if "pos_encoder.pe" in name:
                 continue

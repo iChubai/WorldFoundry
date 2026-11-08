@@ -248,7 +248,7 @@ class NoiseScheduleVP:
         if self.schedule == "discrete":
             return interpolate_fn(
                 t.reshape((-1, 1)), self.t_array.to(t.device), self.log_alpha_array.to(t.device)
-            ).reshape((-1))
+            ).reshape(-1)
         elif self.schedule == "linear":
             return -0.25 * t**2 * (self.beta_1 - self.beta_0) - 0.5 * t * self.beta_0
 
@@ -523,7 +523,7 @@ class DPM_Solver:
             Burcu Karagol Ayan, S Sara Mahdavi, Rapha Gontijo Lopes, et al. Photorealistic text-to-image diffusion models
             with deep language understanding. arXiv preprint arXiv:2205.11487, 2022b.
         """
-        self.model = lambda x, t: model_fn(x, t.expand((x.shape[0])))
+        self.model = lambda x, t: model_fn(x, t.expand(x.shape[0]))
         self.noise_schedule = noise_schedule
         assert algorithm_type in ["dpmsolver", "dpmsolver++"]
         self.algorithm_type = algorithm_type
@@ -1157,7 +1157,7 @@ class DPM_Solver:
             )
         else:
             raise ValueError(f"For adaptive step size solver, order must be 2 or 3, got {order}")
-        while torch.abs((s - t_0)).mean() > t_err:
+        while torch.abs(s - t_0).mean() > t_err:
             t = ns.inverse_lambda(lambda_s + h)
             x_lower, lower_noise_kwargs = lower_update(x, s, t)
             x_higher = higher_update(x, s, t, **lower_noise_kwargs)

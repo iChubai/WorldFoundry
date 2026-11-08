@@ -1,20 +1,23 @@
-import types
 import inspect
+import types
 from typing import List, Optional
+
 import torch
-from torch import nn
 from einops import rearrange
-from .scheduler import SchedulerInterface, FlowMatchScheduler
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_action_21 import (
-    CausalWanModel,
+from torch import nn
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import _video_vae
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
+    HuggingfaceTokenizer,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_21 import (
     WanModel,
 )
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
-    HuggingfaceTokenizer,
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_action_21 import (
+    CausalWanModel,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import _video_vae
+
+from .scheduler import FlowMatchScheduler, SchedulerInterface
 
 
 class WanVAEWrapper(torch.nn.Module):  # todo
@@ -187,12 +190,12 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[List[dict]] = None,
-        kv_cache_mouse: Optional[List[dict]] = None,
-        kv_cache_keyboard: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        current_start: Optional[int] = None,
-        cache_start: Optional[int] = None,
+        kv_cache: list[dict] | None = None,
+        kv_cache_mouse: list[dict] | None = None,
+        kv_cache_keyboard: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        current_start: int | None = None,
+        cache_start: int | None = None,
     ) -> torch.Tensor:
         assert noisy_image_or_video.shape[1] == 16
         # [B, F] -> [B]

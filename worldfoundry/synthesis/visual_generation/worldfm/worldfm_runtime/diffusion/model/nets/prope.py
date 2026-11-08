@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional, Tuple, List, Dict
+from typing import Dict, List, Optional, Tuple
 
 import torch
 
@@ -29,7 +30,7 @@ def get_rope_coeffs_2d(
     dtype: torch.dtype,
     freq_base: float = 100.0,
     freq_scale: float = 1.0,
-) -> Tuple[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+) -> tuple[tuple[torch.Tensor, torch.Tensor], tuple[torch.Tensor, torch.Tensor]]:
     """Precompute RoPE coeffs for a single image (row-major patches).
 
     Returns:
@@ -53,13 +54,13 @@ def prepare_prope_apply_fns(
     *,
     head_dim: int,
     viewmats: torch.Tensor,  # (B, cameras, 4, 4)
-    Ks: Optional[torch.Tensor],  # (B, cameras, 3, 3) or None
+    Ks: torch.Tensor | None,  # (B, cameras, 3, 3) or None
     patches_x: int,
     patches_y: int,
     image_hw: torch.Tensor,  # (B, 2) with [H, W] in pixels
-    coeffs_x: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-    coeffs_y: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-) -> Tuple[
+    coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
+    coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
+) -> tuple[
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
@@ -162,7 +163,7 @@ def reorder_tokens_to_camera_major(
     if is_bnhd:
         # (B, num_heads, seqlen, head_dim)
         B, Hh, N, D = x.shape
-        assert N == patches_y * patches_x_total
+        assert patches_y * patches_x_total == N
         x = x.view(B, Hh, patches_y, patches_x_total, D)
         x = x.view(B, Hh, patches_y, cameras, patches_x_per_cam, D)
         x = x.permute(0, 1, 3, 2, 4, 5).contiguous()  # B, heads, cam, y, x, D
@@ -170,7 +171,7 @@ def reorder_tokens_to_camera_major(
     else:
         # (B, seqlen, num_heads, head_dim)
         B, N, Hh, D = x.shape
-        assert N == patches_y * patches_x_total
+        assert patches_y * patches_x_total == N
         x = x.view(B, patches_y, patches_x_total, Hh, D)
         x = x.view(B, patches_y, cameras, patches_x_per_cam, Hh, D)
         x = x.permute(0, 2, 1, 3, 4, 5).contiguous()  # B, cam, y, x, heads, D
@@ -191,14 +192,14 @@ def reorder_tokens_from_camera_major(
 
     if is_bnhd:
         B, Hh, N, D = x.shape
-        assert N == cameras * patches_y * patches_x_per_cam
+        assert cameras * patches_y * patches_x_per_cam == N
         x = x.view(B, Hh, cameras, patches_y, patches_x_per_cam, D)
         x = x.permute(0, 1, 3, 2, 4, 5).contiguous()  # B, heads, y, cam, x, D
         x = x.view(B, Hh, patches_y, patches_x_total, D)
         return x.view(B, Hh, patches_y * patches_x_total, D)
     else:
         B, N, Hh, D = x.shape
-        assert N == cameras * patches_y * patches_x_per_cam
+        assert cameras * patches_y * patches_x_per_cam == N
         x = x.view(B, cameras, patches_y, patches_x_per_cam, Hh, D)
         x = x.permute(0, 2, 1, 3, 4, 5).contiguous()  # B, y, cam, x, heads, D
         x = x.view(B, patches_y, patches_x_total, Hh, D)
@@ -227,7 +228,7 @@ def _rope_precompute_coeffs(
     freq_base: float,
     freq_scale: float,
     feat_dim: int,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     assert len(positions.shape) == 1
     assert feat_dim % 2 == 0
     num_freqs = feat_dim // 2
@@ -241,7 +242,7 @@ def _rope_precompute_coeffs(
 
 def _rope_apply_coeffs(
     feats: torch.Tensor,  # (B, num_heads, seqlen, feat_dim)
-    coeffs: Tuple[torch.Tensor, torch.Tensor],
+    coeffs: tuple[torch.Tensor, torch.Tensor],
     inverse: bool = False,
 ) -> torch.Tensor:
     cos, sin = coeffs
@@ -265,12 +266,12 @@ def _rope_apply_coeffs(
 
 def _apply_block_diagonal(
     feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: List[Tuple[Callable[[torch.Tensor], torch.Tensor], int]],
+    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
-    funcs, block_sizes = zip(*func_size_pairs)
+    funcs, block_sizes = zip(*func_size_pairs, strict=False)
     assert feats.shape[-1] == sum(block_sizes)
     x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat([f(x_block) for f, x_block in zip(funcs, x_blocks)], dim=-1)
+    out = torch.cat([f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)], dim=-1)
     assert out.shape == feats.shape
     return out
 

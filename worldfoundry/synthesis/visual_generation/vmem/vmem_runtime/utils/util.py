@@ -1,18 +1,15 @@
-from typing import Callable, Dict, List, Optional, Union
+import math
+import os
+from collections.abc import Callable
+from typing import Dict, List, Optional, Tuple, Union
 
+import kornia
 import numpy as np
 import PIL.Image
 import torch
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
-
-
-import kornia
 from PIL import Image, ImageOps
-import os
-from typing import Union, Tuple, List
-import math
-
 
 DEFAULT_FOV_RAD = 0.9424777960769379  # 54 degrees by default
 
@@ -235,7 +232,7 @@ def get_value_dict(
 
 
 def parse_meta_data(file_path, image_height=288, image_width=512):
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
     # First line is the video URL
@@ -285,8 +282,8 @@ def get_wh_with_fixed_shortest_side(w, h, size):
 
 
 def get_resizing_factor(
-    target_shape: Tuple[int, int],  # H, W
-    current_shape: Tuple[int, int],  # H, W
+    target_shape: tuple[int, int],  # H, W
+    current_shape: tuple[int, int],  # H, W
     cover_target: bool = True,
     # If True, the output shape will fully cover the target shape.
     # If No, the target shape will fully cover the output shape.
@@ -328,10 +325,10 @@ def get_resizing_factor(
 
 def transform_img_and_K(
     image: torch.Tensor,
-    size: Union[int, Tuple[int, int]],
+    size: int | tuple[int, int],
     scale: float = 1.0,
-    center: Tuple[float, float] = (0.5, 0.5),
-    K: Union[torch.Tensor, np.ndarray, None] = None,
+    center: tuple[float, float] = (0.5, 0.5),
+    K: torch.Tensor | np.ndarray | None = None,
     size_stride: int = 1,
     mode: str = "crop",
 ):
@@ -401,15 +398,15 @@ def transform_img_and_K(
 
 
 def load_img_and_K(
-    image_path_or_size: Union[str, torch.Size],
-    size: Optional[Union[int, Tuple[int, int]]],
+    image_path_or_size: str | torch.Size,
+    size: int | tuple[int, int] | None,
     scale: float = 1.0,
-    center: Tuple[float, float] = (0.5, 0.5),
-    K: Union[torch.Tensor, np.ndarray, None] = None,
+    center: tuple[float, float] = (0.5, 0.5),
+    K: torch.Tensor | np.ndarray | None = None,
     size_stride: int = 1,
     center_crop: bool = False,
     image_as_tensor: bool = True,
-    context_rgb: Union[np.ndarray, None] = None,
+    context_rgb: np.ndarray | None = None,
     device: str = "cuda",
 ):
     if isinstance(image_path_or_size, torch.Size):
@@ -488,8 +485,8 @@ def load_img_and_K(
 
 
 def geodesic_distance(
-    extrinsic1: Union[np.ndarray, torch.Tensor],
-    extrinsic2: Union[np.ndarray, torch.Tensor],
+    extrinsic1: np.ndarray | torch.Tensor,
+    extrinsic2: np.ndarray | torch.Tensor,
     weight_translation: float = 0.01,
 ):
     """
@@ -881,9 +878,9 @@ def center_crop_pil_image(input_image, target_width=1024, target_height=576):
 
 def resize_pil_image(img, long_edge_size):
     S = max(img.size)
-    if S > long_edge_size:
+    if long_edge_size < S:
         interp = PIL.Image.LANCZOS
-    elif S <= long_edge_size:
+    elif long_edge_size >= S:
         interp = PIL.Image.BICUBIC
     new_size = tuple(int(round(x * long_edge_size / S)) for x in img.size)
     return img.resize(new_size, interp)

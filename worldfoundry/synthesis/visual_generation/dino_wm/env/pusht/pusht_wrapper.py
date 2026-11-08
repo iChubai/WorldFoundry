@@ -1,7 +1,12 @@
 import os
-import numpy as np
+
 import gym
+import numpy as np
+
+# isort: split
 from env.pusht.pusht_env import PushTEnv
+
+# isort: split
 from utils import aggregate_dct
 
 

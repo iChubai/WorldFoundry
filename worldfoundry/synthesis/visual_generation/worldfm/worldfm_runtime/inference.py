@@ -32,8 +32,10 @@ from torchvision.transforms.functional import (
     InterpolationMode,
     center_crop,
     normalize,
-    resize as tv_resize,
     to_tensor,
+)
+from torchvision.transforms.functional import (
+    resize as tv_resize,
 )
 
 from .assets import load_worldfm_checkpoint
@@ -176,14 +178,14 @@ class WorldFMTriConditionInprocess:
         self.vae = vae
 
         self.max_sequence_length = max_sequence_length
-        self._cond2_cached: Optional[torch.Tensor] = None
-        self._cond2_latent_cached: Optional[torch.Tensor] = None
+        self._cond2_cached: torch.Tensor | None = None
+        self._cond2_latent_cached: torch.Tensor | None = None
         self._cond2_candidates_paths: list = []
-        self._cond2_candidates_tensor: Optional[torch.Tensor] = None
-        self._cond2_candidates_latent: Optional[torch.Tensor] = None
+        self._cond2_candidates_tensor: torch.Tensor | None = None
+        self._cond2_candidates_latent: torch.Tensor | None = None
         self._last_profile: dict = {}
-        self._last_cond1_tensor: Optional[torch.Tensor] = None
-        self._last_cond2_tensor: Optional[torch.Tensor] = None
+        self._last_cond1_tensor: torch.Tensor | None = None
+        self._last_cond2_tensor: torch.Tensor | None = None
 
     @torch.inference_mode()
     def set_cond2_from_path(self, cond2_path: str) -> None:
@@ -267,7 +269,7 @@ class WorldFMTriConditionInprocess:
         self,
         render_rgb_u8: torch.Tensor,
         *,
-        cond2_index: Optional[int] = None,
+        cond2_index: int | None = None,
         profile: bool = False,
         profile_tag: str = "",
     ) -> torch.Tensor:
@@ -298,7 +300,7 @@ class WorldFMTriConditionInprocess:
 
         if self._cond2_cached is not None:
             cond2 = self._cond2_cached
-            z_c2: Optional[torch.Tensor] = None
+            z_c2: torch.Tensor | None = None
         else:
             ci = int(cond2_index or 0)
             cond2 = self._cond2_candidates_tensor[ci : ci + 1]  # type: ignore
@@ -411,7 +413,7 @@ class WorldFMTriConditionInprocess:
         *,
         sample_steps: int,
         cfg_scale: float = 4.5,
-        cond2_index: Optional[int] = None,
+        cond2_index: int | None = None,
     ) -> torch.Tensor:
         """Generate one decoded frame with DPM solver sampling.
 
@@ -433,7 +435,7 @@ class WorldFMTriConditionInprocess:
 
         if self._cond2_cached is not None:
             cond2 = self._cond2_cached
-            z_c2: Optional[torch.Tensor] = None
+            z_c2: torch.Tensor | None = None
         else:
             ci = int(cond2_index or 0)
             cond2 = self._cond2_candidates_tensor[ci : ci + 1]  # type: ignore

@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
 
-from .models.wan_video_dit_moe import WanModelMoe
 from .model_registry import model_loader_configs
-from .models.wan_video_dit_moe import ModalityProcessor, MultiModalMoE
+from .models.wan_video_dit_moe import ModalityProcessor, MultiModalMoE, WanModelMoe
 
 
 def replace_dit_model_in_manager():
@@ -16,7 +15,7 @@ def replace_dit_model_in_manager():
             new_model_names = []
             new_model_classes = []
 
-            for name, cls in zip(model_names, model_classes):
+            for name, cls in zip(model_names, model_classes, strict=False):
                 if name == "wan_video_dit":
                     new_model_names.append(name)
                     new_model_classes.append(WanModelMoe)

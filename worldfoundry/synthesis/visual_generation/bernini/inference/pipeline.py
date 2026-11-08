@@ -31,7 +31,7 @@ import torch
 from diffusers.models import AutoencoderKLWan
 from diffusers.video_processor import VideoProcessor
 from tqdm import tqdm
-from transformers import AutoConfig, AutoTokenizer, AutoProcessor, Qwen2_5_VLModel
+from transformers import AutoConfig, AutoProcessor, AutoTokenizer, Qwen2_5_VLModel
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
@@ -39,15 +39,15 @@ from .data.bernini_process import bernini_process_sample
 from .data.bernini_template import BerniniTemplate
 from .data.utils.video_utils import PathVideoReader, smart_video_nframes
 from .data_utils import (
+    FakeVideoReader,
+    VAEVideoTransform,
+    create_fake_image,
+    get_vae_features,
+    get_vit_features,
     make_divisible,
     preprocess_image,
     preprocess_video,
     tensor_to_bytes,
-    get_vit_features,
-    get_vae_features,
-    FakeVideoReader,
-    create_fake_image,
-    VAEVideoTransform,
 )
 from .io_utils import save_output
 from .models import BerniniRendererConfig, BerniniRendererModel
@@ -57,7 +57,7 @@ from .weights import load_weights
 logger = logging.getLogger("bernini.pipeline")
 
 
-def _resolve_cached_hf_path(path: Optional[str]) -> Optional[str]:
+def _resolve_cached_hf_path(path: str | None) -> str | None:
     """Resolve a HF repo id (or repo id + subpath) from local storage only.
 
     Examples:
@@ -431,7 +431,7 @@ class BerniniPipeline:
         )
         # transformer_1 is loaded in diff_dec, while transformer_2 is loaded in diff_dec_low and then
         # attached back to diff_dec before sampling.
-        setattr(model.diff_dec, "transformer_2", model.diff_dec_low.transformer_2)
+        model.diff_dec.transformer_2 = model.diff_dec_low.transformer_2
         model.eval()
 
         t5_tokenizer = AutoTokenizer.from_pretrained(
@@ -631,7 +631,7 @@ class BerniniPipeline:
         sample,
         max_vae_frames: int = 81,
         task_name: str = "t2v",
-        neg_prompt: Optional[str] = None,
+        neg_prompt: str | None = None,
         t5_neg_prompt: str = "",
         use_qwen_neg_prompt: bool = True,
     ):
@@ -660,7 +660,7 @@ class BerniniPipeline:
         processor = self.vit_processor
         chat_template = BerniniTemplate(processor.tokenizer, t5_tokenizer=self.t5_tokenizer)
 
-        with open(vae_config_path, "r") as f:
+        with open(vae_config_path) as f:
             vae_config = json.load(f)
         vae_latent_mean = torch.tensor(vae_config["latents_mean"], device="cpu")
         vae_latent_std = torch.tensor(vae_config["latents_std"], device="cpu")
@@ -744,17 +744,17 @@ class BerniniPipeline:
     @torch.no_grad()
     def sample_vit_embed(
         self,
-        input_embeds: Optional[torch.FloatTensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        attention_mask_4d: Optional[torch.Tensor] = None,
+        input_embeds: torch.FloatTensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        attention_mask_4d: torch.Tensor | None = None,
         visual_output_token_mask=None,
-        uncond_input_embeds: Optional[torch.FloatTensor] = None,
-        uncond_position_ids: Optional[torch.Tensor] = None,
-        uncond_attention_mask_4d: Optional[torch.Tensor] = None,
+        uncond_input_embeds: torch.FloatTensor | None = None,
+        uncond_position_ids: torch.Tensor | None = None,
+        uncond_attention_mask_4d: torch.Tensor | None = None,
         uncond_visual_output_token_mask=None,
-        imgcond_input_embeds: Optional[torch.FloatTensor] = None,
-        imgcond_position_ids: Optional[torch.Tensor] = None,
-        imgcond_attention_mask_4d: Optional[torch.Tensor] = None,
+        imgcond_input_embeds: torch.FloatTensor | None = None,
+        imgcond_position_ids: torch.Tensor | None = None,
+        imgcond_attention_mask_4d: torch.Tensor | None = None,
         imgcond_visual_output_token_mask=None,
         planning_step=3,
         vit_denoising_step=1,

@@ -10,6 +10,7 @@ initializers, then imports only the modules used by GigaWorld-0.
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import import_module
@@ -17,7 +18,6 @@ from importlib.machinery import ModuleSpec
 from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
 from types import ModuleType
-from typing import Iterator
 
 
 @dataclass(frozen=True)

@@ -7,7 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-
 SVD_SCALE = 0.18215
 ACTION_VECTORS = {
     "right": (0.0, 1.0),

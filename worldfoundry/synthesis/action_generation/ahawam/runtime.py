@@ -306,9 +306,7 @@ class AHAWAMRuntime:
 
     def _episode(self, observation: Mapping[str, Any]) -> None:
         episode = first_present(observation, "episode_id", "episode", "trajectory_id")
-        if option_bool(observation.get("reset"), False):
-            self.reset(episode)
-        elif episode is not None and str(episode) != self._episode_id:
+        if option_bool(observation.get("reset"), False) or (episode is not None and str(episode) != self._episode_id):
             self.reset(episode)
 
     def _soft_reprefill(self) -> None:

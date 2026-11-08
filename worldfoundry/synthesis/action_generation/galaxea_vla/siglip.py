@@ -92,7 +92,7 @@ class SiglipAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         # hidden_states: [Batch_Size, Num_Patches, Embed_Dim]
         batch_size, seq_len, _ = hidden_states.size()
         # query_states: [Batch_Size, Num_Patches, Embed_Dim]
@@ -240,6 +240,6 @@ class SiglipVisionModel(nn.Module):
         self.config = config
         self.vision_model = SiglipVisionTransformer(config)
 
-    def forward(self, pixel_values) -> Tuple:
+    def forward(self, pixel_values) -> tuple:
         # [Batch_Size, Channels, Height, Width] -> [Batch_Size, Num_Patches, Embed_Dim]
         return self.vision_model(pixel_values=pixel_values)

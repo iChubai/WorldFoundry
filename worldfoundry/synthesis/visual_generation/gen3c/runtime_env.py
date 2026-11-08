@@ -123,7 +123,7 @@ def _component_dir_candidates(repo_id: str, root: Path) -> list[Path]:
     return deduped
 
 
-def _find_component_dir(repo_id: str, root: Path) -> Optional[Path]:
+def _find_component_dir(repo_id: str, root: Path) -> Path | None:
     """Helper function to find component dir.
 
     Args:
@@ -139,7 +139,7 @@ def _find_component_dir(repo_id: str, root: Path) -> Optional[Path]:
     return None
 
 
-def _find_component_dir_with_file(layout_name: str, repo_id: str, root: Path) -> Optional[Path]:
+def _find_component_dir_with_file(layout_name: str, repo_id: str, root: Path) -> Path | None:
     required = _component_required_file(layout_name)
     for candidate in _component_dir_candidates(repo_id, root):
         if (candidate / required).is_file():
@@ -147,7 +147,7 @@ def _find_component_dir_with_file(layout_name: str, repo_id: str, root: Path) ->
     return None
 
 
-def _direct_layout_component_sources(root: Path) -> Optional[dict[str, Path]]:
+def _direct_layout_component_sources(root: Path) -> dict[str, Path] | None:
     """Find GEN3C components in a direct local checkpoint root."""
     component_sources: dict[str, Path] = {}
     alias_names = {
@@ -213,7 +213,7 @@ def _link_or_copy(src: Path, dst: Path) -> None:
     dst.symlink_to(src, target_is_directory=src.is_dir())
 
 
-def _iter_hfd_roots(path_value: Optional[Path]) -> list[Path]:
+def _iter_hfd_roots(path_value: Path | None) -> list[Path]:
     """Helper function to iter hfd roots.
 
     Args:
@@ -275,7 +275,7 @@ def _iter_direct_checkpoint_roots() -> list[Path]:
     return deduped
 
 
-def _stage_hfd_checkpoints(hfd_root: Path) -> Optional[Path]:
+def _stage_hfd_checkpoints(hfd_root: Path) -> Path | None:
     """Helper function to stage hfd checkpoints.
 
     Args:
@@ -306,7 +306,7 @@ def _stage_component_sources(component_sources: dict[str, Path]) -> Path:
     return stage_root.resolve()
 
 
-def _stage_hf_snapshot_checkpoints() -> Optional[Path]:
+def _stage_hf_snapshot_checkpoints() -> Path | None:
     """Build GEN3C's official checkpoint_dir layout from HF snapshots."""
     component_sources: dict[str, Path] = {}
     try:
@@ -320,7 +320,7 @@ def _stage_hf_snapshot_checkpoints() -> Optional[Path]:
     return _stage_component_sources(component_sources)
 
 
-def prepare_gen3c_checkpoint_root(checkpoint_dir: Optional[str]) -> str:
+def prepare_gen3c_checkpoint_root(checkpoint_dir: str | None) -> str:
     """Prepare gen3c checkpoint root.
 
     Args:

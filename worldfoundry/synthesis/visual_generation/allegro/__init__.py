@@ -28,5 +28,4 @@ def runtime_root() -> Path:
 
 from .worldfoundry_runtime import Allegro, preprocess_images
 
-
 __all__ = ["Allegro", "preprocess_images", "runtime_root"]

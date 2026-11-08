@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import random
+from collections.abc import Callable
+from typing import Tuple, Union
+
+import Imath
 import numpy as np
+import OpenEXR
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from packaging import version as pver
-import random
-import json
-from typing import Union, Callable, Tuple
-import OpenEXR
-import Imath
 
 
 class ImageTransform:
@@ -230,7 +232,7 @@ def mirror_frame_indices(
 
 
 def weighted_sample(
-    arr: np.ndarray, num_samples: int, bias: Union[str, Callable[[np.ndarray], np.ndarray]] = "uniform"
+    arr: np.ndarray, num_samples: int, bias: str | Callable[[np.ndarray], np.ndarray] = "uniform"
 ) -> np.ndarray:
     """
     Sample elements from a numpy array with optional weighting toward the end.
@@ -328,6 +330,6 @@ def write_dict_to_json(data, filename):
 
 
 def read_json_to_dict(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         json_dict = json.load(f)
     return json_dict

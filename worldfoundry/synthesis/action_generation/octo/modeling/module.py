@@ -6,6 +6,8 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
+from ..spec import ModuleSpec
+from ..types import Data, Sequence
 from .base import TokenGroup
 from .block_transformer import (
     AttentionRule,
@@ -13,8 +15,6 @@ from .block_transformer import (
     PrefixGroup,
     TimestepGroup,
 )
-from ..spec import ModuleSpec
-from ..types import Data, Sequence
 
 
 class OctoTransformer(nn.Module):
@@ -77,10 +77,10 @@ class OctoTransformer(nn.Module):
 
     """
 
-    observation_tokenizers: Dict[str, nn.Module]
-    task_tokenizers: Dict[str, nn.Module]
-    readouts: Dict[str, int]
-    transformer_kwargs: Dict
+    observation_tokenizers: dict[str, nn.Module]
+    task_tokenizers: dict[str, nn.Module]
+    readouts: dict[str, int]
+    transformer_kwargs: dict
     token_embedding_size: int
     max_horizon: int
     repeat_task_tokens: bool
@@ -92,10 +92,10 @@ class OctoTransformer(nn.Module):
         observations: Data,
         tasks: Data,
         timestep_pad_mask: jax.Array,
-        readouts: Optional[Sequence[str]] = None,
+        readouts: Sequence[str] | None = None,
         train: bool = False,
         verbose: bool = False,
-    ) -> Dict[str, TokenGroup]:
+    ) -> dict[str, TokenGroup]:
         """
         Args:
             observations: A dictionary containing observation data for a batch of trajectory windows.
@@ -307,7 +307,7 @@ class OctoModule(nn.Module):
     """
 
     octo_transformer: OctoTransformer
-    heads: Dict[str, nn.Module]
+    heads: dict[str, nn.Module]
 
     def __call__(self, observations, tasks, timestep_pad_mask, train=False, verbose=False):
         """Run transformer and the main method for all heads. Useful for init.
@@ -336,11 +336,11 @@ class OctoModule(nn.Module):
     @classmethod
     def create(
         cls,
-        observation_tokenizers: Dict[str, ModuleSpec],
-        task_tokenizers: Dict[str, ModuleSpec],
-        heads: Dict[str, ModuleSpec],
-        readouts: Dict[str, int],
-        transformer_kwargs: Dict,
+        observation_tokenizers: dict[str, ModuleSpec],
+        task_tokenizers: dict[str, ModuleSpec],
+        heads: dict[str, ModuleSpec],
+        readouts: dict[str, int],
+        transformer_kwargs: dict,
         token_embedding_size: int,
         max_horizon: int,
         repeat_task_tokens: bool = False,

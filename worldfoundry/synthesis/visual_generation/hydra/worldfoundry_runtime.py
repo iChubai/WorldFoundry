@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
@@ -46,7 +47,7 @@ class HydraRuntime:
         return Path(__file__).resolve().parent / "hydra_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "HydraRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> HydraRuntime:
         if isinstance(pretrained_model_path, Mapping):
             options = dict(pretrained_model_path)
             options.update(kwargs)

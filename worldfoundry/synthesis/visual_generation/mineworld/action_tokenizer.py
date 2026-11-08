@@ -1,8 +1,8 @@
-import attr
 import collections
-import numpy as np
 from typing import Dict, Union
 
+import attr
+import numpy as np
 from utils import print0
 
 
@@ -150,7 +150,7 @@ class MinecraftActionTokenizer:
         self.action_vocab = action_vocab
 
     def _handle_conflict_action_index(
-        self, action_dict: Dict[str, Union[int, np.ndarray]], key1: str, key2: str, null_key: str, verbose: bool = False
+        self, action_dict: dict[str, int | np.ndarray], key1: str, key2: str, null_key: str, verbose: bool = False
     ):
         if action_dict[key1] == 1 and action_dict[key2] == 1:
             if verbose:
@@ -164,7 +164,7 @@ class MinecraftActionTokenizer:
             return self.action_vocab[null_key]
 
     def get_action_index_from_actiondict(
-        self, action_dict: Dict[str, Union[int, np.ndarray]], action_vocab_offset: int = 0, verbose: bool = False
+        self, action_dict: dict[str, int | np.ndarray], action_vocab_offset: int = 0, verbose: bool = False
     ):
         if not hasattr(self, "action_vocab"):
             self.make_action_vocab(action_vocab_offset=action_vocab_offset, verbose=verbose)

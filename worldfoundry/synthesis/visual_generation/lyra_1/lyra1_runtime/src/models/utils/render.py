@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 from typing import Tuple
+
 import einops
-from einops import rearrange
-from plyfile import PlyData, PlyElement
 import kiui
 import kiui.op
 import numpy as np
-
+import torch
+from einops import rearrange
+from plyfile import PlyData, PlyElement
 from src.models.utils.data import ray_condition
 from src.models.utils.token_pruning import process_tensors
 
@@ -29,8 +29,8 @@ from src.models.utils.token_pruning import process_tensors
 def get_plucker_embedding_and_rays(
     intrinsics_input: torch.Tensor,
     c2ws_input: torch.Tensor,
-    img_size: Tuple[int, int],
-    patch_size_out_factor: Tuple[int, int, int],
+    img_size: tuple[int, int],
+    patch_size_out_factor: tuple[int, int, int],
     flip_flag: torch.Tensor,
     get_batch_index: bool = True,
     dtype: torch.dtype = None,
@@ -287,12 +287,12 @@ def save_ply_orig(gaussians, path, compatible=True, scale_factor=None, prune_fac
     l = ["x", "y", "z"]
     # All channels except the 3 DC
     for i in range(f_dc.shape[1]):
-        l.append("f_dc_{}".format(i))
+        l.append(f"f_dc_{i}")
     l.append("opacity")
     for i in range(scales.shape[1]):
-        l.append("scale_{}".format(i))
+        l.append(f"scale_{i}")
     for i in range(rotations.shape[1]):
-        l.append("rot_{}".format(i))
+        l.append(f"rot_{i}")
 
     dtype_full = [(attribute, "f4") for attribute in l]
 

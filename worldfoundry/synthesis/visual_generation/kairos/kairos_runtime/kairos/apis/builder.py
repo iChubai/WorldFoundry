@@ -1,7 +1,7 @@
 import copy
+
 import torch.nn as nn
 from mmengine.registry import Registry
-
 
 PIPELINES_API = Registry("model_pipeline")
 KAIROS_PROCESSOR = Registry("kairos_processor")

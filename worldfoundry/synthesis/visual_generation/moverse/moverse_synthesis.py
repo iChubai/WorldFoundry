@@ -61,7 +61,7 @@ class MoVerseSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "MoVerseSynthesis":
+    ) -> MoVerseSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -333,8 +333,8 @@ __all__ = [
     "DEFAULT_FLUX_REPO",
     "DEFAULT_MOVERSE_REPO",
     "DEFAULT_WAN_REPO",
-    "MoVerseSynthesis",
     "OFFICIAL_SOURCE_REPO",
     "UPSTREAM_REVISION",
+    "MoVerseSynthesis",
     "runtime_root",
 ]

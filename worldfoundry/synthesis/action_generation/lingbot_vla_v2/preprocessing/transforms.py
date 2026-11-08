@@ -1,16 +1,17 @@
 """LingBot-VLA v2 inference tensor transforms."""
 
-from typing import Dict
+import math
 from pathlib import Path
+from typing import Dict
 
+import einops
 import numpy as np
 import torch
-import math
-import einops
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from torchvision.transforms import v2
+
 from . import logging as logging_utils
 
 logger = logging_utils.get_logger(__name__)
@@ -45,8 +46,8 @@ def dict_apply(func, d):
 class Normalizer:
     def __init__(
         self,
-        norm_stats: Dict[str, Dict[str, np.ndarray]],
-        norm_type: Dict[str, str] | None = None,
+        norm_stats: dict[str, dict[str, np.ndarray]],
+        norm_type: dict[str, str] | None = None,
     ):
         self.norm_stats = dict_apply(lambda x: np.array(x), norm_stats)
         self.norm_type = norm_type or {}
@@ -74,7 +75,7 @@ class Normalizer:
 
         return stat
 
-    def normalize(self, data: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
+    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, torch.Tensor]:
         normalized_data = {}
         for key, value in data.items():
             if key in self.norm_stats:
@@ -133,7 +134,7 @@ class Normalizer:
                 normalized_data[key] = value
         return normalized_data
 
-    def unnormalize(self, data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def unnormalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """
         Unnormalize the given data using stored normalization statistics.
 
@@ -445,9 +446,9 @@ def prepare_language(config, language_tokenizer, observation: dict[str, Tensor])
         lang_tokens (torch.Tensor): (*b, l) language tokens
         lang_masks (torch.Tensor): (*b, l) masks for language tokens, True if token is present, False if missing
     """
-    lang_tokens = observation.get("lang_tokens", None)
-    lang_masks = observation.get("lang_masks", None)
-    prompt = observation.get("prompt", None)
+    lang_tokens = observation.get("lang_tokens")
+    lang_masks = observation.get("lang_masks")
+    prompt = observation.get("prompt")
 
     # either provide `prompt` or (`lang_tokens`, `lang_masks`)
     if prompt is None and (lang_tokens is None or lang_masks is None):

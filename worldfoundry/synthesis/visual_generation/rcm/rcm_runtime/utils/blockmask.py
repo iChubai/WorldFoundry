@@ -4,14 +4,16 @@
 # worldfoundry/core/attention/sparse/block_pattern.py so every causal video runtime
 # shares one chunk-schedule definition. They are re-exported here unchanged so
 # upstream call sites keep working.
+import os
 from dataclasses import replace
 from functools import partial
-import os
-from typing import Optional, Literal, Dict, Tuple, List
+from typing import Dict, List, Literal, Optional, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.attention.flex_attention import flex_attention as torch_flex_attention, create_block_mask
+from torch.nn.attention.flex_attention import create_block_mask
+from torch.nn.attention.flex_attention import flex_attention as torch_flex_attention
 
 from worldfoundry.core.attention.sparse.block_pattern import AttnMaskSpec, BlockPattern, build_mask_fn
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.attention import attention
@@ -91,7 +93,7 @@ def _cuda_compute_capability(device: torch.device) -> int:
     return 0
 
 
-def _flex_block_size(mask_block_size, device: torch.device) -> Tuple[int, int]:
+def _flex_block_size(mask_block_size, device: torch.device) -> tuple[int, int]:
     if isinstance(mask_block_size, tuple):
         return mask_block_size
     if os.environ.get("RCM_FLEX_BACKEND", "auto").lower() == "flash" and _cuda_compute_capability(device) >= 100:
@@ -113,7 +115,7 @@ class FlexOrSdpaLocalAttention(nn.Module):
         flex_attn=flex_attention_op,
         mask_block_size: int = 128,
         compile_block_mask: bool = True,
-        backend: Optional[Literal["flex", "magi"]] = None,
+        backend: Literal["flex", "magi"] | None = None,
     ):
         super().__init__()
         self.attn = attn
@@ -123,8 +125,8 @@ class FlexOrSdpaLocalAttention(nn.Module):
         self.backend = (backend or os.environ.get("RCM_ATTENTION_BACKEND", "flex")).lower()
         if self.backend not in {"flex", "magi"}:
             raise ValueError(f"Unsupported attention backend {self.backend!r}; expected flex or magi")
-        self._bm_cache: Dict[Tuple, object] = {}
-        self._magi_cache: Dict[Tuple, Tuple[torch.Tensor, torch.Tensor]] = {}
+        self._bm_cache: dict[tuple, object] = {}
+        self._magi_cache: dict[tuple, tuple[torch.Tensor, torch.Tensor]] = {}
 
     def clear_mask_cache(self):
         self._bm_cache.clear()
@@ -166,7 +168,7 @@ class FlexOrSdpaLocalAttention(nn.Module):
             self._magi_cache[key] = cached
         return cached
 
-    def forward(self, q, k, v, attn_meta: Optional[AttnMaskSpec] = None, **_ignored):
+    def forward(self, q, k, v, attn_meta: AttnMaskSpec | None = None, **_ignored):
         # q,k,v: [B, S, H, D]
         B, Q, H, D = q.shape
         KV = k.shape[1]
@@ -182,7 +184,7 @@ class FlexOrSdpaLocalAttention(nn.Module):
             pat = spec.pattern
             q_blk = spec.q_block_offset
 
-            if (Q == pat.get_block_tokens(q_blk)) and (KV <= pat.blocks_to_tokens(q_blk + 1)):
+            if (pat.get_block_tokens(q_blk) == Q) and (pat.blocks_to_tokens(q_blk + 1) >= KV):
                 return self.attn(q, k, v)
 
         if self.backend == "magi":
@@ -222,11 +224,11 @@ class FlexOrSdpaLocalAttention(nn.Module):
 def visualize_attn_mask_spec(
     local_attn,
     spec,
-    q_blocks: Optional[int] = None,
-    kv_blocks: Optional[int] = None,
+    q_blocks: int | None = None,
+    kv_blocks: int | None = None,
     figsize=(7, 7),
-    ax: Optional[object] = None,
-    title: Optional[str] = None,
+    ax: object | None = None,
+    title: str | None = None,
     show_block_grid: bool = True,
 ):
     import matplotlib.pyplot as plt

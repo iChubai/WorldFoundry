@@ -1,14 +1,14 @@
-import cv2
-import time
-import torchvision.transforms.functional as TF
-import torch
-import numpy as np
-import subprocess
-from functools import lru_cache
-import cv2
-from PIL import Image
-import requests
 import json
+import subprocess
+import time
+from functools import lru_cache
+
+import cv2
+import numpy as np
+import requests
+import torch
+import torchvision.transforms.functional as TF
+from PIL import Image
 
 
 def get_rotation_metadata(video_path):
@@ -64,7 +64,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
         except Exception as e:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            raise IOError(f"Failed to download video from URL: {e}")
+            raise OSError(f"Failed to download video from URL: {e}")
 
     rotation = get_rotation_metadata(video_path)
     print("rotation", rotation)
@@ -78,7 +78,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
         # Get the original frame count before resampling
         original_cap = cv2.VideoCapture(video_path)
         if not original_cap.isOpened():
-            raise IOError(f"Cannot open original video file")
+            raise OSError("Cannot open original video file")
 
         original_frame_count = int(original_cap.get(cv2.CAP_PROP_FRAME_COUNT))
         original_fps = original_cap.get(cv2.CAP_PROP_FPS)
@@ -92,7 +92,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
                 "-i",
                 video_path,
                 "-filter:v",
-                f"fps=16",
+                "fps=16",
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -108,7 +108,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
         # Now read the resampled video
         cap = cv2.VideoCapture(resampled_path)
         if not cap.isOpened():
-            raise IOError(f"Cannot open resampled video file")
+            raise OSError("Cannot open resampled video file")
 
         frames = []
         t = time.time()

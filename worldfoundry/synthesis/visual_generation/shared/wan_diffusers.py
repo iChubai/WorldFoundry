@@ -10,16 +10,15 @@ from diffusers.utils import logging
 from diffusers.utils.torch_utils import randn_tensor
 from torch.nn import functional as F
 
-
 logger = logging.get_logger(__name__)
 
 
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     """Configure an inference scheduler and return its effective timesteps."""
@@ -85,8 +84,8 @@ class WanDiffusersInferenceMixin:
         prompt=None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         device = device or self._execution_device
         dtype = dtype or self.text_encoder.dtype
@@ -126,7 +125,7 @@ class WanDiffusersInferenceMixin:
             sequence_length,
             -1,
         )
-        return [value[:length] for value, length in zip(embeddings, sequence_lengths)]
+        return [value[:length] for value, length in zip(embeddings, sequence_lengths, strict=False)]
 
     def encode_prompt(
         self,
@@ -137,8 +136,8 @@ class WanDiffusersInferenceMixin:
         prompt_embeds=None,
         negative_prompt_embeds=None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         device = device or self._execution_device
         prompt = [prompt] if isinstance(prompt, str) else prompt

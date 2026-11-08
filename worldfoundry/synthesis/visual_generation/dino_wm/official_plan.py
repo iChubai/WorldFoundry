@@ -1,24 +1,31 @@
 from __future__ import annotations
 
-import os
-import gym
 import json
-import hydra
-import random
-import torch
-import pickle
 import logging
+import os
+import pickle
+import random
 import warnings
-import numpy as np
 from itertools import product
 from pathlib import Path
+
+import gym
+import hydra
+import numpy as np
+import torch
 from einops import rearrange
 from omegaconf import OmegaConf, open_dict
 
+# isort: split
 from env.venv import SubprocVectorEnv
+
+# isort: split
+# isort: split
 from custom_resolvers import replace_slash
-from preprocessor import Preprocessor
+
+# isort: split
 from inference_planning.evaluator import PlanEvaluator
+from preprocessor import Preprocessor
 from utils import cfg_to_dict, seed
 
 warnings.filterwarnings("ignore")
@@ -444,7 +451,7 @@ def planning_main(cfg_dict):
 
     ckpt_base_path = cfg_dict["ckpt_base_path"]
     model_path = f"{ckpt_base_path}/outputs/{cfg_dict['model_name']}/"
-    with open(os.path.join(model_path, "hydra.yaml"), "r") as f:
+    with open(os.path.join(model_path, "hydra.yaml")) as f:
         model_cfg = OmegaConf.load(f)
 
     _use_vendored_dataset_modules(model_cfg)

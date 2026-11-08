@@ -1,4 +1,5 @@
 import math
+
 import torch
 import torch.distributed as dist
 from einops import rearrange
@@ -156,7 +157,6 @@ class ParallelVAEWrapper(nn.Module):
 
         if self.rank == 0:
             print(f"[CP VAE] Output T: {final_output.shape[2]} (Target: {valid_total_t})")
-            pass
 
         return final_output
 
@@ -186,7 +186,7 @@ class ParallelVAEWrapper(nn.Module):
         if using_sp:
             images = self.decode_dist(latents, self.world_size, self.rank, split_dim)
         else:
-            print(f"Fall back to naive decode mode")
+            print("Fall back to naive decode mode")
             images = self.vae.decode(latents, device, tiled, tile_size, tile_stride)
         return images
 

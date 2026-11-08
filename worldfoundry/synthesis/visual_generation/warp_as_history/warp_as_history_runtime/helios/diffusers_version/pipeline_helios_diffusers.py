@@ -13,20 +13,19 @@ from __future__ import annotations
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import html
 import math
+from collections.abc import Callable
 from itertools import accumulate
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import regex as re
 import torch
 import torch.nn.functional as F
-from transformers import AutoTokenizer, UMT5EncoderModel
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
+from transformers import AutoTokenizer, UMT5EncoderModel
 
 try:
     from diffusers.loaders import HeliosLoraLoaderMixin
@@ -40,8 +39,9 @@ except ImportError:
 
 
 from diffusers.models import AutoencoderKLWan
-from .transformer_helios_diffusers import HeliosTransformer3DModel
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+
+from .transformer_helios_diffusers import HeliosTransformer3DModel
 
 try:
     from diffusers.schedulers import HeliosScheduler
@@ -56,13 +56,11 @@ if not hasattr(_diffusers, "HeliosScheduler"):
     _diffusers.HeliosScheduler = HeliosScheduler
 if not hasattr(_diffusers, "HeliosDMDScheduler"):
     _diffusers.HeliosDMDScheduler = HeliosScheduler
-from diffusers.utils import is_ftfy_available, is_torch_xla_available, logging, replace_example_docstring
+from dataclasses import dataclass
+
+from diffusers.utils import BaseOutput, is_ftfy_available, is_torch_xla_available, logging, replace_example_docstring
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
-
-
-from dataclasses import dataclass
-from diffusers.utils import BaseOutput
 
 
 @dataclass
@@ -258,7 +256,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
 
         prompt_embeds = self.text_encoder(text_input_ids.to(device), mask.to(device)).last_hidden_state
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
-        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0
         )

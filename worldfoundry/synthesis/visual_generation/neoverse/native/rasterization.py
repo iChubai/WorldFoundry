@@ -1,6 +1,7 @@
 """NeoVerse Gaussian rasterization components."""
 
 from typing import Dict, Optional, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -50,8 +51,6 @@ except ModuleNotFoundError as error:
     class DefaultStrategy:
         """Default strategy implementation."""
 
-        pass
-
     def rasterization(*args, **kwargs):
         """Rasterization."""
         raise ImportError(
@@ -59,10 +58,10 @@ except ModuleNotFoundError as error:
         ) from _GSPLAT_IMPORT_ERROR
 
 
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils import act_gs, sh_utils
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.frustum import (
     calculate_unprojected_mask,
 )
-from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils import act_gs, sh_utils
 
 from .geometry import (
     closed_form_inverse_se3,
@@ -81,18 +80,18 @@ class Gaussians:
         opacities: Float[Tensor, " *batch"],
         scales: Float[Tensor, "*batch 3"],
         rotations: Float[Tensor, "*batch 4"],
-        confidences: Optional[Float[Tensor, "*batch"]] = None,
+        confidences: Float[Tensor, "*batch"] | None = None,
         timestamp: int = 0,
         life_span: Float[Tensor, "*batch"] | float = 1.0,
         life_span_gamma: float = 0.0,
-        forward_timestamp: Optional[int] = None,
-        forward_vel: Optional[Float[Tensor, "*batch 3"]] = None,
-        forward_scales: Optional[Float[Tensor, "*batch 3"]] = None,
-        forward_rotations: Optional[Float[Tensor, "*batch 3"]] = None,
-        backward_timestamp: Optional[int] = None,
-        backward_vel: Optional[Float[Tensor, "*batch 3"]] = None,
-        backward_scales: Optional[Float[Tensor, "*batch 3"]] = None,
-        backward_rotations: Optional[Float[Tensor, "*batch 3"]] = None,
+        forward_timestamp: int | None = None,
+        forward_vel: Float[Tensor, "*batch 3"] | None = None,
+        forward_scales: Float[Tensor, "*batch 3"] | None = None,
+        forward_rotations: Float[Tensor, "*batch 3"] | None = None,
+        backward_timestamp: int | None = None,
+        backward_vel: Float[Tensor, "*batch 3"] | None = None,
+        backward_scales: Float[Tensor, "*batch 3"] | None = None,
+        backward_rotations: Float[Tensor, "*batch 3"] | None = None,
     ):
         """Init.
 
@@ -257,11 +256,12 @@ class Gaussians:
             target_timestamp: The target timestamp.
             mask: The mask.
         """
-        if self.timestamp == -1 or target_timestamp == self.timestamp:
-            transitioned_harmonics = self.harmonics[mask]
-        elif target_timestamp > self.timestamp and target_timestamp < self.forward_timestamp:
-            transitioned_harmonics = self.harmonics[mask]
-        elif target_timestamp < self.timestamp and target_timestamp > self.backward_timestamp:
+        if (
+            self.timestamp == -1
+            or target_timestamp == self.timestamp
+            or (target_timestamp > self.timestamp and target_timestamp < self.forward_timestamp)
+            or (target_timestamp < self.timestamp and target_timestamp > self.backward_timestamp)
+        ):
             transitioned_harmonics = self.harmonics[mask]
         else:
             transitioned_harmonics = self.harmonics[[]]
@@ -496,9 +496,9 @@ class Rasterizer:
                         and splats.forward_timestamp is not None
                         and timestamp_i < splats.forward_timestamp
                     ):
-                        if self.bidirection:
-                            render_flag = True
-                        elif abs(timestamp_i - splats.timestamp) <= abs(timestamp_i - splats.forward_timestamp):
+                        if self.bidirection or abs(timestamp_i - splats.timestamp) <= abs(
+                            timestamp_i - splats.forward_timestamp
+                        ):
                             render_flag = True
                         else:
                             render_flag = False
@@ -507,9 +507,9 @@ class Rasterizer:
                         and splats.backward_timestamp is not None
                         and timestamp_i > splats.backward_timestamp
                     ):
-                        if self.bidirection:
-                            render_flag = True
-                        elif abs(timestamp_i - splats.timestamp) < abs(timestamp_i - splats.backward_timestamp):
+                        if self.bidirection or abs(timestamp_i - splats.timestamp) < abs(
+                            timestamp_i - splats.backward_timestamp
+                        ):
                             render_flag = True
                         else:
                             render_flag = False
@@ -549,7 +549,7 @@ class Rasterizer:
         width: int,
         height: int,
         **kwargs,
-    ) -> Tuple[Tensor, Tensor, Dict]:
+    ) -> tuple[Tensor, Tensor, dict]:
         """Rasterize splats.
 
         Args:
@@ -699,11 +699,11 @@ class GaussianSplatRenderer(nn.Module):
         self,
         gs_feats: torch.Tensor,  # [B, S, 3, H, W]
         images: torch.Tensor,  # [B, S+V, 3, H, W]
-        predictions: Dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
-        views: Dict[str, torch.Tensor],
-        context_predictions: Dict[str, torch.Tensor],
+        predictions: dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
+        views: dict[str, torch.Tensor],
+        context_predictions: dict[str, torch.Tensor],
         is_inference: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Returns predictions with the following fields filled:
         - rendered_colors / rendered_depths / (rendered_alphas during training)

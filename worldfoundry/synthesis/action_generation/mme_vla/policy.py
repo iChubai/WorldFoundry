@@ -1,5 +1,5 @@
-from collections.abc import Sequence
 import time
+from collections.abc import Sequence
 from typing import Any
 
 import jax
@@ -8,7 +8,6 @@ import numpy as np
 
 from ..openpi import nnx_utils
 from ..openpi import transforms as _transforms
-
 from .memory import MemoryBuffer, MemoryBufferRecurrent
 from .modeling.model import HistoryPi0
 from .modeling.observation import HistAugObservation

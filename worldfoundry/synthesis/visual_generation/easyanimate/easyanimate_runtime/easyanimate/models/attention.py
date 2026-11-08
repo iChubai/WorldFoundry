@@ -169,9 +169,9 @@ class TemporalTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = None,
+        num_embeds_ada_norm: int | None = None,
         attention_bias: bool = False,
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -181,8 +181,8 @@ class TemporalTransformerBlock(nn.Module):
         norm_eps: float = 1e-5,
         final_dropout: bool = False,
         attention_type: str = "default",
-        positional_embeddings: Optional[str] = None,
-        num_positional_embeddings: Optional[int] = None,
+        positional_embeddings: str | None = None,
+        num_positional_embeddings: int | None = None,
         # motion module kwargs
         motion_module_type="VanillaGrid",
         motion_module_kwargs=None,
@@ -288,7 +288,7 @@ class TemporalTransformerBlock(nn.Module):
         self._chunk_size = None
         self._chunk_dim = 0
 
-    def set_chunk_feed_forward(self, chunk_size: Optional[int], dim: int):
+    def set_chunk_feed_forward(self, chunk_size: int | None, dim: int):
         # Sets chunk feed-forward
         self._chunk_size = chunk_size
         self._chunk_dim = dim
@@ -296,12 +296,12 @@ class TemporalTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
-        cross_attention_kwargs: Dict[str, Any] = None,
-        class_labels: Optional[torch.LongTensor] = None,
+        attention_mask: torch.FloatTensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        timestep: torch.LongTensor | None = None,
+        cross_attention_kwargs: dict[str, Any] = None,
+        class_labels: torch.LongTensor | None = None,
         num_frames: int = 16,
         height: int = 32,
         width: int = 32,
@@ -481,9 +481,9 @@ class SelfAttentionTemporalTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = None,
+        num_embeds_ada_norm: int | None = None,
         attention_bias: bool = False,
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -493,8 +493,8 @@ class SelfAttentionTemporalTransformerBlock(nn.Module):
         norm_eps: float = 1e-5,
         final_dropout: bool = False,
         attention_type: str = "default",
-        positional_embeddings: Optional[str] = None,
-        num_positional_embeddings: Optional[int] = None,
+        positional_embeddings: str | None = None,
+        num_positional_embeddings: int | None = None,
         qk_norm=False,
         after_norm=False,
     ):
@@ -591,7 +591,7 @@ class SelfAttentionTemporalTransformerBlock(nn.Module):
         self._chunk_size = None
         self._chunk_dim = 0
 
-    def set_chunk_feed_forward(self, chunk_size: Optional[int], dim: int):
+    def set_chunk_feed_forward(self, chunk_size: int | None, dim: int):
         # Sets chunk feed-forward
         self._chunk_size = chunk_size
         self._chunk_dim = dim
@@ -599,12 +599,12 @@ class SelfAttentionTemporalTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
-        cross_attention_kwargs: Dict[str, Any] = None,
-        class_labels: Optional[torch.LongTensor] = None,
+        attention_mask: torch.FloatTensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        timestep: torch.LongTensor | None = None,
+        cross_attention_kwargs: dict[str, Any] = None,
+        class_labels: torch.LongTensor | None = None,
     ) -> torch.FloatTensor:
         # Notice that normalization is always applied before the real computation in the following blocks.
         # 0. Self-Attention
@@ -780,7 +780,7 @@ class HunyuanDiTBlock(nn.Module):
         norm_elementwise_affine: bool = True,
         norm_eps: float = 1e-6,
         final_dropout: bool = False,
-        ff_inner_dim: Optional[int] = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = True,
         skip: bool = False,
         qk_norm: bool = True,
@@ -913,7 +913,7 @@ class HunyuanDiTBlock(nn.Module):
         self._chunk_size = None
         self._chunk_dim = 0
 
-    def set_chunk_feed_forward(self, chunk_size: Optional[int], dim: int = 0):
+    def set_chunk_feed_forward(self, chunk_size: int | None, dim: int = 0):
         # Sets chunk feed-forward
         self._chunk_size = chunk_size
         self._chunk_dim = dim
@@ -921,14 +921,14 @@ class HunyuanDiTBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        temb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        temb: torch.Tensor | None = None,
         image_rotary_emb=None,
         skip=None,
         num_frames: int = 1,
         height: int = 32,
         width: int = 32,
-        clip_encoder_hidden_states: Optional[torch.Tensor] = None,
+        clip_encoder_hidden_states: torch.Tensor | None = None,
         disable_image_rotary_emb_in_attn1=False,
     ) -> torch.Tensor:
         # Notice that normalization is always applied before the real computation in the following blocks.
@@ -1049,7 +1049,7 @@ class EasyAnimateDiTBlock(nn.Module):
         norm_elementwise_affine: bool = True,
         norm_eps: float = 1e-6,
         final_dropout: bool = True,
-        ff_inner_dim: Optional[int] = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = True,
         qk_norm: bool = True,
         after_norm: bool = False,
@@ -1121,7 +1121,7 @@ class EasyAnimateDiTBlock(nn.Module):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         num_frames=None,
         height=None,
         width=None,

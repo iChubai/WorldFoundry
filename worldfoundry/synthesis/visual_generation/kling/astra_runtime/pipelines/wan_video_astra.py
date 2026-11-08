@@ -1,26 +1,30 @@
-from ..models.model_manager import ModelManager
-from ..models.wan_video_dit import WanModel, RMSNorm, sinusoidal_embedding_1d
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
-    WanTextEncoder,
-    T5RelativeEmbedding,
-    T5LayerNorm,
-)
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
-    WanVideoVAE,
-    RMS_norm,
-    CausalConv3d,
-    Upsample,
-)
-from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter
-from worldfoundry.core.nn import FlowMatchScheduler
-from worldfoundry.base_models.diffusion_model.runners import StagedDiffusionPipeline
-from worldfoundry.core.vram import enable_vram_management, AutoWrappedModule, AutoWrappedLinear
-import torch, os
-from einops import rearrange
+import os
+from typing import Optional
+
 import numpy as np
+import torch
+from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
-from typing import Optional
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
+    CausalConv3d,
+    RMS_norm,
+    Upsample,
+    WanVideoVAE,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
+    T5LayerNorm,
+    T5RelativeEmbedding,
+    WanTextEncoder,
+)
+from worldfoundry.base_models.diffusion_model.runners import StagedDiffusionPipeline
+from worldfoundry.core.nn import FlowMatchScheduler
+from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule, enable_vram_management
+
+from ..models.model_manager import ModelManager
+from ..models.wan_video_dit import RMSNorm, WanModel, sinusoidal_embedding_1d
 
 
 class WanVideoAstraPipeline(StagedDiffusionPipeline):
@@ -418,8 +422,8 @@ def model_fn_wan_video(
     timestep: torch.Tensor,
     cam_emb: torch.Tensor,
     context: torch.Tensor,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     tea_cache: TeaCache = None,
     **kwargs,
 ):

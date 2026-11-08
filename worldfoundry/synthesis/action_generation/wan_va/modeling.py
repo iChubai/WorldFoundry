@@ -1,7 +1,10 @@
 # Inference-only Wan-VA source retained in-tree.
 # Copyright 2024-2025 The Robbyant Team Authors. All rights reserved.
 import math
+from collections.abc import Callable
 from copy import deepcopy
+from functools import partial
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -16,16 +19,15 @@ from diffusers.models.embeddings import (
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import FP32LayerNorm
 from einops import rearrange
-from typing import Callable, ClassVar
 from torch.nn.attention.flex_attention import (
-    _mask_mod_signature,
     BlockMask,
+    _mask_mod_signature,
+    and_masks,
     create_block_mask,
     flex_attention,
-    and_masks,
     or_masks,
 )
-from functools import partial
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:

@@ -7,11 +7,11 @@ import torch
 import torch.backends.cuda
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers.activations import get_activation
 
-from ..config import BaseConfig, StrEnum, D
-from .llm import AttentionType, ActivationType
-from torch.nn.attention import SDPBackend, sdpa_kernel
+from ..config import BaseConfig, D, StrEnum
+from .llm import ActivationType, AttentionType
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class VitConfig(BaseConfig):
     """Config for a vision transformer"""
 
     image_model_type: VisionBackboneType = VisionBackboneType.openai
-    image_default_input_size: Tuple[int, int] = (336, 336)
+    image_default_input_size: tuple[int, int] = (336, 336)
     image_patch_size: int = 14
     image_pos_patch_size: int = 14
     image_emb_dim: int = 1024
@@ -63,7 +63,7 @@ class VitConfig(BaseConfig):
     activation_checkpointing: bool = True
     """Allow activation checkpointing for each layer"""
 
-    init_path: Optional[str] = None
+    init_path: str | None = None
     """Path to initialize the ViT with"""
 
     resize_mode: str = "default"
@@ -146,7 +146,7 @@ class ViTMultiHeadDotProductAttention(nn.Module):
             bias=use_bias,
             device=device,
         )
-        self.attention_dropout: Optional[nn.Dropout] = None
+        self.attention_dropout: nn.Dropout | None = None
         if config.attention_dropout > 0:
             self.attention_dropout = nn.Dropout(config.attention_dropout)
         self.residual_dropout = nn.Dropout(config.residual_dropout)
@@ -178,7 +178,7 @@ class ViTMultiHeadDotProductAttention(nn.Module):
     def _merge_heads(self, hidden_states) -> torch.Tensor:
         return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))
 
-    def forward(self, inputs_q: torch.Tensor, inputs_kv: Optional[torch.Tensor] = None, attn_mask=None) -> torch.Tensor:
+    def forward(self, inputs_q: torch.Tensor, inputs_kv: torch.Tensor | None = None, attn_mask=None) -> torch.Tensor:
         if inputs_kv is not None:
             inputs_k = inputs_kv
             inputs_v = inputs_kv
@@ -276,7 +276,7 @@ class BlockCollection(nn.Module):
         for r in self.resblocks:
             r.reset_parameters()
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         hidden_states = []
         for r in self.resblocks:
             x = r(x)
@@ -296,7 +296,7 @@ class DinoBlockCollection(nn.Module):
         for r in self.resblocks:
             r.reset_parameters()
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         hidden_states = []
         for r in self.resblocks:
             x = r(x)
@@ -434,7 +434,7 @@ class VisionTransformer(nn.Module):
         x = x + torch.cat([cls_emb[None, :, :], pos_emb[None, :, :]], dim=1).to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """
@@ -507,7 +507,7 @@ class SiglipVisionTransformer(nn.Module):
         x = x + pos_emb[None, :, :].to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """
@@ -581,7 +581,7 @@ class DinoVisionTransformer(nn.Module):
         x = x + torch.cat([cls_emb[None, :, :], pos_emb[None, :, :]], dim=1).to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """

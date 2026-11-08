@@ -115,7 +115,7 @@ class AdaptiveAntiDrifting:
     def apply_frame_aware_corruption(
         history_latents: torch.Tensor,
         corruption_strength: float = 0.1,
-        generator: Optional[torch.Generator] = None,
+        generator: torch.Generator | None = None,
     ) -> torch.Tensor:
         noise = torch.randn_like(history_latents, generator=generator, device=history_latents.device)
         return history_latents + corruption_strength * noise

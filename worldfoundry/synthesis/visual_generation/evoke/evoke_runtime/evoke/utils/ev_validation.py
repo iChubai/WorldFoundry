@@ -84,7 +84,7 @@ def _extend_c2w_relative_replay(abs_c2w, total_frames):
     src_dtype = abs_c2w.dtype if hasattr(abs_c2w, "dtype") else np.float32
     a = np.asarray(abs_c2w, dtype=np.float64)
     M = a.shape[0]
-    if M >= total_frames:
+    if total_frames <= M:
         return a[:total_frames].astype(src_dtype)
     out = np.zeros((total_frames, 4, 4), dtype=np.float64)
     out[:M] = a
@@ -123,6 +123,7 @@ def load_pose_for_v2v(
     Also accepts `data` as an extrinsic key alias for `cam_c2w`.
     """
     import numpy as np
+
     from evoke.utils.inference_geometry import (
         resolve_intrinsic_source_resolution,
         transform_intrinsic_for_crop_resize,
@@ -197,7 +198,7 @@ def load_pose_for_v2v(
     return lingbot_Ks, lingbot_c2ws
 
 
-def _float_rgb_to_uint8(x) -> "np.ndarray":
+def _float_rgb_to_uint8(x) -> np.ndarray:
     """Convert float or uint8 array to uint8 RGB; auto-detects [-1,1], [0,1], or [0,255] range."""
     import numpy as np
 
@@ -215,7 +216,7 @@ def _float_rgb_to_uint8(x) -> "np.ndarray":
     return np.clip(arr_f, 0, 255).astype(np.uint8)
 
 
-def _to_np_uint8_frames(video) -> "list[np.ndarray]":
+def _to_np_uint8_frames(video) -> list[np.ndarray]:
     """Normalize any video type (tensor/ndarray/list of PIL/np/tensor) to list[H,W,3] uint8 RGB."""
     import numpy as np
 
@@ -606,7 +607,7 @@ def _load_gt_video_rgb_for_viz(
     target_fps: int = 24,
     source_fps: int = 30,
     start_seconds: float = 0.0,
-) -> "list[np.ndarray]":
+) -> list[np.ndarray]:
     """Load GT video frames via cv2, decode BGR->RGB, center-crop and resize. Returns list[H,W,3 uint8 RGB].
 
     Exactly one of num_target_frames or target_frame_indices must be provided.
@@ -701,7 +702,7 @@ def combine_gt_pred_with_cam_viz(
     pose_type: str = "vipe",
     panel_label_gt: str = "GT",
     panel_label_pred: str = "Pred",
-    warp_dump_dir: "str | None" = None,
+    warp_dump_dir: str | None = None,
     max_rotation_deg: float = 0.0,
     fallback_default_intrinsic: bool = False,
 ):
@@ -709,8 +710,9 @@ def combine_gt_pred_with_cam_viz(
 
     Returns list[np.ndarray] uint8 RGB; use save_rgb_video to write to disk.
     """
-    import numpy as np
     import time as _time
+
+    import numpy as np
 
     pred_frames = _to_np_uint8_frames(pred_video)
     n_pred = len(pred_frames)
@@ -854,7 +856,7 @@ def _load_warp_frames_from_dump_dir(
     target_height: int,
     target_width: int,
     kind: str = "warp",
-) -> "list[np.ndarray] | None":
+) -> list[np.ndarray] | None:
     """Read all chunk_NNN_<kind>.mp4 (kind='warp' or 'vis') from dump dir in order, return concatenated
     list[H,W,3] uint8 RGB or None. The visibility mask ('vis') is written grayscale but decodes as 3-ch."""
     import re

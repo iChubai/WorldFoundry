@@ -11,8 +11,9 @@ interface for model execution and artifact handling.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.media.processing.postprocess import VideoChunk
 from worldfoundry.synthesis.visual_generation.longvie.worldfoundry_runtime import (
@@ -91,7 +92,7 @@ class LongVieSynthesis(BaseSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "LongVieSynthesis":
+    ) -> LongVieSynthesis:
         """Loads a LongVie synthesis model from a pretrained path or options.
 
         This factory method configures and initializes a `LongVieOfficialRuntime`

@@ -11,7 +11,7 @@ class AbstractRegularizer(nn.Module):
     def __init__(self):
         super(AbstractRegularizer, self).__init__()
 
-    def forward(self, z: torch.Tensor) -> Tuple[torch.Tensor, dict]:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, dict]:
         raise NotImplementedError
 
 
@@ -20,7 +20,7 @@ class DiagonalGaussianRegularizer(AbstractRegularizer):
         super(DiagonalGaussianRegularizer, self).__init__()
         self.sample = sample
 
-    def forward(self, z: torch.Tensor) -> Tuple[torch.Tensor, dict]:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, dict]:
         posterior = DiagonalGaussianDistribution(z)
         if self.sample:
             z = posterior.sample()

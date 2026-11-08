@@ -10,7 +10,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_data_path
 
-
 VARIANT_CONFIGS = {
     "4.5b-base": ("4.5B/4.5B_base_config.json", "ckpt/magi/4.5B_base"),
     "4.5b-distill": ("4.5B/4.5B_distill_config.json", "ckpt/magi/4.5B_distill"),

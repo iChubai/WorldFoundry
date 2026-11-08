@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-
 import onnxruntime as ort
+
 from dwpose.onnxdet import inference_detector
 from dwpose.onnxpose import inference_pose
 

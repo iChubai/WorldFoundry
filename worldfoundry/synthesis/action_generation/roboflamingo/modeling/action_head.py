@@ -1,14 +1,15 @@
 # Inference-only RoboFlamingo source retained in-tree.
+import copy
 from typing import Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 from open_flamingo.src.helpers import PerceiverResampler
+
 from .normalizer import LinearNormalizer
 from .trajectory_gpt2 import get_gpt_model
 from .unets import ConditionalUnet1D, Progress, Silent, cosine_beta_schedule, extract
-import copy
 
 
 def lstm_decoder(in_features: int, hidden_size: int, num_layers: int, policy_rnn_dropout_p: float) -> torch.nn.Module:
@@ -113,7 +114,7 @@ class ActionDecoder(nn.Module):
         latent_plan: torch.Tensor,
         perceptual_emb: torch.Tensor,
         latent_goal: torch.Tensor,
-        robot_obs: Optional[torch.Tensor] = None,
+        robot_obs: torch.Tensor | None = None,
     ) -> torch.Tensor:
         raise NotImplementedError
 
@@ -125,7 +126,7 @@ class ActionDecoder(nn.Module):
         latent_plan: torch.Tensor,
         perceptual_emb: torch.Tensor,
         latent_goal: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         raise NotImplementedError
 
     def clear_hidden_state(self) -> None:
@@ -193,7 +194,7 @@ class FCDecoder(ActionDecoder):
     def forward(  # type: ignore
         self,
         input_feature: torch.Tensor,
-        h_0: Optional[torch.Tensor] = None,
+        h_0: torch.Tensor | None = None,
         state_tensor=None,
     ):
         if self.return_feature:
@@ -296,7 +297,7 @@ class DeterministicDecoder(ActionDecoder):
         self.hidden_state = None
 
     def forward(  # type: ignore
-        self, input_feature: torch.Tensor, h_0: Optional[torch.Tensor] = None, state_tensor=None, return_feature=False
+        self, input_feature: torch.Tensor, h_0: torch.Tensor | None = None, state_tensor=None, return_feature=False
     ):
         # reshape
         if input_feature.dim() == 3:
@@ -491,9 +492,7 @@ class GPTDecoder(ActionDecoder):
         return actions, gripper
 
     def get_pattern_name(self):
-        return "gpt_{}_".format(
-            self.hidden_size,
-        )
+        return f"gpt_{self.hidden_size}_"
 
 
 class GPTDecoderActPad(ActionDecoder):
@@ -612,9 +611,7 @@ class GPTDecoderActPad(ActionDecoder):
         return actions, gripper
 
     def get_pattern_name(self):
-        return "gpt_{}_".format(
-            self.hidden_size,
-        )
+        return f"gpt_{self.hidden_size}_"
 
 
 class DiffusionDecoder(ActionDecoder):
@@ -773,7 +770,7 @@ class DiffusionDecoder(ActionDecoder):
 
         x[cond_mask] = cond_data[cond_mask]
         progress = Progress(self.n_timesteps) if verbose else Silent()
-        for i in reversed(range(0, self.n_timesteps)):
+        for i in reversed(range(self.n_timesteps)):
             timesteps = torch.full((batch_size,), i, device=device, dtype=torch.long)
             # 1. predict model output and replace sample
             x = self.p_sample(x, timesteps, local_cond, global_cond, returns)

@@ -15,16 +15,16 @@ Action concatenation order (from oxe_data_converter.py):
 Each batch returns 6 samples with the same video but different world_vector actions.
 """
 
+import json
 import os
 import random
-import numpy as np
-from PIL import Image
 
+import numpy as np
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.transforms import functional as F
-import json
 
 from worldfoundry.synthesis.visual_generation.vid2world.config_paths import (
     resolve_runtime_asset,
@@ -117,7 +117,7 @@ class RTVidActionControl(Dataset):
         )
         self.val_file_set = set()
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
-            with open(self.val_file_list_path, "r") as f:
+            with open(self.val_file_list_path) as f:
                 self.val_file_set = set(json.load(f))
 
         print(f"Current directory: {os.getcwd()}")

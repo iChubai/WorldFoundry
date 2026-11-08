@@ -47,7 +47,7 @@ class EntityMatcher:
     def compute_embedding(
         self,
         image: np.ndarray,
-        mask: Optional[np.ndarray] = None,
+        mask: np.ndarray | None = None,
     ) -> torch.Tensor:
         """Compute foreground-only embedding for an entity image.
 
@@ -112,8 +112,8 @@ class EntityMatcher:
 
     def compute_similarity(
         self,
-        embedding1: Optional[torch.Tensor],
-        embedding2: Optional[torch.Tensor],
+        embedding1: torch.Tensor | None,
+        embedding2: torch.Tensor | None,
     ) -> float:
         """Compute cosine similarity between two embeddings.
 
@@ -131,8 +131,8 @@ class EntityMatcher:
     def is_same_entity(
         self,
         new_image: np.ndarray,
-        existing_embedding: Optional[torch.Tensor],
-        new_mask: Optional[np.ndarray] = None,
+        existing_embedding: torch.Tensor | None,
+        new_mask: np.ndarray | None = None,
     ) -> tuple[bool, float]:
         """Check if a new image matches an existing entity.
 
@@ -151,9 +151,9 @@ class EntityMatcher:
     def find_matching_entity(
         self,
         new_image: np.ndarray,
-        existing_embeddings: dict[str, Optional[torch.Tensor]],
-        new_mask: Optional[np.ndarray] = None,
-    ) -> tuple[Optional[str], float]:
+        existing_embeddings: dict[str, torch.Tensor | None],
+        new_mask: np.ndarray | None = None,
+    ) -> tuple[str | None, float]:
         """Find if a new image matches any existing entity.
 
         Args:

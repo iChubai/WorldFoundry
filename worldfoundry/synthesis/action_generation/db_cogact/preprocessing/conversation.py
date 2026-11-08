@@ -1,6 +1,6 @@
 # Inference-only DB-CogACT source retained in-tree.
 import dataclasses
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import List
 
 import torch
@@ -58,8 +58,8 @@ class Conversation:
     """A class that keeps all conversation history."""
 
     system: str
-    roles: List[str]
-    messages: List[List[str]]
+    roles: list[str]
+    messages: list[list[str]]
     offset: int
     sep_style: SeparatorStyle
     sep: str = "###"
@@ -131,6 +131,7 @@ class Conversation:
                 if isinstance(msg, tuple):
                     import base64
                     from io import BytesIO
+
                     from PIL import Image
 
                     msg, image, image_process_mode = msg

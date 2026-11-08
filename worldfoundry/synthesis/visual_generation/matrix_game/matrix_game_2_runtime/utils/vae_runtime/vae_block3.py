@@ -1,13 +1,14 @@
 from typing import List
-from einops import rearrange
+
 import torch
 import torch.nn as nn
+from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
     AttentionBlock,
     CausalConv3d,
-    RMS_norm,
     ResidualBlock,
+    RMS_norm,
     Upsample,
 )
 
@@ -158,7 +159,7 @@ class VAEDecoderWrapper(nn.Module):
         self.z_dim = 16
         self.conv2 = CausalConv3d(self.z_dim, self.z_dim, 1)
 
-    def forward(self, z: torch.Tensor, *feat_cache: List[torch.Tensor]):
+    def forward(self, z: torch.Tensor, *feat_cache: list[torch.Tensor]):
         # from [batch_size, num_frames, num_channels, height, width]
         # to [batch_size, num_channels, num_frames, height, width]
         z = z.permute(0, 2, 1, 3, 4)
@@ -223,7 +224,7 @@ class VAEDecoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -243,7 +244,7 @@ class VAEDecoder3d(nn.Module):
         # output blocks
         self.head = nn.Sequential(RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, 3, 3, padding=1))
 
-    def forward(self, x: torch.Tensor, feat_cache: List[torch.Tensor]):
+    def forward(self, x: torch.Tensor, feat_cache: list[torch.Tensor]):
         feat_idx = [0]
 
         # conv1

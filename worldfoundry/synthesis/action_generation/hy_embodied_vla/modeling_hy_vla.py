@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (C) 2026 Tencent.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +37,7 @@ from contextlib import suppress
 from pathlib import Path
 
 import torch
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
 from torch import Tensor, nn
 from transformers import AutoConfig, AutoTokenizer
 
@@ -88,7 +87,7 @@ def _is_self_contained_vlm_dir(path: str) -> bool:
         # Tokenizer-only dir: still usable as a tokenizer source.
         return True
     try:
-        with open(cfg_path, "r", encoding="utf-8") as fp:
+        with open(cfg_path, encoding="utf-8") as fp:
             data = json.load(fp)
     except (OSError, ValueError):
         return False
@@ -273,7 +272,7 @@ def _load_vlm_autoconfig(config_or_path):
     if not os.path.isfile(cfg_path):
         raise FileNotFoundError(f"config.json not found in local VLM directory {model_path!r}")
 
-    with open(cfg_path, "r", encoding="utf-8") as fp:
+    with open(cfg_path, encoding="utf-8") as fp:
         data = json.load(fp)
 
     data.pop("auto_map", None)
@@ -545,7 +544,7 @@ class HyVLA(nn.Module):
                     ckpt_cfg_path = str(cand)
             if ckpt_cfg_path is None:
                 raise FileNotFoundError(f"config.json not found in {checkpoint_dir}")
-            with open(ckpt_cfg_path, "r", encoding="utf-8") as _fp:
+            with open(ckpt_cfg_path, encoding="utf-8") as _fp:
                 _ckpt_cfg = json.load(_fp)
             _embedded = _ckpt_cfg.get("vlm_config_dict")
             if _embedded and not getattr(config, "vlm_config_dict", None):
@@ -1252,4 +1251,4 @@ class HyVLAFlowMatching(nn.Module):
         return v_t, att_vis_output
 
 
-__all__ = ["HyVLAConfig", "HyVLA", "HyVLAFlowMatching"]
+__all__ = ["HyVLA", "HyVLAConfig", "HyVLAFlowMatching"]

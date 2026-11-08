@@ -1,9 +1,10 @@
-import torch
 import os
+
+import torch
 import torch.distributed as dist
 
 
-class ZPManager(object):
+class ZPManager:
     def __init__(self, zp_size=8):
         self.rank = int(os.getenv("RANK", "0"))
         self.world_size = int(os.getenv("WORLD_SIZE", "1"))

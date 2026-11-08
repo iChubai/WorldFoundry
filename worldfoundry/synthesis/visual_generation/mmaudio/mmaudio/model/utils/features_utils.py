@@ -5,13 +5,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from open_clip import create_model_from_pretrained
-from torchvision.transforms import Normalize
-
 from mmaudio.ext.autoencoder import AutoEncoderModule
 from mmaudio.ext.mel_converter import get_mel_converter
 from mmaudio.ext.synchformer import Synchformer
 from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
+from open_clip import create_model_from_pretrained
+from torchvision.transforms import Normalize
+
 from worldfoundry.synthesis.visual_generation.mmaudio.checkpoints import dfn5b_open_clip_ref
 
 
@@ -36,9 +36,9 @@ class FeaturesUtils(nn.Module):
     def __init__(
         self,
         *,
-        tod_vae_ckpt: Optional[str] = None,
-        bigvgan_vocoder_ckpt: Optional[str] = None,
-        synchformer_ckpt: Optional[str] = None,
+        tod_vae_ckpt: str | None = None,
+        bigvgan_vocoder_ckpt: str | None = None,
+        synchformer_ckpt: str | None = None,
         enable_conditions: bool = True,
         mode=Literal["16k", "44k"],
         need_vae_encoder: bool = True,

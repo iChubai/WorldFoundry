@@ -7,9 +7,9 @@ https://github.com/FoundationVision/VAR
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from src.Open_MAGVIT2.modules.util import SOSProvider
 
 from worldfoundry.core.model_loading.factory import instantiate_from_config
-from src.Open_MAGVIT2.modules.util import SOSProvider
 
 
 def disabled_train(self, mode=True):
@@ -71,7 +71,7 @@ class Net2NetTransformer(nn.Module):
         for k in sd.keys():
             for ik in ignore_keys:
                 if k.startswith(ik):
-                    print("Deleting key {} from state_dict.".format(k))
+                    print(f"Deleting key {k} from state_dict.")
                     del sd[k]
         self.load_state_dict(sd, strict=False)
         print(f"Restored from {path}")

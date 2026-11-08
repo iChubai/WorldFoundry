@@ -7,7 +7,6 @@ import torch
 
 from .. import image_tensor as image_tools
 
-
 IMAGE_KEYS = ("base_0_rgb", "left_wrist_0_rgb", "right_wrist_0_rgb")
 IMAGE_RESOLUTION = (224, 224)
 

@@ -12,9 +12,9 @@ import os
 import subprocess
 import tempfile
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
-
+from typing import Any
 
 N1_RELEASE_COMMIT = "755876a9afdb41ca6eb6383b36f4a0adb085c73f"
 

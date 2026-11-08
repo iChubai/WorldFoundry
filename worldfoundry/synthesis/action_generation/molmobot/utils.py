@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Optional, Sequence, TypeVar, Union
+from typing import Optional, TypeVar, Union
 
 from .torch_utils import barrier, get_global_rank
 
@@ -21,7 +22,7 @@ def ensure_multiple_of(value: int, multiple: int) -> int:
     return multiple * math.ceil(value / multiple)
 
 
-def split_into_groups(values: Sequence[T], max_group_size: Optional[int]):
+def split_into_groups(values: Sequence[T], max_group_size: int | None):
     if max_group_size is None:
         return [values]
     if max_group_size <= 0:
@@ -53,10 +54,10 @@ def _looks_like_hf_repo_id(value: str) -> bool:
 
 def resource_path(
     folder: PathOrStr,
-    fname: Optional[str] = None,
-    local_cache: Optional[PathOrStr] = None,
+    fname: str | None = None,
+    local_cache: PathOrStr | None = None,
     progress=None,
-    cache_dir: Optional[PathOrStr] = None,
+    cache_dir: PathOrStr | None = None,
     quiet: bool = False,
 ) -> Path:
     """Resolve a staged local path or hfd model asset without network access."""
@@ -94,7 +95,7 @@ def resource_path(
     raise FileNotFoundError(f"Cannot resolve {fname!r} from local folder or model repository {folder_value!r}.")
 
 
-def rank0_resource_path(device, *args, **kwargs) -> Optional[Path]:
+def rank0_resource_path(device, *args, **kwargs) -> Path | None:
     """Resolve once per distributed job from the shared local model store."""
     del device
     result = resource_path(*args, **kwargs) if get_global_rank() == 0 else None

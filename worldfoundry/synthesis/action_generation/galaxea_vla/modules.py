@@ -40,7 +40,7 @@ class ActionEncoder(nn.Module):
     def forward(
         self,
         action: torch.FloatTensor,
-        time_emb: Optional[torch.FloatTensor] = None,
+        time_emb: torch.FloatTensor | None = None,
     ) -> torch.FloatTensor:
         # [Batch_Size, Seq_Len, Width]
         emb = self.linear_1(action)

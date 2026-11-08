@@ -2,44 +2,50 @@ import os
 
 os.environ["HF_HOME"] = os.path.abspath(os.path.realpath(os.path.join(os.path.dirname(__file__), "./hf_download")))
 
-import torch
-import traceback
-import einops
-import safetensors.torch as sf
-import numpy as np
 import math
+import traceback
 
-from PIL import Image
+import einops
+import numpy as np
+import safetensors.torch as sf
+import torch
 from diffusers import AutoencoderKLHunyuanVideo
-from transformers import LlamaModel, CLIPTextModel, LlamaTokenizerFast, CLIPTokenizer
 from diffusers_helper.hunyuan import encode_prompt_conds, vae_decode, vae_encode
-from diffusers_helper.utils import (
-    save_bcthw_as_mp4,
-    crop_or_pad_yield_mask,
-    soft_append_bcthw,
-    resize_and_center_crop,
-    state_dict_weighted_merge,
-    state_dict_offset_merge,
-    generate_timestamp,
-    find_nearest_bucket,
-    hf_clip_vision_encode,
-    AsyncStream,
-    async_run,
+from diffusers_helper.memory import (
+    DynamicSwapInstaller,
+    cpu,
+    fake_diffusers_current_device,
+    get_cuda_free_memory_gb,
+    gpu,
+    load_model_as_complete,
+    move_model_to_device_with_memory_preservation,
+    offload_model_from_device_for_memory_preservation,
+    unload_complete_models,
 )
 from diffusers_helper.model import HunyuanVideoTransformer3DModelPacked, enable_framepack_global_patches
 from diffusers_helper.sampling import sample_hunyuan
-from diffusers_helper.memory import (
-    cpu,
-    gpu,
-    get_cuda_free_memory_gb,
-    move_model_to_device_with_memory_preservation,
-    offload_model_from_device_for_memory_preservation,
-    fake_diffusers_current_device,
-    DynamicSwapInstaller,
-    unload_complete_models,
-    load_model_as_complete,
+from diffusers_helper.utils import (
+    AsyncStream,
+    async_run,
+    crop_or_pad_yield_mask,
+    find_nearest_bucket,
+    generate_timestamp,
+    hf_clip_vision_encode,
+    resize_and_center_crop,
+    save_bcthw_as_mp4,
+    soft_append_bcthw,
+    state_dict_offset_merge,
+    state_dict_weighted_merge,
 )
-from transformers import SiglipImageProcessor, SiglipVisionModel
+from PIL import Image
+from transformers import (
+    CLIPTextModel,
+    CLIPTokenizer,
+    LlamaModel,
+    LlamaTokenizerFast,
+    SiglipImageProcessor,
+    SiglipVisionModel,
+)
 
 # Modified by WorldFoundry: FramePack's process-global norm/accelerate patches are no
 # longer applied when diffusers_helper.model is merely imported; this official runtime

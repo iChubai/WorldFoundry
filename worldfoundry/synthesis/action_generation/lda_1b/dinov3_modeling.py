@@ -20,16 +20,17 @@
 # limitations under the License.
 
 import math
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import numpy as np
 import torch
 from torch import nn
-
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.pytorch_utils import compile_compatible_method_lru_cache
+
 from .dinov3_configuration import DINOv3ViTConfig
 
 
@@ -48,7 +49,7 @@ class DINOv3ViTEmbeddings(nn.Module):
             config.num_channels, config.hidden_size, kernel_size=config.patch_size, stride=config.patch_size
         )
 
-    def forward(self, pixel_values: torch.Tensor, bool_masked_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, pixel_values: torch.Tensor, bool_masked_pos: torch.Tensor | None = None) -> torch.Tensor:
         batch_size = pixel_values.shape[0]
         target_dtype = self.patch_embeddings.weight.dtype
 
@@ -99,9 +100,9 @@ def get_patches_center_coordinates(
 
 def augment_patches_center_coordinates(
     coords: torch.Tensor,
-    shift: Optional[float] = None,
-    jitter: Optional[float] = None,
-    rescale: Optional[float] = None,
+    shift: float | None = None,
+    jitter: float | None = None,
+    rescale: float | None = None,
 ) -> torch.Tensor:
     # Shift coords by adding a uniform value in [-shift, shift]
     if shift is not None:
@@ -188,7 +189,7 @@ def eager_attention_forward(
     query: torch.Tensor,
     key: torch.Tensor,
     value: torch.Tensor,
-    attention_mask: Optional[torch.Tensor],
+    attention_mask: torch.Tensor | None,
     scaling: float,
     dropout: float = 0.0,
     **kwargs,
@@ -272,10 +273,10 @@ class DINOv3ViTAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,
         **kwargs,
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Input shape: Batch x Time x Channel"""
 
         batch_size, patches, _ = hidden_states.size()
@@ -344,7 +345,7 @@ def drop_path(input: torch.Tensor, drop_prob: float = 0.0, training: bool = Fals
 class DINOv3ViTDropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
 
-    def __init__(self, drop_prob: Optional[float] = None) -> None:
+    def __init__(self, drop_prob: float | None = None) -> None:
         super().__init__()
         self.drop_prob = drop_prob
 
@@ -407,8 +408,8 @@ class DINOv3ViTLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,
     ) -> torch.Tensor:
         # Attention with residual connection
         residual = hidden_states
@@ -496,8 +497,8 @@ class DINOv3ViTModel(DINOv3ViTPreTrainedModel):
     def forward(
         self,
         pixel_values: torch.Tensor,
-        bool_masked_pos: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
+        bool_masked_pos: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
         **kwargs,
     ) -> BaseModelOutputWithPooling:
         r"""

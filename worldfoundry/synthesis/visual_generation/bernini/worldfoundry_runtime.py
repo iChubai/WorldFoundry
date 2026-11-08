@@ -9,9 +9,10 @@ import struct
 import sys
 import tempfile
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
@@ -435,7 +436,7 @@ def _cgroup_memory_available_bytes() -> int | None:
             stat_values = {
                 key: int(value)
                 for line in stat_path.read_text(encoding="utf-8").splitlines()
-                if len((parts := line.split())) == 2
+                if len(parts := line.split()) == 2
                 for key, value in (parts,)
             }
             inactive_file = next(
@@ -609,7 +610,9 @@ class BerniniRuntime:
                     gpu_free = [int(torch.cuda.mem_get_info(index)[0]) for index in indices]
                     if peak_cuda_weight:
                         required = int(peak_cuda_weight) + CUDA_WORKSPACE_RESERVE_BYTES
-                        insufficient = [(index, free) for index, free in zip(indices, gpu_free) if free < required]
+                        insufficient = [
+                            (index, free) for index, free in zip(indices, gpu_free, strict=False) if free < required
+                        ]
                         if insufficient:
                             rendered = ", ".join(
                                 f"cuda:{index}={free / 1024**3:.1f} GiB free" for index, free in insufficient
@@ -890,13 +893,13 @@ class BerniniRuntime:
 
 
 __all__ = [
-    "BerniniRuntime",
-    "BerniniVariant",
     "FULL_TASK_DEFAULTS",
     "MODEL_CONFIG_KEYS",
     "RENDERER_TASK_DEFAULTS",
     "UPSTREAM_REVISION",
     "VARIANTS",
+    "BerniniRuntime",
+    "BerniniVariant",
     "checkpoint_integrity_errors",
     "infer_task_type",
     "normalize_task_type",

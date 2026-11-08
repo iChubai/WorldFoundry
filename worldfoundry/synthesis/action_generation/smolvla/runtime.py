@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
@@ -108,8 +109,8 @@ class SmolVLARuntime:
         from accelerate import init_empty_weights
         from safetensors.torch import load_file
 
-        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
 
         from .configuration import SmolVLAConfig
         from .modeling import SmolVLAPolicy

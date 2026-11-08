@@ -12,11 +12,9 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 
 from worldfoundry.core.attention import scaled_dot_product_attention
 
-from .modeling_internlm2 import InternLM2MLP, InternLM2RMSNorm
-
 from .configuration_action_expert import ActionExpertConfig
-
 from .flash_attn_utils import load_flash_attn
+from .modeling_internlm2 import InternLM2MLP, InternLM2RMSNorm
 
 flash_attn_func, flash_attn_varlen_func = None, None
 pad_input, index_first_axis, unpad_input = None, None, None
@@ -127,15 +125,15 @@ class ActioinExpertAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        vlm_key_values: Tuple[torch.Tensor],
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        position_ids_k: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        vlm_key_values: tuple[torch.Tensor],
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        position_ids_k: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
         **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
@@ -233,14 +231,14 @@ class ActioinExpertAttentionFlashAttention2(ActioinExpertAttention):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        vlm_key_values: Tuple[torch.Tensor],
-        attention_mask: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        vlm_key_values: tuple[torch.Tensor],
+        attention_mask: torch.LongTensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
         **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         # InternLM2FlashAttention2 attention does not support output_attentions
         if "padding_mask" in kwargs:
             warnings.warn(
@@ -421,15 +419,15 @@ class ActionExpertDecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        vlm_key_values: Tuple[torch.Tensor],
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        position_ids_k: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        output_attentions: Optional[bool] = False,
-        use_cache: Optional[bool] = False,
+        vlm_key_values: tuple[torch.Tensor],
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        position_ids_k: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
+        output_attentions: bool | None = False,
+        use_cache: bool | None = False,
         **kwargs,
-    ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -619,14 +617,14 @@ class ActionExpertModel(ActionExpertPretrainedModel):
         state_action_traj: torch.FloatTensor,
         # vlm related inputs
         attention_mask: torch.Tensor = None,
-        vlm_key_values: Tuple[Tuple[torch.FloatTensor]] = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        vlm_key_values: tuple[tuple[torch.FloatTensor]] = None,
+        position_ids: torch.LongTensor | None = None,
         # output related args
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
     ):
         use_cache = use_cache if use_cache is not None else self.config.use_cache
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions

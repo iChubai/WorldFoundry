@@ -19,7 +19,7 @@ class EmbodimentSpecificLinear(nn.Module):
         nn.init.uniform_(self.weight, -k, k)
         nn.init.uniform_(self.bias, -k, k)
 
-    def _normalize_embodiment_id(self, embodiment_id: Optional[torch.Tensor], batch_size: int) -> torch.Tensor:
+    def _normalize_embodiment_id(self, embodiment_id: torch.Tensor | None, batch_size: int) -> torch.Tensor:
         if embodiment_id is None:
             embodiment_id = torch.zeros(batch_size, dtype=torch.long, device=self.weight.device)
         elif not isinstance(embodiment_id, torch.Tensor):
@@ -42,7 +42,7 @@ class EmbodimentSpecificLinear(nn.Module):
             )
         return embodiment_id
 
-    def forward(self, x: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, embodiment_id: torch.Tensor | None = None) -> torch.Tensor:
         embodiment_id = self._normalize_embodiment_id(embodiment_id, batch_size=x.shape[0])
         one_hot = F.one_hot(embodiment_id, num_classes=self.num_categories).to(dtype=self.weight.dtype)
         selected_weight = torch.einsum("bc,cij->bij", one_hot, self.weight)
@@ -67,7 +67,7 @@ class EmbodimentSpecificActionEncoder(nn.Module):
         self.act2 = nn.GELU()
         self.out_proj = nn.Linear(256, inner_dim)
 
-    def forward(self, action: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, action: torch.Tensor, embodiment_id: torch.Tensor | None = None) -> torch.Tensor:
         x = self.in_proj(action, embodiment_id=embodiment_id)
         x = self.act1(x)
         x = self.mid_proj(x)
@@ -86,7 +86,7 @@ class EmbodimentSpecificActionDecoder(nn.Module):
         self.act2 = nn.GELU()
         self.out_proj = EmbodimentSpecificLinear(128, action_dim, num_categories=num_embodiments, dtype=dtype)
 
-    def forward(self, action_states: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, action_states: torch.Tensor, embodiment_id: torch.Tensor | None = None) -> torch.Tensor:
         x = self.in_proj(action_states)
         x = self.act1(x)
         x = self.mid_proj(x)

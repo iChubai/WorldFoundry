@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 from PIL import Image
 
-from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.core.media.resolutions import VIDEO_RES_SIZE_INFO
+from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 
 from ...base_synthesis import BaseSynthesis
 
@@ -132,7 +133,7 @@ class WoWSynthesis(BaseSynthesis):
         synthesis_args: Any = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "WoWSynthesis":
+    ) -> WoWSynthesis:
         """Load the native WoW Wan checkpoint route by default.
 
         The official repository marks the Wan demo as recommended; its checkpoint
@@ -177,7 +178,7 @@ class WoWSynthesis(BaseSynthesis):
         synthesis_args: Any,
         device: str,
         **kwargs: Any,
-    ) -> "WoWSynthesis":
+    ) -> WoWSynthesis:
         if pretrained_model_path is None:
             raise FileNotFoundError("WoW Wan backend requires a local checkpoint folder.")
         model_root = _as_local_dir(pretrained_model_path, "WoW Wan checkpoint")
@@ -223,7 +224,7 @@ class WoWSynthesis(BaseSynthesis):
         synthesis_args: Any,
         device: str,
         **kwargs: Any,
-    ) -> "WoWSynthesis":
+    ) -> WoWSynthesis:
         model_size = str(_option(kwargs, synthesis_args, "model_size", "2B")).upper()
         if model_size != "2B":
             raise ValueError("WoW DiT exposes only the released 2B Cosmos Predict2 checkpoint")

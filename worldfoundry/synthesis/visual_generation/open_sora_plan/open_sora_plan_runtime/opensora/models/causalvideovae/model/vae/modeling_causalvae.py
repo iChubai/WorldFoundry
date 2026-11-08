@@ -1,20 +1,23 @@
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
+import os
+from typing import Tuple
+
+import torch
+import torch.nn as nn
+from diffusers.configuration_utils import register_to_config
+
 from ..modeling_videobase import VideoBaseAE
 from ..modules import Normalize
 from ..modules.ops import nonlinearity
-from typing import Tuple
-import torch.nn as nn
-from ..utils.module_utils import resolve_str_to_obj, Module
-from ..utils.distrib_utils import DiagonalGaussianDistribution
 from ..registry import ModelRegistry
-import torch
-from diffusers.configuration_utils import register_to_config
-import os
+from ..utils.distrib_utils import DiagonalGaussianDistribution
+from ..utils.module_utils import Module, resolve_str_to_obj
 
 
 class Encoder(nn.Module):
@@ -22,24 +25,24 @@ class Encoder(nn.Module):
         self,
         z_channels: int,
         hidden_size: int,
-        hidden_size_mult: Tuple[int] = (1, 2, 4, 4),
-        attn_resolutions: Tuple[int] = (16,),
+        hidden_size_mult: tuple[int] = (1, 2, 4, 4),
+        attn_resolutions: tuple[int] = (16,),
         conv_in: Module = "Conv2d",
         conv_out: Module = "CasualConv3d",
         attention: Module = "AttnBlock",
-        resnet_blocks: Tuple[Module] = (
+        resnet_blocks: tuple[Module] = (
             "ResnetBlock2D",
             "ResnetBlock2D",
             "ResnetBlock2D",
             "ResnetBlock3D",
         ),
-        spatial_downsample: Tuple[Module] = (
+        spatial_downsample: tuple[Module] = (
             "Downsample",
             "Downsample",
             "Downsample",
             "",
         ),
-        temporal_downsample: Tuple[Module] = ("", "", "TimeDownsampleRes2x", ""),
+        temporal_downsample: tuple[Module] = ("", "", "TimeDownsampleRes2x", ""),
         mid_resnet: Module = "ResnetBlock3D",
         dropout: float = 0.0,
         resolution: int = 256,
@@ -134,24 +137,24 @@ class Decoder(nn.Module):
         self,
         z_channels: int,
         hidden_size: int,
-        hidden_size_mult: Tuple[int] = (1, 2, 4, 4),
-        attn_resolutions: Tuple[int] = (16,),
+        hidden_size_mult: tuple[int] = (1, 2, 4, 4),
+        attn_resolutions: tuple[int] = (16,),
         conv_in: Module = "Conv2d",
         conv_out: Module = "CasualConv3d",
         attention: Module = "AttnBlock",
-        resnet_blocks: Tuple[Module] = (
+        resnet_blocks: tuple[Module] = (
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
         ),
-        spatial_upsample: Tuple[Module] = (
+        spatial_upsample: tuple[Module] = (
             "",
             "SpatialUpsample2x",
             "SpatialUpsample2x",
             "SpatialUpsample2x",
         ),
-        temporal_upsample: Tuple[Module] = ("", "", "", "TimeUpsampleRes2x"),
+        temporal_upsample: tuple[Module] = ("", "", "", "TimeUpsampleRes2x"),
         mid_resnet: Module = "ResnetBlock3D",
         dropout: float = 0.0,
         resolution: int = 256,
@@ -240,8 +243,8 @@ class CausalVAEModel(VideoBaseAE):
         self,
         hidden_size: int = 128,
         z_channels: int = 4,
-        hidden_size_mult: Tuple[int] = (1, 2, 4, 4),
-        attn_resolutions: Tuple[int] = [],
+        hidden_size_mult: tuple[int] = (1, 2, 4, 4),
+        attn_resolutions: tuple[int] = [],
         dropout: float = 0.0,
         resolution: int = 256,
         double_z: bool = True,
@@ -251,19 +254,19 @@ class CausalVAEModel(VideoBaseAE):
         encoder_conv_in: Module = "CausalConv3d",
         encoder_conv_out: Module = "CausalConv3d",
         encoder_attention: Module = "AttnBlock3D",
-        encoder_resnet_blocks: Tuple[Module] = (
+        encoder_resnet_blocks: tuple[Module] = (
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
         ),
-        encoder_spatial_downsample: Tuple[Module] = (
+        encoder_spatial_downsample: tuple[Module] = (
             "SpatialDownsample2x",
             "SpatialDownsample2x",
             "SpatialDownsample2x",
             "",
         ),
-        encoder_temporal_downsample: Tuple[Module] = (
+        encoder_temporal_downsample: tuple[Module] = (
             "",
             "TimeDownsample2x",
             "TimeDownsample2x",
@@ -273,19 +276,19 @@ class CausalVAEModel(VideoBaseAE):
         decoder_conv_in: Module = "CausalConv3d",
         decoder_conv_out: Module = "CausalConv3d",
         decoder_attention: Module = "AttnBlock3D",
-        decoder_resnet_blocks: Tuple[Module] = (
+        decoder_resnet_blocks: tuple[Module] = (
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
             "ResnetBlock3D",
         ),
-        decoder_spatial_upsample: Tuple[Module] = (
+        decoder_spatial_upsample: tuple[Module] = (
             "",
             "SpatialUpsample2x",
             "SpatialUpsample2x",
             "SpatialUpsample2x",
         ),
-        decoder_temporal_upsample: Tuple[Module] = (
+        decoder_temporal_upsample: tuple[Module] = (
             "",
             "",
             "TimeUpsample2x",
@@ -588,7 +591,7 @@ class CausalVAEModel(VideoBaseAE):
         for k in keys:
             for ik in ignore_keys:
                 if k.startswith(ik):
-                    print("Deleting key {} from state_dict.".format(k))
+                    print(f"Deleting key {k} from state_dict.")
                     del sd[k]
 
         missing_keys, unexpected_keys = self.load_state_dict(sd, strict=False)

@@ -7,22 +7,20 @@
 # Open-Sora-Plan: https://github.com/PKU-YuanGroup/Open-Sora-Plan
 # --------------------------------------------------------
 
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-import os
-from torch import nn
 import torch
 import torch.nn.functional as F
-from einops import rearrange
-
-from diffusers.utils import BaseOutput, logging
-from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.embeddings import PixArtAlphaTextProjection
-
-from allegro.models.transformers.block import to_2tuple, BasicTransformerBlock, AdaLayerNormSingle
+from allegro.models.transformers.block import AdaLayerNormSingle, BasicTransformerBlock, to_2tuple
 from allegro.models.transformers.embedding import PatchEmbed2D, PatchEmbed2DTI2V
+from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models.embeddings import PixArtAlphaTextProjection
+from diffusers.models.modeling_utils import ModelMixin
+from diffusers.utils import BaseOutput, logging
+from einops import rearrange
+from torch import nn
 
 logger = logging.get_logger(__name__)
 
@@ -82,18 +80,18 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = False,
-        sample_size: Optional[int] = None,
-        sample_size_t: Optional[int] = None,
-        patch_size: Optional[int] = None,
-        patch_size_t: Optional[int] = 1,
+        sample_size: int | None = None,
+        sample_size_t: int | None = None,
+        patch_size: int | None = None,
+        patch_size_t: int | None = 1,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = 1000,
+        num_embeds_ada_norm: int | None = 1000,
         use_linear_projection: bool = False,
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -105,7 +103,7 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
         interpolation_scale_h: float = None,
         interpolation_scale_w: float = None,
         interpolation_scale_t: float = None,
-        use_additional_conditions: Optional[bool] = None,
+        use_additional_conditions: bool | None = None,
         sa_attention_mode: str = "flash",
         ca_attention_mode: str = "xformers",
         downsampler: str = None,
@@ -245,14 +243,14 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        timestep: Optional[torch.LongTensor] = None,
-        all_timesteps: Optional[torch.LongTensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
-        class_labels: Optional[torch.LongTensor] = None,
-        cross_attention_kwargs: Dict[str, Any] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        timestep: torch.LongTensor | None = None,
+        all_timesteps: torch.LongTensor | None = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
+        class_labels: torch.LongTensor | None = None,
+        cross_attention_kwargs: dict[str, Any] = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         return_dict: bool = True,
     ):
         """

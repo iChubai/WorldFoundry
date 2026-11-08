@@ -14,8 +14,8 @@
 # limitations under the License.
 
 import torch
-from torch.utils.checkpoint import _get_autocast_kwargs
 from gsplat.rendering import rasterization
+from torch.utils.checkpoint import _get_autocast_kwargs
 
 
 class DeferredBPPatch(torch.autograd.Function):
@@ -78,8 +78,8 @@ class DeferredBPPatch(torch.autograd.Function):
                 for j in range(v):
                     Ks_ij = Ks[i, j]
                     fx, fy, cx, cy = Ks_ij[0, 0], Ks_ij[1, 1], Ks_ij[0, 2], Ks_ij[1, 2]
-                    for m in range(0, ctx.width // ctx.patch_size[1]):
-                        for n in range(0, ctx.height // ctx.patch_size[0]):
+                    for m in range(ctx.width // ctx.patch_size[1]):
+                        for n in range(ctx.height // ctx.patch_size[0]):
                             seed = torch.randint(0, 2**32, (1,)).long().item()
                             ctx.manual_seeds[-1].append(seed)
 
@@ -184,8 +184,8 @@ class DeferredBPPatch(torch.autograd.Function):
                 for j in range(v):
                     Ks_ij = ctx.Ks[i, j]
                     fx, fy, cx, cy = Ks_ij[0, 0], Ks_ij[1, 1], Ks_ij[0, 2], Ks_ij[1, 2]
-                    for m in range(0, ctx.width // ctx.patch_size[1]):
-                        for n in range(0, ctx.height // ctx.patch_size[0]):
+                    for m in range(ctx.width // ctx.patch_size[1]):
+                        for n in range(ctx.height // ctx.patch_size[0]):
                             grad_colors_split = grad_colors[
                                 i,
                                 j,

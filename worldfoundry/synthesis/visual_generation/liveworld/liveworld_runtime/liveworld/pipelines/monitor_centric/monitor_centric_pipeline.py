@@ -14,9 +14,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+# isort: split
 # Import logger FIRST — sets SAM3_TQDM_DISABLE env var at module level,
 # before SAM3 modules evaluate TQDM_DISABLE at their import time.
-from .logger import logger, suppress_verbose_logs  # noqa: E402
+from .logger import logger, suppress_verbose_logs
+
+# isort: split
 
 import cv2
 import numpy as np
@@ -27,52 +30,87 @@ from PIL import Image
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (
     Sam3VideoSegmenter,
 )
+
+# isort: split
 from liveworld.geometry_utils import (
     BackboneInferenceOptions,
-    compute_iteration_plan,
-    render_projection,
-    get_visible_points_for_frame,
     _get_visible_points_and_coverage_gpu,
+    compute_iteration_plan,
+    get_visible_points_for_frame,
+    render_projection,
 )
+
+# isort: split
 from liveworld.pipelines.pipeline_unified_backbone import (
     UnifiedBackbonePipeline,
     generate_scene_projection_from_pointcloud,
     retrieve_reference_frames,
 )
+
+# isort: split
 from liveworld.geometry_utils import scale_intrinsics
+
+# isort: split
 from liveworld.pipelines.pointcloud_updater import create_pointcloud_updater
+
+# isort: split
+# isort: split
 from liveworld.pipelines.pointcloud_updater import (
     PointCloudUpdater,
     ReconstructionResult,
 )
+
+# isort: split
+# isort: split
 from .detector_agent import DetectorAgent
+
+# isort: split
+# isort: split
 from .event_pool import EventPool, EventPoolConfig
+
+# isort: split
+# isort: split
 from .event_projector import EventProjector
+
+# isort: split
+# isort: split
 from .shared_models import SharedModels
+
+# isort: split
+# isort: split
 from .helpers import (
     get_project_root,
-    load_unified_backbone_pipeline,
-    load_geometry_poses,
     load_frame_from_image,
+    load_geometry_poses,
+    load_unified_backbone_pipeline,
     parse_target_resolution,
 )
+
+# isort: split
 from .io_utils import (
     decode_latent_to_rgb,
     ensure_dir,
     save_image,
     save_json,
-    save_video,
     save_pointcloud_ply,
+    save_video,
     visualize_projection_latent,
 )
+
+# isort: split
 from .observer_adapter import ObserverAdapter, ObserverIterationInput
+
+# isort: split
+from liveworld.geometry_utils import project_points, transform_points
+
+from .event_types import EventObservation, EventVideo, make_event_id
 from .projection_compositor import ProjectionCompositor, overlay_fg_on_scene
 from .world_state import WorldState
-from .event_types import EventObservation, make_event_id, EventVideo
-from liveworld.geometry_utils import project_points, transform_points
 
 
 @dataclass
@@ -81,7 +119,7 @@ class EventCentricRuntime:
 
     device: str
     seed: int
-    cpu_offload: Dict[str, bool]
+    cpu_offload: dict[str, bool]
 
 
 @dataclass
@@ -93,35 +131,35 @@ class WorldStateGeometry:
     """
 
     # Camera-to-world poses aligned to the reconstructed point cloud coordinate system.
-    poses_c2w: Optional[np.ndarray] = None  # (N, 4, 4) float32
+    poses_c2w: np.ndarray | None = None  # (N, 4, 4) float32
     # Original geometry poses (before alignment transform).
-    geometry_poses_c2w: Optional[np.ndarray] = None  # (N, 4, 4) float32
+    geometry_poses_c2w: np.ndarray | None = None  # (N, 4, 4) float32
     # Camera intrinsics estimated by Stream3R/MapAnything.
-    intrinsics: Optional[np.ndarray] = None  # (3, 3) float32
+    intrinsics: np.ndarray | None = None  # (3, 3) float32
     # Resolution at which intrinsics are defined.
-    intrinsics_size: Optional[Tuple[int, int]] = None  # (H, W)
+    intrinsics_size: tuple[int, int] | None = None  # (H, W)
     # Transform from geometry coordinates to world (Stream3R) coordinates.
-    alignment_transform: Optional[np.ndarray] = None  # (4, 4) float32
+    alignment_transform: np.ndarray | None = None  # (4, 4) float32
     # First frame image (PIL Image).
-    first_frame: Optional[Image.Image] = None
+    first_frame: Image.Image | None = None
     # Start frame index for video.
     start_frame: int = 0
     # All generated frames accumulated during iterations.
-    all_generated_frames: List[np.ndarray] = field(default_factory=list)
+    all_generated_frames: list[np.ndarray] = field(default_factory=list)
     # Dynamic mask from first frame (for separating fg/bg in P1 mode).
-    first_frame_dynamic_mask: Optional[np.ndarray] = None  # (H, W) bool
+    first_frame_dynamic_mask: np.ndarray | None = None  # (H, W) bool
     # Accumulated scene projection pixel frames (decoded from target scene_proj each iter).
     # List of [H, W, 3] uint8 numpy arrays. Used to build preceding_scene_proj.
-    all_scene_proj_frames: List[np.ndarray] = field(default_factory=list)
+    all_scene_proj_frames: list[np.ndarray] = field(default_factory=list)
     # Accumulated fg projection pixel frames (decoded from target fg_proj each iter).
     # List of [H, W, 3] uint8 numpy arrays. Used to build preceding_fg_proj.
-    all_fg_proj_frames: List[np.ndarray] = field(default_factory=list)
+    all_fg_proj_frames: list[np.ndarray] = field(default_factory=list)
     # Per-frame visible point indices for reference frame retrieval (3D IoU).
     # Key: global frame index, Value: indices of visible points in world point cloud.
-    frame_visible_points: Dict[int, np.ndarray] = field(default_factory=dict)
+    frame_visible_points: dict[int, np.ndarray] = field(default_factory=dict)
     # Per-frame dynamic masks for foreground removal in scene references.
     # Key: global frame index, Value: (H, W) bool mask, True = foreground.
-    frame_dynamic_masks: Dict[int, np.ndarray] = field(default_factory=dict)
+    frame_dynamic_masks: dict[int, np.ndarray] = field(default_factory=dict)
 
 
 class MonitorCentricEvolutionPipeline:
@@ -129,8 +167,8 @@ class MonitorCentricEvolutionPipeline:
 
     def __init__(
         self,
-        config: Dict,
-        shared_models: Optional[SharedModels] = None,
+        config: dict,
+        shared_models: SharedModels | None = None,
     ) -> None:
         # Suppress verbose third-party logs (SAM3, etc.)
         suppress_verbose_logs()
@@ -277,7 +315,7 @@ class MonitorCentricEvolutionPipeline:
         self._preset_entity_names: list[str] | None = None
         if self._use_preset_storyline:
             storyline_path = Path(config["storyline_file"])  # already resolved
-            with open(storyline_path, "r") as f_sl:
+            with open(storyline_path) as f_sl:
                 storyline_data = json.load(f_sl)
             preset_storyline = storyline_data  # contains "scene_text" + "steps"
             logger.info(f"Loaded preset storyline ({len(preset_storyline['steps'])} steps) from {storyline_path}")
@@ -381,7 +419,7 @@ class MonitorCentricEvolutionPipeline:
         except (TypeError, ValueError):
             return 9
 
-    def run(self, iter_inputs: Dict[int, Dict]) -> None:
+    def run(self, iter_inputs: dict[int, dict]) -> None:
         """Run the full event-centric loop.
 
         The caller must provide per-iteration prompts and ensure that the
@@ -453,9 +491,9 @@ class MonitorCentricEvolutionPipeline:
             # [1] BUILD OBSERVATION from last frame of previous iteration
             # -------------------------------------------------------------------
             observation = self._build_observation(iter_idx)
-            detected_entities_all: List[str] = []
-            detected_entities_scene: List[str] = []
-            skipped_small_entities: List[Dict[str, object]] = []
+            detected_entities_all: list[str] = []
+            detected_entities_scene: list[str] = []
+            skipped_small_entities: list[dict[str, object]] = []
             min_mask_ratio = 0.05
 
             if events_enabled:
@@ -658,7 +696,7 @@ class MonitorCentricEvolutionPipeline:
 
                 if events_enabled and save_event_observer_view:
                     event_pcs = self.world_state.list_event_pointclouds()
-                    for event_pc, event_proj in zip(event_pcs, event_projs):
+                    for event_pc, event_proj in zip(event_pcs, event_projs, strict=False):
                         event_dir = ensure_dir(round_dir / f"event_{event_pc.event_id}")
                         event_rgb_frames = decode_latent_to_rgb(event_proj, vae, device, dtype)
                         save_video(event_dir / "fg_projection.mp4", event_rgb_frames, fps=fps)
@@ -720,12 +758,12 @@ class MonitorCentricEvolutionPipeline:
                         black_ratio = self._compute_last_frame_black_ratio(iter_idx)
                         diag_file = obs_dir / "ref_diagnostics.txt"
                         with open(diag_file, "a") as f:
-                            f.write(f"\n--- ref_discard_black_ratio check ---\n")
+                            f.write("\n--- ref_discard_black_ratio check ---\n")
                             f.write(f"  threshold: {ref_discard_threshold}, black_ratio: {black_ratio:.4f}\n")
                             if black_ratio > ref_discard_threshold:
-                                f.write(f"  => DISCARDED all refs (black_ratio > threshold)\n")
+                                f.write("  => DISCARDED all refs (black_ratio > threshold)\n")
                             else:
-                                f.write(f"  => KEPT refs (black_ratio <= threshold)\n")
+                                f.write("  => KEPT refs (black_ratio <= threshold)\n")
                         if black_ratio > ref_discard_threshold:
                             reference_frames = None
             n_scene_refs = len(reference_frames) if reference_frames is not None else 0
@@ -858,9 +896,9 @@ class MonitorCentricEvolutionPipeline:
                 and bool(intermediate_cfg.get("enabled", False))
                 and self.intermediate_detector is not None
             )
-            new_intermediate_agents: List[Tuple] = []
-            intermediate_candidate_frames: List[int] = []
-            intermediate_coverages: List[Tuple[int, float]] = []
+            new_intermediate_agents: list[tuple] = []
+            intermediate_candidate_frames: list[int] = []
+            intermediate_coverages: list[tuple[int, float]] = []
 
             if intermediate_enabled and len(self.event_pool.list_active()) > 0:
                 with logger.timed("Intermediate event detection"):
@@ -982,7 +1020,7 @@ class MonitorCentricEvolutionPipeline:
         )
 
     @staticmethod
-    def _ensure_uint8_colors(colors: Optional[np.ndarray], n_points: int) -> np.ndarray:
+    def _ensure_uint8_colors(colors: np.ndarray | None, n_points: int) -> np.ndarray:
         """Normalize color array to uint8 RGB with length n_points."""
         if n_points <= 0:
             return np.zeros((0, 3), dtype=np.uint8)
@@ -1017,7 +1055,7 @@ class MonitorCentricEvolutionPipeline:
         return pts.astype(np.float32)
 
     @staticmethod
-    def _parse_rgb_color(value: object, default: Tuple[int, int, int]) -> np.ndarray:
+    def _parse_rgb_color(value: object, default: tuple[int, int, int]) -> np.ndarray:
         """Parse RGB color config into uint8 [3]."""
         if value is None:
             return np.array(default, dtype=np.uint8)
@@ -1045,7 +1083,7 @@ class MonitorCentricEvolutionPipeline:
         dists = np.linalg.norm(centers - target[None], axis=1)
         return int(np.argmin(dists))
 
-    def _get_intrinsics_for_pose(self, pose_index: int) -> Tuple[np.ndarray, Tuple[int, int]]:
+    def _get_intrinsics_for_pose(self, pose_index: int) -> tuple[np.ndarray, tuple[int, int]]:
         """Return per-pose intrinsics matrix and its image size (H, W)."""
         intrinsics = self.geometry.intrinsics
         if intrinsics is None:
@@ -1073,15 +1111,15 @@ class MonitorCentricEvolutionPipeline:
 
     def _build_camera_motion_points(
         self,
-        pose_indices: List[int],
+        pose_indices: list[int],
         frustum_depth: float,
-        frustum_color: Optional[np.ndarray] = None,
-        center_color: Optional[np.ndarray] = None,
-        trajectory_color: Optional[np.ndarray] = None,
+        frustum_color: np.ndarray | None = None,
+        center_color: np.ndarray | None = None,
+        trajectory_color: np.ndarray | None = None,
         frustum_edge_samples: int = 8,
         traj_edge_samples: int = 12,
         connect_trajectory: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Build point-cloud markers for camera frustums and trajectory."""
         poses = self.geometry.poses_c2w
         if poses is None or len(pose_indices) == 0:
@@ -1100,9 +1138,9 @@ class MonitorCentricEvolutionPipeline:
         else:
             trajectory_color = np.asarray(trajectory_color, dtype=np.uint8).reshape(3)
 
-        pts_chunks: List[np.ndarray] = []
-        col_chunks: List[np.ndarray] = []
-        camera_centers: List[np.ndarray] = []
+        pts_chunks: list[np.ndarray] = []
+        col_chunks: list[np.ndarray] = []
+        camera_centers: list[np.ndarray] = []
 
         for pose_index in pose_indices:
             idx = min(max(int(pose_index), 0), len(poses) - 1)
@@ -1162,8 +1200,8 @@ class MonitorCentricEvolutionPipeline:
     def _save_final_world_event_camera_ply(
         self,
         out_path: Path,
-        output_cfg: Dict,
-    ) -> Optional[Dict[str, int]]:
+        output_cfg: dict,
+    ) -> dict[str, int] | None:
         """Save merged static scene + event foreground + camera motion to one PLY."""
         scene_points, scene_colors = self.world_state.get_static()
         if scene_points is None or len(scene_points) == 0:
@@ -1299,7 +1337,7 @@ class MonitorCentricEvolutionPipeline:
         save_pointcloud_ply(out_path, points_all, colors_all)
 
         return {
-            "scene_points": int(len(scene_points)),
+            "scene_points": len(scene_points),
             "event_points": int(event_point_count),
             "camera_points": int(total_camera_points),
             "observer_camera_points": int(observer_camera_point_count),
@@ -1307,14 +1345,14 @@ class MonitorCentricEvolutionPipeline:
             "num_camera_poses": int(num_observer_camera_poses),
             "num_observer_camera_poses": int(num_observer_camera_poses),
             "num_event_cameras": int(num_event_cameras),
-            "total_points": int(len(points_all)),
+            "total_points": len(points_all),
         }
 
     def _save_combined_video(
         self,
         path: Path,
-        round_data: List[Dict],
-        event_names: Dict[str, str],
+        round_data: list[dict],
+        event_names: dict[str, str],
         fps: float,
     ) -> None:
         """Create a combined video showing observer and event videos side by side.
@@ -1481,7 +1519,7 @@ class MonitorCentricEvolutionPipeline:
         except (TypeError, ValueError):
             return 3
 
-    def _event_max_scene_refs(self) -> Optional[int]:
+    def _event_max_scene_refs(self) -> int | None:
         """Max scene refs for the event I2V model. None = no limit."""
         evolution_cfg = self.config.get("event", {}).get("evolution", {})
         raw = evolution_cfg.get("max_scene_refs", None)
@@ -1517,7 +1555,7 @@ class MonitorCentricEvolutionPipeline:
         evolution_cfg = self.config.get("event", {}).get("evolution", {})
         return bool(evolution_cfg.get("use_target_scene_proj", True))
 
-    def _event_target_scene_proj_frames(self) -> Optional[List[int]]:
+    def _event_target_scene_proj_frames(self) -> list[int] | None:
         """Return the list of latent frame indices to keep target_scene_proj for.
 
         Config value ``target_scene_proj_frames``:
@@ -1537,8 +1575,8 @@ class MonitorCentricEvolutionPipeline:
     def _segment_event_entities_mask(
         self,
         frame: np.ndarray,
-        entities: List[str],
-    ) -> Optional[np.ndarray]:
+        entities: list[str],
+    ) -> np.ndarray | None:
         """Segment a union foreground mask for event entities on one frame."""
         if frame is None or len(entities) == 0:
             return None
@@ -1556,8 +1594,8 @@ class MonitorCentricEvolutionPipeline:
     def _scrub_static_points_with_dynamic_masks(
         self,
         pose_index: int,
-        dynamic_masks: List[np.ndarray],
-        image_size: Tuple[int, int],
+        dynamic_masks: list[np.ndarray],
+        image_size: tuple[int, int],
     ) -> int:
         """Remove front-most static points that fall inside dynamic masks."""
         if not dynamic_masks:
@@ -1845,7 +1883,7 @@ class MonitorCentricEvolutionPipeline:
     def _initialize_first_frame_projections(
         self,
         first_frame_np: np.ndarray,
-        dynamic_mask: Optional[np.ndarray],
+        dynamic_mask: np.ndarray | None,
     ) -> None:
         """Generate first-frame scene and fg projection pixel frames for P1 mode.
 
@@ -2004,7 +2042,7 @@ class MonitorCentricEvolutionPipeline:
         black_ratio = float((proj_rgb.sum(axis=-1) == 0).mean())
         return black_ratio
 
-    def _render_event_projections(self, iter_idx: int) -> Tuple[List[torch.Tensor], set, Dict[str, set]]:
+    def _render_event_projections(self, iter_idx: int) -> tuple[list[torch.Tensor], set, dict[str, set]]:
         """Render per-event projections for the current iteration.
 
         Uses per-frame foreground point clouds so that frame t shows the entity
@@ -2063,7 +2101,7 @@ class MonitorCentricEvolutionPipeline:
 
         event_projs = []
         visible_event_ids = set()
-        visible_instances: Dict[str, set] = {}
+        visible_instances: dict[str, set] = {}
         for event_pc in self.world_state.list_event_pointclouds():
             if event_pc.points is None or event_pc.colors is None:
                 continue
@@ -2237,7 +2275,7 @@ class MonitorCentricEvolutionPipeline:
     def _compute_union_event_coverage_per_frame(
         self,
         iter_idx: int,
-    ) -> List[Tuple[int, float]]:
+    ) -> list[tuple[int, float]]:
         """Compute per-frame pixel coverage of union event point clouds on observer frames.
 
         For each observer frame in this round, projects ALL event point clouds
@@ -2313,9 +2351,9 @@ class MonitorCentricEvolutionPipeline:
     def _detect_intermediate_events(
         self,
         iter_idx: int,
-        candidate_frames: List[int],
+        candidate_frames: list[int],
         round_dir,
-    ) -> List[Tuple]:
+    ) -> list[tuple]:
         """Detect and register intermediate events from candidate observer frames.
 
         Args:
@@ -2411,7 +2449,7 @@ class MonitorCentricEvolutionPipeline:
 
     def _track_entity_visibility(
         self,
-        entities: List[str],
+        entities: list[str],
         iter_idx: int,
         anchor_local: int,
     ) -> int:
@@ -2580,7 +2618,7 @@ class MonitorCentricEvolutionPipeline:
         anchor_local: int,
         last_visible: int,
         iter_idx: int,
-    ) -> Optional[torch.Tensor]:
+    ) -> torch.Tensor | None:
         """Build fg_proj latent for an intermediate event via observer back-projection.
 
         Uses per-frame world points from Stream3R (stored before dynamic filtering)
@@ -2755,11 +2793,11 @@ class MonitorCentricEvolutionPipeline:
 
     def _get_intermediate_entity_masks(
         self,
-        entities: List[str],
+        entities: list[str],
         iter_idx: int,
         anchor_local: int,
         last_visible: int,
-    ) -> List[Optional[np.ndarray]]:
+    ) -> list[np.ndarray | None]:
         """Get per-frame SAM3 entity masks for observer frames anchor_local to last_visible.
 
         Args:
@@ -2806,10 +2844,10 @@ class MonitorCentricEvolutionPipeline:
     def _build_event_iter0_references(
         self,
         anchor_frame: np.ndarray,
-        entities: List[str],
+        entities: list[str],
         output_h: int,
         output_w: int,
-    ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    ) -> tuple[np.ndarray | None, np.ndarray | None]:
         """Build one-shot scene/instance references from the current anchor frame.
 
         Used only for event iter-0 so first-round event generation can already
@@ -2848,7 +2886,7 @@ class MonitorCentricEvolutionPipeline:
             scene_ref[fg_mask > 0] = 0
         scene_refs = np.stack([scene_ref], axis=0)
 
-        inst_refs: List[np.ndarray] = []
+        inst_refs: list[np.ndarray] = []
         for entity_name in entities:
             inst_masks = self.sam3_segmenter.segment_instances(
                 video_path=[anchor_pil],
@@ -3196,7 +3234,7 @@ class MonitorCentricEvolutionPipeline:
                 for im in selected_frame_pils:
                     im.close()
 
-            fg_masks_by_ref: List[Optional[np.ndarray]] = [None] * len(selected_frames)
+            fg_masks_by_ref: list[np.ndarray | None] = [None] * len(selected_frames)
             if seg_result is not None and getattr(seg_result, "size", 0) > 0:
                 seg_masks = seg_result if seg_result.ndim == 3 else seg_result[None, ...]
                 if seg_masks.shape[0] == 1 and len(selected_frames) > 1:
@@ -3212,8 +3250,8 @@ class MonitorCentricEvolutionPipeline:
 
             # --- Instance references: per-instance fg crop from first frame ---
             first_frame_pil = Image.fromarray(all_evt_frames[0])
-            inst_refs: List[np.ndarray] = []
-            all_instance_masks: List[np.ndarray] = []
+            inst_refs: list[np.ndarray] = []
+            all_instance_masks: list[np.ndarray] = []
             for entity_name in entities:
                 all_instance_masks.extend(
                     self.sam3_segmenter.segment_instances(
@@ -3311,7 +3349,7 @@ class MonitorCentricEvolutionPipeline:
             frames.insert(0, frames[0])
         return np.stack(frames, axis=0)
 
-    def _get_preceding_projection_frames(self, iter_idx: int) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    def _get_preceding_projection_frames(self, iter_idx: int) -> tuple[np.ndarray | None, np.ndarray | None]:
         """Return preceding scene and fg projection pixel frames.
 
         Policy:
@@ -3359,7 +3397,7 @@ class MonitorCentricEvolutionPipeline:
 
         return scene_frames, fg_frames
 
-    def _encode_pixel_frames_to_proj_latent(self, pixel_frames: Optional[np.ndarray]) -> Optional[torch.Tensor]:
+    def _encode_pixel_frames_to_proj_latent(self, pixel_frames: np.ndarray | None) -> torch.Tensor | None:
         """VAE-encode pixel frames to projection latent.
 
         Mirrors the encoding path in generate_scene_projection_from_pointcloud:
@@ -3399,7 +3437,7 @@ class MonitorCentricEvolutionPipeline:
 
         return latent
 
-    def _accumulate_projections(self, scene_proj: torch.Tensor, fg_proj: Optional[torch.Tensor]) -> None:
+    def _accumulate_projections(self, scene_proj: torch.Tensor, fg_proj: torch.Tensor | None) -> None:
         """Decode current iteration's projection latents to pixel frames and store.
 
         Args:
@@ -3421,10 +3459,10 @@ class MonitorCentricEvolutionPipeline:
     def _get_reference_frames(
         self,
         iter_idx: int,
-        target_frame_indices: List[int],
+        target_frame_indices: list[int],
         max_reference_frames: int = 7,
-        diag_path: Optional[Path] = None,
-    ) -> Optional[np.ndarray]:
+        diag_path: Path | None = None,
+    ) -> np.ndarray | None:
         """Retrieve reference frames based on 3D IoU with target frames.
 
         Uses anchor-based selection to find historical frames with highest IoU
@@ -3501,8 +3539,8 @@ class MonitorCentricEvolutionPipeline:
         if reference_frames is not None:
             # Enforce minimum temporal spacing of 4 frames between refs.
             min_spacing = 4
-            spaced_indices: List[int] = []
-            spaced_frames: List[np.ndarray] = []
+            spaced_indices: list[int] = []
+            spaced_frames: list[np.ndarray] = []
             for i, fidx in enumerate(ref_indices):
                 too_close = any(abs(fidx - kept) < min_spacing for kept in spaced_indices)
                 if too_close:
@@ -3525,7 +3563,7 @@ class MonitorCentricEvolutionPipeline:
         if reference_frames is not None:
             # Remove foreground from scene references using stored dynamic masks.
             diag_lines.append("")
-            diag_lines.append(f"--- Foreground removal from scene refs ---")
+            diag_lines.append("--- Foreground removal from scene refs ---")
             diag_lines.append(
                 f"  frame_dynamic_masks available for frames: {sorted(self.geometry.frame_dynamic_masks.keys())}"
             )
@@ -3541,9 +3579,9 @@ class MonitorCentricEvolutionPipeline:
 
             # Fallback: segment each selected scene ref independently, so mask
             # alignment is frame-exact and does not depend on temporal propagation.
-            sam3_ref_masks: Optional[np.ndarray] = None
+            sam3_ref_masks: np.ndarray | None = None
             if ref_mask_entities:
-                per_ref_masks: List[np.ndarray] = []
+                per_ref_masks: list[np.ndarray] = []
                 for i, ref_frame in enumerate(reference_frames):
                     ref_pil = Image.fromarray(ref_frame)
                     try:
@@ -3621,10 +3659,10 @@ class MonitorCentricEvolutionPipeline:
     def _get_reference_frames_pose_based(
         self,
         iter_idx: int,
-        target_frame_indices: List[int],
+        target_frame_indices: list[int],
         num_refs: int = 7,
-        diag_path: Optional[Path] = None,
-    ) -> Optional[np.ndarray]:
+        diag_path: Path | None = None,
+    ) -> np.ndarray | None:
         """Select reference frames by 2D projection coverage onto target poses.
 
         For each of ``num_refs`` evenly-sampled target poses, project every
@@ -3642,7 +3680,7 @@ class MonitorCentricEvolutionPipeline:
         Returns:
             Reference frames as numpy array ``[R, H, W, 3]`` or ``None``.
         """
-        diag_lines: List[str] = [f"=== pose_based_ref (iter {iter_idx}) ==="]
+        diag_lines: list[str] = [f"=== pose_based_ref (iter {iter_idx}) ==="]
 
         # --- early exits ---
         if iter_idx == 0:
@@ -3697,7 +3735,7 @@ class MonitorCentricEvolutionPipeline:
         poses_c2w = self.geometry.poses_c2w
         K = self.geometry.intrinsics  # (3, 3)
 
-        selected_hist_indices: List[int] = []  # frame indices chosen
+        selected_hist_indices: list[int] = []  # frame indices chosen
         used_set: set = set()  # avoid duplicates
 
         for tp_idx in sampled_target_poses:
@@ -3708,7 +3746,7 @@ class MonitorCentricEvolutionPipeline:
 
             best_cov = -1.0
             best_hist_idx = -1
-            cov_list: List[Tuple[int, float]] = []
+            cov_list: list[tuple[int, float]] = []
 
             for hidx, hpts in hist_items:
                 if hidx in used_set:
@@ -3762,7 +3800,7 @@ class MonitorCentricEvolutionPipeline:
                 used_set.add(best_hist_idx)
                 diag_lines.append(f"  => selected hist frame {best_hist_idx} (coverage={best_cov:.4f})")
             else:
-                diag_lines.append(f"  => no valid candidate")
+                diag_lines.append("  => no valid candidate")
             diag_lines.append("")
 
         if not selected_hist_indices:
@@ -3790,9 +3828,9 @@ class MonitorCentricEvolutionPipeline:
         )
         diag_lines.append(f"  active-entity prompts for ref-mask fallback: {ref_mask_entities}")
 
-        sam3_ref_masks: Optional[np.ndarray] = None
+        sam3_ref_masks: np.ndarray | None = None
         if ref_mask_entities:
-            per_ref_masks: List[np.ndarray] = []
+            per_ref_masks: list[np.ndarray] = []
             for i, ref_frame in enumerate(reference_frames):
                 ref_pil = Image.fromarray(ref_frame)
                 try:
@@ -3861,7 +3899,7 @@ class MonitorCentricEvolutionPipeline:
         return reference_frames
 
     @staticmethod
-    def _save_diag(diag_path: Optional[Path], diag_lines: List[str]) -> None:
+    def _save_diag(diag_path: Path | None, diag_lines: list[str]) -> None:
         """Write diagnostic lines to a file."""
         if diag_path is not None:
             diag_path.parent.mkdir(parents=True, exist_ok=True)
@@ -3872,8 +3910,8 @@ class MonitorCentricEvolutionPipeline:
         self,
         iter_idx: int,
         visible_event_ids: set,
-        visible_instances: Optional[Dict[str, set]] = None,
-    ) -> Tuple[Optional[np.ndarray], Dict[str, np.ndarray]]:
+        visible_instances: dict[str, set] | None = None,
+    ) -> tuple[np.ndarray | None, dict[str, np.ndarray]]:
         """Extract instance reference frames from events with visible projections.
 
         When per-instance visibility data is available (``visible_instances``),
@@ -3909,12 +3947,12 @@ class MonitorCentricEvolutionPipeline:
         agent_map = {a.event_id: a for a in active_agents}
 
         # Build mapping from event_id → EventPointCloud for per-instance anchor masks.
-        event_pc_map: Dict[str, object] = {}
+        event_pc_map: dict[str, object] = {}
         for epc in self.world_state.list_event_pointclouds():
             event_pc_map[epc.event_id] = epc
 
-        inst_frames: List[np.ndarray] = []
-        inst_map: Dict[str, np.ndarray] = {}
+        inst_frames: list[np.ndarray] = []
+        inst_map: dict[str, np.ndarray] = {}
         for event_id in visible_event_ids:
             agent = agent_map.get(event_id)
             if agent is None or agent.state.current_anchor_frame is None:
@@ -3953,7 +3991,7 @@ class MonitorCentricEvolutionPipeline:
             else:
                 # Fallback: re-segment with SAM3 (no per-instance visibility filtering).
                 anchor_pil = Image.fromarray(anchor)
-                instance_masks: List[np.ndarray] = []
+                instance_masks: list[np.ndarray] = []
                 for entity_name in entities:
                     instance_masks.extend(
                         self.sam3_segmenter.segment_instances(
@@ -3984,7 +4022,7 @@ class MonitorCentricEvolutionPipeline:
         output_h: int,
         output_w: int,
         min_mask_ratio: float = 0.01,
-    ) -> Optional[np.ndarray]:
+    ) -> np.ndarray | None:
         """Convert a binary mask on an anchor frame to a centered instance reference.
 
         Returns:
@@ -4027,7 +4065,7 @@ class MonitorCentricEvolutionPipeline:
     def _update_frame_visibility(
         self,
         iter_idx: int,
-        target_frame_indices: List[int],
+        target_frame_indices: list[int],
         output_start: int,
     ) -> None:
         """Update per-frame visible point indices for reference frame retrieval.
@@ -4073,7 +4111,7 @@ class MonitorCentricEvolutionPipeline:
                 output_size,
                 device="cuda",
             )
-            for (_, _, global_frame_idx), (_, visible_pts, _, _) in zip(frames_to_process, vis_results):
+            for (_, _, global_frame_idx), (_, visible_pts, _, _) in zip(frames_to_process, vis_results, strict=False):
                 if len(visible_pts) > 0:
                     self.geometry.frame_visible_points[global_frame_idx] = visible_pts
         else:
@@ -4125,7 +4163,7 @@ def _resolve_data_path(value: str, config_dir: Path) -> str:
 _DATA_PATH_KEYS = ("geometry_file_name", "first_frame_image", "entities_file", "storyline_file")
 
 
-def load_monitor_centric_config(config_path: str, system_config_path: str = None) -> Dict:
+def load_monitor_centric_config(config_path: str, system_config_path: str = None) -> dict:
     """Load YAML config with system defaults merging and path resolution.
 
     Args:

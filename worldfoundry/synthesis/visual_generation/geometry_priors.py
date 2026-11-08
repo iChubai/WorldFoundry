@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -13,7 +14,6 @@ from PIL import Image
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
-
 
 _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "dap": "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1",
@@ -133,7 +133,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "GeometryPriorSynthesis":
+    ) -> GeometryPriorSynthesis:
         options: dict[str, Any] = {}
         if isinstance(model_path, Mapping):
             options.update(model_path)
@@ -154,7 +154,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
         if base_model_target:
             try:
                 __import__(base_model_target)
-            except Exception as exc:  # noqa: BLE001 - preserve import failure for Studio.
+            except Exception as exc:  # preserve import failure for Studio.
                 import_error = f"{type(exc).__name__}: {exc}"
         profile_paths = self._checkpoint_paths()
         known_paths = _known_checkpoint_candidates(self.model_id)
@@ -165,6 +165,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
                 for key, default in zip(
                     ("sam_ckpt_path", "aot_ckpt_path", "grounding_dino_ckpt_path"),
                     known_paths,
+                    strict=False,
                 )
             )
         elif explicit:

@@ -27,7 +27,7 @@ class ZeroSeqParallelPlugin(LowLevelZeroPlugin):
         max_norm: float = 0.0,
         norm_type: float = 2.0,
         reduce_bucket_size_in_m: int = 12,
-        communication_dtype: Optional[torch.dtype] = None,
+        communication_dtype: torch.dtype | None = None,
         overlap_communication: bool = True,
         cpu_offload: bool = False,
         master_weights: bool = True,

@@ -1,17 +1,18 @@
-import os
-import sys
-import torch.nn as nn
-from torch.utils.checkpoint import checkpoint, checkpoint_sequential
-import torch.nn.functional as F
-import torch
-import torch.distributed as dist
-import re
 import math
+import os
+import random
+import re
+import sys
 from collections.abc import Iterable
 from itertools import repeat
-from torchvision import transforms as T
-import random
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+import torch.nn.functional as F
 from PIL import Image
+from torch.utils.checkpoint import checkpoint, checkpoint_sequential
+from torchvision import transforms as T
 
 
 def _ntuple(n):
@@ -412,7 +413,7 @@ def cleanup():
 
 # ----------------------------------------------------------------------------
 # logging info.
-class Logger(object):
+class Logger:
     """
     Redirect stderr to stdout, optionally print stdout to a file,
     and optionally force flushing on both stdout and the file.

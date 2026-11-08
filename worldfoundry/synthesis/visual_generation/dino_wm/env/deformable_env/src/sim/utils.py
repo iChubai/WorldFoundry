@@ -5,7 +5,7 @@ import yaml
 
 def load_yaml(filename):
     # load YAML file
-    return yaml.safe_load(open(filename, "r"))
+    return yaml.safe_load(open(filename))
 
 
 def rand_float(lo, hi):
@@ -109,7 +109,7 @@ def fps_with_idx(points, N):
         points[farthest_pts_idx]: np.array() sampled points
         farthest_pts_idx: np.array() indices of the sampled points
     """
-    if N > len(points):
+    if len(points) < N:
         return points, np.arange(len(points))
     else:
         # start with the first point

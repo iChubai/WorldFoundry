@@ -1,6 +1,7 @@
 from collections import OrderedDict, defaultdict
+from collections.abc import Iterator
 from pprint import pformat
-from typing import Iterator, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -30,8 +31,8 @@ class StatefulDistributedSampler(DistributedSampler):
     def __init__(
         self,
         dataset: Dataset,
-        num_replicas: Optional[int] = None,
-        rank: Optional[int] = None,
+        num_replicas: int | None = None,
+        rank: int | None = None,
         shuffle: bool = True,
         seed: int = 0,
         drop_last: bool = False,
@@ -63,8 +64,8 @@ class VariableVideoBatchSampler(DistributedSampler):
         self,
         dataset: VariableVideoTextDataset,
         bucket_config: dict,
-        num_replicas: Optional[int] = None,
-        rank: Optional[int] = None,
+        num_replicas: int | None = None,
+        rank: int | None = None,
         shuffle: bool = True,
         seed: int = 0,
         drop_last: bool = False,
@@ -83,7 +84,7 @@ class VariableVideoBatchSampler(DistributedSampler):
         self._get_num_batch_cached_bucket_sample_dict = None
         self.num_bucket_build_workers = num_bucket_build_workers
 
-    def __iter__(self) -> Iterator[List[int]]:
+    def __iter__(self) -> Iterator[list[int]]:
         if self._get_num_batch_cached_bucket_sample_dict is not None:
             bucket_sample_dict = self._get_num_batch_cached_bucket_sample_dict
             self._get_num_batch_cached_bucket_sample_dict = None

@@ -6,33 +6,34 @@
 #   https://github.com/PixArt-alpha/PixArt-sigma/blob/master/diffusion/model/nets/PixArt.py
 # --------------------------------------------------------
 import math
-import torch
-import torch.nn as nn
 import os
 import traceback
-import numpy as np
-from timm.models.layers import DropPath
-from timm.models.vision_transformer import PatchEmbed, Mlp
 
+import numpy as np
+import torch
+import torch.nn as nn
+from timm.models.layers import DropPath
+from timm.models.vision_transformer import Mlp, PatchEmbed
+
+from ...utils.logger import get_root_logger
 from ..builder import MODELS
 from ..utils import auto_grad_checkpoint, to_2tuple
 from .PixArtWorldFM_blocks import (
-    t2i_modulate,
-    CaptionEmbedder,
     AttentionKVCompress,
+    CaptionEmbedder,
+    FinalLayer,
+    LabelEmbedder,
     MultiHeadCrossAttention,
     T2IFinalLayer,
     TimestepEmbedder,
-    LabelEmbedder,
-    FinalLayer,
+    t2i_modulate,
 )
-from ...utils.logger import get_root_logger
 from .plucker import compute_plucker_rays
 from .prope import (
     get_rope_coeffs_2d,
     prepare_prope_apply_fns,
-    reorder_tokens_to_camera_major,
     reorder_tokens_from_camera_major,
+    reorder_tokens_to_camera_major,
 )
 
 
@@ -89,10 +90,10 @@ class PixArtWorldFMBlock(nn.Module):
                 HW=HW,
                 block_id=block_id,
                 use_prope=bool(kwargs.get("use_prope", False)),
-                prope_viewmats=kwargs.get("prope_viewmats", None),
-                prope_Ks=kwargs.get("prope_Ks", None),
-                prope_image_hw=kwargs.get("prope_image_hw", None),
-                prope_cache=kwargs.get("prope_cache", None),
+                prope_viewmats=kwargs.get("prope_viewmats"),
+                prope_Ks=kwargs.get("prope_Ks"),
+                prope_image_hw=kwargs.get("prope_image_hw"),
+                prope_cache=kwargs.get("prope_cache"),
             ).reshape(B, N, C)
         )
         x = x + self.cross_attn(x, y, mask)
@@ -221,13 +222,13 @@ class PixArtWorldFM(nn.Module):
         if (
             kwargs.get("use_prope", False)
             and ("prope_viewmats" in kwargs)
-            and (kwargs.get("prope_viewmats", None) is not None)
+            and (kwargs.get("prope_viewmats") is not None)
             and bool(kwargs.get("use_prope_cache", True))
         ):
             try:
-                vm_in = kwargs.get("prope_viewmats", None)
-                Ks_in = kwargs.get("prope_Ks", None)
-                ihw_in = kwargs.get("prope_image_hw", None)
+                vm_in = kwargs.get("prope_viewmats")
+                Ks_in = kwargs.get("prope_Ks")
+                ihw_in = kwargs.get("prope_image_hw")
                 if ihw_in is None and data_info is not None and ("img_hw" in data_info):
                     ihw_in = data_info["img_hw"]
 

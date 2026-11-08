@@ -2,13 +2,13 @@ import torch.nn as nn
 from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.networks.lvdm.latent_diffusion import LatentDiffusion
+from worldfoundry.core.model_loading.factory import instantiate_from_config
 from worldfoundry.synthesis.visual_generation.motionctrl.motionctrl_runtime.motionctrl.lvdm_modified_modules import (
     TemporalTransformer_forward,
     selfattn_forward_unet,
     spatial_forward_BasicTransformerBlock,
     temporal_selfattn_forward_BasicTransformerBlock,
 )
-from worldfoundry.core.model_loading.factory import instantiate_from_config
 
 
 class MotionCtrl(LatentDiffusion):
@@ -24,18 +24,18 @@ class MotionCtrl(LatentDiffusion):
         # camera motion control module
 
         bound_method = selfattn_forward_unet.__get__(self.model.diffusion_model, self.model.diffusion_model.__class__)
-        setattr(self.model.diffusion_model, "forward", bound_method)
+        self.model.diffusion_model.forward = bound_method
 
         for _name, _module in self.model.diffusion_model.named_modules():
             if _module.__class__.__name__ == "TemporalTransformer":
                 bound_method = TemporalTransformer_forward.__get__(_module, _module.__class__)
-                setattr(_module, "forward", bound_method)
+                _module.forward = bound_method
 
             if _module.__class__.__name__ == "BasicTransformerBlock":
                 # SpatialTransformer only
                 if _module.attn2.to_k.in_features != context_dim:  # TemporalTransformer without crossattn
                     bound_method = temporal_selfattn_forward_BasicTransformerBlock.__get__(_module, _module.__class__)
-                    setattr(_module, "_forward", bound_method)
+                    _module._forward = bound_method
 
                     cc_projection = nn.Linear(_module.attn2.to_k.in_features + pose_dim, _module.attn2.to_k.in_features)
                     nn.init.eye_(
@@ -50,7 +50,7 @@ class MotionCtrl(LatentDiffusion):
 
                 else:
                     bound_method = spatial_forward_BasicTransformerBlock.__get__(_module, _module.__class__)
-                    setattr(_module, "_forward", bound_method)
+                    _module._forward = bound_method
 
     def get_traj_features(self, extra_cond):
         b, c, t, h, w = extra_cond.shape

@@ -1,4 +1,5 @@
 import torch
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import WanModel
 
 

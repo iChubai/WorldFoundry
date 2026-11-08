@@ -304,7 +304,7 @@ def build_action_dicts(
     explicit = [_interaction_frames(item) for item in schedule]
     if any(count is not None for count in explicit):
         # Honour caller-supplied frame counts, then pad or trim to the horizon.
-        for interaction, count in zip(schedule, explicit):
+        for interaction, count in zip(schedule, explicit, strict=False):
             action = interaction_to_action(interaction, camera_step_degrees=camera_step_degrees)
             actions.extend(_copy_action(action) for _ in range(count if count is not None else 1))
     else:

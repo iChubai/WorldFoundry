@@ -187,7 +187,7 @@ class MidBlock3D(nn.Module):
     def forward(self, hidden_states: torch.FloatTensor) -> torch.FloatTensor:
         hidden_states = self.convs[0](hidden_states)
 
-        for attn, resnet in zip(self.attentions, self.convs[1:]):
+        for attn, resnet in zip(self.attentions, self.convs[1:], strict=False):
             if attn is not None:
                 if self.attention_type == "spatial_temporal":
                     spatial_attn, temporal_attn = attn

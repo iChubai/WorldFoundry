@@ -5,14 +5,13 @@ from collections import defaultdict
 import torch
 from safetensors.torch import load_file
 
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
-
 from videox_fun.utils.group_offload import (
     _is_group_offload_enabled,
     register_auto_device_hook,
     safe_enable_group_offload,
     safe_remove_group_offloading,
 )
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 def _load_lora(path):

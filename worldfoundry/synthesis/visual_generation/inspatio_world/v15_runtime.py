@@ -203,7 +203,7 @@ class InspatioWorldV15Runtime:
         if record["kind"] == "image":
             from .v15_io import image_depth_paths
 
-            for path, value in zip(image_depth_paths(directory, len(values)), values):
+            for path, value in zip(image_depth_paths(directory, len(values)), values, strict=False):
                 value = np.where(np.isfinite(value) & (value >= 0), value, 0)
                 Image.fromarray(encode_depth(value, minimum, maximum)).save(path)
         else:

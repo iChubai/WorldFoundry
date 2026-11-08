@@ -1,6 +1,5 @@
 # Inference-only DB-CogACT source retained in-tree.
 import torch.nn as nn
-
 from transformers import SiglipImageProcessor
 
 from .pe_configuration import get_config

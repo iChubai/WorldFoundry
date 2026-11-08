@@ -13,22 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from copy import deepcopy
+from typing import Dict, List
+
+import einops
 import numpy as np
 import torch
-from torch.utils.data.dataset import Dataset
 import torchvision.transforms as transforms
-import einops
-from typing import List, Dict
-from copy import deepcopy
-import os
+from torch.utils.data.dataset import Dataset
 
+# isort: split
 from src.models.utils.model import timestep_embedding
-from src.models.utils.data import ImageTransform, mirror_frame_indices, weighted_sample, merge_input_target_data_dicts
-from src.models.eval_inputs.registry import dataset_registry
-from src.models.utils.cosmos_1_tokenizer import load_cosmos_latent_statistics, denormalize_latents
 
-from src.models.eval_inputs.datafield import DataField
+# isort: split
+from src.models.utils.data import ImageTransform, merge_input_target_data_dicts, mirror_frame_indices, weighted_sample
+
+# isort: split
 from src.models.eval_inputs.registry import dataset_registry
+
+# isort: split
+from src.models.utils.cosmos_1_tokenizer import denormalize_latents, load_cosmos_latent_statistics
+
+# isort: split
+from src.models.eval_inputs.datafield import DataField
+
+# isort: split
 
 
 class Provider(Dataset):
@@ -232,7 +242,7 @@ class Provider(Dataset):
         view_indices = view_indices + start_view_idx
         return view_indices
 
-    def _get_view_indices_from_input(self, view_indices_input: List[int]):
+    def _get_view_indices_from_input(self, view_indices_input: list[int]):
         num_input_views = len(view_indices_input)
         if self.num_target_views > num_input_views:
             view_indices_i = np.random.permutation(np.arange(self.num_target_views) % num_input_views)
@@ -484,7 +494,7 @@ class Provider(Dataset):
         )
         return original_output_dict_input, original_output_dict_target
 
-    def get_data_dynamic(self, idx: int, frame_indices: List[int], view_indices: List[int], num_input_multi_views: int):
+    def get_data_dynamic(self, idx: int, frame_indices: list[int], view_indices: list[int], num_input_multi_views: int):
         # Split frame and view indices into input and target
         frame_indices_input = frame_indices[: self.opt.num_input_views]
         frame_indices_target = frame_indices[self.opt.num_input_views :]

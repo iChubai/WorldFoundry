@@ -1,21 +1,22 @@
-import random
-import os
-import sys
-import torch
-from functools import partial
+import logging
 import math
+import os
+import random
+import sys
+from copy import deepcopy
+from functools import partial
+
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from copy import deepcopy
-import logging
 from safetensors.torch import load_file
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import Wan2_2_VAE
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
 from worldfoundry.base_models.diffusion_model.models.networks.wan.media_geometry import best_output_size, masks_like
+from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 
-from .modules.model import Yume1p5WanModel, Yume1p5WanAttentionBlock
+from .modules.model import Yume1p5WanAttentionBlock, Yume1p5WanModel
 
 
 def upsample_conv3d_weights(conv_small, size):

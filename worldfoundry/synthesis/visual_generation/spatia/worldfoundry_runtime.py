@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
-from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 from worldfoundry.core.io.paths import hfd_root_path, resolve_local_hf_model_path
+from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
 
 def _checkpoint_file(root: Path, names: tuple[str, ...], label: str) -> Path:
@@ -73,7 +74,7 @@ class SpatiaRuntime:
         return worldfoundry_root / "base_models" / "perception_core" / "general_perception" / "uniception"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "SpatiaRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> SpatiaRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def plan(self, **kwargs: Any) -> dict[str, Any]:

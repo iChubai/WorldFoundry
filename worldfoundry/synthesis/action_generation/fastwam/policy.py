@@ -183,7 +183,7 @@ class FastWAMPolicy(nn.Module):
             dtype=action.dtype,
             shift_override=sigma_shift,
         )
-        for timestep, delta in zip(timesteps, deltas):
+        for timestep, delta in zip(timesteps, deltas, strict=False):
             action_pre = self.action_expert.pre_dit(
                 action_tokens=action,
                 timestep=timestep.unsqueeze(0).to(dtype=action.dtype, device=self.device),
@@ -253,7 +253,7 @@ class FastWAMPolicy(nn.Module):
             dtype=video.dtype,
             shift_override=sigma_shift,
         )
-        for timestep, delta in zip(video_steps, video_deltas):
+        for timestep, delta in zip(video_steps, video_deltas, strict=False):
             prediction = self.video_expert(
                 x=video,
                 timestep=timestep.unsqueeze(0).to(device=self.device, dtype=video.dtype),
@@ -302,7 +302,7 @@ class FastWAMPolicy(nn.Module):
             dtype=action.dtype,
             shift_override=sigma_shift,
         )
-        for timestep, delta in zip(action_steps, action_deltas):
+        for timestep, delta in zip(action_steps, action_deltas, strict=False):
             action_pre = self.action_expert.pre_dit(
                 action_tokens=action,
                 timestep=timestep.unsqueeze(0).to(device=self.device, dtype=action.dtype),

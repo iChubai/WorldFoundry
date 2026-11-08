@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any, Dict
 
@@ -20,7 +21,7 @@ class Segment:
     end: torch.ByteTensor
     trunc: torch.ByteTensor
     mask_padding: torch.BoolTensor
-    info: Dict[str, Any]
+    info: dict[str, Any]
     id: SegmentId
 
     @property

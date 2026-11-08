@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -15,12 +15,6 @@ from diffusers.models import AutoencoderKLWan
 from diffusers.utils import export_to_video, load_image
 from transformers import AutoTokenizer, UMT5EncoderModel
 
-from .output import sha256, save_chunk_state, assemble_resumed_video
-from worldfoundry.base_models.diffusion_model.runners.worldcrafter import WorldCrafterPipeline
-from worldfoundry.base_models.diffusion_model.schedulers.worldcrafter import WorldCrafterScheduler
-from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import (
-    WorldCrafterTransformer3DModel,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.kernels import (
     replace_all_norms_with_flash_norms,
     replace_rmsnorm_with_fp32,
@@ -31,12 +25,18 @@ from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.repen
     RepEncoderInferenceMemoryProvider,
     RepEncoderInferenceProviderConfig,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import (
+    WorldCrafterTransformer3DModel,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.bridge import (
     enable_ucpe_inference_sdpa_attention,
     load_ucpe_camera_adapter_weights,
     patch_worldcrafter_transformer_ucpe,
 )
+from worldfoundry.base_models.diffusion_model.runners.worldcrafter import WorldCrafterPipeline
+from worldfoundry.base_models.diffusion_model.schedulers.worldcrafter import WorldCrafterScheduler
 
+from .output import assemble_resumed_video, save_chunk_state, sha256
 
 CAMERA_CHUNK_FRAMES = 33
 MODEL_HEIGHT = 384
@@ -191,7 +191,7 @@ class WorldCrafter:
         attention_backend: str = "native",
         enable_compile: bool = False,
         shared_model_path: Path | None = None,
-    ) -> "WorldCrafter":
+    ) -> WorldCrafter:
         if model_type == "fast":
             from .model_loading import load_fast
 

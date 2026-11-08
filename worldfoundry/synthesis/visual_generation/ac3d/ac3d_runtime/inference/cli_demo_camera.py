@@ -191,7 +191,7 @@ def generate_video(
         export_to_video(reference_frames, output_path_file_reference, fps=8)
         out_reference_frames = [
             stack_images_horizontally(frame_reference, frame_out)
-            for frame_out, frame_reference in zip(video_generate, reference_frames)
+            for frame_out, frame_reference in zip(video_generate, reference_frames, strict=False)
         ]
         export_to_video(out_reference_frames, output_path_file_out_reference, fps=8)
 

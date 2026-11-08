@@ -14,10 +14,10 @@
 
 """LingBot-VLA v2 inference attention implementations."""
 
-import torch
-import torch.nn.functional as F  # noqa: N812
-from packaging.version import Version
 import einops
+import torch
+import torch.nn.functional as F
+from packaging.version import Version
 
 FLEX_SPARSE_BLOCK_SIZE = 128
 FLEX_KERNEL_OPTIONS = {"BLOCK_M": 32, "BLOCK_N": 64, "num_warps": 4, "num_stages": 2}

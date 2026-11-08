@@ -1,35 +1,32 @@
+import argparse
+import json
 import os
+from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from datetime import datetime
-import argparse
-import json
-from yaml import load, Loader
 import numpy as np
 import torch
 from einops import rearrange
-from copy import deepcopy
-
-from utils.model_utils import (
-    load_condition_models,
-    load_latent_models,
-    load_vae_models,
-    load_diffusion_model,
-    count_model_parameters,
-)
-
+from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
 from utils import import_custom_class, save_video
 from utils.data_utils import get_text_conditions
-
-from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
+from utils.model_utils import (
+    count_model_parameters,
+    load_condition_models,
+    load_diffusion_model,
+    load_latent_models,
+    load_vae_models,
+)
+from yaml import Loader, load
 
 
 class Inferencer:
     def __init__(
         self, config_file, output_dir=None, weight_dtype=torch.bfloat16, device="cuda:0", action_norm_type="meanstd"
     ) -> None:
-        cd = load(open(config_file, "r"), Loader=Loader)
+        cd = load(open(config_file), Loader=Loader)
         args = argparse.Namespace(**cd)
         args.lr = float(args.lr)
         args.epsilon = float(args.epsilon)
@@ -138,9 +135,9 @@ class Inferencer:
                 .to(device, dtype=dtype)
                 .eval()
             )
-        if isinstance(self.vae.latents_mean, List):
+        if isinstance(self.vae.latents_mean, list):
             self.vae.latents_mean = torch.FloatTensor(self.vae.latents_mean)
-        if isinstance(self.vae.latents_std, List):
+        if isinstance(self.vae.latents_std, list):
             self.vae.latents_std = torch.FloatTensor(self.vae.latents_std)
         if self.vae is not None:
             if self.args.enable_slicing:
@@ -322,7 +319,7 @@ class Inferencer:
                 )
 
     def infer(self, n_chunk_action=4, n_chunk_video=1, n_validation=10, global_step=0, domain_name="agibotworld"):
-        model_save_dir = os.path.join(self.save_folder, f"Inference")
+        model_save_dir = os.path.join(self.save_folder, "Inference")
         self.validate(
             model_save_dir,
             global_step,

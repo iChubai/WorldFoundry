@@ -3,42 +3,41 @@
 
 # DeepSpeed Team
 
-from collections import OrderedDict
-import torch
-import sys
 import os
-from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
-from deepspeed import comm as dist
-from deepspeed.runtime.constants import PIPE_REPLICATED
-from deepspeed.runtime import ZeROOptimizer
-from packaging import version as pkg_version
+import sys
+from collections import OrderedDict
 
+import torch
+from deepspeed import comm as dist
+from deepspeed.checkpoint import enable_universal_checkpoint
+from deepspeed.checkpoint.constants import (
+    BASE_OPTIMIZER_STATE,
+    CLIP_GRAD,
+    DS_VERSION,
+    GROUP_PADDINGS,
+    PARAM_SLICE_MAPPINGS,
+    PARTITION_COUNT,
+    SINGLE_PARTITION_OF_FP32_GROUPS,
+)
 from deepspeed.git_version_info import version
+from deepspeed.runtime import ZeROOptimizer
+from deepspeed.runtime.constants import PIPE_REPLICATED
 from deepspeed.runtime.utils import (
-    get_global_norm_of_tensors,
-    clip_tensors_by_global_norm,
     DummyOptim,
     align_dense_tensors,
     all_gather_dp_groups,
     bwc_tensor_model_parallel_rank,
+    clip_tensors_by_global_norm,
+    get_global_norm_of_tensors,
+    graph_process,
     is_model_parallel_parameter,
     see_memory_usage,
-    graph_process,
 )
+from deepspeed.utils import fragment_address, link_hp_params
+from packaging import version as pkg_version
+from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
-from deepspeed.utils import link_hp_params, fragment_address
-from deepspeed.checkpoint import enable_universal_checkpoint
-from deepspeed.checkpoint.constants import (
-    DS_VERSION,
-    PARTITION_COUNT,
-    BASE_OPTIMIZER_STATE,
-    SINGLE_PARTITION_OF_FP32_GROUPS,
-    CLIP_GRAD,
-    GROUP_PADDINGS,
-    PARAM_SLICE_MAPPINGS,
-)
-
-setattr(sys.modules[__name__], "fragment_address", fragment_address)
+sys.modules[__name__].fragment_address = fragment_address
 
 
 def contigous_flatten(tensors):
@@ -242,7 +241,7 @@ class BF16_Optimizer(ZeROOptimizer):
         beginning of training instead of after activations have been allocated.
         """
         for param_partition, grad_partition in zip(
-            self.fp32_groups_flat_partition, self.fp32_groups_gradient_flat_partition
+            self.fp32_groups_flat_partition, self.fp32_groups_gradient_flat_partition, strict=False
         ):
             # In case of grad acc dtype different than FP32, need to cast to high precision.
             param_partition.grad = (
@@ -272,7 +271,7 @@ class BF16_Optimizer(ZeROOptimizer):
 
     def _update_storage_to_flattened_tensor(self, tensor_list, flat_tensor):
         updated_params = self.unflatten(flat_tensor, tensor_list)
-        for p, q in zip(tensor_list, updated_params):
+        for p, q in zip(tensor_list, updated_params, strict=False):
             p.data = q.data
 
     def _flatten_dense_tensors_aligned(self, tensor_list, alignment):
@@ -378,7 +377,7 @@ class BF16_Optimizer(ZeROOptimizer):
     @torch.no_grad()
     def update_lp_params(self):
         for i, (bf16_partitions, fp32_partition) in enumerate(
-            zip(self.bf16_partitioned_groups, self.fp32_groups_flat_partition)
+            zip(self.bf16_partitioned_groups, self.fp32_groups_flat_partition, strict=False)
         ):
             partition_id = dist.get_rank(group=self.real_dp_process_group[i])
             bf16_partitions[partition_id].data.copy_(fp32_partition.data)
@@ -424,7 +423,9 @@ class BF16_Optimizer(ZeROOptimizer):
     def _restore_from_bit16_weights(self):
         for i, group in enumerate(self.bf16_groups):
             partition_id = dist.get_rank(group=self.real_dp_process_group[i])
-            for bf16_partitions, fp32_partition in zip(self.bf16_partitioned_groups, self.fp32_groups_flat_partition):
+            for bf16_partitions, fp32_partition in zip(
+                self.bf16_partitioned_groups, self.fp32_groups_flat_partition, strict=False
+            ):
                 fp32_partition.data.copy_(bf16_partitions[partition_id].data)
 
     def refresh_fp32_params(self):
@@ -448,7 +449,7 @@ class BF16_Optimizer(ZeROOptimizer):
         current_rank_sd = state_dict_list[dp_rank]
 
         ckpt_version = current_rank_sd.get(DS_VERSION, False)
-        assert ckpt_version, f"Empty ds_version in checkpoint, not clear how to proceed"
+        assert ckpt_version, "Empty ds_version in checkpoint, not clear how to proceed"
         ckpt_version = pkg_version.parse(ckpt_version)
 
         self.clip_grad = current_rank_sd.get(CLIP_GRAD, self.clip_grad)
@@ -458,7 +459,7 @@ class BF16_Optimizer(ZeROOptimizer):
 
         if load_from_fp32_weights:
             for current, saved in zip(
-                self.fp32_groups_flat_partition, current_rank_sd[SINGLE_PARTITION_OF_FP32_GROUPS]
+                self.fp32_groups_flat_partition, current_rank_sd[SINGLE_PARTITION_OF_FP32_GROUPS], strict=False
             ):
                 src_tensor = _get_padded_tensor(saved, current.numel())
                 current.data.copy_(src_tensor.data)

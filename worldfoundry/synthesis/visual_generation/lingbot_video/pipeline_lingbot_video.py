@@ -7,19 +7,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.distributed as dist
-from torchvision.transforms.functional import normalize as normalize_image_tensor
-
 from diffusers import DiffusionPipeline
 from diffusers.utils import BaseOutput
 from diffusers.utils.torch_utils import randn_tensor
+from torchvision.transforms.functional import normalize as normalize_image_tensor
 
+from .scheduling_flow_unipc import FlowUniPCMultistepScheduler
 from .utils import (
     LOW_NOISE_TAIL_V1_DEFAULT_STEPS,
     batch_cfg_prompt_inputs,
     compute_refiner_sigmas,
 )
-from .scheduling_flow_unipc import FlowUniPCMultistepScheduler
-
 
 TOKEN_LENGTH = 37698
 HIDDEN_STATE_SKIP_LAYER = 0
@@ -49,7 +47,7 @@ DEFAULT_NEGATIVE_PROMPT_IMAGE = '{"universal_negative": {"visual_quality": ["low
 
 @dataclass
 class LingBotVideoPipelineOutput(BaseOutput):
-    frames: Union[List[np.ndarray], torch.Tensor]
+    frames: list[np.ndarray] | torch.Tensor
 
 
 def _module_dtype(module: torch.nn.Module) -> torch.dtype:
@@ -79,7 +77,7 @@ def _module_device(module: torch.nn.Module) -> torch.device:
         return torch.device("cpu")
 
 
-def _group_global_rank(group: Optional[Any], group_rank: int) -> int:
+def _group_global_rank(group: Any | None, group_rank: int) -> int:
     if group is None:
         return group_rank
     get_global_rank = getattr(dist, "get_global_rank", None)
@@ -118,7 +116,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
         self.prompt_template = PROMPT_TEMPLATE
         self.img_prompt_template = IMG_PROMPT_TEMPLATE
         self.video_prompt_template = VIDEO_PROMPT_TEMPLATE
-        self._crop_start: Optional[int] = None
+        self._crop_start: int | None = None
 
     @staticmethod
     def check_inputs(height: int, width: int, num_frames: int) -> None:
@@ -156,11 +154,11 @@ class LingBotVideoPipeline(DiffusionPipeline):
 
     def _build_prompt_inputs(
         self,
-        prompt: Union[str, List[str]],
-        images: Optional[Any] = None,
-        videos: Optional[Any] = None,
-        video_metadata: Optional[Any] = None,
-        video_kwargs: Optional[Dict[str, Any]] = None,
+        prompt: str | list[str],
+        images: Any | None = None,
+        videos: Any | None = None,
+        video_metadata: Any | None = None,
+        video_kwargs: dict[str, Any] | None = None,
     ):
         if isinstance(prompt, str):
             prompts = [prompt]
@@ -191,13 +189,13 @@ class LingBotVideoPipeline(DiffusionPipeline):
     @torch.no_grad()
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         *,
-        images: Optional[Any] = None,
-        videos: Optional[Any] = None,
-        video_metadata: Optional[Any] = None,
-        video_kwargs: Optional[Dict[str, Any]] = None,
-        device: Optional[Union[str, torch.device]] = None,
+        images: Any | None = None,
+        videos: Any | None = None,
+        video_metadata: Any | None = None,
+        video_kwargs: dict[str, Any] | None = None,
+        device: str | torch.device | None = None,
         return_inputs: bool = False,
     ):
         if self.text_encoder is None or self.processor is None:
@@ -242,8 +240,8 @@ class LingBotVideoPipeline(DiffusionPipeline):
         num_frames: int,
         height: int,
         width: int,
-        generator: Optional[torch.Generator],
-        latents: Optional[torch.Tensor],
+        generator: torch.Generator | None,
+        latents: torch.Tensor | None,
         device: torch.device,
     ) -> torch.Tensor:
         latent_frames = (num_frames - 1) // self.vae_scale_factor_temporal + 1
@@ -280,7 +278,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
     def encode_video_latent(
         self,
         video: torch.Tensor,
-        generator: Optional[torch.Generator] = None,
+        generator: torch.Generator | None = None,
     ) -> torch.Tensor:
         if self.vae is None:
             raise ValueError("`vae` is required to encode video latents.")
@@ -311,7 +309,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
     def _decode_latents(
         self,
         latents: torch.Tensor,
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         vae_device = _module_device(self.vae)
         vae_dtype = _module_dtype(self.vae)
         vae_latents = self._dit_latent_to_vae(latents).to(device=vae_device, dtype=torch.float32)
@@ -343,22 +341,22 @@ class LingBotVideoPipeline(DiffusionPipeline):
         num_inference_steps: int = 40,
         guidance_scale: float = 6.0,
         shift: float = 3.0,
-        generator: Optional[torch.Generator] = None,
-        latents: Optional[torch.Tensor] = None,
-        cond_latent: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_mask: Optional[torch.Tensor] = None,
+        generator: torch.Generator | None = None,
+        latents: torch.Tensor | None = None,
+        cond_latent: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_mask: torch.Tensor | None = None,
         output_type: str = "np",
-        cfg_parallel_group: Optional[Any] = None,
+        cfg_parallel_group: Any | None = None,
         batch_cfg: bool = False,
         null_cond_clone_zero: bool = False,
-        t_thresh: Optional[float] = None,
+        t_thresh: float | None = None,
         refiner_sigma_tail_steps: int = LOW_NOISE_TAIL_V1_DEFAULT_STEPS,
         offload_vae_during_denoise: bool = False,
         return_dict: bool = True,
-    ) -> Union[LingBotVideoPipelineOutput, Tuple[Union[List[np.ndarray], torch.Tensor]]]:
+    ) -> LingBotVideoPipelineOutput | tuple[list[np.ndarray] | torch.Tensor]:
         self.check_inputs(height, width, num_frames)
         if self.transformer is None or self.scheduler is None:
             raise ValueError("`transformer` and `scheduler` are required for generation.")
@@ -442,7 +440,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
                 shift=1.0,
             )
         transformer_dtype = _module_dtype(self.transformer)
-        vae_restore_device: Optional[torch.device] = None
+        vae_restore_device: torch.device | None = None
         vae_offloaded = False
         if offload_vae_during_denoise and output_type == "np" and self.vae is not None:
             vae_device = _module_device(self.vae)

@@ -1,8 +1,9 @@
 # Written by Dibya
+import logging
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from fnmatch import fnmatch
-import logging
-from typing import Any, Dict, Mapping, Sequence, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import einops
 import flax
@@ -61,7 +62,7 @@ class TimestepGroup(TokenGroup):
         assert len(self.mask.shape) == 3, "TimestepGroup mask must be (batch, horizon, n_tokens)"
 
 
-def find_match(pattern_dict: Dict[str, Any], name: str, default: Any) -> Any:
+def find_match(pattern_dict: dict[str, Any], name: str, default: Any) -> Any:
     """Find the first matching pattern in the dictionary, or return the default value."""
     for pattern, value in pattern_dict.items():
         if fnmatch(name, pattern):
@@ -81,7 +82,7 @@ class TokenMetadata:
     attention_rules: Mapping[str, AttentionRule]
 
     @classmethod
-    def create(cls, group: Union[PrefixGroup, TimestepGroup], timestep: int):
+    def create(cls, group: PrefixGroup | TimestepGroup, timestep: int):
         return cls(
             timestep=timestep,
             name=group.name,
@@ -114,7 +115,7 @@ class BlockTransformer(nn.Module):
     """A transformer that acts on multiple groups of tokens, which may attend to each other (in complex patterns)."""
 
     # Forwarded to Transformer
-    transformer_kwargs: Dict
+    transformer_kwargs: dict
     # Enforce that timestep causal structure is not broken (future timesteps can't attend to past timesteps)
     enforce_causal: bool = True
     use_correct_attention: bool = False
@@ -126,7 +127,7 @@ class BlockTransformer(nn.Module):
         timestep_groups: Sequence[TimestepGroup],
         train: bool,
         verbose: bool = False,
-    ) -> Tuple[Sequence[PrefixGroup], Sequence[TimestepGroup]]:
+    ) -> tuple[Sequence[PrefixGroup], Sequence[TimestepGroup]]:
         """
         Args:
             prefix_groups: A list of PrefixGroup objects.
@@ -226,7 +227,8 @@ class BlockTransformer(nn.Module):
         if len(prefix_groups) > 0:
             prefix_embeddings_split = split_tokens(prefix_embeddings, tokens_per_prefix_group, axis=1)
             all_prefix_outputs = [
-                group.replace(tokens=embeddings) for group, embeddings in zip(prefix_groups, prefix_embeddings_split)
+                group.replace(tokens=embeddings)
+                for group, embeddings in zip(prefix_groups, prefix_embeddings_split, strict=False)
             ]
         else:
             all_prefix_outputs = []
@@ -242,7 +244,8 @@ class BlockTransformer(nn.Module):
         timestep_embeddings_split = split_tokens(timestep_embeddings, tokens_per_timestep_group, axis=2)
 
         all_timestep_outputs = [
-            group.replace(tokens=embeddings) for group, embeddings in zip(timestep_groups, timestep_embeddings_split)
+            group.replace(tokens=embeddings)
+            for group, embeddings in zip(timestep_groups, timestep_embeddings_split, strict=False)
         ]
         return all_prefix_outputs, all_timestep_outputs
 

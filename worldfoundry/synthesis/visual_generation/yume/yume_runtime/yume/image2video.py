@@ -13,14 +13,14 @@ import torchvision.transforms.functional as TF
 from safetensors import safe_open
 from safetensors.torch import load_file
 
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import CLIPModel
-from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import WanModel
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import CLIPModel
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import WanModel
+from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 
 
-def upsample_conv3d_weights(conv_small: nn.Conv3d, size: Tuple[int, int, int]):
+def upsample_conv3d_weights(conv_small: nn.Conv3d, size: tuple[int, int, int]):
     old_weight = conv_small.weight.data
     new_weight = F.interpolate(
         old_weight,
@@ -46,7 +46,7 @@ def load_yume_checkpoint(model: nn.Module, checkpoint_dir: str) -> nn.Module:
     index_path = os.path.join(checkpoint_dir, "diffusion_pytorch_model.safetensors.index.json")
 
     if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
+        with open(index_path, encoding="utf-8") as f:
             index_data = json.load(f)
 
         unique_shards = set(index_data["weight_map"].values())
@@ -122,9 +122,9 @@ class YumeI2V:
         else:
             self.model.to(self.device)
 
-        self.text_encoder: Optional[T5EncoderModel] = None
-        self.vae: Optional[WanVAE] = None
-        self.clip: Optional[CLIPModel] = None
+        self.text_encoder: T5EncoderModel | None = None
+        self.vae: WanVAE | None = None
+        self.clip: CLIPModel | None = None
 
     def init_model(
         self,

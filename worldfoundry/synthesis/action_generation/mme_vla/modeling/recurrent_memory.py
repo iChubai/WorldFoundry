@@ -1,11 +1,10 @@
-import flax.nnx as nnx
-import jax.numpy as jnp
-import einops
-
 from typing import Any
 
-from ...openpi import array_typing as at
+import einops
+import flax.nnx as nnx
+import jax.numpy as jnp
 
+from ...openpi import array_typing as at
 from .memory_encoder import FeatureEncoder
 from .memory_utils import kernel_init
 from .rmt import RMTLayer

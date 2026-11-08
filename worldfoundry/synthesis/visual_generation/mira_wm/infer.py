@@ -12,8 +12,9 @@ import contextlib
 import json
 import random
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 RUNTIME_SRC = RUNTIME_DIR / "src"

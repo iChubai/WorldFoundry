@@ -76,7 +76,7 @@ class SceneInputs:
         self.freeze_frame = freeze_frame
 
     def read_matrix(self, file_path):
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             data = file.read()
 
         parsed_data = []
@@ -154,7 +154,7 @@ class SceneInputs:
         depth_files = sorted(depth_files_list, key=lambda x: int(os.path.splitext(x)[0]))
         # Only need the first depth frame for radius estimation
         first_depth = np.array(Image.open(os.path.join(depth_path, depth_files[0]))).astype(np.uint16)
-        with open(os.path.join(source_conf["vggt_depth_path"], "metadata.txt"), "r") as f:
+        with open(os.path.join(source_conf["vggt_depth_path"], "metadata.txt")) as f:
             depths_min, depths_max = tuple([float(t) for t in f.readline().strip().split(" ")])
         first_depth = (first_depth / 65535.0) * (depths_max - depths_min) + depths_min
         first_depth_min = float(first_depth.min())
@@ -163,7 +163,7 @@ class SceneInputs:
         if self.traj_txt_path is not None:
             radius = first_depth_min * source_conf["radius_ratio"]
             print("Foreground mean (radius):", radius)
-            with open(self.traj_txt_path, "r") as file:
+            with open(self.traj_txt_path) as file:
                 lines = file.readlines()
                 x_up_angle = [float(i) for i in lines[0].split()]
                 y_left_angle = [float(i) for i in lines[1].split()]

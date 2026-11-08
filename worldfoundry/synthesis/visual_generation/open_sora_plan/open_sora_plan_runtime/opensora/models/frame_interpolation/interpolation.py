@@ -1,29 +1,32 @@
 # this script is modified from https://github.com/MCG-NKU/AMT/blob/main/demos/demo_2x.py
-from json import load
-import os
-import cv2
-import glob
-import torch
 import argparse
-import numpy as np
+import glob
+import os
 import os.path as osp
+from json import load
 from warnings import warn
+
+import cv2
+import numpy as np
+import torch
 from omegaconf import OmegaConf
 from torchvision.utils import make_grid
 
+# isort: split
 # Modified by WorldFoundry: removed upstream's CWD-relative `sys.path.append('.')`; all
 # AMT imports below are package-absolute and build_from_cfg canonicalizes `networks.*`
 # to the worldfoundry.base_models AMT package, so no path injection is needed.
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
-    read,
-    write,
-    img2tensor,
-    tensor2img,
     check_dim_and_resize,
+    img2tensor,
+    read,
+    tensor2img,
+    write,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder
-
 
 AMT_G = {
     "name": "networks.AMT-G.Model",
@@ -45,7 +48,7 @@ def init(device="cuda"):
         anchor_memory = 1500 * 1024**2
         anchor_memory_bias = 2500 * 1024**2
         vram_avail = torch.cuda.get_device_properties(device).total_memory
-        print("VRAM available: {:.1f} MB".format(vram_avail / 1024**2))
+        print(f"VRAM available: {vram_avail / 1024**2:.1f} MB")
     else:
         # Do not resize in cpu mode
         anchor_resolution = 8192 * 8192
@@ -142,13 +145,13 @@ def interpolater(model, inputs, scale, padder, iters=1):
         outputs: list, the list of the output frames.
     """
 
-    print(f"Start frame interpolation:")
+    print("Start frame interpolation:")
     embt = torch.tensor(1 / 2).float().view(1, 1, 1, 1).to(device)
 
     for i in range(iters):
         print(f"Iter {i + 1}. input_frames={len(inputs)} output_frames={2 * len(inputs) - 1}")
         outputs = [inputs[0]]
-        for in_0, in_1 in zip(inputs[:-1], inputs[1:]):
+        for in_0, in_1 in zip(inputs[:-1], inputs[1:], strict=False):
             in_0 = in_0.to(device)
             in_1 = in_1.to(device)
             with torch.no_grad():

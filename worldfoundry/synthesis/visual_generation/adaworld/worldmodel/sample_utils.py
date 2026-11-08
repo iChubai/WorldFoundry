@@ -3,7 +3,6 @@ from typing import List
 import torch
 from omegaconf import OmegaConf
 from safetensors.torch import load_file as load_safetensors
-
 from vwm.modules.diffusionmodules.sampling import EulerEDMSampler
 from vwm.util import instantiate_from_config
 
@@ -107,7 +106,7 @@ def get_sampler(sampler, steps, discretization_config, guider_config, n_context_
     return sampler
 
 
-def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_embeddings: List = None):
+def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_embeddings: list = None):
     if force_uc_zero_embeddings is None:
         force_uc_zero_embeddings = []
     num_context = len(value_dict["img_seq"]) - 1
@@ -157,7 +156,7 @@ def get_batch(keys, value_dict):
 
     for key in keys:
         batch[key] = value_dict[key]
-    for key in batch.keys():
+    for key in batch:
         if key not in batch_uc and isinstance(batch[key], torch.Tensor):
             batch_uc[key] = torch.clone(batch[key])
     return batch, batch_uc

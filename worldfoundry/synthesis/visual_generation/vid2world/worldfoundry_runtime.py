@@ -6,7 +6,6 @@ from worldfoundry.synthesis.visual_generation.vid2world.config_paths import (
     runtime_config_root,
 )
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "main" / "inference.py"
 CONFIG_ROOT = runtime_config_root()

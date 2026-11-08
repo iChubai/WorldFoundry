@@ -46,7 +46,7 @@ class ModelHook:
     _is_stateful = False
 
     def __init__(self):
-        self.fn_ref: "HookFunctionReference" = None
+        self.fn_ref: HookFunctionReference = None
 
     def initialize_hook(self, module: torch.nn.Module) -> torch.nn.Module:
         r"""
@@ -68,7 +68,7 @@ class ModelHook:
         """
         return module
 
-    def pre_forward(self, module: torch.nn.Module, *args, **kwargs) -> Tuple[Tuple[Any], Dict[str, Any]]:
+    def pre_forward(self, module: torch.nn.Module, *args, **kwargs) -> tuple[tuple[Any], dict[str, Any]]:
         r"""
         Hook that is executed just before the forward method of the model.
 
@@ -142,7 +142,7 @@ class HookRegistry:
     def __init__(self, module_ref: torch.nn.Module) -> None:
         super().__init__()
 
-        self.hooks: Dict[str, ModelHook] = {}
+        self.hooks: dict[str, ModelHook] = {}
 
         self._module_ref = module_ref
         self._hook_order = []
@@ -188,7 +188,7 @@ class HookRegistry:
         self._hook_order.append(name)
         self._fn_refs.append(fn_ref)
 
-    def get_hook(self, name: str) -> Optional[ModelHook]:
+    def get_hook(self, name: str) -> ModelHook | None:
         return self.hooks.get(name, None)
 
     def remove_hook(self, name: str, recurse: bool = True) -> None:
@@ -264,31 +264,31 @@ class GroupOffloadingConfig:
     non_blocking: bool
     record_stream: bool
     low_cpu_mem_usage: bool
-    num_blocks_per_group: Optional[int] = None
-    offload_to_disk_path: Optional[str] = None
-    stream: Optional[Union[torch.cuda.Stream, torch.Stream]] = None
-    block_modules: Optional[List[str]] = None
-    exclude_kwargs: Optional[List[str]] = None
-    module_prefix: Optional[str] = ""
+    num_blocks_per_group: int | None = None
+    offload_to_disk_path: str | None = None
+    stream: torch.cuda.Stream | torch.Stream | None = None
+    block_modules: list[str] | None = None
+    exclude_kwargs: list[str] | None = None
+    module_prefix: str | None = ""
 
 
 class ModuleGroup:
     def __init__(
         self,
-        modules: List[torch.nn.Module],
+        modules: list[torch.nn.Module],
         offload_device: torch.device,
         onload_device: torch.device,
         offload_leader: torch.nn.Module,
-        onload_leader: Optional[torch.nn.Module] = None,
-        parameters: Optional[List[torch.nn.Parameter]] = None,
-        buffers: Optional[List[torch.Tensor]] = None,
+        onload_leader: torch.nn.Module | None = None,
+        parameters: list[torch.nn.Parameter] | None = None,
+        buffers: list[torch.Tensor] | None = None,
         non_blocking: bool = False,
-        stream: Union[torch.cuda.Stream, torch.Stream, None] = None,
-        record_stream: Optional[bool] = False,
+        stream: torch.cuda.Stream | torch.Stream | None = None,
+        record_stream: bool | None = False,
         low_cpu_mem_usage: bool = False,
         onload_self: bool = True,
-        offload_to_disk_path: Optional[str] = None,
-        group_id: Optional[Union[int, str]] = None,
+        offload_to_disk_path: str | None = None,
+        group_id: int | str | None = None,
     ) -> None:
         self.modules = modules
         self.offload_device = offload_device
@@ -493,7 +493,7 @@ class GroupOffloadingHook(ModelHook):
 
     def __init__(self, group: ModuleGroup, *, config: GroupOffloadingConfig) -> None:
         self.group = group
-        self.next_group: Optional[ModuleGroup] = None
+        self.next_group: ModuleGroup | None = None
         self.config = config
 
     def initialize_hook(self, module: torch.nn.Module) -> torch.nn.Module:
@@ -565,7 +565,7 @@ class LazyPrefetchGroupOffloadingHook(ModelHook):
     _is_stateful = False
 
     def __init__(self):
-        self.execution_order: List[Tuple[str, torch.nn.Module]] = []
+        self.execution_order: list[tuple[str, torch.nn.Module]] = []
         self._layer_execution_tracker_module_names = set()
 
     def initialize_hook(self, module):
@@ -669,17 +669,17 @@ class LayerExecutionTrackerHook(ModelHook):
 
 def apply_group_offloading(
     module: torch.nn.Module,
-    onload_device: Union[str, torch.device],
-    offload_device: Union[str, torch.device] = torch.device("cpu"),
-    offload_type: Union[str, GroupOffloadingType] = "block_level",
-    num_blocks_per_group: Optional[int] = None,
+    onload_device: str | torch.device,
+    offload_device: str | torch.device = torch.device("cpu"),
+    offload_type: str | GroupOffloadingType = "block_level",
+    num_blocks_per_group: int | None = None,
     non_blocking: bool = False,
     use_stream: bool = False,
     record_stream: bool = False,
     low_cpu_mem_usage: bool = False,
-    offload_to_disk_path: Optional[str] = None,
-    block_modules: Optional[List[str]] = None,
-    exclude_kwargs: Optional[List[str]] = None,
+    offload_to_disk_path: str | None = None,
+    block_modules: list[str] | None = None,
+    exclude_kwargs: list[str] | None = None,
 ) -> None:
     r"""
     Applies group offloading to the internal layers of a torch.nn.Module. To understand what group offloading is, and
@@ -1049,8 +1049,8 @@ def _apply_lazy_group_offloading_hook(
 
 
 def _gather_parameters_with_no_group_offloading_parent(
-    module: torch.nn.Module, modules_with_group_offloading: Set[str]
-) -> List[torch.nn.Parameter]:
+    module: torch.nn.Module, modules_with_group_offloading: set[str]
+) -> list[torch.nn.Parameter]:
     parameters = []
     for name, parameter in module.named_parameters():
         has_parent_with_group_offloading = False
@@ -1067,8 +1067,8 @@ def _gather_parameters_with_no_group_offloading_parent(
 
 
 def _gather_buffers_with_no_group_offloading_parent(
-    module: torch.nn.Module, modules_with_group_offloading: Set[str]
-) -> List[torch.Tensor]:
+    module: torch.nn.Module, modules_with_group_offloading: set[str]
+) -> list[torch.Tensor]:
     buffers = []
     for name, buffer in module.named_buffers():
         has_parent_with_group_offloading = False
@@ -1084,7 +1084,7 @@ def _gather_buffers_with_no_group_offloading_parent(
     return buffers
 
 
-def _find_parent_module_in_module_dict(name: str, module_dict: Dict[str, torch.nn.Module]) -> str:
+def _find_parent_module_in_module_dict(name: str, module_dict: dict[str, torch.nn.Module]) -> str:
     atoms = name.split(".")
     while len(atoms) > 0:
         parent_name = ".".join(atoms)
@@ -1108,7 +1108,7 @@ def _raise_error_if_accelerate_model_or_sequential_hook_present(module: torch.nn
             )
 
 
-def _get_top_level_group_offload_hook(module: torch.nn.Module) -> Optional[GroupOffloadingHook]:
+def _get_top_level_group_offload_hook(module: torch.nn.Module) -> GroupOffloadingHook | None:
     for submodule in module.modules():
         if hasattr(submodule, "_diffusers_hook"):
             group_offloading_hook = submodule._diffusers_hook.get_hook(_GROUP_OFFLOADING)
@@ -1163,7 +1163,7 @@ def _maybe_remove_and_reapply_group_offloading(module: torch.nn.Module) -> None:
 
 def remove_group_offloading(
     module: torch.nn.Module,
-    exclude_modules: Optional[Union[str, List[str]]] = None,
+    exclude_modules: str | list[str] | None = None,
 ) -> None:
     """
     Removes group offloading hooks from a module and its submodules.
@@ -1218,13 +1218,13 @@ def enable_group_offload(
     onload_device: torch.device,
     offload_device: torch.device = torch.device("cpu"),
     offload_type: str = "block_level",
-    num_blocks_per_group: Optional[int] = None,
+    num_blocks_per_group: int | None = None,
     non_blocking: bool = False,
     use_stream: bool = False,
     record_stream: bool = False,
     low_cpu_mem_usage=False,
-    offload_to_disk_path: Optional[str] = None,
-    exclude_modules: Optional[Union[str, List[str]]] = None,
+    offload_to_disk_path: str | None = None,
+    exclude_modules: str | list[str] | None = None,
 ) -> None:
     r"""
     Applies group offloading to the internal layers of a torch.nn.Module. To understand what group offloading is,
@@ -1385,7 +1385,7 @@ def register_auto_device_hook(model):
         model: The model with registered hooks
     """
 
-    def auto_device_hook(module, input: Tuple[Any, ...]):
+    def auto_device_hook(module, input: tuple[Any, ...]):
         """
         Forward pre-hook function to automatically transfer device before forward
 

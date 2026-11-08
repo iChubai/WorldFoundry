@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import write_json
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
@@ -71,7 +72,7 @@ class HyEmbodiedVLASynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "HyEmbodiedVLASynthesis":
+    ) -> HyEmbodiedVLASynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):

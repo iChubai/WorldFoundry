@@ -1,23 +1,21 @@
 import abc
-from collections.abc import Sequence
 import dataclasses
 import enum
 import logging
 import pathlib
+from collections.abc import Sequence
 from typing import Generic, TypeVar
 
-from flax import nnx
-from flax import struct
-from flax import traverse_util
 import jax
 import jax.numpy as jnp
 import numpy as np
 import orbax.checkpoint as ocp
 import safetensors
 import torch
+from flax import nnx, struct, traverse_util
 
-from .. import image_tensor as image_tools
 from .. import array_typing as at
+from .. import image_tensor as image_tools
 
 logger = logging.getLogger("openpi")
 

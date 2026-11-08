@@ -68,7 +68,6 @@ def _validate_args(args: argparse.Namespace) -> None:
 def _load_rgb(path: Path, *, height: int, width: int):
     import numpy as np
     from PIL import Image
-
     from tesseract.utils import crop_and_resize_frames, read_video_first_frame
 
     if path.suffix.lower() in {".mp4", ".mov", ".webm", ".avi"}:
@@ -99,7 +98,6 @@ def _synthetic_gradient_geometry(rgb):
 def _file_geometry(depth_path: Path, normal_path: Path, *, height: int, width: int):
     import cv2
     import numpy as np
-
     from tesseract.utils import crop_and_resize_frames
 
     depth = np.asarray(np.load(depth_path), dtype=np.float32).squeeze()
@@ -147,9 +145,9 @@ def run(args: argparse.Namespace) -> Path:
     import numpy as np
     import torch
     from diffusers import CogVideoXDPMScheduler
-
     from tesseract.modules.tesseract_model import TesserActDepthNormal
     from tesseract.modules.tesseract_pipeline import TesserActImageToDepthNormalVideoPipeline
+
     from worldfoundry.core.media.codecs.video import save_video_h264
 
     if not torch.cuda.is_available():

@@ -1,11 +1,12 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional
-import torch
+from typing import Any, Dict, List, Optional
 
+import torch
 from einops import rearrange
-from ..utils.wan_wrapper import WanDiffusionWrapper
 from tqdm import tqdm
 
+from ..utils.wan_wrapper import WanDiffusionWrapper
 
 # The Matrix-Game-2 streaming VAE exposes 32 recurrent feature-cache slots.
 # Keep this lightweight: importing ``ZERO_VAE_CACHE`` allocates roughly 2 GiB of
@@ -27,20 +28,20 @@ class CausalInferenceSession:
     the original Matrix-Game-2 conditioning algorithm.
     """
 
-    conditional_dict: Dict[str, Any]
+    conditional_dict: dict[str, Any]
     mode: str
     batch_size: int
     dtype: torch.dtype
     device: torch.device
-    kv_cache: List[Dict[str, Any]]
-    mouse_kv_cache: List[Dict[str, Any]]
-    keyboard_kv_cache: List[Dict[str, Any]]
-    crossattn_cache: List[Dict[str, Any]]
-    vae_cache: List[Optional[torch.Tensor]]
+    kv_cache: list[dict[str, Any]]
+    mouse_kv_cache: list[dict[str, Any]]
+    keyboard_kv_cache: list[dict[str, Any]]
+    crossattn_cache: list[dict[str, Any]]
+    vae_cache: list[torch.Tensor | None]
     current_start_frame: int = 0
-    initial_latent: Optional[torch.Tensor] = None
-    last_model_ms: Optional[float] = None
-    last_decode_ms: Optional[float] = None
+    initial_latent: torch.Tensor | None = None
+    last_model_ms: float | None = None
+    last_decode_ms: float | None = None
     invalidated: bool = False
 
 
@@ -52,9 +53,9 @@ class CausalInferenceBlock:
     video: torch.Tensor
     start_frame: int
     end_frame: int
-    model_ms: Optional[float] = None
-    decode_ms: Optional[float] = None
-    total_ms: Optional[float] = None
+    model_ms: float | None = None
+    decode_ms: float | None = None
+    total_ms: float | None = None
 
 
 def get_current_action(mode="universal"):
@@ -78,7 +79,7 @@ def get_current_action(mode="universal"):
             try:
                 idx_mouse = input("Please input the mouse action (e.g. `U`):\n").strip().lower()
                 idx_keyboard = input("Please input the keyboard action (e.g. `W`):\n").strip().lower()
-                if idx_mouse in CAMERA_VALUE_MAP.keys() and idx_keyboard in KEYBOARD_IDX.keys():
+                if idx_mouse in CAMERA_VALUE_MAP and idx_keyboard in KEYBOARD_IDX:
                     flag = 1
             except:
                 pass
@@ -247,8 +248,8 @@ class CausalInferencePipeline(torch.nn.Module):
         if self.num_frame_per_block > 1:
             self.generator.model.num_frame_per_block = self.num_frame_per_block
 
-        self._session: Optional[CausalInferenceSession] = None
-        self._last_block: Optional[CausalInferenceBlock] = None
+        self._session: CausalInferenceSession | None = None
+        self._last_block: CausalInferenceBlock | None = None
         # Calls on one pipeline are serialized by its resident session owner.
         # The optional stream belongs to this pipeline, never to a global pool.
         self.overlap_vae_decode = False
@@ -258,13 +259,13 @@ class CausalInferencePipeline(torch.nn.Module):
         self._decode_overlap_runtime = {"calls": 0, "execution": "disabled"}
 
     @property
-    def session(self) -> Optional[CausalInferenceSession]:
+    def session(self) -> CausalInferenceSession | None:
         """Return the active rollout state, if one has been started."""
 
         return self._session
 
     @property
-    def last_block(self) -> Optional[CausalInferenceBlock]:
+    def last_block(self) -> CausalInferenceBlock | None:
         """Return the most recent block and its model/decode timings."""
 
         return self._last_block
@@ -324,8 +325,8 @@ class CausalInferencePipeline(torch.nn.Module):
         self,
         conditional_dict: Mapping[str, Any],
         *,
-        initial_latent: Optional[torch.Tensor] = None,
-        reference_tensor: Optional[torch.Tensor] = None,
+        initial_latent: torch.Tensor | None = None,
+        reference_tensor: torch.Tensor | None = None,
         mode: str = "universal",
     ) -> CausalInferenceSession:
         """Allocate a rollout's caches and optionally seed clean latent context.
@@ -428,10 +429,10 @@ class CausalInferencePipeline(torch.nn.Module):
     def step_session(
         self,
         noise: torch.Tensor,
-        conditional_dict: Optional[Mapping[str, Any]] = None,
+        conditional_dict: Mapping[str, Any] | None = None,
         *,
-        action: Optional[Mapping[str, torch.Tensor]] = None,
-        mode: Optional[str] = None,
+        action: Mapping[str, torch.Tensor] | None = None,
+        mode: str | None = None,
         profile: bool = False,
     ) -> torch.Tensor:
         """Generate and decode one block on the active resident session."""
@@ -457,7 +458,7 @@ class CausalInferencePipeline(torch.nn.Module):
         session: CausalInferenceSession,
         noise: torch.Tensor,
         *,
-        action: Optional[Mapping[str, torch.Tensor]] = None,
+        action: Mapping[str, torch.Tensor] | None = None,
         profile: bool = False,
     ) -> CausalInferenceBlock:
         """Generate one block; the resident owner serializes calls and reset.
@@ -508,8 +509,8 @@ class CausalInferencePipeline(torch.nn.Module):
             model_start.record(timing_stream)
 
         noisy_input = noise
-        denoised_pred: Optional[torch.Tensor] = None
-        timestep: Optional[torch.Tensor] = None
+        denoised_pred: torch.Tensor | None = None
+        timestep: torch.Tensor | None = None
         for index, current_timestep in enumerate(self.denoising_step_list):
             timestep = (
                 torch.ones(
@@ -645,7 +646,7 @@ class CausalInferencePipeline(torch.nn.Module):
         self,
         noise: torch.Tensor,
         conditional_dict: Mapping[str, Any],
-        initial_latent: Optional[torch.Tensor] = None,
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         mode: str = "universal",
         profile: bool = False,
@@ -664,8 +665,8 @@ class CausalInferencePipeline(torch.nn.Module):
             reference_tensor=noise,
             mode=mode,
         )
-        videos: List[torch.Tensor] = []
-        generated_latents: List[torch.Tensor] = []
+        videos: list[torch.Tensor] = []
+        generated_latents: list[torch.Tensor] = []
         num_blocks = num_frames // self.num_frame_per_block
         for block_index in tqdm(range(num_blocks)):
             noise_start = block_index * self.num_frame_per_block
@@ -678,7 +679,7 @@ class CausalInferencePipeline(torch.nn.Module):
             generated_latents.append(block.latent)
 
         if return_latents:
-            latent_parts: List[torch.Tensor] = []
+            latent_parts: list[torch.Tensor] = []
             if initial_latent is not None:
                 latent_parts.append(initial_latent)
             latent_parts.extend(generated_latents)

@@ -1,4 +1,5 @@
 import math
+from typing import Union
 
 import torch
 import torch.nn.functional as F
@@ -6,8 +7,6 @@ from einops import repeat
 from torch import nn
 
 from .transformer import MultiviewTransformer
-
-from typing import Union
 
 
 def timestep_embedding(
@@ -31,7 +30,7 @@ def timestep_embedding(
 
 
 class Upsample(nn.Module):
-    def __init__(self, channels: int, out_channels: Union[int, None] = None):
+    def __init__(self, channels: int, out_channels: int | None = None):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -45,7 +44,7 @@ class Upsample(nn.Module):
 
 
 class Downsample(nn.Module):
-    def __init__(self, channels: int, out_channels: Union[int, None] = None):
+    def __init__(self, channels: int, out_channels: int | None = None):
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -86,7 +85,7 @@ class ResBlock(nn.Module):
         self,
         channels: int,
         emb_channels: int,
-        out_channels: Union[int, None],
+        out_channels: int | None,
         dense_in_channels: int,
         dropout: float,
     ):

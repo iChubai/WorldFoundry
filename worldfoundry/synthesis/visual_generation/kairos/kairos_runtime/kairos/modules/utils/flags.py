@@ -1,6 +1,7 @@
 import os
-import torch
 import subprocess
+
+import torch
 
 
 def detectplat_device_gpu_vendor():

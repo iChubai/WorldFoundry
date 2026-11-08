@@ -7,8 +7,8 @@ It simplifies access to core functionalities by re-exporting
 and `DreamDojoSynthesis` for generating or synthesizing world configurations.
 """
 
-from .worldfoundry_runtime import DreamDojoRuntime
 from .dreamdojo_synthesis import DreamDojoSynthesis
+from .worldfoundry_runtime import DreamDojoRuntime
 
 # Defines the public interface of the module, specifying which names are
 # imported when a client does 'from package import *'.

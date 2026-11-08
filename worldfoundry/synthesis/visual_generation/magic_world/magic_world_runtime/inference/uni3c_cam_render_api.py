@@ -1,15 +1,16 @@
 # uni3c_cam_render.py
 import os
 import warnings
-from typing import List, Sequence, Union
+from collections.abc import Sequence
+from typing import List, Union
 
 import einops
 import numpy as np
 import torch
 import trimesh
-from PIL import Image, ImageOps
 from diffusers.utils import export_to_video
-from torchvision.transforms import ToTensor, ToPILImage
+from PIL import Image, ImageOps
+from torchvision.transforms import ToPILImage, ToTensor
 
 try:
     from pytorch3d.renderer import PointsRasterizationSettings
@@ -28,7 +29,7 @@ from uni3c.pointcloud import point_rendering
 warnings.filterwarnings("ignore")
 
 
-def _to_torch_image_0_1(img: Union[Image.Image, np.ndarray, torch.Tensor]) -> Image.Image:
+def _to_torch_image_0_1(img: Image.Image | np.ndarray | torch.Tensor) -> Image.Image:
     """
     将输入统一成 PIL.Image（RGB），内部只做必要的格式兼容。
     """
@@ -111,8 +112,8 @@ def get_models(device):
 
 @torch.no_grad()
 def render_from_image_and_traj(
-    reference_image: Union[Image.Image, np.ndarray, torch.Tensor],
-    traj_params: Union[List[Sequence[float]], np.ndarray],
+    reference_image: Image.Image | np.ndarray | torch.Tensor,
+    traj_params: list[Sequence[float]] | np.ndarray,
     output_path: str,
     *,
     traj_type: str = "custom",
@@ -129,7 +130,7 @@ def render_from_image_and_traj(
     depth_radius: float = 0.008,
     ppp: int = 8,
     fps: int = 30,
-) -> tuple[List[Image.Image], List[Image.Image]]:  # ← 新增显式返回类型
+) -> tuple[list[Image.Image], list[Image.Image]]:  # ← 新增显式返回类型
     """
     将原 cam_render.py 的主流程封装成函数：
     - reference_image: 直接给图片对象（PIL/np/tensor）

@@ -48,7 +48,7 @@ class Uni3CSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "Uni3CSynthesis":
+    ) -> Uni3CSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):

@@ -1,23 +1,28 @@
+import os
+import time
 import types
 from contextlib import nullcontext
 from typing import List, Optional
+
 import torch
 from torch import nn
 
-import time
-from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import _video_vae
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import _video_vae
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forcing.krea_model import (
-    WanModel,
-    RegisterTokens,
-    GanAttentionBlock,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forcing.krea import CausalWanModel
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
-import os
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forcing.krea_model import (
+    GanAttentionBlock,
+    RegisterTokens,
+    WanModel,
+)
+from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
+
+# isort: split
 from settings import resolve_model_asset, resolve_model_path
+
+# isort: split
 
 
 from safetensors.torch import load_file as safe_load_file
@@ -52,7 +57,7 @@ class WanTextEncoder(torch.nn.Module):
         # Assume we are always on GPU
         return torch.cuda.current_device()
 
-    def forward(self, text_prompts: List[str]) -> dict:
+    def forward(self, text_prompts: list[str]) -> dict:
         stime = time.time()
         ids, mask = self.tokenizer(text_prompts, return_mask=True, add_special_tokens=True)
         ids = ids.to(self.device)
@@ -60,7 +65,7 @@ class WanTextEncoder(torch.nn.Module):
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.text_encoder(ids, mask)
 
-        for u, v in zip(context, seq_lens):
+        for u, v in zip(context, seq_lens, strict=False):
             u[v:] = 0.0  # set padding to 0.0
         result = {"prompt_embeds": context}
         return result
@@ -272,14 +277,14 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        current_start: Optional[int] = None,
-        classify_mode: Optional[bool] = False,
-        concat_time_embeddings: Optional[bool] = False,
-        clean_x: Optional[torch.Tensor] = None,
-        aug_t: Optional[torch.Tensor] = None,
-        cache_start: Optional[int] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        current_start: int | None = None,
+        classify_mode: bool | None = False,
+        concat_time_embeddings: bool | None = False,
+        clean_x: torch.Tensor | None = None,
+        aug_t: torch.Tensor | None = None,
+        cache_start: int | None = None,
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
 

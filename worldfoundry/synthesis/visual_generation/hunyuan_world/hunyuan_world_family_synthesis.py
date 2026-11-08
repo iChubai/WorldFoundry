@@ -75,7 +75,7 @@ class HunyuanWorldPlanSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HunyuanWorldPlanSynthesis":
+    ) -> HunyuanWorldPlanSynthesis:
         """Returns a plan-only synthesis instance without actual executable synthesis.
 
         This method is provided for API compatibility but ignores all input
@@ -222,7 +222,7 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HunyuanWorldMirrorSynthesis":
+    ) -> HunyuanWorldMirrorSynthesis:
         """Loads and initializes the HunyuanWorld-Mirror model pipeline.
 
         This method retrieves the HunyuanMirrorPipeline from `worldfoundry` and
@@ -395,7 +395,7 @@ class HYWorld2PanoSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HYWorld2PanoSynthesis":
+    ) -> HYWorld2PanoSynthesis:
         """Loads and initializes the HY-Pano 2.0 pipeline from its vendored runtime.
 
         This method is responsible for setting up the `HunyuanPanoPipeline`
@@ -480,11 +480,11 @@ class HYWorld2PanoSynthesis(BaseSynthesis):
 
 
 __all__ = [
+    "HYWorld2PanoSynthesis",
+    "HYWorld2Synthesis",
+    "HunyuanWorld1Synthesis",
     "HunyuanWorldIntegrationError",
     "HunyuanWorldIntegrationStatus",
-    "HunyuanWorldPlanSynthesis",
-    "HunyuanWorld1Synthesis",
     "HunyuanWorldMirrorSynthesis",
-    "HYWorld2Synthesis",
-    "HYWorld2PanoSynthesis",
+    "HunyuanWorldPlanSynthesis",
 ]

@@ -1,22 +1,23 @@
+from collections.abc import Sequence
+from typing import Literal, TypeAlias
+
 import einops
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from collections.abc import Sequence
-from typing import Literal, TypeAlias
-
 from ...openpi import array_typing as at
 from ...openpi import sharding
 from ...openpi.modeling import lora
-from ...openpi.modeling.gemma import Attention
-from ...openpi.modeling.gemma import Config
-from ...openpi.modeling.gemma import Embedder
-from ...openpi.modeling.gemma import PALIGEMMA_VOCAB_SIZE
-from ...openpi.modeling.gemma import RMSNorm
-from ...openpi.modeling.gemma import _apply_rope
-from ...openpi.modeling.gemma import _gated_residual
-
+from ...openpi.modeling.gemma import (
+    PALIGEMMA_VOCAB_SIZE,
+    Attention,
+    Config,
+    Embedder,
+    RMSNorm,
+    _apply_rope,
+    _gated_residual,
+)
 from .integration import Attention_with_MemoryExpert, Variant, _name, get_config
 from .memory_utils import kernel_init_out_proj
 
@@ -139,7 +140,7 @@ class HistoryBlock(nn.Module):
                     if self.integration_type != "expert"
                     else _name("pre_attention_norm", i - 1)
                 )
-                x, gate = RMSNorm(name=name)(x, adarms_cond[i])  # noqa: PLW2901
+                x, gate = RMSNorm(name=name)(x, adarms_cond[i])
             pre_attn.append(x)
             gates.append(gate if x is not None else None)
 
@@ -159,10 +160,10 @@ class HistoryBlock(nn.Module):
                     x = MemoryRMSNorm(name="mem_rms_norm_ffn")(x, mem_mod_vec)
 
                 name = _name("pre_ffw_norm", i) if self.integration_type != "expert" else _name("pre_ffw_norm", i - 1)
-                x, gate = RMSNorm(name=name)(x, adarms_cond[i])  # noqa: PLW2901
+                x, gate = RMSNorm(name=name)(x, adarms_cond[i])
 
                 name = _name("mlp", i) if self.integration_type != "expert" else _name("mlp", i - 1)
-                x = lora.FeedForward(  # noqa: PLW2901
+                x = lora.FeedForward(
                     features=config.width,
                     hidden_dim=config.mlp_dim,
                     name=name,

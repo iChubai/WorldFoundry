@@ -5,8 +5,9 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .infer import _load_json, _normalize_actions, _resolve_checkpoint
 
@@ -126,13 +127,13 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         try:
             importlib.import_module("torchcodec")
             decoder_available = True
-        except Exception as exc:  # noqa: BLE001 - native-loader errors must be surfaced in the plan.
+        except Exception as exc:  # native-loader errors must be surfaced in the plan.
             torchcodec_error = str(exc).splitlines()[0] or type(exc).__name__
     if not decoder_available and importlib.util.find_spec("av") is not None:
         try:
             importlib.import_module("av")
             decoder_available = True
-        except Exception:  # noqa: BLE001 - report both decoder routes together below.
+        except Exception:  # report both decoder routes together below.
             pass
     if not decoder_available:
         missing.append(
@@ -148,7 +149,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         try:
             torch = importlib.import_module("torch")
             cuda_available = bool(torch.cuda.is_available())
-        except Exception:  # noqa: BLE001 - the import failure is reported as an unavailable device.
+        except Exception:  # the import failure is reported as an unavailable device.
             cuda_available = False
         if not cuda_available:
             missing.append(

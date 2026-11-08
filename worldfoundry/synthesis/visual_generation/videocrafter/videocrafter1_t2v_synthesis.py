@@ -8,9 +8,8 @@ of the model within the `worldfoundry` framework.
 
 from __future__ import annotations
 
-from .worldfoundry_runtime import VideoCrafter
-
 from ..runtime_video_synthesis import RuntimeVideoSynthesis
+from .worldfoundry_runtime import VideoCrafter
 
 
 class VideoCrafter1T2VSynthesis(RuntimeVideoSynthesis):

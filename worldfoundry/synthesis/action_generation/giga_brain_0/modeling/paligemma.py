@@ -12,6 +12,7 @@ from transformers.models.siglip.modeling_siglip import (
     SiglipVisionEmbeddings,
 )
 from transformers.utils import can_return_tuple
+
 from worldfoundry.core.attention import apply_rotary_embedding, scaled_dot_product_attention
 
 
@@ -512,7 +513,7 @@ class GemmaDecoderLayerWithExpert(nn.Module):
         )
 
         after_attn_embeds = []
-        for i, (residual, attn_output, attn_gate) in enumerate(zip(residuals, attn_outputs, attn_gates)):
+        for i, (residual, attn_output, attn_gate) in enumerate(zip(residuals, attn_outputs, attn_gates, strict=False)):
             if residual is not None:
                 after_attn_embeds.append(self.gated_residual(residual, attn_output, attn_gate))
             else:

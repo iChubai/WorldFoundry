@@ -15,7 +15,8 @@
 
 # from neophilia; Author: Qsh (qsh.zh27@gmail.com) Kaiwen Zheng (zkwthu@gmail.com)
 
-from typing import Any, Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any, List, Optional, Tuple, Union
 
 import torch
 import torch.distributed as dist
@@ -68,12 +69,12 @@ def single_all_to_all(input, local_seq_2_local_head, group, async_op=False):
 
 
 def async_a2a_communicate(
-    a2a_inputs: Union[torch.Tensor, List[torch.Tensor]],
+    a2a_inputs: torch.Tensor | list[torch.Tensor],
     cp_size: int,
     cp_group: ProcessGroup,
     cp_stream: torch.cuda.Stream,
     local_seq_2_local_head: bool,
-) -> Union[torch.Tensor, List[torch.Tensor]]:
+) -> torch.Tensor | list[torch.Tensor]:
     """
     A2A communication for context parallelism. best used in communicate qkv
     Modified from Nvidia Transformer Engine.
@@ -124,7 +125,7 @@ class _SeqAllToAll(torch.autograd.Function):
         return res
 
     @staticmethod
-    def backward(ctx: Any, *grad_output: torch.Tensor) -> Tuple[None, torch.Tensor, None]:
+    def backward(ctx: Any, *grad_output: torch.Tensor) -> tuple[None, torch.Tensor, None]:
         return (None, _SeqAllToAll.apply(ctx.group, *grad_output, not ctx.local_seq_2_local_head), None)
 
 
@@ -139,7 +140,7 @@ class _SeqAllToAllQKV(torch.autograd.Function):
         cp_size: int,
         cp_stream: torch.cuda.Stream,
         local_seq_2_local_head: bool,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         ctx.group = group
         ctx.cp_size = cp_size
         ctx.cp_stream = cp_stream
@@ -150,7 +151,7 @@ class _SeqAllToAllQKV(torch.autograd.Function):
     @staticmethod
     def backward(
         ctx: Any, *grad_output: torch.Tensor
-    ) -> Tuple[None, torch.Tensor, torch.Tensor, torch.Tensor, None, None, None]:
+    ) -> tuple[None, torch.Tensor, torch.Tensor, torch.Tensor, None, None, None]:
         q_grad, k_grad, v_grad = _SeqAllToAllQKV.apply(
             ctx.group, *grad_output, ctx.cp_size, ctx.cp_stream, not ctx.local_seq_2_local_head
         )
@@ -160,7 +161,7 @@ class _SeqAllToAllQKV(torch.autograd.Function):
 class DistributedAttention(torch.nn.Module):
     """Wraps a local attention op with optional Ulysses-style CP (A2A) + optional KV cache."""
 
-    def __init__(self, local_attention: Union[torch.nn.Module, Callable]) -> None:
+    def __init__(self, local_attention: torch.nn.Module | Callable) -> None:
         super().__init__()
         self.local_attn = local_attention
         self.pg = None
@@ -171,8 +172,8 @@ class DistributedAttention(torch.nn.Module):
         self.stream = stream
 
     def _materialize_kv(
-        self, key: torch.Tensor, value: torch.Tensor, attn_ctx: Optional[AttnContext]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, key: torch.Tensor, value: torch.Tensor, attn_ctx: AttnContext | None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if attn_ctx is None or attn_ctx.kv_cache is None:
             return key, value
 
@@ -203,7 +204,7 @@ class DistributedAttention(torch.nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         key_current: torch.Tensor,
-        attn_ctx: Optional[AttnContext],
+        attn_ctx: AttnContext | None,
     ):
         if attn_ctx is None or attn_ctx.attn_observer is None:
             return
@@ -224,7 +225,7 @@ class DistributedAttention(torch.nn.Module):
         key: torch.Tensor,
         value: torch.Tensor,
         *args: Any,
-        attn_ctx: Optional[AttnContext] = None,
+        attn_ctx: AttnContext | None = None,
         **kwargs,
     ) -> torch.Tensor:
         """

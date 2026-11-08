@@ -4,7 +4,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_data_path
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 INFERENCE_ENTRYPOINT = RUNTIME_DIR / "inference.py"
 BLOCKED_REASON = (

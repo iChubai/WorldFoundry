@@ -1,4 +1,5 @@
 import os
+
 import torch
 from PIL import Image
 from transformers import AutoModelForImageTextToText, AutoProcessor
@@ -102,7 +103,9 @@ class PromptRewriter:
 
         generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+        ]
 
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False

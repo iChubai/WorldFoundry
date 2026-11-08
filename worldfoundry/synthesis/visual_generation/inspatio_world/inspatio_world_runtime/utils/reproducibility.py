@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Mapping
+from collections.abc import Mapping
 
 SEED_ENV = "WORLDFOUNDRY_INSPATIO_WORLD_SEED"
 DETERMINISTIC_ENV = "WORLDFOUNDRY_DETERMINISTIC"

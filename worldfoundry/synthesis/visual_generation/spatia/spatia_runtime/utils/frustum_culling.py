@@ -1,5 +1,6 @@
-import torch
 from typing import Dict, Optional, Tuple
+
+import torch
 from scipy.optimize import linear_sum_assignment
 
 try:
@@ -12,7 +13,7 @@ except Exception:
     tl = None
     HAS_TRITON = False
 
-__all__ = ["frustum_frontmost_mask", "frustum_frontmost_mask_triton", "find_mask_matches"]
+__all__ = ["find_mask_matches", "frustum_frontmost_mask", "frustum_frontmost_mask_triton"]
 
 
 def _ensure_homogeneous_w2c(w2c: torch.Tensor) -> torch.Tensor:
@@ -56,9 +57,9 @@ def frustum_frontmost_mask(
     points_xyz_rgb: torch.Tensor,
     w2c_matrices: torch.Tensor,
     intrinsics: torch.Tensor,
-    image_size: Tuple[int, int],
-    near: Optional[float] = None,
-    far: Optional[float] = None,
+    image_size: tuple[int, int],
+    near: float | None = None,
+    far: float | None = None,
     background_depth: float = 1e9,
 ) -> torch.Tensor:
     """
@@ -83,9 +84,9 @@ def frustum_frontmost_mask(
     # Valid frustum: in front and within near/far
     valid = Z > 0
     if near is not None:
-        valid = valid & (Z >= near)
+        valid = valid & (near <= Z)
     if far is not None:
-        valid = valid & (Z <= far)
+        valid = valid & (far >= Z)
 
     fx, fy, cx, cy = K[:, 0:1], K[:, 1:2], K[:, 2:3], K[:, 3:4]
     eps = torch.finfo(dtype).eps
@@ -117,7 +118,7 @@ def frustum_frontmost_mask(
 
     # A point is frontmost if its Z equals the per-pixel min Z (within a small tol)
     minZ_at_point = depth_buf.gather(1, pix.view(T, -1))  # [T,N]
-    front = valid & (Z <= (minZ_at_point + 1e-6))
+    front = valid & ((minZ_at_point + 1e-6) >= Z)
     return front
 
 
@@ -153,9 +154,9 @@ def frustum_frontmost_mask_triton(
     points_xyz_rgb: torch.Tensor,
     w2c_matrices: torch.Tensor,
     intrinsics: torch.Tensor,
-    image_size: Tuple[int, int],
-    near: Optional[float] = None,
-    far: Optional[float] = None,
+    image_size: tuple[int, int],
+    near: float | None = None,
+    far: float | None = None,
     background_depth: float = 1e9,
 ) -> torch.Tensor:
     """
@@ -182,9 +183,9 @@ def frustum_frontmost_mask_triton(
 
     valid = Z > 0
     if near is not None:
-        valid = valid & (Z >= near)
+        valid = valid & (near <= Z)
     if far is not None:
-        valid = valid & (Z <= far)
+        valid = valid & (far >= Z)
 
     fx, fy, cx, cy = K[:, 0:1], K[:, 1:2], K[:, 2:3], K[:, 3:4]
     eps = torch.finfo(dtype).eps
@@ -214,13 +215,13 @@ def frustum_frontmost_mask_triton(
     )
     # Read min depth for points
     minZ_at_point = depth_buf.gather(1, pix.view(T, -1))
-    front = valid & (Z <= (minZ_at_point + 1e-6))
+    front = valid & ((minZ_at_point + 1e-6) >= Z)
     return front
 
 
 def find_mask_matches(
     A: torch.Tensor, B: torch.Tensor, method: str = "independent", bf16: bool = True
-) -> Dict[int, int]:
+) -> dict[int, int]:
     """
     Match each mask in `B` to the best mask in `A`.
 
@@ -266,7 +267,7 @@ def find_mask_matches(
         cost_matrix = -intersection_matrix
         cost_matrix_np = cost_matrix.cpu().numpy()
         row_ind, col_ind = linear_sum_assignment(cost_matrix_np)
-        matches = {r: c for r, c in zip(row_ind, col_ind)}
+        matches = {r: c for r, c in zip(row_ind, col_ind, strict=False)}
         for i in range(N):
             if i not in matches:
                 matches[i] = -1

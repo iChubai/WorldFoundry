@@ -4,12 +4,13 @@ import torch
 import torch.nn as nn
 from transformers import (
     AutoTokenizer,
-    SiglipVisionModel,
-    SiglipImageProcessor,
     LlamaForCausalLM,
     LogitsProcessor,
     LogitsProcessorList,
+    SiglipImageProcessor,
+    SiglipVisionModel,
 )
+
 from .encoder import ActionTransformerProjector
 from .model import load_local_transformers_model
 

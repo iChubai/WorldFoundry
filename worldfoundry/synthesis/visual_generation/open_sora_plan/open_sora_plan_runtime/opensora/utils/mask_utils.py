@@ -1,10 +1,11 @@
-from math import floor, ceil
 from abc import ABC, abstractmethod
+from math import ceil, floor
+
 import cv2
-import torch
-import torch.nn.functional as F
 import imageio
 import numpy as np
+import torch
+import torch.nn.functional as F
 
 try:
     import torch_npu
@@ -173,9 +174,7 @@ class MaskProcessor:
                 list(mask_type_ratio_dict.keys()), list(mask_type_ratio_dict.values())
             )[0]
         elif mask_type is not None:
-            assert mask_type in STR_TO_TYPE.keys() or mask_type in STR_TO_TYPE.values(), (
-                f"Invalid mask type: {mask_type}"
-            )
+            assert mask_type in STR_TO_TYPE or mask_type in STR_TO_TYPE.values(), f"Invalid mask type: {mask_type}"
             mask_generator_type = mask_type if mask_type in MaskType else STR_TO_TYPE[mask_type]
         else:
             raise ValueError("mask_type or mask_type_ratio_dict should be provided.")

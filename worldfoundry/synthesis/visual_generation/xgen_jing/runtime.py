@@ -22,6 +22,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.minimax_h3 import (
     minimax_h3_rf_v_to_x0,
 )
 from worldfoundry.pipelines.minimax._minimax_h3.packed_tokens import minimax_h3_unpatchify_video_tokens
+
 from .packing import audio_endpoint, chunk_lengths, expand_slices, pack
 
 
@@ -135,9 +136,10 @@ class JINGRuntime:
     ):
         from diffusers.models.autoencoders.vae import DiagonalGaussianDistribution
         from transformers import AutoProcessor, AutoTokenizer
+
         from worldfoundry.base_models.diffusion_model.models.encoders.minimax_h3_qwen3vl import MiniMaxH3Qwen3VLEncoder
+        from worldfoundry.core.media.codecs.audio import mux_audio_video, write_audio
         from worldfoundry.core.media.codecs.video import save_video_h264
-        from worldfoundry.core.media.codecs.audio import write_audio, mux_audio_video
 
         for name, value in (("height", height), ("width", width)):
             if type(value) is not int or value <= 0 or value % 32:

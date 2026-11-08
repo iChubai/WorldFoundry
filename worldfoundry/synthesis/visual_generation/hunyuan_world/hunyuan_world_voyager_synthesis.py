@@ -44,7 +44,7 @@ class HunyuanWorldVoyagerSynthesis(BaseSynthesis):
         self.runtime = runtime
 
     @classmethod
-    def from_pretrained(cls, *args: Any, **kwargs: Any) -> "HunyuanWorldVoyagerSynthesis":
+    def from_pretrained(cls, *args: Any, **kwargs: Any) -> HunyuanWorldVoyagerSynthesis:
         """
         Creates an instance of HunyuanWorldVoyagerSynthesis by loading a pretrained Voyager runtime.
 

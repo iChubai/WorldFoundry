@@ -69,7 +69,7 @@ class Mixture(nn.Module):
     def forward_norm(
         self,
         x: torch.FloatTensor,
-        cond: Optional[torch.FloatTensor] = None,
+        cond: torch.FloatTensor | None = None,
     ) -> torch.FloatTensor | None:
         if hasattr(self, "norm"):
             args = [x] if self.adaptive_mode is None else [x, cond]
@@ -186,7 +186,7 @@ class MixtureAttention(nn.Module):
         states = apply_rotary_pos_emb(states, cos, sin)
         return states.to(orig_dtype)
 
-    def repeat_kv(self, key_states: torch.FloatTensor, value_states: torch.FloatTensor) -> Tuple[torch.FloatTensor]:
+    def repeat_kv(self, key_states: torch.FloatTensor, value_states: torch.FloatTensor) -> tuple[torch.FloatTensor]:
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
         return key_states, value_states

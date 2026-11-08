@@ -1,48 +1,48 @@
+import argparse
+import math
+import os
+import time
+from pathlib import Path
+
+import imageio
+import torch
+import torch.distributed as dist
 from diffusers.schedulers import (
+    CogVideoXDDIMScheduler,
     DDIMScheduler,
     DDPMScheduler,
-    PNDMScheduler,
-    EulerDiscreteScheduler,
-    DPMSolverMultistepScheduler,
-    HeunDiscreteScheduler,
-    EulerAncestralDiscreteScheduler,
     DEISMultistepScheduler,
-    KDPM2AncestralDiscreteScheduler,
+    DPMSolverMultistepScheduler,
     DPMSolverSinglestepScheduler,
-    CogVideoXDDIMScheduler,
+    EulerAncestralDiscreteScheduler,
+    EulerDiscreteScheduler,
     FlowMatchEulerDiscreteScheduler,
+    HeunDiscreteScheduler,
+    KDPM2AncestralDiscreteScheduler,
+    PNDMScheduler,
 )
 from einops import rearrange
-import time
-import torch
-import os
-import torch.distributed as dist
-from torchvision.utils import save_image
-import imageio
-import math
-import argparse
-from pathlib import Path
-from transformers import AutoModelForCausalLM
 from huggingface_hub import snapshot_download
+from torchvision.utils import save_image
+from transformers import AutoModelForCausalLM
 
 try:
     import torch_npu
+    from opensora.acceleration.parallel_states import hccl_info, initialize_sequence_parallel_state
     from opensora.npu_config import npu_config
-    from opensora.acceleration.parallel_states import initialize_sequence_parallel_state, hccl_info
 except:
     torch_npu = None
     npu_config = None
     from opensora.utils.parallel_states import initialize_sequence_parallel_state, nccl_info
 
-    pass
 
-from opensora.utils.utils import set_seed
 from opensora.models.causalvideovae import ae_stride_config, ae_wrapper
-from opensora.sample.pipeline_opensora import OpenSoraPipeline
-from opensora.sample.pipeline_inpaint import OpenSoraInpaintPipeline
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
 from opensora.models.diffusion.opensora_v1_3.modeling_inpaint import OpenSoraInpaint_v1_3
-from transformers import T5EncoderModel, T5Tokenizer, AutoTokenizer, MT5EncoderModel, CLIPTextModelWithProjection
+from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
+from opensora.sample.pipeline_inpaint import OpenSoraInpaintPipeline
+from opensora.sample.pipeline_opensora import OpenSoraPipeline
+from opensora.utils.utils import set_seed
+from transformers import AutoTokenizer, CLIPTextModelWithProjection, MT5EncoderModel, T5EncoderModel, T5Tokenizer
 
 
 def get_scheduler(args):
@@ -308,14 +308,14 @@ def run_model_and_save_samples(args, pipeline, caption_refiner_model=None, enhan
     if not isinstance(args.text_prompt, list):
         args.text_prompt = [args.text_prompt]
     if len(args.text_prompt) == 1 and args.text_prompt[0].endswith("txt"):
-        text_prompt = open(args.text_prompt[0], "r").readlines()
+        text_prompt = open(args.text_prompt[0]).readlines()
         args.text_prompt = [i.strip() for i in text_prompt]
 
     if args.model_type == "inpaint" or args.model_type == "i2v":
         if not isinstance(args.conditional_pixel_values_path, list):
             args.conditional_pixel_values_path = [args.conditional_pixel_values_path]
         if len(args.conditional_pixel_values_path) == 1 and args.conditional_pixel_values_path[0].endswith("txt"):
-            temp = open(args.conditional_pixel_values_path[0], "r").readlines()
+            temp = open(args.conditional_pixel_values_path[0]).readlines()
             conditional_pixel_values_path = [i.strip().split(",") for i in temp]
 
         mask_type = args.mask_type if args.mask_type is not None else None
@@ -436,7 +436,7 @@ def run_model_and_save_samples(args, pipeline, caption_refiner_model=None, enhan
             video_grids.append(videos)
 
     if args.model_type == "inpaint" or args.model_type == "i2v":
-        for index, (prompt, cond_path) in enumerate(zip(args.text_prompt, conditional_pixel_values_path)):
+        for index, (prompt, cond_path) in enumerate(zip(args.text_prompt, conditional_pixel_values_path, strict=False)):
             if not args.sp and args.local_rank != -1 and index % args.world_size != args.local_rank:
                 continue
             generate(prompt, cond_path, mask_type)
@@ -482,7 +482,7 @@ def run_model_and_save_samples(args, pipeline, caption_refiner_model=None, enhan
                     fps=args.fps,
                     quality=6,
                 )
-            print("save path {}".format(args.save_img_path))
+            print(f"save path {args.save_img_path}")
 
 
 def run_model_and_save_samples_npu(args, pipeline, caption_refiner_model=None, enhance_video_model=None):

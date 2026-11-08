@@ -1,13 +1,13 @@
 """End-effector pose conversions used by inference postprocessing."""
 
-import torch
 import numpy as np
+import torch
 from torch import Tensor
 
 __all__ = [
     "_is_quaternion_relative_type",
-    "relative_pose_quaternion",
     "absolute_pose_quaternion",
+    "relative_pose_quaternion",
 ]
 
 

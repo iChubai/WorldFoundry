@@ -8,9 +8,9 @@ and checkpoint loader instead of carrying a private runtime fork.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from types import MethodType
-from typing import Iterable
 
 import torch
 import torch.nn as nn
@@ -19,6 +19,8 @@ from einops import rearrange
 from worldfoundry.base_models.diffusion_model.models.networks.wan import AttentionModule, WanModel
 from worldfoundry.core.attention import (
     apply_complex_rotary_embedding as rope_apply,
+)
+from worldfoundry.core.attention import (
     packed_sequence_attention as flash_attention,
 )
 from worldfoundry.core.kernels import layer_norm_scale_shift

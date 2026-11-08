@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Optional, Sequence
+from typing import Optional
 
 DEFAULT_NEOVERSE_REPO = "Yuppie1204/NeoVerse"
 DEFAULT_NEOVERSE_LORA_NAME = "Wan21_T2V_14B_lightx2v_cfg_step_distill_lora_rank64.safetensors"
@@ -97,7 +98,7 @@ def ensure_neoverse_runtime() -> Path:
     return root
 
 
-def _iter_candidate_paths(source_value: Optional[str | os.PathLike]) -> Iterable[Path]:
+def _iter_candidate_paths(source_value: str | os.PathLike | None) -> Iterable[Path]:
     """Iterates through potential paths for a given source value.
 
     This function first checks if the source value directly refers to an
@@ -206,7 +207,7 @@ def _resolve_file_from_source(
     source_value: str | os.PathLike,
     *,
     expected_names: Sequence[str],
-    allow_patterns: Optional[Sequence[str]] = None,
+    allow_patterns: Sequence[str] | None = None,
 ) -> Path:
     """Resolves a specific file from a given source, which can be a local path or a Hugging Face repo ID.
 
@@ -264,7 +265,7 @@ def _resolve_file_from_source(
     raise FileNotFoundError(f"Unable to find any of {list(expected_names)} in snapshot for {source_value}.")
 
 
-def resolve_neoverse_model_dir(source_value: Optional[str | os.PathLike]) -> Path:
+def resolve_neoverse_model_dir(source_value: str | os.PathLike | None) -> Path:
     """Resolves the absolute path to a valid NeoVerse model directory.
 
     This function searches for a NeoVerse model directory in several locations:
@@ -312,7 +313,7 @@ def resolve_neoverse_model_dir(source_value: Optional[str | os.PathLike]) -> Pat
 
 def resolve_neoverse_reconstructor_path(
     model_dir: str | os.PathLike,
-    override: Optional[str | os.PathLike] = None,
+    override: str | os.PathLike | None = None,
 ) -> Path:
     """Resolves the absolute path to the NeoVerse reconstructor checkpoint.
 
@@ -343,10 +344,10 @@ def resolve_neoverse_reconstructor_path(
 
 def resolve_neoverse_lora_path(
     model_dir: str | os.PathLike,
-    override: Optional[str | os.PathLike] = None,
+    override: str | os.PathLike | None = None,
     *,
     use_lora: bool = True,
-) -> Optional[Path]:
+) -> Path | None:
     """Resolves the absolute path to a NeoVerse LoRA checkpoint.
 
     Args:

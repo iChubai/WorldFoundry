@@ -1,5 +1,6 @@
-from typing import List, Optional
 import time
+from typing import List, Optional
+
 import torch
 
 from ..wan_utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
@@ -32,9 +33,9 @@ class BidirectionalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
+        text_prompts: list[str],
         return_latents=False,
-        initial_latent: Optional[torch.Tensor] = None,
+        initial_latent: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.

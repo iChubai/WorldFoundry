@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (C) 2026 Tencent.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +54,7 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
 
 
 class SpaceTimeBlock(nn.Module):
@@ -274,7 +273,7 @@ def _make_wrapper_forward(orig_forward):
 def apply_video_encoder_patch(
     visual: nn.Module,
     spacetime_layer_stride: int = 4,
-    past_drop_layer: Optional[int] = None,
+    past_drop_layer: int | None = None,
     max_num_frames: int = 18,
     time_embed_base: float = 100.0,
 ) -> None:

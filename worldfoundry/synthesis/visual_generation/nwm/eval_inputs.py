@@ -35,7 +35,7 @@ class BaseEvalInputDataset(Dataset):
         data_folder: str,
         data_split_folder: str,
         dataset_name: str,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
         len_traj_pred: int,
@@ -51,7 +51,7 @@ class BaseEvalInputDataset(Dataset):
         self.dataset_name = dataset_name
 
         traj_names_file = os.path.join(data_split_folder, traj_names)
-        with open(traj_names_file, "r") as f:
+        with open(traj_names_file) as f:
             file_lines = f.read()
             self.traj_names = file_lines.split("\n")
         if "" in self.traj_names:
@@ -129,7 +129,7 @@ class EvalDataset(BaseEvalInputDataset):
         data_folder: str,
         data_split_folder: str,
         dataset_name: str,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
         len_traj_pred: int,
@@ -156,7 +156,7 @@ class EvalDataset(BaseEvalInputDataset):
             predefined_index,
         )
 
-    def __getitem__(self, i: int) -> Tuple[torch.Tensor]:
+    def __getitem__(self, i: int) -> tuple[torch.Tensor]:
         try:
             f_curr, curr_time, _, _ = self.index_to_data[i]
             context_times = list(range(curr_time - self.context_size + 1, curr_time + 1))

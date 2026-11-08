@@ -13,9 +13,9 @@ from .tokenizers import HuggingfaceTokenizer
 from .xlm_roberta import XLMRoberta
 
 __all__ = [
+    "CLIPModel",
     "XLMRobertaCLIP",
     "clip_xlm_roberta_vit_h_14",
-    "CLIPModel",
 ]
 
 

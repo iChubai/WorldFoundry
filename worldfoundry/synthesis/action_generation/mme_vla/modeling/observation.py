@@ -5,7 +5,6 @@ from ...openpi.modeling.model import ArrayT
 from ...openpi.modeling.model import Observation as _Observation
 from ...openpi.modeling.model import preprocess_observation as _preprocess_observation
 
-
 #  b: batch size
 #  t: time step
 #  v: view

@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
-
+from typing import Any
 
 from worldfoundry.evaluation.utils import REPO_ROOT, worldfoundry_data_path
 from worldfoundry.runtime.env import resolve_hfd_root
@@ -91,7 +91,7 @@ class AnimateDiffRuntime:
         self._pipe = None  # Internal variable to hold the initialized AnimateDiff pipeline
 
     @classmethod
-    def from_synthesis(cls, synthesis: Any) -> "AnimateDiffRuntime":
+    def from_synthesis(cls, synthesis: Any) -> AnimateDiffRuntime:
         """
         Builds an AnimateDiffRuntime instance from a RuntimeProfileSynthesis adapter.
 

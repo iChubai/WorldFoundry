@@ -9,17 +9,19 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-from ..base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.giga_brain_0.runtime import (
     GigaBrain0Runtime,
     GigaBrain0RuntimeConfig,
     select_giga_brain_0_paths,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 class GigaBrain0Synthesis(ActionModelSynthesis):
@@ -70,7 +72,7 @@ class GigaBrain0Synthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "GigaBrain0Synthesis":
+    ) -> GigaBrain0Synthesis:
         """Create a lazy GigaBrain-0 synthesis wrapper.
 
         Args:

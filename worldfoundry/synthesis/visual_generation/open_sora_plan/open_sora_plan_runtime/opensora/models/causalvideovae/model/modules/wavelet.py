@@ -1,15 +1,16 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
+from einops import rearrange
+
 from ..modules import CausalConv3d
 from ..modules.ops import video_to_image
 
-from einops import rearrange
-
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config, set_run_dtype
-except Exception as e:
+except Exception:
     torch_npu = None
     npu_config = None
 

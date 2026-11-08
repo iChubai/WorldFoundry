@@ -5,15 +5,15 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import conda_envs_root_path, conda_root_path, project_root, resolve_worldfoundry_path
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
-
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = project_root(RUNTIME_ROOT)
@@ -175,7 +175,7 @@ class MatrixGame1Runtime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "MatrixGame1Runtime":
+    ) -> MatrixGame1Runtime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -598,9 +598,9 @@ __all__ = [
     "DEFAULT_CHECKPOINT_DIR",
     "DEFAULT_CONDA_DIR",
     "EXPECTED_CHECKPOINT_FILES",
-    "MatrixGame1Runtime",
-    "MatrixGame1RuntimePlan",
     "OPTIONAL_CHECKPOINT_FILES",
     "REQUIRED_RUNTIME_FILES",
     "RUNTIME_ROOT",
+    "MatrixGame1Runtime",
+    "MatrixGame1RuntimePlan",
 ]

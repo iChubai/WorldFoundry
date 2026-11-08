@@ -1,7 +1,7 @@
 import imageio
 import numpy as np
-from tqdm import tqdm
 from PIL import Image
+from tqdm import tqdm
 
 
 def save_video(frames, save_path, fps, quality=9, ffmpeg_params=None):

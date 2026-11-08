@@ -1,21 +1,30 @@
 import copy
 import json
+import os
 import random
 import sys
-import os
+import time
+
 import imageio
 import numpy as np
 import torch
-from tqdm import tqdm
-from mmengine import Config as MMConfig
-import time
 import torch.distributed as dist
+from mmengine import Config as MMConfig
+from tqdm import tqdm
 
+# isort: split
+from kairos.modules.utils import save_image, save_video
 
-from kairos.modules.utils import save_video, save_image
+# isort: split
+# isort: split
 from kairos.modules.utils import load_state_dict
+
+# isort: split
+# isort: split
 from kairos.pipelines.kairos_embodied_pipeline import KairosEmbodiedPipeline
-from kairos.apis.builder import PIPELINES_API, KAIROS_PROCESSOR, DITS
+
+# isort: split
+from kairos.apis.builder import DITS, KAIROS_PROCESSOR, PIPELINES_API
 
 
 @PIPELINES_API.register_module()

@@ -10,16 +10,18 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from ..base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.roboflamingo.runtime import (
     RoboFlamingoRuntime,
     RoboFlamingoRuntimeConfig,
     select_roboflamingo_runtime_config,
 )
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 def _first_observation_value(*values: Any) -> Any:
@@ -88,7 +90,7 @@ class RoboFlamingoSynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "RoboFlamingoSynthesis":
+    ) -> RoboFlamingoSynthesis:
         """Create RoboFlamingo from profile metadata without loading torch.
 
         This factory method simplifies instantiation by resolving model paths

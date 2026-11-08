@@ -14,8 +14,9 @@
 
 import math
 import numbers
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import flashinfer
 import torch
@@ -36,10 +37,10 @@ try:
 except:
     flex_attention = None
 
+from inference.common.config import EngineConfig, ModelConfig
 from torch import Tensor
 from torch.nn import Parameter
 
-from inference.common.config import EngineConfig, ModelConfig
 from worldfoundry.core import InferenceParams, ModelMetaArgs, PackedCrossAttnParams, divide
 from worldfoundry.core.attention import CSOHelper, UlyssesScheduler, cso_communication
 from worldfoundry.core.distributed.model_parallel import groups as parallel_state
@@ -571,7 +572,7 @@ class CustomMLP(torch.nn.Module):
 ##########################################################
 # LearnableRotaryEmbeddingCat
 ##########################################################
-def ndgrid(*tensors) -> Tuple[torch.Tensor, ...]:
+def ndgrid(*tensors) -> tuple[torch.Tensor, ...]:
     """generate N-D grid in dimension order.
 
     The ndgrid function is like meshgrid except that the order of the first two input arguments are switched.
@@ -596,7 +597,7 @@ def ndgrid(*tensors) -> Tuple[torch.Tensor, ...]:
 
 
 def pixel_freq_bands(
-    num_bands: int, max_freq: float = 224.0, linear_bands: bool = True, device: Optional[torch.device] = None
+    num_bands: int, max_freq: float = 224.0, linear_bands: bool = True, device: torch.device | None = None
 ):
     if linear_bands:
         bands = torch.linspace(1.0, max_freq / 2, num_bands, dtype=torch.float32, device=device)
@@ -606,7 +607,7 @@ def pixel_freq_bands(
 
 
 def freq_bands(
-    num_bands: int, temperature: float = 10000.0, step: int = 2, device: Optional[torch.device] = None
+    num_bands: int, temperature: float = 10000.0, step: int = 2, device: torch.device | None = None
 ) -> torch.Tensor:
     exp = torch.arange(0, num_bands, step, dtype=torch.int64, device=device).to(torch.float32) / num_bands
     bands = 1.0 / (temperature**exp)
@@ -614,18 +615,18 @@ def freq_bands(
 
 
 def build_fourier_pos_embed(
-    feat_shape: List[int],
-    bands: Optional[torch.Tensor] = None,
+    feat_shape: list[int],
+    bands: torch.Tensor | None = None,
     num_bands: int = 64,
     max_res: int = 224,
     temperature: float = 10000.0,
     linear_bands: bool = False,
     include_grid: bool = False,
     in_pixels: bool = True,
-    ref_feat_shape: Optional[List[int]] = None,
+    ref_feat_shape: list[int] | None = None,
     dtype: torch.dtype = torch.float32,
-    device: Optional[torch.device] = None,
-) -> List[torch.Tensor]:
+    device: torch.device | None = None,
+) -> list[torch.Tensor]:
     """
 
     Args:
@@ -666,7 +667,7 @@ def build_fourier_pos_embed(
         # eva's scheme for resizing rope embeddings (ref shape = pretrain)
         # aligning to the endpoint e.g [0,1,2] -> [0, 0.4, 0.8, 1.2, 1.6, 2]
         t_rescaled = []
-        for x, f, r in zip(t, feat_shape, ref_feat_shape):
+        for x, f, r in zip(t, feat_shape, ref_feat_shape, strict=False):
             # deal with image input
             if f == 1:
                 assert r == 1, "ref_feat_shape must be 1 when feat_shape is 1"
@@ -685,16 +686,16 @@ def build_fourier_pos_embed(
 
 
 def build_rotary_pos_embed(
-    feat_shape: List[int],
-    bands: Optional[torch.Tensor] = None,
+    feat_shape: list[int],
+    bands: torch.Tensor | None = None,
     dim: int = 64,
     max_res: int = 224,
     temperature: float = 10000.0,
     linear_bands: bool = False,
     in_pixels: bool = True,
-    ref_feat_shape: Optional[List[int]] = None,
+    ref_feat_shape: list[int] | None = None,
     dtype: torch.dtype = torch.float32,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
 ):
     """
 
@@ -749,8 +750,8 @@ class LearnableRotaryEmbeddingCat(nn.Module):
         temperature=10000,
         in_pixels=True,
         linear_bands: bool = False,
-        feat_shape: Optional[List[int]] = None,
-        ref_feat_shape: Optional[List[int]] = None,
+        feat_shape: list[int] | None = None,
+        ref_feat_shape: list[int] | None = None,
     ):
         super().__init__()
         self.dim = dim
@@ -771,7 +772,7 @@ class LearnableRotaryEmbeddingCat(nn.Module):
             bands = freq_bands(self.dim // 8, temperature=self.temperature, step=1, device=torch.cuda.current_device())
         return bands
 
-    def get_embed(self, shape: Optional[List[int]], ref_feat_shape: Optional[List[int]] = None):
+    def get_embed(self, shape: list[int] | None, ref_feat_shape: list[int] | None = None):
         # rebuild bands and embeddings every call, use if target shape changes
         embeds = build_rotary_pos_embed(
             feat_shape=shape,
@@ -841,7 +842,7 @@ class Attention(torch.nn.Module):
 ##########################################################
 def split_tensor_along_last_dim(
     tensor: torch.Tensor, num_partitions: int, contiguous_split_chunks: bool = False
-) -> List[torch.Tensor]:
+) -> list[torch.Tensor]:
     """Split a tensor along its last dimension.
 
     Args:

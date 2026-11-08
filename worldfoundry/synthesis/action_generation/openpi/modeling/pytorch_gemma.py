@@ -2,7 +2,8 @@ from typing import Literal
 
 import torch
 from torch import nn
-from transformers.models.auto import AutoModel, CONFIG_MAPPING
+from transformers.models.auto import CONFIG_MAPPING, AutoModel
+
 from . import hf_gemma as modeling_gemma
 from .hf_gemma_config import GemmaConfig
 
@@ -71,7 +72,7 @@ class PaliGemmaWithExpertModel(nn.Module):
         super().__init__()
 
         vlm_config_hf = CONFIG_MAPPING["paligemma"]()
-        vlm_config_hf._vocab_size = 257152  # noqa: SLF001
+        vlm_config_hf._vocab_size = 257152
         vlm_config_hf.image_token_index = 257152
         vlm_config_hf.text_config.hidden_size = vlm_config.width
         vlm_config_hf.text_config.intermediate_size = vlm_config.mlp_dim

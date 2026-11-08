@@ -2,11 +2,15 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api import (
     DepthAnything3,
 )
+
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
     affine_inverse,
     as_homogeneous,
@@ -149,7 +153,6 @@ class ModelDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_civitai(self, state_dict):
         """From civitai.

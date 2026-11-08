@@ -5,8 +5,8 @@
 #     IDDPM: https://github.com/openai/improved-diffusion/blob/main/improved_diffusion/gaussian_diffusion.py
 
 
-import math
 import enum
+import math
 
 import numpy as np
 import torch as th

@@ -66,7 +66,7 @@ def load_safetensors(path):
 
 
 # Helper functions
-def unsqueeze_dict_values(data: Dict[str, Any]) -> Dict[str, Any]:
+def unsqueeze_dict_values(data: dict[str, Any]) -> dict[str, Any]:
     """
     Unsqueeze the values of a dictionary.
     This converts the data to be batched of size 1.
@@ -84,7 +84,7 @@ def unsqueeze_dict_values(data: Dict[str, Any]) -> Dict[str, Any]:
     return unsqueezed_data
 
 
-def squeeze_dict_values(data: Dict[str, Any]) -> Dict[str, Any]:
+def squeeze_dict_values(data: dict[str, Any]) -> dict[str, Any]:
     """
     Squeeze the values of a dictionary. This removes the batch dimension (axis=0).
     NOTE: We use axis=0 explicitly to avoid removing other size-1 dimensions
@@ -108,7 +108,7 @@ class BasePolicy(ABC):
     """Abstract base class for robot control policies."""
 
     @abstractmethod
-    def get_action(self, observations: Dict[str, Any]) -> Dict[str, Any]:
+    def get_action(self, observations: dict[str, Any]) -> dict[str, Any]:
         """
         Abstract method to get the action for a given state.
 
@@ -121,7 +121,7 @@ class BasePolicy(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_modality_config(self) -> Dict[str, ModalityConfig]:
+    def get_modality_config(self) -> dict[str, ModalityConfig]:
         """
         Return the modality config of the policy.
         """
@@ -151,7 +151,7 @@ class BeingHPolicy(BasePolicy):
         max_view_num: int = -1,
         use_fixed_view: bool = False,
         action_attn_mode: str = "causal",
-        device: Union[int, str] = "cuda" if torch.cuda.is_available() else "cpu",
+        device: int | str = "cuda" if torch.cuda.is_available() else "cpu",
         torch_dtype: str | torch.dtype | None = "auto",
         # MPG overrides
         use_mpg: bool = None,
@@ -362,11 +362,11 @@ class BeingHPolicy(BasePolicy):
 
     def _apply_mpg_overrides(
         self,
-        use_mpg: Optional[bool],
-        mpg_lambda: Optional[float],
-        mpg_num_projections: Optional[int],
-        mpg_refinement_iters: Optional[int],
-        mpg_gate_temperature: Optional[float],
+        use_mpg: bool | None,
+        mpg_lambda: float | None,
+        mpg_num_projections: int | None,
+        mpg_refinement_iters: int | None,
+        mpg_gate_temperature: float | None,
     ):
         """Apply MPG parameter overrides."""
         if use_mpg is not None:
@@ -410,7 +410,7 @@ class BeingHPolicy(BasePolicy):
                 f"refinement_iters={self.model.config.mpg_refinement_iters}"
             )
 
-    def _apply_flow_matching_overrides(self, num_inference_timesteps: Optional[int]):
+    def _apply_flow_matching_overrides(self, num_inference_timesteps: int | None):
         """Apply flow matching parameter overrides."""
         if num_inference_timesteps is not None:
             print(
@@ -479,7 +479,7 @@ class BeingHPolicy(BasePolicy):
 
         print(f"[Metadata] Loading from: {metadata_path}")
 
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             all_metadatas = json.load(f)
 
         metadata_dict = all_metadatas.get(self.dataset_name)
@@ -596,7 +596,7 @@ class BeingHPolicy(BasePolicy):
         print(f"✓ Metadata loaded for '{self.dataset_name}'")
 
     @torch.no_grad()
-    def get_action(self, observations: Dict[str, Any]) -> Dict[str, Any]:
+    def get_action(self, observations: dict[str, Any]) -> dict[str, Any]:
         """
         Get action with RTC support.
 
@@ -687,7 +687,7 @@ class BeingHPolicy(BasePolicy):
 
         return result
 
-    def _prepare_packed_inputs(self, processed_obs: Dict[str, Any], instructions: List[str]) -> Dict[str, Any]:
+    def _prepare_packed_inputs(self, processed_obs: dict[str, Any], instructions: list[str]) -> dict[str, Any]:
         """Prepare packed inputs for model."""
         first_state_key = next((k for k in processed_obs if k.startswith("state.")), None)
         N, _ = processed_obs[first_state_key].shape
@@ -850,7 +850,7 @@ class BeingHPolicy(BasePolicy):
             "embodiment_ids": torch.tensor([31], dtype=torch.long),
         }
 
-    def _check_is_batched(self, obs: Dict[str, Any]) -> bool:
+    def _check_is_batched(self, obs: dict[str, Any]) -> bool:
         first_key, first_val = next(iter(obs.items()))
 
         if isinstance(first_val, np.ndarray):
@@ -863,5 +863,5 @@ class BeingHPolicy(BasePolicy):
             return True
         return False
 
-    def get_modality_config(self) -> Dict[str, ModalityConfig]:
+    def get_modality_config(self) -> dict[str, ModalityConfig]:
         return self.data_config.modality_config()

@@ -1,35 +1,36 @@
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
 
-from ..modeling_videobase import VideoBaseAE
-from diffusers.configuration_utils import register_to_config
+import os
+from collections import deque
+from copy import deepcopy
+from typing import List
+
 import torch
 import torch.nn as nn
+from diffusers.configuration_utils import register_to_config
+from einops import rearrange
+
+from ..modeling_videobase import VideoBaseAE
 from ..modules import (
-    ResnetBlock2D,
-    ResnetBlock3D,
+    AttnBlock3DFix,
+    CausalConv3d,
     Conv2d,
     HaarWaveletTransform3D,
     InverseHaarWaveletTransform3D,
-    CausalConv3d,
     Normalize,
-    AttnBlock3DFix,
+    ResnetBlock2D,
+    ResnetBlock3D,
     nonlinearity,
 )
-import torch.nn as nn
-from ..utils.distrib_utils import DiagonalGaussianDistribution
-import torch
-from copy import deepcopy
-import os
 from ..registry import ModelRegistry
-from einops import rearrange
-from collections import deque
-from ..utils.module_utils import resolve_str_to_obj, Module
-from typing import List
+from ..utils.distrib_utils import DiagonalGaussianDistribution
+from ..utils.module_utils import Module, resolve_str_to_obj
 
 
 class Encoder(VideoBaseAE):
@@ -316,8 +317,8 @@ class WFVAEModel(VideoBaseAE):
         norm_type: str = "groupnorm",
         t_interpolation: str = "nearest",
         connect_res_layer_num: int = 1,
-        scale: List[float] = [0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215],
-        shift: List[float] = [0, 0, 0, 0, 0, 0, 0, 0],
+        scale: list[float] = [0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215],
+        shift: list[float] = [0, 0, 0, 0, 0, 0, 0, 0],
         # Module config
         l1_dowmsample_block: str = "Downsample",
         l1_downsample_wavelet: str = "HaarWaveletTransform2D",
@@ -530,7 +531,7 @@ class WFVAEModel(VideoBaseAE):
         for k in keys:
             for ik in ignore_keys:
                 if k.startswith(ik):
-                    print("Deleting key {} from state_dict.".format(k))
+                    print(f"Deleting key {k} from state_dict.")
                     del sd[k]
 
         missing_keys, unexpected_keys = self.load_state_dict(sd, strict=False)

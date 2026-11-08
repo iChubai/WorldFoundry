@@ -1,29 +1,31 @@
-import torch
-from einops import rearrange, repeat
 from typing import Any, Dict, Optional, Tuple
+
+import torch
 import torch.nn.functional as F
-from torch import nn
-from typing import Optional, Tuple
+from diffusers.models.attention import FeedForward
+from diffusers.models.attention_processor import Attention as Attention_
+from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.utils import logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
-from diffusers.models.attention import FeedForward
-
-from diffusers.models.attention_processor import Attention as Attention_
-from diffusers.models.embeddings import Timesteps, TimestepEmbedding
+from einops import rearrange, repeat
+from torch import nn
 
 try:
     import torch_npu
-    from opensora.npu_config import npu_config, set_run_dtype
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info as xccl_info
+
     from opensora.acceleration.communications import all_to_all_SBH
+    from opensora.acceleration.parallel_states import get_sequence_parallel_state
+    from opensora.acceleration.parallel_states import hccl_info as xccl_info
+    from opensora.npu_config import npu_config, set_run_dtype
 except:
     torch_npu = None
     npu_config = None
     set_run_dtype = None
-    from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info as xccl_info
     from opensora.utils.communications import all_to_all_SBH
+    from opensora.utils.parallel_states import get_sequence_parallel_state
+    from opensora.utils.parallel_states import nccl_info as xccl_info
 
-from ..common import RoPE3D, PositionGetter3D
+from ..common import PositionGetter3D, RoPE3D
 
 logger = logging.get_logger(__name__)
 
@@ -184,9 +186,9 @@ class OpenSoraAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.FloatTensor,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        temb: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        temb: torch.FloatTensor | None = None,
         frame: int = 8,
         height: int = 16,
         width: int = 16,
@@ -319,7 +321,7 @@ class BasicTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
         attention_bias: bool = False,
         only_cross_attention: bool = False,
@@ -328,10 +330,10 @@ class BasicTransformerBlock(nn.Module):
         norm_elementwise_affine: bool = True,
         norm_eps: float = 1e-5,
         final_dropout: bool = False,
-        ff_inner_dim: Optional[int] = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = True,
         attention_out_bias: bool = True,
-        interpolation_scale_thw: Tuple[int] = (1, 1, 1),
+        interpolation_scale_thw: tuple[int] = (1, 1, 1),
         sparse1d: bool = False,
         sparse_n: int = 2,
         sparse_group: bool = False,
@@ -393,10 +395,10 @@ class BasicTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
+        attention_mask: torch.FloatTensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        timestep: torch.LongTensor | None = None,
         frame: int = None,
         height: int = None,
         width: int = None,

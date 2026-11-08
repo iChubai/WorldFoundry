@@ -8,7 +8,7 @@ from typing import Any
 import torch
 
 from .config import LlavaPythiaConfig
-from .constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN
+from .constants import DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IMAGE_PATCH_TOKEN
 from .model import LlavaPythiaForCausalLM
 
 

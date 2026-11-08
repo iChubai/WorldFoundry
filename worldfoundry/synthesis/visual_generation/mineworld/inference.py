@@ -1,18 +1,19 @@
 import os
-import cv2
 import shutil
-import torch
 import time
-import numpy as np
-from tqdm import tqdm
-from rich import print
-from pathlib import Path
-from torch import autocast
-from einops import rearrange
-from action_tokenizer import MinecraftActionTokenizer
-from omegaconf import OmegaConf
-from torchvision import transforms
 from argparse import ArgumentParser
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from action_tokenizer import MinecraftActionTokenizer
+from einops import rearrange
+from omegaconf import OmegaConf
+from rich import print
+from torch import autocast
+from torchvision import transforms
+from tqdm import tqdm
 from utils import load_model, tensor_to_uint8
 
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -86,7 +87,7 @@ def lvm_generate(args, model, output_dir, demo_video):
     ### 2. load action into list
     action_list = []
     action_tokenizer = MinecraftActionTokenizer()
-    with open(input_action_path, "r") as f:
+    with open(input_action_path) as f:
         for line in f:
             line = eval(line.strip(), {"__builtins__": None}, safe_globals)
             line["camera"] = np.array(line["camera"])

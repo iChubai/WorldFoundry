@@ -1,7 +1,8 @@
 # Adapted from Tencent Hunyuan-GameCraft-1.0, under the Tencent Hunyuan Community License.
 import inspect
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -39,7 +40,7 @@ from .text_encoder import TextEncoder
 
 @dataclass
 class HunyuanVideoPipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -65,8 +66,8 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         text_encoder: TextEncoder,
         transformer: HYVideoDiffusionTransformer,
         scheduler: KarrasDiffusionSchedulers,
-        text_encoder_2: Optional[TextEncoder] = None,
-        progress_bar_config: Dict[str, Any] = None,
+        text_encoder_2: TextEncoder | None = None,
+        progress_bar_config: dict[str, Any] = None,
         args=None,
     ):
         super().__init__()
@@ -219,14 +220,14 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         num_videos_per_prompt,
         do_classifier_free_guidance,
         negative_prompt=None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        lora_scale: Optional[float] = None,
-        clip_skip: Optional[int] = None,
-        text_encoder: Optional[TextEncoder] = None,
-        data_type: Optional[str] = "image",
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        lora_scale: float | None = None,
+        clip_skip: int | None = None,
+        text_encoder: TextEncoder | None = None,
+        data_type: str | None = "image",
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -336,7 +337,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance and negative_prompt_embeds is None:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif prompt is not None and type(prompt) is not type(negative_prompt):
@@ -394,45 +395,46 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Union[str, List[str]],
-        cam_latents: Union[torch.Tensor],  # cam_latents
-        last_latents: Union[torch.Tensor],
-        uncond_cam_latents: Union[torch.Tensor],
-        gt_latents: Union[torch.Tensor],
+        prompt: str | list[str],
+        cam_latents: torch.Tensor,  # cam_latents
+        last_latents: torch.Tensor,
+        uncond_cam_latents: torch.Tensor,
+        gt_latents: torch.Tensor,
         height: int,
         width: int,
         video_length: int,  # frame is called video_len in hunyuan_multimodal/dev_video
         data_type: str = "video",
         num_inference_steps: int = 50,
-        timesteps: List[int] = None,
-        sigmas: List[float] = None,
+        timesteps: list[int] = None,
+        sigmas: list[float] = None,
         guidance_scale: float = 7.5,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        ref_latents: Optional[torch.Tensor] = None,
-        uncond_ref_latents: Optional[torch.Tensor] = None,
+        negative_prompt: str | list[str] | None = None,
+        ref_latents: torch.Tensor | None = None,
+        uncond_ref_latents: torch.Tensor | None = None,
         ip_cfg_scale: float = 0.0,
         use_deepcache: int = 1,
-        num_videos_per_prompt: Optional[int] = 1,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         guidance_rescale: float = 0.0,
-        clip_skip: Optional[int] = None,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        clip_skip: int | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
-        n_tokens: Optional[int] = None,
+        n_tokens: int | None = None,
         video_val_flag: bool = False,
         denoise_strength: float = 1.0,
         mask=None,
@@ -737,7 +739,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                 with torch.autocast(device_type="cuda", dtype=target_dtype, enabled=autocast_enabled):
                     is_cache = False
                     if use_deepcache and num_inference_steps == 50:
-                        no_cache_steps = list(range(0, 10)) + list(range(10, 40, 2)) + list(range(40, 50))
+                        no_cache_steps = list(range(10)) + list(range(10, 40, 2)) + list(range(40, 50))
                         if i in no_cache_steps:
                             is_cache = False
                         else:

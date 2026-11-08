@@ -1,14 +1,14 @@
 from functools import partial
-import numpy as np
 
-import torch
+import numpy as np
 import pytorch_lightning as pl
+import torch
 from torch.utils.data import DataLoader, Dataset
 
+from worldfoundry.core.model_loading.factory import instantiate_from_config
 from worldfoundry.synthesis.visual_generation.vid2world.eval_inputs.base import (
     Txt2ImgIterableBaseDataset,
 )
-from worldfoundry.core.model_loading.factory import instantiate_from_config
 
 
 def worker_init_fn(_):

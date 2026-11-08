@@ -1,27 +1,29 @@
 from typing import List, Optional, Tuple
 
-import torch
-import torch.nn as nn
-import torch.amp as amp
-
 import numpy as np
-from einops import rearrange
-
+import torch
+import torch.amp as amp
+import torch.nn as nn
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
-
+from einops import rearrange
 from safetensors.torch import load_file
 
-from .lora_utils import create_lora_network
 from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
+
+from .lora_utils import create_lora_network
+
+# isort: split
 from .attention import Attention, MultiHeadCrossAttention
+
+# isort: split
 from .blocks import (
-    TimestepEmbedder,
     CaptionEmbedder,
-    PatchEmbed3D,
     FeedForwardSwiGLU,
     FinalLayer_FP32,
     LayerNorm_FP32,
+    PatchEmbed3D,
+    TimestepEmbedder,
     modulate_fp32,
 )
 
@@ -157,14 +159,14 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
         adaln_tembed_dim: int = 512,
         frequency_embedding_size: int = 256,
         # default params
-        patch_size: Tuple[int] = (1, 2, 2),
+        patch_size: tuple[int] = (1, 2, 2),
         # attention config
         enable_flashattn3: bool = False,
         enable_flashattn2: bool = False,
         enable_xformers: bool = False,
         enable_bsa: bool = False,
         bsa_params: dict = None,
-        cp_split_hw: Optional[List[int]] = None,
+        cp_split_hw: list[int] | None = None,
         text_tokens_zero_pad: bool = False,
     ) -> None:
         super().__init__()

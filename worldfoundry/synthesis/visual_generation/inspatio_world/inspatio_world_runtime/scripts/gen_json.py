@@ -1,12 +1,14 @@
-import os
+import argparse
 import json
+import os
 from glob import glob
+
 import cv2
 import torch
 from PIL import Image
-import argparse
-from transformers import AutoProcessor, AutoConfig, AutoModelForCausalLM
 from tqdm import tqdm
+from transformers import AutoConfig, AutoModelForCausalLM, AutoProcessor
+
 from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (
     initialize_reproducibility,
 )
@@ -59,7 +61,7 @@ class CaptionModel:
         generated_texts = self.processor.batch_decode(generated_ids, skip_special_tokens=False)
 
         final_captions = []
-        for text, img in zip(generated_texts, image_list):
+        for text, img in zip(generated_texts, image_list, strict=False):
             text = text.replace("<pad>", "")
             try:
                 parsed_answer = self.processor.post_process_generation(
@@ -129,7 +131,7 @@ def process_videos(video_paths, vggt_root, model_path, batch_size):
 
         if len(batch_images) >= batch_size:
             captions = caption_model.process_batch(batch_images)
-            for meta, cap in zip(batch_meta, captions):
+            for meta, cap in zip(batch_meta, captions, strict=False):
                 meta["text"] = cap
                 results.append(meta)
             batch_images = []
@@ -137,7 +139,7 @@ def process_videos(video_paths, vggt_root, model_path, batch_size):
 
     if batch_images:
         captions = caption_model.process_batch(batch_images)
-        for meta, cap in zip(batch_meta, captions):
+        for meta, cap in zip(batch_meta, captions, strict=False):
             meta["text"] = cap
             results.append(meta)
 

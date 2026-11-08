@@ -1,16 +1,18 @@
 from typing import List, Optional
+
 import torch
+import torch.distributed as dist
+
+from worldfoundry.core.vram import get_cuda_free_memory_gb, gpu, move_model_to_device_with_memory_preservation
+from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtime.pipeline.causal_inference import (
+    CausalInferencePipeline,
+    _move_conditioning_to_device,
+)
 from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtime.utils.wan_wrapper import (
     WanDiffusionWrapper,
     WanTextEncoder,
     WanVAEWrapper,
 )
-from worldfoundry.core.vram import gpu, get_cuda_free_memory_gb, move_model_to_device_with_memory_preservation
-from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtime.pipeline.causal_inference import (
-    CausalInferencePipeline,
-    _move_conditioning_to_device,
-)
-import torch.distributed as dist
 
 
 class InteractiveCausalInferencePipeline(CausalInferencePipeline):
@@ -232,8 +234,8 @@ class InteractiveCausalInferencePipeline(CausalInferencePipeline):
         self,
         noise: torch.Tensor,
         *,
-        text_prompts_list: List[List[str]],
-        switch_frame_indices: List[int],
+        text_prompts_list: list[list[str]],
+        switch_frame_indices: list[int],
         return_latents: bool = False,
         low_memory: bool = False,
     ):

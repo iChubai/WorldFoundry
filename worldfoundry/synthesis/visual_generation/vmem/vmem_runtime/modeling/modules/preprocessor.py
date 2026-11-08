@@ -13,7 +13,7 @@ from worldfoundry.synthesis.visual_generation.vmem.runtime_env import (
 )
 
 
-class Dust3rPipeline(object):
+class Dust3rPipeline:
     def __init__(
         self,
         device: str | torch.device = "cuda",
@@ -102,8 +102,8 @@ class Dust3rPipeline(object):
         pts3d = [x.detach().cpu().numpy() for x in scene.get_pts3d()]  # type: ignore
         if num_img > 1:
             masks = [x.detach().cpu().numpy() for x in scene.get_masks()]
-            points = [p[m] for p, m in zip(pts3d, masks)]
-            point_colors = [img[m] for img, m in zip(imgs, masks)]
+            points = [p[m] for p, m in zip(pts3d, masks, strict=False)]
+            point_colors = [img[m] for img, m in zip(imgs, masks, strict=False)]
         else:
             points = [p.reshape(-1, 3) for p in pts3d]
             point_colors = [img.reshape(-1, 3) for img in imgs]

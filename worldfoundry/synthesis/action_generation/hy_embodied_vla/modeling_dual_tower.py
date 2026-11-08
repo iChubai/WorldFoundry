@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (C) 2026 Tencent.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -147,7 +146,7 @@ class HyDualTowerConfig(PretrainedConfig):
         # Optional reference to the outer ``HyVLAConfig`` (used by
         # HyVLAFlowMatching to keep its proj_width in sync with the
         # expert tower's hidden_size).
-        self.config = kwargs.get("config", None)
+        self.config = kwargs.get("config")
 
         super().__init__(**kwargs)
 
@@ -302,13 +301,13 @@ class HyDualTower(PreTrainedModel):
     # ------------------------------------------------------------------
     def forward(
         self,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Union[List[torch.FloatTensor], Cache]] = None,
-        inputs_embeds: List[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        fill_kv_cache: Optional[bool] = None,
-        modality_masks: List[torch.FloatTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | Cache | None = None,
+        inputs_embeds: list[torch.FloatTensor] = None,
+        use_cache: bool | None = None,
+        fill_kv_cache: bool | None = None,
+        modality_masks: list[torch.FloatTensor] = None,
     ):
         models = [self.vlm.language_model.model, self.expert.model]
         att_vis_output = []
@@ -399,7 +398,7 @@ class HyDualTower(PreTrainedModel):
             k_normed = []
 
             vlm_layer = models[0].layers[layer_idx]
-            for q_part, k_part in zip(q_parts, k_parts):
+            for q_part, k_part in zip(q_parts, k_parts, strict=False):
                 q_normed.append(vlm_layer.self_attn.query_layernorm(q_part))
                 k_normed.append(vlm_layer.self_attn.key_layernorm(k_part))
             query_states = torch.cat(q_normed, dim=2)
@@ -542,4 +541,4 @@ class HyDualTower(PreTrainedModel):
         return att_output, probs
 
 
-__all__ = ["HyDualTowerConfig", "HyDualTower"]
+__all__ = ["HyDualTower", "HyDualTowerConfig"]

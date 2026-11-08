@@ -1,18 +1,27 @@
-import sys
-import os
 import argparse
 import logging
-import warnings
+import os
 import random
+import sys
+import warnings
+
 import torch
 import torch.distributed as dist
 
 warnings.filterwarnings("ignore")
 from PIL import Image
+
 from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import MAX_AREA_CONFIGS, WAN_CONFIGS
 from worldfoundry.core.distributed.sequence_parallel.ops import init_distributed_group
+
+# isort: split
 from pipeline.inference_interactive_pipeline import MatrixGame3Pipeline as MatrixGame3InteractivePipeline
+
+# isort: split
+# isort: split
 from pipeline.inference_pipeline import MatrixGame3Pipeline
+
+# isort: split
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
 
 
@@ -139,12 +148,12 @@ def generate(args):
         dist.init_process_group(backend="nccl", init_method="env://", rank=rank, world_size=world_size)
     else:
         assert not (args.t5_fsdp or args.dit_fsdp), (
-            f"t5_fsdp and dit_fsdp are not supported in non-distributed environments."
+            "t5_fsdp and dit_fsdp are not supported in non-distributed environments."
         )
-        assert not (args.ulysses_size > 1), f"sequence parallel are not supported in non-distributed environments."
+        assert not (args.ulysses_size > 1), "sequence parallel are not supported in non-distributed environments."
 
     if args.ulysses_size > 1:
-        assert args.ulysses_size == world_size, f"The number of ulysses_size should be equal to the world size."
+        assert args.ulysses_size == world_size, "The number of ulysses_size should be equal to the world size."
         init_distributed_group()
 
     cfg = WAN_CONFIGS["matrix_game3"]

@@ -7,11 +7,11 @@ import jax
 import jax.numpy as jnp
 from typing_extensions import override
 
+from .. import array_typing as at
+from . import gemma as _gemma
 from . import model as _model
 from . import pi0_config
-from . import gemma as _gemma
 from . import siglip as _siglip
-from .. import array_typing as at
 
 logger = logging.getLogger("openpi")
 

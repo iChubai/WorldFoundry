@@ -1,4 +1,6 @@
-import torch, math
+import math
+
+import torch
 
 
 class FlowMatchScheduler:

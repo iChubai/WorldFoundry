@@ -1,4 +1,5 @@
 from typing import List
+
 import torch
 
 from worldfoundry.synthesis.visual_generation.forcing.shared.wan_wrapper import (
@@ -29,7 +30,7 @@ class BidirectionalInferencePipeline(torch.nn.Module):
             timesteps = torch.cat((self.scheduler.timesteps.cpu(), torch.tensor([0], dtype=torch.float32)))
             self.denoising_step_list = timesteps[1000 - self.denoising_step_list]
 
-    def inference(self, noise: torch.Tensor, text_prompts: List[str]) -> torch.Tensor:
+    def inference(self, noise: torch.Tensor, text_prompts: list[str]) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.
         Inputs:

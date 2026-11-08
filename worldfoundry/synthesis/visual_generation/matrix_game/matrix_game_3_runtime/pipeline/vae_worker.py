@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from pathlib import Path
 
 # When run as `python3 pipeline/vae_worker.py`, the parent package is unknown; add repo root like other entrypoints.
@@ -7,14 +7,17 @@ _repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
+import argparse
+import json
+import time
+
+import numpy as np
 import torch
 import torch.multiprocessing as mp
-import time
-import json
-import argparse
-import numpy as np
 from einops import rearrange
 from utils.visualize import process_video
+
+# isort: split
 from pipeline.vae_config import load_vae
 
 
@@ -104,12 +107,12 @@ def run_vae_worker_queue(latent_queue, ack_queue, done_event, watch_dir, device_
                 [vid_cpu], actual_watch_dir, metadata, mouse_condition, keyboard_condition, save_name, clip_idx=clip_idx
             )
 
-    print(f"✅ All clips decoded.", flush=True)
-    print(f"🎬 Saving final video ...", flush=True)
+    print("✅ All clips decoded.", flush=True)
+    print("🎬 Saving final video ...", flush=True)
     _save_final_video(all_videos, actual_watch_dir, metadata, mouse_condition_all, keyboard_condition_all, save_name)
     print(f"🎉 Video saved to {os.path.join(actual_watch_dir, f'{save_name}.mp4')}", flush=True)
     done_event.set()
-    print(f"✨ Task complete. Exiting.", flush=True)
+    print("✨ Task complete. Exiting.", flush=True)
 
 
 def _save_final_video(

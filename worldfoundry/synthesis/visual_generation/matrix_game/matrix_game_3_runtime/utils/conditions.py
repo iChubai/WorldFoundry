@@ -1,5 +1,6 @@
-import torch
 import random
+
+import torch
 
 
 def combine_data(data, num_frames=57, keyboard_dim=4, mouse=True):
@@ -89,7 +90,7 @@ def Bench_actions_universal(num_frames, num_samples_per_action=4):
         mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
 
         for sub_act in base_action:
-            if not sub_act in action_name:  # 只处理action_name包含的动作
+            if sub_act not in action_name:  # 只处理action_name包含的动作
                 continue
             # print(f"action name: {action_name} sub_act: {sub_act}")
             if sub_act in CAMERA_VALUE_MAP:

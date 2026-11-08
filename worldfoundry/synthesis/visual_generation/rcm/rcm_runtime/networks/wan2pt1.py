@@ -16,36 +16,35 @@
 # from Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
 import math
-from typing import Optional, List
+from typing import List, Optional
 
 import torch
 import torch.amp as amp
 import torch.nn as nn
 from einops import rearrange, repeat
-
 from torch.distributed import ProcessGroup, get_process_group_ranks
 from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import CheckpointImpl, CheckpointWrapper
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
 
 from worldfoundry.core.distributed.runtime.logging import log
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.context_parallel import (
-    split_inputs_cp,
-    cat_outputs_cp,
-    cat_outputs_cp_with_grad,
-    broadcast,
-)
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import (
-    KVCache,
-    AttnContext,
-    CausalInferenceState,
-    KVCacheMode,
-)
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import (
     AttnMaskSpec,
     FlexOrSdpaLocalAttention,
+)
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.context_parallel import (
+    broadcast,
+    cat_outputs_cp,
+    cat_outputs_cp_with_grad,
+    split_inputs_cp,
+)
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import (
+    AttnContext,
+    CausalInferenceState,
+    KVCache,
+    KVCacheMode,
 )
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.rope import RopeCache
 
@@ -53,7 +52,7 @@ T5_CONTEXT_TOKEN_NUMBER = 512
 FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER = 257 * 2
 
 
-def _uses_append_cache(attn_ctx: Optional[AttnContext]) -> bool:
+def _uses_append_cache(attn_ctx: AttnContext | None) -> bool:
     return attn_ctx is not None and attn_ctx.mode == KVCacheMode.APPEND and attn_ctx.kv_cache is not None
 
 
@@ -126,13 +125,13 @@ class VideoRopePosition3DEmb(nn.Module):
         self,
         B_T_H_W_C: torch.Size,
         t_start: int = 0,
-        t_indices: Optional[torch.Tensor] = None,
-        h_ntk_factor: Optional[float] = None,
-        w_ntk_factor: Optional[float] = None,
-        t_ntk_factor: Optional[float] = None,
+        t_indices: torch.Tensor | None = None,
+        h_ntk_factor: float | None = None,
+        w_ntk_factor: float | None = None,
+        t_ntk_factor: float | None = None,
     ):
         B, T, H, W, _ = B_T_H_W_C
-        assert H <= self.max_h and W <= self.max_w, (
+        assert self.max_h >= H and self.max_w >= W, (
             f"Input dimensions (H={H}, W={W}) exceed the maximum dimensions (max_h={self.max_h}, max_w={self.max_w})"
         )
         total_tokens = T * H * W
@@ -273,7 +272,7 @@ class WanSelfAttention(nn.Module):
             self.norm_q.reset_parameters()
             self.norm_k.reset_parameters()
 
-    def forward(self, x, seq_lens, attn_ctx: Optional[AttnContext] = None, attn_meta: Optional[AttnMaskSpec] = None):
+    def forward(self, x, seq_lens, attn_ctx: AttnContext | None = None, attn_meta: AttnMaskSpec | None = None):
         r"""
         Args:
             x(Tensor): Shape [B, L, num_heads, C / num_heads]
@@ -419,8 +418,8 @@ class WanAttentionBlock(nn.Module):
         seq_lens,
         context,
         context_lens,
-        attn_ctx: Optional[AttnContext] = None,
-        attn_meta: Optional[AttnMaskSpec] = None,
+        attn_ctx: AttnContext | None = None,
+        attn_meta: AttnMaskSpec | None = None,
     ):
         r"""
         Args:
@@ -640,8 +639,8 @@ class WanModel(nn.Module):
         T: int,
         H: int,
         W: int,
-        inference_state: Optional[CausalInferenceState],
-        attn_meta: Optional[AttnMaskSpec],
+        inference_state: CausalInferenceState | None,
+        attn_meta: AttnMaskSpec | None,
         use_fused: bool,
     ) -> RopeCache:
         """Compute RoPE frequencies and populate inference_state.
@@ -724,8 +723,8 @@ class WanModel(nn.Module):
         crossattn_emb,
         frame_cond_crossattn_emb_B_L_D=None,
         y_B_C_T_H_W=None,
-        inference_state: Optional[CausalInferenceState] = None,
-        attn_meta: Optional[AttnMaskSpec] = None,
+        inference_state: CausalInferenceState | None = None,
+        attn_meta: AttnMaskSpec | None = None,
         **kwargs,
     ):
         r"""
@@ -926,7 +925,7 @@ class WanModel(nn.Module):
         self._is_context_parallel_enabled = False
         self._cp_group = None
 
-    def enable_context_parallel(self, process_group: Optional[ProcessGroup] = None):
+    def enable_context_parallel(self, process_group: ProcessGroup | None = None):
         cp_ranks = get_process_group_ranks(process_group)
         for block in self.blocks:
             block.self_attn.set_context_parallel_group(
@@ -958,7 +957,7 @@ class WanModel(nn.Module):
 
         return self
 
-    def allocate_kv_caches(self, max_len: int, cache_factory=None) -> List[KVCache]:
+    def allocate_kv_caches(self, max_len: int, cache_factory=None) -> list[KVCache]:
         """Build one KV cache per layer.
 
         ``cache_factory`` lets WorldFoundry substitute a policy-driven cache for

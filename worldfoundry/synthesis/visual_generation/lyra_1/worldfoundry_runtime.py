@@ -67,7 +67,7 @@ class Lyra1Runtime:
         checkpoint_dir: str | None = None,
         default_mode: str = "static",
         **kwargs: Any,
-    ) -> "Lyra1Runtime":
+    ) -> Lyra1Runtime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):

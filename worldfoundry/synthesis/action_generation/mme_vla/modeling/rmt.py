@@ -1,17 +1,19 @@
+from functools import partial
+
+import einops
 import flax.nnx as nnx
 import jax
 import jax.numpy as jnp
-import einops
+from jax import vmap
+
 from ...openpi import array_typing as at
 from ...openpi import sharding
-from functools import partial
-from jax import vmap
 from .memory_utils import (
+    apply_rotary_emb,
     kernel_init,
     kernel_init_out_proj,
     kernel_init_out_proj_rmt,
     precompute_freqs_cis,
-    apply_rotary_emb,
     rms_normalize,
 )
 

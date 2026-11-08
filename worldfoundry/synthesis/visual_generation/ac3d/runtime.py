@@ -7,8 +7,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import imageio.v3 as iio
 import numpy as np
@@ -338,7 +339,7 @@ class AC3DRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "AC3DRuntime":
+    ) -> AC3DRuntime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["controlnet_model_path"] = str(pretrained_model_path)

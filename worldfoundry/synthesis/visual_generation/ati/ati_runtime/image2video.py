@@ -18,20 +18,18 @@ import torch.distributed as dist
 import torchvision.transforms.functional as TF
 from tqdm import tqdm
 
-from worldfoundry.core.distributed.sharding.block_fsdp import (
-    shard_model,
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
+    WanVAE,
 )
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import (
     CLIPModel,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
-    WanModel,
-)
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import (
     T5EncoderModel,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    WanVAE,
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    WanModel,
 )
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
@@ -41,7 +39,9 @@ from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
 from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (
     FlowUniPCMultistepScheduler,
 )
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
+from worldfoundry.core.distributed.sharding.block_fsdp import (
+    shard_model,
+)
 
 from .motion_patch import patch_motion
 

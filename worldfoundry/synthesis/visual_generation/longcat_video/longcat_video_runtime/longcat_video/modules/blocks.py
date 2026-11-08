@@ -6,12 +6,12 @@
 
 
 import math
+from typing import Optional
+
 import torch
+import torch.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.amp as amp
-
-from typing import Optional
 
 
 class FeedForwardSwiGLU(nn.Module):
@@ -20,7 +20,7 @@ class FeedForwardSwiGLU(nn.Module):
         dim: int,
         hidden_dim: int,
         multiple_of: int = 256,
-        ffn_dim_multiplier: Optional[float] = None,
+        ffn_dim_multiplier: float | None = None,
     ):
         super().__init__()
         hidden_dim = int(2 * hidden_dim / 3)

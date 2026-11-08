@@ -1,4 +1,5 @@
 import os
+
 import torch
 
 try:
@@ -7,16 +8,15 @@ try:
 except:
     torch_npu = None
     npu_config = None
-    pass
+from opensora.sample.caption_refiner import OpenSoraCaptionRefiner
 from opensora.utils.sample_utils import (
+    get_args,
     init_gpu_env,
     init_npu_env,
     prepare_pipeline,
-    get_args,
     run_model_and_save_samples,
     run_model_and_save_samples_npu,
 )
-from opensora.sample.caption_refiner import OpenSoraCaptionRefiner
 
 if __name__ == "__main__":
     args = get_args()

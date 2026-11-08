@@ -85,10 +85,10 @@ class InfiniteWorldSynthesis(BaseSynthesis):
     def plan(
         cls,
         pretrained_model_path=None,
-        device: Optional[str] = None,
-        config_path: Optional[str] = None,
+        device: str | None = None,
+        config_path: str | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generates a plan for the InfiniteWorldRuntime based on provided configurations.
 
@@ -111,7 +111,7 @@ class InfiniteWorldSynthesis(BaseSynthesis):
             **kwargs,
         )
 
-    def predict(self, *args, **kwargs) -> Dict[str, Any]:
+    def predict(self, *args, **kwargs) -> dict[str, Any]:
         """
         Executes the prediction logic using the wrapped InfiniteWorldRuntime instance.
 

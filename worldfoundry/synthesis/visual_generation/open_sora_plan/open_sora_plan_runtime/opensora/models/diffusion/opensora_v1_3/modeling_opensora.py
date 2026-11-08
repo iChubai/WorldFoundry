@@ -1,24 +1,27 @@
 import os
-import numpy as np
-from torch import nn
-import torch
-from einops import rearrange, repeat
 from typing import Any, Dict, Optional, Tuple
-from torch.nn import functional as F
-from diffusers.models.modeling_outputs import Transformer2DModelOutput
-from diffusers.utils import is_torch_version, deprecate
+
+import numpy as np
+import torch
 from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models.embeddings import PixArtAlphaTextProjection
+from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import AdaLayerNormSingle
-from diffusers.models.embeddings import PixArtAlphaTextProjection
-from opensora.models.diffusion.opensora_v1_3.modules import BasicTransformerBlock, Attention
+from diffusers.utils import deprecate, is_torch_version
+from einops import rearrange, repeat
+from torch import nn
+from torch.nn import functional as F
+
 from opensora.models.diffusion.common import PatchEmbed2D
+from opensora.models.diffusion.opensora_v1_3.modules import Attention, BasicTransformerBlock
 from opensora.utils.utils import to_2tuple
 
 try:
     import torch_npu
-    from opensora.npu_config import npu_config
+
     from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
+    from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
@@ -33,17 +36,17 @@ class OpenSoraT2V_v1_3(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = True,
-        sample_size_h: Optional[int] = None,
-        sample_size_w: Optional[int] = None,
-        sample_size_t: Optional[int] = None,
-        patch_size: Optional[int] = None,
-        patch_size_t: Optional[int] = None,
+        sample_size_h: int | None = None,
+        sample_size_w: int | None = None,
+        sample_size_t: int | None = None,
+        patch_size: int | None = None,
+        patch_size_t: int | None = None,
         activation_fn: str = "geglu",
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -120,10 +123,10 @@ class OpenSoraT2V_v1_3(ModelMixin, ConfigMixin):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        timestep: Optional[torch.LongTensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        timestep: torch.LongTensor | None = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         return_dict: bool = True,
         **kwargs,
     ):
@@ -212,7 +215,7 @@ class OpenSoraT2V_v1_3(ModelMixin, ConfigMixin):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
 
                 hidden_states = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),
@@ -329,9 +332,8 @@ OpenSora_v1_3_models_class = {
 }
 
 if __name__ == "__main__":
-    from opensora.models.causalvideovae import ae_stride_config, ae_channel_config
-    from opensora.models.causalvideovae import ae_norm, ae_denorm
     from opensora.models import CausalVAEModelWrapper
+    from opensora.models.causalvideovae import ae_channel_config, ae_denorm, ae_norm, ae_stride_config
 
     args = type(
         "args",

@@ -26,7 +26,6 @@ import torch
 import torch.utils.data
 from decord import VideoReader
 from lru import LRU
-
 from src.models.eval_inputs.base import BaseDataset
 from src.models.eval_inputs.datafield import DataField
 
@@ -38,14 +37,14 @@ class Radym(BaseDataset):
     def __init__(
         self,
         root_path,
-        filter_list_path: Optional[str] = None,
+        filter_list_path: str | None = None,
         num_views: int = -1,
         depth_folder: str = "depth",
-        custom_folders: Optional[List[str]] = None,
-        custom_fields: Optional[List[str]] = None,
+        custom_folders: list[str] | None = None,
+        custom_fields: list[str] | None = None,
         start_view_idx: int = 0,
-        depth_path: Optional[List[str]] = None,
-        camera_path: Optional[List[str]] = None,
+        depth_path: list[str] | None = None,
+        camera_path: list[str] | None = None,
     ):
         # For multi-view datasets, root_path is the path to camera idx 0.
         self.root_path = root_path
@@ -58,7 +57,7 @@ class Radym(BaseDataset):
             self.filter_list_path = (
                 filter_list_path if os.path.isabs(filter_list_path) else os.path.join(root_path, filter_list_path)
             )
-            with open(self.filter_list_path, "r") as f:
+            with open(self.filter_list_path) as f:
                 self.filter_set = [line.strip() for line in f.readlines()]
             self.filter_set = set([x.split(".")[0] for x in self.filter_set])
         self.n_views = num_views
@@ -180,9 +179,9 @@ class Radym(BaseDataset):
     def _read_data(
         self,
         video_idx: int,
-        frame_idxs: List[int],
-        view_idxs: List[int],
-        data_fields: List[DataField],
+        frame_idxs: list[int],
+        view_idxs: list[int],
+        data_fields: list[DataField],
     ):
         frame_indices = np.asarray(frame_idxs).astype(np.int64)
         rgb_path = self.mp4_file_paths[video_idx]
@@ -313,7 +312,7 @@ class Radym(BaseDataset):
 
             elif data_field == DataField.CAPTION:
                 caption_path = data_base_path / "caption" / f"{data_key}.txt"
-                with open(caption_path, "r") as f:
+                with open(caption_path) as f:
                     caption = f.read()
                 output_dict[data_field] = caption
             elif data_field == "custom":
@@ -322,7 +321,7 @@ class Radym(BaseDataset):
                     assert len(self.custom_folders) == len(self.custom_fields), (
                         "Custom folders and types must have the same length"
                     )
-                    for custom_folder, custom_fields in zip(self.custom_folders, self.custom_fields):
+                    for custom_folder, custom_fields in zip(self.custom_folders, self.custom_fields, strict=False):
                         if custom_fields == "ftheta_intrinsic":
                             intrinsics_data = np.load(data_base_path / custom_folder / f"{data_key}.npz")
                             f_idx = np.searchsorted(intrinsics_data["inds"], frame_indices)

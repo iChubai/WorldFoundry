@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
-
 from mmaudio.ext.rotary_embeddings import apply_rope
 from mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
 
@@ -39,7 +38,7 @@ class SelfAttention(nn.Module):
         self.split_into_heads = Rearrange("b n (h d j) -> b h n d j", h=nheads, d=dim // nheads, j=3)
 
     def pre_attention(
-        self, x: torch.Tensor, rot: Optional[torch.Tensor]
+        self, x: torch.Tensor, rot: torch.Tensor | None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # x: batch_size * n_tokens * n_channels
         qkv = self.qkv(x)
@@ -96,7 +95,7 @@ class MMDitSingleBlock(nn.Module):
 
             self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(dim, 6 * dim, bias=True))
 
-    def pre_attention(self, x: torch.Tensor, c: torch.Tensor, rot: Optional[torch.Tensor]):
+    def pre_attention(self, x: torch.Tensor, c: torch.Tensor, rot: torch.Tensor | None):
         # x: BS * N * D
         # cond: BS * D
         modulation = self.adaLN_modulation(c)
@@ -121,7 +120,7 @@ class MMDitSingleBlock(nn.Module):
 
         return x
 
-    def forward(self, x: torch.Tensor, cond: torch.Tensor, rot: Optional[torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, cond: torch.Tensor, rot: torch.Tensor | None) -> torch.Tensor:
         # x: BS * N * D
         # cond: BS * D
         x_qkv, x_conditions = self.pre_attention(x, cond, rot)

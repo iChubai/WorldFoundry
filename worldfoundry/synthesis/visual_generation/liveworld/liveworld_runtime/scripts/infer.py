@@ -135,7 +135,7 @@ def main() -> None:
     if args.configs_list:
         # Batch mode: read config paths from file, then remove the temp file.
         configs_list_path = Path(args.configs_list)
-        with open(configs_list_path, "r") as f:
+        with open(configs_list_path) as f:
             config_paths = [line.strip() for line in f if line.strip()]
         configs_list_path.unlink(missing_ok=True)
         _run_batch(config_paths, args.output_root, args.device, args.entity_names, args.system_config)

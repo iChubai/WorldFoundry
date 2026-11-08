@@ -15,7 +15,7 @@ from worldfoundry.core.configuration.hydra import (
 
 @attrs.define(slots=False)
 class Config(InferenceConfig):
-    defaults: List[Any] = attrs.field(
+    defaults: list[Any] = attrs.field(
         factory=lambda: [
             "_self_",
             {"model": "fsdp_wan2pt1_lyra2_spatial"},

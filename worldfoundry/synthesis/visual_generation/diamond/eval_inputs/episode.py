@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -13,7 +14,7 @@ class Episode:
     rew: torch.FloatTensor
     end: torch.ByteTensor
     trunc: torch.ByteTensor
-    info: Dict[str, Any]
+    info: dict[str, Any]
 
     def __len__(self) -> int:
         return self.obs.size(0)
@@ -30,11 +31,11 @@ class Episode:
     def dead(self) -> torch.ByteTensor:
         return (self.end + self.trunc).clip(max=1)
 
-    def compute_metrics(self) -> Dict[str, Any]:
+    def compute_metrics(self) -> dict[str, Any]:
         return {"length": len(self), "return": self.rew.sum().item()}
 
     @classmethod
-    def load(cls, path: Path, map_location: Optional[torch.device] = None) -> Episode:
+    def load(cls, path: Path, map_location: torch.device | None = None) -> Episode:
         return cls(
             **{
                 k: v.div(255).mul(2).sub(1) if k == "obs" else v

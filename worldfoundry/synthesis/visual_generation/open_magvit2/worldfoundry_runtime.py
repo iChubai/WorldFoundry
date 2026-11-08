@@ -5,8 +5,9 @@ within the WorldFoundry framework. It handles model loading, configuration resol
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import hfd_root_path
 from worldfoundry.core.io.paths import package_module_root as package_root
@@ -88,7 +89,7 @@ class OpenMAGVIT2Runtime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "OpenMAGVIT2Runtime":
+    ) -> OpenMAGVIT2Runtime:
         """
         Initializes OpenMAGVIT2Runtime from a pretrained model path or configuration.
 

@@ -181,18 +181,18 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
         norm_num_groups: int = 32,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = False,
-        sample_size: Optional[int] = None,
-        num_vector_embeds: Optional[int] = None,
-        patch_size: Optional[int] = None,
+        sample_size: int | None = None,
+        num_vector_embeds: int | None = None,
+        patch_size: int | None = None,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = None,
+        num_embeds_ada_norm: int | None = None,
         use_linear_projection: bool = False,
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -210,9 +210,9 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         # 3d patch params
         patch_3d: bool = False,
         fake_3d: bool = False,
-        time_patch_size: Optional[int] = None,
+        time_patch_size: int | None = None,
         casual_3d: bool = False,
-        casual_3d_upsampler_index: Optional[list] = None,
+        casual_3d_upsampler_index: list | None = None,
         # motion module kwargs
         motion_module_type="VanillaGrid",
         motion_module_kwargs=None,
@@ -454,23 +454,23 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        timestep: Optional[torch.LongTensor] = None,
+        timestep: torch.LongTensor | None = None,
         timestep_cond=None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        text_embedding_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states_t5: Optional[torch.Tensor] = None,
-        text_embedding_mask_t5: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        text_embedding_mask: torch.Tensor | None = None,
+        encoder_hidden_states_t5: torch.Tensor | None = None,
+        text_embedding_mask_t5: torch.Tensor | None = None,
         image_meta_size=None,
         style=None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
+        image_rotary_emb: torch.Tensor | None = None,
         inpaint_latents: torch.Tensor = None,
         control_latents: torch.Tensor = None,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
-        class_labels: Optional[torch.LongTensor] = None,
-        cross_attention_kwargs: Dict[str, Any] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        clip_encoder_hidden_states: Optional[torch.Tensor] = None,
-        clip_attention_mask: Optional[torch.Tensor] = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
+        class_labels: torch.LongTensor | None = None,
+        cross_attention_kwargs: dict[str, Any] = None,
+        attention_mask: torch.Tensor | None = None,
+        clip_encoder_hidden_states: torch.Tensor | None = None,
+        clip_attention_mask: torch.Tensor | None = None,
         return_dict: bool = True,
     ):
         """
@@ -619,7 +619,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                 args = {
                     "basic": [],
                     "motionmodule": [video_length, height, width],
@@ -751,7 +751,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         config_file = os.path.join(pretrained_model_path, "config.json")
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
 
         from diffusers.utils import WEIGHTS_NAME
@@ -912,9 +912,9 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
-        patch_size: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
+        patch_size: int | None = None,
         n_query=16,
         projection_dim=768,
         activation_fn: str = "gelu-approximate",
@@ -1073,9 +1073,9 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
         image_rotary_emb=None,
         inpaint_latents=None,
         control_latents: torch.Tensor = None,
-        clip_encoder_hidden_states: Optional[torch.Tensor] = None,
-        clip_attention_mask: Optional[torch.Tensor] = None,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
+        clip_encoder_hidden_states: torch.Tensor | None = None,
+        clip_attention_mask: torch.Tensor | None = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
         return_dict=True,
     ):
         """
@@ -1165,7 +1165,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                     args = {
                         "kvcompression_basic": [video_length, height, width, clip_encoder_hidden_states],
                         "basic": [video_length, height, width, clip_encoder_hidden_states],
@@ -1222,7 +1222,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                     args = {
                         "kvcompression_basic": [
                             None,
@@ -1323,7 +1323,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
         config_file = os.path.join(pretrained_model_path, "config.json")
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
 
         from diffusers.utils import WEIGHTS_NAME
@@ -1476,9 +1476,9 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 30,
         attention_head_dim: int = 64,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
-        patch_size: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
+        patch_size: int | None = None,
         sample_width: int = 90,
         sample_height: int = 60,
         ref_channels: int = None,
@@ -1617,19 +1617,19 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         hidden_states,
         timestep,
         timestep_cond=None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        text_embedding_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states_t5: Optional[torch.Tensor] = None,
-        text_embedding_mask_t5: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        text_embedding_mask: torch.Tensor | None = None,
+        encoder_hidden_states_t5: torch.Tensor | None = None,
+        text_embedding_mask_t5: torch.Tensor | None = None,
         image_meta_size=None,
         style=None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
-        inpaint_latents: Optional[torch.Tensor] = None,
-        control_latents: Optional[torch.Tensor] = None,
-        ref_latents: Optional[torch.Tensor] = None,
-        clip_encoder_hidden_states: Optional[torch.Tensor] = None,
-        clip_attention_mask: Optional[torch.Tensor] = None,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
+        image_rotary_emb: torch.Tensor | None = None,
+        inpaint_latents: torch.Tensor | None = None,
+        control_latents: torch.Tensor | None = None,
+        ref_latents: torch.Tensor | None = None,
+        clip_encoder_hidden_states: torch.Tensor | None = None,
+        clip_attention_mask: torch.Tensor | None = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
         return_dict=True,
     ):
         batch_size, channels, video_length, height, width = hidden_states.size()
@@ -1740,7 +1740,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
 
                             return custom_forward
 
-                        ckpt_kwargs: Dict[str, Any] = (
+                        ckpt_kwargs: dict[str, Any] = (
                             {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                         )
                         hidden_states, encoder_hidden_states = torch.utils.checkpoint.checkpoint(
@@ -1787,7 +1787,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                     hidden_states, encoder_hidden_states = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(block),
                         hidden_states,
@@ -1843,7 +1843,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         config_file = os.path.join(pretrained_model_path, "config.json")
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
 
         from diffusers.utils import WEIGHTS_NAME

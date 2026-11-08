@@ -1,18 +1,20 @@
 # SPDX-License-Identifier: MIT
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
+import logging
+import math
+from typing import Any, Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Any, Dict, Tuple, Optional
 from einops import rearrange
-from .gradient import gradient_checkpoint_forward
+
 from worldfoundry.core.attention import (
     native_sdpa_priority,
     scaled_dot_product_attention,
 )
 
-import logging
+from .gradient import gradient_checkpoint_forward
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ def flash_attention(
     k: torch.Tensor,
     v: torch.Tensor,
     num_heads: int,
-    ctx_mask: Optional[torch.Tensor] = None,
+    ctx_mask: torch.Tensor | None = None,
     compatibility_mode=True,
 ):
     if compatibility_mode:
@@ -205,7 +207,7 @@ class SelfAttention(nn.Module):
 
         # self.attn = AttentionModule(self.num_heads)
 
-    def forward(self, x, freqs, self_attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, freqs, self_attn_mask: torch.Tensor | None = None):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
@@ -238,7 +240,7 @@ class CrossAttention(nn.Module):
 
         # self.attn = AttentionModule(self.num_heads)
 
-    def forward(self, x: torch.Tensor, ctx: torch.Tensor, ctx_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, ctx: torch.Tensor, ctx_mask: torch.Tensor | None = None):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(ctx))
         v = self.v(ctx)
@@ -275,7 +277,7 @@ class DiTBlock(nn.Module):
         self.modulation = nn.Parameter(torch.randn(1, 6, hidden_dim) / hidden_dim**0.5)
         self.gate = GateModule()
 
-    def forward(self, x, context, t_mod, freqs, context_mask=None, self_attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, context, t_mod, freqs, context_mask=None, self_attn_mask: torch.Tensor | None = None):
         if context_mask is not None and context_mask.dim() == 3:
             context_mask = context_mask.unsqueeze(1)  # (B, 1, seq_len, context_len), 1 for heads
         has_seq = len(t_mod.shape) == 4
@@ -323,7 +325,7 @@ class MLP(torch.nn.Module):
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -353,7 +355,7 @@ class WanVideoDiT(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         attn_head_dim: int,
         num_layers: int,
@@ -427,11 +429,11 @@ class WanVideoDiT(torch.nn.Module):
         if self.use_gradient_checkpointing:
             logger.info("Using gradient checkpointing for DiT blocks. This will save memory but use more computation.")
 
-    def patchify(self, x: torch.Tensor, control_camera_latents_input: Optional[torch.Tensor] = None):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor | None = None):
         x = self.patch_embedding(x)
         if self.control_adapter is not None and control_camera_latents_input is not None:
             y_camera = self.control_adapter(control_camera_latents_input)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
             x = x[0].unsqueeze(0)
         return x
 
@@ -452,8 +454,8 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor],
-        action: Optional[torch.Tensor],
+        context_mask: torch.Tensor | None,
+        action: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if x.ndim != 5:
             raise ValueError(f"`latents` must be 5D [B, C, T, H, W], got shape {tuple(x.shape)}")
@@ -542,11 +544,11 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
         fuse_vae_embedding_in_latents: bool = False,
-        control_camera_latents_input: Optional[torch.Tensor] = None,
-    ) -> Dict[str, Any]:
+        control_camera_latents_input: torch.Tensor | None = None,
+    ) -> dict[str, Any]:
         x, timestep, context_mask = self._validate_forward_inputs(
             x=x,
             timestep=timestep,
@@ -616,7 +618,7 @@ class WanVideoDiT(torch.nn.Module):
             },
         }
 
-    def post_dit(self, x_tokens: torch.Tensor, pre_state: Dict[str, Any]) -> torch.Tensor:
+    def post_dit(self, x_tokens: torch.Tensor, pre_state: dict[str, Any]) -> torch.Tensor:
         f, h, w = pre_state["meta"]["grid_size"]
         x = self.head(x_tokens, pre_state["t"])
         x = self.unpatchify(x, (f, h, w))
@@ -627,8 +629,8 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
         fuse_vae_embedding_in_latents: bool = False,
     ):
         pre_state = self.pre_dit(

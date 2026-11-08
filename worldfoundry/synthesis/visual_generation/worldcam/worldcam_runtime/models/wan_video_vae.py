@@ -1,9 +1,9 @@
-from einops import rearrange, repeat
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange, repeat
 from tqdm import tqdm
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 CACHE_T = 2
@@ -133,16 +133,8 @@ class Resample38(Resample):
             self.resample = nn.Identity()
 
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AttentionBlock, AvgDown3D, DupUp3D
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import ResidualBlock
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AttentionBlock
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import DupUp3D
 
 
 class Down_ResidualBlock(nn.Module):
@@ -247,7 +239,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -365,7 +357,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(

@@ -1,12 +1,14 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .normalize import Normalize
-from .conv import CausalConv3d
-import torch
+
 from .block import Block
+from .conv import CausalConv3d
+from .normalize import Normalize
 
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config, set_run_dtype
 except:
     torch_npu = None

@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import numpy as np
+
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
 _DATA_CONFIG = load_vla_va_wam_runtime_config("hy-embodied-vla")
@@ -142,7 +143,7 @@ def _camera_mapping(images: Any, *, replicate_single_image: bool) -> dict[str, A
     if images is None:
         return {}
     keys = CAMERA_KEYS if replicate_single_image else CAMERA_KEYS[:1]
-    return {key: images for key in keys}
+    return dict.fromkeys(keys, images)
 
 
 def build_model_batch(

@@ -77,7 +77,7 @@ class CompressedMemoryRunner(NativeDiffusionRunner):
                         for value in torch.stack([step.timestep for step in schedule]).cpu().tolist()
                     )
                 )
-                for step, expert in zip(schedule, experts):
+                for step, expert in zip(schedule, experts, strict=False):
                     context.step = replace(step, index=chunk_index * len(schedule) + step.index)
                     common = {
                         "expert": expert,

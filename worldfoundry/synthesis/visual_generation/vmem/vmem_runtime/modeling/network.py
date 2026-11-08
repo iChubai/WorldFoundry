@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
+from typing import Union
 
 import torch
 import torch.nn as nn
-
-from typing import Union
 
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.modules.layers import (
     Downsample,
@@ -19,7 +18,7 @@ from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.modules
 
 
 @dataclass
-class VMemModelParams(object):
+class VMemModelParams:
     in_channels: int = 11
     model_channels: int = 320
     out_channels: int = 4
@@ -62,7 +61,7 @@ class VMemModel(nn.Module):
         ds = 1
         for level, mult in enumerate(params.channel_mult):
             for _ in range(params.num_res_blocks):
-                input_layers: list[Union[ResBlock, MultiviewTransformer, Downsample]] = [
+                input_layers: list[ResBlock | MultiviewTransformer | Downsample] = [
                     ResBlock(
                         channels=ch,
                         emb_channels=time_embed_dim,
@@ -131,7 +130,7 @@ class VMemModel(nn.Module):
         for level, mult in list(enumerate(params.channel_mult))[::-1]:
             for i in range(params.num_res_blocks + 1):
                 ich = input_block_chans.pop()
-                output_layers: list[Union[ResBlock, MultiviewTransformer, Upsample]] = [
+                output_layers: list[ResBlock | MultiviewTransformer | Upsample] = [
                     ResBlock(
                         channels=ch + ich,
                         emb_channels=time_embed_dim,
@@ -175,7 +174,7 @@ class VMemModel(nn.Module):
         t: torch.Tensor,
         y: torch.Tensor,
         dense_y: torch.Tensor,
-        num_frames: Union[int, None] = None,
+        num_frames: int | None = None,
     ) -> torch.Tensor:
         num_frames = num_frames or self.params.num_frames
         t_emb = timestep_embedding(t, self.model_channels)

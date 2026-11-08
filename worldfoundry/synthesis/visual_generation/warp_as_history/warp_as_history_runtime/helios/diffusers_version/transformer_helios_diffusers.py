@@ -13,7 +13,6 @@ from __future__ import annotations
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from functools import lru_cache
 from typing import Any
@@ -21,7 +20,6 @@ from typing import Any
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
 from diffusers.models._modeling_parallel import ContextParallelInput, ContextParallelOutput
@@ -46,7 +44,6 @@ except ImportError:
 
 
 from diffusers.utils.torch_utils import maybe_allow_in_graph
-
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -142,7 +139,7 @@ def apply_rotary_emb_transposed(
     return out.type_as(hidden_states)
 
 
-def _get_qkv_projections(attn: "HeliosAttention", hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor):
+def _get_qkv_projections(attn: HeliosAttention, hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor):
     # encoder_hidden_states is only passed for cross-attention
     if encoder_hidden_states is None:
         encoder_hidden_states = hidden_states
@@ -189,7 +186,7 @@ class HeliosAttnProcessor:
 
     def __call__(
         self,
-        attn: "HeliosAttention",
+        attn: HeliosAttention,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,

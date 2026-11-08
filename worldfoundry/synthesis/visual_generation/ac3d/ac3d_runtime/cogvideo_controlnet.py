@@ -1,19 +1,19 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
-from torch import nn
-from einops import rearrange
 import torch.nn.functional as F
-from diffusers.models.transformers.cogvideox_transformer_3d import Transformer2DModelOutput, CogVideoXBlock
-from diffusers.utils import is_torch_version
+from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import PeftAdapterMixin
-from diffusers.utils.torch_utils import maybe_allow_in_graph
-from diffusers.models.embeddings import CogVideoXPatchEmbed, TimestepEmbedding, Timesteps, get_3d_sincos_pos_embed
-from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.attention_processor import AttentionProcessor, AttnProcessor2_0
-from diffusers.models.normalization import AdaLayerNorm, CogVideoXLayerNormZero, AdaLayerNormZeroSingle
-from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models.embeddings import CogVideoXPatchEmbed, TimestepEmbedding, Timesteps, get_3d_sincos_pos_embed
+from diffusers.models.modeling_utils import ModelMixin
+from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormZeroSingle, CogVideoXLayerNormZero
+from diffusers.models.transformers.cogvideox_transformer_3d import CogVideoXBlock, Transformer2DModelOutput
+from diffusers.utils import is_torch_version
+from diffusers.utils.torch_utils import maybe_allow_in_graph
+from einops import rearrange
+from torch import nn
 
 
 class CogVideoXControlnet(ModelMixin, ConfigMixin, PeftAdapterMixin):
@@ -156,9 +156,9 @@ class CogVideoXControlnet(ModelMixin, ConfigMixin, PeftAdapterMixin):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         controlnet_states: torch.Tensor,
-        timestep: Union[int, float, torch.LongTensor],
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        timestep_cond: Optional[torch.Tensor] = None,
+        timestep: int | float | torch.LongTensor,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
+        timestep_cond: torch.Tensor | None = None,
         return_dict: bool = True,
     ):
         batch_size, num_frames, channels, height, width = controlnet_states.shape
@@ -203,7 +203,7 @@ class CogVideoXControlnet(ModelMixin, ConfigMixin, PeftAdapterMixin):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                 hidden_states, encoder_hidden_states = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),
                     hidden_states,

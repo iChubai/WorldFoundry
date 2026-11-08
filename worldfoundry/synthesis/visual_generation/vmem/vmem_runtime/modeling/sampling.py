@@ -1,11 +1,11 @@
+# from seva.geometry import get_camera_dist
+from typing import Union
+
 import numpy as np
 import torch
 import torch.nn as nn
 from einops import rearrange
 from tqdm import tqdm
-
-# from seva.geometry import get_camera_dist
-from typing import Union
 
 
 def get_camera_dist(
@@ -60,7 +60,7 @@ def generate_roughly_equally_spaced_steps(num_substeps: int, max_step: int) -> n
     return np.linspace(max_step - 1, 0, num_substeps, endpoint=False).astype(int)[::-1]
 
 
-class EpsScaling(object):
+class EpsScaling:
     def __call__(self, sigma: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         c_skip = torch.ones_like(sigma, device=sigma.device)
         c_out = -sigma
@@ -69,13 +69,13 @@ class EpsScaling(object):
         return c_skip, c_out, c_in, c_noise
 
 
-class DDPMDiscretization(object):
+class DDPMDiscretization:
     def __init__(
         self,
         linear_start: float = 5e-06,
         linear_end: float = 0.012,
         num_timesteps: int = 1000,
-        log_snr_shift: Union[float, None] = 2.4,
+        log_snr_shift: float | None = 2.4,
     ):
         self.num_timesteps = num_timesteps
 
@@ -89,7 +89,7 @@ class DDPMDiscretization(object):
         alphas = 1.0 - betas  # first alpha here is on data side
         self.alphas_cumprod = np.cumprod(alphas, axis=0)
 
-    def get_sigmas(self, n: int, device: Union[str, torch.device] = "cpu") -> torch.Tensor:
+    def get_sigmas(self, n: int, device: str | torch.device = "cpu") -> torch.Tensor:
         if n < self.num_timesteps:
             timesteps = generate_roughly_equally_spaced_steps(n, self.num_timesteps)
             alphas_cumprod = self.alphas_cumprod[timesteps]
@@ -108,21 +108,21 @@ class DDPMDiscretization(object):
         n: int,
         do_append_zero: bool = True,
         flip: bool = False,
-        device: Union[str, torch.device] = "cpu",
+        device: str | torch.device = "cpu",
     ) -> torch.Tensor:
         sigmas = self.get_sigmas(n, device=device)
         sigmas = append_zero(sigmas) if do_append_zero else sigmas
         return sigmas if not flip else torch.flip(sigmas, (0,))
 
 
-class DiscreteDenoiser(object):
+class DiscreteDenoiser:
     sigmas: torch.Tensor
 
     def __init__(
         self,
         discretization: DDPMDiscretization,
         num_idx: int = 1000,
-        device: Union[str, torch.device] = "cpu",
+        device: str | torch.device = "cpu",
     ):
         self.scaling = EpsScaling()
         self.discretization = discretization
@@ -138,7 +138,7 @@ class DiscreteDenoiser(object):
         dists = sigma - self.sigmas[:, None]
         return dists.abs().argmin(dim=0).view(sigma.shape)
 
-    def idx_to_sigma(self, idx: Union[torch.Tensor, int]) -> torch.Tensor:
+    def idx_to_sigma(self, idx: torch.Tensor | int) -> torch.Tensor:
         return self.sigmas[idx]
 
     def __call__(
@@ -161,18 +161,18 @@ class DiscreteDenoiser(object):
         return network(input * c_in, c_noise, cond, **additional_model_inputs) * c_out + input * c_skip
 
 
-class ConstantScaleRule(object):
-    def __call__(self, scale: Union[float, torch.Tensor]) -> Union[float, torch.Tensor]:
+class ConstantScaleRule:
+    def __call__(self, scale: float | torch.Tensor) -> float | torch.Tensor:
         return scale
 
 
-class MultiviewScaleRule(object):
+class MultiviewScaleRule:
     def __init__(self, min_scale: float = 1.0):
         self.min_scale = min_scale
 
     def __call__(
         self,
-        scale: Union[float, torch.Tensor],
+        scale: float | torch.Tensor,
         c2w: torch.Tensor,
         K: torch.Tensor,
         input_frame_mask: torch.Tensor,
@@ -192,10 +192,8 @@ class MultiviewScaleRule(object):
         return scale
 
 
-class ConstantScaleSchedule(object):
-    def __call__(
-        self, sigma: Union[float, torch.Tensor], scale: Union[float, torch.Tensor]
-    ) -> Union[float, torch.Tensor]:
+class ConstantScaleSchedule:
+    def __call__(self, sigma: float | torch.Tensor, scale: float | torch.Tensor) -> float | torch.Tensor:
         if isinstance(sigma, float):
             return scale
         elif isinstance(sigma, torch.Tensor):
@@ -206,27 +204,25 @@ class ConstantScaleSchedule(object):
             raise ValueError(f"Invalid sigma type {type(sigma)}.")
 
 
-class ConstantGuidance(object):
+class ConstantGuidance:
     def __call__(
         self,
         uncond: torch.Tensor,
         cond: torch.Tensor,
-        scale: Union[float, torch.Tensor],
+        scale: float | torch.Tensor,
     ) -> torch.Tensor:
         if isinstance(scale, torch.Tensor) and len(scale.shape) == 1:
             scale = append_dims(scale, cond.ndim)
         return uncond + scale * (cond - uncond)
 
 
-class VanillaCFG(object):
+class VanillaCFG:
     def __init__(self):
         self.scale_rule = ConstantScaleRule()
         self.scale_schedule = ConstantScaleSchedule()
         self.guidance = ConstantGuidance()
 
-    def __call__(
-        self, x: torch.Tensor, sigma: Union[float, torch.Tensor], scale: Union[float, torch.Tensor]
-    ) -> torch.Tensor:
+    def __call__(self, x: torch.Tensor, sigma: float | torch.Tensor, scale: float | torch.Tensor) -> torch.Tensor:
         x_u, x_c = x.chunk(2)
         scale = self.scale_rule(scale)
         scale_value = self.scale_schedule(sigma, scale)
@@ -257,8 +253,8 @@ class MultiviewCFG(VanillaCFG):
     def __call__(  # type: ignore
         self,
         x: torch.Tensor,
-        sigma: Union[float, torch.Tensor],
-        scale: Union[float, torch.Tensor],
+        sigma: float | torch.Tensor,
+        scale: float | torch.Tensor,
         c2w: torch.Tensor,
         K: torch.Tensor,
         input_frame_mask: torch.Tensor,
@@ -281,8 +277,8 @@ class MultiviewTemporalCFG(MultiviewCFG):
     def __call__(
         self,
         x: torch.Tensor,
-        sigma: Union[float, torch.Tensor],
-        scale: Union[float, torch.Tensor],
+        sigma: float | torch.Tensor,
+        scale: float | torch.Tensor,
         c2w: torch.Tensor,
         K: torch.Tensor,
         input_frame_mask: torch.Tensor,
@@ -298,14 +294,14 @@ class MultiviewTemporalCFG(MultiviewCFG):
         return super().__call__(x, sigma, scale, c2w, K, input_frame_mask.flatten(0, 1))
 
 
-class EulerEDMSampler(object):
+class EulerEDMSampler:
     def __init__(
         self,
         discretization: DDPMDiscretization,
-        guider: Union[VanillaCFG, MultiviewCFG, MultiviewTemporalCFG],
-        num_steps: Union[int, None] = None,
+        guider: VanillaCFG | MultiviewCFG | MultiviewTemporalCFG,
+        num_steps: int | None = None,
         verbose: bool = False,
-        device: Union[str, torch.device] = "cuda",
+        device: str | torch.device = "cuda",
         s_churn=0.0,
         s_tmin=0.0,
         s_tmax=float("inf"),
@@ -323,7 +319,7 @@ class EulerEDMSampler(object):
         self.s_noise = s_noise
 
     def prepare_sampling_loop(
-        self, x: torch.Tensor, cond: dict, uc: dict, num_steps: Union[int, None] = None
+        self, x: torch.Tensor, cond: dict, uc: dict, num_steps: int | None = None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, int, dict, dict]:
         num_steps = num_steps or self.num_steps
         assert num_steps is not None, "num_steps must be specified"
@@ -333,7 +329,7 @@ class EulerEDMSampler(object):
         s_in = x.new_ones([x.shape[0]])
         return x, s_in, sigmas, num_sigmas, cond, uc
 
-    def get_sigma_gen(self, num_sigmas: int, verbose: bool = True) -> Union[range, tqdm]:
+    def get_sigma_gen(self, num_sigmas: int, verbose: bool = True) -> range | tqdm:
         sigma_generator = range(num_sigmas - 1)
         if self.verbose and verbose:
             sigma_generator = tqdm(
@@ -350,7 +346,7 @@ class EulerEDMSampler(object):
         next_sigma: torch.Tensor,
         denoiser,
         x: torch.Tensor,
-        scale: Union[float, torch.Tensor],
+        scale: float | torch.Tensor,
         cond: dict,
         uc: dict,
         gamma: float = 0.0,
@@ -371,10 +367,10 @@ class EulerEDMSampler(object):
         self,
         denoiser,
         x: torch.Tensor,
-        scale: Union[float, torch.Tensor],
+        scale: float | torch.Tensor,
         cond: dict,
-        uc: Union[dict, None] = None,
-        num_steps: Union[int, None] = None,
+        uc: dict | None = None,
+        num_steps: int | None = None,
         verbose: bool = True,
         **guider_kwargs,
     ) -> torch.Tensor:
@@ -402,12 +398,12 @@ class EulerEDMSampler(object):
 
 
 def create_samplers(
-    guider_types: Union[int, list[int]],
+    guider_types: int | list[int],
     discretization,
-    num_frames: Union[list[int], None],
+    num_frames: list[int] | None,
     num_steps: int = 50,
     cfg_min: float = 1.2,
-    device: Union[str, torch.device] = "cuda",
+    device: str | torch.device = "cuda",
 ):
     guider_mapping = {
         0: VanillaCFG,

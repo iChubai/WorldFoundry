@@ -59,7 +59,7 @@ class AdaLayerNorm(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        temb: Optional[torch.Tensor] = None,
+        temb: torch.Tensor | None = None,
     ) -> torch.Tensor:
         temb = self.linear(self.silu(temb))
         scale, shift = temb.chunk(2, dim=1)
@@ -74,7 +74,7 @@ class BasicTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
         attention_bias: bool = False,
         upcast_attention: bool = False,
@@ -83,9 +83,9 @@ class BasicTransformerBlock(nn.Module):
         norm_eps: float = 1e-5,
         final_dropout: bool = False,
         attention_type: str = "default",
-        positional_embeddings: Optional[str] = None,
-        num_positional_embeddings: Optional[int] = None,
-        ff_inner_dim: Optional[int] = None,
+        positional_embeddings: str | None = None,
+        num_positional_embeddings: int | None = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = True,
         attention_out_bias: bool = True,
     ):
@@ -148,10 +148,10 @@ class BasicTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
-        temb: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
+        temb: torch.LongTensor | None = None,
     ) -> torch.Tensor:
         # 0. Self-Attention
         if self.norm_type == "ada_norm":
@@ -199,7 +199,7 @@ class DiT(ModelMixin, ConfigMixin):
         dropout: float = 0.1,
         attention_bias: bool = True,
         activation_fn: str = "gelu-approximate",
-        num_embeds_ada_norm: Optional[int] = 1000,
+        num_embeds_ada_norm: int | None = 1000,
         upcast_attention: bool = False,
         norm_type: str = "ada_norm",
         norm_elementwise_affine: bool = False,
@@ -207,9 +207,9 @@ class DiT(ModelMixin, ConfigMixin):
         max_num_positional_embeddings: int = 512,
         compute_dtype=torch.float32,
         final_dropout: bool = True,
-        positional_embeddings: Optional[str] = "sinusoidal",
+        positional_embeddings: str | None = "sinusoidal",
         interleave_self_attention=False,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         **kwargs,
     ):
         super().__init__()
@@ -264,7 +264,7 @@ class DiT(ModelMixin, ConfigMixin):
         self,
         hidden_states: torch.Tensor,  # Shape: (B, T, D)
         encoder_hidden_states: torch.Tensor,  # Shape: (B, S, D)
-        timestep: Optional[torch.LongTensor] = None,
+        timestep: torch.LongTensor | None = None,
         return_all_hidden_states: bool = False,
     ):
         # Encode timesteps

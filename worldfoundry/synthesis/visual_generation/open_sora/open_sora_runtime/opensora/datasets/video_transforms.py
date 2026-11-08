@@ -448,7 +448,7 @@ class RandomHorizontalFlipVideo:
 #  ------------------------------------------------------------
 #  ---------------------  Sampling  ---------------------------
 #  ------------------------------------------------------------
-class TemporalRandomCrop(object):
+class TemporalRandomCrop:
     """Temporally crop the given frame indices at a random location.
 
     Args:

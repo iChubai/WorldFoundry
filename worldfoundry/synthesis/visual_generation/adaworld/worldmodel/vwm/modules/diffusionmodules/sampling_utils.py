@@ -1,6 +1,5 @@
 import torch
 from scipy import integrate
-
 from vwm.util import append_dims
 
 

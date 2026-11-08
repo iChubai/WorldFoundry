@@ -33,7 +33,7 @@ def decode_frames(
 
         decoder = VideoDecoder(video_bytes, device="cpu")
         frames = decoder.get_frames_at(frame_indices).data  # (T, C, H, W) uint8
-    except Exception as torchcodec_error:  # noqa: BLE001 - native ABI/load errors require fallback.
+    except Exception as torchcodec_error:  # native ABI/load errors require fallback.
         frames = _decode_frames_pyav(video_bytes, frame_indices, torchcodec_error=torchcodec_error)
     if frame_size is not None:
         frames = _resize(frames, frame_size)

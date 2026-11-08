@@ -1,15 +1,16 @@
-from collections.abc import Callable, Mapping, Sequence
 import dataclasses
 import re
+from collections.abc import Callable, Mapping, Sequence
 from typing import Protocol, TypeAlias, TypeVar, runtime_checkable
 
 import flax.traverse_util as traverse_util
 import jax
 import numpy as np
-from . import image_numpy as image_tools
-from .modeling import tokenizer as _tokenizer
+
 from . import array_typing as at
+from . import image_numpy as image_tools
 from . import normalize as _normalize
+from .modeling import tokenizer as _tokenizer
 
 DataDict: TypeAlias = at.PyTree
 NormStats: TypeAlias = _normalize.NormStats

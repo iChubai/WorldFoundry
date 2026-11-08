@@ -203,7 +203,7 @@ class SpatialAttnUpBlock3D(nn.Module):
             self.upsampler = None
 
     def forward(self, x: torch.FloatTensor) -> torch.FloatTensor:
-        for conv, attn in zip(self.convs, self.attentions):
+        for conv, attn in zip(self.convs, self.attentions, strict=False):
             x = conv(x)
             x = attn(x)
 
@@ -327,7 +327,7 @@ class TemporalAttnUpBlock3D(nn.Module):
             self.upsampler = None
 
     def forward(self, x: torch.FloatTensor) -> torch.FloatTensor:
-        for conv, attn in zip(self.convs, self.attentions):
+        for conv, attn in zip(self.convs, self.attentions, strict=False):
             x = conv(x)
             x = attn(x)
 

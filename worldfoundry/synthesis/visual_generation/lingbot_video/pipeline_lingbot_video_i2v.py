@@ -7,8 +7,8 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
-from PIL import Image
 from diffusers.utils.torch_utils import randn_tensor
+from PIL import Image
 
 from .pipeline_lingbot_video import (
     DEFAULT_NEGATIVE_PROMPT,
@@ -21,7 +21,6 @@ from .pipeline_lingbot_video import (
     _transformer_timestep,
 )
 from .utils import batch_cfg_prompt_inputs
-
 
 IMAGE_MIN_TOKEN_NUM = 4
 IMAGE_MAX_TOKEN_NUM = 16384
@@ -45,9 +44,9 @@ def smart_resize(
     height: int,
     width: int,
     factor: int,
-    min_pixels: Optional[int] = None,
-    max_pixels: Optional[int] = None,
-) -> Tuple[int, int]:
+    min_pixels: int | None = None,
+    max_pixels: int | None = None,
+) -> tuple[int, int]:
     max_pixels = max_pixels if max_pixels is not None else IMAGE_MAX_TOKEN_NUM * factor**2
     min_pixels = min_pixels if min_pixels is not None else IMAGE_MIN_TOKEN_NUM * factor**2
     if max_pixels < min_pixels:
@@ -119,7 +118,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
     def encode_image_latent(
         self,
         pixel: torch.Tensor,
-        generator: Optional[torch.Generator] = None,
+        generator: torch.Generator | None = None,
     ) -> torch.Tensor:
         if self.vae is None:
             raise ValueError("`vae` is required to encode image latents.")
@@ -139,9 +138,9 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
     def __call__(
         self,
         prompt: str,
-        image: Optional[Image.Image] = None,
-        image_tensor: Optional[torch.Tensor] = None,
-        cond_latent: Optional[torch.Tensor] = None,
+        image: Image.Image | None = None,
+        image_tensor: torch.Tensor | None = None,
+        cond_latent: torch.Tensor | None = None,
         negative_prompt: str = DEFAULT_NEGATIVE_PROMPT,
         height: int = 480,
         width: int = 480,
@@ -149,18 +148,18 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
         num_inference_steps: int = 40,
         guidance_scale: float = 6.0,
         shift: float = 3.0,
-        generator: Optional[torch.Generator] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_mask: Optional[torch.Tensor] = None,
+        generator: torch.Generator | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_mask: torch.Tensor | None = None,
         output_type: str = "np",
-        cfg_parallel_group: Optional[Any] = None,
+        cfg_parallel_group: Any | None = None,
         batch_cfg: bool = False,
         null_cond_clone_zero: bool = False,
         return_dict: bool = True,
-    ) -> Union[LingBotVideoPipelineOutput, Tuple[Union[list, torch.Tensor]]]:
+    ) -> LingBotVideoPipelineOutput | tuple[list | torch.Tensor]:
         self.check_inputs(height, width, num_frames)
         if self.transformer is None or self.scheduler is None:
             raise ValueError("`transformer` and `scheduler` are required for generation.")

@@ -28,7 +28,7 @@ from timm.models.layers import to_2tuple, trunc_normal_
 ###################################################
 
 
-def ndgrid(*tensors) -> Tuple[torch.Tensor, ...]:
+def ndgrid(*tensors) -> tuple[torch.Tensor, ...]:
     """generate N-D grid in dimension order.
 
     The ndgrid function is like meshgrid except that the order of the first two input arguments are switched.
@@ -53,7 +53,7 @@ def ndgrid(*tensors) -> Tuple[torch.Tensor, ...]:
 
 
 def freq_bands(
-    num_bands: int, temperature: float = 10000.0, step: int = 2, device: Optional[torch.device] = None
+    num_bands: int, temperature: float = 10000.0, step: int = 2, device: torch.device | None = None
 ) -> torch.Tensor:
     exp = torch.arange(0, num_bands, step, dtype=torch.int64, device=device).to(torch.float32) / num_bands
     bands = 1.0 / (temperature**exp)
@@ -61,7 +61,7 @@ def freq_bands(
 
 
 def pixel_freq_bands(
-    num_bands: int, max_freq: float = 224.0, linear_bands: bool = True, device: Optional[torch.device] = None
+    num_bands: int, max_freq: float = 224.0, linear_bands: bool = True, device: torch.device | None = None
 ):
     if linear_bands:
         bands = torch.linspace(1.0, max_freq / 2, num_bands, dtype=torch.float32, device=device)
@@ -71,19 +71,19 @@ def pixel_freq_bands(
 
 
 def build_fourier_pos_embed(
-    feat_shape: List[int],
-    bands: Optional[torch.Tensor] = None,
+    feat_shape: list[int],
+    bands: torch.Tensor | None = None,
     num_bands: int = 64,
     max_res: int = 224,
     temperature: float = 10000.0,
     linear_bands: bool = False,
     include_grid: bool = False,
     in_pixels: bool = True,
-    ref_feat_shape: Optional[List[int]] = None,
+    ref_feat_shape: list[int] | None = None,
     dtype: torch.dtype = torch.float32,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
     center_imgidx=True,
-) -> List[torch.Tensor]:
+) -> list[torch.Tensor]:
     """
 
     Args:
@@ -129,7 +129,7 @@ def build_fourier_pos_embed(
     if ref_feat_shape is not None:
         assert len(feat_shape) == len(ref_feat_shape), "shape must be in same dimension"
         # eva's scheme for resizing rope embeddings (ref shape = pretrain)
-        t = [x / f * r for x, f, r in zip(t, feat_shape, ref_feat_shape)]
+        t = [x / f * r for x, f, r in zip(t, feat_shape, ref_feat_shape, strict=False)]
 
     grid = torch.stack(ndgrid(t), dim=-1)
     grid = grid.unsqueeze(-1)
@@ -151,16 +151,16 @@ def apply_rot_embed(x: torch.Tensor, sin_emb, cos_emb):
 
 
 def build_rotary_pos_embed(
-    feat_shape: List[int],
-    bands: Optional[torch.Tensor] = None,
+    feat_shape: list[int],
+    bands: torch.Tensor | None = None,
     dim: int = 64,
     max_res: int = 224,
     temperature: float = 10000.0,
     linear_bands: bool = False,
     in_pixels: bool = True,
-    ref_feat_shape: Optional[List[int]] = None,
+    ref_feat_shape: list[int] | None = None,
     dtype: torch.dtype = torch.float32,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
     center_imgidx=True,
 ):
     """
@@ -736,7 +736,7 @@ class ViTDecoder(nn.Module):
 ###################################################
 # DiagonalGaussianDistribution
 ###################################################
-class DiagonalGaussianDistribution(object):
+class DiagonalGaussianDistribution:
     def __init__(self, parameters, deterministic=False):
         self.parameters = parameters
         self.mean, self.logvar = torch.chunk(parameters, 2, dim=1)

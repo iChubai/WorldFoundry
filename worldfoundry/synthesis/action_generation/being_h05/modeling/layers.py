@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
+from typing import Any
 
 import numpy as np
 import torch
-from torch import nn
-from typing import Any
 import torch.nn.functional as F
+from torch import nn
 from transformers.activations import ACT2FN
 
 

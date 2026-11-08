@@ -3,10 +3,11 @@
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Optional
+
 import numpy as np
 import torch
 from pydantic import Field
-from typing import Optional
 
 from .schema import DatasetMetadata, StateActionMetadata
 from .transform_base import InvertibleModalityTransform
@@ -25,12 +26,12 @@ class ConcatTransform(InvertibleModalityTransform):
         description="Concatenation order for each video modality. Format: ['video.ego_view_pad_res224_freq20', ...]",
     )
 
-    state_concat_order: Optional[list[str]] = Field(
+    state_concat_order: list[str] | None = Field(
         default=None,
         description="Concatenation order for each state modality. Format: ['state.position', 'state.velocity', ...].",
     )
 
-    action_concat_order: Optional[list[str]] = Field(
+    action_concat_order: list[str] | None = Field(
         default=None,
         description="Concatenation order for each action modality. "
         "Format: ['action.position', 'action.velocity', ...].",
@@ -60,7 +61,7 @@ class ConcatTransform(InvertibleModalityTransform):
 
     def apply(self, data: dict) -> dict:
         grouped_keys = {}
-        for key in data.keys():
+        for key in data:
             try:
                 modality, _ = key.split(".")
             except:  # noqa: E722

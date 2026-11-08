@@ -1,8 +1,9 @@
 import copy
 import random
+
+import numpy as np
 import torch
 from scipy.stats import truncnorm
-import numpy as np
 
 
 def normalize_images(img):

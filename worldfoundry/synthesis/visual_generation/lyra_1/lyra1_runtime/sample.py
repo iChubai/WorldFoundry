@@ -13,27 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Dict, List
-from tqdm import tqdm
 import os
 import re
+from typing import Dict, List, Optional
+
+import einops
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
 from accelerate import PartialState
-import einops
-from omegaconf import OmegaConf
 from accelerate.logging import get_logger
+from omegaconf import OmegaConf
+from tqdm import tqdm
 
+# isort: split
 from src.models.recon.model_latent_recon import LatentRecon
+
+# isort: split
 from src.utils.visu import create_depth_visu, generate_wave_video, save_video
+
+# isort: split
 from src.models.eval_inputs import get_multi_dataloader
+
+# isort: split
+# isort: split
 from src.models.utils.model import encode_latent_time_vae, encode_plucker_vae
+
+# isort: split
 from src.models.utils.render import get_plucker_embedding_and_rays, save_ply, save_ply_orig
-from src.models.utils.model import load_vae, encode_multi_view_video, encode_video, decode_multi_view_latents
-from src.models.utils.data import write_dict_to_json
-from src.models.utils.misc import dtype_map, seed_everything, load_and_merge_configs
+
+# isort: split
+from src.models.utils.model import decode_multi_view_latents, encode_multi_view_video, encode_video, load_vae
+
+# isort: split
 from src.models.utils.checkpoint import get_most_recent_checkpoint
+from src.models.utils.data import write_dict_to_json
+from src.models.utils.misc import dtype_map, load_and_merge_configs, seed_everything
+
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 logger = get_logger(__name__, log_level="INFO")
@@ -264,7 +280,7 @@ def main_single(
         # Make sure all use the same multi views within one batch
         if "num_input_multi_views" in batch_test:
             assert (batch_test["num_input_multi_views"][0] == batch_test["num_input_multi_views"]).all(), (
-                f"Not supporting multi batch size for variable multi-view"
+                "Not supporting multi batch size for variable multi-view"
             )
             num_input_multi_views = int(batch_test["num_input_multi_views"][0].item())
             batch_test["num_input_multi_views"] = num_input_multi_views

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class HFTokenizer(TextProcessor):
     def __init__(
         self,
         tokenizer_name: str,
-        tokenizer_kwargs: Optional[dict] = {
+        tokenizer_kwargs: dict | None = {
             "max_length": 64,
             "padding": "max_length",
             "truncation": True,
@@ -79,7 +80,7 @@ class CLIPTextProcessor(TextProcessor):
     def __init__(
         self,
         processor_path: str | None = None,
-        tokenizer_kwargs: Optional[dict] = {
+        tokenizer_kwargs: dict | None = {
             "max_length": 64,
             "padding": "max_length",
             "truncation": True,

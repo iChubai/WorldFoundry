@@ -1,7 +1,8 @@
-import torch
-import torch_npu
-import torch.distributed as dist
 import os
+
+import torch
+import torch.distributed as dist
+import torch_npu
 
 try:
     from lcalib.functional import lcal_initialize

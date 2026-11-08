@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 MatrixGame I2V Video Generation
@@ -9,28 +8,30 @@ specified keyboard and mouse conditions.
 """
 
 import argparse
-import os
 import glob
-from typing import Tuple, Dict, List, Optional
-import torch
-import numpy as np
-from PIL import Image
+import os
+from typing import Dict, List, Optional, Tuple
+
 import imageio
+import numpy as np
+import torch
+from condtions import Bench_actions_76, interaction_condition
 from diffusers.utils import load_image
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
-from safetensors.torch import load_file as safe_load
-from peft import LoraConfig, get_peft_model_state_dict, set_peft_model_state_dict
+from matrixgame.encoder_variants import get_text_enc
 from matrixgame.sample.pipeline_matrixgame import MatrixGameVideoPipeline
 from matrixgame.vae_variants import get_vae
-from matrixgame.encoder_variants import get_text_enc
-from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
+from peft import LoraConfig, get_peft_model_state_dict, set_peft_model_state_dict
+from PIL import Image
+from safetensors.torch import load_file as safe_load
+from teacache_forward import teacache_forward
+from tools.visualize import process_video
+
 from worldfoundry.base_models.diffusion_model.schedulers.hunyuan_compat import (
     HunyuanVideoFlowMatchDiscreteScheduler as FlowMatchDiscreteScheduler,
 )
-from tools.visualize import process_video
-from condtions import Bench_actions_76, interaction_condition
-from teacache_forward import teacache_forward
+from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
 
 
 class VideoGenerator:
@@ -102,7 +103,7 @@ class VideoGenerator:
         self.pipeline.transformer.__class__.previous_residual = None
         self.pipeline.transformer.__class__.forward = teacache_forward
 
-    def _resize_and_crop_image(self, image: Image.Image, target_size: Tuple[int, int]) -> Image.Image:
+    def _resize_and_crop_image(self, image: Image.Image, target_size: tuple[int, int]) -> Image.Image:
         """
         Resize and crop image to target dimensions while maintaining aspect ratio.
 
@@ -130,7 +131,7 @@ class VideoGenerator:
 
         return image.crop((left, top, right, bottom))
 
-    def _load_images(self, root_dir: str) -> List[str]:
+    def _load_images(self, root_dir: str) -> list[str]:
         """
         Load image paths from directory with specified extensions.
 
@@ -150,7 +151,7 @@ class VideoGenerator:
 
         return image_paths[: self.args.max_images] if hasattr(self.args, "max_images") else image_paths
 
-    def _process_condition(self, condition: Dict, image_path: str) -> None:
+    def _process_condition(self, condition: dict, image_path: str) -> None:
         """
         Process a single condition and generate video.
 

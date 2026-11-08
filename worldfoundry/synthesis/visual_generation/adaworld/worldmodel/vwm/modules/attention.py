@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 from einops import rearrange
 from torch import nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 SDP_IS_AVAILABLE = callable(getattr(F, "scaled_dot_product_attention", None))
@@ -145,7 +146,7 @@ class MemoryEfficientCrossAttention(nn.Module):  # We are using this implementat
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
-        self.attention_op: Optional[Any] = None
+        self.attention_op: Any | None = None
 
         if zero_init:
             nn.init.zeros_(self.to_out[0].weight)
@@ -309,9 +310,9 @@ class SpatialTransformer(nn.Module):
 
         from omegaconf import ListConfig
 
-        if exists(context_dim) and not isinstance(context_dim, (List, ListConfig)):
+        if exists(context_dim) and not isinstance(context_dim, (list, ListConfig)):
             context_dim = [context_dim]
-        if exists(context_dim) and isinstance(context_dim, List):
+        if exists(context_dim) and isinstance(context_dim, list):
             if depth != len(context_dim):
                 print(
                     f"WARNING: {self.__class__.__name__}: "
@@ -358,7 +359,7 @@ class SpatialTransformer(nn.Module):
 
     def forward(self, x, context=None):
         # NOTE: If no context is given, cross-attn defaults to self-attn
-        if not isinstance(context, List):
+        if not isinstance(context, list):
             context = [context]
         b, c, h, w = x.shape
         x_in = x

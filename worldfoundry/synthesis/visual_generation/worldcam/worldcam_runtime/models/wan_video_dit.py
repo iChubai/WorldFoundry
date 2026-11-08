@@ -1,11 +1,17 @@
+import math
+from typing import Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Tuple, Optional
 from einops import rearrange, repeat
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import SimpleAdapter
+
+# isort: split
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
@@ -303,7 +309,7 @@ class MLP(torch.nn.Module):
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -333,7 +339,7 @@ class WanModel(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -381,11 +387,11 @@ class WanModel(torch.nn.Module):
         else:
             self.control_adapter = None
 
-    def patchify(self, x: torch.Tensor, control_camera_latents_input: Optional[torch.Tensor] = None):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor | None = None):
         x = self.patch_embedding(x)
         if self.control_adapter is not None and control_camera_latents_input is not None:
             y_camera = self.control_adapter(control_camera_latents_input)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
             x = x[0].unsqueeze(0)
         grid_size = x.shape[2:]
         x = rearrange(x, "b c f h w -> b (f h w) c").contiguous()
@@ -464,8 +470,8 @@ class WanModel(torch.nn.Module):
         context: torch.Tensor,
         extrinsics: torch.Tensor,
         intrinsics: torch.Tensor,
-        clip_feature: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        clip_feature: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
         **kwargs,

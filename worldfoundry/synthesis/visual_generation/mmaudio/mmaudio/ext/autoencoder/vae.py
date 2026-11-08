@@ -3,7 +3,6 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-
 from mmaudio.ext.autoencoder.edm2_utils import MPConv1D
 from mmaudio.ext.autoencoder.vae_modules import AttnBlock1D, Downsample1D, ResnetBlock1D, Upsample1D, nonlinearity
 from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
@@ -511,7 +510,7 @@ class VAE(nn.Module):
         self,
         x: torch.Tensor,
         sample_posterior: bool = True,
-        rng: Optional[torch.Generator] = None,
+        rng: torch.Generator | None = None,
         normalize: bool = True,
         unnormalize: bool = True,
     ) -> tuple[torch.Tensor, DiagonalGaussianDistribution]:

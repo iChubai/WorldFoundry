@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 
+from worldfoundry.core.attention.backends.hybrid import attention
 from worldfoundry.core.nn import activation_layer as get_activation_layer
 from worldfoundry.core.nn import apply_gate
 from worldfoundry.core.nn import normalization_layer as get_norm_layer
-from worldfoundry.core.attention.backends.hybrid import attention
 
 from .embed_layers import TextProjection, TimestepEmbedder
 from .mlp_layers import MLP
@@ -24,8 +24,8 @@ class IndividualTokenRefinerBlock(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -100,8 +100,8 @@ class IndividualTokenRefiner(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -126,7 +126,7 @@ class IndividualTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         c: torch.LongTensor,
-        mask: Optional[torch.Tensor] = None,
+        mask: torch.Tensor | None = None,
     ):
         self_attn_mask = None
         if mask is not None:
@@ -165,8 +165,8 @@ class SingleTokenRefiner(nn.Module):
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
         attn_mode: str = "torch",
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -198,7 +198,7 @@ class SingleTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.LongTensor,
-        mask: Optional[torch.LongTensor] = None,
+        mask: torch.LongTensor | None = None,
     ):
         timestep_aware_representations = self.t_embedder(t)
 

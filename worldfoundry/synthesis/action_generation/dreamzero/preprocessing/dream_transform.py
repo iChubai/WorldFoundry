@@ -1,23 +1,24 @@
 # Inference-only model preprocessing adapted from the official DreamZero source.
+import ast
+import html
 import os
 from typing import List, Optional
 
-from einops import rearrange
+import ftfy
 import numpy as np
-from pydantic import Field, PrivateAttr
+import regex as re
 import torch
+import tree
+from einops import rearrange
+from pydantic import Field, PrivateAttr
 from transformers import AutoTokenizer
 from transformers.feature_extraction_utils import BatchFeature
-import tree
-import ftfy
-import html
-import regex as re
-import ast
 
-from .schema import EmbodimentTag, DatasetMetadata
-from .transform_base import InvertibleModalityTransform
-from .language import formalize_language
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
+
+from .language import formalize_language
+from .schema import DatasetMetadata, EmbodimentTag
+from .transform_base import InvertibleModalityTransform
 
 
 def basic_clean(text):
@@ -81,7 +82,7 @@ class HuggingfaceTokenizer:
         return text
 
 
-def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodiment_tag_mapping=None) -> dict:
+def collate(features: list[dict], tokenizer: AutoTokenizer, num_views=3, embodiment_tag_mapping=None) -> dict:
     batch = {}
     keys = features[0].keys()
 
@@ -113,9 +114,10 @@ def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                             + " The video is split into three views: The top view shows the camera view from the robot's wrist, the bottom-left view shows the camera view from the left exterior camera, and the bottom-right view shows the camera view from the right exterior camera. During training, one of the two bottom exterior views may be a black screen (dropped view). The robot "
                             + processed_item.lower()
                         )
-                    elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.GR1_UNIFIED.value]:
-                        processed_item = "A single view video shows that a human " + processed_item.lower()
-                    elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]:
+                    elif (
+                        elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.GR1_UNIFIED.value]
+                        or elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]
+                    ):
                         processed_item = "A single view video shows that a human " + processed_item.lower()
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.XDOF.value]:
                         processed_item = (
@@ -150,9 +152,10 @@ def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                             + " The video is split into three views: The top view shows the camera view from the robot's wrist, the bottom-left view shows the camera view from the left exterior camera, and the bottom-right view shows the camera view from the right exterior camera. During training, one of the two bottom exterior views may be a black screen (dropped view). The robot "
                             + str(item).lower()
                         )
-                    elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.GR1_UNIFIED.value]:
-                        item = "A single view video shows that a human " + str(item).lower()
-                    elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]:
+                    elif (
+                        elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.GR1_UNIFIED.value]
+                        or elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]
+                    ):
                         item = "A single view video shows that a human " + str(item).lower()
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.XDOF.value]:
                         item = (
@@ -202,8 +205,8 @@ class DreamTransform(InvertibleModalityTransform):
     )
 
     # Private attributes to keep track of shapes/dimensions across apply/unapply
-    _language_key: Optional[str] = PrivateAttr(default=None)
-    _language_keys: Optional[list[str]] = PrivateAttr(default=None)
+    _language_key: str | None = PrivateAttr(default=None)
+    _language_keys: list[str] | None = PrivateAttr(default=None)
 
     # XEmbDiT arguments
     default_instruction: str
@@ -217,7 +220,7 @@ class DreamTransform(InvertibleModalityTransform):
 
     # Add tokenizer attribute
     tokenizer_path: str = Field(default="google/umt5-xxl", description="Path to the tokenizer.")
-    _tokenizer: Optional[HuggingfaceTokenizer] = PrivateAttr(default=None)
+    _tokenizer: HuggingfaceTokenizer | None = PrivateAttr(default=None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

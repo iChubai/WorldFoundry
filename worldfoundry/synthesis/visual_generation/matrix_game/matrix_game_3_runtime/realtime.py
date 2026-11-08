@@ -13,7 +13,8 @@ import math
 import os
 import time
 from bisect import bisect_right
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -417,7 +418,7 @@ class MatrixGame3RealtimeSession:
         selected[-1] = 4
         memory_pluckers: list[torch.Tensor] = []
         latent_indices: list[int] = []
-        for memory_index, reference_index in zip(selected, selected_base):
+        for memory_index, reference_index in zip(selected, selected_base, strict=False):
             latent_indices.append(self._latent_index(memory_index))
             aligned_index = self._align_frame_to_block(memory_index)
             memory_block = self._extrinsics[aligned_index : aligned_index + 4]

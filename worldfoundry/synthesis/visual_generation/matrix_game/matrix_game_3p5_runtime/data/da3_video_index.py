@@ -651,7 +651,7 @@ def _prompt_has_detailed(prompt_path):
     if not prompt_path:
         return False
     try:
-        with open(prompt_path, "r", encoding="utf-8") as f:
+        with open(prompt_path, encoding="utf-8") as f:
             payload = json.load(f) or {}
     except (OSError, ValueError):
         return False
@@ -720,7 +720,7 @@ def _read_depth_metadata(depth_path):
     if not os.path.isfile(metadata_path):
         return "npz_float", None, None
     try:
-        with open(metadata_path, "r", encoding="utf-8") as f:
+        with open(metadata_path, encoding="utf-8") as f:
             payload = json.load(f) or {}
     except (OSError, ValueError):
         return "npz_float", metadata_path, None

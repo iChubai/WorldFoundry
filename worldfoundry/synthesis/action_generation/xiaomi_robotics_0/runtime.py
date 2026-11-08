@@ -8,12 +8,13 @@ the Hugging Face remote-code cache.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.core.io.formats.serialization import write_json
+from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     collect_images,
     completed_action_result,
@@ -165,7 +166,7 @@ class XiaomiRobotics0RuntimeConfig:
         options: Mapping[str, Any] | None = None,
         *,
         device: str | None = None,
-    ) -> "XiaomiRobotics0RuntimeConfig":
+    ) -> XiaomiRobotics0RuntimeConfig:
         values = dict(options or {})
         variant = first_present(
             values,
@@ -376,7 +377,7 @@ class XiaomiRobotics0Runtime:
             else:
                 primary_values = [] if image is None else [image]
             missing_keys = [key for key in self.config.camera_keys if normalized.get(key) is None]
-            for key, value in zip(missing_keys, primary_values):
+            for key, value in zip(missing_keys, primary_values, strict=False):
                 normalized[key] = value
         values = collect_images(normalized, None, self.config.camera_keys)
         if len(values) != len(self.config.camera_keys):
@@ -558,10 +559,10 @@ def predict_action(
 
 __all__ = [
     "ACTION_HORIZONS_BY_ROBOT_TYPE",
-    "CheckpointSpec",
     "MODEL_ID",
     "OFFICIAL_CHECKPOINTS",
     "UPSTREAM_GITHUB_REVISION",
+    "CheckpointSpec",
     "XiaomiRobotics0Runtime",
     "XiaomiRobotics0RuntimeConfig",
     "build_instruction_prompt",

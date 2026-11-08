@@ -21,10 +21,10 @@ import torch
 import torch.distributed
 import torch.nn as nn
 from einops import rearrange
-
-import worldfoundry.core.distributed.model_parallel.groups as mpu
 from inference.common.config import MagiConfig
 from inference.infra.checkpoint.checkpointing import load_checkpoint
+
+import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import (
     InferenceParams,
     ModelMetaArgs,
@@ -288,7 +288,7 @@ class VideoDiTModel(torch.nn.Module):
     @torch.no_grad()
     def forward_pre_process(
         self, x, t, y, caption_dropout_mask=None, xattn_mask=None, kv_range=None, **kwargs
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, ModelMetaArgs]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, ModelMetaArgs]:
         assert kv_range is not None, "Please ensure kv_range is provided"
 
         x = x * self.model_config.x_rescale_factor
@@ -424,7 +424,7 @@ class VideoDiTModel(torch.nn.Module):
 
     def forward_3cfg(
         self, x, timestep, y, mask, kv_range, inference_params, **kwargs
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, int]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, int]:
         """
         Forward pass of PixArt, but also batches the unconditional forward pass for classifier-free guidance.
         """

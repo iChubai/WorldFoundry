@@ -36,8 +36,8 @@ import cv2
 import numpy as np
 import torch
 import torch.distributed as dist
-from torch.distributed.device_mesh import init_device_mesh
 import tyro
+from torch.distributed.device_mesh import init_device_mesh
 
 # Avoid FailOnRecompileLimitHit when serving: the flow scheduler's torch.compile'd
 # multistep_uni_p_bh_update recompiles under varying shapes/inputs (e.g. batch size,
@@ -54,11 +54,13 @@ if hasattr(_dynamo, "accumulated_recompile_limit"):
 from tianshou.data import Batch
 
 from .protocol import BasePolicy
+from .websocket import PolicyServerConfig, WebsocketPolicyServer
 
-from .websocket import WebsocketPolicyServer, PolicyServerConfig
+# isort: split
 from .modeling.policy import GrootSimPolicy
-from .preprocessing import EmbodimentTag, ComposedModalityTransform
 
+# isort: split
+from .preprocessing import ComposedModalityTransform, EmbodimentTag
 
 # DreamZero Wan 5B is trained with 160×320 (droid_relative_wan22). Fallback if we cannot read from policy.
 DEFAULT_IMAGE_HEIGHT = 160

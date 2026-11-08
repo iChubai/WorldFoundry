@@ -14,7 +14,6 @@ import pickle
 from pathlib import Path
 from typing import Any
 
-
 EXO_INPUT_KEY = "observation/exterior_image_1_left"
 WRIST_INPUT_KEY = "observation/wrist_image_left"
 
@@ -63,10 +62,10 @@ class Pi0JointPositionPolicy:
     def prepare_model(self) -> None:
         if self.model is not None:
             return
+        import numpy as np
         import openpi.models_pytorch.transformers_replace as replacements
         import transformers
         from openpi.policies.policy_config import create_trained_policy
-        import numpy as np
 
         source = Path(replacements.__path__[0])
         target = Path(transformers.__path__[0])

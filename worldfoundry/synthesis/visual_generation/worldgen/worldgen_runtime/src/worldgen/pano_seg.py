@@ -1,9 +1,11 @@
-from PIL import Image
-import torch
 import argparse
+
 import numpy as np
-from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
-from .utils.general_utils import pano_to_cube, cube_to_pano
+import torch
+from PIL import Image
+from transformers import OneFormerForUniversalSegmentation, OneFormerProcessor
+
+from .utils.general_utils import cube_to_pano, pano_to_cube
 
 
 def build_segment_model(device: torch.device = "cuda"):

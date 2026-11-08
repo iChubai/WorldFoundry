@@ -6,8 +6,9 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_candidates, resolve_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
@@ -165,7 +166,7 @@ class MagicWorldRuntime:
         return worldfoundry_root / "base_models" / "three_dimensions" / "depth" / "depth_pro"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "MagicWorldRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> MagicWorldRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def plan(self, **kwargs: Any) -> dict[str, Any]:

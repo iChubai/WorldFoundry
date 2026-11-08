@@ -2,6 +2,7 @@ from typing import Any
 
 import torch
 
+from .modeling import GigaBrain0Policy
 from .preprocessing import (
     AbsoluteActions,
     ImageTransform,
@@ -10,7 +11,6 @@ from .preprocessing import (
     PromptTokenizerTransform,
     Unnormalize,
 )
-from .modeling import GigaBrain0Policy
 
 
 def _pad_stats_to_dim(stats: dict, target_dim: int) -> dict:

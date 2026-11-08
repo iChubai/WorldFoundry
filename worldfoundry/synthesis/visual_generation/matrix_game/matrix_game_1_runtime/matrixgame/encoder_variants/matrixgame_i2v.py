@@ -1,16 +1,16 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, Tuple
-from copy import deepcopy
 
 import torch
 import torch.nn as nn
 from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    CLIPImageProcessor,
     CLIPTextModel,
     CLIPTokenizer,
-    AutoTokenizer,
-    AutoModel,
     LlavaForConditionalGeneration,
-    CLIPImageProcessor,
 )
 from transformers.utils import ModelOutput
 
@@ -117,9 +117,9 @@ class TextEncoderModelOutput(ModelOutput):
     """
 
     hidden_state: torch.FloatTensor = None
-    attention_mask: Optional[torch.LongTensor] = None
-    hidden_states_list: Optional[Tuple[torch.FloatTensor, ...]] = None
-    text_outputs: Optional[list] = None
+    attention_mask: torch.LongTensor | None = None
+    hidden_states_list: tuple[torch.FloatTensor, ...] | None = None
+    text_outputs: list | None = None
 
 
 class TextEncoder(nn.Module):
@@ -127,17 +127,17 @@ class TextEncoder(nn.Module):
         self,
         text_encoder_type: str,
         max_length: int,
-        text_encoder_precision: Optional[str] = None,
-        text_encoder_path: Optional[str] = None,
-        tokenizer_type: Optional[str] = None,
-        tokenizer_path: Optional[str] = None,
-        output_key: Optional[str] = None,
+        text_encoder_precision: str | None = None,
+        text_encoder_path: str | None = None,
+        tokenizer_type: str | None = None,
+        tokenizer_path: str | None = None,
+        output_key: str | None = None,
         use_attention_mask: bool = True,
         i2v_mode: bool = False,
-        input_max_length: Optional[int] = None,
-        prompt_template: Optional[dict] = None,
-        prompt_template_video: Optional[dict] = None,
-        hidden_state_skip_layer: Optional[int] = None,
+        input_max_length: int | None = None,
+        prompt_template: dict | None = None,
+        prompt_template_video: dict | None = None,
+        hidden_state_skip_layer: int | None = None,
         apply_final_norm: bool = False,
         reproduce: bool = False,
         logger=None,
@@ -217,10 +217,10 @@ class TextEncoder(nn.Module):
     @staticmethod
     def _expand_image_tokens_for_llava(
         input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor],
+        attention_mask: torch.Tensor | None,
         image_token_id: int,
         image_token_count: int,
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Match older Llava merge semantics expected by MatrixGame checkpoints."""
         if image_token_count <= 1:
             return input_ids, attention_mask
@@ -618,9 +618,9 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         prompt,
         device,
         num_videos_per_prompt=1,
-        clip_skip: Optional[int] = None,
-        text_encoder: Optional[TextEncoder] = None,
-        data_type: Optional[str] = "image",
+        clip_skip: int | None = None,
+        text_encoder: TextEncoder | None = None,
+        data_type: str | None = "image",
         semantic_images=None,
     ):
         if prompt is not None and isinstance(prompt, str):

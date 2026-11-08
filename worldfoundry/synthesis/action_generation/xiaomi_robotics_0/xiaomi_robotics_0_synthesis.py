@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.core.io.formats.serialization import write_json
+from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation._native_policy_runtime import option_bool
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
@@ -52,7 +53,7 @@ class XiaomiRobotics0Synthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "XiaomiRobotics0Synthesis":
+    ) -> XiaomiRobotics0Synthesis:
         """Create a lazy wrapper without importing torch or transformers."""
 
         del args

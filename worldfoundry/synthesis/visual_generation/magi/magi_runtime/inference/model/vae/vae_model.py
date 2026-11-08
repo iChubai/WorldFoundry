@@ -344,7 +344,7 @@ class AutoModel:
     """
 
     def __init__(self):
-        raise EnvironmentError(
+        raise OSError(
             "AutoModel is designed to be instantiated "
             "using the `AutoModel.from_pretrained(pretrained_model_name_or_path)` method."
         )
@@ -353,9 +353,9 @@ class AutoModel:
     def from_pretrained(cls, pretrained_model_name_or_path, *args, **kwargs) -> VideoTokenizerABC:
         config = os.path.join(pretrained_model_name_or_path, "config.json")
         if not os.path.exists(config):
-            raise ValueError("Can't find a model config file at {}.".format(config))
+            raise ValueError(f"Can't find a model config file at {config}.")
         # Load config
-        with open(config, "r") as json_file:
+        with open(config) as json_file:
             config_dict = json.load(json_file)
         assert config_dict["_class_name"] == "ViTVAE"
         return ViTVAE.from_pretrained(pretrained_model_name_or_path, *args, **kwargs)

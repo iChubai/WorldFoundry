@@ -53,7 +53,7 @@ class MMCollator:
     def __init__(
         self,
         special_tokens,
-        shapes_to_pad_to: Optional[Dict[str, Union[VariablePaddingSpec, TensorSpec]]] = None,
+        shapes_to_pad_to: dict[str, VariablePaddingSpec | TensorSpec] | None = None,
         include_metadata: bool = True,
         pad=None,
         skip_padding=None,
@@ -68,11 +68,11 @@ class MMCollator:
         self.include_metadata = include_metadata
         self.pad = pad
 
-    def __call__(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def __call__(self, batch: list[dict[str, Any]]) -> dict[str, Any]:
         if not batch:
             raise ValueError("Cannot collate an empty MolmoBot batch.")
         max_sequence_len = self.shapes_to_pad_to["tokens"].shape[0] if self.pad is not None else None
-        output: Dict[str, Any] = {
+        output: dict[str, Any] = {
             "input_ids": _collate(
                 [example["input_tokens"] for example in batch],
                 [max_sequence_len],

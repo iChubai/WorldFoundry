@@ -1,5 +1,6 @@
 import math
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -18,6 +19,7 @@ except:
     print("No module 'xformers'. Processing without it")
 
 from vwm.modules.attention import MemoryEfficientCrossAttention
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -167,7 +169,7 @@ class MemoryEfficientAttnBlock(nn.Module):
         self.k = nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
         self.v = nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
         self.proj_out = nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
-        self.attention_op: Optional[Any] = None
+        self.attention_op: Any | None = None
 
     def attention(self, h_: torch.Tensor) -> torch.Tensor:
         h_ = self.norm(h_)

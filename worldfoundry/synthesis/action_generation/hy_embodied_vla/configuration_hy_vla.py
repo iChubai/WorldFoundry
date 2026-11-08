@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (C) 2026 Tencent.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +25,7 @@ and are ignored by :meth:`HyVLAConfig.from_pretrained`.
 
 from __future__ import annotations
 
+import builtins
 import dataclasses
 import json
 import os
@@ -151,7 +151,7 @@ class HyVLAConfig:
 
     @classmethod
     def from_pretrained(
-        cls: Type[T],
+        cls: builtins.type[T],
         pretrained_name_or_path: str | Path,
         *,
         force_download: bool = False,
@@ -168,7 +168,7 @@ class HyVLAConfig:
         model_dir = resolve_local_hf_model_path(model_id, required_files=(CONFIG_NAME,))
         config_file = os.path.join(model_dir, CONFIG_NAME)
 
-        with open(config_file, "r", encoding="utf-8") as fp:
+        with open(config_file, encoding="utf-8") as fp:
             data = json.load(fp)
 
         allowed = {f.name for f in fields(cls)}
@@ -194,6 +194,6 @@ class HyVLAConfig:
 
 __all__ = [
     "FeatureType",
-    "PolicyFeature",
     "HyVLAConfig",
+    "PolicyFeature",
 ]

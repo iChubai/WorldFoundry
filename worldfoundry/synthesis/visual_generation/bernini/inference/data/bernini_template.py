@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from collections import defaultdict
-from typing import Dict, List, Optional, Sequence
-
 import os
-import torch
+from collections import defaultdict
+from collections.abc import Sequence
+from typing import Dict, List, Optional
+
 import numpy as np
+import torch
 from diffusers.pipelines.wan.pipeline_wan import prompt_clean
 
 try:
@@ -24,6 +25,7 @@ try:
 except ModuleNotFoundError:
     IGNORE_INDEX = -100
 from veomni.utils import logging
+
 from .utils.attention_utils import build_custom_attention_mask
 
 logger = logging.get_logger(__name__)
@@ -33,7 +35,7 @@ class T5TextTokenizer:
     def __init__(self, t5_tokenizer):
         self.t5_tokenizer = t5_tokenizer
 
-    def extract_text_prompt(self, conversations: Sequence[Dict], drop_text: int = 0) -> str:
+    def extract_text_prompt(self, conversations: Sequence[dict], drop_text: int = 0) -> str:
         if drop_text:
             return ""
         text_parts = []
@@ -46,11 +48,11 @@ class T5TextTokenizer:
 
     def tokenize(
         self,
-        conversations: Sequence[Dict],
+        conversations: Sequence[dict],
         drop_text: int = 0,
-        max_length: Optional[int] = None,
+        max_length: int | None = None,
         preprocess_fn=None,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         text_prompt = self.extract_text_prompt(conversations, drop_text)
 
         if preprocess_fn is not None:
@@ -96,7 +98,7 @@ class Qwen2VLTemplate:
         self.image_end_id = self.tokenizer.convert_tokens_to_ids("<|vision_end|>")
         self.eos = self.tokenizer.encode("<|im_end|>\n", add_special_tokens=False)
         self.bos = self.tokenizer.encode("<|im_start|>", add_special_tokens=False)
-        self.cfg_ratio = kwargs.get("cfg_ratio", None)
+        self.cfg_ratio = kwargs.get("cfg_ratio")
 
     def image_pattern(self, token_num):
         return "<|vision_start|>" + self.image_pad * token_num + "<|vision_end|>"
@@ -168,16 +170,16 @@ class BerniniTemplate(Qwen2VLTemplate):
 
     def encode_messages(
         self,
-        conversations: Sequence[Dict[str, str]],
-        num_tokens: Dict[str, List[int]] = defaultdict(list),
+        conversations: Sequence[dict[str, str]],
+        num_tokens: dict[str, list[int]] = defaultdict(list),
         task_name: str = "",
         drop_text: int = 0,
         drop_video: int = 0,
         drop_img: int = 0,
         vit_mask_ratio: float = 1.0,
-        neg_prompt: Optional[str] = "",
+        neg_prompt: str | None = "",
         **kwargs,
-    ) -> Dict[str, List[int]]:
+    ) -> dict[str, list[int]]:
         sys_msg = self._get_system_mesage(task_name)
         messages = [] if sys_msg is None else [sys_msg]
         image_token_num_list = iter(num_tokens.get("image", []))

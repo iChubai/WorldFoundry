@@ -1,7 +1,7 @@
 import argparse
+import json
 import os
 import re
-import json
 import sys
 from pathlib import Path
 from typing import List, Optional
@@ -13,28 +13,27 @@ sys.path.insert(0, _RUNTIME_ROOT)
 
 from uni3c_cam_render_api import render_from_image_and_traj
 
+# isort: split
+
 import torch
 import torch.distributed as dist
-from omegaconf import OmegaConf
-from torchvision import transforms
-from einops import rearrange
 import torchvision.transforms.functional as TF
+from einops import rearrange
+from omegaconf import OmegaConf
 from PIL import Image
-
-from torch.utils.data import Dataset, DataLoader, SequentialSampler
-from torch.utils.data.distributed import DistributedSampler
-
 from pipeline import CausalInferencePipeline
+from torch.utils.data import DataLoader, Dataset, SequentialSampler
+from torch.utils.data.distributed import DistributedSampler
+from torchvision import transforms
+from utils.camera_pose import process_pose_file
+from videox_fun.utils.utils import get_video_to_video_render_latent
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import (
     CLIPModel,
 )
-from utils.camera_pose import process_pose_file
-from videox_fun.utils.utils import get_video_to_video_render_latent
-from worldfoundry.core.utils.tensors.torch import set_seed_everywhere as set_seed
 from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.core.media.codecs.video import write_video_torchvision as write_video
-
+from worldfoundry.core.utils.tensors.torch import set_seed_everywhere as set_seed
 from worldfoundry.core.vram import DynamicSwapInstaller, get_cuda_free_memory_gb
 
 
@@ -55,7 +54,7 @@ def load_prompt_index(json_path: str) -> dict:
       - exact filename -> describe
       - stem -> describe
     """
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         items = json.load(f)
 
     by_name = {}
@@ -157,7 +156,7 @@ def _pool_latent_frames(latent: torch.Tensor, mode: str = "mean") -> torch.Tenso
 
 
 def _append_cache_from_pred_latent(
-    cache_list: List[torch.Tensor], pred_latent: torch.Tensor, detach: bool = True
+    cache_list: list[torch.Tensor], pred_latent: torch.Tensor, detach: bool = True
 ) -> None:
     """
     pred_latent: [B, F, C, H, W]
@@ -168,7 +167,7 @@ def _append_cache_from_pred_latent(
     cache_list.append(frames)
 
 
-def _pack_cache_list(cache_list: List[torch.Tensor]) -> Optional[torch.Tensor]:
+def _pack_cache_list(cache_list: list[torch.Tensor]) -> torch.Tensor | None:
     """
     List[[B,F_i,C,H,W]] -> [B,F_total,C,H,W]
     """
@@ -187,7 +186,7 @@ def _pack_cache_list(cache_list: List[torch.Tensor]) -> Optional[torch.Tensor]:
     return torch.cat(cache_list, dim=1)  # [B,F_total,C,H,W]
 
 
-def _trim_cache_list_to_max_frames(cache_list: List[torch.Tensor], max_frames: int) -> List[torch.Tensor]:
+def _trim_cache_list_to_max_frames(cache_list: list[torch.Tensor], max_frames: int) -> list[torch.Tensor]:
     if max_frames <= 0:
         return []
 
@@ -213,7 +212,7 @@ def _trim_cache_list_to_max_frames(cache_list: List[torch.Tensor], max_frames: i
 
 def _select_topk_from_cache_list(
     query_first_latent: torch.Tensor,  # [B,Fq,C,H,W]，只用首帧
-    cache_list: List[torch.Tensor],  # List[[B,F_i,C,H,W]]
+    cache_list: list[torch.Tensor],  # List[[B,F_i,C,H,W]]
     topk: int,
     cache_pool: str = "mean",
 ) -> torch.Tensor:

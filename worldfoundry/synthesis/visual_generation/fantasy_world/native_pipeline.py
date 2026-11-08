@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 from collections import Counter
 from dataclasses import dataclass
-import logging
 from pathlib import Path
 
 import torch
@@ -31,7 +31,6 @@ from worldfoundry.core.model_loading import (
     load_state_dict,
     merge_flattened_path_lora_,
 )
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -276,9 +275,9 @@ def build_fantasy_world_wan22_models(
 
 
 __all__ = [
-    "FantasyWorldWan22Models",
     "WAN21_OVERLAY_GROUPS",
     "WAN22_OVERLAY_GROUPS",
+    "FantasyWorldWan22Models",
     "build_fantasy_world_wan21_model",
     "build_fantasy_world_wan22_models",
     "load_fantasy_world_overlay",

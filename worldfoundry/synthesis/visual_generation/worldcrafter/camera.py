@@ -5,17 +5,16 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
 import math
-from pathlib import Path
 import re
+from dataclasses import asdict, dataclass
 from functools import partial
+from pathlib import Path
 
 import numpy as np
 
 from worldfoundry.core.io.filesystem.file_utils import file_sha256
-
 
 CHUNK_FRAMES = 33
 FPS = 16

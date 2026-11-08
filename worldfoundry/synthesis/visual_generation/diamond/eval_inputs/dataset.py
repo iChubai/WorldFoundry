@@ -1,23 +1,23 @@
-from collections import Counter
 import multiprocessing as mp
-from pathlib import Path
 import shutil
+from collections import Counter
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
+from utils import StateDictMixin
 
 from .episode import Episode
 from .segment import Segment, SegmentId
 from .utils import make_segment
-from utils import StateDictMixin
 
 
 class Dataset(StateDictMixin, torch.utils.data.Dataset):
     def __init__(
         self,
         directory: Path,
-        name: Optional[str] = None,
+        name: str | None = None,
         cache_in_ram: bool = False,
         use_manager: bool = False,
         save_on_disk: bool = True,
@@ -56,11 +56,11 @@ class Dataset(StateDictMixin, torch.utils.data.Dataset):
         return self._name
 
     @property
-    def counts_rew(self) -> List[int]:
+    def counts_rew(self) -> list[int]:
         return [self.counter_rew[r] for r in [-1, 0, 1]]
 
     @property
-    def counts_end(self) -> List[int]:
+    def counts_end(self) -> list[int]:
         return [self.counter_end[e] for e in [0, 1]]
 
     def _reset(self) -> None:
@@ -87,7 +87,7 @@ class Dataset(StateDictMixin, torch.utils.data.Dataset):
                 self._cache[episode_id] = episode
         return episode
 
-    def add_episode(self, episode: Episode, *, episode_id: Optional[int] = None) -> int:
+    def add_episode(self, episode: Episode, *, episode_id: int | None = None) -> int:
         self.assert_not_static()
         episode = episode.to("cpu")
 
@@ -127,7 +127,7 @@ class Dataset(StateDictMixin, torch.utils.data.Dataset):
         subfolders = "/".join([f"{x:0{n - i}d}" for i, x in enumerate(subfolders)])
         return self._directory / subfolders / f"{episode_id}.pt"
 
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
         super().load_state_dict(state_dict)
         self._cache.clear()
 

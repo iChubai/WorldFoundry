@@ -4,22 +4,28 @@ import argparse
 import os
 import time
 from functools import partial
-from PIL import Image
-from diffusers.video_processor import VideoProcessor
-from diffusers.utils import export_to_video
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from diffusers.pipelines.wan.pipeline_wan import prompt_clean
+from diffusers.utils import export_to_video
+from diffusers.video_processor import VideoProcessor
 from einops import rearrange
+from PIL import Image
 from tqdm import tqdm
 
-from .configuration import VA_CONFIGS
+from worldfoundry.core.distributed.runtime.runtime_setup import _configure_model, init_distributed
+from worldfoundry.core.distributed.sharding.fsdp2_sharding import shard_model
 from worldfoundry.core.execution.device import resolve_inference_dtype
 from worldfoundry.core.io.paths import resolve_worldfoundry_path
-from worldfoundry.core.distributed.sharding.fsdp2_sharding import shard_model
-from worldfoundry.core.distributed.runtime.runtime_setup import _configure_model, init_distributed
+
+from .configuration import VA_CONFIGS
+from .inference_utils import (
+    data_seq_to_patch,
+    get_mesh_id,
+    save_async,
+)
 from .loading import (
     WanVAEStreamingWrapper,
     load_text_encoder,
@@ -27,15 +33,9 @@ from .loading import (
     load_transformer,
     load_vae,
 )
-from .scheduler import FlowMatchScheduler
-from .inference_utils import (
-    data_seq_to_patch,
-    get_mesh_id,
-    save_async,
-)
 from .logging import init_logger, logger
+from .scheduler import FlowMatchScheduler
 from .serving import run_async_server_mode
-
 
 WAN_VA_CHECKPOINT_ENV = "WORLDFOUNDRY_WAN_VA_CHECKPOINT_DIR"
 
@@ -141,7 +141,7 @@ class VA_Server:
             text_input_ids.to(text_encoder_device), mask.to(text_encoder_device)
         ).last_hidden_state
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
-        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0
         )
@@ -584,17 +584,17 @@ class VA_Server:
         compute_kv_cache = obs.get("compute_kv_cache", False)
 
         if reset:
-            logger.info(f"******************* Reset server ******************")
+            logger.info("******************* Reset server ******************")
             self._reset(prompt=prompt)
             return dict()
         if not hasattr(self, "frame_st_id"):
             self._reset(prompt=prompt)
         if compute_kv_cache:
-            logger.info(f"################# Compute KV Cache #################")
+            logger.info("################# Compute KV Cache #################")
             self._compute_kv_cache(obs)
             return dict()
         else:
-            logger.info(f"################# Infer One Chunk #################")
+            logger.info("################# Infer One Chunk #################")
             action, _ = self._infer(obs, frame_st_id=self.frame_st_id)
             return dict(action=action)
 
@@ -672,10 +672,10 @@ def run(args):
     config.world_size = world_size
     model = VA_Server(config)
     if config.infer_mode == "i2va":
-        logger.info(f"******************************USE I2AV mode******************************")
+        logger.info("******************************USE I2AV mode******************************")
         model.generate()
     elif config.infer_mode == "server":
-        logger.info(f"******************************USE Server mode******************************")
+        logger.info("******************************USE Server mode******************************")
         run_async_server_mode(model, local_rank, config.host, port)
     else:
         raise ValueError(f"Unknown infer mode: {config.infer_mode}")

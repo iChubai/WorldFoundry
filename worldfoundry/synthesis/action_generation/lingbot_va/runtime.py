@@ -9,9 +9,10 @@ interactions.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
 from worldfoundry.synthesis.action_generation.wan_va import RUNTIME_ROOT, WAN_VA_PACKAGE, WAN_VA_ROOT
@@ -534,7 +535,7 @@ def _normalize_lingbot_va_frame(source: Any, camera_keys: Sequence[str]) -> dict
 
     # If the source is a single image (not a mapping or sequence), normalize it and replicate for all keys.
     image = _as_hwc_uint8_image(source)
-    return {key: image for key in camera_keys}
+    return dict.fromkeys(camera_keys, image)
 
 
 def _normalize_lingbot_va_obs(source: Any, camera_keys: Sequence[str]) -> list[dict[str, Any]]:
@@ -697,10 +698,10 @@ class LingBotVAWebsocketRuntime:
 
 
 __all__ = [
-    "LingBotVARuntimeConfig",
-    "LingBotVAWebsocketRuntime",
     "RUNTIME_ROOT",
     "WAN_VA_ROOT",
+    "LingBotVARuntimeConfig",
+    "LingBotVAWebsocketRuntime",
     "build_server_command",
     "config_name_for_checkpoint",
     "read_transformer_attn_mode",

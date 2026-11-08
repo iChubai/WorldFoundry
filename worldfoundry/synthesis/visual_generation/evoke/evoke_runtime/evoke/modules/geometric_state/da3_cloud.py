@@ -983,7 +983,7 @@ def _render_multisrc(
         D = torch.full((h * w,), float("inf"), device=device)
         D.scatter_reduce_(0, py[ok] * w + px[ok], z[ok], reduce="amin", include_self=True)
         df = d.reshape(-1)
-        v = (D < float("inf")) & (df > 1e-4)
+        v = (float("inf") > D) & (df > 1e-4)
         if int(v.sum()) < tposepts_n:
             return 1.0
         s = float((D[v] / df[v]).median())
@@ -1171,7 +1171,7 @@ def _render_backward(
         D = torch.full((h * w,), float("inf"), device=device)
         D.scatter_reduce_(0, py[ok] * w + px[ok], z[ok], reduce="amin", include_self=True)
         df = d.reshape(-1)
-        v = (D < float("inf")) & (df > 1e-4)
+        v = (float("inf") > D) & (df > 1e-4)
         if int(v.sum()) < tposepts_n:
             return 1.0
         s = float((D[v] / df[v]).median())
@@ -1262,7 +1262,7 @@ def _render_backward(
                 m = vr & (~filled)
                 fused = torch.where(m[None].expand(3, H, W), cr, fused)
                 filled = filled | vr
-        warps.append((fused.clamp(0, 1) * 2 - 1))
+        warps.append(fused.clamp(0, 1) * 2 - 1)
         viss.append(filled.float())
     return torch.stack(warps, 1)[None].contiguous(), torch.stack(viss)[None, None].contiguous()
 
@@ -1438,7 +1438,7 @@ def _render_backward_multisrc_zbuf(
         D = torch.full((h * w,), float("inf"), device=device)
         D.scatter_reduce_(0, py[ok] * w + px[ok], z[ok], reduce="amin", include_self=True)
         df = d.reshape(-1)
-        v = (D < float("inf")) & (df > 1e-4)
+        v = (float("inf") > D) & (df > 1e-4)
         nov = int(v.sum())
         if nov < tposepts_n:
             return 1.0, nov
@@ -1562,10 +1562,10 @@ def _render_backward_multisrc_zbuf(
                 col = torch.where(upd[None].expand(3, -1, -1), (num / den.clamp(min=1e-6))[0], col)
                 m[0, 0] = torch.where(upd, torch.ones_like(m[0, 0]), m[0, 0])
             col[:, removed] = 0.0  # specks cleared into holes -> black (handed to the model to generate)
-            warps.append((col.clamp(0, 1) * 2 - 1))
+            warps.append(col.clamp(0, 1) * 2 - 1)
             viss.append(hv_b.float())
             continue
-        warps.append((fused.clamp(0, 1) * 2 - 1))
+        warps.append(fused.clamp(0, 1) * 2 - 1)
         viss.append(covered.float())
     vis_out = torch.stack(viss)[None, None].contiguous()
     # instrumentation (only printed on low coverage to avoid spam): distinguishes "empty store / cold start" (A) from "recall sources exist but got kicked out / drifted in scale" (B).

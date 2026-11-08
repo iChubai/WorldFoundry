@@ -1,14 +1,14 @@
 import os
 import re
 
+import decord
 import numpy as np
 import requests
 import torch
+from einops import rearrange
 from torchvision.datasets.folder import IMG_EXTENSIONS
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import resize
-import decord
-from einops import rearrange
 
 VID_EXTENSIONS = (".mp4", ".avi", ".mov", ".mkv")
 
@@ -349,7 +349,7 @@ def generate_traj_txt(x_up_angles, y_left_angles, r, r_zoom, frame, is_translati
     is_zoom = all(x == 0 for x in x_up_angles) and all(y == 0 for y in y_left_angles)
     is_not_y = all(y == 0 for y in y_left_angles)
 
-    for x_up_angle, y_left_angle, r_val, r_zoom_val in zip(x_up_angles, y_left_angles, rs, r_zooms):
+    for x_up_angle, y_left_angle, r_val, r_zoom_val in zip(x_up_angles, y_left_angles, rs, r_zooms, strict=False):
         if is_not_y:
             c2w_new = sphere2pose(
                 np.float32(x_up_angle),

@@ -5,8 +5,9 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional
 
 import torch
 
@@ -15,15 +16,15 @@ from worldfoundry.core.io import (
     load_video_frames,
     materialize_video_input,
 )
-from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
     resolve_local_hf_model_path,
 )
+from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.evaluation.utils import worldfoundry_data_path
-from .inspatio_world_runtime.utils.reproducibility import SEED_ENV, reproducibility_env
 
+from .inspatio_world_runtime.utils.reproducibility import SEED_ENV, reproducibility_env
 
 _BUNDLED_REPO_ROOT = package_root("worldfoundry.synthesis.visual_generation.inspatio_world") / "inspatio_world_runtime"
 _CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "inspatio_world")
@@ -53,13 +54,13 @@ class InspatioWorldRuntime:
 
     def __init__(
         self,
-        repo_root: Optional[str] = None,
+        repo_root: str | None = None,
         checkpoint_source: str = DEFAULT_CHECKPOINT_REPO,
         wan_model_source: str = DEFAULT_WAN_MODEL_REPO,
         da3_model_source: str = DEFAULT_DA3_MODEL_REPO,
         florence_model_source: str = DEFAULT_FLORENCE_MODEL_REPO,
         device: str = "cuda",
-        defaults: Optional[Dict[str, Any]] = None,
+        defaults: dict[str, Any] | None = None,
     ) -> None:
         bundled_root = Path(self.bundled_repo_root()).resolve()
         if repo_root is not None and Path(repo_root).expanduser().resolve() != bundled_root:
@@ -81,15 +82,15 @@ class InspatioWorldRuntime:
         cls,
         pretrained_model_path: str = DEFAULT_CHECKPOINT_REPO,
         args=None,
-        device: Optional[str] = None,
+        device: str | None = None,
         wan_model_path: str = DEFAULT_WAN_MODEL_REPO,
         da3_model_path: str = DEFAULT_DA3_MODEL_REPO,
         florence_model_path: str = DEFAULT_FLORENCE_MODEL_REPO,
-        config_path: Optional[str] = None,
-        tae_checkpoint_path: Optional[str] = None,
-        default_traj_txt_path: Optional[str] = None,
+        config_path: str | None = None,
+        tae_checkpoint_path: str | None = None,
+        default_traj_txt_path: str | None = None,
         **kwargs,
-    ) -> "InspatioWorldRuntime":
+    ) -> InspatioWorldRuntime:
         defaults = {
             "config_path": config_path,
             "tae_checkpoint_path": tae_checkpoint_path,
@@ -146,7 +147,7 @@ class InspatioWorldRuntime:
             return str(matches[0].resolve())
         raise FileNotFoundError(f"Unable to locate an InSpatio-World checkpoint under {root}.")
 
-    def _resolve_config_path(self, config_path: Optional[str]) -> str:
+    def _resolve_config_path(self, config_path: str | None) -> str:
         resolved = config_path or self.defaults.get("config_path") or DEFAULT_CONFIG_PATH
         candidate = Path(str(resolved)).expanduser()
         if candidate.is_absolute() and candidate.exists():
@@ -161,7 +162,7 @@ class InspatioWorldRuntime:
             return str(repo_candidate.resolve())
         raise FileNotFoundError(f"InSpatio-World config not found: {resolved}")
 
-    def _resolve_trajectory_path(self, traj_txt_path: Optional[str]) -> str:
+    def _resolve_trajectory_path(self, traj_txt_path: str | None) -> str:
         raw_value = traj_txt_path or self.defaults.get("default_traj_txt_path") or DEFAULT_TRAJECTORY_NAME
         candidate = Path(str(raw_value)).expanduser()
         if candidate.exists():
@@ -184,7 +185,7 @@ class InspatioWorldRuntime:
             f"Trajectory file not found: {raw_value}. Checked local path and data trajectory root {_TRAJECTORY_ROOT}."
         )
 
-    def _resolve_optional_tae_checkpoint(self, tae_checkpoint_path: Optional[str], use_tae: bool) -> Optional[str]:
+    def _resolve_optional_tae_checkpoint(self, tae_checkpoint_path: str | None, use_tae: bool) -> str | None:
         if not use_tae:
             return None
 
@@ -221,12 +222,12 @@ class InspatioWorldRuntime:
             dst.unlink()
         dst.symlink_to(src)
 
-    def _stage_input_dir(self, visual_input, output_root: Path, fps: int) -> tuple[Path, list[Path], Optional[Path]]:
+    def _stage_input_dir(self, visual_input, output_root: Path, fps: int) -> tuple[Path, list[Path], Path | None]:
         input_dir = output_root / "input"
         input_dir.mkdir(parents=True, exist_ok=True)
 
         staged_videos: list[Path] = []
-        source_dir: Optional[Path] = None
+        source_dir: Path | None = None
         if isinstance(visual_input, (str, os.PathLike)):
             candidate = Path(visual_input).expanduser()
             if not candidate.exists():
@@ -330,7 +331,7 @@ class InspatioWorldRuntime:
         json_path.write_text(json.dumps(payload, indent=4, ensure_ascii=False), encoding="utf-8")
         return str(json_path)
 
-    def _stage_existing_vggt(self, source_dir: Optional[Path], input_dir: Path, enable: bool) -> None:
+    def _stage_existing_vggt(self, source_dir: Path | None, input_dir: Path, enable: bool) -> None:
         if not enable or source_dir is None:
             return
         source_vggt_dir = source_dir / "new_vggt"
@@ -385,14 +386,14 @@ class InspatioWorldRuntime:
 
     def plan(
         self,
-        config_path: Optional[str] = None,
-        traj_txt_path: Optional[str] = None,
+        config_path: str | None = None,
+        traj_txt_path: str | None = None,
         skip_step1: bool = False,
         skip_step2: bool = False,
         skip_step3: bool = False,
         use_tae: bool = False,
-        tae_checkpoint_path: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        tae_checkpoint_path: str | None = None,
+    ) -> dict[str, Any]:
         """Describe the in-tree runtime plan without launching inference.
 
         Args:
@@ -496,17 +497,17 @@ class InspatioWorldRuntime:
     def predict(
         self,
         visual_input,
-        traj_txt_path: Optional[str] = None,
+        traj_txt_path: str | None = None,
         prompt: str = "",
-        output_root: Optional[str] = None,
+        output_root: str | None = None,
         fps: int = 24,
         step1_gpus: str = "0",
         step2_gpus: str = "0",
-        step3_gpus: Optional[str] = None,
+        step3_gpus: str | None = None,
         step3_nproc: int = 1,
         master_port: int = 29513,
-        config_path: Optional[str] = None,
-        json_path: Optional[str] = None,
+        config_path: str | None = None,
+        json_path: str | None = None,
         skip_step1: bool = False,
         skip_step2: bool = False,
         skip_step3: bool = False,
@@ -514,12 +515,12 @@ class InspatioWorldRuntime:
         rotation_only: bool = False,
         adaptive_frame: bool = True,
         freeze_repeat: int = 0,
-        freeze_frame: Optional[int] = None,
+        freeze_frame: int | None = None,
         use_tae: bool = False,
-        tae_checkpoint_path: Optional[str] = None,
+        tae_checkpoint_path: str | None = None,
         compile_dit: bool = False,
-        seed: Optional[int] = None,
-        deterministic: Optional[bool] = None,
+        seed: int | None = None,
+        deterministic: bool | None = None,
         show_progress: bool = True,
         return_dict: bool = False,
         **kwargs,

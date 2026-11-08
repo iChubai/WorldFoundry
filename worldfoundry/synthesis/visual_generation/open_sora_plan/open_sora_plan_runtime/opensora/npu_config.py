@@ -1,14 +1,15 @@
+import gc
 import math
 import mmap
 import os
 import pickle
 import random
-import numpy as np
-import torch
 import subprocess
 import sys
 import threading
-import gc
+
+import numpy as np
+import torch
 import torch.distributed as dist
 
 from opensora.adaptor.zp_manager import zp_manager
@@ -21,8 +22,8 @@ try:
 except:
     npu_is_available = False
 
-from contextlib import contextmanager
 import types
+from contextlib import contextmanager
 
 
 def compress_video(input_file, output_file, out_size):
@@ -92,27 +93,32 @@ class NPUConfig:
         self.mm = dict()
 
         if self.on_npu:
-            import deepspeed
             import sys
+
+            import deepspeed
 
             torch_npu.npu.set_compile_mode(jit_compile=False)
 
             import deepspeed.runtime.utils as utils
+
             from opensora.adaptor.utils import all_gather_dp_groups, all_gather_into_tensor_dp_groups
 
             utils.all_gather_dp_groups = all_gather_dp_groups
 
             import deepspeed.runtime.bf16_optimizer as bf16_optimizer
+
             from opensora.adaptor.bf16_optimizer import BF16_Optimizer
 
             self.replace_methods(bf16_optimizer.BF16_Optimizer, BF16_Optimizer)
 
-            from opensora.adaptor.stage_1_and_2 import DeepSpeedZeroOptimizer
             import deepspeed.runtime.zero.stage_1_and_2 as stage_1_and_2
+
+            from opensora.adaptor.stage_1_and_2 import DeepSpeedZeroOptimizer
 
             self.replace_methods(stage_1_and_2.DeepSpeedZeroOptimizer, DeepSpeedZeroOptimizer, ["_has_inf_or_nan"])
 
             import deepspeed.runtime.engine as engine
+
             from opensora.adaptor.engine import DeepSpeedEngine
 
             self.replace_methods(
@@ -436,7 +442,7 @@ class NPUConfig:
 
             def print_dim(tensor_, indices):
                 if tensor_.dim() == len(indices):
-                    return "{0:10.5f} ".format(tensor[tuple(indices)].detach().item())
+                    return f"{tensor[tuple(indices)].detach().item():10.5f} "
                 else:
                     cur_dim = len(indices)
                     ret = ""

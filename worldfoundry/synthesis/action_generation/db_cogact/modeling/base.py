@@ -1,13 +1,14 @@
 # Inference-only DB-CogACT source retained in-tree.
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Mapping, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel, GenerationMixin
+from transformers import AutoConfig, AutoModel, GenerationMixin, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import ModelOutput
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
@@ -20,18 +21,18 @@ from .vision import build_vision_tower
 class DexboticConfig(PretrainedConfig):
     model_type = "dexbotic"
     llm_config: str | PretrainedConfig
-    mm_projector_type: Optional[str] = "mlp2x_gelu"
-    mm_vision_tower: Optional[str] = None
-    chat_template: Optional[str] = "dexbotic"
-    init_llm_weights: Optional[bool] = False
+    mm_projector_type: str | None = "mlp2x_gelu"
+    mm_vision_tower: str | None = None
+    chat_template: str | None = "dexbotic"
+    init_llm_weights: bool | None = False
 
 
 @dataclass
 class CausalLMOutputDexbotic(ModelOutput):
     logits: torch.FloatTensor = None
-    past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
-    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
-    attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+    past_key_values: tuple[tuple[torch.FloatTensor]] | None = None
+    hidden_states: tuple[torch.FloatTensor, ...] | None = None
+    attentions: tuple[torch.FloatTensor, ...] | None = None
 
 
 class DexboticPretrainedModel(PreTrainedModel):
@@ -213,12 +214,12 @@ class DexboticVLMModel(DexboticPretrainedModel):
 
     def _prepare_inputs_for_multimodal(
         self,
-        input_ids: Optional[torch.Tensor],
-        position_ids: Optional[torch.Tensor],
-        attention_mask: Optional[torch.Tensor],
-        past_key_values: Optional[torch.Tensor],
-        cache_position: Optional[torch.Tensor],
-        images: Optional[torch.Tensor],
+        input_ids: torch.Tensor | None,
+        position_ids: torch.Tensor | None,
+        attention_mask: torch.Tensor | None,
+        past_key_values: torch.Tensor | None,
+        cache_position: torch.Tensor | None,
+        images: torch.Tensor | None,
     ) -> tuple:
         """Insert vision embeddings into an inference prompt."""
         vision = self.mm_vision_module
@@ -237,7 +238,7 @@ class DexboticVLMModel(DexboticPretrainedModel):
         if position_ids is None:
             position_ids = torch.arange(input_ids.shape[1], dtype=torch.long, device=input_ids.device)
 
-        unpadded_ids = [ids[mask] for ids, mask in zip(input_ids, attention_mask)]
+        unpadded_ids = [ids[mask] for ids, mask in zip(input_ids, attention_mask, strict=False)]
         new_input_embeds = []
         cur_image_idx = 0
         for ids in unpadded_ids:

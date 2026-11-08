@@ -1,10 +1,11 @@
-from PIL import Image
+from typing import Literal, Optional
+
 import numpy as np
+import open3d as o3d
 import torch
 import torch.nn.functional as F
-from skimage import measure, draw
-from typing import Optional, Literal
-import open3d as o3d
+from PIL import Image
+from skimage import draw, measure
 
 try:
     import py360convert
@@ -224,7 +225,7 @@ def convert_rgbd2mesh_panorama(
     rgb: torch.Tensor,  # (H, W, 3) RGB image, values [0, 1]
     distance: torch.Tensor,  # (H, W) Distance map
     rays: torch.Tensor,  # (H, W, 3) Ray directions (unit vectors ideally)
-    mask: Optional[torch.Tensor] = None,  # (H, W) Optional boolean mask
+    mask: torch.Tensor | None = None,  # (H, W) Optional boolean mask
     max_size: int = 4096,  # Max dimension for resizing
     device: Literal["cuda", "cpu"] = "cuda",  # Computation device
 ) -> o3d.geometry.TriangleMesh:

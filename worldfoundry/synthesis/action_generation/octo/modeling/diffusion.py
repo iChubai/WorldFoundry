@@ -1,6 +1,7 @@
 # copied from: https://raw.githubusercontent.com/rail-berkeley/bridge_data_v2/main/jaxrl_m/networks/diffusion_nets.py
 import logging
-from typing import Callable, Optional, Sequence
+from collections.abc import Callable, Sequence
+from typing import Optional
 
 import flax.linen as nn
 import jax
@@ -73,7 +74,7 @@ class MLP(nn.Module):
     activation: Callable = nn.swish
     activate_final: bool = False
     use_layer_norm: bool = False
-    dropout_rate: Optional[float] = None
+    dropout_rate: float | None = None
 
     @nn.compact
     def __call__(self, x: jax.Array, train: bool = False) -> jax.Array:

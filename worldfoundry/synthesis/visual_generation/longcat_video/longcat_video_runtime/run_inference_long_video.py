@@ -1,30 +1,37 @@
-import os
 import argparse
 import datetime
-import PIL.Image
-import numpy as np
+import os
 
+import numpy as np
+import PIL.Image
 import torch
 import torch.distributed as dist
-
 from transformers import UMT5EncoderModel
+
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.tokenizer_loading import (
     load_longcat_tokenizer,
 )
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.video_io import write_video
 
+# isort: split
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.pipeline_longcat_video import (
     LongCatVideoPipeline,
+)
+
+# isort: split
+from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.modules.autoencoder_kl_wan import (
+    AutoencoderKLWan,
 )
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.scheduling_flow_match_euler import (
     FlowMatchEulerDiscreteScheduler,
 )
-from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.modules.autoencoder_kl_wan import (
-    AutoencoderKLWan,
-)
+
+# isort: split
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.modules.longcat_video_dit import (
     LongCatVideoTransformer3DModel,
 )
+
+# isort: split
 from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
 from worldfoundry.core.distributed.model_parallel.context_state import init_context_parallel
 
@@ -109,7 +116,7 @@ def generate(args):
     if local_rank == 0:
         output_tensor = torch.from_numpy(np.array(output))
         output_tensor = (output_tensor * 255).clamp(0, 255).to(torch.uint8)
-        write_video(f"output_long_video_0.mp4", output_tensor, fps=15, video_codec="libx264", options={"crf": f"{18}"})
+        write_video("output_long_video_0.mp4", output_tensor, fps=15, video_codec="libx264", options={"crf": f"{18}"})
 
     video = [(output[i] * 255).astype(np.uint8) for i in range(output.shape[0])]
     video = [PIL.Image.fromarray(img) for img in video]

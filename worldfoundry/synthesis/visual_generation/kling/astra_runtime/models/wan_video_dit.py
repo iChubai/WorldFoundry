@@ -1,9 +1,11 @@
+import math
+from typing import Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Tuple, Optional
 from einops import rearrange
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
 
 try:
@@ -29,16 +31,25 @@ except ModuleNotFoundError:
 
 from worldfoundry.core.attention import (
     apply_complex_rotary_embedding as rope_apply,
+)
+from worldfoundry.core.attention import (
     complex_rotary_frequencies as precompute_freqs_cis,
+)
+from worldfoundry.core.attention import (
     complex_rotary_frequencies_3d as precompute_freqs_cis_3d,
+)
+from worldfoundry.core.attention import (
     packed_sequence_attention as flash_attention,
 )
-from worldfoundry.core.nn import RMSNorm, scale_shift as modulate, sinusoidal_embedding_1d
+from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
+from worldfoundry.core.nn import scale_shift as modulate
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import (
+    MLP,
     AttentionModule,
     CrossAttention,
     Head,
-    MLP,
     WanModelStateDictConverter,
 )
 
@@ -136,7 +147,7 @@ class DiTBlock(nn.Module):
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -160,7 +171,7 @@ class WanModel(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -191,8 +202,8 @@ class WanModel(torch.nn.Module):
         timestep: torch.Tensor,
         cam_emb: torch.Tensor,
         context: torch.Tensor,
-        clip_feature: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        clip_feature: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
         **kwargs,

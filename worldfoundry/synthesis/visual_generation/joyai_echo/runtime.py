@@ -16,9 +16,10 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from worldfoundry.core.io import resolve_data_path
@@ -632,7 +633,7 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
                 raise ValueError("Echo-WM timesteps must be a non-empty descending list")
             values = [float(value) for value in timesteps]
             if not all(math.isfinite(v) and v == int(v) and 0 < v <= 1000 for v in values) or any(
-                a <= b for a, b in zip(values, values[1:])
+                a <= b for a, b in zip(values, values[1:], strict=False)
             ):
                 raise ValueError("Echo-WM timesteps must be integers in [1, 1000] and descending")
         prompt = str(request.get("prompt") or "").strip()

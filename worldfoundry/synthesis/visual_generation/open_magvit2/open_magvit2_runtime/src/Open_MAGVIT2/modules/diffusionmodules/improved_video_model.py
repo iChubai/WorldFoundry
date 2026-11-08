@@ -1,11 +1,13 @@
+from collections import OrderedDict
+from collections.abc import Callable
+from typing import Any, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-from einops import rearrange
 import torch.nn.functional as F
-from typing import Union, Tuple, Optional, Callable, Any, List
-from collections import OrderedDict
-from torch.nn.modules.utils import _triple, _pair
+from einops import rearrange
 from torch import Tensor
+from torch.nn.modules.utils import _pair, _triple
 
 
 def swish(x):
@@ -19,10 +21,10 @@ class ConvBlock3D(nn.Module):
         in_planes: int,
         out_planes: int,
         *,
-        kernel_size: Union[int, Tuple[int, int, int]],
+        kernel_size: int | tuple[int, int, int],
         causal: bool,
-        padding: Union[int, Tuple[int, int, int]] = 0,
-        stride: Union[int, Tuple[int, int, int]] = 1,
+        padding: int | tuple[int, int, int] = 0,
+        stride: int | tuple[int, int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         **kwargs: Any,
@@ -272,7 +274,7 @@ class Decoder(nn.Module):
         return z
 
 
-def depth_to_space3d(x: torch.Tensor, block_size: List) -> torch.Tensor:
+def depth_to_space3d(x: torch.Tensor, block_size: list) -> torch.Tensor:
     """Depth-to-Space DCR mode (depth-column-row) core implementation.
 
     Args:
@@ -281,7 +283,7 @@ def depth_to_space3d(x: torch.Tensor, block_size: List) -> torch.Tensor:
     """
     # check inputs
     if x.dim() < 3:
-        raise ValueError(f"Expecting a channels-first (*CHW) tensor of at least 3 dimensions")
+        raise ValueError("Expecting a channels-first (*CHW) tensor of at least 3 dimensions")
     c, t, h, w = x.shape[-4:]
 
     time_block, h_block, w_block = block_size

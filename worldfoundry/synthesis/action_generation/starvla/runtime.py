@@ -5,20 +5,21 @@ from __future__ import annotations
 import json
 import re
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.action_normalization import (
     select_modality_statistics,
     unnormalize_action_values,
 )
+from worldfoundry.core.io.formats.serialization import jsonable
 from worldfoundry.core.io.paths import (
     project_root,
     resolve_local_hf_model_path,
     resolve_worldfoundry_path,
 )
-from worldfoundry.core.io.formats.serialization import jsonable
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
 

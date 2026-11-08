@@ -1,31 +1,31 @@
 """Qwen2 action expert and routed-MoE inference layers."""
 
-import torch
-from torch import nn
-import torch.nn.functional as F
 from typing import Optional, Tuple
 
-from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
-from transformers.modeling_layers import GradientCheckpointingLayer
-from transformers.generation import GenerationMixin
-from transformers.utils import auto_docstring, logging
-from transformers.activations import ACT2FN
-from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
-from transformers.processing_utils import Unpack
-
+import torch
+import torch.nn.functional as F
 import transformers.models.qwen2.modeling_qwen2 as hf_qwen2
+from torch import nn
+from transformers.activations import ACT2FN
+from transformers.generation import GenerationMixin
+from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
+from transformers.modeling_layers import GradientCheckpointingLayer
+from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 from transformers.models.qwen2.modeling_qwen2 import (
-    Qwen2MLP,
+    PreTrainedModel,
     Qwen2Attention,
+    Qwen2MLP,
     Qwen2RMSNorm,
     Qwen2RotaryEmbedding,
-    PreTrainedModel,
 )
-
 from transformers.models.qwen2.modeling_qwen2 import (
-    Qwen2Model as _Qwen2Model,
     Qwen2ForCausalLM as _Qwen2ForCausalLM,
 )
+from transformers.models.qwen2.modeling_qwen2 import (
+    Qwen2Model as _Qwen2Model,
+)
+from transformers.processing_utils import Unpack
+from transformers.utils import auto_docstring, logging
 
 logger = logging.get_logger(__name__)
 
@@ -292,14 +292,14 @@ class Qwen2DecoderLayer(GradientCheckpointingLayer):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        att_output: Optional[torch.Tensor] = None,
-        start: Optional[int] = 0,
-        end: Optional[int] = 0,
+        att_output: torch.Tensor | None = None,
+        start: int | None = 0,
+        end: int | None = 0,
         compute_kqv: bool = False,
         output_atten: bool = False,
-        ada_cond: Optional[torch.Tensor] = None,
+        ada_cond: torch.Tensor | None = None,
         **kwargs: Unpack[FlashAttentionKwargs],
-    ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         # Ensure input dtypes match weight dtype (needed for gradient checkpointing
         # recomputation where autocast context is lost)
         param_dtype = self.self_attn.q_proj.weight.dtype

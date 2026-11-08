@@ -19,7 +19,6 @@ _PROGRESS_UI = os.environ.get("EVOKE_INFER_PROGRESS", "0") == "1" and os.environ
 import torch
 from PIL import Image
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
 if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly
     sys.path.insert(0, str(REPO_ROOT))
@@ -1081,16 +1080,16 @@ def _check_prereqs(args):
         # the pipeline forbids image+video together (non-warp), so v2v only gets video.
         raise SystemExit(f"[geo-infer] FATAL: sample_type={args.sample_type} needs --image_path")
     if args.sample_type == "v2v" and not (args.video_path and Path(args.video_path).is_file()):
-        raise SystemExit(f"[geo-infer] FATAL: sample_type=v2v needs --video_path")
+        raise SystemExit("[geo-infer] FATAL: sample_type=v2v needs --video_path")
     if args.use_geometric_state and args.sample_type == "t2v":
         raise SystemExit(
-            f"[geo-infer] FATAL: --use_geometric_state cannot be combined with sample_type=t2v (the warp backend needs source pixels)"
+            "[geo-infer] FATAL: --use_geometric_state cannot be combined with sample_type=t2v (the warp backend needs source pixels)"
         )
 
     if args.use_geometric_state:
         # warp backend = DA3 (known GT trajectory + depth-only estimation); weight directory: --geo_da3_weights / EVOKE_DA3_WEIGHTS.
         if not args.lingbot_pose_path or not Path(args.lingbot_pose_path).is_file():
-            raise SystemExit(f"[geo-infer] FATAL: --use_geometric_state requires --lingbot_pose_path")
+            raise SystemExit("[geo-infer] FATAL: --use_geometric_state requires --lingbot_pose_path")
 
     if args.stream_long_video:
         # In streaming mode the full video can only be stitched from per-chunk segments, so both
@@ -1102,13 +1101,13 @@ def _check_prereqs(args):
             )
         if not args.save_chunk_segments:
             raise SystemExit(
-                f"[geo-infer] FATAL: --stream_long_video requires --save_chunk_segments "
-                f"(the full video is stitched from segments/)"
+                "[geo-infer] FATAL: --stream_long_video requires --save_chunk_segments "
+                "(the full video is stitched from segments/)"
             )
         if args.bg_postprocess:
             raise SystemExit(
-                f"[geo-infer] FATAL: --stream_long_video and --bg_postprocess are mutually exclusive "
-                f"(streaming has no full frame array to hand to a background worker)"
+                "[geo-infer] FATAL: --stream_long_video and --bg_postprocess are mutually exclusive "
+                "(streaming has no full frame array to hand to a background worker)"
             )
 
 
@@ -1165,7 +1164,7 @@ def _wait_for_worker_slot(workers_dir: Path, max_workers: int, poll: float = 2.0
         live = 0
         for m in list(workers_dir.glob("*.lock")):
             try:
-                pid = int((m.read_text().strip() or "0"))
+                pid = int(m.read_text().strip() or "0")
             except (ValueError, OSError):
                 pid = 0
             if pid > 0 and _pid_alive(pid):
@@ -1279,8 +1278,9 @@ def build_pipe(args):
         print("[geo-infer] reusing the already-loaded pipeline (weights are not re-read)", flush=True)
         return hit
     from diffusers import AutoencoderKLWan
-    from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
     from evoke.pipelines.pipeline_evoke import EvokePipeline
+
+    from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
 
     # use diffusers-fork scheduler to accept mu kwarg
     from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
@@ -1584,6 +1584,7 @@ def build_pipe(args):
     # load optional partial weights (memory convs + camera_ctrl.safetensors from same dir)
     if args.partial_path:
         from argparse import Namespace
+
         from evoke.utils.inference_utils import load_extra_components
 
         # build minimal fake args required by load_extra_components gates
@@ -1864,17 +1865,17 @@ def main(argv=None):
                 )
                 if _has_gt:
                     print(
-                        f"[geo-infer] [save_chunk_segments] enabled (GT sliced on demand, not preloaded -> fast startup).",
+                        "[geo-infer] [save_chunk_segments] enabled (GT sliced on demand, not preloaded -> fast startup).",
                         flush=True,
                     )
                     print(f"[geo-infer] [save_chunk_segments]   GT video: {args.ref_video_for_viz}", flush=True)
                     print(
-                        f"[geo-infer] [save_chunk_segments]   reads the matching pixel range per chunk (~33-36 frames/chunk, 1-2s)",
+                        "[geo-infer] [save_chunk_segments]   reads the matching pixel range per chunk (~33-36 frames/chunk, 1-2s)",
                         flush=True,
                     )
                 else:
                     print(
-                        f"[geo-infer] [save_chunk_segments] enabled, no GT video -> pred-only segments (no side-by-side)",
+                        "[geo-infer] [save_chunk_segments] enabled, no GT video -> pred-only segments (no side-by-side)",
                         flush=True,
                     )
                 print(
@@ -1889,7 +1890,7 @@ def main(argv=None):
                 )
             else:
                 print(
-                    f"[geo-infer] [save_chunk_segments] no GT/pose -> dumping pred-only segments (no side-by-side, no energy ring)",
+                    "[geo-infer] [save_chunk_segments] no GT/pose -> dumping pred-only segments (no side-by-side, no energy ring)",
                     flush=True,
                 )
 
@@ -2053,7 +2054,7 @@ def main(argv=None):
                                     float(args.fps),
                                     (int(w_seg * _num_cols), int(h_seg)),
                                 )
-                                for i, (gtf, prf) in enumerate(zip(gt_cam, pred_cam)):
+                                for i, (gtf, prf) in enumerate(zip(gt_cam, pred_cam, strict=False)):
                                     _parts = [gtf, prf]
                                     if _has_warp:
                                         _parts.append(_fit_seg(_warp_frames[min(i, len(_warp_frames) - 1)]))
@@ -2134,7 +2135,7 @@ def main(argv=None):
                 _ck = int(float(_e["start_sec"]) * float(args.fps) / _stride)
             _chunk_prompts[_ck] = str(_e["prompt"])
         print(
-            f"[geo-infer] prompt schedule: "
+            "[geo-infer] prompt schedule: "
             + ", ".join(f"chunk{c}(~{c * _stride / float(args.fps):.1f}s)" for c in sorted(_chunk_prompts)),
             flush=True,
         )
@@ -2271,11 +2272,11 @@ def main(argv=None):
             )
         if _asm.get("sbs") is None:
             print(
-                f"[geo-infer] [WARN] no gt_vs_pred_cam_viz.mp4 (0 GT segments: the GT source video is shorter than this rollout, "
-                f"or every GT slice failed) -- the plain pred video was still written.",
+                "[geo-infer] [WARN] no gt_vs_pred_cam_viz.mp4 (0 GT segments: the GT source video is shorter than this rollout, "
+                "or every GT slice failed) -- the plain pred video was still written.",
                 flush=True,
             )
-        print(f"[geo-infer] DONE (stream mode).", flush=True)
+        print("[geo-infer] DONE (stream mode).", flush=True)
         return
 
     # collect pred frames as uint8 RGB
@@ -2343,7 +2344,7 @@ def main(argv=None):
         print(f"[geo-infer] DONE (encode running in background, see {output_dir}/postproc.log).", flush=True)
     else:
         run_postprocess(output_dir, video_np, _pp_params)
-        print(f"[geo-infer] DONE.", flush=True)
+        print("[geo-infer] DONE.", flush=True)
 
 
 def _acquire_load_slot(root: Path, poll: float = 3.0):

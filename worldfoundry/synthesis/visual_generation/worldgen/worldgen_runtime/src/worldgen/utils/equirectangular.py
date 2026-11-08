@@ -607,7 +607,7 @@ def merge_with_consensus(
     fov_deg: float,
     voxel_size: float = 0.02,
     depth_tolerance: float = 0.15,
-) -> "Gaussians3D":
+) -> Gaussians3D:
     """Merge Gaussians from overlapping views using depth consensus.
 
     For regions covered by multiple views, keeps Gaussians whose depth
@@ -640,7 +640,7 @@ def merge_with_consensus(
     all_opacities = []
     all_view_weights = []
 
-    for view_id, (gaussians, view_forward) in enumerate(zip(gaussians_list, view_forwards)):
+    for view_id, (gaussians, view_forward) in enumerate(zip(gaussians_list, view_forwards, strict=False)):
         positions = gaussians.mean_vectors[0]  # (N, 3)
 
         # Compute weight based on distance from view center

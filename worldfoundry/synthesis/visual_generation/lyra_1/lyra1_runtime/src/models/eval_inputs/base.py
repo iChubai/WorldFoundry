@@ -30,11 +30,10 @@ class BaseDataset(ABC):
         pass
 
     @abstractmethod
-    def available_data_fields(self) -> List[DataField]:
+    def available_data_fields(self) -> list[DataField]:
         """
         Return a list of available data fields in the dataset.
         """
-        pass
 
     @abstractmethod
     def num_videos(self) -> int:
@@ -42,7 +41,6 @@ class BaseDataset(ABC):
         Returns:
             Number of videos in the dataset.
         """
-        pass
 
     @abstractmethod
     def num_views(self, video_idx: int) -> int:
@@ -53,7 +51,6 @@ class BaseDataset(ABC):
         Returns:
             Number of views in the video.
         """
-        pass
 
     @abstractmethod
     def num_frames(self, video_idx: int, view_idx: int = 0) -> int:
@@ -65,7 +62,6 @@ class BaseDataset(ABC):
         Returns:
             Number of frames in the given view.
         """
-        pass
 
     def read_video_metadata(self, video_idx: int) -> dict[str, Any]:
         """
@@ -95,9 +91,9 @@ class BaseDataset(ABC):
     def read(
         self,
         video_idx: int,
-        frame_idxs: Optional[List[int]] = None,
-        view_idxs: Optional[List[int]] = None,
-        data_fields: Optional[List[DataField]] = None,
+        frame_idxs: list[int] | None = None,
+        view_idxs: list[int] | None = None,
+        data_fields: list[DataField] | None = None,
     ) -> dict[DataField, Any]:
         """
         Read data from the dataset.
@@ -153,8 +149,8 @@ class BaseDataset(ABC):
     def _read_data(
         self,
         video_idx: int,
-        frame_idxs: List[int],
-        view_idxs: List[int],
-        data_fields: List[DataField],
+        frame_idxs: list[int],
+        view_idxs: list[int],
+        data_fields: list[DataField],
     ) -> dict[DataField, Any]:
         pass

@@ -1,14 +1,14 @@
-import torch
-import random
-import numbers
-from torchvision.transforms import RandomCrop, RandomResizedCrop
-import statistics
-import numpy as np
-import ftfy
-import regex as re
 import html
+import numbers
+import random
+import statistics
 
+import ftfy
+import numpy as np
+import regex as re
+import torch
 from PIL import Image
+from torchvision.transforms import RandomCrop, RandomResizedCrop
 
 
 def _is_tensor_video_clip(clip):
@@ -602,7 +602,7 @@ class RandomHorizontalFlipVideo:
 #  ------------------------------------------------------------
 #  ---------------------  Sampling  ---------------------------
 #  ------------------------------------------------------------
-class TemporalRandomCrop(object):
+class TemporalRandomCrop:
     """Temporally crop the given frame indices at a random location.
 
     Args:
@@ -619,7 +619,7 @@ class TemporalRandomCrop(object):
         return begin_index, end_index
 
 
-class DynamicSampleDuration(object):
+class DynamicSampleDuration:
     """Temporally crop the given frame indices at a random location.
 
     Args:
@@ -857,11 +857,12 @@ def calculate_statistics(data):
 
 
 if __name__ == "__main__":
-    from torchvision import transforms
-    import torchvision.io as io
-    import numpy as np
-    from torchvision.utils import save_image
     import os
+
+    import numpy as np
+    import torchvision.io as io
+    from torchvision import transforms
+    from torchvision.utils import save_image
 
     vframes, aframes, info = io.read_video(filename="./v_Archery_g01_c03.avi", pts_unit="sec", output_format="TCHW")
 

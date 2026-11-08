@@ -388,7 +388,7 @@ class UMT5EncoderModel:
         # init tokenizer
         self.tokenizer = HuggingfaceTokenizer(name=tokenizer_path, seq_len=text_len, clean="whitespace")
 
-    def __call__(self, texts, device: Optional[torch.device] = None):
+    def __call__(self, texts, device: torch.device | None = None):
         if device is None:
             device = self.device
         ids, mask = self.tokenizer(texts, return_mask=True, add_special_tokens=True)
@@ -398,7 +398,7 @@ class UMT5EncoderModel:
         context = self.model(ids, mask)
         # return [u[:v] for u, v in zip(context, seq_lens)]
         stack_emb = []
-        for u, length in zip(context, seq_lens):
+        for u, length in zip(context, seq_lens, strict=False):
             if length > self.text_len:
                 stack_emb.append(u[: self.text_len])
             else:
@@ -408,12 +408,12 @@ class UMT5EncoderModel:
         return torch.stack(stack_emb)
 
 
-t5_encoder: Optional[UMT5EncoderModel] = None
+t5_encoder: UMT5EncoderModel | None = None
 
 
 def get_umt5_embedding(
     checkpoint_path: str,
-    prompts: Union[str, List[str]],
+    prompts: str | list[str],
     device: str = "cuda",
     max_length: int = 512,
 ) -> torch.Tensor:

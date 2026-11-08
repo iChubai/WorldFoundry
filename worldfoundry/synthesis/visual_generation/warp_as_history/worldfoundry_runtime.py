@@ -5,11 +5,14 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     SOURCE_ROOT as PI3_SOURCE_ROOT,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     ensure_import_paths as ensure_pi3_import_paths,
 )
 
@@ -65,7 +68,7 @@ class WarpAsHistoryRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "WarpAsHistoryRuntime":
+    ) -> WarpAsHistoryRuntime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):

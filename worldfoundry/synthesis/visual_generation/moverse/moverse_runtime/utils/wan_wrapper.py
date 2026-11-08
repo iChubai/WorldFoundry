@@ -3,8 +3,9 @@ from typing import List, Optional
 
 import torch
 
-from worldfoundry.base_models.diffusion_model.schedulers import (
-    InferenceFlowMatchScheduler,
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (
+    load_wan_config,
+    load_wan_transformer,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.resident import (
     WanVAEWrapper as _WanVAEWrapper,
@@ -14,17 +15,14 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.resident impor
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.moverse.causal import (
     CausalWanModel,
+    causal_rope_apply_shared_height,
+    parse_memrope_cfg,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.moverse.mmdit import (
     CausalMMDiTModel,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.moverse.causal import (
-    causal_rope_apply_shared_height,
-    parse_memrope_cfg,
-)
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (
-    load_wan_config,
-    load_wan_transformer,
+from worldfoundry.base_models.diffusion_model.schedulers import (
+    InferenceFlowMatchScheduler,
 )
 
 
@@ -142,9 +140,7 @@ class WanDiffusionWrapper(torch.nn.Module):
                     double_stream_layers=_double,
                     cross_attn_norm=cross_attn_norm,
                 )
-                print(
-                    f"CausalMMDiTModel initialised (weights must be loaded separately via load_causal_mmdit_weights)."
-                )
+                print("CausalMMDiTModel initialised (weights must be loaded separately via load_causal_mmdit_weights).")
             else:
                 self.model = load_wan_transformer(
                     CausalWanModel,
@@ -172,7 +168,7 @@ class WanDiffusionWrapper(torch.nn.Module):
         # recam_concat uses standard RoPE over the doubled frame sequence — no injection needed.
         if token_concat_and_share_rope and not recam_concat:
             self.model.set_rope_fn(causal_rope_fn=causal_rope_apply_shared_height)
-            print(f"Applied shared-height RoPE variant via set_rope_fn().")
+            print("Applied shared-height RoPE variant via set_rope_fn().")
         elif recam_concat:
             print("recam_concat=True: frame-dim concat, standard RoPE (no injection).")
 
@@ -238,10 +234,10 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        current_start: Optional[int] = None,
-        cond_latent: Optional[torch.Tensor] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        current_start: int | None = None,
+        cond_latent: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:

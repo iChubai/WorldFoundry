@@ -1,12 +1,14 @@
-import os
-import torch
-import random
 import argparse
+import os
+import random
+from collections.abc import Callable
+from typing import Dict
+
 import numpy as np
-from PIL import Image
-from omegaconf import OmegaConf
-from typing import Callable, Dict
 import psutil
+import torch
+from omegaconf import OmegaConf
+from PIL import Image
 
 
 def get_ram_usage():
@@ -85,7 +87,7 @@ def cfg_to_dict(cfg):
     return cfg_dict
 
 
-def reduce_dict(f: Callable, d: Dict):
+def reduce_dict(f: Callable, d: dict):
     return {k: reduce_dict(f, v) if isinstance(v, dict) else f(v) for k, v in d.items()}
 
 

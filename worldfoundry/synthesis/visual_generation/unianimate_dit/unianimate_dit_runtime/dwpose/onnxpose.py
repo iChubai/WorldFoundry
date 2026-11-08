@@ -6,8 +6,8 @@ import onnxruntime as ort
 
 
 def preprocess(
-    img: np.ndarray, out_bbox, input_size: Tuple[int, int] = (192, 256)
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    img: np.ndarray, out_bbox, input_size: tuple[int, int] = (192, 256)
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Do preprocessing for RTMPose model inference.
 
     Args:
@@ -79,12 +79,12 @@ def inference(sess: ort.InferenceSession, img: np.ndarray) -> np.ndarray:
 
 
 def postprocess(
-    outputs: List[np.ndarray],
-    model_input_size: Tuple[int, int],
-    center: Tuple[int, int],
-    scale: Tuple[int, int],
+    outputs: list[np.ndarray],
+    model_input_size: tuple[int, int],
+    center: tuple[int, int],
+    scale: tuple[int, int],
     simcc_split_ratio: float = 2.0,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Postprocess for RTMPose model output.
 
     Args:
@@ -114,7 +114,7 @@ def postprocess(
     return np.array(all_key), np.array(all_score)
 
 
-def bbox_xyxy2cs(bbox: np.ndarray, padding: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
+def bbox_xyxy2cs(bbox: np.ndarray, padding: float = 1.0) -> tuple[np.ndarray, np.ndarray]:
     """Transform the bbox format from (x,y,w,h) into (center, scale)
 
     Args:
@@ -200,8 +200,8 @@ def get_warp_matrix(
     center: np.ndarray,
     scale: np.ndarray,
     rot: float,
-    output_size: Tuple[int, int],
-    shift: Tuple[float, float] = (0.0, 0.0),
+    output_size: tuple[int, int],
+    shift: tuple[float, float] = (0.0, 0.0),
     inv: bool = False,
 ) -> np.ndarray:
     """Calculate the affine transformation matrix that can warp the bbox area
@@ -254,7 +254,7 @@ def get_warp_matrix(
 
 def top_down_affine(
     input_size: dict, bbox_scale: dict, bbox_center: dict, img: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Get the bbox image as the model input by affine transform.
 
     Args:
@@ -286,7 +286,7 @@ def top_down_affine(
     return img, bbox_scale
 
 
-def get_simcc_maximum(simcc_x: np.ndarray, simcc_y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def get_simcc_maximum(simcc_x: np.ndarray, simcc_y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Get maximum response location and value from simcc representations.
 
     Note:
@@ -330,7 +330,7 @@ def get_simcc_maximum(simcc_x: np.ndarray, simcc_y: np.ndarray) -> Tuple[np.ndar
     return locs, vals
 
 
-def decode(simcc_x: np.ndarray, simcc_y: np.ndarray, simcc_split_ratio) -> Tuple[np.ndarray, np.ndarray]:
+def decode(simcc_x: np.ndarray, simcc_y: np.ndarray, simcc_split_ratio) -> tuple[np.ndarray, np.ndarray]:
     """Modulate simcc distribution with Gaussian.
 
     Args:

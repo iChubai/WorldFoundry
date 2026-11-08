@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     resolve_data_path,
@@ -399,9 +400,7 @@ class EventVLARuntime:
 
     def _step_and_episode(self, observation: Mapping[str, Any]) -> int:
         episode = first_present(observation, "episode_id", "episode", "trajectory_id")
-        if option_bool(observation.get("reset"), False):
-            self.reset(episode)
-        elif episode is not None and str(episode) != self._episode_id:
+        if option_bool(observation.get("reset"), False) or (episode is not None and str(episode) != self._episode_id):
             self.reset(episode)
         raw_step = first_present(observation, "timestep", "step", "frame_index")
         step = int(raw_step) if raw_step is not None else self._implicit_step

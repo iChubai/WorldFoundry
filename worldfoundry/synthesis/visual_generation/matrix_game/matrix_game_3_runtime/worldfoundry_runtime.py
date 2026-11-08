@@ -6,9 +6,10 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 import torch
@@ -108,7 +109,7 @@ def _validate_runtime_root(path_value: Path) -> Path:
     return path_value.resolve()
 
 
-def resolve_checkpoint_dir(path_value: Optional[str]) -> str:
+def resolve_checkpoint_dir(path_value: str | None) -> str:
     requested = "" if path_value is None else str(path_value).strip()
     primary: str | Path | None
     if requested in DEFAULT_MATRIX_GAME3_ALIASES:
@@ -182,7 +183,7 @@ class MatrixGame3Runtime:
         runtime_path: str,
         checkpoint_dir: str,
         device: str = "cuda",
-        defaults: Optional[dict] = None,
+        defaults: dict | None = None,
     ):
         self.runtime_root = runtime_path
         self.checkpoint_dir = checkpoint_dir
@@ -196,9 +197,9 @@ class MatrixGame3Runtime:
         pretrained_model_path,
         args=None,
         device=None,
-        checkpoint_dir: Optional[str] = None,
+        checkpoint_dir: str | None = None,
         **kwargs,
-    ) -> "MatrixGame3Runtime":
+    ) -> MatrixGame3Runtime:
         del args
         runtime_path = str(_validate_runtime_root(runtime_root()))
         checkpoint_source = checkpoint_dir
@@ -221,30 +222,30 @@ class MatrixGame3Runtime:
         keyboard_condition,
         mouse_condition,
         num_iterations: int,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
         save_name: str = "matrix_game_3",
         size: str | Sequence[int] = "704*1280",
         fps: int = 17,
         seed: int = 42,
-        num_inference_steps: Optional[int] = None,
-        sample_shift: Optional[float] = None,
-        sample_guide_scale: Optional[float] = None,
-        checkpoint_dir: Optional[str] = None,
-        vae_type: Optional[str] = None,
-        lightvae_pruning_rate: Optional[float] = None,
-        fa_version: Optional[str] = None,
+        num_inference_steps: int | None = None,
+        sample_shift: float | None = None,
+        sample_guide_scale: float | None = None,
+        checkpoint_dir: str | None = None,
+        vae_type: str | None = None,
+        lightvae_pruning_rate: float | None = None,
+        fa_version: str | None = None,
         visualize_ops: bool = True,
-        use_base_model: Optional[bool] = None,
-        use_int8: Optional[bool] = None,
-        verify_quant: Optional[bool] = None,
-        use_async_vae: Optional[bool] = None,
-        async_vae_warmup_iters: Optional[int] = None,
-        compile_vae: Optional[bool] = None,
-        ulysses_size: Optional[int] = None,
-        t5_fsdp: Optional[bool] = None,
-        t5_cpu: Optional[bool] = None,
-        dit_fsdp: Optional[bool] = None,
-        convert_model_dtype: Optional[bool] = None,
+        use_base_model: bool | None = None,
+        use_int8: bool | None = None,
+        verify_quant: bool | None = None,
+        use_async_vae: bool | None = None,
+        async_vae_warmup_iters: int | None = None,
+        compile_vae: bool | None = None,
+        ulysses_size: int | None = None,
+        t5_fsdp: bool | None = None,
+        t5_cpu: bool | None = None,
+        dit_fsdp: bool | None = None,
+        convert_model_dtype: bool | None = None,
         show_progress: bool = True,
         **kwargs,
     ):

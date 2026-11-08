@@ -58,9 +58,9 @@ class MatrixGame3Synthesis(BaseSynthesis):
         runtime_path: str | None = None,
         checkpoint_dir: str | None = None,
         device: str = "cuda",
-        defaults: Optional[dict] = None,
+        defaults: dict | None = None,
         *,
-        runtime: "MatrixGame3Runtime | None" = None,
+        runtime: MatrixGame3Runtime | None = None,
     ):
         """
         Initializes a new instance of MatrixGame3Synthesis.
@@ -127,7 +127,7 @@ class MatrixGame3Synthesis(BaseSynthesis):
         device: str | None = None,
         checkpoint_dir: str | None = None,
         **kwargs: Any,
-    ) -> "MatrixGame3Synthesis":
+    ) -> MatrixGame3Synthesis:
         """
         Creates a MatrixGame3Synthesis instance by loading a pretrained model.
 

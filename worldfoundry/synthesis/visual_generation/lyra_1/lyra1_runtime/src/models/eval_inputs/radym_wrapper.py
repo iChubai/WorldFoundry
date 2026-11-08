@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 import os
 from typing import Any, List, Optional
+
+import torch
 from src.models.eval_inputs.radym import Radym
 
 
@@ -46,9 +47,9 @@ class RadymWrapper(Radym):
     def get_data(
         self,
         idx,
-        data_fields: List[str],
-        frame_indices: Optional[List[int]] = None,
-        view_indices: Optional[List[int]] = None,
+        data_fields: list[str],
+        frame_indices: list[int] | None = None,
+        view_indices: list[int] | None = None,
         camera_convention: str = "opencv",
     ):
         assert camera_convention == "opencv", f"No support for camera convention {camera_convention}"

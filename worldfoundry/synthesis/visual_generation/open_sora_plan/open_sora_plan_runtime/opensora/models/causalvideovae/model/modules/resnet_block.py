@@ -1,16 +1,18 @@
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
 
 import torch
+from torch.utils.checkpoint import checkpoint
+
+from .block import Block
+from .conv import CausalConv3d
 from .normalize import Normalize
 from .ops import nonlinearity, video_to_image
-from .conv import CausalConv3d
-from .block import Block
-from torch.utils.checkpoint import checkpoint
 
 
 class ResnetBlock2D(Block):

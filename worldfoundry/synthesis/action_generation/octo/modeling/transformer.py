@@ -1,12 +1,13 @@
 # adapted from https://github.com/google-research/vision_transformer/blob/main/vit_jax/models_vit.py
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from .base import TokenGroup
 from ..types import Dtype, PRNGKey, Shape, Union
+from .base import TokenGroup
 
 
 class AddPositionEmbs(nn.Module):
@@ -40,7 +41,7 @@ class MlpBlock(nn.Module):
 
     mlp_dim: int
     dtype: Dtype = jnp.float32
-    out_dim: Optional[int] = None
+    out_dim: int | None = None
     dropout_rate: float = 0.1
     kernel_init: Callable[[PRNGKey, Shape, Dtype], jax.Array] = nn.initializers.xavier_uniform()
     bias_init: Callable[[PRNGKey, Shape, Dtype], jax.Array] = nn.initializers.normal(stddev=1e-6)
@@ -73,7 +74,7 @@ class MAPHead(nn.Module):
     From https://github.com/google-research/big_vision/blob/main/big_vision/models/vit.py
     """
 
-    mlp_dim: Optional[int] = None  # Defaults to 4x input dim
+    mlp_dim: int | None = None  # Defaults to 4x input dim
     num_heads: int = 8
     num_readouts: int = 1
 

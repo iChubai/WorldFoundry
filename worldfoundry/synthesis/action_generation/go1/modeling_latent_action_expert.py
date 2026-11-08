@@ -4,10 +4,9 @@ import torch
 from timm.models.vision_transformer import Mlp
 from torch import nn
 
+from .configuration_action_expert import ActionExpertConfig
 from .modeling_action_expert import ActionExpertModel, ActionExpertPretrainedModel
 from .modeling_internlm2 import InternLM2RMSNorm
-
-from .configuration_action_expert import ActionExpertConfig
 
 
 class FinalLayer(nn.Module):
@@ -89,8 +88,8 @@ class LatentPlannerModel(ActionExpertPretrainedModel):
     def latent_action_process(
         self,
         state: torch.Tensor = None,
-        vlm_key_values_downsample: Optional[list] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        vlm_key_values_downsample: list | None = None,
+        attention_mask: torch.Tensor | None = None,
     ):
         H = self.latent_token_nums
         action = torch.cat([state] * H, dim=1)  # if continuous [B, 4, 1]
@@ -100,13 +99,15 @@ class LatentPlannerModel(ActionExpertPretrainedModel):
 
         # Project vlm kv_cache head dim into action expert head dim
         latent_vlm_key_values_downsample = []
-        for vlm_key_value, k_proj, v_proj in zip(vlm_key_values, self.latent_k_proj_layers, self.latent_v_proj_layers):
+        for vlm_key_value, k_proj, v_proj in zip(
+            vlm_key_values, self.latent_k_proj_layers, self.latent_v_proj_layers, strict=False
+        ):
             latent_vlm_key_values_downsample.append((k_proj(vlm_key_value[0]), v_proj(vlm_key_value[1])))
         return outputs, latent_vlm_key_values_downsample
 
     def forward(
         self,
-        vlm_key_values_downsample: Tuple[Tuple[torch.FloatTensor]] = None,
+        vlm_key_values_downsample: tuple[tuple[torch.FloatTensor]] = None,
         attention_mask: torch.Tensor = None,
     ):
         B = attention_mask.shape[0]

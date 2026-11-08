@@ -3,4 +3,7 @@
 
 from .filter import *
 from .resample import *
+
+# isort: split
+# Activation exports take precedence in the upstream public namespace.
 from .act import *

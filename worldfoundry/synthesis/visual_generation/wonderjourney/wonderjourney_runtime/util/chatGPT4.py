@@ -1,12 +1,12 @@
-import openai
+import base64
+import io
 import json
+import os
 import time
 from pathlib import Path
-import io
-import base64
-import requests
-import os
 
+import openai
+import requests
 
 _nlp = None
 _nlp_load_attempted = False
@@ -31,7 +31,7 @@ def _get_nlp():
 openai.api_key = os.environ.get("OPENAI_API_KEY", "")
 
 
-class TextpromptGen(object):
+class TextpromptGen:
     def __init__(self, root_path, control=False):
         super(TextpromptGen, self).__init__()
         self.model = "gpt-4"
@@ -50,9 +50,9 @@ class TextpromptGen(object):
         save_dir.mkdir(parents=True, exist_ok=True)
         try:
             output["background"][0] = self.generate_keywords(output["background"][0])
-            with open(save_dir / "scene_{}.json".format(str(self.scene_num).zfill(2)), "w") as json_file:
+            with open(save_dir / f"scene_{str(self.scene_num).zfill(2)}.json", "w") as json_file:
                 json.dump(output, json_file, indent=4)
-        except Exception as e:
+        except Exception:
             pass
         return
 
@@ -330,7 +330,7 @@ class TextpromptGen(object):
                     print("Border: ", border)
                     has_border = border == "yes"
                     break
-            except Exception as e:
+            except Exception:
                 print("Something has been wrong while asking GPT4V. Wait for a second and ask chatGPT4 again!")
                 time.sleep(1)
                 continue
@@ -348,7 +348,7 @@ class TextpromptGen(object):
                     if blur in ["yes", "no"]:
                         print("Blur: ", blur)
                         break
-                except Exception as e:
+                except Exception:
                     print("Something has been wrong while asking GPT4V. Wait for a second and ask chatGPT4 again!")
                     time.sleep(1)
                     continue

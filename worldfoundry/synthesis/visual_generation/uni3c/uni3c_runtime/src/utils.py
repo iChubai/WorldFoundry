@@ -1,15 +1,14 @@
 import logging
 import os
+import random
 
 import imageio
 import numpy as np
 import torch
 import torch.distributed as dist
 from PIL import Image
-from scipy.interpolate import UnivariateSpline
-from scipy.interpolate import interp1d
+from scipy.interpolate import UnivariateSpline, interp1d
 from scipy.spatial.transform import Rotation
-import random
 
 
 def set_seed(seed):

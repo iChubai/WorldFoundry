@@ -4,7 +4,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_data_path
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "offline_infer" / "run_inference_client.py"
 DEFAULT_INPUT_FILE = resolve_data_path("models", "runtime", "configs", "starwm", "data", "wm_test_horizon5_1traj.json")

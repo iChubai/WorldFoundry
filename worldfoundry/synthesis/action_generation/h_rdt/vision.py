@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 
 def _first_sequence(value: Any) -> Any:

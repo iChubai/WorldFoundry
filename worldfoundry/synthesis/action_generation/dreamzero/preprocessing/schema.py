@@ -46,7 +46,7 @@ class RotationType(Enum):
 class LeRobotModalityField(BaseModel):
     """Metadata for a LeRobot modality field."""
 
-    original_key: Optional[str] = Field(
+    original_key: str | None = Field(
         default=None,
         description="The original key of the modality in the LeRobot dataset",
     )
@@ -63,13 +63,13 @@ class LeRobotStateActionMetadata(LeRobotModalityField):
         ...,
         description="The end index of the modality in the concatenated state/action vector",
     )
-    rotation_type: Optional[RotationType] = Field(default=None, description="The type of rotation for the modality")
+    rotation_type: RotationType | None = Field(default=None, description="The type of rotation for the modality")
     absolute: bool = Field(default=True, description="Whether the modality is absolute")
     dtype: str = Field(
         default="float64",
         description="The data type of the modality. Defaults to float64.",
     )
-    range: Optional[tuple[float, float]] = Field(
+    range: tuple[float, float] | None = Field(
         default=None,
         description="The range of the modality, if applicable. Defaults to None.",
     )
@@ -112,7 +112,7 @@ class LeRobotModalityMetadata(BaseModel):
         ...,
         description="The metadata for the video modality. The keys are the new names of each video modality.",
     )
-    annotation: Optional[dict[str, LeRobotModalityField]] = Field(
+    annotation: dict[str, LeRobotModalityField] | None = Field(
         default=None,
         description="The metadata for the annotation modality. The keys are the new names of each annotation modality.",
     )
@@ -245,7 +245,7 @@ class VideoMetadata(BaseModel):
 
 class StateActionMetadata(BaseModel):
     absolute: bool = Field(..., description="Whether the state or action is absolute")
-    rotation_type: Optional[RotationType] = Field(None, description="Type of rotation, if any")
+    rotation_type: RotationType | None = Field(None, description="Type of rotation, if any")
     shape: tuple[int, ...] = Field(..., description="Shape of the state or action")
     continuous: bool = Field(..., description="Whether the state or action is continuous")
 

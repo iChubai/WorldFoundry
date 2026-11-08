@@ -10,31 +10,32 @@
 import html
 import inspect
 import math
+import os
+import random
 import re
 import urllib.parse as ul
-from typing import Callable, List, Optional, Tuple, Union
-from einops import rearrange
-import ftfy
-import torch
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import List, Optional, Tuple, Union
+
+import ftfy
+import numpy as np
+import torch
+import torch.nn.functional as F
 import tqdm
 from bs4 import BeautifulSoup
-import random
-import os
-import numpy as np
-import torch.nn.functional as F
-
 from diffusers import DiffusionPipeline
 from diffusers.schedulers import EulerAncestralDiscreteScheduler
 from diffusers.utils import (
     BACKENDS_MAPPING,
+    BaseOutput,
     is_bs4_available,
     is_ftfy_available,
     logging,
     replace_example_docstring,
-    BaseOutput,
 )
 from diffusers.utils.torch_utils import randn_tensor
+from einops import rearrange
 from transformers import T5EncoderModel, T5Tokenizer
 
 logger = logging.get_logger(__name__)
@@ -73,9 +74,9 @@ EXAMPLE_DOC_STRING = """
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
     **kwargs,
 ):
     """
@@ -140,18 +141,18 @@ class AllegroTI2VPipeline(DiffusionPipeline):
 
     bad_punct_regex = re.compile(
         r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
-    )  # noqa
+    )
 
     _optional_components = ["tokenizer", "text_encoder", "vae", "transformer", "scheduler"]
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
     def __init__(
         self,
-        tokenizer: Optional[T5Tokenizer] = None,
-        text_encoder: Optional[T5EncoderModel] = None,
-        vae: Optional[AllegroAutoencoderKL3D] = None,
-        transformer: Optional[AllegroTransformerTI2V3DModel] = None,
-        scheduler: Optional[EulerAncestralDiscreteScheduler] = None,
+        tokenizer: T5Tokenizer | None = None,
+        text_encoder: T5EncoderModel | None = None,
+        vae: AllegroAutoencoderKL3D | None = None,
+        transformer: AllegroTransformerTI2V3DModel | None = None,
+        scheduler: EulerAncestralDiscreteScheduler | None = None,
         device: torch.device = torch.device("cuda"),
         dtype: torch.dtype = torch.float16,
     ):
@@ -172,15 +173,15 @@ class AllegroTI2VPipeline(DiffusionPipeline):
     # Adapted from diffusers.pipelines.deepfloyd_if.pipeline_if.encode_prompt
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         do_classifier_free_guidance: bool = True,
         negative_prompt: str = "",
         num_images_per_prompt: int = 1,
-        device: Optional[torch.device] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
-        prompt_attention_mask: Optional[torch.FloatTensor] = None,
-        negative_prompt_attention_mask: Optional[torch.FloatTensor] = None,
+        device: torch.device | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
+        prompt_attention_mask: torch.FloatTensor | None = None,
+        negative_prompt_attention_mask: torch.FloatTensor | None = None,
         clean_caption: bool = False,
         max_sequence_length: int = 120,
         **kwargs,
@@ -441,13 +442,11 @@ class AllegroTI2VPipeline(DiffusionPipeline):
         # urls:
         caption = re.sub(
             r"\b((?:https?:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
-            # noqa
             "",
             caption,
         )  # regex for urls
         caption = re.sub(
             r"\b((?:www:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
-            # noqa
             "",
             caption,
         )  # regex for urls
@@ -476,7 +475,6 @@ class AllegroTI2VPipeline(DiffusionPipeline):
         # все виды тире / all types of dash --> "-"
         caption = re.sub(
             r"[\u002D\u058A\u05BE\u1400\u1806\u2010-\u2015\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D]+",
-            # noqa
             "-",
             caption,
         )
@@ -582,32 +580,32 @@ class AllegroTI2VPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
         negative_prompt: str = "",
         num_inference_steps: int = 100,
-        timesteps: List[int] = None,
+        timesteps: list[int] = None,
         guidance_scale: float = 7.5,
-        num_images_per_prompt: Optional[int] = 1,
-        num_frames: Optional[int] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        num_images_per_prompt: int | None = 1,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        prompt_attention_mask: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_attention_mask: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "pil",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        prompt_attention_mask: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_attention_mask: torch.FloatTensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
+        callback: Callable[[int, int, torch.FloatTensor], None] | None = None,
         callback_steps: int = 1,
         clean_caption: bool = True,
         max_sequence_length: int = 512,
         verbose: bool = True,
-        conditional_images: Optional[List[torch.FloatTensor]] = None,
-        conditional_images_indices: Optional[List[int]] = None,
-    ) -> Union[AllegroTI2VPipelineOutput, Tuple]:
+        conditional_images: list[torch.FloatTensor] | None = None,
+        conditional_images_indices: list[int] | None = None,
+    ) -> AllegroTI2VPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
 

@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-
 NUM_HISTORY = 6
 NUM_FRAMES = 5
 ACTION_DIM = 7
@@ -258,10 +257,10 @@ def run(args: argparse.Namespace) -> Path:
 
     import numpy as np
     import torch
-
     from models.ctrl_world import CrtlWorld
     from models.pipeline_ctrl_world import CtrlWorldDiffusionPipeline
     from models.utils import split_ctrl_world_latents
+
     from worldfoundry.core.media.codecs.video import save_video_h264
     from worldfoundry.core.model_loading import load_torch_checkpoint
 

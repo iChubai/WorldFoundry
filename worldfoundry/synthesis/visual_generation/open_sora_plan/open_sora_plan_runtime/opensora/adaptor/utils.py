@@ -8,28 +8,27 @@ Copyright NVIDIA/Megatron
 Helper functions and classes from multiple sources.
 """
 
-from collections.abc import Iterable
-from deepspeed.moe.utils import is_moe_param
-import os
-import psutil
 import gc
+import os
+from collections.abc import Iterable
 from math import sqrt
-from packaging import version as pkg_version
 
+import psutil
 import torch
 from deepspeed import comm as dist
+from deepspeed.moe.utils import is_moe_param
+from packaging import version as pkg_version
 
 try:
     from torch._six import inf
 except ModuleNotFoundError:
     from torch import inf
 
-from deepspeed.utils import groups, logger
-from deepspeed.runtime.constants import PIPE_REPLICATED
-from numpy import prod
 from deepspeed.accelerator import get_accelerator
-
 from deepspeed.module_inject.policy import transpose
+from deepspeed.runtime.constants import PIPE_REPLICATED
+from deepspeed.utils import groups, logger
+from numpy import prod
 from torch.nn import functional as F
 
 torch_memory_reserved = get_accelerator().memory_reserved
@@ -72,7 +71,7 @@ def noop_decorator(func):
     return func
 
 
-class noop_context(object):
+class noop_context:
     def __init__(self):
         pass
 
@@ -99,8 +98,9 @@ def set_random_seed(seed):
     Args:
         seed (int): the seed to use
     """
-    import numpy
     import random
+
+    import numpy
 
     random.seed(seed)
     numpy.random.seed(seed)
@@ -205,7 +205,7 @@ def move_to_device(item, device, criterion_func):
         return item
 
 
-class CheckOverflow(object):
+class CheckOverflow:
     """Checks for overflow in gradient across parallel process"""
 
     def __init__(self, param_groups=None, mpu=None, zero_reduce_scatter=False, deepspeed=None):
@@ -608,7 +608,7 @@ def partition_balanced(weights, num_parts):
     dp_min = np.full((n + 1, m + 1), np.inf)
     dp_cost = np.full((n + 1, m + 1), np.inf)
     position = np.zeros((n + 1, m + 1), dtype=int)
-    prefix_sum = np.zeros((n + 1))
+    prefix_sum = np.zeros(n + 1)
     prefix_sum[1:] = np.cumsum(weights)
 
     dp_max[0, 0] = 0
@@ -825,7 +825,7 @@ def call_to_str(base, *args, **kwargs):
         if kwargs:
             name += ", "
     if kwargs:
-        name += ", ".join(f"{key}={repr(arg)}" for key, arg in kwargs.items())
+        name += ", ".join(f"{key}={arg!r}" for key, arg in kwargs.items())
     name += ")"
     return name
 
@@ -873,7 +873,7 @@ def get_global_norm_of_tensors(input_tensors, norm_type=2, mpu=None, use_graph=F
         Total norm of the tensors (viewed as a single vector).
     """
     assert isinstance(input_tensors, Iterable), f"expected Iterable type not {type(input_tensors)}"
-    assert all([torch.is_tensor(t) for t in input_tensors]), f"expected list of only tensors"
+    assert all([torch.is_tensor(t) for t in input_tensors]), "expected list of only tensors"
 
     norm_type = float(norm_type)
     if norm_type == inf:
@@ -961,7 +961,9 @@ def align_dense_tensors(tensor_list, alignment):
 
 
 def all_gather_into_tensor_dp_groups(groups_flat, partitioned_param_groups, zp_process_group, dp_process_group=None):
-    for group_id, (group_flat, partitioned_params) in enumerate(zip(groups_flat, partitioned_param_groups)):
+    for group_id, (group_flat, partitioned_params) in enumerate(
+        zip(groups_flat, partitioned_param_groups, strict=False)
+    ):
         partition_id = dist.get_rank(group=zp_process_group[group_id])
         dp_world_size = dist.get_world_size(group=dp_process_group)
         if dp_world_size == 1:

@@ -1,17 +1,14 @@
 # Adapted from https://github.com/showlab/Tune-A-Video/blob/main/tuneavideo/pipelines/pipeline_tuneavideo.py
 
 import inspect
-import torch
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import List, Optional, Union
 
 import numpy as np
-
-from typing import Callable, List, Optional, Union
-from dataclasses import dataclass
-from diffusers.utils import is_accelerate_available
-from packaging import version
-from einops import rearrange
-from transformers import CLIPTextModel, CLIPTokenizer
+import torch
 from diffusers.configuration_utils import FrozenDict
+from diffusers.loaders import LoraLoaderMixin
 from diffusers.models import AutoencoderKL
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import (
@@ -22,19 +19,20 @@ from diffusers.schedulers import (
     LMSDiscreteScheduler,
     PNDMScheduler,
 )
-from diffusers.loaders import LoraLoaderMixin
-from diffusers.utils import deprecate, logging, BaseOutput
+from diffusers.utils import BaseOutput, deprecate, is_accelerate_available, logging
+from einops import rearrange
+from packaging import version
+from transformers import CLIPTextModel, CLIPTokenizer
 
 from ..models.pose_adaptor import CameraPoseEncoder
 from ..models.unet import UNet3DConditionModel
-
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 @dataclass
 class AnimationPipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 class AnimationPipeline(DiffusionPipeline, LoraLoaderMixin):
@@ -46,14 +44,12 @@ class AnimationPipeline(DiffusionPipeline, LoraLoaderMixin):
         text_encoder: CLIPTextModel,
         tokenizer: CLIPTokenizer,
         unet: UNet3DConditionModel,
-        scheduler: Union[
-            DDIMScheduler,
-            PNDMScheduler,
-            LMSDiscreteScheduler,
-            EulerDiscreteScheduler,
-            EulerAncestralDiscreteScheduler,
-            DPMSolverMultistepScheduler,
-        ],
+        scheduler: DDIMScheduler
+        | PNDMScheduler
+        | LMSDiscreteScheduler
+        | EulerDiscreteScheduler
+        | EulerAncestralDiscreteScheduler
+        | DPMSolverMultistepScheduler,
     ):
         super().__init__()
 
@@ -183,7 +179,7 @@ class AnimationPipeline(DiffusionPipeline, LoraLoaderMixin):
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif type(prompt) is not type(negative_prompt):
@@ -320,21 +316,21 @@ class AnimationPipeline(DiffusionPipeline, LoraLoaderMixin):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
-        video_length: Optional[int],
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        prompt: str | list[str],
+        video_length: int | None,
+        height: int | None = None,
+        width: int | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_videos_per_prompt: Optional[int] = 1,
+        negative_prompt: str | list[str] | None = None,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "tensor",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        output_type: str | None = "tensor",
         return_dict: bool = True,
-        callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
-        callback_steps: Optional[int] = 1,
+        callback: Callable[[int, int, torch.FloatTensor], None] | None = None,
+        callback_steps: int | None = 1,
         multidiff_total_steps: int = 1,
         multidiff_overlaps: int = 12,
         **kwargs,
@@ -459,14 +455,12 @@ class CameraCtrlPipeline(AnimationPipeline):
         text_encoder: CLIPTextModel,
         tokenizer: CLIPTokenizer,
         unet: UNet3DConditionModel,
-        scheduler: Union[
-            DDIMScheduler,
-            PNDMScheduler,
-            LMSDiscreteScheduler,
-            EulerDiscreteScheduler,
-            EulerAncestralDiscreteScheduler,
-            DPMSolverMultistepScheduler,
-        ],
+        scheduler: DDIMScheduler
+        | PNDMScheduler
+        | LMSDiscreteScheduler
+        | EulerDiscreteScheduler
+        | EulerAncestralDiscreteScheduler
+        | DPMSolverMultistepScheduler,
         pose_encoder: CameraPoseEncoder,
     ):
         super().__init__(vae, text_encoder, tokenizer, unet, scheduler)
@@ -526,7 +520,7 @@ class CameraCtrlPipeline(AnimationPipeline):
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif type(prompt) is not type(negative_prompt):
@@ -580,22 +574,22 @@ class CameraCtrlPipeline(AnimationPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         pose_embedding: torch.FloatTensor,
-        video_length: Optional[int],
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        video_length: int | None,
+        height: int | None = None,
+        width: int | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_videos_per_prompt: Optional[int] = 1,
+        negative_prompt: str | list[str] | None = None,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "tensor",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        output_type: str | None = "tensor",
         return_dict: bool = True,
-        callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
-        callback_steps: Optional[int] = 1,
+        callback: Callable[[int, int, torch.FloatTensor], None] | None = None,
+        callback_steps: int | None = 1,
         multidiff_total_steps: int = 1,
         multidiff_overlaps: int = 12,
         **kwargs,

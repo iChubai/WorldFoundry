@@ -18,7 +18,7 @@ class SerialVectorEnv:
 
     def sample_random_init_goal_states(self, seed):
         init_state, goal_state = zip(
-            *(self.envs[i].sample_random_init_goal_states(seed[i]) for i in range(self.num_envs))
+            *(self.envs[i].sample_random_init_goal_states(seed[i]) for i in range(self.num_envs)), strict=False
         )
         return np.stack(init_state), np.stack(goal_state)
 

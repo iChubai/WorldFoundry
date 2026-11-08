@@ -5,17 +5,20 @@ from dataclasses import dataclass
 from itertools import pairwise
 
 import torch
+
+from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.variants.jing.control import control_vector
 from worldfoundry.base_models.diffusion_model.schedulers.minimax_h3 import (
     minimax_h3_align_frame_count as align_num_frames,
-    minimax_h3_video_latent_t as video_latent_num_frames,
 )
-from worldfoundry.pipelines.minimax._minimax_h3.packed_tokens import (
-    minimax_h3_patchify_video_latent,
+from worldfoundry.base_models.diffusion_model.schedulers.minimax_h3 import (
+    minimax_h3_video_latent_t as video_latent_num_frames,
 )
 from worldfoundry.pipelines.minimax._minimax_h3.packed_sequence import (
     _axis_from_sqrt_area as _spatial_position_grid,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.variants.jing.control import control_vector
+from worldfoundry.pipelines.minimax._minimax_h3.packed_tokens import (
+    minimax_h3_patchify_video_latent,
+)
 
 
 def chunk_lengths(num_frames, first_chunk_size=2):
@@ -138,7 +141,7 @@ class Packed:
     def audio_channel_major(self):
         pieces = self.audio[0].split([2 * length for length in self.audio_lengths])
         return torch.cat(
-            [part.reshape(2, length, -1) for part, length in zip(pieces, self.audio_lengths)],
+            [part.reshape(2, length, -1) for part, length in zip(pieces, self.audio_lengths, strict=False)],
             dim=1,
         ).flatten(0, 1)
 

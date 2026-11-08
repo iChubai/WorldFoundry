@@ -25,14 +25,14 @@ def build_estimator(
     backend: str,
     device,
     process_res: int,
-    weights: Optional[str] = None,
-    src: Optional[str] = None,
-    vigeo_opts: Optional[dict] = None,
+    weights: str | None = None,
+    src: str | None = None,
+    vigeo_opts: dict | None = None,
 ):
     """Construct the sole supported inference depth backend."""
     if (backend or "vigeo").lower() != "vigeo":
         raise ValueError(f"this inference-only Evoke port supports depth_backend='vigeo', got {backend!r}")
-    from .vigeo_cloud import ViGeoDepthEstimator, _VIGEO_WEIGHTS
+    from .vigeo_cloud import _VIGEO_WEIGHTS, ViGeoDepthEstimator
 
     kwargs = dict(device=device, process_res=int(process_res), weights=(weights or str(_VIGEO_WEIGHTS)))
     if src:
@@ -60,7 +60,7 @@ def reset_stream(estimator) -> None:
         fn()
 
 
-def check_assets(backend: str, weights: Optional[str] = None, src: Optional[str] = None) -> None:
+def check_assets(backend: str, weights: str | None = None, src: str | None = None) -> None:
     """Fail before model loading when ViGeo source or weights are missing."""
     if (backend or "vigeo").lower() != "vigeo":
         raise ValueError(f"this inference-only Evoke port supports depth_backend='vigeo', got {backend!r}")

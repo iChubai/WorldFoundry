@@ -5,6 +5,7 @@ from typing import Dict, Tuple, Union
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
+
 from vwm.modules.autoencoding.regularizer import AbstractRegularizer
 from vwm.util import instantiate_from_config
 
@@ -40,13 +41,13 @@ class AutoencodingEngine(AbstractAutoencoder):
     Regularizations such as KL or VQ are moved to the regularizer class.
     """
 
-    def __init__(self, *args, encoder_config: Dict, decoder_config: Dict, regularizer_config: Dict, **kwargs):
+    def __init__(self, *args, encoder_config: dict, decoder_config: dict, regularizer_config: dict, **kwargs):
         super(AutoencodingEngine, self).__init__(*args, **kwargs)
         self.encoder: nn.Module = instantiate_from_config(encoder_config)
         self.decoder: nn.Module = instantiate_from_config(decoder_config)
         self.regularization: AbstractRegularizer = instantiate_from_config(regularizer_config)
 
-    def get_input(self, batch: Dict) -> torch.Tensor:
+    def get_input(self, batch: dict) -> torch.Tensor:
         # Image tensors should be scaled to -1 ... 1 and in channels-first format (e.g., bchw instead if bhwc)
         return batch[self.input_key]
 
@@ -55,7 +56,7 @@ class AutoencodingEngine(AbstractAutoencoder):
 
     def encode(
         self, x: torch.Tensor, return_reg_log: bool = False, unregularized: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, dict]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, dict]:
         z = self.encoder(x)
         if unregularized:
             return z, {}
@@ -70,7 +71,7 @@ class AutoencodingEngine(AbstractAutoencoder):
         x = self.decoder(z, **kwargs)
         return x
 
-    def forward(self, x: torch.Tensor, **additional_decode_kwargs) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
+    def forward(self, x: torch.Tensor, **additional_decode_kwargs) -> tuple[torch.Tensor, torch.Tensor, dict]:
         z, reg_log = self.encode(x, return_reg_log=True)
         dec = self.decode(z, **additional_decode_kwargs)
         return z, dec, reg_log
@@ -89,7 +90,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
         self.post_quant_conv = nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
         self.embed_dim = embed_dim
 
-    def encode(self, x: torch.Tensor, return_reg_log: bool = False) -> Union[torch.Tensor, Tuple[torch.Tensor, dict]]:
+    def encode(self, x: torch.Tensor, return_reg_log: bool = False) -> torch.Tensor | tuple[torch.Tensor, dict]:
         if self.max_batch_size is None:
             z = self.encoder(x)
             z = self.quant_conv(z)

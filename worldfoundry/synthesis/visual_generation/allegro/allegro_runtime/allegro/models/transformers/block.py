@@ -8,14 +8,16 @@
 # --------------------------------------------------------
 
 
+import collections
+from collections.abc import Callable
 from importlib import import_module
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import torch
-import collections
 import torch.nn.functional as F
-from torch.nn.attention import SDPBackend, sdpa_kernel
+from allegro.models.transformers.embedding import CombinedTimestepSizeEmbeddings
+from allegro.models.transformers.rope import PositionGetter3D, RoPE3D
 from diffusers.models.activations import GEGLU, GELU, ApproximateGELU
 from diffusers.models.attention_processor import (
     AttnAddedKVProcessor,
@@ -39,9 +41,7 @@ from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormZero
 from diffusers.utils import USE_PEFT_BACKEND, deprecate, is_xformers_available
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 from torch import nn
-
-from allegro.models.transformers.rope import RoPE3D, PositionGetter3D
-from allegro.models.transformers.embedding import CombinedTimestepSizeEmbeddings
+from torch.nn.attention import SDPBackend, sdpa_kernel
 
 if is_xformers_available():
     import xformers
@@ -115,18 +115,18 @@ class Attention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
         bias: bool = False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
-        cross_attention_norm: Optional[str] = None,
+        cross_attention_norm: str | None = None,
         cross_attention_norm_num_groups: int = 32,
-        added_kv_proj_dim: Optional[int] = None,
-        norm_num_groups: Optional[int] = None,
-        spatial_norm_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
+        norm_num_groups: int | None = None,
+        spatial_norm_dim: int | None = None,
         out_bias: bool = True,
         scale_qk: bool = True,
         only_cross_attention: bool = False,
@@ -240,7 +240,7 @@ class Attention(nn.Module):
         self.set_processor(processor)
 
     def set_use_memory_efficient_attention_xformers(
-        self, use_memory_efficient_attention_xformers: bool, attention_op: Optional[Callable] = None
+        self, use_memory_efficient_attention_xformers: bool, attention_op: Callable | None = None
     ) -> None:
         r"""
         Set whether to use memory efficient attention from `xformers` or not.
@@ -526,8 +526,8 @@ class Attention(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
         **cross_attention_kwargs,
     ) -> torch.Tensor:
         r"""
@@ -755,9 +755,9 @@ class AttnProcessor2_0(nn.Module):
         self,
         attn: Attention,
         hidden_states: torch.FloatTensor,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        temb: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        temb: torch.FloatTensor | None = None,
         frame: int = 8,
         height: int = 16,
         width: int = 16,
@@ -864,7 +864,7 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Optional[int] = None,
+        dim_out: int | None = None,
         mult: int = 4,
         dropout: float = 0.0,
         activation_fn: str = "geglu",
@@ -941,9 +941,9 @@ class BasicTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = None,
+        num_embeds_ada_norm: int | None = None,
         attention_bias: bool = False,
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
@@ -952,13 +952,13 @@ class BasicTransformerBlock(nn.Module):
         norm_type: str = "layer_norm",  # 'layer_norm', 'ada_norm', 'ada_norm_zero', 'ada_norm_single'
         norm_eps: float = 1e-5,
         final_dropout: bool = False,
-        positional_embeddings: Optional[str] = None,
-        num_positional_embeddings: Optional[int] = None,
+        positional_embeddings: str | None = None,
+        num_positional_embeddings: int | None = None,
         sa_attention_mode: str = "flash",
         ca_attention_mode: str = "xformers",
         use_rope: bool = False,
-        interpolation_scale_thw: Tuple[int] = (1, 1, 1),
-        block_idx: Optional[int] = None,
+        interpolation_scale_thw: tuple[int] = (1, 1, 1),
+        block_idx: int | None = None,
     ):
         super().__init__()
         self.only_cross_attention = only_cross_attention
@@ -1051,12 +1051,12 @@ class BasicTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
-        cross_attention_kwargs: Dict[str, Any] = None,
-        class_labels: Optional[torch.LongTensor] = None,
+        attention_mask: torch.FloatTensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        timestep: torch.LongTensor | None = None,
+        cross_attention_kwargs: dict[str, Any] = None,
+        class_labels: torch.LongTensor | None = None,
         frame: int = None,
         height: int = None,
         width: int = None,
@@ -1179,10 +1179,10 @@ class AdaLayerNormSingle(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
         batch_size: int = None,
-        hidden_dtype: Optional[torch.dtype] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        hidden_dtype: torch.dtype | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # No modulation happening here.
         embedded_timestep = self.emb(
             timestep, batch_size=batch_size, hidden_dtype=hidden_dtype, resolution=None, aspect_ratio=None

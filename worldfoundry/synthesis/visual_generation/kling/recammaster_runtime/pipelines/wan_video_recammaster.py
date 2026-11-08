@@ -1,29 +1,32 @@
-from ..model_manager import ModelManager
-from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import WanModel
-from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter, WanTextEncoder
-from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_2_runtime.extension_modules.wanx_vae.wanx_vae import (
-    WanVAE as WanVideoVAE,
-)
-from worldfoundry.core.nn import FlowMatchScheduler
-from worldfoundry.base_models.diffusion_model.runners import StagedDiffusionPipeline
-import torch, os
-from einops import rearrange
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
+import os
 from typing import Optional
 
-from worldfoundry.core.vram import enable_vram_management, AutoWrappedModule, AutoWrappedLinear
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5RelativeEmbedding, T5LayerNorm
+import numpy as np
+import torch
+from einops import rearrange
+from PIL import Image
+from tqdm import tqdm
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
+    CausalConv3d,
+    RMS_norm,
+    Upsample,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter, WanTextEncoder
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5LayerNorm, T5RelativeEmbedding
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    WanModel,
     WanRMSNorm,
     sinusoidal_embedding_1d,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    RMS_norm,
-    CausalConv3d,
-    Upsample,
+from worldfoundry.base_models.diffusion_model.runners import StagedDiffusionPipeline
+from worldfoundry.core.nn import FlowMatchScheduler
+from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule, enable_vram_management
+from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_2_runtime.extension_modules.wanx_vae.wanx_vae import (
+    WanVAE as WanVideoVAE,
 )
+
+from ..model_manager import ModelManager
 
 
 class WanVideoReCamMasterPipeline(StagedDiffusionPipeline):
@@ -398,8 +401,8 @@ def model_fn_wan_video(
     timestep: torch.Tensor,
     cam_emb: torch.Tensor,
     context: torch.Tensor,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     tea_cache: TeaCache = None,
     **kwargs,
 ):

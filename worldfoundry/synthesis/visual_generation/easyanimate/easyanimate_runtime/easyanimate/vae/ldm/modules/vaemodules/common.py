@@ -7,7 +7,6 @@ from einops import rearrange, repeat
 
 from .activations import get_activation
 
-
 try:
     current_version = torch.__version__
     version_numbers = [int(x) for x in current_version.split(".")[:2]]
@@ -15,7 +14,7 @@ try:
         need_to_float = True
     else:
         need_to_float = False
-except Exception as e:
+except Exception:
     print("Encountered an error with Torch version. Set the data type to float in the VAE. ")
     need_to_float = False
 

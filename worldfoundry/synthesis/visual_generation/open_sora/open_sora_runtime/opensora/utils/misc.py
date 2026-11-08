@@ -167,7 +167,7 @@ def all_reduce_mean(tensor: torch.Tensor) -> torch.Tensor:
     return tensor
 
 
-def get_model_numel(model: torch.nn.Module) -> Tuple[int, int]:
+def get_model_numel(model: torch.nn.Module) -> tuple[int, int]:
     num_params = 0
     num_params_trainable = 0
     for p in model.parameters():
@@ -344,7 +344,7 @@ def transpose(x):
     Args:
         x (list[list]):
     """
-    ret = list(map(list, zip(*x)))
+    ret = list(map(list, zip(*x, strict=False)))
     return ret
 
 

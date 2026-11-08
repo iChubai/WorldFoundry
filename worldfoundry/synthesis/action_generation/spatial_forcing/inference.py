@@ -6,17 +6,18 @@ import json
 import math
 import os
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 os.environ.setdefault("USE_FLAX", "0")
 os.environ.setdefault("USE_TF", "0")
 os.environ.setdefault("TRANSFORMERS_NO_FLAX", "1")
 os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
 
-from worldfoundry.core.media.types import MediaKind, infer_media_kind
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
+from worldfoundry.core.media.types import MediaKind, infer_media_kind
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
 

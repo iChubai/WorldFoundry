@@ -14,20 +14,15 @@ import torch
 from diffusers.models import AutoencoderKLWan
 from transformers import AutoTokenizer, UMT5EncoderModel
 
-from worldfoundry.base_models.diffusion_model.runners.worldcrafter import WorldCrafterPipeline
-from worldfoundry.base_models.diffusion_model.schedulers.worldcrafter import WorldCrafterScheduler
-from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import (
-    WorldCrafterTransformer3DModel,
-)
-from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.compact_ucpe import compact_ucpe
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.attention import FastUcpeSelfAttention
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.compact_ucpe import compact_ucpe
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.contract import (
     load_dmd_inference_contract,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.resident import ResidentBranches
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.kernels import (
-    replace_rmsnorm_with_fp32,
     replace_all_norms_with_flash_norms,
+    replace_rmsnorm_with_fp32,
     replace_rope_with_flash_rope,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.repencoder import (
@@ -35,11 +30,16 @@ from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.repen
     RepEncoderInferenceMemoryProvider,
     RepEncoderInferenceProviderConfig,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import (
+    WorldCrafterTransformer3DModel,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.bridge import (
     enable_ucpe_inference_sdpa_attention,
-    patch_worldcrafter_transformer_ucpe,
     load_ucpe_camera_adapter_weights,
+    patch_worldcrafter_transformer_ucpe,
 )
+from worldfoundry.base_models.diffusion_model.runners.worldcrafter import WorldCrafterPipeline
+from worldfoundry.base_models.diffusion_model.schedulers.worldcrafter import WorldCrafterScheduler
 
 
 def load_fast(

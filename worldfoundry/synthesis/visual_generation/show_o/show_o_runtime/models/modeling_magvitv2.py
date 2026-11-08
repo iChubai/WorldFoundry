@@ -1,11 +1,13 @@
+import math
 from dataclasses import dataclass, field
+
 import numpy as np
 import torch
 import torch.nn as nn
+
 from .common_modules import *
-from .modeling_utils import ConfigMixin, ModelMixin, register_to_config
 from .misc import *
-import math
+from .modeling_utils import ConfigMixin, ModelMixin, register_to_config
 
 
 class Updateable:
@@ -292,7 +294,7 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = self.resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
-        print("Working with z of shape {} = {} dimensions.".format(self.z_shape, np.prod(self.z_shape)))
+        print(f"Working with z of shape {self.z_shape} = {np.prod(self.z_shape)} dimensions.")
 
         # z to block_in
         self.conv_in = torch.nn.Conv2d(z_channels, block_in, kernel_size=3, stride=1, padding=1)

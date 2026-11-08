@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 from .configuration import A1Config
-
 
 IMAGE_PATCH_TOKEN = "<im_patch>"
 IMAGE_START_TOKEN = "<im_start>"
@@ -117,9 +117,9 @@ def _as_rgb_array(value: Any) -> np.ndarray:
         raise ValueError("A1 images must contain only finite values")
     if array.dtype != np.uint8:
         low, high = float(array.min()), float(array.max())
-        if 0.0 <= low and high <= 1.0:
+        if low >= 0.0 and high <= 1.0:
             array = array * 255.0
-        elif -1.0 <= low and high <= 1.0:
+        elif low >= -1.0 and high <= 1.0:
             array = (array + 1.0) * 127.5
         array = np.clip(np.rint(array), 0, 255).astype(np.uint8)
     return np.ascontiguousarray(array)
@@ -323,10 +323,10 @@ class A1Processor:
 
 
 __all__ = [
-    "A1PreparedBatch",
-    "A1Processor",
     "ACTION_END_TOKEN",
     "ACTION_START_TOKEN",
     "EXTRA_TOKENS",
+    "A1PreparedBatch",
+    "A1Processor",
     "load_local_tokenizer",
 ]

@@ -1,16 +1,15 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/resnet.py
 
-from einops import rearrange, repeat
 from functools import partial
 from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from diffusers.models.activations import get_activation
-from diffusers.models.normalization import AdaGroupNorm
 from diffusers.models.attention_processor import SpatialNorm
+from diffusers.models.normalization import AdaGroupNorm
+from einops import rearrange, repeat
 
 
 class InflatedConv3d(nn.Conv2d):
@@ -96,7 +95,7 @@ class FusionBlock2D(nn.Module):
         up=False,
         down=False,
         conv_shortcut_bias: bool = True,
-        conv_2d_out_channels: Optional[int] = None,
+        conv_2d_out_channels: int | None = None,
         zero_init=True,
     ):
         super().__init__()

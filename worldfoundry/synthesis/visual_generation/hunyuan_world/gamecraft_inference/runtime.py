@@ -178,7 +178,7 @@ def ActionToPoseFromID(action_id, value=0.2, duration=33):
             )
         )
     ]
-    for i, (pos, rot) in enumerate(zip(positions, rotations)):
+    for i, (pos, rot) in enumerate(zip(positions, rotations, strict=False)):
         rotation = quaternion_to_rotation_matrix(euler_to_quaternion(rot))
         extrinsic = np.hstack([rotation, pos.reshape(3, 1)])
         row = [i] + intrinsic + [0, 0] + extrinsic.flatten().tolist()

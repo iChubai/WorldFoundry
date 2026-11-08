@@ -18,18 +18,18 @@ from torchvision.transforms import v2
 from transformers import PretrainedConfig
 from transformers.feature_extraction_utils import BatchFeature
 
-from worldfoundry.core.nn.diffusion.schedulers import (
-    FlowMatchScheduler,
-)
-from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (
-    FlowUniPCMultistepScheduler,
-)
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
     T5LayerNorm,
     T5RelativeEmbedding,
 )
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (
+    FlowUniPCMultistepScheduler,
+)
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.core.model_loading.checkpoints.file import load_state_dict
+from worldfoundry.core.nn.diffusion.schedulers import (
+    FlowMatchScheduler,
+)
 from worldfoundry.core.vram import (
     AutoWrappedLinear,
     AutoWrappedModule,
@@ -336,7 +336,7 @@ class WANPolicyHead(ActionHead):
                     # Handle sharded safetensors
                     print(f"Loading sharded safetensors using index: {safetensors_index_path}")
 
-                    with open(safetensors_index_path, "r") as f:
+                    with open(safetensors_index_path) as f:
                         index = json.load(f)
 
                     # Load each shard
@@ -726,7 +726,7 @@ class WANPolicyHead(ActionHead):
         thresholds = [0.95, 0.93]
         countdowns = [4, 2]
 
-        for threshold, countdown in zip(thresholds, countdowns):
+        for threshold, countdown in zip(thresholds, countdowns, strict=False):
             if sim > threshold:
                 self.skip_countdown = countdown
                 return False
@@ -1099,7 +1099,9 @@ class WANPolicyHead(ActionHead):
         image_encoder_time = start_image_encoder_event.elapsed_time(end_image_encoder_event) / 1000
         vae_time = start_vae_event.elapsed_time(end_vae_event) / 1000
         kv_creation_time = start_kv_event.elapsed_time(end_kv_event) / 1000
-        diffusion_times = [s.elapsed_time(e) for s, e in zip(start_diffusion_events, end_diffusion_events)]
+        diffusion_times = [
+            s.elapsed_time(e) for s, e in zip(start_diffusion_events, end_diffusion_events, strict=False)
+        ]
         diffusion_time = sum(diffusion_times) / 1000
         scheduler_time = (
             total_time - kv_creation_time - diffusion_time - text_encoder_time - image_encoder_time - vae_time

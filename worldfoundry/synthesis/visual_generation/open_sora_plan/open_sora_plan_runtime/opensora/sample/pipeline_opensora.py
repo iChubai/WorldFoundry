@@ -1,6 +1,8 @@
 import inspect
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import torch
 from einops import rearrange
@@ -11,17 +13,16 @@ try:  # transformers < 5 exposed the multilingual alias at package level.
 except ImportError:  # transformers 5 consolidated it with the T5 tokenizer.
     from transformers import T5Tokenizer as MT5Tokenizer
 
-from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.models import AutoencoderKL, HunyuanDiT2DModel
 from diffusers.models.embeddings import get_2d_rotary_pos_embed
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from diffusers.schedulers import DDPMScheduler, FlowMatchEulerDiscreteScheduler
-from diffusers.utils import logging, BaseOutput
+from diffusers.utils import BaseOutput, logging
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-
 from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
 
 try:
@@ -36,7 +37,7 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 @dataclass
 class OpenSoraPipelineOutput(BaseOutput):
-    videos: Union[List[torch.FloatTensor], np.ndarray]
+    videos: list[torch.FloatTensor] | np.ndarray
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.rescale_noise_cfg
@@ -57,10 +58,10 @@ def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     """
@@ -159,12 +160,12 @@ class OpenSoraPipeline(DiffusionPipeline):
         dtype: torch.dtype = None,
         num_samples_per_prompt: int = 1,
         do_classifier_free_guidance: bool = True,
-        negative_prompt: Optional[str] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask: Optional[torch.Tensor] = None,
-        max_sequence_length: Optional[int] = None,
+        negative_prompt: str | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        prompt_attention_mask: torch.Tensor | None = None,
+        negative_prompt_attention_mask: torch.Tensor | None = None,
+        max_sequence_length: int | None = None,
         text_encoder_index: int = 0,
     ):
         r"""
@@ -274,7 +275,7 @@ class OpenSoraPipeline(DiffusionPipeline):
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance and negative_prompt_embeds is None:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif prompt is not None and type(prompt) is not type(negative_prompt):
@@ -470,32 +471,33 @@ class OpenSoraPipeline(DiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]] = None,
-        num_frames: Optional[int] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        num_inference_steps: Optional[int] = 50,
-        timesteps: List[int] = None,
-        guidance_scale: Optional[float] = 5.0,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_samples_per_prompt: Optional[int] = 1,
-        eta: Optional[float] = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_embeds_2: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds_2: Optional[torch.Tensor] = None,
-        prompt_attention_mask: Optional[torch.Tensor] = None,
-        prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        prompt: str | list[str] = None,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        num_inference_steps: int | None = 50,
+        timesteps: list[int] = None,
+        guidance_scale: float | None = 5.0,
+        negative_prompt: str | list[str] | None = None,
+        num_samples_per_prompt: int | None = 1,
+        eta: float | None = 0.0,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_embeds_2: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds_2: torch.Tensor | None = None,
+        prompt_attention_mask: torch.Tensor | None = None,
+        prompt_attention_mask_2: torch.Tensor | None = None,
+        negative_prompt_attention_mask: torch.Tensor | None = None,
+        negative_prompt_attention_mask_2: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         guidance_rescale: float = 0.0,
         max_sequence_length: int = 512,
         device=None,

@@ -12,6 +12,7 @@ from transformers.models.siglip.modeling_siglip import (
     SiglipVisionEmbeddings,
 )
 from transformers.utils import can_return_tuple
+
 from worldfoundry.core.attention import apply_rotary_embedding, scaled_dot_product_attention
 
 
@@ -566,7 +567,9 @@ class Gemma2DecoderLayerWithExpert(nn.Module):
         )
 
         hs_after_attn_list = []
-        for i, (residual, attn_output, attn_gate) in enumerate(zip(residuals_pre_attn, attn_outputs, attn_gates)):
+        for i, (residual, attn_output, attn_gate) in enumerate(
+            zip(residuals_pre_attn, attn_outputs, attn_gates, strict=False)
+        ):
             if residual is not None:
                 normed_attn_out = self.post_attention_layernorms[i](attn_output)
                 hs_after_attn = self.gated_residual(residual, normed_attn_out, attn_gate)
@@ -817,12 +820,9 @@ class PaliGemma2WithExpertModel(nn.Module):
                 )
                 hidden_states_list = layer_outputs
                 if use_cache:
-                    if fill_kv_cache and present_key_states is not None:
-                        updated_kv_cache[layer_idx] = {
-                            "key_states": present_key_states,
-                            "value_states": present_value_states,
-                        }
-                    elif auto_regression_inference_mode and present_key_states is not None:
+                    if (fill_kv_cache and present_key_states is not None) or (
+                        auto_regression_inference_mode and present_key_states is not None
+                    ):
                         updated_kv_cache[layer_idx] = {
                             "key_states": present_key_states,
                             "value_states": present_value_states,

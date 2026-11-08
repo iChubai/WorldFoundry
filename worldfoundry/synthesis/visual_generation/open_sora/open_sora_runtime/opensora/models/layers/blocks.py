@@ -767,7 +767,7 @@ class PositionEmbedding2D(nn.Module):
         h: int,
         w: int,
         scale: float = 1.0,
-        base_size: Optional[int] = None,
+        base_size: int | None = None,
     ):
         grid_h = torch.arange(h, device=device) / scale
         grid_w = torch.arange(w, device=device) / scale
@@ -790,8 +790,8 @@ class PositionEmbedding2D(nn.Module):
         x: torch.Tensor,
         h: int,
         w: int,
-        scale: Optional[float] = 1.0,
-        base_size: Optional[int] = None,
+        scale: float | None = 1.0,
+        base_size: int | None = None,
     ) -> torch.Tensor:
         return self._get_cached_emb(x.device, x.dtype, h, w, scale, base_size)
 

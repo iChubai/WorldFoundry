@@ -1,20 +1,24 @@
 # env import
 import gym
+
+# isort: split
+import collections
+from collections.abc import Sequence
+from typing import Dict, Optional, Tuple, Union
+
+import cv2
 import einops
-from gym import spaces
-from pymunk.space_debug_draw_options import SpaceDebugColor
-from pymunk.vec2d import Vec2d
-from typing import Tuple, Sequence, Dict, Union, Optional
+import numpy as np
 import pygame
 import pymunk
-import numpy as np
-import shapely.geometry as sg
-import cv2
-import skimage.transform as st
 import pymunk.pygame_util
-import collections
-from matplotlib import cm
+import shapely.geometry as sg
+import skimage.transform as st
 import torch
+from gym import spaces
+from matplotlib import cm
+from pymunk.space_debug_draw_options import SpaceDebugColor
+from pymunk.vec2d import Vec2d
 
 # @markdown ### **Environment**
 # @markdown Defines a PyMunk-based Push-T environment `PushTEnv`.
@@ -70,8 +74,8 @@ def farthest_point_sampling(points: np.ndarray, n_points: int, init_idx: int):
 class PymunkKeypointManager:
     def __init__(
         self,
-        local_keypoint_map: Dict[str, np.ndarray],
-        color_map: Optional[Dict[str, np.ndarray]] = None,
+        local_keypoint_map: dict[str, np.ndarray],
+        color_map: dict[str, np.ndarray] | None = None,
     ):
         """
         local_keypoint_map:
@@ -142,7 +146,7 @@ class PymunkKeypointManager:
         pose = tuple(obj.position) + (obj.angle,)
         return cls.get_tf_img(pose)
 
-    def get_keypoints_global(self, pose_map: Dict[set, Union[Sequence, pymunk.Body]], is_obj=False):
+    def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):
         kp_map = dict()
         for key, value in pose_map.items():
             if is_obj:
@@ -244,8 +248,8 @@ class DrawOptions(pymunk.SpaceDebugDrawOptions):
 
     def draw_fat_segment(
         self,
-        a: Tuple[float, float],
-        b: Tuple[float, float],
+        a: tuple[float, float],
+        b: tuple[float, float],
         radius: float,
         outline_color: SpaceDebugColor,
         fill_color: SpaceDebugColor,
@@ -284,7 +288,7 @@ class DrawOptions(pymunk.SpaceDebugDrawOptions):
 
     def draw_polygon(
         self,
-        verts: Sequence[Tuple[float, float]],
+        verts: Sequence[tuple[float, float]],
         radius: float,
         outline_color: SpaceDebugColor,
         fill_color: SpaceDebugColor,
@@ -301,18 +305,18 @@ class DrawOptions(pymunk.SpaceDebugDrawOptions):
                 b = verts[(i + 1) % len(verts)]
                 self.draw_fat_segment(a, b, radius, fill_color, fill_color)
 
-    def draw_dot(self, size: float, pos: Tuple[float, float], color: SpaceDebugColor) -> None:
+    def draw_dot(self, size: float, pos: tuple[float, float], color: SpaceDebugColor) -> None:
         p = to_pygame(pos, self.surface)
         pygame.draw.circle(self.surface, color.as_int(), p, round(size), 0)
 
 
-def get_mouse_pos(surface: pygame.Surface) -> Tuple[int, int]:
+def get_mouse_pos(surface: pygame.Surface) -> tuple[int, int]:
     """Get position of the mouse pointer in pymunk coordinates."""
     p = pygame.mouse.get_pos()
     return from_pygame(p, surface)
 
 
-def to_pygame(p: Tuple[float, float], surface: pygame.Surface) -> Tuple[int, int]:
+def to_pygame(p: tuple[float, float], surface: pygame.Surface) -> tuple[int, int]:
     """Convenience method to convert pymunk coordinates to pygame surface
     local coordinates.
 
@@ -325,7 +329,7 @@ def to_pygame(p: Tuple[float, float], surface: pygame.Surface) -> Tuple[int, int
         return round(p[0]), round(p[1])
 
 
-def from_pygame(p: Tuple[float, float], surface: pygame.Surface) -> Tuple[int, int]:
+def from_pygame(p: tuple[float, float], surface: pygame.Surface) -> tuple[int, int]:
     """Convenience method to convert pygame surface local coordinates to
     pymunk coordinates
     """
@@ -1012,8 +1016,8 @@ class PushTEnv(gym.Env):
 class PymunkKeypointManager:
     def __init__(
         self,
-        local_keypoint_map: Dict[str, np.ndarray],
-        color_map: Optional[Dict[str, np.ndarray]] = None,
+        local_keypoint_map: dict[str, np.ndarray],
+        color_map: dict[str, np.ndarray] | None = None,
     ):
         """
         local_keypoint_map:
@@ -1084,7 +1088,7 @@ class PymunkKeypointManager:
         pose = tuple(obj.position) + (obj.angle,)
         return cls.get_tf_img(pose)
 
-    def get_keypoints_global(self, pose_map: Dict[set, Union[Sequence, pymunk.Body]], is_obj=False):
+    def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):
         kp_map = dict()
         for key, value in pose_map.items():
             if is_obj:
@@ -1122,8 +1126,8 @@ class PushTKeypointsEnv(PushTEnv):
         draw_keypoints=False,
         reset_to_state=None,
         render_action=False,
-        local_keypoint_map: Dict[str, np.ndarray] = None,
-        color_map: Optional[Dict[str, np.ndarray]] = None,
+        local_keypoint_map: dict[str, np.ndarray] = None,
+        color_map: dict[str, np.ndarray] | None = None,
     ):
         super().__init__(
             legacy=legacy,

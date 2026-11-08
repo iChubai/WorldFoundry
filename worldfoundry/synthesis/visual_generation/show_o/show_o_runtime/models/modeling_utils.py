@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 The HuggingFace Inc. team.
 # Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -20,16 +19,13 @@ import json
 import os
 import re
 from collections import OrderedDict
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import safetensors
 import torch
-from huggingface_hub import create_repo, split_torch_state_dict_into_shards
-from huggingface_hub.utils import validate_hf_hub_args
-from torch import Tensor, nn
-
 from diffusers import __version__
 from diffusers.utils import (
     FLAX_WEIGHTS_NAME,
@@ -43,17 +39,16 @@ from diffusers.utils import (
     is_torch_version,
     logging,
 )
+from huggingface_hub import create_repo, split_torch_state_dict_into_shards
+from huggingface_hub.utils import validate_hf_hub_args
+from torch import Tensor, nn
 
 CONFIG_NAME = "config.json"
 WEIGHTS_NAME = "pytorch_model.bin"
 SAFETENSORS_WEIGHTS_NAME = "pytorch_model.safetensors"
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = "https://huggingface.co"
 
-from diffusers.utils.hub_utils import (
-    PushToHubMixin,
-    load_or_create_model_card,
-    populate_model_card,
-)
+from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.model_loading_utils import (
     _determine_device_map,
     _fetch_index_file,
@@ -61,8 +56,11 @@ from diffusers.models.model_loading_utils import (
     load_model_dict_into_meta,
     load_state_dict,
 )
-
-from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.utils.hub_utils import (
+    PushToHubMixin,
+    load_or_create_model_card,
+    populate_model_card,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -129,7 +127,7 @@ def get_parameter_device(parameter: torch.nn.Module) -> torch.device:
     except StopIteration:
         # For torch.nn.DataParallel compatibility in PyTorch 1.5
 
-        def find_tensor_attributes(module: torch.nn.Module) -> List[Tuple[str, Tensor]]:
+        def find_tensor_attributes(module: torch.nn.Module) -> list[tuple[str, Tensor]]:
             tuples = [(k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)]
             return tuples
 
@@ -151,7 +149,7 @@ def get_parameter_dtype(parameter: torch.nn.Module) -> torch.dtype:
     except StopIteration:
         # For torch.nn.DataParallel compatibility in PyTorch 1.5
 
-        def find_tensor_attributes(module: torch.nn.Module) -> List[Tuple[str, Tensor]]:
+        def find_tensor_attributes(module: torch.nn.Module) -> list[tuple[str, Tensor]]:
             tuples = [(k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)]
             return tuples
 
@@ -251,7 +249,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
         """
         self.set_use_npu_flash_attention(False)
 
-    def set_use_memory_efficient_attention_xformers(self, valid: bool, attention_op: Optional[Callable] = None) -> None:
+    def set_use_memory_efficient_attention_xformers(self, valid: bool, attention_op: Callable | None = None) -> None:
         # Recursively walk through all the children.
         # Any children which exposes the set_use_memory_efficient_attention_xformers method
         # gets the message
@@ -266,7 +264,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
             if isinstance(module, torch.nn.Module):
                 fn_recursive_set_mem_eff(module)
 
-    def enable_xformers_memory_efficient_attention(self, attention_op: Optional[Callable] = None) -> None:
+    def enable_xformers_memory_efficient_attention(self, attention_op: Callable | None = None) -> None:
         r"""
         Enable memory efficient attention from [xFormers](https://facebookresearch.github.io/xformers/).
 
@@ -310,12 +308,12 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
 
     def save_pretrained(
         self,
-        save_directory: Union[str, os.PathLike],
+        save_directory: str | os.PathLike,
         is_main_process: bool = True,
-        save_function: Optional[Callable] = None,
+        save_function: Callable | None = None,
         safe_serialization: bool = True,
-        variant: Optional[str] = None,
-        max_shard_size: Union[int, str] = "10GB",
+        variant: str | None = None,
+        max_shard_size: int | str = "10GB",
         push_to_hub: bool = False,
         **kwargs,
     ):
@@ -449,7 +447,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
 
     @classmethod
     @validate_hf_hub_args
-    def from_pretrained(cls, pretrained_model_name_or_path: Optional[Union[str, os.PathLike]], **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike | None, **kwargs):
         r"""
         Instantiate a pretrained PyTorch model from a pretrained model configuration.
 
@@ -741,7 +739,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
                         commit_hash=commit_hash,
                     )
 
-                except IOError as e:
+                except OSError as e:
                     logger.error(f"An error occurred while trying to fetch {pretrained_model_name_or_path}: {e}")
                     if not allow_pickle:
                         raise
@@ -834,7 +832,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
 
                         if "'Attention' object has no attribute" in str(e):
                             logger.warning(
-                                f"Taking `{str(e)}` while using `accelerate.load_checkpoint_and_dispatch` to mean {pretrained_model_name_or_path}"
+                                f"Taking `{e!s}` while using `accelerate.load_checkpoint_and_dispatch` to mean {pretrained_model_name_or_path}"
                                 " was saved with deprecated attention block weight names. We will load it with the deprecated attention block"
                                 " names and convert them on the fly to the new attention block format. Please re-save the model after this conversion,"
                                 " so we don't have to do the on the fly renaming in the future. If the model is from a hub checkpoint,"
@@ -905,7 +903,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
         model,
         state_dict: OrderedDict,
         resolved_archive_file,
-        pretrained_model_name_or_path: Union[str, os.PathLike],
+        pretrained_model_name_or_path: str | os.PathLike,
         ignore_mismatched_sizes: bool = False,
     ):
         # Retrieve missing & unexpected_keys
@@ -1198,7 +1196,7 @@ class LegacyModelMixin(ModelMixin):
 
     @classmethod
     @validate_hf_hub_args
-    def from_pretrained(cls, pretrained_model_name_or_path: Optional[Union[str, os.PathLike]], **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike | None, **kwargs):
         # To prevent dependency import problem.
         from diffusers.models.model_loading_utils import _fetch_remapped_cls_from_config
 

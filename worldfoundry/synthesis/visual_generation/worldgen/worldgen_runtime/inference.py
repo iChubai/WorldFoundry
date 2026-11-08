@@ -6,7 +6,6 @@ from pathlib import Path
 
 import torch
 from PIL import Image
-
 from worldgen import WorldGen
 
 

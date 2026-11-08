@@ -12,8 +12,9 @@ executing checkpoint-side Python.
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -747,9 +748,9 @@ class XR1(nn.Module):
 
 
 __all__ = [
+    "XR1",
     "DiT",
     "MLPProjector",
     "TimestepEmbedder",
-    "XR1",
     "XR1Qwen3VLForConditionalGeneration",
 ]

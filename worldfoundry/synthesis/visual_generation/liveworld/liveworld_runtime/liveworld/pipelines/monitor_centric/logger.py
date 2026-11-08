@@ -65,7 +65,7 @@ class PipelineLogger:
 
     def __init__(self, use_color: bool = True):
         self.use_color = use_color and sys.stdout.isatty()
-        self._round_start: Optional[float] = None
+        self._round_start: float | None = None
         self._current_round: int = 0
 
     def _c(self, color: str, text: str) -> str:
@@ -185,7 +185,7 @@ class PipelineLogger:
         )
         self._emit("STAGE", msg, color=self.BOLD + self.CYAN, blank_before=True)
 
-    def detection(self, entities: List[str]):
+    def detection(self, entities: list[str]):
         if not entities:
             self._emit("DET", "entities=(none)")
             return

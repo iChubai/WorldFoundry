@@ -1,12 +1,12 @@
+import logging
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-import logging
-from diffusers.models.lora import LoRALinearLayer
 from diffusers.models.attention import Attention
+from diffusers.models.lora import LoRALinearLayer
 from diffusers.utils import USE_PEFT_BACKEND
-from typing import Optional
-
 from einops import rearrange
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ class AttnProcessor:
         self,
         attn: Attention,
         hidden_states: torch.FloatTensor,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        temb: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        temb: torch.FloatTensor | None = None,
         scale: float = 1.0,
         pose_feature=None,
     ) -> torch.Tensor:

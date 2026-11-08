@@ -11,8 +11,8 @@ try:
 except ImportError:  # pragma: no cover - optional typing dependency for lightweight imports.
     NDArray = Any
 from pydantic import BaseModel, Field, field_serializer
-from .constants import EmbodimentTag
 
+from .constants import EmbodimentTag
 
 # ==============================================================================
 # Rotation Representation
@@ -44,7 +44,7 @@ class RotationType(Enum):
 class LeRobotModalityField(BaseModel):
     """Base metadata for LeRobot modality field."""
 
-    original_key: Optional[str] = Field(default=None, description="Original key in LeRobot dataset")
+    original_key: str | None = Field(default=None, description="Original key in LeRobot dataset")
 
 
 class LeRobotStateActionMetadata(LeRobotModalityField):
@@ -58,17 +58,17 @@ class LeRobotStateActionMetadata(LeRobotModalityField):
         ...,
         description="End index of the modality in concatenated state/action vector",
     )
-    rotation_type: Optional[RotationType] = Field(default=None, description="The type of rotation for the modality")
+    rotation_type: RotationType | None = Field(default=None, description="The type of rotation for the modality")
     absolute: bool = Field(default=True, description="Whether the modality is absolute")
     dtype: str = Field(
         default="float64",
         description="The data type of the modality. Defaults to float64.",
     )
-    range: Optional[tuple[float, float]] = Field(
+    range: tuple[float, float] | None = Field(
         default=None,
         description="The range of the modality, if applicable. Defaults to None.",
     )
-    original_key: Optional[str] = Field(
+    original_key: str | None = Field(
         default=None,
         description="The original key of the modality in the LeRobot dataset.",
     )
@@ -77,7 +77,7 @@ class LeRobotStateActionMetadata(LeRobotModalityField):
 class LeRobotStateMetadata(LeRobotStateActionMetadata):
     """Metadata for a LeRobot state modality."""
 
-    original_key: Optional[str] = Field(
+    original_key: str | None = Field(
         default="observation.state",  # LeRobot convention for states
         description="The original key of the state modality in the LeRobot dataset",
     )
@@ -86,7 +86,7 @@ class LeRobotStateMetadata(LeRobotStateActionMetadata):
 class LeRobotActionMetadata(LeRobotStateActionMetadata):
     """Metadata for a LeRobot action modality."""
 
-    original_key: Optional[str] = Field(
+    original_key: str | None = Field(
         default="action",  # LeRobot convention for actions
         description="The original key of the action modality in the LeRobot dataset",
     )
@@ -107,7 +107,7 @@ class LeRobotModalityMetadata(BaseModel):
         ...,
         description="The metadata for the video modality. The keys are the new names of each video modality.",
     )
-    annotation: Optional[dict[str, LeRobotModalityField]] = Field(
+    annotation: dict[str, LeRobotModalityField] | None = Field(
         default=None,
         description="The metadata for the annotation modality. The keys are the new names of each annotation modality.",
     )
@@ -201,7 +201,7 @@ class VideoMetadata(BaseModel):
 
 class StateActionMetadata(BaseModel):
     absolute: bool = Field(..., description="Whether the state or action is absolute")
-    rotation_type: Optional[RotationType] = Field(None, description="Type of rotation, if any")
+    rotation_type: RotationType | None = Field(None, description="Type of rotation, if any")
     shape: tuple[int, ...] = Field(..., description="Shape of the state or action")
     continuous: bool = Field(..., description="Whether the state or action is continuous")
 

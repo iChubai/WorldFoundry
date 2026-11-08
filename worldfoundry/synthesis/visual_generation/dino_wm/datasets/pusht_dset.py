@@ -1,13 +1,15 @@
-import torch
-import decord
 import pickle
-import numpy as np
+from collections.abc import Callable
 from pathlib import Path
-from einops import rearrange
+from typing import Any, Optional
+
+import decord
+import numpy as np
+import torch
 from decord import VideoReader
-from typing import Callable, Optional
+from einops import rearrange
+
 from .traj_dset import TrajDataset, TrajSlicerDataset
-from typing import Optional, Callable, Any
 
 decord.bridge.set_bridge("torch")
 
@@ -23,8 +25,8 @@ PROPRIO_STD = torch.tensor([101.1202, 87.0112, 74.84556075, 74.14009094])
 class PushTDataset(TrajDataset):
     def __init__(
         self,
-        n_rollout: Optional[int] = None,
-        transform: Optional[Callable] = None,
+        n_rollout: int | None = None,
+        transform: Callable | None = None,
         data_path: str = "data/pusht_dataset",
         normalize_action: bool = True,
         relative=True,

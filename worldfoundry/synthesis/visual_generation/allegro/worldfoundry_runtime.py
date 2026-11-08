@@ -162,7 +162,7 @@ class Allegro:
         with third_party_lazy_import_guard():
             import transformers
 
-            getattr(transformers, "AutoImageProcessor")
+            transformers.AutoImageProcessor
             components = load_allegro_components()
             import torch
             from diffusers.schedulers import EulerAncestralDiscreteScheduler

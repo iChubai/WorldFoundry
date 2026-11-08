@@ -7,31 +7,28 @@
 import os
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-import cv2
-import torch
-import numpy as np
-import json
-import copy
-import torch
-import random
 import argparse
-import shutil
-import tempfile
-import subprocess
-import numpy as np
-import math
-
-import torch.multiprocessing as mp
-import torch.distributed as dist
-import pickle
+import copy
+import json
 import logging
-from io import BytesIO
+import math
 
 # import oss2 as oss
 import os.path as osp
-
+import pickle
+import random
+import shutil
+import subprocess
 import sys
+import tempfile
+from io import BytesIO
+
+import cv2
 import dwpose.util as util
+import numpy as np
+import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 from dwpose.wholebody import Wholebody
 
 
@@ -203,7 +200,7 @@ def mp_main(args):
             os.path.join(args.source_video_paths, frame_name) for frame_name in os.listdir(args.source_video_paths)
         ]
 
-    logger.info("There are {} videos for extracting poses".format(len(video_paths)))
+    logger.info(f"There are {len(video_paths)} videos for extracting poses")
 
     logger.info("LOAD: DW Pose Model")
     dwpose_model = DWposeDetector()

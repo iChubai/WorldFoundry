@@ -1,8 +1,9 @@
-import torch
-import numpy as np
 import os
-from rich import print
 from typing import Union
+
+import numpy as np
+import torch
+from rich import print
 
 from worldfoundry.core.model_loading.factory import (
     get_obj_from_str,
@@ -34,7 +35,7 @@ def load_model_from_config(config, sd, gpu=True, eval_mode=True):
     return {"model": model}
 
 
-def get_valid_dirs(dir1: str, dir2: Union[None, str] = None, dir3: Union[None, str] = None) -> Union[None, str]:
+def get_valid_dirs(dir1: str, dir2: None | str = None, dir3: None | str = None) -> None | str:
     if (dir1 is not None) and os.path.isdir(dir1):
         return dir1
     elif (dir2 is not None) and os.path.isdir(dir2):
@@ -45,7 +46,7 @@ def get_valid_dirs(dir1: str, dir2: Union[None, str] = None, dir3: Union[None, s
         return None
 
 
-def get_valid_paths(path1: str, path2: Union[None, str] = None, path3: Union[None, str] = None) -> Union[None, str]:
+def get_valid_paths(path1: str, path2: None | str = None, path3: None | str = None) -> None | str:
     if (path1 is not None) and os.path.isfile(path1):
         return path1
     elif (path2 is not None) and os.path.isfile(path2):

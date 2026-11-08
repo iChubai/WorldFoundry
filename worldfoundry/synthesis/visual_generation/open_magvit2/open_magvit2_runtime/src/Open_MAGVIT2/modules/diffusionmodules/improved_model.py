@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from einops import rearrange
 import torch.nn.functional as F
+from einops import rearrange
 
 
 def swish(x):
@@ -221,7 +221,7 @@ def depth_to_space(x: torch.Tensor, block_size: int) -> torch.Tensor:
     """
     # check inputs
     if x.dim() < 3:
-        raise ValueError(f"Expecting a channels-first (*CHW) tensor of at least 3 dimensions")
+        raise ValueError("Expecting a channels-first (*CHW) tensor of at least 3 dimensions")
     c, h, w = x.shape[-3:]
 
     s = block_size**2

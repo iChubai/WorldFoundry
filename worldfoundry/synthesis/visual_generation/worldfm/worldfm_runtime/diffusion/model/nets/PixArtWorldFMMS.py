@@ -5,33 +5,34 @@
 # Modified from PixArt-Sigma's repos:
 #   https://github.com/PixArt-alpha/PixArt-sigma/blob/master/diffusion/model/nets/PixArtMS.py
 # --------------------------------------------------------
-import torch
-import torch.nn as nn
 import os
 import traceback
+
+import torch
+import torch.nn as nn
 from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp
 
+from ...utils.logger import get_root_logger
 from ..builder import MODELS
 from ..utils import auto_grad_checkpoint, to_2tuple
+from .PixArtWorldFM import PixArtWorldFM, get_2d_sincos_pos_embed
 from .PixArtWorldFM_blocks import (
-    t2i_modulate,
-    CaptionEmbedder,
     AttentionKVCompress,
+    CaptionEmbedder,
     MultiHeadCrossAttention,
+    SizeEmbedder,
     T2IFinalLayer,
     TimestepEmbedder,
-    SizeEmbedder,
+    t2i_modulate,
 )
-from .PixArtWorldFM import PixArtWorldFM, get_2d_sincos_pos_embed
 from .plucker import compute_plucker_rays
 from .prope import (
     get_rope_coeffs_2d,
     prepare_prope_apply_fns,
-    reorder_tokens_to_camera_major,
     reorder_tokens_from_camera_major,
+    reorder_tokens_to_camera_major,
 )
-from ...utils.logger import get_root_logger
 
 
 class PatchEmbed(nn.Module):
@@ -116,14 +117,14 @@ class PixArtWorldFMMSBlock(nn.Module):
                 HW=HW,
                 block_id=block_id,
                 use_prope=bool(kwargs.get("use_prope", False)),
-                prope_viewmats=kwargs.get("prope_viewmats", None),
-                prope_Ks=kwargs.get("prope_Ks", None),
-                prope_image_hw=kwargs.get("prope_image_hw", None),
-                prope_cache=kwargs.get("prope_cache", None),
+                prope_viewmats=kwargs.get("prope_viewmats"),
+                prope_Ks=kwargs.get("prope_Ks"),
+                prope_image_hw=kwargs.get("prope_image_hw"),
+                prope_cache=kwargs.get("prope_cache"),
             )
         )
         if not self.disable_cross_attn:
-            cond2_tokens = kwargs.get("cond2_tokens", None)
+            cond2_tokens = kwargs.get("cond2_tokens")
             if cond2_tokens is not None:
                 # In cond2-cross-attn mode, attend to cond2 tokens (reference image).
                 # IMPORTANT: MultiHeadCrossAttention flattens batch into a single sequence internally;
@@ -148,7 +149,7 @@ class PixArtWorldFMMSBlock(nn.Module):
                                 _rank0 = dist.get_rank() == 0
                         except Exception:
                             _rank0 = True
-                        debug_step = kwargs.get("debug_step", None)
+                        debug_step = kwargs.get("debug_step")
                         debug_steps = int(kwargs.get("debug_steps", 1) or 1)
                         if (not _rank0) or (debug_step is not None and int(debug_step) >= debug_steps):
                             raise RuntimeError("skip")
@@ -317,7 +318,7 @@ class PixArtWorldFMMS(PixArtWorldFM):
         # This allows diffusion/model/gaussian_diffusion.py to remain generic
         use_cond2_cross_attn = bool(kwargs.get("use_cond2_cross_attn", False))
         debug_cond2_stats = bool(kwargs.get("debug_cond2_stats", False))
-        debug_step = kwargs.get("debug_step", None)
+        debug_step = kwargs.get("debug_step")
         debug_steps = int(kwargs.get("debug_steps", 1) or 1)
         # rank0-only debug to avoid 4x log spam in DDP
         _rank0 = True
@@ -382,7 +383,7 @@ class PixArtWorldFMMS(PixArtWorldFM):
         if kwargs.get("tri_condition", False):
             cond1 = kwargs["cond1"]
             cond2 = kwargs["cond2"]
-            cond1_mask_latent = kwargs.get("cond1_mask_latent", None)
+            cond1_mask_latent = kwargs.get("cond1_mask_latent")
             cond1_mask_inject_mode = kwargs.get("cond1_mask_inject_mode", "add")
             # Only concat if not already concatenated (check width or explicit flag if needed)
             # Here we assume if x matches cond width, it's likely just the target
@@ -565,13 +566,13 @@ class PixArtWorldFMMS(PixArtWorldFM):
         if (
             kwargs.get("use_prope", False)
             and ("prope_viewmats" in kwargs)
-            and (kwargs.get("prope_viewmats", None) is not None)
+            and (kwargs.get("prope_viewmats") is not None)
             and bool(kwargs.get("use_prope_cache", True))
         ):
             try:
-                vm_in = kwargs.get("prope_viewmats", None)
-                Ks_in = kwargs.get("prope_Ks", None)
-                ihw_in = kwargs.get("prope_image_hw", None)
+                vm_in = kwargs.get("prope_viewmats")
+                Ks_in = kwargs.get("prope_Ks")
+                ihw_in = kwargs.get("prope_image_hw")
                 if ihw_in is None and data_info is not None and ("img_hw" in data_info):
                     ihw_in = data_info["img_hw"]
                 cameras = int(vm_in.shape[1])

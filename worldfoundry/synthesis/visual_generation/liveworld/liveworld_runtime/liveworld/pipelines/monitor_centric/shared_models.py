@@ -14,16 +14,31 @@ from typing import Optional
 
 import torch
 
+# isort: split
 from .observer_adapter import ObserverAdapter
+
+# isort: split
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (
     Sam3VideoSegmenter,
 )
+
+# isort: split
 from .entity_matcher import EntityMatcher
+
+# isort: split
 from .helpers import get_project_root, load_unified_backbone_pipeline, parse_target_resolution
+
+# isort: split
+# isort: split
 from .logger import logger
+
+# isort: split
+# isort: split
 from liveworld.pipelines.pointcloud_updater import PointCloudUpdater, create_pointcloud_updater
 
 
@@ -35,7 +50,7 @@ class SharedModels:
     qwen_extractor: Qwen3VLEntityExtractor
     sam3_segmenter: Sam3VideoSegmenter
     pointcloud_handler: PointCloudUpdater
-    entity_matcher: Optional[EntityMatcher]
+    entity_matcher: EntityMatcher | None
 
 
 def create_shared_models(config: dict) -> SharedModels:

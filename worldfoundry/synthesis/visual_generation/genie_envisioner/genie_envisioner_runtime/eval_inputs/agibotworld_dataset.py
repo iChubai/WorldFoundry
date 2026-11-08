@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -8,27 +8,25 @@ import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import json
-import random
-import math
-import numpy as np
-
-import torch
-from torch.utils.data.dataset import Dataset
-from einops import rearrange
 import glob
-from moviepy.editor import VideoFileClip
-import torchvision.transforms as transforms
-from tqdm import tqdm
-import torch.nn.functional as F
+import json
+import math
+import random
+
 import cv2
-
+import numpy as np
+import torch
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+from einops import rearrange
 from eval_inputs.utils.domain_table import DomainTable
-from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
 from eval_inputs.utils.get_actions import parse_h5
-
+from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
+from eval_inputs.utils.utils import gen_crop_config, intrin_crop_transform, intrinsic_transform
+from moviepy.editor import VideoFileClip
+from torch.utils.data.dataset import Dataset
+from tqdm import tqdm
 from utils import zero_rank_print
-from eval_inputs.utils.utils import intrinsic_transform, gen_crop_config, intrin_crop_transform
 
 
 class AgiBotWorld(Dataset):
@@ -97,7 +95,7 @@ class AgiBotWorld(Dataset):
         fix_mem_idx:              used in validation stage only, set memory indexes to fix_mem_idx
         """
 
-        zero_rank_print(f"loading annotations...")
+        zero_rank_print("loading annotations...")
 
         assert action_type in ["delta", "absolute", "relative"]
         self.action_type = action_type
@@ -117,10 +115,10 @@ class AgiBotWorld(Dataset):
 
         if specific_tasks is None and dataset_info_cache_path is not None and os.path.exists(dataset_info_cache_path):
             zero_rank_print(f"Load Cache Dataset Information from {dataset_info_cache_path}")
-            with open(dataset_info_cache_path, "r") as f:
+            with open(dataset_info_cache_path) as f:
                 self.dataset = json.load(f)
         else:
-            for _data_root, _domain_name in zip(self.data_roots, domains):
+            for _data_root, _domain_name in zip(self.data_roots, domains, strict=False):
                 valid_tasks = os.listdir(os.path.join(_data_root, "observations"))
                 valid_tasks.sort()
                 for task in tqdm(valid_tasks):
@@ -129,7 +127,7 @@ class AgiBotWorld(Dataset):
                             continue
                         zero_rank_print(f"preparing data info: task-{task}")
                         task_infos = dict()
-                        with open(os.path.join(task_info_root, f"task_{task}.json"), "r") as f:
+                        with open(os.path.join(task_info_root, f"task_{task}.json")) as f:
                             for info in json.load(f):
                                 task_infos.update({str(info["episode_id"]): (info["label_info"], info["task_name"])})
                         episode_list = list(task_infos.keys())
@@ -205,13 +203,13 @@ class AgiBotWorld(Dataset):
         self.ignore_seek = ignore_seek
 
         if task_recap_file is not None:
-            with open(task_recap_file, "r", encoding="UTF-8") as f:
+            with open(task_recap_file, encoding="UTF-8") as f:
                 self.task_recap_map = json.load(f)
         else:
             self.task_recap_map = None
 
         if step_recap_file is not None:
-            with open(step_recap_file, "r", encoding="UTF-8") as f:
+            with open(step_recap_file, encoding="UTF-8") as f:
                 self.step_recap_map = json.load(f)
         else:
             self.step_recap_map = None
@@ -229,9 +227,7 @@ class AgiBotWorld(Dataset):
             self.StatisticInfo = load_stat_file(stat_file)
 
     def get_total_timesteps(self, data_root, cam_name):
-        with open(
-            os.path.join(data_root, "parameters", "camera", cam_name + "_extrinsic_params_aligned.json"), "r"
-        ) as f:
+        with open(os.path.join(data_root, "parameters", "camera", cam_name + "_extrinsic_params_aligned.json")) as f:
             info = json.load(f)
         total_frames = len(info)
         return total_frames
@@ -257,7 +253,7 @@ class AgiBotWorld(Dataset):
         indexes = np.array(list(range(chunk_end - self.sample_n_frames, chunk_end)))
         indexes = np.clip(indexes, a_min=1, a_max=total_frames - 1).tolist()
         video_end = indexes[-self.action_chunk :]
-        mem_candidates = [indexes[int(i)] for i in range(0, self.sample_n_frames - self.action_chunk)]
+        mem_candidates = [indexes[int(i)] for i in range(self.sample_n_frames - self.action_chunk)]
         if self.previous_pick_mode == "uniform":
             mem_indexes = [
                 mem_candidates[int(i)] for i in np.linspace(0, len(mem_candidates) - 1, self.n_previous).tolist()
@@ -268,7 +264,7 @@ class AgiBotWorld(Dataset):
                 mem_candidates[i]
                 for i in sorted(
                     np.random.choice(
-                        list(range(0, len(mem_candidates) - 1)), size=self.n_previous - 1, replace=False
+                        list(range(len(mem_candidates) - 1)), size=self.n_previous - 1, replace=False
                     ).tolist()
                 )
             ] + [mem_candidates[-1]]
@@ -354,7 +350,7 @@ class AgiBotWorld(Dataset):
         intrinsic_list = []
         c2ws_list = []
         for cam_name in cam_name_list:
-            with open(os.path.join(data_root, "parameters", "camera", cam_name + "_intrinsic_params.json"), "r") as f:
+            with open(os.path.join(data_root, "parameters", "camera", cam_name + "_intrinsic_params.json")) as f:
                 info = json.load(f)["intrinsic"]
             intrinsic = torch.eye(3, dtype=torch.float)
             intrinsic[0, 0] = info["fx"]
@@ -364,7 +360,7 @@ class AgiBotWorld(Dataset):
             intrinsic_list.append(intrinsic)
 
             with open(
-                os.path.join(data_root, "parameters", "camera", cam_name + "_extrinsic_params_aligned.json"), "r"
+                os.path.join(data_root, "parameters", "camera", cam_name + "_extrinsic_params_aligned.json")
             ) as f:
                 info = json.load(f)
             c2ws = []

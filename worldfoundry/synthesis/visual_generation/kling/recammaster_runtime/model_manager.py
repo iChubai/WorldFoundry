@@ -1,19 +1,24 @@
-import os, torch, json, importlib
+import importlib
+import json
+import os
 from typing import List
+
+import torch
+
+from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict, split_state_dict_with_prefix
+from worldfoundry.core.vram import init_weights_on_device
 
 from .models.lora import get_lora_loaders
 from .recammaster_model_registry import (
-    model_loader_configs,
     huggingface_model_loader_configs,
+    model_loader_configs,
     patch_model_loader_configs,
 )
-from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict, split_state_dict_with_prefix
-from worldfoundry.core.vram import init_weights_on_device
 
 
 def load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device):
     loaded_model_names, loaded_models = [], []
-    for model_name, model_class in zip(model_names, model_classes):
+    for model_name, model_class in zip(model_names, model_classes, strict=False):
         print(f"    model_name: {model_name} model_class: {model_class.__name__}")
         state_dict_converter = model_class.state_dict_converter()
         if model_resource == "civitai":
@@ -39,7 +44,7 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
 
 def load_model_from_huggingface_folder(file_path, model_names, model_classes, torch_dtype, device):
     loaded_model_names, loaded_models = [], []
-    for model_name, model_class in zip(model_names, model_classes):
+    for model_name, model_class in zip(model_names, model_classes, strict=False):
         if torch_dtype in [torch.float32, torch.float16, torch.bfloat16]:
             model = model_class.from_pretrained(file_path, torch_dtype=torch_dtype).eval()
         else:
@@ -73,7 +78,7 @@ def load_patch_model_from_single_file(
     state_dict, model_names, model_classes, extra_kwargs, model_manager, torch_dtype, device
 ):
     loaded_model_names, loaded_models = [], []
-    for model_name, model_class in zip(model_names, model_classes):
+    for model_name, model_class in zip(model_names, model_classes, strict=False):
         while True:
             for model_id in range(len(model_manager.model)):
                 base_model_name = model_manager.model_name[model_id]
@@ -206,14 +211,14 @@ class ModelDetectorFromHuggingfaceFolder:
         file_list = os.listdir(file_path)
         if "config.json" not in file_list:
             return False
-        with open(os.path.join(file_path, "config.json"), "r") as f:
+        with open(os.path.join(file_path, "config.json")) as f:
             config = json.load(f)
         if "architectures" not in config and "_class_name" not in config:
             return False
         return True
 
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
-        with open(os.path.join(file_path, "config.json"), "r") as f:
+        with open(os.path.join(file_path, "config.json")) as f:
             config = json.load(f)
         loaded_model_names, loaded_models = [], []
         architectures = config["architectures"] if "architectures" in config else [config["_class_name"]]
@@ -271,7 +276,7 @@ class ModelManager:
         self,
         torch_dtype=torch.float16,
         device="cuda",
-        file_path_list: List[str] = [],
+        file_path_list: list[str] = [],
     ):
         self.torch_dtype = torch_dtype
         self.device = device
@@ -296,7 +301,7 @@ class ModelManager:
         model_names, models = load_model_from_single_file(
             state_dict, model_names, model_classes, model_resource, self.torch_dtype, self.device
         )
-        for model_name, model in zip(model_names, models):
+        for model_name, model in zip(model_names, models, strict=False):
             self.model.append(model)
             self.model_path.append(file_path)
             self.model_name.append(model_name)
@@ -307,7 +312,7 @@ class ModelManager:
         model_names, models = load_model_from_huggingface_folder(
             file_path, model_names, model_classes, self.torch_dtype, self.device
         )
-        for model_name, model in zip(model_names, models):
+        for model_name, model in zip(model_names, models, strict=False):
             self.model.append(model)
             self.model_path.append(file_path)
             self.model_name.append(model_name)
@@ -320,7 +325,7 @@ class ModelManager:
         model_names, models = load_patch_model_from_single_file(
             state_dict, model_names, model_classes, extra_kwargs, self, self.torch_dtype, self.device
         )
-        for model_name, model in zip(model_names, models):
+        for model_name, model in zip(model_names, models, strict=False):
             self.model.append(model)
             self.model_path.append(file_path)
             self.model_name.append(model_name)
@@ -335,7 +340,7 @@ class ModelManager:
             is_loaded = False
             if len(state_dict) == 0:
                 state_dict = load_state_dict(file_path)
-            for model_name, model, model_path in zip(self.model_name, self.model, self.model_path):
+            for model_name, model, model_path in zip(self.model_name, self.model, self.model_path, strict=False):
                 for lora in get_lora_loaders():
                     match_results = lora.match(model, state_dict)
                     if match_results is not None:
@@ -371,14 +376,14 @@ class ModelManager:
                     allowed_model_names=model_names,
                     model_manager=self,
                 )
-                for model_name, model in zip(model_names, models):
+                for model_name, model in zip(model_names, models, strict=False):
                     self.model.append(model)
                     self.model_path.append(file_path)
                     self.model_name.append(model_name)
                 print(f"    The following models are loaded: {model_names}.")
                 break
         else:
-            print(f"    We cannot detect the model type. No models are loaded.")
+            print("    We cannot detect the model type. No models are loaded.")
 
     def load_models(self, file_path_list, model_names=None, device=None, torch_dtype=None):
         for file_path in file_path_list:
@@ -387,7 +392,7 @@ class ModelManager:
     def fetch_model(self, model_name, file_path=None, require_model_path=False):
         fetched_models = []
         fetched_model_paths = []
-        for model, model_path, model_name_ in zip(self.model, self.model_path, self.model_name):
+        for model, model_path, model_name_ in zip(self.model, self.model_path, self.model_name, strict=False):
             if file_path is not None and file_path != model_path:
                 continue
             if model_name == model_name_:

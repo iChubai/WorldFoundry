@@ -1,22 +1,25 @@
-import torch
-from einops import rearrange, repeat
 from typing import Any, Dict, Optional, Tuple
+
 import torch
 import torch.nn.functional as F
-from torch import nn
 from diffusers.models.attention_processor import Attention as Attention_
+from einops import rearrange, repeat
+from torch import nn
 
 try:
     import torch_npu
-    from opensora.npu_config import npu_config, set_run_dtype
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info as xccl_info
+
     from opensora.acceleration.communications import all_to_all_SBH
+    from opensora.acceleration.parallel_states import get_sequence_parallel_state
+    from opensora.acceleration.parallel_states import hccl_info as xccl_info
+    from opensora.npu_config import npu_config, set_run_dtype
 except:
     torch_npu = None
     npu_config = None
     set_run_dtype = None
-    from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info as xccl_info
     from opensora.utils.communications import all_to_all_SBH
+    from opensora.utils.parallel_states import get_sequence_parallel_state
+    from opensora.utils.parallel_states import nccl_info as xccl_info
 
 
 class PatchEmbed2D(nn.Module):
@@ -42,7 +45,7 @@ class PatchEmbed2D(nn.Module):
         return latent
 
 
-class PositionGetter3D(object):
+class PositionGetter3D:
     """return positions of patches"""
 
     def __init__(
@@ -51,7 +54,7 @@ class PositionGetter3D(object):
         self.cache_positions = {}
 
     def __call__(self, b, t, h, w, device):
-        if not (b, t, h, w) in self.cache_positions:
+        if (b, t, h, w) not in self.cache_positions:
             x = torch.arange(w, device=device)
             y = torch.arange(h, device=device)
             z = torch.arange(t, device=device)

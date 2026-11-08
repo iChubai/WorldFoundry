@@ -10,9 +10,10 @@ vendored configurations and checkpoints provided within the WorldFoundry framewo
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import DEFAULT_SHARED_HFD_ROOT
 from worldfoundry.evaluation.utils import worldfoundry_data_path
@@ -200,7 +201,7 @@ class MotionCtrlRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "MotionCtrlRuntime":
+    ) -> MotionCtrlRuntime:
         """
         Factory method to build a lazy MotionCtrl runtime instance.
         It parses various ways of specifying model paths and options.

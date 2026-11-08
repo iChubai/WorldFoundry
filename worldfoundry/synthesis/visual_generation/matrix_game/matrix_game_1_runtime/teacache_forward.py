@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional, Union
 import numpy as np
 import torch
 
-from worldfoundry.core.nn import modulate_sequence as modulate
 from worldfoundry.core.attention import get_cu_seqlens
+from worldfoundry.core.nn import modulate_sequence as modulate
 
 
 def teacache_forward(
@@ -14,13 +14,13 @@ def teacache_forward(
     timestep: torch.Tensor,  # Should be in range(0, 1000).
     encoder_hidden_states: torch.Tensor = None,
     encoder_attention_mask: torch.Tensor = None,  # Now we don't use it.
-    freqs_cos: Optional[torch.Tensor] = None,
-    freqs_sin: Optional[torch.Tensor] = None,
+    freqs_cos: torch.Tensor | None = None,
+    freqs_sin: torch.Tensor | None = None,
     guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
     mouse_condition=None,
     keyboard_condition=None,
     return_dict: bool = True,
-) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+) -> torch.Tensor | dict[str, torch.Tensor]:
     x = hidden_states
     t = timestep
     text_states, text_states_2 = encoder_hidden_states
@@ -134,8 +134,8 @@ def teacache_forward(
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
-                    image_kwargs: Dict[str, Any] = {
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -159,7 +159,7 @@ def teacache_forward(
                         **ckpt_kwargs,
                     )
                 else:
-                    image_kwargs: Dict[str, Any] = {
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -195,8 +195,8 @@ def teacache_forward(
 
                             return custom_forward
 
-                        ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
-                        image_kwargs: Dict[str, Any] = {
+                        ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
+                        image_kwargs: dict[str, Any] = {
                             "tt": hidden_states.shape[2] // self.patch_size[0],
                             "th": hidden_states.shape[3] // self.patch_size[1],
                             "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -220,7 +220,7 @@ def teacache_forward(
                             **ckpt_kwargs,
                         )
                     else:
-                        image_kwargs: Dict[str, Any] = {
+                        image_kwargs: dict[str, Any] = {
                             "tt": hidden_states.shape[2] // self.patch_size[0],
                             "th": hidden_states.shape[3] // self.patch_size[1],
                             "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -257,8 +257,8 @@ def teacache_forward(
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
-                image_kwargs: Dict[str, Any] = {
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
+                image_kwargs: dict[str, Any] = {
                     "tt": hidden_states.shape[2] // self.patch_size[0],
                     "th": hidden_states.shape[3] // self.patch_size[1],
                     "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -282,7 +282,7 @@ def teacache_forward(
                     **ckpt_kwargs,
                 )
             else:
-                image_kwargs: Dict[str, Any] = {
+                image_kwargs: dict[str, Any] = {
                     "tt": hidden_states.shape[2] // self.patch_size[0],
                     "th": hidden_states.shape[3] // self.patch_size[1],
                     "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -318,8 +318,8 @@ def teacache_forward(
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
-                    image_kwargs: Dict[str, Any] = {
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -343,7 +343,7 @@ def teacache_forward(
                         **ckpt_kwargs,
                     )
                 else:
-                    image_kwargs: Dict[str, Any] = {
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],

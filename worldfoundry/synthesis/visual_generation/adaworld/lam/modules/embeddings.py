@@ -5,7 +5,7 @@ from typing import Literal, Union
 
 import torch
 from einops import rearrange, repeat
-from torch import nn, einsum, broadcast_tensors, Tensor
+from torch import Tensor, broadcast_tensors, einsum, nn
 from torch.amp import autocast
 from torch.nn import Module
 
@@ -70,7 +70,7 @@ class RotaryEmbedding(Module):
     def __init__(
         self,
         dim,
-        custom_freqs: Union[Tensor, None] = None,
+        custom_freqs: Tensor | None = None,
         freqs_for: Literal["lang", "pixel", "constant"] = "lang",
         theta=10000,
         max_freq=10,
@@ -179,7 +179,7 @@ class RotaryEmbedding(Module):
         rotated_k = rotated_k.type(k.dtype)
         return rotated_q, rotated_k
 
-    def get_scale(self, t: Tensor, seq_len: Union[int, None] = None, offset=0):
+    def get_scale(self, t: Tensor, seq_len: int | None = None, offset=0):
         assert self.use_xpos
 
         should_cache = self.cache_if_possible and exists(seq_len) and (offset + seq_len) <= self.cache_max_seq_len

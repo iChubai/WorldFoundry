@@ -10,8 +10,9 @@ imports an adjacent source checkout.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -286,7 +287,7 @@ class ActionHeadConfig:
     diffusion_model_cfg: Mapping[str, Any] | None = None
 
     @classmethod
-    def from_mapping(cls, value: Mapping[str, Any]) -> "ActionHeadConfig":
+    def from_mapping(cls, value: Mapping[str, Any]) -> ActionHeadConfig:
         fields = cls.__dataclass_fields__
         return cls(**{key: item for key, item in value.items() if key in fields})
 

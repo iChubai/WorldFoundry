@@ -58,13 +58,13 @@ class CogVideoXEncoder3D(nn.Module):
         self,
         in_channels: int = 3,
         out_channels: int = 16,
-        down_block_types: Tuple[str, ...] = (
+        down_block_types: tuple[str, ...] = (
             "CogVideoXDownBlock3D",
             "CogVideoXDownBlock3D",
             "CogVideoXDownBlock3D",
             "CogVideoXDownBlock3D",
         ),
-        block_out_channels: Tuple[int, ...] = (128, 256, 256, 512),
+        block_out_channels: tuple[int, ...] = (128, 256, 256, 512),
         layers_per_block: int = 3,
         act_fn: str = "silu",
         norm_eps: float = 1e-6,
@@ -133,7 +133,7 @@ class CogVideoXEncoder3D(nn.Module):
                 logger.debug(f"Clearing fake Context Parallel cache for layer: {name}")
                 module._clear_fake_context_parallel_cache()
 
-    def forward(self, sample: torch.Tensor, temb: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, sample: torch.Tensor, temb: torch.Tensor | None = None) -> torch.Tensor:
         r"""The forward method of the `CogVideoXEncoder3D` class."""
         hidden_states = self.conv_in(sample)
 
@@ -198,13 +198,13 @@ class CogVideoXDecoder3D(nn.Module):
         self,
         in_channels: int = 16,
         out_channels: int = 3,
-        up_block_types: Tuple[str, ...] = (
+        up_block_types: tuple[str, ...] = (
             "CogVideoXUpBlock3D",
             "CogVideoXUpBlock3D",
             "CogVideoXUpBlock3D",
             "CogVideoXUpBlock3D",
         ),
-        block_out_channels: Tuple[int, ...] = (128, 256, 256, 512),
+        block_out_channels: tuple[int, ...] = (128, 256, 256, 512),
         layers_per_block: int = 3,
         act_fn: str = "silu",
         norm_eps: float = 1e-6,
@@ -280,7 +280,7 @@ class CogVideoXDecoder3D(nn.Module):
                 logger.debug(f"Clearing fake Context Parallel cache for layer: {name}")
                 module._clear_fake_context_parallel_cache()
 
-    def forward(self, sample: torch.Tensor, temb: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, sample: torch.Tensor, temb: torch.Tensor | None = None) -> torch.Tensor:
         r"""The forward method of the `CogVideoXDecoder3D` class."""
         hidden_states = self.conv_in(sample)
 

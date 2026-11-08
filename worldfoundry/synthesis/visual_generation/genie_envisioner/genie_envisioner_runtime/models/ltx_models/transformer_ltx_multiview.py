@@ -19,24 +19,20 @@ from typing import Any, Dict, Optional, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from einops import rearrange
-
+import torch.utils.checkpoint
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
-from diffusers.utils import USE_PEFT_BACKEND, is_torch_version, logging, scale_lora_layers, unscale_lora_layers
-from diffusers.utils.torch_utils import maybe_allow_in_graph
 from diffusers.models.attention import FeedForward
 from diffusers.models.embeddings import PixArtAlphaTextProjection
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import AdaLayerNormSingle, RMSNorm
-import torch.utils.checkpoint
-
+from diffusers.utils import USE_PEFT_BACKEND, is_torch_version, logging, scale_lora_layers, unscale_lora_layers
+from diffusers.utils.torch_utils import maybe_allow_in_graph
+from einops import rearrange
+from models.action_patches.patches import add_action_expert, preprocessing_action_states
 from models.ltx_models.ltx_attention_processor import Attention
 
-
-from models.action_patches.patches import preprocessing_action_states, add_action_expert
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -58,9 +54,9 @@ class LTXVideoAttentionProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        image_rotary_emb: torch.Tensor | None = None,
         n_view: int = 1,
         cross_view_attn: bool = False,
     ) -> torch.Tensor:
@@ -149,12 +145,12 @@ class LTXVideoRotaryPosEmbed(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        rope_interpolation_scale: Optional[Tuple[torch.Tensor, float, float]] = None,
+        rope_interpolation_scale: tuple[torch.Tensor, float, float] | None = None,
         num_frames=None,
         height=None,
         width=None,
         **kwargs,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         batch_size = hidden_states.shape[0]
 
         # Always compute rope in fp32
@@ -275,11 +271,11 @@ class LTXVideoTransformerBlock(nn.Module):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         n_view: int = None,
         cross_view_attn: bool = False,
-        self_attention_mask: Optional[torch.Tensor] = None,
+        self_attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         batch_size = hidden_states.size(0)
         norm_hidden_states = self.norm1(hidden_states)
@@ -446,7 +442,7 @@ class LTXVideoTransformer3DModel(ModelMixin, ConfigMixin, FromOriginalModelMixin
         timestep: torch.LongTensor = None,
         encoder_attention_mask: torch.Tensor = None,
         n_view: int = 1,
-        rope_interpolation_scale: Optional[Tuple[float, float, float]] = None,
+        rope_interpolation_scale: tuple[float, float, float] | None = None,
         return_dict: bool = True,
         action_states: torch.Tensor = None,
         action_timestep: torch.LongTensor = None,
@@ -524,7 +520,7 @@ class LTXVideoTransformer3DModel(ModelMixin, ConfigMixin, FromOriginalModelMixin
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
 
                 if return_video or store_buffer:
                     hidden_states = torch.utils.checkpoint.checkpoint(

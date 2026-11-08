@@ -15,16 +15,17 @@
 import gc
 import math
 from collections import Counter
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from queue import Queue
-from typing import Dict, Generator, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch
 import torch.distributed as dist
+from inference.common.timer import event_path_timer
 from tqdm import tqdm
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
-from inference.common.timer import event_path_timer
 from worldfoundry.core import InferenceParams, print_rank_0
 from worldfoundry.core.distributed import pp_scheduler
 
@@ -36,13 +37,13 @@ class InferenceInput:
     caption_embs: torch.Tensor
     emb_masks: torch.Tensor
     y: torch.Tensor
-    prefix_video: Union[torch.Tensor, None]
-    latent_size: Tuple[int]
-    t_schedule_config: Dict = field(default_factory=dict)
+    prefix_video: torch.Tensor | None
+    latent_size: tuple[int]
+    t_schedule_config: dict = field(default_factory=dict)
     num_steps: int = None
     vae_ckpt: str = None
-    task_idx_list: List[int] = None
-    report_chunk_num_list: List[int] = None
+    task_idx_list: list[int] = None
+    report_chunk_num_list: list[int] = None
     chunk_num: int = None
 
 
@@ -52,7 +53,7 @@ def _process_txt_embeddings(
     null_emb: torch.Tensor,
     infer_chunk_num: int,
     clean_chunk_num: int,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     special_token_keys = get_special_token_keys()
     print_rank_0(f"special_token = {list(special_token_keys)}")
 
@@ -72,7 +73,7 @@ def _process_txt_embeddings(
 
 def _process_null_embeddings(
     null_caption_embedding: torch.Tensor, null_emb_masks: torch.Tensor, infer_chunk_num: int
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     null_embs = null_caption_embedding.repeat(1, infer_chunk_num, 1, 1)
     negative_special_token_keys = get_negative_special_token_keys()
     if negative_special_token_keys:
@@ -186,7 +187,7 @@ def generate_sequences(chunk_num, window_size, chunk_offset):
     return clip_start, clip_end, t_start, t_end
 
 
-def init_t(t_schedule_config: Union[Dict, None], num_steps: int, device: torch.device, shortcut_mode: str = ""):
+def init_t(t_schedule_config: dict | None, num_steps: int, device: torch.device, shortcut_mode: str = ""):
     """Init Timestep and Transform t"""
     if num_steps == 12:
         base_t = torch.linspace(0, 1, 4 + 1, device=device) / 4
@@ -255,7 +256,7 @@ def find_dit_model(model):
 
 
 class SampleTransport:
-    def __init__(self, model: torch.nn.Module, transport_inputs: List[InferenceInput], device: torch.device):
+    def __init__(self, model: torch.nn.Module, transport_inputs: list[InferenceInput], device: torch.device):
         # ========= Input Tensor =========
         self.model = model
         self.transport_inputs = transport_inputs
@@ -270,14 +271,14 @@ class SampleTransport:
 
         # ========= Init Batched Inputs and Work Queue =========
         self.work_queue = Queue()
-        self.chunk_denoise_count: List[Counter] = []
-        self.ts: List[torch.Tensor] = []
-        self.time_interval: List[torch.Tensor] = []
-        self.xs: List[torch.Tensor] = []
-        self.x_chunks: List[torch.Tensor] = []
-        self.velocities: List[torch.Tensor] = []
-        self.time_record: List[tqdm] = []
-        self.inference_params: List[InferenceParams] = []
+        self.chunk_denoise_count: list[Counter] = []
+        self.ts: list[torch.Tensor] = []
+        self.time_interval: list[torch.Tensor] = []
+        self.xs: list[torch.Tensor] = []
+        self.x_chunks: list[torch.Tensor] = []
+        self.velocities: list[torch.Tensor] = []
+        self.time_record: list[tqdm] = []
+        self.inference_params: list[InferenceParams] = []
         self.init_work_queue()
 
     def init_work_queue(self) -> None:
@@ -302,7 +303,11 @@ class SampleTransport:
             if torch.distributed.get_rank() == 0:
                 report_chunk_num = sum(
                     dict(
-                        zip(self.transport_inputs[idx].task_idx_list, self.transport_inputs[idx].report_chunk_num_list)
+                        zip(
+                            self.transport_inputs[idx].task_idx_list,
+                            self.transport_inputs[idx].report_chunk_num_list,
+                            strict=False,
+                        )
                     ).values()
                 )
 
@@ -442,7 +447,7 @@ class SampleTransport:
 
     def try_pad_prefix_video(
         self, infer_idx: int, x_chunk: torch.Tensor, t: torch.Tensor, prefix_video_start: int
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Non-Const Method"""
         prefix_length = self.transport_inputs[infer_idx].prefix_video.size(2)
 
@@ -483,9 +488,9 @@ class SampleTransport:
         infer_idx: int,
         slice_point: int,
         denoising_range_num: int,
-        noise2clean_kvrange: List[int],
+        noise2clean_kvrange: list[int],
         clean_chunk_kvrange: int,
-        denoise_step_of_each_chunk: List[int],
+        denoise_step_of_each_chunk: list[int],
     ) -> torch.Tensor:
         """Const Method"""
         assert len(denoise_step_of_each_chunk) == denoising_range_num
@@ -525,7 +530,7 @@ class SampleTransport:
         return k_range
 
     def generate_kvrange_for_denoising_video(
-        self, infer_idx: int, slice_point: int, denoising_range_num: int, denoise_step_of_each_chunk: List[int]
+        self, infer_idx: int, slice_point: int, denoising_range_num: int, denoise_step_of_each_chunk: list[int]
     ) -> torch.Tensor:
         """Const Method"""
         noise2clean_kvrange = self.runtime_config.noise2clean_kvrange
@@ -567,7 +572,7 @@ class SampleTransport:
 
     def generate_denoise_status_and_sequences(
         self, infer_idx: int, cur_denoise_step: int
-    ) -> Tuple[Tuple[int, int, int], Tuple[int, int, int, int, int]]:
+    ) -> tuple[tuple[int, int, int], tuple[int, int, int, int, int]]:
         """Const Method"""
         chunk_offset = 0
         if self.transport_inputs[infer_idx].prefix_video is not None:
@@ -798,7 +803,7 @@ class SampleTransport:
 
 def generate_per_chunk(
     model: torch.nn.Module, prefix_video: torch.Tensor, caption_embs: torch.Tensor, emb_masks: torch.Tensor
-) -> Generator[Tuple[int, int, int, int, int, torch.Tensor], None, None]:
+) -> Generator[tuple[int, int, int, int, int, torch.Tensor], None, None]:
     device = f"cuda:{torch.cuda.current_device()}"
     transport_inputs: InferenceInput = extract_feature_for_inference(model, prefix_video, caption_embs, emb_masks)
     sample_transport = SampleTransport(model=model, transport_inputs=[transport_inputs], device=device)

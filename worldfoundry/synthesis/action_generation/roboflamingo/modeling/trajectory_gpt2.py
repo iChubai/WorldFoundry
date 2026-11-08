@@ -1,5 +1,4 @@
 # Inference-only RoboFlamingo source retained in-tree.
-# coding=utf-8
 # Copyright 2018 The OpenAI Team Authors and HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -20,9 +19,8 @@ import os
 from typing import List, Optional, Tuple
 
 import torch
-from torch._C import has_spectral
 import torch.nn as nn
-
+from torch._C import has_spectral
 from transformers.activations import ACT2FN
 from transformers.file_utils import (
     add_code_sample_docstrings,
@@ -34,10 +32,10 @@ from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
 )
 from transformers.modeling_utils import PreTrainedModel
+from transformers.models.gpt2.configuration_gpt2 import GPT2Config
 from transformers.pytorch_utils import Conv1D, find_pruneable_heads_and_indices, prune_conv1d_layer
 from transformers.utils import logging
 from transformers.utils.model_parallel_utils import assert_device_map, get_device_map
-from transformers.models.gpt2.configuration_gpt2 import GPT2Config
 
 logger = logging.get_logger(__name__)
 
@@ -61,18 +59,18 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
     import tensorflow as tf
 
     tf_path = os.path.abspath(gpt2_checkpoint_path)
-    logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+    logger.info(f"Converting TensorFlow checkpoint from {tf_path}")
     # Load weights from TF model
     init_vars = tf.train.list_variables(tf_path)
     names = []
     arrays = []
     for name, shape in init_vars:
-        logger.info("Loading TF weight {} with shape {}".format(name, shape))
+        logger.info(f"Loading TF weight {name} with shape {shape}")
         array = tf.train.load_variable(tf_path, name)
         names.append(name)
         arrays.append(array.squeeze())
 
-    for name, array in zip(names, arrays):
+    for name, array in zip(names, arrays, strict=False):
         name = name[6:]  # skip "model/"
         name = name.split("/")
         pointer = model
@@ -82,19 +80,19 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
             else:
                 scope_names = [m_name]
             if scope_names[0] == "w" or scope_names[0] == "g":
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             elif scope_names[0] == "b":
-                pointer = getattr(pointer, "bias")
+                pointer = pointer.bias
             elif scope_names[0] == "wpe" or scope_names[0] == "wte":
                 pointer = getattr(pointer, scope_names[0])
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             else:
                 pointer = getattr(pointer, scope_names[0])
             if len(scope_names) >= 2:
                 num = int(scope_names[1])
                 pointer = pointer[num]
         assert pointer.shape == array.shape, f"Pointer shape {pointer.shape} and array shape {array.shape} mismatched"
-        logger.info("Initialize PyTorch weight {}".format(name))
+        logger.info(f"Initialize PyTorch weight {name}")
         pointer.data = torch.from_numpy(array)
     return model
 
@@ -599,7 +597,7 @@ class GPT2Model(GPT2PreTrainedModel):
         all_self_attentions = () if output_attentions else None
         all_cross_attentions = () if output_attentions and self.config.add_cross_attention else None
         all_hidden_states = () if output_hidden_states else None
-        for i, (block, layer_past) in enumerate(zip(self.h, past_key_values)):
+        for i, (block, layer_past) in enumerate(zip(self.h, past_key_values, strict=False)):
             if self.use_layers is not None and i >= self.use_layers:
                 break
 

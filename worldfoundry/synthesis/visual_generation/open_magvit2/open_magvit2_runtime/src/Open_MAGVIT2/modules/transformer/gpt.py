@@ -4,11 +4,12 @@ https://github.com/FoundationVision/LlamaGen
 https://github.com/kakaobrain/rq-vae-transformer
 """
 
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from typing import Optional
-import math
 
 
 ### from https://huggingface.co/transformers/v3.2.0/_modules/transformers/generation_utils.html
@@ -240,8 +241,8 @@ class Attention(nn.Module):
         self,
         x: torch.Tensor,
         freqs_cis: torch.Tensor = None,
-        input_pos: Optional[torch.Tensor] = None,
-        mask: Optional[torch.Tensor] = None,
+        input_pos: torch.Tensor | None = None,
+        mask: torch.Tensor | None = None,
     ):
         bsz, seqlen, _ = x.shape
         kv_size = self.n_kv_head * self.head_dim
@@ -331,7 +332,7 @@ class Block(nn.Module):
         self.ffn_norm = RMSNorm(config.dim, eps=config.norm_eps)
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
-    def forward(self, x: torch.Tensor, freqs_cis: torch.Tensor, start_pos: int, mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, freqs_cis: torch.Tensor, start_pos: int, mask: torch.Tensor | None = None):
         h = x + self.drop_path(self.attention(self.attention_norm(x), freqs_cis, start_pos, mask))
         out = h + self.drop_path(self.feed_forward(self.ffn_norm(h)))
         return out

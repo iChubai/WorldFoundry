@@ -17,8 +17,8 @@ from typing import Any
 import numpy as np
 import torch
 import torch.distributed as dist
-from torch.distributed.device_mesh import DeviceMesh
 from PIL import Image
+from torch.distributed.device_mesh import DeviceMesh
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
@@ -481,7 +481,7 @@ def _module_dtype(module: Any) -> str | None:
     if module is None:
         return None
     if hasattr(module, "dtype"):
-        dtype = getattr(module, "dtype")
+        dtype = module.dtype
         if isinstance(dtype, torch.dtype):
             return _dtype_name(dtype)
     if isinstance(module, torch.nn.Module):

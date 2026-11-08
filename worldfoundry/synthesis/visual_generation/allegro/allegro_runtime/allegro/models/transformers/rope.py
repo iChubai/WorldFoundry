@@ -1,14 +1,12 @@
 # Adapted from Diffusers and Open-Sora-Plan
 
 import torch
-
-
 from diffusers.utils import logging
 
 logger = logging.get_logger(__name__)
 
 
-class PositionGetter3D(object):
+class PositionGetter3D:
     """return positions of patches"""
 
     def __init__(
@@ -17,7 +15,7 @@ class PositionGetter3D(object):
         self.cache_positions = {}
 
     def __call__(self, b, t, h, w, device):
-        if not (b, t, h, w) in self.cache_positions:
+        if (b, t, h, w) not in self.cache_positions:
             x = torch.arange(w, device=device)
             y = torch.arange(h, device=device)
             z = torch.arange(t, device=device)

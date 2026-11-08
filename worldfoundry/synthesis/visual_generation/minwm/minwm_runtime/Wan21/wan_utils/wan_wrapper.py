@@ -1,15 +1,15 @@
-import types
 import os
+import types
 from typing import Optional
+
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import _video_vae
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.action import WanModel
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.causal import CausalWanModel
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import _video_vae
 from worldfoundry.core.nn.diffusion.schedulers import FlowMatchScheduler, SchedulerInterface
-
 
 _BASE_MODEL_ROOT = os.environ.get(
     "WORLDFOUNDRY_MINWM_WAN_BASE_MODEL",
@@ -50,7 +50,7 @@ class WanTextEncoder(torch.nn.Module):
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.text_encoder(ids, mask)
 
-        for u, v in zip(context, seq_lens):
+        for u, v in zip(context, seq_lens, strict=False):
             u[v:] = 0.0  # set padding to 0.0
 
         return {"prompt_embeds": context}
@@ -206,13 +206,13 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[list[dict]] = None,
-        crossattn_cache: Optional[list[dict]] = None,
-        current_start: Optional[int] = None,
-        cache_start: Optional[int] = None,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-        prope_kv_cache: Optional[list[dict]] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        current_start: int | None = None,
+        cache_start: int | None = None,
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+        prope_kv_cache: list[dict] | None = None,
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
 

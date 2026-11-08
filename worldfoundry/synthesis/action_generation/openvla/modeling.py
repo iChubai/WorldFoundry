@@ -17,9 +17,10 @@ References [LLaVa, IDEFICS-2]:
 # so runtime imports do not depend on external repo code or HF remote-code cache.
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import timm
@@ -39,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 # === Utility Functions for Monkey-Patching ===
-def unpack_tuple(fn: Callable[[Any], Tuple[Any]]) -> Callable[[Any], Any]:
+def unpack_tuple(fn: Callable[[Any], tuple[Any]]) -> Callable[[Any], Any]:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         result = fn(*args, **kwargs)
         return result[0] if isinstance(result, tuple) else result
@@ -65,9 +66,9 @@ class PrismaticVisionBackbone(nn.Module):
     def __init__(
         self,
         use_fused_vision_backbone: bool,
-        image_sizes: List[int],
-        timm_model_ids: List[str],
-        timm_override_act_layers: List[Optional[str]],
+        image_sizes: list[int],
+        timm_model_ids: list[str],
+        timm_override_act_layers: list[str | None],
     ) -> None:
         super().__init__()
         self.use_fused_vision_backbone = use_fused_vision_backbone
@@ -165,12 +166,12 @@ class PrismaticCausalLMOutputWithPast(ModelOutput):
     """Base class for Prismatic casual (visually-conditioned) language model outputs; also exposes visual features."""
 
     logits: torch.FloatTensor = None
-    past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
-    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
+    past_key_values: tuple[tuple[torch.FloatTensor]] | None = None
+    hidden_states: tuple[torch.FloatTensor, ...] | None = None
+    attentions: tuple[torch.FloatTensor] | None = None
 
     # Additions for VLMs
-    projector_features: Optional[torch.FloatTensor] = None
+    projector_features: torch.FloatTensor | None = None
 
 
 class PrismaticPreTrainedModel(PreTrainedModel):
@@ -178,7 +179,7 @@ class PrismaticPreTrainedModel(PreTrainedModel):
     base_model_prefix: str = "model"
     supports_gradient_checkpointing: bool = False
 
-    _no_split_modules: ClassVar[List[str]] = ["PrismaticProjector"]
+    _no_split_modules: ClassVar[list[str]] = ["PrismaticProjector"]
     _skip_keys_device_placement: str = "past_key_values"
     _supports_flash_attn_2: bool = True
 
@@ -267,7 +268,7 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel, GenerationMixi
         self.language_model.tie_weights()  # Note: `Llama-2` and `Mistral` don't tie weights (no-op)
 
     def resize_token_embeddings(
-        self, new_num_tokens: Optional[int] = None, pad_to_multiple_of: Optional[int] = None
+        self, new_num_tokens: int | None = None, pad_to_multiple_of: int | None = None
     ) -> nn.Embedding:
         updated_embeddings = self.language_model.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
 
@@ -280,17 +281,17 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel, GenerationMixi
     # === Core Prismatic VLM `forward()` Logic ===
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        pixel_values: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        output_projector_features: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, PrismaticCausalLMOutputWithPast]:
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        pixel_values: torch.FloatTensor | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        output_projector_features: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | PrismaticCausalLMOutputWithPast:
         """Run a forward pass through the VLM, returning a PrismaticCausalLMOutputWithPast instance."""
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -427,13 +428,13 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel, GenerationMixi
     # === GenerationMixin Methods ===
     def prepare_inputs_for_generation(
         self,
-        input_ids: Optional[torch.Tensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        input_ids: torch.Tensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        pixel_values: torch.FloatTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
         **kwargs: str,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Borrowed from `LlamaForCausalLM` and simplified for batch size = 1; mirrors original PrismaticVLM logic."""
         if ((input_ids is not None) and (input_ids.shape[0] > 1)) or (
             (inputs_embeds is not None) and (inputs_embeds.shape[0] > 1)
@@ -482,7 +483,7 @@ class OpenVLAForActionPrediction(PrismaticForConditionalGeneration):
         self.vocab_size = self.config.text_config.vocab_size - self.config.pad_to_multiple_of
 
     def predict_action(
-        self, input_ids: Optional[torch.LongTensor] = None, unnorm_key: Optional[str] = None, **kwargs: str
+        self, input_ids: torch.LongTensor | None = None, unnorm_key: str | None = None, **kwargs: str
     ) -> np.ndarray:
         """Thin wrapper around .generate() that decodes predicted actions and unnormalizes them."""
         # If the special empty token ('') does not already appear after the colon (':') token in the prompt
@@ -514,7 +515,7 @@ class OpenVLAForActionPrediction(PrismaticForConditionalGeneration):
         return actions
 
     @staticmethod
-    def _check_unnorm_key(norm_stats: Dict[str, Dict[str, Any]], unnorm_key: Optional[str]) -> str:
+    def _check_unnorm_key(norm_stats: dict[str, dict[str, Any]], unnorm_key: str | None) -> str:
         if unnorm_key is None:
             assert len(norm_stats) == 1, (
                 f"Your model was trained on more than one dataset, "
@@ -529,12 +530,12 @@ class OpenVLAForActionPrediction(PrismaticForConditionalGeneration):
         )
         return unnorm_key
 
-    def get_action_dim(self, unnorm_key: Optional[str] = None) -> int:
+    def get_action_dim(self, unnorm_key: str | None = None) -> int:
         """Get the dimensionality of the policy's action space."""
         unnorm_key = self._check_unnorm_key(self.norm_stats, unnorm_key)
         return len(self.norm_stats[unnorm_key]["action"]["q01"])
 
-    def get_action_stats(self, unnorm_key: Optional[str] = None) -> Dict[str, Any]:
+    def get_action_stats(self, unnorm_key: str | None = None) -> dict[str, Any]:
         """Get all the logged statistics for the given dataset."""
         unnorm_key = self._check_unnorm_key(self.norm_stats, unnorm_key)
         return self.norm_stats[unnorm_key]["action"]

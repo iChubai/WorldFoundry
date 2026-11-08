@@ -10,15 +10,14 @@ https://github.com/lucidrains/vector-quantize-pytorch/blob/master/vector_quantiz
 https://github.com/theAdamColton/ijepa-enhanced/blob/7edef5f7288ae8f537f0db8a10044a2a487f70c9/ijepa_enhanced/lfq.py
 """
 
-from math import log2, ceil
 from collections import namedtuple
+from math import ceil, log2
 
 import torch
-from torch import nn, einsum
 import torch.nn.functional as F
+from einops import pack, rearrange, reduce, unpack
+from torch import einsum, nn
 from torch.nn import Module
-
-from einops import rearrange, reduce, pack, unpack
 
 # constants
 

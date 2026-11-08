@@ -1,9 +1,11 @@
-import torch
 from typing import Optional
+
+import torch
+
 from worldfoundry.core.attention import attention_backend_context
 
 
-def sample_top_k(logits, temperature: float = 1.0, top_k: Optional[int] = None, vocab_size=8192):
+def sample_top_k(logits, temperature: float = 1.0, top_k: int | None = None, vocab_size=8192):
     """
     Sample from the logits using top-k sampling.
     Source: https://github.com/pytorch-labs/gpt-fast/blob/main/generate.py
@@ -29,7 +31,7 @@ def multinomial_sample_one_no_sync(probs_sort, dtype=torch.int):
 def logits_to_probs(
     logits,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
+    top_k: int | None = None,
 ):
     logits = logits / max(temperature, 1e-5)
 
@@ -65,7 +67,7 @@ def sample_n_top_p(logits, temperature, top_p, vocab_size=8192):
     return next_token
 
 
-def sample_n_top_k(logits, temperature: float = 1.0, top_k: Optional[int] = None, vocab_size=8192):
+def sample_n_top_k(logits, temperature: float = 1.0, top_k: int | None = None, vocab_size=8192):
     if temperature == 0.0:
         # Modify for multiple logits (n items)
         idx_next = torch.argmax(logits[:, :, :vocab_size], dim=-1, keepdim=True)  # Use all n logits for top-k
@@ -80,7 +82,7 @@ def sample_n_top_k(logits, temperature: float = 1.0, top_k: Optional[int] = None
 def logits_to_n_probs(
     logits,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
+    top_k: int | None = None,
 ):
     logits = logits / max(temperature, 1e-5)
 
@@ -97,8 +99,8 @@ def decode_one_token(
     input_ids: torch.Tensor,
     position_ids: torch.Tensor,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[float] = None,
+    top_k: int | None = None,
+    top_p: float | None = None,
 ):
     """
     Decode a single token from the autoregressive model.
@@ -115,8 +117,8 @@ def decode_some_token(
     input_ids: torch.Tensor,
     position_ids: torch.Tensor,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[float] = None,
+    top_k: int | None = None,
+    top_p: float | None = None,
 ):
     """
     Decode multi token from the autoregressive model.
@@ -134,8 +136,8 @@ def decode_n_tokens(
     position_ids: torch.Tensor,
     num_generate_tokens: int,
     temperature: float = 1.0,
-    top_p: Optional[float] = 0.8,
-    top_k: Optional[int] = None,
+    top_p: float | None = 0.8,
+    top_k: int | None = None,
     decode_one_token_function=decode_one_token,
     pixnum: int = 336,
     actnum: int = 11,
@@ -180,8 +182,8 @@ def prefill(
     input_ids: torch.Tensor = None,
     position_ids: torch.Tensor = None,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[float] = 0.8,
+    top_k: int | None = None,
+    top_p: float | None = 0.8,
     **kwargs,
 ):
     logits = model(input_ids=input_ids, position_ids=position_ids)
@@ -233,8 +235,8 @@ def img_diagd_decode_n_tokens(
     position_ids: torch.Tensor,
     num_generate_tokens: int,
     temperature: float = 1.0,
-    top_p: Optional[float] = 0.8,
-    top_k: Optional[int] = None,
+    top_p: float | None = 0.8,
+    top_k: int | None = None,
     decode_some_token_function=decode_some_token,
     pixnum: int = 336,
     actnum: int = 11,
@@ -386,8 +388,8 @@ def video_diagd_decode_n_tokens(
     position_ids: torch.Tensor,
     num_generate_tokens: int,
     temperature: float = 1.0,
-    top_p: Optional[float] = 0.8,
-    top_k: Optional[int] = None,
+    top_p: float | None = 0.8,
+    top_k: int | None = None,
     decode_some_token_function=decode_some_token,
     pixnum: int = 336,
     actnum: int = 11,

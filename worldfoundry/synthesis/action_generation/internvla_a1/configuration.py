@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 
 @dataclass
@@ -39,7 +40,7 @@ class InternVLAA1Config:
         defaults: Mapping[str, Any],
         dtype: str,
         num_inference_steps: int | None = None,
-    ) -> "InternVLAA1Config":
+    ) -> InternVLAA1Config:
         values = {**dict(defaults), **dict(payload)}
         required = (
             "qwen3_vl_variant",

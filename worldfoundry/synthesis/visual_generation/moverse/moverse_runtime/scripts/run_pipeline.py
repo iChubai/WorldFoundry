@@ -23,9 +23,8 @@ if SCRIPTS_DIR not in sys.path:
 
 from omegaconf import OmegaConf
 from PIL import Image
-
-from rendering.gaussian_renderer import GaussianRenderer, load_gaussians
 from pipeline import CausalInferencePipeline
+from rendering.gaussian_renderer import GaussianRenderer, load_gaussians
 from traj_to_extrinsics import load_trajectory, trajectory_to_w2cs
 
 
@@ -127,7 +126,7 @@ def load_pipeline(args, config):
     # FP8 quantization
     if args.fp8:
         try:
-            from torchao.quantization.quant_api import quantize_, Float8DynamicActivationFloat8WeightConfig
+            from torchao.quantization.quant_api import Float8DynamicActivationFloat8WeightConfig, quantize_
 
             quantize_(pipeline.generator, Float8DynamicActivationFloat8WeightConfig())
             print("[init] FP8 quantization enabled")
@@ -137,6 +136,7 @@ def load_pipeline(args, config):
     # TAEHV lightweight VAE decoder
     if args.taehv:
         import types
+
         from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.taehv import TAEHV
 
         taehv_ckpt = args.taehv_checkpoint
@@ -466,7 +466,7 @@ def main():
 
     # ── Run pipeline ──────────────────────────────────────────────────────
     print(f"\n{'=' * 60}")
-    print(f"  Headless Video Generation")
+    print("  Headless Video Generation")
     print(f"  Scene:    {args.scene}")
     print(f"  Prompt:   {args.prompt[:60]}...")
     print(f"  Frames:   {args.num_frames}")
@@ -524,18 +524,18 @@ def main():
                 print(f"  [cleanup] Removed excess frame: {f.name}")
 
     # ── Compile gen video ──────────────────────────────────────────────────
-    print(f"[ffmpeg] Compiling gen video...")
+    print("[ffmpeg] Compiling gen video...")
     gen_success = frames_to_video(frames_dir, args.output, fps=args.fps)
 
     # ── Compile render video ───────────────────────────────────────────────
     render_video = args.output.replace(".mp4", "_render.mp4")
-    print(f"[ffmpeg] Compiling render video...")
+    print("[ffmpeg] Compiling render video...")
     render_success = frames_to_video(render_frames_dir, render_video, fps=args.fps)
 
     # ── Create side-by-side comparison (numpy + imageio, same as UI) ───────
     combined_video = args.output.replace(".mp4", "_side_by_side.mp4")
     if gen_success and render_success:
-        print(f"[combine] Creating side-by-side comparison...")
+        print("[combine] Creating side-by-side comparison...")
         try:
             import imageio
 
@@ -562,7 +562,7 @@ def main():
 
             # Concatenate horizontally: [render | gen]
             combined_imgs = []
-            for r_img, g_img in zip(render_imgs, gen_imgs):
+            for r_img, g_img in zip(render_imgs, gen_imgs, strict=False):
                 combined = np.zeros((target_h, target_w_render + target_w_gen, 3), dtype=np.uint8)
                 combined[:, :target_w_render] = r_img
                 combined[:, target_w_render:] = g_img
@@ -589,12 +589,12 @@ def main():
     # ── Clean up temporary frames ───────────────────────────────────────────
     if gen_success and args.save_frames_dir is None:
         shutil.rmtree(frames_dir)
-        print(f"[cleanup] Removed gen frames directory")
+        print("[cleanup] Removed gen frames directory")
     if render_success:
         shutil.rmtree(render_frames_dir)
-        print(f"[cleanup] Removed render frames directory")
+        print("[cleanup] Removed render frames directory")
 
-    print(f"\n[complete] Outputs:")
+    print("\n[complete] Outputs:")
     print(f"  Gen video:       {args.output}")
     print(f"  Render video:    {render_video}")
     if os.path.exists(combined_video):

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
-import time
 from typing import Dict, List, Optional, Tuple
 
 from transformers import AutoTokenizer
@@ -60,10 +60,10 @@ class HfTokenizerWrapper:
         self.image_prompt_token_id = special[IMAGE_PROMPT]
         self.video_prompt_token_id = special[VIDEO_PROMPT]
 
-    def encode(self, text: str) -> List[int]:
+    def encode(self, text: str) -> list[int]:
         return self.tokenizer.encode(text, add_special_tokens=False)
 
-    def decode(self, token_ids: List[int], truncate_at_eos: bool = True) -> str:
+    def decode(self, token_ids: list[int], truncate_at_eos: bool = True) -> str:
         token_ids = [int(token_id) for token_id in token_ids]
         if token_ids and self.eos_token_id == self.bos_token_id and token_ids[0] == self.eos_token_id:
             token_ids = token_ids[1:]
@@ -77,10 +77,10 @@ class HfTokenizerWrapper:
         return len(self.tokenizer)
 
 
-_TOKENIZER_CACHE: Dict[Tuple[str, Optional[str], bool, Optional[int]], HfTokenizerWrapper] = {}
+_TOKENIZER_CACHE: dict[tuple[str, str | None, bool, int | None], HfTokenizerWrapper] = {}
 
 
-def _source_and_cache(identifier: str, tokenizer_dir: Optional[str]) -> tuple[str, Optional[str]]:
+def _source_and_cache(identifier: str, tokenizer_dir: str | None) -> tuple[str, str | None]:
     """Resolve a tokenizer only from an explicit directory or hfd model store."""
     if tokenizer_dir:
         from worldfoundry.core.io.paths import resolve_worldfoundry_path
@@ -105,9 +105,9 @@ def _has_exact_token(tokenizer, token: str) -> bool:
 
 def _load_and_extend_tokenizer(
     source: str,
-    cache_dir: Optional[str],
+    cache_dir: str | None,
     has_extra_token: bool,
-    pad_tokenizer_to: Optional[int],
+    pad_tokenizer_to: int | None,
 ):
     tokenizer = AutoTokenizer.from_pretrained(
         source,
@@ -158,8 +158,8 @@ def _load_and_extend_tokenizer(
 def build_tokenizer(
     tokenizer_type: str,
     has_extra_token: bool = True,
-    tokenizer_dir: Optional[str] = None,
-    pad_tokenizer_to: Optional[int] = None,
+    tokenizer_dir: str | None = None,
+    pad_tokenizer_to: int | None = None,
 ) -> HfTokenizerWrapper:
     source, cache_dir = _source_and_cache(tokenizer_type, tokenizer_dir)
     cache_key = (source, cache_dir, has_extra_token, pad_tokenizer_to)
@@ -192,19 +192,19 @@ def build_tokenizer(
     return wrapped
 
 
-def get_special_token_ids(tokenizer) -> Dict[str, int]:
+def get_special_token_ids(tokenizer) -> dict[str, int]:
     ids = [tokenizer.encode(token) for token in EXTRA_TOKENS]
     if any(len(token_ids) != 1 for token_ids in ids):
         raise ValueError(f"Molmo visual tokens are not atomic: {ids}")
-    return {token: token_ids[0] for token, token_ids in zip(EXTRA_TOKENS, ids)}
+    return {token: token_ids[0] for token, token_ids in zip(EXTRA_TOKENS, ids, strict=False)}
 
 
 @dataclass
 class TokenizerConfig(BaseConfig):
     identifier: str = "gpt2"
-    tokenizer_dir: Optional[str] = None
+    tokenizer_dir: str | None = None
 
-    def build(self, pad_tokenizer_to: Optional[int]):
+    def build(self, pad_tokenizer_to: int | None):
         return build_tokenizer(
             self.identifier,
             tokenizer_dir=self.tokenizer_dir,
@@ -216,7 +216,6 @@ __all__ = [
     "EXTRA_TOKENS",
     "FRAME_END_TOKEN",
     "FRAME_START_TOKEN",
-    "HfTokenizerWrapper",
     "IMAGE_LOW_RES_TOKEN",
     "IMAGE_PATCH_TOKEN",
     "IMAGE_PROMPT",
@@ -224,8 +223,9 @@ __all__ = [
     "IM_END_TOKEN",
     "IM_START_TOKEN",
     "LOW_RES_IMAGE_START_TOKEN",
-    "TokenizerConfig",
     "VIDEO_PROMPT",
+    "HfTokenizerWrapper",
+    "TokenizerConfig",
     "build_tokenizer",
     "get_special_token_ids",
 ]

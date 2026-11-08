@@ -2,13 +2,11 @@ import jax
 import jax.experimental
 import jax.experimental.multihost_utils
 import jax.numpy as jnp
+import src.data.utils as data_utils
+import src.utils.sharding as sharding_utils
 import torch
 from einops import rearrange, repeat
 from flax import nnx
-from worldfoundry.core.media.codecs.video import write_video as _worldfoundry_write_video
-
-import src.data.utils as data_utils
-import src.utils.sharding as sharding_utils
 from src.models.utils import jax_to_torch
 from src.models.wan_vae import VAE_SCALE
 from src.runners.base_runner import BaseRunner
@@ -19,6 +17,8 @@ from src.utils.rollout import (
     perform_bidirectional_multiplayer_rollout,
     perform_multiplayer_rollout,
 )
+
+from worldfoundry.core.media.codecs.video import write_video as _worldfoundry_write_video
 
 
 def write_video(path, video, fps=20):

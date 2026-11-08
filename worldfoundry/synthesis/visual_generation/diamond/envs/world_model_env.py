@@ -1,18 +1,18 @@
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, Dict, Generator, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import torch
+from coroutines import coroutine
+from models.diffusion import Denoiser, DiffusionSampler, DiffusionSamplerConfig
+from models.rew_end_model import RewEndModel
 from torch import Tensor
 from torch.distributions.categorical import Categorical
 from torch.utils.data import DataLoader
 
-from coroutines import coroutine
-from models.diffusion import Denoiser, DiffusionSampler, DiffusionSamplerConfig
-from models.rew_end_model import RewEndModel
-
-ResetOutput = Tuple[torch.FloatTensor, Dict[str, Any]]
-StepOutput = Tuple[Tensor, Tensor, Tensor, Tensor, Dict[str, Any]]
-InitialCondition = Tuple[Tensor, Tensor, Tuple[Tensor, Tensor]]
+ResetOutput = tuple[torch.FloatTensor, dict[str, Any]]
+StepOutput = tuple[Tensor, Tensor, Tensor, Tensor, dict[str, Any]]
+InitialCondition = tuple[Tensor, Tensor, tuple[Tensor, Tensor]]
 
 
 @dataclass
@@ -89,11 +89,11 @@ class WorldModelEnv:
         return self.obs_buffer[:, -1], rew, end, trunc, info
 
     @torch.no_grad()
-    def predict_next_obs(self) -> Tuple[Tensor, List[Tensor]]:
+    def predict_next_obs(self) -> tuple[Tensor, list[Tensor]]:
         return self.sampler.sample(self.obs_buffer, self.act_buffer)
 
     @torch.no_grad()
-    def predict_rew_end(self, next_obs: Tensor) -> Tuple[Tensor, Tensor]:
+    def predict_rew_end(self, next_obs: Tensor) -> tuple[Tensor, Tensor]:
         logits_rew, logits_end, (self.hx_rew_end, self.cx_rew_end) = self.rew_end_model.predict_rew_end(
             self.obs_buffer[:, -1:],
             self.act_buffer[:, -1:],

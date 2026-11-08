@@ -9,8 +9,9 @@
 
 import torch
 import torch.nn as nn
+
+from .diffusion import ModelVarType, create_diffusion
 from .dit import DiT
-from .diffusion import create_diffusion, ModelVarType
 
 
 class LinearModel(nn.Module):

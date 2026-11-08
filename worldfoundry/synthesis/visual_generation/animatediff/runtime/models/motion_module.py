@@ -1,18 +1,16 @@
+import math
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-import torch
 import numpy as np
+import torch
 import torch.nn.functional as F
-from torch import nn
 import torchvision
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.utils import BaseOutput
 from diffusers.utils.import_utils import is_xformers_available
-
 from einops import rearrange, repeat
-import math
+from torch import nn
 
 from .diffusers_compat import CrossAttention, FeedForward, ModelMixin
 
@@ -210,7 +208,7 @@ class TemporalTransformerBlock(nn.Module):
         self.ff_norm = nn.LayerNorm(dim)
 
     def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None, video_length=None):
-        for attention_block, norm in zip(self.attention_blocks, self.norms):
+        for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
                 attention_block(

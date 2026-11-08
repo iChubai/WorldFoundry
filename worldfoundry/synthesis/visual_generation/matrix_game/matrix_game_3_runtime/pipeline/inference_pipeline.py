@@ -1,3 +1,4 @@
+import atexit
 import gc
 import json
 import logging
@@ -5,37 +6,47 @@ import math
 import os
 import random
 import sys
+import time
 import types
+from functools import partial
 from pathlib import Path
+
 import numpy as np
 import torch
-import atexit
-import time
 import torch.distributed as dist
-from torch.distributed.fsdp import FullyShardedDataParallel
-
-from PIL import Image
-from tqdm import tqdm
 from einops import rearrange
-from functools import partial
+from PIL import Image
+from torch.distributed.fsdp import FullyShardedDataParallel
+from tqdm import tqdm
+
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
+
+# isort: split
 from worldfoundry.core.attention.parallel.memory_rope_sequence_parallel import (
     sp_attn_forward,
     sp_dit_forward,
 )
-from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size
-from worldfoundry.base_models.diffusion_model.schedulers import FlowUniPCMultistepScheduler
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_22 import WanModel
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.full_context_t5 import T5EncoderModel
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_22 import WanModel
+from worldfoundry.base_models.diffusion_model.schedulers import FlowUniPCMultistepScheduler
+from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.light_22 import Wan2_2_VAE
-from utils.visualize import process_video
+
+# isort: split
 from utils.cam_utils import (
-    compute_relative_poses,
-    select_memory_idx_fov,
-    get_intrinsics,
     _interpolate_camera_poses_handedness,
+    compute_relative_poses,
+    get_intrinsics,
+    select_memory_idx_fov,
 )
-from utils.utils import get_data, build_plucker_from_c2ws, build_plucker_from_pose
+from utils.utils import build_plucker_from_c2ws, build_plucker_from_pose, get_data
+from utils.visualize import process_video
+
+# isort: split
 from pipeline.vae_worker import start_vae_worker_process
 
 RUNTIME_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -151,9 +162,7 @@ class MatrixGame3Pipeline:
         self.model = WanModel.from_pretrained(model_ckpt_dir, torch_dtype=torch.bfloat16, **model_config)
         logging.info("Model initialized.")
 
-        if args is not None and getattr(args, "use_int8", False):
-            use_int8 = True
-        elif getattr(config, "use_int8", False):
+        if (args is not None and getattr(args, "use_int8", False)) or getattr(config, "use_int8", False):
             use_int8 = True
         else:
             use_int8 = False
@@ -264,7 +273,7 @@ class MatrixGame3Pipeline:
         )
 
         if self.rank == 0:
-            from .vae_config import load_vae, get_vae_config
+            from .vae_config import get_vae_config, load_vae
 
             self.vae = load_vae(device_id=device_id, args=args)
             self.vae_config_dict = get_vae_config(args)
@@ -304,7 +313,7 @@ class MatrixGame3Pipeline:
                     )
             else:
                 if self.rank == 0:
-                    print(f"\n[Rank 0] Running in SERIAL mode (Diffusion and VAE interleaved)\n", flush=True)
+                    print("\n[Rank 0] Running in SERIAL mode (Diffusion and VAE interleaved)\n", flush=True)
 
     def _configure_model(self, model, use_sp, dit_fsdp, shard_fn, convert_model_dtype):
         """
@@ -532,7 +541,7 @@ class MatrixGame3Pipeline:
 
                     memory_pluckers = []
                     latent_idx = []
-                    for mem_idx, reference_idx in zip(selected_index, selected_index_base):
+                    for mem_idx, reference_idx in zip(selected_index, selected_index_base, strict=False):
                         l_idx = get_latent_idx(mem_idx)
                         latent_idx.append(l_idx)
 
@@ -730,10 +739,10 @@ class MatrixGame3Pipeline:
                     print(
                         f"\n[Rank 0] Diffusion finished. Latents were sent to async VAE ({self.output_dir})", flush=True
                     )
-                    print(f"Waiting for VAE decode done signal (final 0.mp4 save continues in worker)...", flush=True)
+                    print("Waiting for VAE decode done signal (final 0.mp4 save continues in worker)...", flush=True)
                     vae_wait_start = time.time()
                     if not self.vae_done_event.wait(timeout=600):
-                        print(f"[Rank 0] VAE worker done_event wait timed out after 600s.", flush=True)
+                        print("[Rank 0] VAE worker done_event wait timed out after 600s.", flush=True)
                     vae_catchup_time = time.time() - vae_wait_start
                     print(f"VAE decode done signal received in {vae_catchup_time:.2f}s.", flush=True)
 
@@ -744,11 +753,11 @@ class MatrixGame3Pipeline:
                         )
                         self.vae_process.join(timeout=60)
                         if self.vae_process.is_alive():
-                            print(f"[Rank 0] VAE Worker timed out, killing it...", flush=True)
+                            print("[Rank 0] VAE Worker timed out, killing it...", flush=True)
                             self.vae_process.kill()
                             self.vae_process.join(timeout=10)
                         else:
-                            print(f"[Rank 0] VAE Worker finished gracefully.", flush=True)
+                            print("[Rank 0] VAE Worker finished gracefully.", flush=True)
                 video = None
 
             if self.rank == 0:

@@ -1,6 +1,7 @@
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -15,31 +16,29 @@ from diffusers.utils import BaseOutput, replace_example_docstring
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
 from PIL import Image
-from transformers import T5Tokenizer
+from transformers import AutoTokenizer, T5Tokenizer
 
-from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
-    WanDiffusersInferenceMixin,
-    resize_mask,
-    retrieve_timesteps,
-)
-from transformers import AutoTokenizer
-
-from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import CameraConditionCache
-from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import StaticConditionCache
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import AutoencoderKLWan
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import CLIPModel
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (
     WanT5EncoderModel,
 )
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import CLIPModel
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import (
     WanTransformer3DModel,
 )
+from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import CameraConditionCache
+from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import StaticConditionCache
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
     get_sampling_sigmas,
 )
 from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (
     FlowUniPCMultistepScheduler,
+)
+from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
+    WanDiffusersInferenceMixin,
+    resize_mask,
+    retrieve_timesteps,
 )
 
 EXAMPLE_DOC_STRING = """
@@ -138,36 +137,37 @@ class WanFunControlPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 720,
-        control_video: Union[torch.FloatTensor] = None,
-        control_camera_video: Union[torch.FloatTensor] = None,
-        start_image: Union[torch.FloatTensor] = None,
-        ref_image: Union[torch.FloatTensor] = None,
+        control_video: torch.FloatTensor = None,
+        control_camera_video: torch.FloatTensor = None,
+        start_image: torch.FloatTensor = None,
+        ref_image: torch.FloatTensor = None,
         num_frames: int = 49,
         num_inference_steps: int = 50,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 6,
         num_videos_per_prompt: int = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
         output_type: str = "pil",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         clip_image: Image = None,
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,
         shift: int = 5,
-    ) -> Union[WanPipelineOutput, Tuple]:
+    ) -> WanPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
         Args:

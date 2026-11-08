@@ -1,16 +1,15 @@
+import json
 import os
 import random
-import json
-import torch
 
+import numpy as np
+import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
-import numpy as np
-
 from decord import VideoReader
-from torch.utils.data.dataset import Dataset
 from packaging import version as pver
+from torch.utils.data.dataset import Dataset
 
 
 def unpack_mm_params(p):
@@ -37,7 +36,7 @@ class RandomHorizontalFlipWithPose(nn.Module):
             flip_flag = self.get_flip_flag(n_image)
 
         ret_images = []
-        for fflag, img in zip(flip_flag, image):
+        for fflag, img in zip(flip_flag, image, strict=False):
             if fflag:
                 ret_images.append(F.hflip(img))
             else:
@@ -45,7 +44,7 @@ class RandomHorizontalFlipWithPose(nn.Module):
         return torch.stack(ret_images, dim=0)
 
 
-class Camera(object):
+class Camera:
     def __init__(self, entry):
         fx, fy, cx, cy = entry[1:5]
         self.fx = fx
@@ -139,7 +138,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
         self.minimum_sample_stride = minimum_sample_stride
         self.sample_n_frames = sample_n_frames
 
-        self.dataset = json.load(open(os.path.join(root_path, annotation_json), "r"))
+        self.dataset = json.load(open(os.path.join(root_path, annotation_json)))
         self.length = len(self.dataset)
         sample_size = image_size
         sample_size = tuple(sample_size) if not isinstance(sample_size, int) else (sample_size, sample_size)
@@ -188,7 +187,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
     def load_cameras(self, idx):
         video_dict = self.dataset[idx]
         pose_file = os.path.join(self.root_path, video_dict["pose_file"])
-        with open(pose_file, "r") as f:
+        with open(pose_file) as f:
             poses = f.readlines()
         poses = [pose.strip().split(" ") for pose in poses[1:]]
         cam_params = [[float(x) for x in pose] for pose in poses]
@@ -275,7 +274,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
                 video, video_caption, plucker_embedding, flip_flag, clip_name = self.get_batch(idx)
                 break
 
-            except Exception as e:
+            except Exception:
                 idx = random.randint(0, self.length - 1)
         if self.use_flip:
             video = self.pixel_transforms[0](video)

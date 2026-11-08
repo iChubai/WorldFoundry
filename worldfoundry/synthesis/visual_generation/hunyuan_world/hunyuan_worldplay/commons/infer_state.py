@@ -5,7 +5,7 @@ from typing import Optional
 @dataclass
 class InferState:
     enable_sageattn: bool = False  # whether to use SageAttention
-    sage_blocks_range: Optional[range] = None  # block range to use SageAttention
+    sage_blocks_range: range | None = None  # block range to use SageAttention
     enable_torch_compile: bool = False  # whether to use torch compile
 
     # fp8 gemm related

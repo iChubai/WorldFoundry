@@ -106,7 +106,7 @@ class ViGeoDepthEstimator:
         process_res: int = 644,
         src: Path = _VIGEO_SRC,
         weights: Path = _VIGEO_WEIGHTS,
-        num_tokens: Optional[int] = None,
+        num_tokens: int | None = None,
         mode: str = "chunk",
         chunk_size: int = 16,
         intr_source: str = "gt",
@@ -159,7 +159,7 @@ class ViGeoDepthEstimator:
         self._kv = None
         self._win_seen = 0
         self._anchor_scales: list[float] = []
-        self._scale_locked: Optional[float] = None
+        self._scale_locked: float | None = None
         self._parallax_warned = False  # the zero-parallax diagnostic fires once per stream
 
     @property
@@ -342,7 +342,7 @@ class ViGeoDepthEstimator:
         diag = float((h**2 + w**2) ** 0.5)
         return (focal_norm * (diag / 2.0)).cpu().numpy().astype(np.float32)
 
-    def _resolve_scale(self, c_raw: Optional[float]) -> Optional[float]:
+    def _resolve_scale(self, c_raw: float | None) -> float | None:
         """Turn this window's raw Umeyama scale into the scale actually applied.
 
         A zero-baseline window (`c_raw is None`) is rejected first, whatever the lock state: it carries no

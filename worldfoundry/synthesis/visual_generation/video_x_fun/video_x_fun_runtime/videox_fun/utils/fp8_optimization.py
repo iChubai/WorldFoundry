@@ -55,16 +55,14 @@ def convert_weight_dtype_wrapper(module, origin_dtype):
             continue
         original_forward = module.forward
         if hasattr(module, "weight") and module.weight is not None:
-            setattr(module, "original_forward", original_forward)
-            setattr(
-                module,
-                "forward",
-                lambda *inputs, m=module, **kwargs: autocast_model_forward(m, origin_dtype, *inputs, **kwargs),
+            module.original_forward = original_forward
+            module.forward = lambda *inputs, m=module, **kwargs: autocast_model_forward(
+                m, origin_dtype, *inputs, **kwargs
             )
 
 
 def undo_convert_weight_dtype_wrapper(module):
     for name, module in module.named_modules():
         if hasattr(module, "original_forward") and module.weight is not None:
-            setattr(module, "forward", module.original_forward)
+            module.forward = module.original_forward
             delattr(module, "original_forward")

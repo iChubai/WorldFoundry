@@ -16,7 +16,7 @@ class WebsocketClientPolicy:
     See WebsocketPolicyServer for a corresponding server implementation.
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: Optional[int] = None, api_key: Optional[str] = None) -> None:
+    def __init__(self, host: str = "0.0.0.0", port: int | None = None, api_key: str | None = None) -> None:
         self._uri = f"ws://{host}"
         if port is not None:
             self._uri += f":{port}"
@@ -24,10 +24,10 @@ class WebsocketClientPolicy:
         self._api_key = api_key
         self._ws, self._server_metadata = self._wait_for_server()
 
-    def get_server_metadata(self) -> Dict:
+    def get_server_metadata(self) -> dict:
         return self._server_metadata
 
-    def _wait_for_server(self) -> Tuple[websockets.sync.client.ClientConnection, Dict]:
+    def _wait_for_server(self) -> tuple[websockets.sync.client.ClientConnection, dict]:
         logging.info(f"Waiting for server at {self._uri}...")
         timeout = float(os.environ.get("WORLDFOUNDRY_LINGBOT_VA_SERVER_WAIT_TIMEOUT") or 0)
         deadline = time.monotonic() + timeout if timeout > 0 else None

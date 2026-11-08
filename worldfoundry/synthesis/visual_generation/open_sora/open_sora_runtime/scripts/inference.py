@@ -5,14 +5,25 @@ from pprint import pformat
 import torch
 import torch.distributed as dist
 from mmengine.runner import set_random_seed
+from opensora.acceleration.parallel_states import set_sequence_parallel_group
 from tqdm import tqdm
 
-from opensora.acceleration.parallel_states import set_sequence_parallel_group
+# isort: split
 from opensora.datasets import save_sample
+
+# isort: split
+# isort: split
 from opensora.datasets.aspect import get_image_size, get_num_frames
+
+# isort: split
+# isort: split
 from opensora.models.text_encoder.t5 import text_preprocessing
+
+# isort: split
 from opensora.registry import MODELS, SCHEDULERS, build_module
 from opensora.utils.config_utils import parse_configs
+
+# isort: split
 from opensora.utils.inference_utils import (
     add_watermark,
     append_generated,
@@ -29,6 +40,8 @@ from opensora.utils.inference_utils import (
     refine_prompts_by_openai,
     split_prompt,
 )
+
+# isort: split
 from opensora.utils.misc import all_exists, create_logger, is_distributed, is_main_process, to_torch_dtype
 
 
@@ -245,7 +258,9 @@ def main():
 
             # 4. merge to obtain the final prompt
             batch_prompts = []
-            for prompt_segment_list, loop_idx_list in zip(batched_prompt_segment_list, batched_loop_idx_list):
+            for prompt_segment_list, loop_idx_list in zip(
+                batched_prompt_segment_list, batched_loop_idx_list, strict=False
+            ):
                 batch_prompts.append(merge_prompt(prompt_segment_list, loop_idx_list))
 
             # == Iter over loop generation ==

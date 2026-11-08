@@ -7,7 +7,6 @@ import gc
 import sys
 from pathlib import Path
 
-
 NUM_VIEWS = 3
 
 
@@ -217,12 +216,12 @@ def run(args: argparse.Namespace) -> Path:
     import torch
     from diffusers import FlowMatchEulerDiscreteScheduler
     from einops import rearrange
-    from safetensors.torch import load_file
-    from transformers import T5EncoderModel, T5Tokenizer
-
     from models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
     from models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
     from models.pipeline.custom_pipeline import CustomPipeline
+    from safetensors.torch import load_file
+    from transformers import T5EncoderModel, T5Tokenizer
+
     from worldfoundry.core.media.codecs.video import save_video_h264
 
     if not torch.cuda.is_available():

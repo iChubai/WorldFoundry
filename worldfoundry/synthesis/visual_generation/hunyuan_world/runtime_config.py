@@ -12,9 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import resolve_worldfoundry_path
-from worldfoundry.evaluation.utils import load_manifest
-from worldfoundry.evaluation.utils import worldfoundry_data_path
-
+from worldfoundry.evaluation.utils import load_manifest, worldfoundry_data_path
 
 # Root directory where Hunyuan World runtime configuration YAML files are stored.
 HUNYUAN_WORLD_RUNTIME_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "hunyuan_world")

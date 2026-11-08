@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Mapping, Sequence
 from types import SimpleNamespace
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_data_path
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-
 from worldfoundry.synthesis.action_generation._lingbot_vla_runtime import (
     action_values,
     find_training_config,
@@ -25,9 +24,9 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     option_int,
     runtime_options_cache_key,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
-
-_RUNTIME_CACHE: dict[tuple[Any, ...], "_LingBotV1Runtime"] = {}
+_RUNTIME_CACHE: dict[tuple[Any, ...], _LingBotV1Runtime] = {}
 _CONFIG_ROOT = resolve_data_path("models", "runtime", "configs", "lingbot_vla", "v1")
 _ASSET_ROOT = resolve_data_path("models", "runtime", "assets", "lingbot_vla", "v1")
 _MODEL_CONFIG = load_vla_va_wam_runtime_config("lingbot-vla")
@@ -72,17 +71,17 @@ class _LingBotV1Runtime:
         from transformers import AutoConfig, AutoProcessor, PretrainedConfig
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.execution.inference import (
             compile_module_if_enabled,
             install_worldfoundry_inference_infra,
         )
         from worldfoundry.core.io.assets.hf import materialize_hf_snapshot
+        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.utils.tensors.torch import freeze_params, set_random_seed
 
-        from .preprocessing.features import FeatureTransform
         from .modeling.policy import LingbotVlaPolicy
+        from .preprocessing.features import FeatureTransform
 
         install_worldfoundry_inference_infra()
         self.options = dict(options)

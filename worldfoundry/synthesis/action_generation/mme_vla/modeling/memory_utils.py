@@ -1,8 +1,8 @@
-import flax.nnx as nnx
-import jax.numpy as jnp
-import jax
 from functools import partial
 
+import flax.nnx as nnx
+import jax
+import jax.numpy as jnp
 
 kernel_init = nnx.initializers.normal(stddev=0.02)
 kernel_init_ttt_v = nnx.initializers.normal(stddev=0.01)

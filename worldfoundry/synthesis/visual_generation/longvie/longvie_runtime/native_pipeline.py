@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import types
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import torch
@@ -12,7 +12,6 @@ import torch.distributed as dist
 from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
-from typing_extensions import Literal
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
     CausalConv3d,
@@ -36,7 +35,11 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan import WanMode
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import (
     WanModelDualControl,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan.vace import VaceWanModel
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.runners.staged import (
     InferenceStage,
     InferenceStageRunner,
@@ -134,7 +137,7 @@ class LongViePipeline(StagedDiffusionPipeline):
     def load_lora(
         self,
         module: torch.nn.Module,
-        lora_config: Union[ModelConfig, str] = None,
+        lora_config: ModelConfig | str = None,
         alpha=1,
         hotload=False,
         state_dict=None,
@@ -457,11 +460,11 @@ class LongViePipeline(StagedDiffusionPipeline):
         dit_weight_path: str | None = None,
         control_layers: int = 12,
         torch_dtype: torch.dtype = torch.bfloat16,
-        device: Union[str, torch.device] = "cuda",
+        device: str | torch.device = "cuda",
         use_usp: bool = False,
         ring_degree: int = 1,
         ulysses_degree: int = 1,
-    ) -> "LongViePipeline":
+    ) -> LongViePipeline:
         """Assemble LongVie from explicitly loaded native Wan components."""
 
         pipe = cls(device=device, torch_dtype=torch_dtype, tokenizer_path=tokenizer_path)
@@ -500,30 +503,29 @@ class LongViePipeline(StagedDiffusionPipeline):
         self,
         # Prompt
         prompt: str,
-        negative_prompt: Optional[str] = "",
+        negative_prompt: str | None = "",
         # Image-to-video
-        input_image: Optional[Image.Image] = None,
+        input_image: Image.Image | None = None,
         # First-last-frame-to-video
-        end_image: Optional[Image.Image] = None,
+        end_image: Image.Image | None = None,
         # Video-to-video
-        input_video: Optional[list[Image.Image]] = None,
-        denoising_strength: Optional[float] = 1.0,
+        input_video: list[Image.Image] | None = None,
+        denoising_strength: float | None = 1.0,
         # Speech-to-video
-        input_audio: Optional[np.array] = None,
-        audio_embeds: Optional[torch.Tensor] = None,
-        audio_sample_rate: Optional[int] = 16000,
-        s2v_pose_video: Optional[list[Image.Image]] = None,
-        s2v_pose_latents: Optional[torch.Tensor] = None,
-        motion_video: Optional[list[Image.Image]] = None,
+        input_audio: Optional[np.array] = None,  # noqa: UP045 - np.array is a function in the upstream annotation.
+        audio_embeds: torch.Tensor | None = None,
+        audio_sample_rate: int | None = 16000,
+        s2v_pose_video: list[Image.Image] | None = None,
+        s2v_pose_latents: torch.Tensor | None = None,
+        motion_video: list[Image.Image] | None = None,
         # ControlNet
-        control_video: Optional[list[Image.Image]] = None,
-        reference_image: Optional[Image.Image] = None,
+        control_video: list[Image.Image] | None = None,
+        reference_image: Image.Image | None = None,
         # Camera control
-        camera_control_direction: Optional[
-            Literal["Left", "Right", "Up", "Down", "LeftUp", "LeftDown", "RightUp", "RightDown"]
-        ] = None,
-        camera_control_speed: Optional[float] = 1 / 54,
-        camera_control_origin: Optional[tuple] = (
+        camera_control_direction: Literal["Left", "Right", "Up", "Down", "LeftUp", "LeftDown", "RightUp", "RightDown"]
+        | None = None,
+        camera_control_speed: float | None = 1 / 54,
+        camera_control_origin: tuple | None = (
             0,
             0.532139961,
             0.946026558,
@@ -545,42 +547,42 @@ class LongViePipeline(StagedDiffusionPipeline):
             0,
         ),
         # VACE
-        vace_video: Optional[list[Image.Image]] = None,
-        vace_video_mask: Optional[Image.Image] = None,
-        vace_reference_image: Optional[Image.Image] = None,
-        vace_scale: Optional[float] = 1.0,
+        vace_video: list[Image.Image] | None = None,
+        vace_video_mask: Image.Image | None = None,
+        vace_reference_image: Image.Image | None = None,
+        vace_scale: float | None = 1.0,
         # Animate
-        animate_pose_video: Optional[list[Image.Image]] = None,
-        animate_face_video: Optional[list[Image.Image]] = None,
-        animate_inpaint_video: Optional[list[Image.Image]] = None,
-        animate_mask_video: Optional[list[Image.Image]] = None,
+        animate_pose_video: list[Image.Image] | None = None,
+        animate_face_video: list[Image.Image] | None = None,
+        animate_inpaint_video: list[Image.Image] | None = None,
+        animate_mask_video: list[Image.Image] | None = None,
         # Randomness
-        seed: Optional[int] = None,
-        rand_device: Optional[str] = "cpu",
+        seed: int | None = None,
+        rand_device: str | None = "cpu",
         # Shape
-        height: Optional[int] = 480,
-        width: Optional[int] = 832,
+        height: int | None = 480,
+        width: int | None = 832,
         num_frames=81,
         # Classifier-free guidance
-        cfg_scale: Optional[float] = 5.0,
-        cfg_merge: Optional[bool] = False,
+        cfg_scale: float | None = 5.0,
+        cfg_merge: bool | None = False,
         # Boundary
-        switch_DiT_boundary: Optional[float] = 0.875,
+        switch_DiT_boundary: float | None = 0.875,
         # Scheduler
-        num_inference_steps: Optional[int] = 50,
-        sigma_shift: Optional[float] = 5.0,
+        num_inference_steps: int | None = 50,
+        sigma_shift: float | None = 5.0,
         # Speed control
-        motion_bucket_id: Optional[int] = None,
+        motion_bucket_id: int | None = None,
         # VAE tiling
-        tiled: Optional[bool] = True,
-        tile_size: Optional[tuple[int, int]] = (30, 52),
-        tile_stride: Optional[tuple[int, int]] = (15, 26),
+        tiled: bool | None = True,
+        tile_size: tuple[int, int] | None = (30, 52),
+        tile_stride: tuple[int, int] | None = (15, 26),
         # Sliding window
-        sliding_window_size: Optional[int] = None,
-        sliding_window_stride: Optional[int] = None,
+        sliding_window_size: int | None = None,
+        sliding_window_stride: int | None = None,
         # Teacache
-        tea_cache_l1_thresh: Optional[float] = None,
-        tea_cache_model_id: Optional[str] = "",
+        tea_cache_l1_thresh: float | None = None,
+        tea_cache_model_id: str | None = "",
         # progress_bar
         progress_bar_cmd=tqdm,
         dense_video=None,
@@ -720,7 +722,7 @@ class LongViePipeline(StagedDiffusionPipeline):
             if (
                 timestep.item() < switch_DiT_boundary * self.scheduler.num_train_timesteps
                 and self.dit2 is not None
-                and not models["dit"] is self.dit2
+                and models["dit"] is not self.dit2
             ):
                 self.load_models_to_device(self.in_iteration_models_2)
                 models["dit"] = self.dit2
@@ -1441,7 +1443,6 @@ class TemporalTiler_BCTHW:
 
     def __init__(self):
         """Init."""
-        pass
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
         """Build 1d mask.
@@ -1539,22 +1540,22 @@ def model_fn_wan_video(
     latents: torch.Tensor = None,
     timestep: torch.Tensor = None,
     context: torch.Tensor = None,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     reference_latents=None,
     vace_context=None,
     vace_scale=1.0,
-    audio_embeds: Optional[torch.Tensor] = None,
-    motion_latents: Optional[torch.Tensor] = None,
-    s2v_pose_latents: Optional[torch.Tensor] = None,
+    audio_embeds: torch.Tensor | None = None,
+    motion_latents: torch.Tensor | None = None,
+    s2v_pose_latents: torch.Tensor | None = None,
     drop_motion_frames: bool = True,
     tea_cache: TeaCache = None,
     use_unified_sequence_parallel: bool = False,
-    motion_bucket_id: Optional[torch.Tensor] = None,
+    motion_bucket_id: torch.Tensor | None = None,
     pose_latents=None,
     face_pixel_values=None,
-    sliding_window_size: Optional[int] = None,
-    sliding_window_stride: Optional[int] = None,
+    sliding_window_size: int | None = None,
+    sliding_window_stride: int | None = None,
     cfg_merge: bool = False,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,
@@ -1683,7 +1684,7 @@ def model_fn_wan_video(
         value = dit.patch_embedding(value)
         if dit.control_adapter is not None and camera_control is not None:
             camera_value = dit.control_adapter(camera_control)
-            value = [base + control for base, control in zip(value, camera_value)][0].unsqueeze(0)
+            value = [base + control for base, control in zip(value, camera_value, strict=False)][0].unsqueeze(0)
         return value
 
     x = patch_volume(x, control_camera_latents_input)

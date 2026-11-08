@@ -140,7 +140,7 @@ class AlayaWorldModel(LTXModel):
         )
         self._context_parallel_group = None
 
-    def enable_context_parallel(self, group=None) -> "AlayaWorldModel":
+    def enable_context_parallel(self, group=None) -> AlayaWorldModel:
         """Enable Ulysses self attention using an initialized process group.
 
         The existing per-device attention implementation remains the inner

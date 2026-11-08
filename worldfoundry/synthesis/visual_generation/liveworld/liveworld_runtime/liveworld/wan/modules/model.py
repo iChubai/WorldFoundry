@@ -690,7 +690,7 @@ class WanModel(ModelMixin, ConfigMixin):
         # 1) 解析参数，兼容两种风格
         if "enable" in kwargs or "gradient_checkpointing_func" in kwargs:
             enable = kwargs.get("enable", True)
-            grad_ckpt_func = kwargs.get("gradient_checkpointing_func", None)
+            grad_ckpt_func = kwargs.get("gradient_checkpointing_func")
         elif len(args) >= 1 and isinstance(args[0], bool):
             enable = args[0]
             grad_ckpt_func = None
@@ -782,7 +782,7 @@ class WanModel(ModelMixin, ConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -798,7 +798,7 @@ class WanModel(ModelMixin, ConfigMixin):
             # Split y_camera along batch dimension to match x (which is a list of tensors)
             y_camera = [y_camera[i : i + 1] for i in range(y_camera.size(0))]
             # Element-wise addition of camera features to visual features
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
 
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -980,10 +980,10 @@ class WanModel(ModelMixin, ConfigMixin):
 
         c = self.out_dim if c is None else c
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from copy import deepcopy
 import heapq
 import math
+from collections.abc import Callable, Sequence
+from copy import deepcopy
 
 import einops
 import jax

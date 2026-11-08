@@ -1,45 +1,45 @@
 """Shared checkpoint-compatible inference layers for LingBot-VLA v2."""
 
+from typing import List, Optional, Union
+
 import einops
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-from typing import List, Optional, Union
 from transformers import (
     AutoConfig,
     PretrainedConfig,
     PreTrainedModel,
 )
-from transformers.models.auto import CONFIG_MAPPING
 from transformers.cache_utils import Cache
-from transformers.utils import logging
-from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
-
+from transformers.models.auto import CONFIG_MAPPING
 from transformers.models.qwen2.modeling_qwen2 import (
     Qwen2RMSNorm,
 )
+from transformers.utils import logging
+
+from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
 
 try:
     from dinov3.hub.backbones import (
+        dinov3_vitb16,
         dinov3_vits16,
         dinov3_vits16plus,
-        dinov3_vitb16,
     )
 except:
     pass
-from .utils import (
-    create_sinusoidal_pos_embedding,
-    make_att_2d_masks,
-)
-from .utils import apply_rope, our_eager_attention_forward
-from .attention import flex_attention_forward
-from .attention import build_block_mask, flex_attention_with_block_mask
-
+from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
 from .depth_head import TaskTokenDepthHead
 from .qwen2_expert import (
+    FixQwen2RMSNorm,
     Qwen2ForCausalLM,
     Qwen2TokenMoeBlock,
-    FixQwen2RMSNorm,
+)
+from .utils import (
+    apply_rope,
+    create_sinusoidal_pos_embedding,
+    make_att_2d_masks,
+    our_eager_attention_forward,
 )
 
 logger = logging.get_logger(__name__)
@@ -340,7 +340,7 @@ class QwenvlWithExpertModel(PreTrainedModel):
     def get_image_features(
         self,
         pixel_values: torch.FloatTensor,
-        image_grid_thw: Optional[torch.LongTensor] = None,
+        image_grid_thw: torch.LongTensor | None = None,
         precompute_grid_thw: bool = False,
     ):
         """
@@ -387,9 +387,9 @@ class QwenvlWithExpertModel(PreTrainedModel):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         layer_idx: int,
-        past_key_values: Optional[Union[List[torch.FloatTensor], Cache]] = None,
-        use_cache: Optional[bool] = None,
-        fill_kv_cache: Optional[bool] = None,
+        past_key_values: list[torch.FloatTensor] | Cache | None = None,
+        use_cache: bool | None = None,
+        fill_kv_cache: bool | None = None,
     ):
         if use_cache:
             if past_key_values is None:
@@ -410,14 +410,14 @@ class QwenvlWithExpertModel(PreTrainedModel):
 
     def forward(
         self,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        vlm_position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Union[List[torch.FloatTensor], Cache]] = None,
-        inputs_embeds: List[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        fill_kv_cache: Optional[bool] = None,
-        ada_cond: List[torch.FloatTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        vlm_position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | Cache | None = None,
+        inputs_embeds: list[torch.FloatTensor] = None,
+        use_cache: bool | None = None,
+        fill_kv_cache: bool | None = None,
+        ada_cond: list[torch.FloatTensor] = None,
     ):
         """
         Args:
@@ -1069,4 +1069,4 @@ class FlowMatching(nn.Module):
         return v_t
 
 
-__all__ = ["AdaRMSNorm", "FixAdaRMSNorm", "replace_lnorm_with_adanorm", "FlowMatching"]
+__all__ = ["AdaRMSNorm", "FixAdaRMSNorm", "FlowMatching", "replace_lnorm_with_adanorm"]

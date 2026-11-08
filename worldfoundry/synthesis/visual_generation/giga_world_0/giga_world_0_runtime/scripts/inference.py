@@ -10,17 +10,17 @@ import tyro
 from accelerate.utils import set_seed
 from giga_datasets import image_utils
 from giga_datasets import utils as gd_utils
+from giga_models import GigaWorld0Pipeline
+from giga_models.utils import find_free_port
 from PIL import Image
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms import functional as F
 from tqdm import tqdm
 
-from giga_models import GigaWorld0Pipeline
 from worldfoundry.core.distributed.sequence_parallel.runtime import (
     get_sequence_parallel_group,
     initialize_sequence_parallel_group,
 )
-from giga_models.utils import find_free_port
 
 
 def _inference(
@@ -73,7 +73,7 @@ def _inference(
                     jerky movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special \
                     effects, fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and \
                     flickering. Overall, the video is of poor quality."
-    data_list = json.load(open(data_path, "r"))
+    data_list = json.load(open(data_path))
     data_list = gd_utils.split_data(data_list, dp_world_size, dp_rank)
     os.makedirs(save_dir, exist_ok=True)
     # Inference loop
@@ -167,7 +167,7 @@ def inference(
     vae_model_path: str = None,
     lora_model_path: str = None,
     lora_fuse: bool = False,
-    gpu_ids: List[int] = [0],
+    gpu_ids: list[int] = [0],
     num_inference_steps: int = 30,
     fps: int = 16,
     num_frames: int = 61,

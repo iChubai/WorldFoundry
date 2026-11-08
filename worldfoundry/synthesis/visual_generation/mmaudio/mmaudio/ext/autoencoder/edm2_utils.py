@@ -29,7 +29,7 @@ def constant(value, shape=None, dtype=None, device=None, memory_format=None):
         memory_format = torch.contiguous_format
 
     key = (value.shape, value.dtype, value.tobytes(), shape, dtype, device, memory_format)
-    tensor = _constant_cache.get(key, None)
+    tensor = _constant_cache.get(key)
     if tensor is None:
         tensor = torch.as_tensor(value.copy(), dtype=dtype, device=device)
         if shape is not None:

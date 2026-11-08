@@ -1,7 +1,7 @@
 """NeoVerse 3D geometry transformations."""
 
-import torch
 import numpy as np
+import torch
 
 
 def depth_to_camera_coords(depthmap, camera_intrinsics):

@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_worldfoundry_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-from ..base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.act.runtime import ACTRuntime, ACTRuntimeConfig, select_act_checkpoint
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 class ACTSynthesis(ActionModelSynthesis):
@@ -47,7 +49,7 @@ class ACTSynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "ACTSynthesis":
+    ) -> ACTSynthesis:
         """Create a lazy ACT synthesis wrapper from profile/runtime options.
 
         Args:

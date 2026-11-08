@@ -3,12 +3,15 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from einops import rearrange
 
-from .rope_3d import RotaryPositionalEmbedding
 from .blocks import RMSNorm_FP32
+from .rope_3d import RotaryPositionalEmbedding
+
+# isort: split
 from ..block_sparse_attention.bsa_interface import flash_attn_bsa_3d
+
+# isort: split
 from worldfoundry.core.attention.parallel.long_context_ulysses import ulysses_wrapper
 from worldfoundry.core.utils.python.misc_utils import env_is_true
 
@@ -23,9 +26,9 @@ class Attention(nn.Module):
         enable_xformers: bool = False,
         enable_bsa: bool = False,
         bsa_params: dict = None,
-        cp_split_hw: Optional[List[int]] = None,
+        cp_split_hw: list[int] | None = None,
         *,
-        enable_kv_optimization: Optional[bool] = None,
+        enable_kv_optimization: bool | None = None,
     ) -> None:
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
@@ -238,7 +241,7 @@ class MultiHeadCrossAttention(nn.Module):
 
     def _process_cross_attn(self, x, cond, kv_seqlen):
         B, N, C = x.shape
-        assert C == self.dim and cond.shape[2] == self.dim
+        assert self.dim == C and cond.shape[2] == self.dim
 
         q = self.q_linear(x).view(1, -1, self.num_heads, self.head_dim)
         kv = self.kv_linear(cond).view(1, -1, 2, self.num_heads, self.head_dim)

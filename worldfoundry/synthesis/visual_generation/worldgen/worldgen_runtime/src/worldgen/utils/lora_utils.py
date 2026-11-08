@@ -1,8 +1,9 @@
 import os
-import torch
-import safetensors.torch
 import re
-from typing import Dict, Tuple, List
+from typing import Dict, List, Tuple
+
+import safetensors.torch
+import torch
 
 
 def get_block_number(key):
@@ -11,7 +12,7 @@ def get_block_number(key):
     return int(match.group(1)) if match else None
 
 
-def load_and_fix_lora(lora_path: str) -> Tuple[Dict[str, torch.Tensor], float]:
+def load_and_fix_lora(lora_path: str) -> tuple[dict[str, torch.Tensor], float]:
     """Load and fix LoRA weights, ensuring all required components are present."""
     # Load the state dict
     if lora_path.endswith(".safetensors"):
@@ -90,7 +91,7 @@ def load_and_fix_lora(lora_path: str) -> Tuple[Dict[str, torch.Tensor], float]:
     return state_dict, 1.0
 
 
-def compose_lora_with_fixes(lora_paths: List[Tuple[str, float]]) -> Dict[str, torch.Tensor]:
+def compose_lora_with_fixes(lora_paths: list[tuple[str, float]]) -> dict[str, torch.Tensor]:
     """Compose multiple LoRAs after fixing any missing keys."""
     from nunchaku.lora.flux.compose import compose_lora
 

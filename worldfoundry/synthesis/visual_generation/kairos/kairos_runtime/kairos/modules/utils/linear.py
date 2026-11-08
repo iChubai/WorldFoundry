@@ -1,18 +1,22 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import torch
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
-from abc import ABC, abstractmethod
+
+# isort: split
 from kairos.modules.utils import parallel_state
+
+# isort: split
 from typing import Any
-import torch.nn as nn
+
 import torch.distributed as dist
+import torch.nn as nn
 
 
 def ensure_divisibility(numerator, denominator) -> None:
     """Ensure that numerator is divisible by the denominator."""
-    assert numerator % denominator == 0, "{} is not divisible by {}".format(numerator, denominator)
+    assert numerator % denominator == 0, f"{numerator} is not divisible by {denominator}"
 
 
 def divide(numerator: int, denominator: int) -> int:

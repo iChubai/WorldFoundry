@@ -1,11 +1,13 @@
 # Inference-only RoboFlamingo source retained in-tree.
+import copy
+from collections import namedtuple
+
 import torch
 from einops import rearrange, repeat
-from torch import nn
-import copy
 from open_flamingo.src.helpers import PerceiverResampler
+from torch import nn
+
 from .action_head import DeterministicDecoder, DiffusionDecoder, FCDecoder, GPTDecoder
-from collections import namedtuple
 
 
 class BCFlamingo(nn.Module):
@@ -69,7 +71,7 @@ class BCFlamingo(nn.Module):
         self.window_size = window_size
         self.tcp_rel = tcp_rel
         self.act_step = multi_step_action
-        print("window size: {}".format(window_size))
+        print(f"window size: {window_size}")
         self.vision_encoder = vision_encoder
         self.perceiver = PerceiverResampler(dim=self.vis_dim)
         self.sep_resampler = sep_resampler
@@ -136,18 +138,7 @@ class BCFlamingo(nn.Module):
             )
             self.lang_encoder.lm_head = lm_head
         elif decoder_type == "fc":
-            if use_hist:
-                self.lang_encoder.lm_head = self.action_head = FCDecoder(
-                    in_features,
-                    self.window_size,
-                    use_diff=use_diff,
-                    last_action=last_action,
-                    fusion_mode=fusion_mode,
-                    use_state=use_state,
-                    return_feature=return_feature,
-                    multi_step_action=multi_step_action,
-                )
-            elif "vit_concat" in fusion_mode:
+            if use_hist or "vit_concat" in fusion_mode:
                 self.lang_encoder.lm_head = self.action_head = FCDecoder(
                     in_features,
                     self.window_size,

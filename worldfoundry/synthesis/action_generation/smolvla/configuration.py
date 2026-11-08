@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -16,7 +17,7 @@ class PolicyFeature:
     shape: tuple[int, ...]
 
     @classmethod
-    def from_value(cls, value: Mapping[str, Any]) -> "PolicyFeature":
+    def from_value(cls, value: Mapping[str, Any]) -> PolicyFeature:
         return cls(
             type=str(value.get("type", "")).upper(),
             shape=tuple(int(dimension) for dimension in value.get("shape", ())),
@@ -59,7 +60,7 @@ class SmolVLAConfig:
     compile_mode: str = "max-autotune"
 
     @classmethod
-    def from_json(cls, path: str | Path) -> "SmolVLAConfig":
+    def from_json(cls, path: str | Path) -> SmolVLAConfig:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         allowed = set(cls.__dataclass_fields__)
         values = {key: value for key, value in payload.items() if key in allowed}

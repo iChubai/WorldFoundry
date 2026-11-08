@@ -1,9 +1,9 @@
+import imageio
 import kornia
 import numpy as np
 import torch
 from matplotlib import cm
 from torchvision.io import write_video
-import imageio
 
 
 def tensor2im(input_image, imtype=np.uint8):

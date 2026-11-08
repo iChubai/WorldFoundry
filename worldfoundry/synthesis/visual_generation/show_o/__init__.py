@@ -7,7 +7,7 @@ It makes `ShowORuntime` available from `.worldfoundry_runtime` and
 to be imported directly from the 'show_o' package namespace.
 """
 
-from .worldfoundry_runtime import ShowORuntime
 from .show_o_synthesis import ShowOSynthesis
+from .worldfoundry_runtime import ShowORuntime
 
 __all__ = ["ShowORuntime", "ShowOSynthesis"]

@@ -26,7 +26,7 @@ class eval_mode:
             model.train(False)
 
     def __exit__(self, *args):
-        for model, state in zip(self.models, self.prev_states):
+        for model, state in zip(self.models, self.prev_states, strict=False):
             model.train(state)
         return False
 
@@ -40,7 +40,7 @@ def set_seed_everywhere(seed):
 
 
 def soft_update_params(net, target_net, tau):
-    for param, target_param in zip(net.parameters(), target_net.parameters()):
+    for param, target_param in zip(net.parameters(), target_net.parameters(), strict=False):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
 
 

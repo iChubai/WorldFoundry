@@ -6,15 +6,14 @@ from typing import Optional
 import numpy as np
 import torch
 from colorlog import ColoredFormatter
-from PIL import Image
-from torchvision.transforms import v2
-
 from mmaudio.data.av_utils import ImageInfo, VideoInfo, read_frames, reencode_with_audio
 from mmaudio.model.flow_matching import FlowMatching
 from mmaudio.model.networks import MMAudio
 from mmaudio.model.sequence_config import CONFIG_16K, CONFIG_44K, SequenceConfig
 from mmaudio.model.utils.features_utils import FeaturesUtils
 from mmaudio.utils.download_utils import download_model_if_needed
+from PIL import Image
+from torchvision.transforms import v2
 
 log = logging.getLogger()
 
@@ -24,7 +23,7 @@ class ModelConfig:
     model_name: str
     model_path: Path
     vae_path: Path
-    bigvgan_16k_path: Optional[Path]
+    bigvgan_16k_path: Path | None
     mode: str
     synchformer_ckpt: Path = Path("./ext_weights/synchformer_state_dict.pth")
 
@@ -88,11 +87,11 @@ all_model_cfg: dict[str, ModelConfig] = {
 
 
 def generate(
-    clip_video: Optional[torch.Tensor],
-    sync_video: Optional[torch.Tensor],
-    text: Optional[list[str]],
+    clip_video: torch.Tensor | None,
+    sync_video: torch.Tensor | None,
+    text: list[str] | None,
     *,
-    negative_text: Optional[list[str]] = None,
+    negative_text: list[str] | None = None,
     feature_utils: FeaturesUtils,
     net: MMAudio,
     fm: FlowMatching,

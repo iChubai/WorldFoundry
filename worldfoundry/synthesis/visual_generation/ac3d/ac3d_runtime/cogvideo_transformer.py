@@ -1,9 +1,9 @@
 from typing import Any, Dict, Optional, Tuple, Union
 
-import torch
 import numpy as np
-from diffusers.utils import is_torch_version
+import torch
 from diffusers.models.transformers.cogvideox_transformer_3d import CogVideoXTransformer3DModel, Transformer2DModelOutput
+from diffusers.utils import is_torch_version
 
 
 class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):
@@ -11,12 +11,12 @@ class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):
         self,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        timestep: Union[int, float, torch.LongTensor],
+        timestep: int | float | torch.LongTensor,
         start_frame=None,
-        timestep_cond: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        timestep_cond: torch.Tensor | None = None,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         controlnet_states: torch.Tensor = None,
-        controlnet_weights: Optional[Union[float, int, list, np.ndarray, torch.FloatTensor]] = 1.0,
+        controlnet_weights: float | int | list | np.ndarray | torch.FloatTensor | None = 1.0,
         return_dict: bool = True,
     ):
         batch_size, num_frames, channels, height, width = hidden_states.shape
@@ -51,7 +51,7 @@ class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                 hidden_states, encoder_hidden_states = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),
                     hidden_states,

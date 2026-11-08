@@ -1,21 +1,21 @@
 import argparse
-import torch
 import os
 from pathlib import Path
-from omegaconf import OmegaConf
-from tqdm import tqdm
-from torchvision import transforms
-from torchvision.io import write_video
-from einops import rearrange
+
+import torch
 import torch.distributed as dist
+from einops import rearrange
+from eval_inputs import TextDataset, TextImagePairDataset
+from omegaconf import OmegaConf
+from pipeline.causal_inference import CausalInferencePipeline
+from runtime_utils.memory import DynamicSwapInstaller, get_cuda_free_memory_gb, gpu
 from torch.utils.data import DataLoader, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
+from torchvision import transforms
+from torchvision.io import write_video
+from tqdm import tqdm
 
-from pipeline.causal_inference import CausalInferencePipeline
-from eval_inputs import TextDataset, TextImagePairDataset
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
-
-from runtime_utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", type=str, help="Path to the config file")

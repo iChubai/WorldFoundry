@@ -1,15 +1,16 @@
 import time
 from typing import List, Optional
-import torch
 
-from ..wan_utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
+import torch
+import tqdm
 
 from worldfoundry.core.vram import (
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,
 )
-import tqdm
+
+from ..wan_utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 
 class CausalInferencePipeline(torch.nn.Module):
@@ -50,14 +51,14 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,
         rectified_tf=False,
-        viewmats: Optional[torch.Tensor] = None,  # (B, F, 4, 4) PRoPE camera extrinsics
-        Ks: Optional[torch.Tensor] = None,  # (B, F, 3, 3) PRoPE camera intrinsics
+        viewmats: torch.Tensor | None = None,  # (B, F, 4, 4) PRoPE camera extrinsics
+        Ks: torch.Tensor | None = None,  # (B, F, 3, 3) PRoPE camera intrinsics
     ) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.

@@ -5,21 +5,21 @@ from __future__ import annotations
 import importlib
 import json
 import logging
-from pathlib import Path
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
-from hydra.utils import instantiate
 import numpy as np
-from omegaconf import DictConfig, ListConfig, OmegaConf
-from tianshou.data import Batch
 import torch
 import torch.distributed as dist
+from hydra.utils import instantiate
+from omegaconf import DictConfig, ListConfig, OmegaConf
+from tianshou.data import Batch
 from torch.distributed.device_mesh import DeviceMesh
 
 from ..preprocessing import ComposedModalityTransform, DatasetMetadata, EmbodimentTag
 from .targets import rewrite_targets, validate_inference_targets
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,20 +1,18 @@
+import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any, Dict, Optional
 
 import torch
 import torch.nn.functional as F
+from diffusers.models.attention import FeedForward
+from diffusers.models.attention_processor import Attention
+from diffusers.utils import BaseOutput
+from einops import rearrange
 from torch import nn
 
-from diffusers.utils import BaseOutput
-from diffusers.models.attention_processor import Attention
-from diffusers.models.attention import FeedForward
-
-from typing import Dict, Any
-from .resnet import InflatedGroupNorm
 from .attention_processor import PoseAdaptorAttnProcessor
-
-from einops import rearrange
-import math
+from .resnet import InflatedGroupNorm
 
 
 def zero_module(module):
@@ -50,7 +48,7 @@ class VanillaTemporalModule(nn.Module):
         zero_initialize=True,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: Dict = {},
+        attention_processor_kwargs: dict = {},
         causal_temporal_attention=False,
         causal_temporal_attention_mask_type="",
         rescale_output_factor=1.0,
@@ -83,7 +81,7 @@ class VanillaTemporalModule(nn.Module):
         temb=None,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: Dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},
     ):
         hidden_states = self.temporal_transformer(
             hidden_states, encoder_hidden_states, attention_mask, cross_attention_kwargs=cross_attention_kwargs
@@ -114,7 +112,7 @@ class TemporalTransformer3DModel(nn.Module):
         temporal_position_encoding_max_len=32,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: Dict = {},
+        attention_processor_kwargs: dict = {},
         causal_temporal_attention=None,
         causal_temporal_attention_mask_type="",
         rescale_output_factor=1.0,
@@ -207,7 +205,7 @@ class TemporalTransformer3DModel(nn.Module):
                 raise ValueError
 
             # generate attention mask fron binary values
-            mask = mask.masked_fill(mask == 0, float("-inf")).masked_fill(mask == 1, float(0.0))
+            mask = mask.masked_fill(mask == 0, float("-inf")).masked_fill(mask == 1, 0.0)
             mask = mask.unsqueeze(0)
             mask = mask.repeat(batch_size, 1, 1)
 
@@ -220,7 +218,7 @@ class TemporalTransformer3DModel(nn.Module):
         hidden_states,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: Dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},
     ):
         residual = hidden_states
 
@@ -272,7 +270,7 @@ class TemporalTransformerBlock(nn.Module):
         temporal_position_encoding_max_len=32,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: Dict = {},
+        attention_processor_kwargs: dict = {},
         rescale_output_factor=1.0,
     ):
         super().__init__()
@@ -312,10 +310,10 @@ class TemporalTransformerBlock(nn.Module):
         hidden_states,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: Dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},
     ):
         for attention_block, norm, attention_block_type in zip(
-            self.attention_blocks, self.norms, self.attention_block_types
+            self.attention_blocks, self.norms, self.attention_block_types, strict=False
         ):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
@@ -378,7 +376,7 @@ class TemporalSelfAttention(Attention):
         self.rescale_output_factor = rescale_output_factor
 
     def set_use_memory_efficient_attention_xformers(
-        self, use_memory_efficient_attention_xformers: bool, attention_op: Optional[Callable] = None
+        self, use_memory_efficient_attention_xformers: bool, attention_op: Callable | None = None
     ):
         # disable motion module efficient xformers to avoid bad results, don't know why
         # TODO: fix this bug
@@ -409,7 +407,7 @@ class TemporalSelfAttention(Attention):
                 attention_mask=attention_mask,
                 **cross_attention_kwargs,
             )
-        elif hasattr(self.processor, "__call__"):
+        elif callable(self.processor):
             return self.processor.__call__(
                 self,
                 hidden_states,

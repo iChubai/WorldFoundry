@@ -12,13 +12,12 @@ from typing import Any
 import torch
 
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
-from worldfoundry.core.model_loading.checkpoints import assign_state_dict_strict
 from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 from worldfoundry.core.io.paths import resolve_local_hf_model_path, resolve_worldfoundry_path
+from worldfoundry.core.model_loading.checkpoints import assign_state_dict_strict
 
 from .action import ActionModel
 from .policy import CogACT
-
 
 _DEFAULT_TOKENIZER_REF = "openvla/openvla-7b"
 _MODEL_TYPES = {"DiT-S", "DiT-B", "DiT-L"}

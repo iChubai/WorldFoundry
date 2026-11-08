@@ -8,8 +8,8 @@ GPT model:
 - the final decoder is a linear projection into a vanilla Softmax classifier
 """
 
-import math
 import logging
+import math
 
 import torch
 import torch.nn as nn
@@ -614,7 +614,7 @@ class KMeans(nn.Module):
     @torch.no_grad()
     def initialize(self, x):
         N, D = x.shape
-        assert D == self.nc, D
+        assert self.nc == D, D
         c = x[torch.randperm(N)[: self.ncluster]]  # init clusters at random
         for i in range(self.niter):
             # assign all pixels to the closest codebook element

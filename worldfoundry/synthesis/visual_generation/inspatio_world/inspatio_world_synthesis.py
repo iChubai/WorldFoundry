@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 from worldfoundry.synthesis.visual_generation.inspatio_world.worldfoundry_runtime import (
     DEFAULT_CHECKPOINT_REPO,
     DEFAULT_DA3_MODEL_REPO,
@@ -15,7 +16,6 @@ from worldfoundry.synthesis.visual_generation.inspatio_world.worldfoundry_runtim
     DEFAULT_WAN_MODEL_REPO,
     InspatioWorldRuntime,
 )
-from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 
 class InspatioWorldSynthesis(BaseSynthesis):
@@ -23,14 +23,14 @@ class InspatioWorldSynthesis(BaseSynthesis):
 
     def __init__(
         self,
-        repo_root: Optional[str] = None,
+        repo_root: str | None = None,
         checkpoint_source: str = DEFAULT_CHECKPOINT_REPO,
         wan_model_source: str = DEFAULT_WAN_MODEL_REPO,
         da3_model_source: str = DEFAULT_DA3_MODEL_REPO,
         florence_model_source: str = DEFAULT_FLORENCE_MODEL_REPO,
         device: str = "cuda",
-        defaults: Optional[Dict[str, Any]] = None,
-        runtime: Optional[InspatioWorldRuntime] = None,
+        defaults: dict[str, Any] | None = None,
+        runtime: InspatioWorldRuntime | None = None,
     ) -> None:
         """
         Initializes the InspatioWorldSynthesis adapter.
@@ -95,15 +95,15 @@ class InspatioWorldSynthesis(BaseSynthesis):
         cls,
         pretrained_model_path: str = DEFAULT_CHECKPOINT_REPO,
         args=None,
-        device: Optional[str] = None,
+        device: str | None = None,
         wan_model_path: str = DEFAULT_WAN_MODEL_REPO,
         da3_model_path: str = DEFAULT_DA3_MODEL_REPO,
         florence_model_path: str = DEFAULT_FLORENCE_MODEL_REPO,
-        config_path: Optional[str] = None,
-        tae_checkpoint_path: Optional[str] = None,
-        default_traj_txt_path: Optional[str] = None,
+        config_path: str | None = None,
+        tae_checkpoint_path: str | None = None,
+        default_traj_txt_path: str | None = None,
         **kwargs,
-    ) -> "InspatioWorldSynthesis":
+    ) -> InspatioWorldSynthesis:
         """
         Initializes the `InspatioWorldSynthesis` adapter by loading a pretrained InSpatio-World model.
 
@@ -145,7 +145,7 @@ class InspatioWorldSynthesis(BaseSynthesis):
         )
         return cls(runtime=runtime)
 
-    def plan(self, *args, **kwargs) -> Dict[str, Any]:
+    def plan(self, *args, **kwargs) -> dict[str, Any]:
         """
         Executes the planning phase using the underlying InSpatio-World runtime.
 

@@ -11,7 +11,8 @@
 # --------------------------------------------------------
 
 import enum
-from typing import Callable, List
+from collections.abc import Callable
+from typing import List
 
 import numpy as np
 import torch
@@ -889,7 +890,7 @@ class GaussianDiffusion:
         }
 
 
-def _extract_into_tensor(arr: torch.Tensor, timesteps: torch.Tensor, broadcast_shape: List[int]):
+def _extract_into_tensor(arr: torch.Tensor, timesteps: torch.Tensor, broadcast_shape: list[int]):
     """
     Extract values from a 1-D numpy array for a batch of indices.
     :param arr: the 1-D numpy array.

@@ -2,13 +2,15 @@
 Based on https://github.com/buoyancy99/diffusion-forcing/blob/main/algorithms/diffusion_forcing/models/attention.py
 """
 
-from typing import Optional
 from collections import namedtuple
+from typing import Optional
+
 import torch
-from torch import nn
-from torch.nn import functional as F
 from einops import rearrange
 from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
+from torch import nn
+from torch.nn import functional as F
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 

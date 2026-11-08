@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     completed_action_result,
@@ -12,7 +13,6 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     option_int,
     runtime_options_cache_key,
 )
-
 
 _RUNTIME_CACHE: dict[tuple[Any, ...], Any] = {}
 

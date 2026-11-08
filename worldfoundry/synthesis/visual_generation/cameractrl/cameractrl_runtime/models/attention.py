@@ -4,13 +4,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 import torch
-from torch import nn
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models.attention import BasicTransformerBlock
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import BaseOutput
-from diffusers.models.attention import BasicTransformerBlock
 from einops import rearrange, repeat
+from torch import nn
 
 
 @dataclass
@@ -24,14 +23,14 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
+        in_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
         norm_num_groups: int = 32,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = False,
         activation_fn: str = "geglu",
-        num_embeds_ada_norm: Optional[int] = None,
+        num_embeds_ada_norm: int | None = None,
         use_linear_projection: bool = False,
         only_cross_attention: bool = False,
         upcast_attention: bool = False,

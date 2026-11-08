@@ -1,10 +1,11 @@
-from typing import Any, Callable, Dict, List, Optional, Union
-
 import os
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Union
+
 import torch
 import torch.nn as nn
 import transformers.activations
-from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2Tokenizer, AutoProcessor
+from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration, Qwen2Tokenizer
 
 if not hasattr(transformers.activations, "PytorchGELUTanh"):
     transformers.activations.PytorchGELUTanh = transformers.activations.GELUActivation
@@ -76,10 +77,10 @@ class QwenVLTextEncoder(nn.Module):
     @torch.no_grad()
     def _get_qwen_prompt_embeds(
         self,
-        prompt: Union[str, List[str]],
-        images: Optional[Union[Any, List[Any]]] = None,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        prompt: str | list[str],
+        images: Any | list[Any] | None = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         """
         Returns:
@@ -113,7 +114,7 @@ class QwenVLTextEncoder(nn.Module):
         chat_texts = []
         pre_texts = []
         post_texts = []
-        for p, img in zip(prompt_list, images_list):
+        for p, img in zip(prompt_list, images_list, strict=False):
             if img is not None:
                 user_content = [
                     {"type": "image"},
@@ -189,7 +190,7 @@ class QwenVLTextEncoder(nn.Module):
         prompt_embeds = hidden_states.new_zeros((bsz, max_L, D))
         encoder_attention_mask = torch.zeros((bsz, max_L), device=device, dtype=torch.bool)
 
-        for i, (h, m) in enumerate(zip(prompt_h_list, prompt_m_list)):
+        for i, (h, m) in enumerate(zip(prompt_h_list, prompt_m_list, strict=False)):
             L = h.shape[0]
             prompt_embeds[i, :L] = h
             encoder_attention_mask[i, :L] = m

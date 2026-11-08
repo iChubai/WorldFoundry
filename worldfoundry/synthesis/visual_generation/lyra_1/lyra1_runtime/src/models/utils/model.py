@@ -13,19 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import math
+import random
+from typing import Tuple
+
+import einops
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import random
-import json
-import einops
-from typing import Tuple
-
 from src.models.utils.attention import Block
-from src.models.utils.mamba2 import Mamba2Block
 from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_tokenizer
+from src.models.utils.mamba2 import Mamba2Block
 
 
 def load_vae(vae_backbone, vae_path):
@@ -128,7 +128,7 @@ def encode_latent_time_vae(batch, encode_video, img_size, time_keys=["time_embed
     return batch
 
 
-def repeat_time_spatially(time_embeddings: torch.Tensor, img_size: Tuple[int, int]):
+def repeat_time_spatially(time_embeddings: torch.Tensor, img_size: tuple[int, int]):
     return einops.repeat(time_embeddings, "b t c -> b t c h w", h=img_size[0], w=img_size[1])
 
 
@@ -187,11 +187,11 @@ def forward_checkpointing(layer, *args, gradient_checkpoint=False):
 
     # Identify tensor positions and values
     tensor_positions = [(i, arg) for i, arg in enumerate(args) if isinstance(arg, torch.Tensor)]
-    tensor_indices, tensor_args = zip(*tensor_positions) if tensor_positions else ([], [])
+    tensor_indices, tensor_args = zip(*tensor_positions, strict=False) if tensor_positions else ([], [])
 
     def wrapped(*tensors_in):
         args_copy = list(args)
-        for i, t in zip(tensor_indices, tensors_in):
+        for i, t in zip(tensor_indices, tensors_in, strict=False):
             args_copy[i] = t
         return layer(*args_copy)
 

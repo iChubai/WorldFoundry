@@ -2,7 +2,7 @@
 MolmoAct2 configuration
 """
 
-from typing import Optional, Any
+from typing import Any, Optional
 
 from transformers import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation
@@ -188,7 +188,7 @@ class MolmoAct2TextConfig(PretrainedConfig):
         self,
         hidden_size: int = 3584,
         num_attention_heads: int = 28,
-        num_key_value_heads: Optional[int] = 4,
+        num_key_value_heads: int | None = 4,
         head_dim: int = 128,
         vocab_size: int = 152064,
         additional_vocab_size: int = 128,
@@ -202,7 +202,7 @@ class MolmoAct2TextConfig(PretrainedConfig):
         max_position_embeddings: int = 4096,
         rope_theta: float = 1000000.0,
         rope_scaling: dict[str, Any] = None,
-        rope_scaling_layers: Optional[list[int]] = None,
+        rope_scaling_layers: list[int] | None = None,
         use_qk_norm: bool = False,
         qk_norm_type: str = "olmo",
         layer_norm_eps: int = 1e-6,

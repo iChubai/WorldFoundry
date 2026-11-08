@@ -1,9 +1,10 @@
+from typing import Union
+
 import torch
 import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import nn
 from torch.nn.attention import SDPBackend, sdpa_kernel
-from typing import Union
 
 
 class GEGLU(nn.Module):
@@ -20,7 +21,7 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Union[int, None] = None,
+        dim_out: int | None = None,
         mult: int = 4,
         dropout: float = 0.0,
     ):
@@ -37,7 +38,7 @@ class Attention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        context_dim: Union[int, None] = None,
+        context_dim: int | None = None,
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
@@ -53,7 +54,7 @@ class Attention(nn.Module):
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
 
-    def forward(self, x: torch.Tensor, context: Union[torch.Tensor, None] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, context: torch.Tensor | None = None) -> torch.Tensor:
         q = self.to_q(x)
         context = context if context is not None else x
         k = self.to_k(context)
@@ -219,7 +220,7 @@ class MultiviewTransformer(nn.Module):
         x = rearrange(x, "b c h w -> b (h w) c")
         x = self.proj_in(x)
 
-        for block, mix_block in zip(self.transformer_blocks, self.time_mix_blocks):
+        for block, mix_block in zip(self.transformer_blocks, self.time_mix_blocks, strict=False):
             if self.name in self.unflatten_names:
                 x = rearrange(x, "(b t) (h w) c -> b (t h w) c", t=num_frames, h=h, w=w)
             x = block(x, context=context)

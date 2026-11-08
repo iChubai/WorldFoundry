@@ -17,6 +17,7 @@ import torch
 from PIL import Image
 
 from worldfoundry.core import load_pil_image, load_video_frames, save_video_frames
+
 from .native_pipeline import load_multiworld_config, load_multiworld_pipeline
 from .runtime_env import (
     resolve_checkpoint_path,
@@ -209,7 +210,7 @@ class MultiWorldItTakesTwoRuntime:
         fps: int | None = None,
         weight_dtype: torch.dtype = torch.bfloat16,
         **kwargs: Any,
-    ) -> "MultiWorldItTakesTwoRuntime":
+    ) -> MultiWorldItTakesTwoRuntime:
         del args
         if kwargs:
             raise ValueError(f"Unsupported MultiWorld kwargs: {', '.join(sorted(kwargs))}")

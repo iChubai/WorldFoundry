@@ -1,26 +1,24 @@
 # Inference-only LAPA source retained in-tree.
-from typing import Any, Dict, List, Optional, Tuple, Union
+import copy
 import json
 import warnings
-import copy
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import flax.linen as nn
 import jax
 import jax.numpy as jnp
+from flax.core.frozen_dict import freeze, unfreeze
+from flax.traverse_util import flatten_dict, unflatten_dict
 from jax import lax
 from jax.sharding import PartitionSpec as PS
-import flax.linen as nn
-from flax.core.frozen_dict import unfreeze, freeze
-from flax.traverse_util import flatten_dict, unflatten_dict
-
+from transformers import GenerationConfig
+from transformers.generation.flax_utils import FlaxLogitsProcessorList, FlaxSampleOutput, SampleState, logger
 from transformers.modeling_flax_outputs import FlaxBaseModelOutput, FlaxCausalLMOutput
 from transformers.modeling_flax_utils import ACT2FN, FlaxPreTrainedModel
-from transformers.generation.flax_utils import SampleState, FlaxLogitsProcessorList, FlaxSampleOutput, logger
 from transformers.utils import add_start_docstrings, add_start_docstrings_to_model_forward
-from transformers import GenerationConfig
-
 from tux import load_pickle, open_file
-from .llama import LLaMAConfig, LLAMA_STANDARD_CONFIGS, FlaxLLaMABlockCollection, RMSNorm
 
+from .llama import LLAMA_STANDARD_CONFIGS, FlaxLLaMABlockCollection, LLaMAConfig, RMSNorm
 
 VIDEO_LLAMA_STANDARD_CONFIGS = LLAMA_STANDARD_CONFIGS
 
@@ -145,7 +143,7 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
     def __init__(
         self,
         config: VideoLLaMAConfig,
-        input_shape: Tuple = (4, 1),
+        input_shape: tuple = (4, 1),
         seed: int = 0,
         dtype: jnp.dtype = jnp.float32,
         _do_init: bool = True,
@@ -214,9 +212,9 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
         past_key_values: dict = None,
         dropout_rng: jax.random.PRNGKey = None,
         train: bool = False,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -285,7 +283,7 @@ class FlaxVideoLLaMAModule(nn.Module):
     config: VideoLLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self):
         self.embed_dim = self.config.hidden_size
@@ -395,7 +393,7 @@ class FlaxDeltaLaMAForCausalLMModule(nn.Module):
     config: VideoLLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self):
         self.transformer = FlaxVideoLLaMAModule(self.config, dtype=self.dtype)
@@ -521,7 +519,7 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
     module_class = FlaxDeltaLaMAForCausalLMModule
 
     def prepare_inputs_for_generation(
-        self, input_ids, max_length, attention_mask: Optional[jax.Array] = None, vision_masks=None, delta_masks=None
+        self, input_ids, max_length, attention_mask: jax.Array | None = None, vision_masks=None, delta_masks=None
     ):
         # initializing the cache
         batch_size, seq_length = input_ids.shape
@@ -557,16 +555,16 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
     def _sample_vision(
         self,
         input_ids: None,
-        max_length: Optional[int] = None,
-        pad_token_id: Optional[int] = None,
-        eos_token_id: Optional[int] = None,
-        prng_key: Optional[jnp.ndarray] = None,
-        logits_processor: Optional[FlaxLogitsProcessorList] = None,
-        logits_warper: Optional[FlaxLogitsProcessorList] = None,
+        max_length: int | None = None,
+        pad_token_id: int | None = None,
+        eos_token_id: int | None = None,
+        prng_key: jnp.ndarray | None = None,
+        logits_processor: FlaxLogitsProcessorList | None = None,
+        logits_warper: FlaxLogitsProcessorList | None = None,
         cfg_scales: jnp.ndarray = 1.0,
         trace: bool = True,
-        params: Optional[Dict[str, jnp.ndarray]] = None,
-        model_kwargs: Optional[Dict[str, jnp.ndarray]] = None,
+        params: dict[str, jnp.ndarray] | None = None,
+        model_kwargs: dict[str, jnp.ndarray] | None = None,
     ):
         # init values
         max_length = max_length if max_length is not None else self.generation_config.max_length
@@ -661,11 +659,11 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
         self,
         input_ids: jnp.ndarray,
         cfg_scales: jnp.ndarray = 1.0,
-        generation_config: Optional[GenerationConfig] = None,
-        prng_key: Optional[jnp.ndarray] = None,
+        generation_config: GenerationConfig | None = None,
+        prng_key: jnp.ndarray | None = None,
         trace: bool = True,
-        params: Optional[Dict[str, jnp.ndarray]] = None,
-        logits_processor: Optional[FlaxLogitsProcessorList] = None,
+        params: dict[str, jnp.ndarray] | None = None,
+        logits_processor: FlaxLogitsProcessorList | None = None,
         **kwargs,
     ):
         # Handle `generation_config` and kwargs that might update it, and validate the `.generate()` call
@@ -781,22 +779,9 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
             logits_processor=logits_processor,
         )
 
-        if not generation_config.do_sample and generation_config.num_beams == 1:
-            logits_warper = self._get_logits_warper(generation_config=generation_config)
-            return self._sample_vision(
-                input_ids,
-                generation_config.max_length,
-                generation_config.pad_token_id,
-                generation_config.eos_token_id,
-                prng_key,
-                logits_warper=logits_warper,
-                logits_processor=logits_processor,
-                cfg_scales=cfg_scales,
-                trace=trace,
-                params=params,
-                model_kwargs=model_kwargs,
-            )
-        elif generation_config.do_sample and generation_config.num_beams == 1:
+        if (not generation_config.do_sample and generation_config.num_beams == 1) or (
+            generation_config.do_sample and generation_config.num_beams == 1
+        ):
             logits_warper = self._get_logits_warper(generation_config=generation_config)
             return self._sample_vision(
                 input_ids,

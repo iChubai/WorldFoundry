@@ -14,6 +14,7 @@ from worldfoundry.synthesis.visual_generation.vmem.runtime_env import (
     ensure_vmem_runtime,
     runtime_root,
 )
+
 from .vmem_synthesis import DEFAULT_VMEM_REPO, DEFAULT_VMEM_SURFEL_REPO, VMemSynthesis
 
 __all__ = [

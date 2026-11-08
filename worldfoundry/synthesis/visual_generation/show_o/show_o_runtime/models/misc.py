@@ -1,24 +1,22 @@
-from omegaconf import OmegaConf
-import torch
+from collections.abc import Callable, Iterable, Sized
 from typing import (
     Any,
-    Callable,
     Dict,
-    Iterable,
     List,
+    Literal,
     NamedTuple,
     NewType,
     Optional,
-    Sized,
     Tuple,
     Type,
     TypeVar,
     Union,
 )
-from typing_extensions import Literal
+
+import torch
 
 # Config type
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 # PyTorch Tensor type
 from torch import Tensor
@@ -36,7 +34,7 @@ def _distributed_available():
     return torch.distributed.is_available() and torch.distributed.is_initialized()
 
 
-def parse_structured(fields: Any, cfg: Optional[Union[dict, DictConfig]] = None) -> Any:
+def parse_structured(fields: Any, cfg: dict | DictConfig | None = None) -> Any:
     # added by Xavier -- delete '--local-rank' in multi-nodes training, don't know why there is such a keyword
     if "--local-rank" in cfg:
         del cfg["--local-rank"]

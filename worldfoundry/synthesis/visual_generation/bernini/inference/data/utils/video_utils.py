@@ -44,7 +44,7 @@ def load_video_from_path(video: str, use_audio_in_video: bool = False):
 
 def smart_video_nframes(
     total_frames: int,
-    video_fps: Union[int, float],
+    video_fps: int | float,
     fps: int = 2.0,
     frame_factor: int = None,
     min_frames: int = None,
@@ -105,7 +105,7 @@ class VideoReader:
     def fps(self):
         return self._fps
 
-    def sample(self, frame_indices) -> List[Image.Image]:
+    def sample(self, frame_indices) -> list[Image.Image]:
         frames = self.vr.get_batch(frame_indices).asnumpy()
         frames = [Image.fromarray(f).convert("RGB") for f in frames]
         return frames
@@ -157,7 +157,7 @@ class PathVideoReader(VideoReader):
     def length(self) -> int:
         return self._max_frame_id + 1
 
-    def sample(self, frame_indices: List[int]) -> List[Image.Image]:
+    def sample(self, frame_indices: list[int]) -> list[Image.Image]:
         """
         frame_indices: indices relative to the cropped clip
         """

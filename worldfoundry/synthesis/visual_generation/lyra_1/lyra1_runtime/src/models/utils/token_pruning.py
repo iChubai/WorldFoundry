@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Optional, Tuple
+
 import torch
 import torch.nn.functional as F
-from typing import List, Tuple, Optional
 
 
 # Sample Gumbel noise for Gumbel-Softmax trick
@@ -101,9 +102,9 @@ def structured_selection(
 # Apply the mask and select tokens and other tensors based on the selected indices
 def apply_mask_and_select(
     tokens: torch.Tensor,  # (B, C, T, H, W)
-    other_tensors: List[torch.Tensor],
+    other_tensors: list[torch.Tensor],
     mask: torch.Tensor,  # (B, T, H, W)
-) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+) -> tuple[torch.Tensor, list[torch.Tensor]]:
     B, C, T, H, W = tokens.shape
     N = T * H * W
 
@@ -132,15 +133,15 @@ def apply_mask_and_select(
 def process_tensors(
     tokens: torch.Tensor,  # (B, C, T, H, W)
     mask_logits: torch.Tensor,  # (B, 1, T, H, W)
-    other_tensors: List[torch.Tensor],
-    total_k: Optional[int] = None,
-    k_t: Optional[int] = None,
-    k_hw: Optional[int] = None,
+    other_tensors: list[torch.Tensor],
+    total_k: int | None = None,
+    k_t: int | None = None,
+    k_hw: int | None = None,
     temperature: float = 1.0,
     eps: float = 1e-6,
     training: bool = True,
     soft_inference: bool = True,
-) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+) -> tuple[torch.Tensor, list[torch.Tensor]]:
     """
     If training=True -> uses softmax + hard sampling (Gumbel-Softmax trick)
     If training=False -> uses topk (non-differentiable)

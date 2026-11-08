@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2023, Haofan Wang, Qixun Wang, All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +18,8 @@
 import argparse
 
 import torch
-from safetensors.torch import load_file
-
 from diffusers import StableDiffusionPipeline
+from safetensors.torch import load_file
 
 
 def load_diffusers_lora(pipeline, state_dict, alpha=1.0):

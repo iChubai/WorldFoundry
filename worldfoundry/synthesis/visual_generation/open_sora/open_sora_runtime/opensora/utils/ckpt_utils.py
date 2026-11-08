@@ -181,7 +181,7 @@ def model_gathering(model: torch.nn.Module, model_shape_dict: dict):
     dist.barrier()
 
 
-def remove_padding(tensor: torch.Tensor, original_shape: Tuple) -> torch.Tensor:
+def remove_padding(tensor: torch.Tensor, original_shape: tuple) -> torch.Tensor:
     return tensor[: functools.reduce(operator.mul, original_shape)]
 
 
@@ -219,7 +219,7 @@ def load_checkpoint(model, ckpt_path, save_as_pt=False, model_name="model", stri
 
 
 def load_json(file_path: str):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         return json.load(f)
 
 
@@ -280,7 +280,7 @@ def load(
     optimizer: Optimizer = None,
     lr_scheduler: _LRScheduler = None,
     sampler=None,
-) -> Tuple[int, int, int]:
+) -> tuple[int, int, int]:
     assert os.path.exists(load_dir), f"Checkpoint directory {load_dir} does not exist"
     assert os.path.exists(os.path.join(load_dir, "running_states.json")), "running_states.json does not exist"
     running_states = load_json(os.path.join(load_dir, "running_states.json"))

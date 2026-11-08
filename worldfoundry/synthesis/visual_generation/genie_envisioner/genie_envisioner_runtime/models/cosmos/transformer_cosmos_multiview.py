@@ -1,6 +1,7 @@
 """Native Cosmos component."""
 
-from typing import Callable, Optional, Tuple
+from collections.abc import Callable
+from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -37,10 +38,10 @@ class CosmosRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         hidden_size: int,
-        max_size: Tuple[int, int, int] = (128, 240, 240),
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        max_size: tuple[int, int, int] = (128, 240, 240),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
         base_fps: int = 24,
-        rope_scale: Tuple[float, float, float] = (2.0, 1.0, 1.0),
+        rope_scale: tuple[float, float, float] = (2.0, 1.0, 1.0),
     ) -> None:
         """Init.
 
@@ -56,7 +57,7 @@ class CosmosRotaryPosEmbed(nn.Module):
         """
         super().__init__()
 
-        self.max_size = [size // patch for size, patch in zip(max_size, patch_size)]
+        self.max_size = [size // patch for size, patch in zip(max_size, patch_size, strict=False)]
         self.patch_size = patch_size
         self.base_fps = base_fps
 
@@ -69,8 +70,8 @@ class CosmosRotaryPosEmbed(nn.Module):
         self.t_ntk_factor = rope_scale[0] ** (self.dim_t / (self.dim_t - 2))
 
     def forward(
-        self, hidden_states: torch.Tensor, fps: Optional[int] = None, **kwargs
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, hidden_states: torch.Tensor, fps: int | None = None, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:
@@ -133,9 +134,9 @@ class MultiViewCosmosAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        image_rotary_emb: torch.Tensor | None = None,
         n_view: int = 1,
         cross_view_attn: bool = False,
         is_causal: bool = False,
@@ -275,10 +276,10 @@ class CosmosTransformerBlock(nn.Module):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         embedded_timestep: torch.Tensor,
-        temb: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
-        extra_pos_emb: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        temb: torch.Tensor | None = None,
+        image_rotary_emb: torch.Tensor | None = None,
+        extra_pos_emb: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
         n_view: int = 1,
         cross_view_attn: bool = False,
     ) -> torch.Tensor:
@@ -376,11 +377,11 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         mlp_ratio: float = 4.0,
         text_embed_dim: int = 1024,
         adaln_lora_dim: int = 256,
-        max_size: Tuple[int, int, int] = (128, 240, 240),
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
-        rope_scale: Tuple[float, float, float] = (2.0, 1.0, 1.0),
+        max_size: tuple[int, int, int] = (128, 240, 240),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
+        rope_scale: tuple[float, float, float] = (2.0, 1.0, 1.0),
         concat_padding_mask: bool = True,
-        extra_pos_embed_type: Optional[str] = "learnable",
+        extra_pos_embed_type: str | None = "learnable",
         use_view_embed: bool = True,
         max_view: int = 3,
         action_expert: bool = False,
@@ -487,10 +488,10 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         hidden_states: torch.Tensor,
         timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
-        fps: Optional[int] = None,
-        condition_mask: Optional[torch.Tensor] = None,
-        padding_mask: Optional[torch.Tensor] = None,
+        encoder_attention_mask: torch.Tensor | None = None,
+        fps: int | None = None,
+        condition_mask: torch.Tensor | None = None,
+        padding_mask: torch.Tensor | None = None,
         return_dict: bool = True,
         n_view: int = 1,
         num_frames: int = None,
@@ -770,7 +771,7 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 f"use a module that supports gradient checkpointing by creating a boolean attribute `gradient_checkpointing`."
             )
 
-    def enable_gradient_checkpointing(self, gradient_checkpointing_func: Optional[Callable] = None) -> None:
+    def enable_gradient_checkpointing(self, gradient_checkpointing_func: Callable | None = None) -> None:
         """
         Activates gradient checkpointing for the current model (may be referred to as *activation checkpointing* or
         *checkpoint activations* in other frameworks).

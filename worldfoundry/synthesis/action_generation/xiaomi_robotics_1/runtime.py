@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     resolve_data_path,
@@ -68,7 +69,7 @@ class XiaomiRobotics1RuntimeConfig:
         *,
         checkpoint_path: str,
         device: str,
-    ) -> "XiaomiRobotics1RuntimeConfig":
+    ) -> XiaomiRobotics1RuntimeConfig:
         action_type = str(options.get("action_type") or "joint").lower()
         if action_type not in {"joint", "ee"}:
             raise ValueError("action_type must be 'joint' or 'ee'")

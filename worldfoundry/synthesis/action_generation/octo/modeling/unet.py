@@ -97,7 +97,7 @@ class ConditionalResidualBlock1D(nn.Module):
 
 
 class ConditionalUnet1D(nn.Module):
-    down_features: Tuple[int] = (256, 512, 1024)
+    down_features: tuple[int] = (256, 512, 1024)
     mid_layers: int = 2
     kernel_size: int = 3
     n_groups: int = 8

@@ -7,8 +7,9 @@ text-to-video generation.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import RuntimeProfileSynthesis
 from worldfoundry.runtime.assets import expand_worldfoundry_path
@@ -36,7 +37,7 @@ class ZeroScopeSynthesis(DelegatedPredictMixin, RuntimeProfileSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "ZeroScopeSynthesis":
+    ) -> ZeroScopeSynthesis:
         """Loads a pre-trained ZeroScope model and initializes the synthesis adapter.
 
         This factory method is responsible for parsing model configuration,

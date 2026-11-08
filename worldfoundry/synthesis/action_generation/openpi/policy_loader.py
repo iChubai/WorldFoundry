@@ -6,11 +6,11 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
-from .modeling import model as _model
-from . import policy as _policy
 from . import checkpoints as _checkpoints
 from . import config as _config
+from . import policy as _policy
 from . import transforms
+from .modeling import model as _model
 
 
 def create_trained_policy(

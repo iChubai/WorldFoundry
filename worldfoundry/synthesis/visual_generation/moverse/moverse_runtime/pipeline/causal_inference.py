@@ -1,16 +1,17 @@
-from typing import List, Optional
 import time
-import torch
+from typing import List, Optional
 
+import torch
 from utils.misc import randn_like_fp32_cast
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
+
+from pipeline.causal_base import CausalPipelineBase
 from worldfoundry.core.vram import (
     DynamicSwapInstaller,
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,
 )
-from pipeline.causal_base import CausalPipelineBase
 
 
 def _cuda_ms(ev_start: torch.cuda.Event, ev_end: torch.cuda.Event) -> float:
@@ -98,13 +99,13 @@ class CausalInferencePipeline(CausalPipelineBase, torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,
-        cond_latent: Optional[torch.Tensor] = None,
-        conditional_dict: Optional[dict] = None,
+        cond_latent: torch.Tensor | None = None,
+        conditional_dict: dict | None = None,
     ) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.
@@ -448,7 +449,7 @@ class CausalInferencePipeline(CausalPipelineBase, torch.nn.Module):
         batch_size: int = 1,
         device=None,
         dtype: torch.dtype = torch.bfloat16,
-        conditional_dict: Optional[dict] = None,
+        conditional_dict: dict | None = None,
         num_frames_for_cache: int = 21,
     ) -> None:
         """Initialize (or reset) a streaming generation session.
@@ -489,7 +490,7 @@ class CausalInferencePipeline(CausalPipelineBase, torch.nn.Module):
 
         self._stream_current_frame: int = 0
         self._stream_max_frames: int = num_frames_for_cache
-        self._stream_conditional_dict: Optional[dict] = conditional_dict
+        self._stream_conditional_dict: dict | None = conditional_dict
 
         # Clear VAE temporal decode cache to ensure each streaming session
         # starts from frame 0 (avoid stale feat_cache from previous sessions).
@@ -500,8 +501,8 @@ class CausalInferencePipeline(CausalPipelineBase, torch.nn.Module):
         self,
         noise: torch.Tensor,  # [B, N, C, H, W]
         cond_latent: torch.Tensor,  # [B, N, C, H, W]
-        conditional_dict: Optional[dict] = None,
-        _timing: Optional[dict] = None,
+        conditional_dict: dict | None = None,
+        _timing: dict | None = None,
     ) -> torch.Tensor:
         """Single streaming inference step: generate N frames without resetting KV cache.
 

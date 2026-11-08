@@ -13,9 +13,10 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
 from worldfoundry.synthesis.action_generation.dreamzero import runtime_root as dreamzero_runtime_root

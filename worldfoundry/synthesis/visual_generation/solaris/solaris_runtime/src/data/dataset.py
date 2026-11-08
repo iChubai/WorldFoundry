@@ -46,7 +46,7 @@ class Dataset(TorchDataset):
         self.dataset_name = dataset_name
         self.directory = Path(data_dir).expanduser()
 
-        with open(self.directory / "episodes_info.json", "r") as json_file:
+        with open(self.directory / "episodes_info.json") as json_file:
             self.episodes_info = json.load(json_file)
         self._num_episodes = self.episodes_info["num_episodes"]
         self._lengths = np.array([ep["length"] for ep in self.episodes_info["episodes"]])
@@ -198,9 +198,9 @@ class DatasetMultiplayer(TorchDataset):
             raise ValueError(f"Error reading video {video_path_bot2}: {e}") from e
 
         try:
-            with open(actions_path_bot1, "r") as f:
+            with open(actions_path_bot1) as f:
                 bot1_actions = json.load(f)
-            with open(actions_path_bot2, "r") as f:
+            with open(actions_path_bot2) as f:
                 bot2_actions = json.load(f)
             bot1_actions = bot1_actions[segment_id.bot1_start : segment_id.bot1_stop]
             bot2_actions = bot2_actions[segment_id.bot2_start : segment_id.bot2_stop]

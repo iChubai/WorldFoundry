@@ -1,13 +1,14 @@
 import inspect
 import os
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Union
+
+import decord
 import numpy as np
 import torch
 from einops import rearrange
 from PIL import Image
-import decord
-
 from transformers import CLIPImageProcessor, CLIPTextModelWithProjection, CLIPTokenizer, T5EncoderModel
 
 try:  # transformers < 5 exposed the multilingual alias at package level.
@@ -15,40 +16,38 @@ try:  # transformers < 5 exposed the multilingual alias at package level.
 except ImportError:  # transformers 5 consolidated it with the T5 tokenizer.
     from transformers import T5Tokenizer as MT5Tokenizer
 import torch.nn.functional as F
-from torchvision.transforms import Compose, Lambda, Resize
-
-from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.models import AutoencoderKL, HunyuanDiT2DModel
 from diffusers.models.embeddings import get_2d_rotary_pos_embed
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from diffusers.schedulers import DDPMScheduler
-from diffusers.utils import logging, BaseOutput
+from diffusers.utils import BaseOutput, logging
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-
 from opensora.models.diffusion.opensora_v1_3.modeling_inpaint import OpenSoraInpaint_v1_3
-from opensora.sample.pipeline_opensora import OpenSoraPipeline, OpenSoraPipelineOutput, rescale_noise_cfg
 from opensora.sample.input_transforms import (
     CenterCropResizeVideo,
     SpatialStrideCropVideo,
     ToTensorAfterResize,
     maxhwresize,
 )
+from opensora.sample.pipeline_opensora import OpenSoraPipeline, OpenSoraPipelineOutput, rescale_noise_cfg
 from opensora.utils.mask_utils import (
-    MaskProcessor,
-    MaskCompressor,
-    GaussianNoiseAdder,
-    MaskType,
     STR_TO_TYPE,
     TYPE_TO_STR,
+    GaussianNoiseAdder,
+    MaskCompressor,
+    MaskProcessor,
+    MaskType,
 )
+from torchvision.transforms import Compose, Lambda, Resize
 
 try:
     import torch_npu
-    from opensora.npu_config import npu_config
     from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
+    from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
@@ -185,7 +184,7 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
                 "conditional_pixel_values_indices should be a list of integers with the same length as conditional_pixel_values_path"
             )
 
-        if mask_type is not None and not mask_type in STR_TO_TYPE.keys() and not mask_type in STR_TO_TYPE.values():
+        if mask_type is not None and mask_type not in STR_TO_TYPE.keys() and mask_type not in STR_TO_TYPE.values():
             raise ValueError(f"Invalid mask type: {mask_type}")
 
         if not isinstance(max_hxw, int) or not (max_hxw >= 102400 and max_hxw <= 236544):
@@ -345,37 +344,38 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        conditional_pixel_values_path: Union[str, List[str]] = None,
-        conditional_pixel_values_indices: Union[int, List[int]] = None,
-        mask_type: Union[str, MaskType] = None,
+        conditional_pixel_values_path: str | list[str] = None,
+        conditional_pixel_values_indices: int | list[int] = None,
+        mask_type: str | MaskType = None,
         crop_for_hw: bool = False,
         max_hxw: int = 236544,
-        noise_strength: Optional[float] = 0.0,
-        prompt: Union[str, List[str]] = None,
-        num_frames: Optional[int] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        num_inference_steps: Optional[int] = 50,
-        guidance_scale: Optional[float] = 5.0,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_samples_per_prompt: Optional[int] = 1,
-        eta: Optional[float] = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_embeds_2: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds_2: Optional[torch.Tensor] = None,
-        prompt_attention_mask: Optional[torch.Tensor] = None,
-        prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        noise_strength: float | None = 0.0,
+        prompt: str | list[str] = None,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        num_inference_steps: int | None = 50,
+        guidance_scale: float | None = 5.0,
+        negative_prompt: str | list[str] | None = None,
+        num_samples_per_prompt: int | None = 1,
+        eta: float | None = 0.0,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_embeds_2: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds_2: torch.Tensor | None = None,
+        prompt_attention_mask: torch.Tensor | None = None,
+        prompt_attention_mask_2: torch.Tensor | None = None,
+        negative_prompt_attention_mask: torch.Tensor | None = None,
+        negative_prompt_attention_mask_2: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         guidance_rescale: float = 0.0,
         max_sequence_length: int = 512,
         device=None,

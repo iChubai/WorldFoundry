@@ -100,7 +100,7 @@ def pose_string_to_json(pose_string: str) -> dict:
 def _load_pose_json_from_path(path: str) -> dict:
     if not os.path.exists(path):
         raise ValueError(f"Pose json not found: {path}")
-    with open(path, "r") as f:
+    with open(path) as f:
         return json.load(f)
 
 

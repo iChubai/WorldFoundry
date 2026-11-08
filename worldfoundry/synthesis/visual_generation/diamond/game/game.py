@@ -13,9 +13,9 @@ from .play_env import PlayEnv
 class Game:
     def __init__(
         self,
-        play_env: Union[PlayEnv, DatasetEnv],
+        play_env: PlayEnv | DatasetEnv,
         keymap: Keymap,
-        size: Tuple[int, int],
+        size: tuple[int, int],
         fps: int,
         verbose: bool,
     ) -> None:

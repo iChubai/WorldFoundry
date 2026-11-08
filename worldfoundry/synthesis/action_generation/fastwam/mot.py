@@ -2,13 +2,13 @@
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
 from __future__ import annotations
 
+import logging
 from typing import Dict, Optional
 
 import torch
 import torch.nn as nn
 
 from .wan_video_dit import flash_attention, modulate, rope_apply
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class MoT(nn.Module):
     def __init__(
         self,
-        mixtures: Dict[str, nn.Module],
+        mixtures: dict[str, nn.Module],
         mot_checkpoint_mixed_attn: bool = True,
     ):
         super().__init__()
@@ -106,7 +106,7 @@ class MoT(nn.Module):
         shift_mlp: torch.Tensor,
         scale_mlp: torch.Tensor,
         gate_mlp: torch.Tensor,
-        context_payload: Optional[dict],
+        context_payload: dict | None,
     ) -> torch.Tensor:
         x = block.gate(residual_x, gate_msa, block.self_attn.o(mixed_attn_out))
 
@@ -194,7 +194,7 @@ class MoT(nn.Module):
         gate_mlp: torch.Tensor,
         use_gradient_checkpointing: bool,
         mixed_slice: torch.Tensor,
-        context_payload: Optional[dict],
+        context_payload: dict | None,
     ) -> torch.Tensor:
         """Apply post-attention computations, with optional checkpointing.
 
@@ -261,7 +261,7 @@ class MoT(nn.Module):
         video_tokens: torch.Tensor,
         video_freqs: torch.Tensor,
         video_t_mod: torch.Tensor,
-        video_context_payload: Optional[dict],
+        video_context_payload: dict | None,
         video_attention_mask: torch.Tensor,
     ) -> list[dict[str, torch.Tensor]]:
         """Prefill video branch once and cache per-layer K/V for action denoising.
@@ -343,7 +343,7 @@ class MoT(nn.Module):
         action_tokens: torch.Tensor,
         action_freqs: torch.Tensor,
         action_t_mod: torch.Tensor,
-        action_context_payload: Optional[dict],
+        action_context_payload: dict | None,
         video_kv_cache: list[dict[str, torch.Tensor]],
         attention_mask: torch.Tensor,
         video_seq_len: int,
@@ -438,11 +438,11 @@ class MoT(nn.Module):
 
     def forward(
         self,
-        embeds_all: Dict[str, torch.Tensor],
+        embeds_all: dict[str, torch.Tensor],
         attention_mask: torch.Tensor,
-        freqs_all: Dict[str, torch.Tensor],
-        context_all: Dict[str, Optional[dict]],
-        t_mod_all: Dict[str, torch.Tensor],
+        freqs_all: dict[str, torch.Tensor],
+        context_all: dict[str, dict | None],
+        t_mod_all: dict[str, torch.Tensor],
     ):
         missing = [k for k in self.expert_order if k not in embeds_all]
         if missing:
@@ -521,7 +521,7 @@ class MoT(nn.Module):
             mixed = self._mixed_attention(q_cat=q_cat, k_cat=k_cat, v_cat=v_cat, attention_mask=attention_mask)
 
             start = 0
-            for name, seq_len in zip(self.expert_order, seq_lens):
+            for name, seq_len in zip(self.expert_order, seq_lens, strict=False):
                 # 4. split mixed attention output and apply post-attention blocks for each expert
                 end = start + seq_len
                 mixed_slice = mixed[:, start:end, :]

@@ -4,18 +4,22 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import skimage
 import torch
 import torch.nn.functional as F
-import skimage
-from PIL import Image
 from einops import rearrange
 from kornia.geometry import PinholeCamera
+from PIL import Image
+
 from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat import (
     configure_pytorch3d_extension,
 )
 
 configure_pytorch3d_extension()
 
+from typing import List, Optional, Tuple, Union
+
+from kornia.morphology import erosion
 from pytorch3d.renderer import (
     PerspectiveCameras,
     PointsRasterizationSettings,
@@ -23,16 +27,13 @@ from pytorch3d.renderer import (
 )
 from pytorch3d.renderer.points.compositor import _add_background_color_to_images
 from pytorch3d.structures import Pointclouds
-from torchvision.transforms import ToTensor, ToPILImage, Resize
+from torchvision.transforms import Resize, ToPILImage, ToTensor
 from util.midas_utils import (
     dpt_512_transform,
     dpt_transform,
 )
-from util.utils import functbl, save_depth_map
-
 from util.segment_utils import refine_disp_with_segments, save_sam_anns
-from typing import List, Optional, Tuple, Union
-from kornia.morphology import erosion
+from util.utils import functbl, save_depth_map
 
 BG_COLOR = (1, 0, 0)
 
@@ -83,7 +84,7 @@ class SoftmaxImportanceCompositor(torch.nn.Module):
 
     def __init__(
         self,
-        background_color: Optional[Union[Tuple, List, torch.Tensor]] = None,
+        background_color: tuple | list | torch.Tensor | None = None,
         softmax_scale=1.0,
     ) -> None:
         super().__init__()
@@ -185,7 +186,7 @@ class FrameSyn(torch.nn.Module):
 
             self.predefined_cameras = [
                 PerspectiveCameras(K=K.unsqueeze(0), R=R.T.unsqueeze(0), T=t.unsqueeze(0), device=self.device)
-                for K, R, t in zip(Ks, Rs, ts)
+                for K, R, t in zip(Ks, Rs, ts, strict=False)
             ]
             self.current_camera = self.predefined_cameras[0]
 

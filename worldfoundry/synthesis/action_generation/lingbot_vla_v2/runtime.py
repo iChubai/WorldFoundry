@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from types import SimpleNamespace
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_data_path
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-
 from worldfoundry.synthesis.action_generation._lingbot_vla_runtime import (
     action_values,
     find_training_config,
@@ -24,9 +23,9 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     option_int,
     runtime_options_cache_key,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
-
-_RUNTIME_CACHE: dict[tuple[Any, ...], "_LingBotV2Runtime"] = {}
+_RUNTIME_CACHE: dict[tuple[Any, ...], _LingBotV2Runtime] = {}
 _CONFIG_ROOT = resolve_data_path("models", "runtime", "configs", "lingbot_vla", "v2")
 _ASSET_ROOT = resolve_data_path("models", "runtime", "assets", "lingbot_vla", "v2")
 _MODEL_CONFIG = load_vla_va_wam_runtime_config("lingbot-vla-v2")
@@ -74,7 +73,6 @@ class _LingBotV2Runtime:
         from transformers import AutoConfig, AutoProcessor
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.execution.inference import (
             compile_module_if_enabled,
@@ -82,11 +80,20 @@ class _LingBotV2Runtime:
         )
         from worldfoundry.core.io.assets.hf import materialize_hf_snapshot
         from worldfoundry.core.io.paths import resolve_local_hf_model_path
+        from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.utils.tensors.torch import freeze_params, set_random_seed
 
+        # isort: split
         from .preprocessing.features import FeatureTransform
+
+        # isort: split
         from .modeling.configuration import LingbotVLAV2Config
+
+        # isort: split
         from .modeling.policy import LingbotVlaV2Policy
+
+        # isort: split
+        # isort: split
         from .modeling.qwen3_vl import apply_lingbot_qwen3_vl_patch
 
         install_worldfoundry_inference_infra()
@@ -269,6 +276,7 @@ class _LingBotV2Runtime:
     @staticmethod
     def _pad_and_stack(values: Sequence[Any]) -> Any:
         import torch
+
         from worldfoundry.core.utils.tensors.batch import stack_or_pad_tensors
 
         if not isinstance(values[0], torch.Tensor):
@@ -310,7 +318,7 @@ class _LingBotV2Runtime:
             ).to(device="cpu", dtype=torch.float32)
 
         chunks: dict[str, list[np.ndarray]] = {key: [] for key in self.action_keys}
-        for item, action in zip(transformed, actions):
+        for item, action in zip(transformed, actions, strict=False):
             current = dict(item)
             current["actions"] = action
             current["state"] = current["state"].float()

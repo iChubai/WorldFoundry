@@ -1,2 +1,2 @@
-from .env import make_atari_env, TorchEnv
+from .env import TorchEnv, make_atari_env
 from .world_model_env import WorldModelEnv, WorldModelEnvConfig

@@ -4,21 +4,26 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-import PIL.Image
-import numpy as np
-from scipy.spatial.transform import Rotation
-import torch
 import cv2
 import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import numpy as np
+import PIL.Image
+import torch
+from scipy.spatial.transform import Rotation
+
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import (
+    depthmap_to_absolute_camera_coordinates,
     geotrf,
     get_med_dist_between_poses,
-    depthmap_to_absolute_camera_coordinates,
 )
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.image import rgb, img_to_arr
+
+# isort: split
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.image import img_to_arr, rgb
+
+# isort: split
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
@@ -95,7 +100,7 @@ def pts3d_to_trimesh(img, pts3d, valid=None):
 
 
 def cat_meshes(meshes):
-    vertices, faces, colors = zip(*[(m["vertices"], m["faces"], m["face_colors"]) for m in meshes])
+    vertices, faces, colors = zip(*[(m["vertices"], m["faces"], m["face_colors"]) for m in meshes], strict=False)
     n_vertices = np.cumsum([0] + [len(v) for v in vertices])
     for i in range(len(faces)):
         faces[i][:] += n_vertices[i]
@@ -164,12 +169,12 @@ class SceneViz:
         if mask is None:
             mask = [slice(None)] * len(pts3d)
 
-        pts = np.concatenate([p[m] for p, m in zip(pts3d, mask)])
+        pts = np.concatenate([p[m] for p, m in zip(pts3d, mask, strict=False)])
         pct = trimesh.PointCloud(pts)
 
         if isinstance(color, (list, np.ndarray, torch.Tensor)):
             color = to_numpy(color)
-            col = np.concatenate([p[m] for p, m in zip(color, mask)])
+            col = np.concatenate([p[m] for p, m in zip(color, mask, strict=False)])
             assert col.shape == pts.shape, bb()
             pct.visual.vertex_colors = uint8(col.reshape(-1, 3))
         else:
@@ -262,8 +267,8 @@ def show_raw_pointcloud_with_cams(imgs, pts3d, mask, focals, cams2world, point_s
 
     scene = trimesh.Scene()
 
-    pts = np.concatenate([p[m] for p, m in zip(pts3d, mask)])
-    col = np.concatenate([p[m] for p, m in zip(imgs, mask)])
+    pts = np.concatenate([p[m] for p, m in zip(pts3d, mask, strict=False)])
+    col = np.concatenate([p[m] for p, m in zip(imgs, mask, strict=False)])
     pct = trimesh.PointCloud(pts.reshape(-1, 3), colors=col.reshape(-1, 3))
     scene.add_geometry(pct)
 
@@ -390,7 +395,7 @@ def uint8(colors):
         colors = np.array(colors)
     if np.issubdtype(colors.dtype, np.floating):
         colors *= 255
-    assert 0 <= colors.min() and colors.max() < 256
+    assert colors.min() >= 0 and colors.max() < 256
     return np.uint8(colors)
 
 
@@ -632,7 +637,7 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
         kp2 = kp2[ind]
         mask = mask[ind]
 
-    for i, (pt1, pt2) in enumerate(zip(kp1, kp2)):
+    for i, (pt1, pt2) in enumerate(zip(kp1, kp2, strict=False)):
         if color_by == 0:
             coord_angle = np.arctan2(pt1[1] - center1[1], pt1[0] - center1[0])
         elif color_by == 1:
@@ -690,7 +695,7 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
         whole_img = np.concatenate([img1, img2], axis=0)
     else:
         whole_img = np.concatenate([img1, img2], axis=1)
-    for i, (pt1, pt2) in enumerate(zip(kp1, kp2)):
+    for i, (pt1, pt2) in enumerate(zip(kp1, kp2, strict=False)):
         if color_by == 0:
             coord_angle = np.arctan2(pt1[1] - center1[1], pt1[0] - center1[0])
         elif color_by == 1:
@@ -749,9 +754,9 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
     return whole_img
 
 
-import torch
 import os
 import time
+
 import viser
 
 

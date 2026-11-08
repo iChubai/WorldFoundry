@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel
 
+from .dream_transform import DreamTransform
 from .embodiment import EmbodimentTag
 from .schema import DatasetMetadata
 from .transform_base import ComposedModalityTransform, InvertibleModalityTransform, ModalityTransform
@@ -22,7 +23,6 @@ from .transform_video import (
     VideoToNumpy,
     VideoToTensor,
 )
-from .dream_transform import DreamTransform
 
 
 class ModalityConfig(BaseModel):

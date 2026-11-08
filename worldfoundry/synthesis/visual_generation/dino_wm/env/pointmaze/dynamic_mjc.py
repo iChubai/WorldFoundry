@@ -3,8 +3,9 @@ dynamic_mjc.py
 A small library for programmatically building MuJoCo XML files
 """
 
-from contextlib import contextmanager
 import tempfile
+from contextlib import contextmanager
+
 import numpy as np
 
 
@@ -40,7 +41,7 @@ def pointmass_model(name):
     return model
 
 
-class MJCModel(object):
+class MJCModel:
     def __init__(self, name):
         self.name = name
         self.root = MJCTreeNode("mujoco").add_attr("model", name)
@@ -77,7 +78,7 @@ class MJCModel(object):
         pass
 
 
-class MJCTreeNode(object):
+class MJCTreeNode:
     def __init__(self, name):
         self.name = name
         self.attrs = {}

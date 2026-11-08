@@ -1,36 +1,36 @@
-import sys
-import os
 import io
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
-import traceback
+import glob
 import json
-import random
 import math
+import random
+import traceback
+
+import cv2
 import numpy as np
 import pandas as pd
-
 import torch
-from torch.utils.data.dataset import Dataset
-from einops import rearrange
-import glob
-from moviepy.editor import VideoFileClip
-import torchvision.transforms as transforms
-from tqdm import tqdm
 import torch.nn.functional as F
-import cv2
-from PIL import Image
+import torchvision.transforms as transforms
+from einops import rearrange
 
 # from eval_inputs.utils.domain_table import DomainTable
 from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
-# from eval_inputs.utils.get_actions import parse_h5
+from eval_inputs.utils.utils import gen_crop_config, intrin_crop_transform, intrinsic_transform
+from moviepy.editor import VideoFileClip
+from PIL import Image
+from torch.utils.data.dataset import Dataset
+from tqdm import tqdm
 
+# from eval_inputs.utils.get_actions import parse_h5
 from utils import zero_rank_print
-from eval_inputs.utils.utils import intrinsic_transform, gen_crop_config, intrin_crop_transform
 
 
 def load_jsonl(jsonl_path):
@@ -38,7 +38,7 @@ def load_jsonl(jsonl_path):
     load jsonl file
     """
     data = []
-    with open(jsonl_path, "r", encoding="UTF-8") as f:
+    with open(jsonl_path, encoding="UTF-8") as f:
         for line in f:
             data.append(json.loads(line))
     return data
@@ -118,7 +118,7 @@ class CustomLeRobotDataset(Dataset):
 
         """
 
-        zero_rank_print(f"loading annotations...")
+        zero_rank_print("loading annotations...")
 
         assert action_type in ["delta", "absolute", "relative"]
         self.action_type = action_type
@@ -145,11 +145,11 @@ class CustomLeRobotDataset(Dataset):
 
         if dataset_info_cache_path is not None and os.path.exists(dataset_info_cache_path):
             zero_rank_print(f"Load Cache Dataset Information from {dataset_info_cache_path}")
-            with open(dataset_info_cache_path, "r") as f:
+            with open(dataset_info_cache_path) as f:
                 self.dataset = json.load(f)
         else:
             # construct the dataset_info
-            for _data_root, _domain_name in zip(self.data_roots, domains):
+            for _data_root, _domain_name in zip(self.data_roots, domains, strict=False):
                 print(f"Loading {_domain_name} data from {_data_root}")
 
                 # into the meta folder
@@ -168,7 +168,7 @@ class CustomLeRobotDataset(Dataset):
                 for item in task_index_task_str:
                     task_index_task_str_dict[item["task_index"]] = item["task"]
 
-                with open(os.path.join(meta_folder, "info.json"), "r") as f:
+                with open(os.path.join(meta_folder, "info.json")) as f:
                     metainfo = json.load(f)
                     total_chunks = metainfo["total_chunks"]
                     chunks_size = metainfo["chunks_size"]
@@ -259,13 +259,13 @@ class CustomLeRobotDataset(Dataset):
             self.previous_pick_mode = "uniform"
 
         if task_recap_file is not None:
-            with open(task_recap_file, "r", encoding="UTF-8") as f:
+            with open(task_recap_file, encoding="UTF-8") as f:
                 self.task_recap_map = json.load(f)
         else:
             self.task_recap_map = None
 
         if step_recap_file is not None:
-            with open(step_recap_file, "r", encoding="UTF-8") as f:
+            with open(step_recap_file, encoding="UTF-8") as f:
                 self.step_recap_map = json.load(f)
         else:
             self.step_recap_map = None
@@ -326,7 +326,7 @@ class CustomLeRobotDataset(Dataset):
                 mem_candidates[i]
                 for i in sorted(
                     np.random.choice(
-                        list(range(0, len(mem_candidates) - 1)), size=self.n_previous - 1, replace=False
+                        list(range(len(mem_candidates) - 1)), size=self.n_previous - 1, replace=False
                     ).tolist()
                 )
             ] + [mem_candidates[-1]]

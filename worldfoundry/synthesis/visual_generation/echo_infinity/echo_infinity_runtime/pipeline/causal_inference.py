@@ -1,13 +1,15 @@
-from typing import List, Optional
-import torch
 from pathlib import Path
+from typing import List, Optional
+
+import torch
+import torch.distributed as dist
+
+from worldfoundry.core.vram import get_cuda_free_memory_gb, gpu, move_model_to_device_with_memory_preservation
 from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtime.utils.wan_wrapper import (
     WanDiffusionWrapper,
     WanTextEncoder,
     WanVAEWrapper,
 )
-from worldfoundry.core.vram import gpu, get_cuda_free_memory_gb, move_model_to_device_with_memory_preservation
-import torch.distributed as dist
 
 
 def _config_get(config, key, default=None):
@@ -80,7 +82,7 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
+        text_prompts: list[str],
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,
@@ -267,19 +269,19 @@ class CausalInferencePipeline(torch.nn.Module):
         updated_modules = []
         if hasattr(self.generator.model, "max_attention_size"):
             try:
-                prev = getattr(self.generator.model, "max_attention_size")
+                prev = self.generator.model.max_attention_size
             except Exception:
                 prev = None
-            setattr(self.generator.model, "max_attention_size", target_size)
+            self.generator.model.max_attention_size = target_size
             updated_modules.append("<root_model>")
         for name, module in self.generator.model.named_modules():
             if hasattr(module, "max_attention_size"):
                 try:
-                    prev = getattr(module, "max_attention_size")
+                    prev = module.max_attention_size
                 except Exception:
                     prev = None
                 try:
-                    setattr(module, "max_attention_size", target_size)
+                    module.max_attention_size = target_size
                     updated_modules.append(name if name else module.__class__.__name__)
                 except Exception:
                     pass

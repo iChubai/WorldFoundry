@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Generic, List, Optional, Sequence, TypeVar, Union
+from collections.abc import Sequence
+from typing import Generic, List, Optional, TypeVar, Union
 
-from .pose import EndEffectorPose, JointPose, Pose
-from .types import ActionFormat
 import numpy as np
 from numpy.typing import NDArray
 from scipy import interpolate
 from scipy.spatial.transform import Rotation, Slerp
 
+from .pose import EndEffectorPose, JointPose, Pose
+from .types import ActionFormat
 
 PoseType = TypeVar("PoseType", bound=Pose)
 
@@ -38,7 +39,7 @@ class ActionChunk(Generic[PoseType]):
     def __init__(
         self,
         poses: Sequence[PoseType],
-        times: Optional[Union[Sequence[float], NDArray[np.float64]]] = None,
+        times: Sequence[float] | NDArray[np.float64] | None = None,
     ):
         """
         Initialize action chunking from a list of poses.
@@ -54,7 +55,7 @@ class ActionChunk(Generic[PoseType]):
         if not poses:
             raise ValueError("ActionChunk must contain at least one pose")
 
-        self._poses: List[PoseType] = list(poses)
+        self._poses: list[PoseType] = list(poses)
 
         # Set up times
         if times is None:
@@ -65,7 +66,7 @@ class ActionChunk(Generic[PoseType]):
             self._times = np.array(times, dtype=np.float64)
 
     @property
-    def poses(self) -> List[PoseType]:
+    def poses(self) -> list[PoseType]:
         """Get the list of poses"""
         return self._poses.copy()
 
@@ -79,7 +80,7 @@ class ActionChunk(Generic[PoseType]):
         """Get the number of poses in the action chunking"""
         return len(self._poses)
 
-    def relative_chunking(self, reference_frame: Optional[PoseType] = None) -> "ActionChunk[PoseType]":
+    def relative_chunking(self, reference_frame: PoseType | None = None) -> "ActionChunk[PoseType]":
         """
         Compute the relative action chunking with respect to a reference frame.
 
@@ -100,13 +101,13 @@ class ActionChunk(Generic[PoseType]):
 
         # Use the polymorphic subtraction defined in the Pose subclasses.
         # The subtraction returns the same type as the operands
-        relative_poses: List[PoseType] = [pose - ref_pose for pose in self._poses]  # type: ignore[misc]
+        relative_poses: list[PoseType] = [pose - ref_pose for pose in self._poses]  # type: ignore[misc]
 
         # Return a new instance of the same action chunking class
         # (e.g., JointActionChunk or EndEffectorActionChunk)
         return self.__class__(relative_poses, times=self.times)
 
-    def delta_chunking(self, reference_frame: Optional[PoseType] = None) -> "ActionChunk[PoseType]":
+    def delta_chunking(self, reference_frame: PoseType | None = None) -> "ActionChunk[PoseType]":
         """
         Compute the delta action chunking where each pose represents the relative
         transformation from the previous frame.
@@ -124,7 +125,7 @@ class ActionChunk(Generic[PoseType]):
         if not self._poses:
             return self.__class__([], times=[])
 
-        delta_poses: List[PoseType] = []
+        delta_poses: list[PoseType] = []
 
         # Determine the initial reference for the very first pose.
         # If a reference_frame is given, the first delta is pose[0] - reference_frame.
@@ -159,8 +160,8 @@ class ActionChunk(Generic[PoseType]):
 
     def interpolate(
         self,
-        num_points: Optional[int] = None,
-        times: Optional[NDArray[np.float64]] = None,
+        num_points: int | None = None,
+        times: NDArray[np.float64] | None = None,
     ) -> "ActionChunk":
         """
         Interpolate the action chunking to generate intermediate poses.
@@ -244,7 +245,7 @@ class JointActionChunk(ActionChunk[JointPose]):
     def __init__(
         self,
         poses: Sequence[JointPose],
-        times: Optional[Union[Sequence[float], NDArray[np.float64]]] = None,
+        times: Sequence[float] | NDArray[np.float64] | None = None,
     ):
         """
         Initialize a joint trajectory from a list of joint poses.
@@ -264,8 +265,8 @@ class JointActionChunk(ActionChunk[JointPose]):
 
     def interpolate(
         self,
-        num_points: Optional[int] = None,
-        times: Optional[NDArray[np.float64]] = None,
+        num_points: int | None = None,
+        times: NDArray[np.float64] | None = None,
     ) -> "JointActionChunk":
         """
         Interpolate the joint action chunking to generate intermediate configurations.
@@ -372,7 +373,7 @@ class JointActionChunk(ActionChunk[JointPose]):
             )
 
         # Add each relative pose to the reference frame
-        absolute_poses: List[JointPose] = []
+        absolute_poses: list[JointPose] = []
         for relative_pose in self._poses:
             absolute_joints = reference_frame.joints + relative_pose.joints
             absolute_pose = JointPose(joints=absolute_joints, joint_names=reference_frame.joint_names)
@@ -447,7 +448,7 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
     def __init__(
         self,
         poses: Sequence[EndEffectorPose],
-        times: Optional[Union[Sequence[float], NDArray[np.float64]]] = None,
+        times: Sequence[float] | NDArray[np.float64] | None = None,
     ):
         """
         Initialize an end-effector trajectory from a list of end-effector poses.
@@ -484,8 +485,8 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
 
     def interpolate(
         self,
-        num_points: Optional[int] = None,
-        times: Optional[NDArray[np.float64]] = None,
+        num_points: int | None = None,
+        times: NDArray[np.float64] | None = None,
     ) -> "EndEffectorActionChunk":
         """
         Interpolate the action chunking to generate intermediate poses.
@@ -628,7 +629,7 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
         T_ref = reference_frame.homogeneous
 
         # Compose each relative transformation with the reference frame
-        absolute_poses: List[EndEffectorPose] = []
+        absolute_poses: list[EndEffectorPose] = []
         for relative_pose in self._poses:
             # Get relative transformation as homogeneous matrix
             T_relative = relative_pose.homogeneous

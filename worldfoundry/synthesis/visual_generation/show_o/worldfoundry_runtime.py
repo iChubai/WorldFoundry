@@ -7,8 +7,9 @@ for generating images from text prompts.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import hfd_root_path
 from worldfoundry.core.io.paths import package_module_root as package_root
@@ -85,7 +86,7 @@ class ShowORuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "ShowORuntime":
+    ) -> ShowORuntime:
         """Creates a ShowORuntime instance from pretrained model settings.
 
         This factory method allows initializing the runtime with various configurations,

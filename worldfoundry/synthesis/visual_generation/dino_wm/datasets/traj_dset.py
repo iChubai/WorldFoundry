@@ -1,11 +1,12 @@
 import abc
-import torch
+from collections.abc import Sequence
+from typing import List, Optional
+
 import numpy as np
-from torch.utils.data import Dataset
-from typing import Optional, Sequence, List
-from torch.utils.data import Dataset, Subset
-from torch import default_generator, randperm
+import torch
 from einops import rearrange
+from torch import default_generator, randperm
+from torch.utils.data import Dataset, Subset
 
 
 # https://github.com/JaidedAI/EasyOCR/issues/1243
@@ -105,15 +106,16 @@ class TrajSlicerDataset(TrajDataset):
 def random_split_traj(
     dataset: TrajDataset,
     lengths: Sequence[int],
-    generator: Optional[torch.Generator] = default_generator,
-) -> List[TrajSubset]:
+    generator: torch.Generator | None = default_generator,
+) -> list[TrajSubset]:
     if sum(lengths) != len(dataset):  # type: ignore[arg-type]
         raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
 
     indices = randperm(sum(lengths), generator=generator).tolist()
     print(f"Split {len(dataset)} trajectories into {lengths}")
     return [
-        TrajSubset(dataset, indices[offset - length : offset]) for offset, length in zip(_accumulate(lengths), lengths)
+        TrajSubset(dataset, indices[offset - length : offset])
+        for offset, length in zip(_accumulate(lengths), lengths, strict=False)
     ]
 
 

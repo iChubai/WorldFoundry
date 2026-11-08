@@ -45,10 +45,10 @@ from worldfoundry.core.attention.parallel.causal_rope_sequence_parallel import (
     sp_attn_forward_causal_chunked,
     sp_dit_forward_causal_chunked,
 )
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size
-from worldfoundry.core.geometry.transforms import ray_condition
+from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 from worldfoundry.core.execution.realtime.flow_sampling import reference_flow_schedule, reference_flow_to_clean
+from worldfoundry.core.geometry.transforms import ray_condition
 from worldfoundry.operators.lingbot_world_operator import (
     compute_relative_poses,
     get_Ks_transformed,
@@ -497,6 +497,7 @@ class LingBotWorldV2Inference:
                         noise[:, :latent_frames].split(chunk_size, dim=1),
                         condition.split(chunk_size, dim=1),
                         camera.split(chunk_size, dim=2),
+                        strict=False,
                     ),
                     total=latent_frames // chunk_size,
                 )

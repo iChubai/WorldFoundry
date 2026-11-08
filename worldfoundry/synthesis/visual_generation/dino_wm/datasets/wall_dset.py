@@ -1,9 +1,12 @@
-import torch
+from collections.abc import Callable
+from pathlib import Path
+from typing import Optional
+
 import decord
 import numpy as np
-from pathlib import Path
-from typing import Callable, Optional
-from .traj_dset import TrajDataset, get_train_val_sliced, TrajSlicerDataset
+import torch
+
+from .traj_dset import TrajDataset, TrajSlicerDataset, get_train_val_sliced
 
 decord.bridge.set_bridge("torch")
 
@@ -18,8 +21,8 @@ class WallDataset(TrajDataset):
     def __init__(
         self,
         data_path: str = "data/wall_single",
-        n_rollout: Optional[int] = None,
-        transform: Optional[Callable] = None,
+        n_rollout: int | None = None,
+        transform: Callable | None = None,
         normalize_action: bool = False,
         action_scale=1.0,
     ):

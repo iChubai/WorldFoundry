@@ -1,8 +1,9 @@
 # Inference-only DreamZero runtime retained in-tree.
 import atexit
 import ctypes
-import torch
+
 import tensorrt as trt
+import torch
 
 
 def torch_type(trt_type):

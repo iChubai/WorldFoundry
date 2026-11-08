@@ -80,7 +80,7 @@ class ImageGeneratorTransformer(nn.Module):
         relevant_vlm_states = vlm_hidden_states[-len(self.blocks) :]
 
         hidden_states = []
-        for block, vlm_state in zip(self.blocks, relevant_vlm_states):
+        for block, vlm_state in zip(self.blocks, relevant_vlm_states, strict=False):
             vlm_state = vlm_state.to(dtype=x.dtype)
             x = block(x, vlm_state)
             hidden_states.append(x)

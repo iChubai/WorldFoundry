@@ -1,14 +1,14 @@
 """DualCamCtrl official camera/depth dual-branch Wan pipeline."""
 
-import torch
 import os
 import types
+from typing import Literal, Optional, Union
+
 import numpy as np
+import torch
+from einops import rearrange, reduce, repeat
 from PIL import Image
-from einops import rearrange, repeat, reduce
-from typing import Optional, Union
 from tqdm import tqdm
-from typing_extensions import Literal
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
     CausalConv3d,
@@ -22,8 +22,8 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan import (
     WanTextEncoder,
 )
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
-    T5RelativeEmbedding,
     T5LayerNorm,
+    T5RelativeEmbedding,
 )
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants import (
     WanMotionControllerModel,
@@ -31,7 +31,11 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants impor
 from worldfoundry.base_models.diffusion_model.models.networks.wan import WanModel
 from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import CameraConditionCache
 from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import StaticConditionCache
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan.vace import VaceWanModel
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.runners.staged import (
     InferenceStage,
     InferenceStageRunner,
@@ -40,10 +44,10 @@ from worldfoundry.base_models.diffusion_model.runners.staged import (
 from worldfoundry.core.model_loading import GeneralLoRALoader, load_state_dict
 from worldfoundry.core.nn import FlowMatchScheduler, RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.vram import (
-    enable_vram_management,
-    AutoWrappedModule,
     AutoWrappedLinear,
+    AutoWrappedModule,
     WanAutoCastLayerNorm,
+    enable_vram_management,
 )
 
 
@@ -230,8 +234,8 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
     def initialize_usp(self):
         import torch.distributed as dist
         from xfuser.core.distributed import (
-            initialize_model_parallel,
             init_distributed_environment,
+            initialize_model_parallel,
         )
 
         dist.init_process_group(backend="nccl", init_method="env://")
@@ -245,6 +249,7 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
 
     def enable_usp(self):
         from xfuser.core.distributed import get_sequence_parallel_world_size
+
         from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import (
             usp_attn_forward,
             usp_dit_forward,
@@ -270,7 +275,7 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
         vace: VaceWanModel | None = None,
         copy_control_weights: bool = True,
         torch_dtype: torch.dtype = torch.bfloat16,
-        device: Union[str, torch.device] = "cuda",
+        device: str | torch.device = "cuda",
         use_usp: bool = False,
     ) -> "WanVideoCameraPipeline":
         """Assemble DualCamCtrl around explicitly loaded native Wan roles."""
@@ -284,8 +289,9 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
         pipe.motion_controller = motion_controller
         pipe.vace = vace
 
-        from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import WanControlNet
         from omegaconf import OmegaConf
+
+        from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import WanControlNet
 
         conf = OmegaConf.load(config_path)
         controlnet = WanControlNet(**conf["dit"], **conf).to(
@@ -312,37 +318,27 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
         self,
         # Prompt
         prompt: str,
-        negative_prompt: Optional[str] = "",
+        negative_prompt: str | None = "",
         # Image-to-video
-        input_image: Optional[Image.Image] = None,
+        input_image: Image.Image | None = None,
         # First-last-frame-to-video
-        end_image: Optional[Image.Image] = None,
+        end_image: Image.Image | None = None,
         # TODO Uncomment this
-        extra_images: Optional[list[Image.Image]] = None,
-        extra_image_frame_index: Optional[list[int]] = None,
+        extra_images: list[Image.Image] | None = None,
+        extra_image_frame_index: list[int] | None = None,
         # Video-to-video
-        input_video: Optional[list[Image.Image]] = None,
-        denoising_strength: Optional[float] = 1.0,
+        input_video: list[Image.Image] | None = None,
+        denoising_strength: float | None = 1.0,
         # ControlNet
-        input_control: Optional[list[Image.Image]] = None,
-        reference_image: Optional[Image.Image] = None,
-        return_control_latents: Optional[bool] = False,
+        input_control: list[Image.Image] | None = None,
+        reference_image: Image.Image | None = None,
+        return_control_latents: bool | None = False,
         # Camera control
-        plucker_embedding: Optional[torch.Tensor] = None,
-        camera_control_direction: Optional[
-            Literal[
-                "Left",
-                "Right",
-                "Up",
-                "Down",
-                "LeftUp",
-                "LeftDown",
-                "RightUp",
-                "RightDown",
-            ]
-        ] = None,
-        camera_control_speed: Optional[float] = 1 / 54,
-        camera_control_origin: Optional[tuple] = (
+        plucker_embedding: torch.Tensor | None = None,
+        camera_control_direction: Literal["Left", "Right", "Up", "Down", "LeftUp", "LeftDown", "RightUp", "RightDown"]
+        | None = None,
+        camera_control_speed: float | None = 1 / 54,
+        camera_control_origin: tuple | None = (
             0,
             0.532139961,
             0.946026558,
@@ -364,40 +360,40 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
             0,
         ),
         # VACE
-        vace_video: Optional[list[Image.Image]] = None,
-        vace_video_mask: Optional[Image.Image] = None,
-        vace_reference_image: Optional[Image.Image] = None,
-        vace_scale: Optional[float] = 1.0,
+        vace_video: list[Image.Image] | None = None,
+        vace_video_mask: Image.Image | None = None,
+        vace_reference_image: Image.Image | None = None,
+        vace_scale: float | None = 1.0,
         # Randomness
-        seed: Optional[int] = None,
-        rand_device: Optional[str] = "cpu",
+        seed: int | None = None,
+        rand_device: str | None = "cpu",
         # Shape
-        batch_size: Optional[int] = 1,
-        height: Optional[int] = 480,
-        width: Optional[int] = 832,
+        batch_size: int | None = 1,
+        height: int | None = 480,
+        width: int | None = 832,
         num_frames=41,
         # Classifier-free guidance
-        cfg_scale: Optional[float] = 5.0,
-        cfg_merge: Optional[bool] = False,
+        cfg_scale: float | None = 5.0,
+        cfg_merge: bool | None = False,
         # Scheduler
-        num_inference_steps: Optional[int] = 50,
-        sigma_shift: Optional[float] = 5.0,
+        num_inference_steps: int | None = 50,
+        sigma_shift: float | None = 5.0,
         # Speed control
-        motion_bucket_id: Optional[int] = None,
+        motion_bucket_id: int | None = None,
         # VAE tiling
-        tiled: Optional[bool] = True,
-        tile_size: Optional[tuple[int, int]] = (30, 52),
-        tile_stride: Optional[tuple[int, int]] = (15, 26),
+        tiled: bool | None = True,
+        tile_size: tuple[int, int] | None = (30, 52),
+        tile_stride: tuple[int, int] | None = (15, 26),
         # Sliding window
-        sliding_window_size: Optional[int] = None,
-        sliding_window_stride: Optional[int] = None,
+        sliding_window_size: int | None = None,
+        sliding_window_stride: int | None = None,
         # Teacache
-        tea_cache_l1_thresh: Optional[float] = None,
-        tea_cache_model_id: Optional[str] = "",
+        tea_cache_l1_thresh: float | None = None,
+        tea_cache_model_id: str | None = "",
         # progress_bar
         progress_bar_cmd=tqdm,
         # t2v or i2v
-        t2v: Optional[bool] = False,
+        t2v: bool | None = False,
         stage="naive",
     ):
         # Scheduler
@@ -1009,17 +1005,17 @@ def model_fn_wan_video(
     control_latents: torch.Tensor = None,
     timestep: torch.Tensor = None,
     context: torch.Tensor | StaticConditionCache = None,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
-    control_y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
+    control_y: torch.Tensor | None = None,
     reference_latents=None,
     vace_context=None,
     vace_scale=1.0,
     tea_cache: TeaCache = None,
     use_unified_sequence_parallel: bool = False,
-    motion_bucket_id: Optional[torch.Tensor] = None,
-    sliding_window_size: Optional[int] = None,
-    sliding_window_stride: Optional[int] = None,
+    motion_bucket_id: torch.Tensor | None = None,
+    sliding_window_size: int | None = None,
+    sliding_window_stride: int | None = None,
     cfg_merge: bool = False,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,

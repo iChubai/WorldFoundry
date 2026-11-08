@@ -52,7 +52,7 @@ class HunyuanGameCraftSynthesis(BaseSynthesis):
         self.runtime = runtime
 
     @classmethod
-    def from_pretrained(cls, *args: Any, **kwargs: Any) -> "HunyuanGameCraftSynthesis":
+    def from_pretrained(cls, *args: Any, **kwargs: Any) -> HunyuanGameCraftSynthesis:
         """
         Creates a `HunyuanGameCraftSynthesis` instance by loading a `HunyuanGameCraftRuntime`
         from pretrained weights.

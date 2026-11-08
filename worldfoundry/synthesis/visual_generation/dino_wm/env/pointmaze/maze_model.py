@@ -1,12 +1,14 @@
 """A pointmass maze env."""
 
-from gym.envs.mujoco import mujoco_env
-from gym import utils
-from d4rl import offline_env
-from .dynamic_mjc import MJCModel
-import numpy as np
 import random
+
 import gym
+import numpy as np
+from d4rl import offline_env
+from gym import utils
+from gym.envs.mujoco import mujoco_env
+
+from .dynamic_mjc import MJCModel
 
 WALL = 10
 EMPTY = 11
@@ -169,7 +171,7 @@ class MazeEnv(mujoco_env.MujocoEnv, utils.EzPickle, offline_env.OfflineEnv):
         self.str_maze_spec = maze_spec
         self.maze_arr = parse_maze(maze_spec)
         self.reward_type = reward_type
-        self.reset_locations = list(zip(*np.where(self.maze_arr == EMPTY)))
+        self.reset_locations = list(zip(*np.where(self.maze_arr == EMPTY), strict=False))
         self.reset_locations.sort()
 
         self._target = np.array([0.0, 0.0])
@@ -185,7 +187,7 @@ class MazeEnv(mujoco_env.MujocoEnv, utils.EzPickle, offline_env.OfflineEnv):
 
         # Set the default goal (overriden by a call to set_target)
         # Try to find a goal if it exists
-        self.goal_locations = list(zip(*np.where(self.maze_arr == GOAL)))
+        self.goal_locations = list(zip(*np.where(self.maze_arr == GOAL), strict=False))
         if len(self.goal_locations) == 1:
             self.set_target(self.goal_locations[0])
         elif len(self.goal_locations) > 1:

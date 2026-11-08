@@ -1,13 +1,14 @@
 from typing import List
-from einops import rearrange
+
 import torch
 import torch.nn as nn
+from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
     AttentionBlock,
     CausalConv3d,
-    RMS_norm,
     ResidualBlock,
+    RMS_norm,
     Upsample,
 )
 
@@ -156,7 +157,7 @@ class VAEEncoderWrapper(nn.Module):
         self.register_buffer("std", torch.tensor(std, dtype=torch.float32))
         self.z_dim = 16
 
-    def forward(self, z: torch.Tensor, feat_cache: List[torch.Tensor], stream: bool = False):
+    def forward(self, z: torch.Tensor, feat_cache: list[torch.Tensor], stream: bool = False):
         device, dtype = z.device, z.dtype
         scale = [self.mean.to(dtype=dtype), 1.0 / self.std.to(dtype=dtype)]
 
@@ -241,7 +242,7 @@ class VAEDecoderWrapper(nn.Module):
         self.z_dim = 16
         self.conv2 = CausalConv3d(self.z_dim, self.z_dim, 1)
 
-    def forward(self, z: torch.Tensor, *feat_cache: List[torch.Tensor]):
+    def forward(self, z: torch.Tensor, *feat_cache: list[torch.Tensor]):
         # from [batch_size, num_frames, num_channels, height, width]
         # to [batch_size, num_channels, num_frames, height, width]
         z = z.permute(0, 2, 1, 3, 4)
@@ -300,7 +301,7 @@ class VAEEncoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -325,7 +326,7 @@ class VAEEncoder3d(nn.Module):
             RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, z_dim, 3, padding=1)
         )
 
-    def forward(self, x: torch.Tensor, feat_cache: List[torch.Tensor]):
+    def forward(self, x: torch.Tensor, feat_cache: list[torch.Tensor]):
         feat_idx = [0]
 
         idx = feat_idx[0]
@@ -401,7 +402,7 @@ class VAEDecoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -419,7 +420,7 @@ class VAEDecoder3d(nn.Module):
         self.upsamples = nn.Sequential(*upsamples)
         self.head = nn.Sequential(RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, 3, 3, padding=1))
 
-    def forward(self, x: torch.Tensor, feat_cache: List[torch.Tensor]):
+    def forward(self, x: torch.Tensor, feat_cache: list[torch.Tensor]):
         feat_idx = [0]
         # conv1
         idx = feat_idx[0]

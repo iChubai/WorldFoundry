@@ -4,8 +4,8 @@ Action format derived from VPT https://github.com/openai/Video-Pre-Training
 """
 
 import json
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Mapping, Sequence
 
 import av
 import torch

@@ -7,13 +7,13 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core import cuda_visible_devices_from_device
 from worldfoundry.runtime.assets import expand_worldfoundry_path
-
 
 SOURCE_ROOT = Path(__file__).resolve().parents[4]
 INFERENCE_ROOT = Path(__file__).resolve().parent
@@ -133,7 +133,7 @@ class LingBotVideoRuntime:
         *,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "LingBotVideoRuntime":
+    ) -> LingBotVideoRuntime:
         return cls(checkpoint_dir, device=device, **kwargs)
 
     def missing_checkpoint_files(

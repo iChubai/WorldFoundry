@@ -16,18 +16,18 @@ class FrameBankEntry:
     chunk_idx: int
     pixel_idx: int  # global pixel index used for recency sorting
     # Optional Pi3X geometry cache; None by default.
-    cached_geometry: Optional[dict] = None
+    cached_geometry: dict | None = None
 
 
 class FrameBank:
     """Append-only keyframe store with top-K retrieval."""
 
-    def __init__(self, max_size: Optional[int] = None):
+    def __init__(self, max_size: int | None = None):
         """Args:
         max_size: capacity cap; None or <=0 means unlimited; excess entries evicted FIFO.
         """
         self.entries: list[FrameBankEntry] = []
-        self.max_size: Optional[int] = int(max_size) if (max_size is not None and int(max_size) > 0) else None
+        self.max_size: int | None = int(max_size) if (max_size is not None and int(max_size) > 0) else None
 
     # ---------------- ingest ----------------
 
@@ -56,9 +56,9 @@ class FrameBank:
         top_k: int = 8,
         # Split API: nearby by recency + select by metric.
         nearby_k: int = 0,  # number of most-recent frames by pixel_idx
-        select_k: Optional[int] = None,  # number of frames chosen by metric; defaults to top_k
+        select_k: int | None = None,  # number of frames chosen by metric; defaults to top_k
         metric: str = "v1",  # "v1" / "v2" / "v3"
-        metric_kwargs: Optional[dict] = None,  # per-metric keyword args
+        metric_kwargs: dict | None = None,  # per-metric keyword args
         # V1-only heuristics kept for backward compat.
         diversity_min_dist: float = 0.0,  # skip candidates closer than this to already-selected
         time_decay_weight: float = 0.0,  # penalize recent frames by this weight

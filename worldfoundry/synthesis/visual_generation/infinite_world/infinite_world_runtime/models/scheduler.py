@@ -1,14 +1,13 @@
 import math
 import time
-import numpy as np
-
-from tqdm import tqdm
-from typing import Callable
-from einops import rearrange
+from collections.abc import Callable
 from functools import partial
 
+import numpy as np
 import torch
+from einops import rearrange
 from torch.distributions import LogisticNormal
+from tqdm import tqdm
 
 from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
 

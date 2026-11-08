@@ -10,14 +10,17 @@
 # NoMaD, GNM, ViNT: https://github.com/robodhruv/visualnav-transformer
 # --------------------------------------------------------
 
+import os
+import pickle
+import random
+from typing import Tuple
+
 import numpy as np
 import torch
-import os
-from PIL import Image
-from typing import Tuple
-import pickle
 import tqdm
+from PIL import Image
 from torch.utils.data import Dataset
+
 from worldfoundry.synthesis.visual_generation.vid2world.config_paths import (
     load_runtime_yaml,
 )
@@ -29,8 +32,6 @@ from worldfoundry.synthesis.visual_generation.vid2world.nvm_utils.misc import (
     to_local_coords,
     transform,
 )
-import random
-
 
 # Help NumPy 1.x unpickle NumPy 2.x pickles, please use this sparingly and only temporarily
 if np.__version__[:2] == "1.":
@@ -77,7 +78,7 @@ class BaseDataset(Dataset):
         data_folder: str,
         data_split_folder: str,
         dataset_name: str,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
         len_traj_pred: int,
@@ -102,7 +103,7 @@ class BaseDataset(Dataset):
         self.goals_per_obs = goals_per_obs
 
         traj_names_file = os.path.join(self.data_split_folder, traj_names)
-        with open(traj_names_file, "r") as f:
+        with open(traj_names_file) as f:
             file_lines = f.read()
             self.traj_names = file_lines.split("\n")
         if "" in self.traj_names:
@@ -160,7 +161,7 @@ class BaseDataset(Dataset):
         for traj_name in tqdm.tqdm(self.traj_names, disable=not use_tqdm, dynamic_ncols=True):
             traj_data = self._get_trajectory(traj_name)
             traj_len = len(traj_data["position"])
-            for goal_time in range(0, traj_len):
+            for goal_time in range(traj_len):
                 goals_index.append((traj_name, goal_time))
 
             begin_time = self.context_size - 1
@@ -229,7 +230,7 @@ class RECONVIDDataset(BaseDataset):
         data_folder: str,
         data_split_folder: str,
         dataset_name: str,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
         len_traj_pred: int,
@@ -261,7 +262,7 @@ class RECONVIDDataset(BaseDataset):
         self.mode = mode
         self.video_length = video_length
 
-    def __getitem__(self, i: int) -> Tuple[torch.Tensor]:
+    def __getitem__(self, i: int) -> tuple[torch.Tensor]:
         try:
             # Our logic of sampling a continuous video & corresponding sequence is as follows:
             # 1. context_times is the first frame, goal_time is all the following frames
@@ -311,7 +312,7 @@ class RECONEvalDataset(BaseDataset):
         data_folder: str,
         data_split_folder: str,
         dataset_name: str,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
         len_traj_pred: int,  # should be 16
@@ -343,7 +344,7 @@ class RECONEvalDataset(BaseDataset):
         self.mode = mode
         self.video_length = video_length
 
-    def __getitem__(self, i: int) -> Tuple[torch.Tensor]:
+    def __getitem__(self, i: int) -> tuple[torch.Tensor]:
         try:
             # Our logic of sampling a continuous video & corresponding sequence is as follows:
             # 1. context_times is the first frame, goal_time is all the following frames

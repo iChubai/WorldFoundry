@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import threading
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch

@@ -1,22 +1,20 @@
 """Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> eval_inputs -> csgovid.py functionality."""
 
+import math
 import os
 import random
 from importlib.resources import files
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import numpy as np
-from tqdm import tqdm
-from PIL import Image
-
 import torch
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+from PIL import Image
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.transforms import functional as F
-from torch import Tensor
-from typing import Optional, List, Tuple
-import math
+from tqdm import tqdm
 
 from worldfoundry.synthesis.visual_generation.vid2world.config_paths import (
     resolve_runtime_asset,
@@ -25,7 +23,6 @@ from worldfoundry.synthesis.visual_generation.vid2world.csgo_utils.data import (
     CSGOHdf5Dataset,
     SegmentId,
 )
-
 
 _VID2WORLD_RUNTIME_ROOT = Path(str(files("worldfoundry.synthesis.visual_generation.vid2world")))
 
@@ -115,7 +112,7 @@ class CSGOVID(Dataset):
             self.val_file_list_path = str(resolve_runtime_asset(self.val_file_list_path, _VID2WORLD_RUNTIME_ROOT))
 
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
-            with open(self.val_file_list_path, "r") as f:  # val_file_list_path is a txt file, each line is a file path
+            with open(self.val_file_list_path) as f:  # val_file_list_path is a txt file, each line is a file path
                 self.val_file_set = set(line.strip() for line in f)
         print(f"Current directory: {os.getcwd()}")
         print(f"Does val_file_list_path exist? {os.path.exists(self.val_file_list_path)}")
@@ -387,7 +384,7 @@ class CSGOVID(Dataset):
         return torch.stack(new_frames, dim=1)  # [C, T, H, W]
 
     @staticmethod
-    def get_crop_params(img: Tensor, scale: List[float], ratio: List[float]) -> Tuple[int, int, int, int]:
+    def get_crop_params(img: Tensor, scale: list[float], ratio: list[float]) -> tuple[int, int, int, int]:
         """Get parameters for ``crop`` for a random sized crop.
 
         Args:
@@ -433,11 +430,11 @@ class CSGOVID(Dataset):
 
     @staticmethod
     def get_jittor_params(
-        brightness: Optional[List[float]],
-        contrast: Optional[List[float]],
-        saturation: Optional[List[float]],
-        hue: Optional[List[float]],
-    ) -> Tuple[Tensor, Optional[float], Optional[float], Optional[float], Optional[float]]:
+        brightness: list[float] | None,
+        contrast: list[float] | None,
+        saturation: list[float] | None,
+        hue: list[float] | None,
+    ) -> tuple[Tensor, float | None, float | None, float | None, float | None]:
         """Get the parameters for the randomized transform to be applied on image.
 
         Args:

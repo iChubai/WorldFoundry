@@ -2,27 +2,29 @@
 Wrap the Huggingface Transformers Llama to PyTorch Lightning Module.
 """
 
+import inspect
 import os
 import sys
-import inspect
-import torch
 from typing import Optional
+
+import torch
 import torch.utils.checkpoint
+from diagonal_decoding import (
+    decode_n_tokens,
+    decode_one_token,
+    decode_some_token,
+    img_diagd_decode_n_tokens,
+    prefill,
+    video_diagd_decode_n_tokens,
+)
 from torch import nn
+from transformers import LlamaConfig
 from transformers.activations import ACT2FN
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
-from transformers import LlamaConfig
 from utils import get_obj_from_str, instantiate_from_config
-from diagonal_decoding import (
-    decode_one_token,
-    decode_some_token,
-    decode_n_tokens,
-    prefill,
-    img_diagd_decode_n_tokens,
-    video_diagd_decode_n_tokens,
-)
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -31,7 +33,7 @@ logger = logging.get_logger(__name__)
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 
-if not (parentdir in sys.path):
+if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
 
@@ -101,7 +103,7 @@ class LlamaRotaryEmbedding(nn.Module):
     def __init__(
         self,
         device=None,
-        config: Optional[LlamaConfig] = None,
+        config: LlamaConfig | None = None,
     ):
         super().__init__()
         self.rope_kwargs = {}
@@ -195,8 +197,8 @@ class LlamaAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
         positions_embedding=None,
     ):
         bsz, q_len, _ = hidden_states.size()
@@ -256,8 +258,8 @@ class LlamaDecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
         positions_embedding=None,
     ):
         """
@@ -318,7 +320,7 @@ class LlamaModel(PreTrainedModel):
         ).cuda()
         self.post_init()
 
-    def _create_attention_mask(self, input_pos: Optional[torch.Tensor]):
+    def _create_attention_mask(self, input_pos: torch.Tensor | None):
         """
         Creates an attention mask for the transformer layers.
 
@@ -334,8 +336,8 @@ class LlamaModel(PreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
     ):
         if input_ids is None:
             raise ValueError("decoder_input_ids is None")
@@ -370,7 +372,7 @@ class LlamaForCausalLM(PreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        position_ids: torch.LongTensor | None = None,
     ):
         outputs = self.model(
             input_ids=input_ids,

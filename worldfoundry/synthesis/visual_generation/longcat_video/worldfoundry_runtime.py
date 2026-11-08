@@ -6,13 +6,13 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core import cuda_visible_devices_from_device, jsonable
 from worldfoundry.runtime.assets import expand_worldfoundry_path
-
 
 SRC_ROOT = Path(__file__).resolve().parents[4]
 RUNTIME_ROOT = SRC_ROOT / "worldfoundry" / "synthesis" / "visual_generation" / "longcat_video" / "longcat_video_runtime"
@@ -131,7 +131,7 @@ class LongCatVideoRuntime:
         task_type: str = DEFAULT_TASK,
         device: str = "cuda",
         **options: Any,
-    ) -> "LongCatVideoRuntime":
+    ) -> LongCatVideoRuntime:
         return cls(checkpoint_dir=checkpoint_dir, task_type=task_type, device=device, **options)
 
     def missing_checkpoint_files(self) -> tuple[str, ...]:

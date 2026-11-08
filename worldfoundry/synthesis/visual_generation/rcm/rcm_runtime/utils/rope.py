@@ -24,9 +24,9 @@ class RopeCache:
     post-RoPE mode to rotate the new key before caching.
     """
 
-    query_freqs: Optional[torch.Tensor] = None
-    key_freqs: Optional[torch.Tensor] = None
-    current_key_freqs: Optional[torch.Tensor] = None
+    query_freqs: torch.Tensor | None = None
+    key_freqs: torch.Tensor | None = None
+    current_key_freqs: torch.Tensor | None = None
     use_fused: bool = True
     cached_k_rotated: bool = True
 
@@ -55,7 +55,7 @@ def apply_rotary_emb_torch(
     )
 
 
-def apply_rope(x: torch.Tensor, freqs: Optional[torch.Tensor], fused: bool = True) -> torch.Tensor:
+def apply_rope(x: torch.Tensor, freqs: torch.Tensor | None, fused: bool = True) -> torch.Tensor:
     if freqs is None:
         return x
 
@@ -106,8 +106,8 @@ def rope_time_delta_(k: torch.Tensor, delta_frames: int, dim_t: int, t_ntk_facto
 
 
 def apply_rope_with_tangent(
-    x: torch.Tensor, t_x: torch.Tensor, freqs: Optional[torch.Tensor], fused: bool = False
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    x: torch.Tensor, t_x: torch.Tensor, freqs: torch.Tensor | None, fused: bool = False
+) -> tuple[torch.Tensor, torch.Tensor]:
     if freqs is None:
         return x, t_x
 

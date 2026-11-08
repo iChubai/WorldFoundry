@@ -4,9 +4,10 @@ import json
 import math
 import os
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -18,8 +19,7 @@ os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
-from .constants import ACTION_DIM, ACTION_PROPRIO_NORMALIZATION_TYPE, NormalizationType, PROPRIO_DIM
-
+from .constants import ACTION_DIM, ACTION_PROPRIO_NORMALIZATION_TYPE, PROPRIO_DIM, NormalizationType
 
 _DATA_CONFIG = load_vla_va_wam_runtime_config("openvla-oft")
 OPENVLA_IMAGE_SIZE = int(_DATA_CONFIG["image_size"])

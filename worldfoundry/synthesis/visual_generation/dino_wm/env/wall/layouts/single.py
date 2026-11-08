@@ -1,9 +1,11 @@
 import math
-import torch
-import numpy as np
-from scipy.stats import truncnorm
 from dataclasses import dataclass
 from typing import NamedTuple
+
+import numpy as np
+import torch
+from scipy.stats import truncnorm
+
 from .configs import ConfigBase
 from .wall_utils import *
 

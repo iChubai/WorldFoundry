@@ -24,22 +24,24 @@ expressed as native recipes.
 """
 
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Union, Tuple
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.distributed as dist
-import numpy as np
-from dataclasses import dataclass
-from packaging import version
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.configuration_utils import FrozenDict
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.models import AutoencoderKL
 from diffusers.models.lora import adjust_lora_scale_text_encoder
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import (
     USE_PEFT_BACKEND,
+    BaseOutput,
     deprecate,
     logging,
     replace_example_docstring,
@@ -47,8 +49,7 @@ from diffusers.utils import (
     unscale_lora_layers,
 )
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.utils import BaseOutput
+from packaging import version
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video import (
     AutoencoderKLCausal3D,
@@ -84,10 +85,10 @@ def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
 
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     """
@@ -145,7 +146,7 @@ def retrieve_timesteps(
 class HunyuanVideoPipelineOutput(BaseOutput):
     """Hunyuan video pipeline output implementation."""
 
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 class HunyuanVideoPipeline(DiffusionPipeline):
@@ -179,8 +180,8 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         text_encoder: TextEncoder,
         transformer: HYVideoDiffusionTransformer,
         scheduler: KarrasDiffusionSchedulers,
-        text_encoder_2: Optional[TextEncoder] = None,
-        progress_bar_config: Dict[str, Any] = None,
+        text_encoder_2: TextEncoder | None = None,
+        progress_bar_config: dict[str, Any] = None,
         args=None,
     ):
         """Init.
@@ -250,14 +251,14 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         num_videos_per_prompt,
         do_classifier_free_guidance,
         negative_prompt=None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        lora_scale: Optional[float] = None,
-        clip_skip: Optional[int] = None,
-        text_encoder: Optional[TextEncoder] = None,
-        data_type: Optional[str] = "image",
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        lora_scale: float | None = None,
+        clip_skip: int | None = None,
+        text_encoder: TextEncoder | None = None,
+        data_type: str | None = "image",
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -369,7 +370,7 @@ class HunyuanVideoPipeline(DiffusionPipeline):
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance and negative_prompt_embeds is None:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif prompt is not None and type(prompt) is not type(negative_prompt):
@@ -674,42 +675,39 @@ class HunyuanVideoPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         height: int,
         width: int,
         video_length: int,
         data_type: str = "video",
         num_inference_steps: int = 50,
-        timesteps: List[int] = None,
-        sigmas: List[float] = None,
+        timesteps: list[int] = None,
+        sigmas: list[float] = None,
         guidance_scale: float = 7.5,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_videos_per_prompt: Optional[int] = 1,
+        negative_prompt: str | list[str] | None = None,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         guidance_rescale: float = 0.0,
-        clip_skip: Optional[int] = None,
-        callback_on_step_end: Optional[
-            Union[
-                Callable[[int, int, Dict], None],
-                PipelineCallback,
-                MultiPipelineCallbacks,
-            ]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        clip_skip: int | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
-        n_tokens: Optional[int] = None,
-        embedded_guidance_scale: Optional[float] = None,
+        n_tokens: int | None = None,
+        embedded_guidance_scale: float | None = None,
         **kwargs,
     ):
         r"""

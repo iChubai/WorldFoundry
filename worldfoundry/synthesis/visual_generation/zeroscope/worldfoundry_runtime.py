@@ -8,8 +8,9 @@ based on text prompts.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 
 class ZeroScopeRuntime:
@@ -42,7 +43,7 @@ class ZeroScopeRuntime:
         self._pipe = None  # Stores the loaded diffusers pipeline instance.
 
     @classmethod
-    def from_synthesis(cls, synthesis: Any) -> "ZeroScopeRuntime":
+    def from_synthesis(cls, synthesis: Any) -> ZeroScopeRuntime:
         """Creates a ZeroScopeRuntime instance from a synthesis object.
 
         This class method is a convenient constructor that extracts required parameters

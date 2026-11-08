@@ -1,23 +1,34 @@
 """LingBot-VLA v2 policy architecture for inference."""
 
+from typing import List, Optional, Union
+
 import einops
 import torch
 from torch import Tensor, nn
-from typing import List, Optional, Union
-
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
-from transformers.models.auto import CONFIG_MAPPING
 from transformers.cache_utils import Cache
+from transformers.models.auto import CONFIG_MAPPING
 from transformers.utils import logging
 
 from .configuration import LingbotVLAV2Config
+
+# isort: split
 from .qwen3_vl import (
     Qwen3VLForConditionalGeneration,
     apply_rotary_pos_emb,
 )
+
+# isort: split
+from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
+from .base import (
+    FlowMatching as FlowMatchingV1,
+)
 from .base import (
     replace_lnorm_with_adanorm,
-    FlowMatching as FlowMatchingV1,
+)
+from .qwen2_expert import (
+    Qwen2ForCausalLM,
+    Qwen2TokenMoeBlock,
 )
 from .utils import (
     block_suffix_to_fv_,
@@ -25,11 +36,6 @@ from .utils import (
     our_eager_attention_forward,
     prefix_query_segments,
     prefix_query_token_spans,
-)
-from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
-from .qwen2_expert import (
-    Qwen2ForCausalLM,
-    Qwen2TokenMoeBlock,
 )
 
 try:
@@ -254,9 +260,9 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         layer_idx: int,
-        past_key_values: Optional[Union[List[torch.FloatTensor], Cache]] = None,
-        use_cache: Optional[bool] = None,
-        fill_kv_cache: Optional[bool] = None,
+        past_key_values: list[torch.FloatTensor] | Cache | None = None,
+        use_cache: bool | None = None,
+        fill_kv_cache: bool | None = None,
     ):
         if use_cache:
             if past_key_values is None:
@@ -283,16 +289,16 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
 
     def forward(
         self,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        vlm_position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Union[List[torch.FloatTensor], Cache]] = None,
-        inputs_embeds: List[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        fill_kv_cache: Optional[bool] = None,
-        ada_cond: List[torch.FloatTensor] = None,
-        visual_pos_masks: Optional[torch.Tensor] = None,
-        deepstack_visual_embeds: Optional[list[torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        vlm_position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | Cache | None = None,
+        inputs_embeds: list[torch.FloatTensor] = None,
+        use_cache: bool | None = None,
+        fill_kv_cache: bool | None = None,
+        ada_cond: list[torch.FloatTensor] = None,
+        visual_pos_masks: torch.Tensor | None = None,
+        deepstack_visual_embeds: list[torch.Tensor] | None = None,
     ):
         models = [self.qwenvl.model.language_model, self.qwen_expert.model]
         num_layers = self.qwenvl.config.text_config.num_hidden_layers

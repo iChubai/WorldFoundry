@@ -66,9 +66,9 @@ class SolarisRuntime:
         jax_cache_dir: str,
         model_weights_path: str,
         *,
-        python_executable: Optional[str] = None,
+        python_executable: str | None = None,
         device: str = "cuda",
-        defaults: Optional[dict[str, Any]] = None,
+        defaults: dict[str, Any] | None = None,
     ) -> None:
         """Initializes the SolarisRuntime instance with resolved paths and configurations.
 
@@ -108,23 +108,23 @@ class SolarisRuntime:
     @classmethod
     def from_pretrained(
         cls,
-        pretrained_model_path: Optional[str] = None,
+        pretrained_model_path: str | None = None,
         args=None,
-        device: Optional[str] = None,
-        runtime_root: Optional[str] = None,
-        pretrained_model_dir: Optional[str] = None,
-        eval_data_dir: Optional[str] = None,
-        output_dir: Optional[str] = None,
-        checkpoint_dir: Optional[str] = None,
-        jax_cache_dir: Optional[str] = None,
-        model_weights_path: Optional[str] = None,
-        python_executable: Optional[str] = None,
+        device: str | None = None,
+        runtime_root: str | None = None,
+        pretrained_model_dir: str | None = None,
+        eval_data_dir: str | None = None,
+        output_dir: str | None = None,
+        checkpoint_dir: str | None = None,
+        jax_cache_dir: str | None = None,
+        model_weights_path: str | None = None,
+        python_executable: str | None = None,
         enable_jax_cache: bool = False,
-        eval_num_samples: Optional[int] = None,
+        eval_num_samples: int | None = None,
         num_workers: int = 8,
         num_frames_eval: int = 257,
         **kwargs,
-    ) -> "SolarisRuntime":
+    ) -> SolarisRuntime:
         """Factory method to create a `SolarisRuntime` instance with automatic path resolution.
 
         This method resolves various directory paths based on `pretrained_model_path` or
@@ -291,17 +291,17 @@ class SolarisRuntime:
 
     def predict(
         self,
-        eval_types: Optional[object] = None,
+        eval_types: object | None = None,
         *,
         experiment_name: str = "solaris_worldfoundry",
-        output_dir: Optional[str] = None,
-        eval_num_samples: Optional[int] = None,
-        num_workers: Optional[int] = None,
-        num_frames_eval: Optional[int] = None,
-        enable_jax_cache: Optional[bool] = None,
-        checkpoint_dir: Optional[str] = None,
-        jax_cache_dir: Optional[str] = None,
-        model_weights_path: Optional[str] = None,
+        output_dir: str | None = None,
+        eval_num_samples: int | None = None,
+        num_workers: int | None = None,
+        num_frames_eval: int | None = None,
+        enable_jax_cache: bool | None = None,
+        checkpoint_dir: str | None = None,
+        jax_cache_dir: str | None = None,
+        model_weights_path: str | None = None,
         return_dict: bool = False,
         show_progress: bool = True,
     ):

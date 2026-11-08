@@ -1,16 +1,17 @@
 """Video processor class for MolmoAct2"""
 
-from functools import partial
 import os
 import warnings
+from collections.abc import Callable
+from functools import partial
+from typing import Optional, Union
 from urllib.parse import urlparse
-from typing import Optional, Union, Callable
 
-import numpy as np
 import einops
+import numpy as np
 import torch
 import torchvision.transforms
-
+from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import (
     IMAGENET_STANDARD_MEAN,
     IMAGENET_STANDARD_STD,
@@ -19,26 +20,23 @@ from transformers.image_utils import (
     SizeDict,
     validate_kwargs,
 )
-from transformers.video_utils import (
-    VideoInput,
-    is_valid_video,
-    make_batched_videos,
-    make_batched_metadata,
-    VideoMetadata,
-)
 from transformers.processing_utils import Unpack, VideosKwargs
-from transformers.video_processing_utils import BaseVideoProcessor
-from transformers.utils import logging
-from transformers.feature_extraction_utils import BatchFeature
 from transformers.utils import (
+    TensorType,
     is_av_available,
     is_decord_available,
     is_torchcodec_available,
-    TensorType,
     logging,
     to_numpy,
 )
-
+from transformers.video_processing_utils import BaseVideoProcessor
+from transformers.video_utils import (
+    VideoInput,
+    VideoMetadata,
+    is_valid_video,
+    make_batched_metadata,
+    make_batched_videos,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -79,7 +77,7 @@ def resize_image(
         )(image)
         resized = torch.clip(resized, 0.0, 1.0).to(dtype)
     else:
-        assert image.dtype == torch.uint8, "SigLIP expects float images or uint8 images, but got {}".format(image.dtype)
+        assert image.dtype == torch.uint8, f"SigLIP expects float images or uint8 images, but got {image.dtype}"
         in_min = 0.0
         in_max = 255.0
         resized = torchvision.transforms.Resize(
@@ -197,9 +195,9 @@ def image_to_patches_and_grids(
 
 
 def get_candidate_target_fps(
-    video_fps: Union[int, float],
-    sampling_fps: Union[int, float],
-    max_fps: Union[int, float] = MAX_VIDEO_FPS,
+    video_fps: int | float,
+    sampling_fps: int | float,
+    max_fps: int | float = MAX_VIDEO_FPS,
 ) -> list[float]:
     """
     Return the subset of `video_fps` factors that remain multiples of `sampling_fps`.
@@ -439,7 +437,7 @@ VIDEO_DECODERS = {
 def load_video(
     video: VideoInput,
     backend: str = "decord",
-    sample_timestamps_fn: Optional[Callable] = None,
+    sample_timestamps_fn: Callable | None = None,
     **kwargs,
 ):
     """
@@ -531,11 +529,11 @@ def get_frame_times_and_chosen_fps(selected_target_fps, total_frames, max_frames
 
 
 class MolmoAct2VideoProcessorKwargs(VideosKwargs, total=False):
-    patch_size: Optional[int]
-    pooling_size: Optional[list[int]]
-    frame_sample_mode: Optional[str]
-    max_fps: Optional[int]
-    sampling_fps: Optional[int]
+    patch_size: int | None
+    pooling_size: list[int] | None
+    frame_sample_mode: str | None
+    max_fps: int | None
+    sampling_fps: int | None
 
 
 class MolmoAct2VideoProcessor(BaseVideoProcessor):
@@ -563,7 +561,7 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
 
     def _further_process_kwargs(
         self,
-        size: Optional[SizeDict] = None,
+        size: SizeDict | None = None,
         **kwargs,
     ) -> dict:
         """
@@ -580,8 +578,8 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
         metadata: VideoMetadata,
         frame_sample_mode: str,
         num_frames: int,
-        max_fps: Optional[int] = None,
-        sampling_fps: Optional[int] = None,
+        max_fps: int | None = None,
+        sampling_fps: int | None = None,
         **kwargs,
     ) -> np.ndarray:
         """
@@ -633,10 +631,10 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
     def sample_frames(
         self,
         metadata: VideoMetadata,
-        frame_sample_mode: Optional[str] = None,
-        num_frames: Optional[int] = None,
-        max_fps: Optional[int] = None,
-        sampling_fps: Optional[int] = None,
+        frame_sample_mode: str | None = None,
+        num_frames: int | None = None,
+        max_fps: int | None = None,
+        sampling_fps: int | None = None,
         **kwargs,
     ) -> np.ndarray:
         """
@@ -711,7 +709,7 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
         else:
             raise NotImplementedError(frame_sample_mode)
 
-    def fetch_videos(self, video_url_or_urls: Union[str, list[str], list[list[str]]], sample_timestamps_fn=None):
+    def fetch_videos(self, video_url_or_urls: str | list[str] | list[list[str]], sample_timestamps_fn=None):
         """
         Convert a single local path or a list of local paths into `np.array` objects.
 
@@ -737,7 +735,10 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
 
         if isinstance(video_url_or_urls, list):
             return list(
-                zip(*[self.fetch_videos(x, sample_timestamps_fn=sample_timestamps_fn) for x in video_url_or_urls])
+                zip(
+                    *[self.fetch_videos(x, sample_timestamps_fn=sample_timestamps_fn) for x in video_url_or_urls],
+                    strict=False,
+                )
             )
         else:
             return load_video(video_url_or_urls, backend=backend, sample_timestamps_fn=sample_timestamps_fn)
@@ -745,10 +746,10 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
     def _decode_and_sample_videos(
         self,
         videos: VideoInput,
-        video_metadata: Union[VideoMetadata, dict],
-        do_sample_frames: Optional[bool] = None,
-        sample_indices_fn: Optional[Callable] = None,
-        sample_timestamps_fn: Optional[Callable] = None,
+        video_metadata: VideoMetadata | dict,
+        do_sample_frames: bool | None = None,
+        sample_indices_fn: Callable | None = None,
+        sample_timestamps_fn: Callable | None = None,
     ):
         """
         Decode input videos and sample frames if needed.
@@ -762,7 +763,7 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
             assert video_metadata[0].fps is not None, "FPS must be provided for video input"
             sampled_videos = []
             sampled_metadata = []
-            for video, metadata in zip(videos, video_metadata):
+            for video, metadata in zip(videos, video_metadata, strict=False):
                 indices = sample_indices_fn(metadata=metadata)
                 metadata.frames_indices = indices
                 sampled_videos.append(video[indices])
@@ -830,14 +831,14 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
     def _preprocess(
         self,
         videos: list[np.ndarray],
-        size: Optional[SizeDict] = None,
-        resample: Optional[PILImageResampling] = None,
-        image_mean: Optional[Union[float, list[float]]] = None,
-        image_std: Optional[Union[float, list[float]]] = None,
-        do_convert_rgb: Optional[bool] = None,
-        patch_size: Optional[int] = None,
-        pooling_size: Optional[list[int]] = None,
-        return_tensors: Optional[Union[str, TensorType]] = None,
+        size: SizeDict | None = None,
+        resample: PILImageResampling | None = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
+        do_convert_rgb: bool | None = None,
+        patch_size: int | None = None,
+        pooling_size: list[int] | None = None,
+        return_tensors: str | TensorType | None = None,
         **kwargs,
     ) -> BatchFeature:
         """

@@ -8,15 +8,15 @@ import socket
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 from contextlib import nullcontext
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io import load_serialized, resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
-
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -295,7 +295,7 @@ class OfficialVideoRuntime:
         return dict(payload)
 
     @classmethod
-    def from_model_id(cls, model_id: str, *, device: str = "cuda", **overrides: Any) -> "OfficialVideoRuntime":
+    def from_model_id(cls, model_id: str, *, device: str = "cuda", **overrides: Any) -> OfficialVideoRuntime:
         return cls(
             model_id=model_id,
             runtime_config_path=f"models/runtime/configs/video_official/{model_id}.yaml",
@@ -923,6 +923,7 @@ class OfficialVideoRuntime:
         finally:
             torch.load = original_torch_load  # type: ignore[assignment]
         from modelscope.pipelines.multi_modal.text_to_video_synthesis_pipeline import tensor2vid
+
         from worldfoundry.core.media.codecs.video import save_video_h264
 
         def _postprocess_video(inputs: dict[str, Any], **post_params: Any) -> dict[str, str]:
@@ -1288,10 +1289,10 @@ class OfficialVideoRuntime:
         from transformers import (
             AutoProcessor,
             AutoTokenizer,
-            Qwen2VLImageProcessor,
-            Qwen2VLVideoProcessor,
             Qwen2_5_VLForConditionalGeneration,
             Qwen2_5_VLProcessor,
+            Qwen2VLImageProcessor,
+            Qwen2VLVideoProcessor,
         )
 
         preprocessor_config = json.loads((checkpoint_path / "preprocessor_config.json").read_text(encoding="utf-8"))

@@ -18,10 +18,11 @@ import threading
 import traceback
 import uuid
 from collections import deque
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from io import BytesIO
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import numpy as np
 import safetensors
@@ -85,8 +86,8 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # Global storage for session frames
-session_frames_storage: Dict[str, List[torch.Tensor]] = {}
-session_frame_locks: Dict[str, threading.Lock] = {}
+session_frames_storage: dict[str, list[torch.Tensor]] = {}
+session_frame_locks: dict[str, threading.Lock] = {}
 
 UUID_NIL = str(uuid.UUID(int=0))
 USE_STATIC_ENCODER_COND_DICT = os.getenv("USE_STATIC_ENCODER_COND_DICT", "false").lower() in ("true", "1", "yes")
@@ -368,7 +369,7 @@ class GenerationSession:
         params: GenerateParams,
         config: OmegaConf,
         debug=False,
-        frame_callback: Optional[Callable] = None,
+        frame_callback: Callable | None = None,
         models: Models | None = None,
     ):
         self.current_use_taehv = config.use_taehv
@@ -389,7 +390,7 @@ class GenerationSession:
         self.height = params.height // 8 * 8
         self.latent_width = self.width // 8
         self.latent_height = self.height // 8
-        self.resume_latents: Optional[torch.Tensor] = None
+        self.resume_latents: torch.Tensor | None = None
         self.last_frame_latent = None
 
         self.config = config
@@ -413,8 +414,8 @@ class GenerationSession:
 
         self.gpu_initialized = False
 
-        self.encode_vae_cache: list[Optional[torch.Tensor]] = [None] * 55
-        self.decode_vae_cache: list[Optional[torch.Tensor]] = [None] * 55
+        self.encode_vae_cache: list[torch.Tensor | None] = [None] * 55
+        self.decode_vae_cache: list[torch.Tensor | None] = [None] * 55
         self.num_frame_per_block = 3
 
         self.rnd = torch.Generator(self.gpu).manual_seed(self.params.seed)
@@ -459,7 +460,7 @@ class GenerationSession:
             print("Setting up start frame")
             self.setup_start_frame(self.params.start_frame, models)
 
-        self.last_pred: Optional[torch.Tensor] = None
+        self.last_pred: torch.Tensor | None = None
 
     def to(self, gpu):
         if self.gpu == gpu:
@@ -954,8 +955,7 @@ async def download_video(session_id: str):
 
         # Clean up the stored frames
         del session_frames_storage[session_id]
-        if session_id in session_frame_locks:
-            del session_frame_locks[session_id]
+        session_frame_locks.pop(session_id, None)
 
         # Return the MP4 file
         return Response(
@@ -969,7 +969,7 @@ async def download_video(session_id: str):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-def save_video_to_bytes(pixels: torch.Tensor, fps: int = 24) -> Optional[bytes]:
+def save_video_to_bytes(pixels: torch.Tensor, fps: int = 24) -> bytes | None:
     """Save video frames to MP4 and return as bytes"""
     try:
         # pixels shape: [1, num_frames, 3, H, W]
@@ -1190,7 +1190,7 @@ async def ws_session(websocket: WebSocket, id: str, config: OmegaConf, models: M
             f"Client disconnected from api session {id}, generation session {session.session_id if session else None}"
         )
     finally:
-        logging.info(f"Terminating session")
+        logging.info("Terminating session")
         if session:
             session.dispose()
         if frame_sender_task:

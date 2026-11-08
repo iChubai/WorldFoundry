@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # transformations.py
 
 # Copyright (c) 2006, Christoph Gohlke
@@ -166,10 +165,8 @@ True
 
 """
 
-from __future__ import division
-
-import warnings
 import math
+import warnings
 
 import numpy
 
@@ -1361,7 +1358,7 @@ def random_rotation_matrix(rand=None):
     return quaternion_matrix(random_quaternion(rand))
 
 
-class Arcball(object):
+class Arcball:
     """Virtual Trackball Control.
 
     >>> ball = Arcball()

@@ -31,7 +31,7 @@ def prepare_dataloader(
     drop_last=False,
     pin_memory=False,
     num_workers=0,
-    process_group: Optional[ProcessGroup] = None,
+    process_group: ProcessGroup | None = None,
     bucket_config=None,
     num_bucket_build_workers=1,
     **kwargs,

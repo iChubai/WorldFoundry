@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 Microsoft and the HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +49,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention
 from .configuration_florence2 import Florence2Config, Florence2LanguageConfig
 
 if is_flash_attn_2_available():
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
+    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
 
 logger = logging.get_logger(__name__)
 
@@ -590,7 +589,7 @@ class DaViT(nn.Module):
             x (_type_): input image tensor
         """
         input_size = (x.size(2), x.size(3))
-        for conv, block in zip(self.convs, self.blocks):
+        for conv, block in zip(self.convs, self.blocks, strict=False):
             x, input_size = conv(x, input_size)
             x, input_size = block(x, input_size)
         return x
@@ -630,7 +629,7 @@ class DaViT(nn.Module):
 
 if is_flash_attn_2_available():
     from flash_attn import flash_attn_func, flash_attn_varlen_func
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
+    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
 
 
 # Copied from transformers.models.llama.modeling_llama._get_unpad_data
@@ -673,7 +672,7 @@ class Florence2ScaledWordEmbedding(nn.Embedding):
     This module overrides nn.Embeddings' forward by multiplying with embeddings scale.
     """
 
-    def __init__(self, num_embeddings: int, embedding_dim: int, padding_idx: int, embed_scale: Optional[float] = 1.0):
+    def __init__(self, num_embeddings: int, embedding_dim: int, padding_idx: int, embed_scale: float | None = 1.0):
         super().__init__(num_embeddings, embedding_dim, padding_idx)
         self.embed_scale = embed_scale
 
@@ -690,7 +689,7 @@ class Florence2Attention(nn.Module):
         num_heads: int,
         dropout: float = 0.0,
         bias: bool = True,
-        config: Optional[Florence2LanguageConfig] = None,
+        config: Florence2LanguageConfig | None = None,
     ):
         super().__init__()
         self.embed_dim = embed_dim
@@ -717,10 +716,10 @@ class Florence2Attention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        layer_head_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        layer_head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], None]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, None]:
         """Input shape: Batch x Time x Channel"""
 
         bsz, tgt_len, _ = hidden_states.size()
@@ -807,10 +806,10 @@ class Florence2FlashAttention2(Florence2Attention):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        layer_head_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        layer_head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, None, None]:
+    ) -> tuple[torch.Tensor, None, None]:
         # Florence2FlashAttention2 attention does not support output_attentions
         if output_attentions:
             raise ValueError("Florence2FlashAttention2 attention does not support output_attentions")
@@ -959,10 +958,10 @@ class Florence2SdpaAttention(Florence2Attention):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        layer_head_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        layer_head_mask: torch.Tensor | None = None,
         output_attentions: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], None]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, None]:
         """Input shape: Batch x Time x Channel"""
         if output_attentions or layer_head_mask is not None:
             # TODO: Improve this warning with e.g. `model.config._attn_implementation = "manual"` once this is implemented.
@@ -1044,8 +1043,8 @@ class Florence2EncoderLayer(nn.Module):
         hidden_states: torch.FloatTensor,
         attention_mask: torch.FloatTensor,
         layer_head_mask: torch.FloatTensor,
-        output_attentions: Optional[bool] = False,
-    ) -> Tuple[torch.FloatTensor, Optional[torch.FloatTensor]]:
+        output_attentions: bool | None = False,
+    ) -> tuple[torch.FloatTensor, torch.FloatTensor | None]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -1114,10 +1113,7 @@ class Florence2LanguagePreTrainedModel(PreTrainedModel):
             for name, _ in module.named_parameters():
                 if name == "bias":
                     nn.init.constant_(module.bias, 0)
-        elif isinstance(module, nn.LayerNorm):
-            nn.init.constant_(module.weight, 1.0)
-            nn.init.constant_(module.bias, 0)
-        elif isinstance(module, nn.BatchNorm2d):
+        elif isinstance(module, nn.LayerNorm) or isinstance(module, nn.BatchNorm2d):
             nn.init.constant_(module.weight, 1.0)
             nn.init.constant_(module.bias, 0)
 
@@ -1142,7 +1138,7 @@ class Florence2Encoder(Florence2LanguagePreTrainedModel):
         embed_tokens (nn.Embedding): output embedding
     """
 
-    def __init__(self, config: Florence2LanguageConfig, embed_tokens: Optional[nn.Embedding] = None):
+    def __init__(self, config: Florence2LanguageConfig, embed_tokens: nn.Embedding | None = None):
         super().__init__(config)
 
         self.dropout = config.dropout
@@ -1179,13 +1175,13 @@ class Florence2Encoder(Florence2LanguagePreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutput]:
+        attention_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutput:
         r"""
         Args:
             input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
@@ -1528,14 +1524,14 @@ class Florence2ForConditionalGeneration(Florence2PreTrainedModel):
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        pixel_values: Optional[torch.FloatTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutput]:
+        input_ids: torch.LongTensor | None = None,
+        pixel_values: torch.FloatTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutput:
         """Encode text/image inputs without constructing or invoking a decoder."""
 
         if input_ids is not None and inputs_embeds is not None:

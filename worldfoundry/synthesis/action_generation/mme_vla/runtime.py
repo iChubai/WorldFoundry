@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
 import os
 import shutil
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+from typing import Any
 
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     completed_action_result,
@@ -63,9 +64,9 @@ def _runtime_for(location: str, options: Mapping[str, Any]) -> Any:
     # Keep the JAX/OpenPI model graph out of module import.  Workspace discovery
     # imports every public runtime, while these dependencies are only required
     # when an MME-VLA checkpoint is actually loaded.
+    from ..openpi.modeling import tokenizer as openpi_tokenizer
     from . import config as mme_config
     from . import policy_loader
-    from ..openpi.modeling import tokenizer as openpi_tokenizer
 
     config_name = str(options.get("policy_config") or _DEFAULT_POLICY_CONFIG)
     key = (

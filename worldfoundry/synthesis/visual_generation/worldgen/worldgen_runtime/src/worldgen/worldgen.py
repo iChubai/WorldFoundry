@@ -1,15 +1,17 @@
-import torch
-import numpy as np
-import cv2
-from PIL import Image
-import open3d as o3d
-from .pano_depth import build_depth_model, pred_pano_depth, pred_depth
-from .pano_seg import build_segment_model, seg_pano_fg
-from .pano_gen import build_pano_gen_model, gen_pano_image, build_pano_fill_model, gen_pano_fill_image
-from .pano_inpaint import build_inpaint_model, inpaint_image
-from .utils.splat_utils import convert_rgbd_to_gs, SplatFile, mask_splat, merge_splats
-from .utils.general_utils import map_image_to_pano, resize_img, depth_match, convert_rgbd2mesh_panorama
 from typing import Optional, Union
+
+import cv2
+import numpy as np
+import open3d as o3d
+import torch
+from PIL import Image
+
+from .pano_depth import build_depth_model, pred_depth, pred_pano_depth
+from .pano_gen import build_pano_fill_model, build_pano_gen_model, gen_pano_fill_image, gen_pano_image
+from .pano_inpaint import build_inpaint_model, inpaint_image
+from .pano_seg import build_segment_model, seg_pano_fg
+from .utils.general_utils import convert_rgbd2mesh_panorama, depth_match, map_image_to_pano, resize_img
+from .utils.splat_utils import SplatFile, convert_rgbd_to_gs, mask_splat, merge_splats
 
 
 class WorldGen:
@@ -21,7 +23,7 @@ class WorldGen:
         lora_path: str = None,
         resolution: int = 1600,
         device: torch.device = "cuda",
-        low_vram: Optional[bool] = None,
+        low_vram: bool | None = None,
         initialize_pano_generator: bool = True,
     ):
         self.device = device
@@ -88,7 +90,7 @@ class WorldGen:
 
     def _generate_world(
         self, pano_image: Image.Image, return_mesh: bool = False
-    ) -> Union[SplatFile, o3d.geometry.TriangleMesh]:
+    ) -> SplatFile | o3d.geometry.TriangleMesh:
         init_pred = pred_pano_depth(self.depth_model, pano_image)
 
         if self.use_sharp:
@@ -108,7 +110,7 @@ class WorldGen:
             splat = self.inpaint_bg_splat(pano_image, splat, init_pred)
         return splat
 
-    def generate_pano(self, prompt: str = "", image: Optional[Image.Image] = None) -> Image.Image:
+    def generate_pano(self, prompt: str = "", image: Image.Image | None = None) -> Image.Image:
         if self.pano_gen_model is None:
             raise RuntimeError("WorldGen panorama generation was not initialized for this direct-panorama request.")
         if self.mode == "t2s":
@@ -142,8 +144,8 @@ class WorldGen:
 
     @torch.inference_mode()
     def generate_world(
-        self, prompt: str = "", image: Optional[Image.Image] = None, return_mesh: bool = False
-    ) -> Union[SplatFile, o3d.geometry.TriangleMesh]:
+        self, prompt: str = "", image: Image.Image | None = None, return_mesh: bool = False
+    ) -> SplatFile | o3d.geometry.TriangleMesh:
         pano_image = self.generate_pano(prompt, image)
         scene = self._generate_world(pano_image, return_mesh)
         return scene

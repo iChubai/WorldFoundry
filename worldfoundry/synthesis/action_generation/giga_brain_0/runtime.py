@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
 
@@ -288,7 +289,7 @@ def _normalize_image_mapping(images: Any) -> dict[str, Any]:
         items = images.items()
     # If a sequence is provided, assume it corresponds to GIGA_BRAIN_0_IMAGE_KEYS
     elif isinstance(images, Sequence) and not isinstance(images, (str, bytes, bytearray, Path)):
-        items = zip(GIGA_BRAIN_0_IMAGE_KEYS, images)
+        items = zip(GIGA_BRAIN_0_IMAGE_KEYS, images, strict=False)
     else:
         raise ValueError(
             "GigaBrain-0 requires a multi-view image mapping keyed by official camera names: "

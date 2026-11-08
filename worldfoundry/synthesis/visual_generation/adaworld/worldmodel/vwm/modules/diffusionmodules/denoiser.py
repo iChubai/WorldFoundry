@@ -6,7 +6,7 @@ from vwm.util import append_dims, instantiate_from_config
 
 
 class Denoiser(nn.Module):
-    def __init__(self, scaling_config: Dict):
+    def __init__(self, scaling_config: dict):
         super(Denoiser, self).__init__()
         self.scaling = instantiate_from_config(scaling_config)
 
@@ -16,7 +16,7 @@ class Denoiser(nn.Module):
     def possibly_quantize_c_noise(self, c_noise: torch.Tensor) -> torch.Tensor:
         return c_noise
 
-    def forward(self, network: nn.Module, noised_input: torch.Tensor, sigma: torch.Tensor, cond: Dict):
+    def forward(self, network: nn.Module, noised_input: torch.Tensor, sigma: torch.Tensor, cond: dict):
         sigma = self.possibly_quantize_sigma(sigma)
         sigma_shape = sigma.shape
         sigma = append_dims(sigma, noised_input.ndim)

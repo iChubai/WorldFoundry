@@ -8,10 +8,11 @@ import math
 import os
 from typing import List, Optional
 
+import imageio
 import numpy as np
 import torch
-import imageio
 from PIL import Image, ImageOps
+
 from worldfoundry.core.io import VideoData, save_video
 from worldfoundry.synthesis.visual_generation.sama.native_pipeline import (
     SamaWanPipeline,
@@ -146,7 +147,7 @@ def detect_video_resolution(video_path: str, fallback: tuple[int, int]) -> tuple
     return fallback
 
 
-def detect_video_fps(video_path: str) -> Optional[float]:
+def detect_video_fps(video_path: str) -> float | None:
     fps = None
     try:
         reader = imageio.get_reader(video_path)
@@ -232,15 +233,15 @@ def pad_frame(frame, pad_left: int, pad_right: int, pad_top: int, pad_bottom: in
 
 
 def load_clip_frames(
-    video_path: str, height: int, width: int, max_frames: Optional[int], resolutions=None
-) -> List[torch.Tensor]:
+    video_path: str, height: int, width: int, max_frames: int | None, resolutions=None
+) -> list[torch.Tensor]:
     if resolutions is None:
         orig_w, orig_h = detect_video_resolution(video_path, fallback=(width, height))
         resize_w, resize_h, pad_l, pad_r, pad_t, pad_b = compute_letterbox_params(orig_w, orig_h, width, height)
         reader = VideoData(video_file=video_path, height=resize_h, width=resize_w)
         total = len(reader)
         limit = min(total, max_frames) if max_frames is not None else total
-        frames: List[torch.Tensor] = []
+        frames: list[torch.Tensor] = []
         for i in range(limit):
             frame = reader[i]
             frame = pad_frame(frame, pad_l, pad_r, pad_t, pad_b)
@@ -254,7 +255,7 @@ def load_clip_frames(
         reader.set_shape(new_height, new_width)
         total = len(reader)
         limit = min(total, max_frames) if max_frames is not None else total
-        frames: List[torch.Tensor] = []
+        frames: list[torch.Tensor] = []
         for i in range(limit):
             frames.append(reader[i])
         w, h = reader[0].size
@@ -262,7 +263,7 @@ def load_clip_frames(
         return frames
 
 
-def ensure_4k_plus_1_frames(frames: List[torch.Tensor]) -> tuple[List[torch.Tensor], bool]:
+def ensure_4k_plus_1_frames(frames: list[torch.Tensor]) -> tuple[list[torch.Tensor], bool]:
     """Pad frames until len % 4 == 1 (Wan requirement)."""
     if not frames:
         return frames, False

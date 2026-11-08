@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import math
 from collections import OrderedDict
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
 import torch
 import torch.nn.functional as F

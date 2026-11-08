@@ -241,8 +241,8 @@ if __name__ == "__main__":
 
     process_group = None
     if args.context_parallel_size > 1:
-        from worldfoundry.core.distributed.runtime import torch_process_group as distributed
         from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
+        from worldfoundry.core.distributed.runtime import torch_process_group as distributed
 
         distributed.init()
         parallel_state.initialize_model_parallel(context_parallel_size=args.context_parallel_size)
@@ -438,7 +438,7 @@ if __name__ == "__main__":
 
         use_chunk_captions = False
         if captions_file is not None:
-            with open(captions_file, "r") as f:
+            with open(captions_file) as f:
                 captions_dict = json.load(f)
             chunk_keys_int = sorted(int(k) for k in captions_dict)
             chunk_keys_int = [k for k in chunk_keys_int if k < N]
@@ -489,7 +489,7 @@ if __name__ == "__main__":
                 if not os.path.isfile(txt_path):
                     log.error(f"Caption file not found: {txt_path}")
                     continue
-                with open(txt_path, "r") as f:
+                with open(txt_path) as f:
                     caption = f.read().strip()
                 log.info(f"Loaded caption from {txt_path}", rank0_only=True)
             else:

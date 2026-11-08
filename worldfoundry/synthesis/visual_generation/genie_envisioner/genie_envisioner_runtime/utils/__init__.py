@@ -1,15 +1,16 @@
-import os
-import sys
-import logging
-from datetime import datetime
 import atexit
 import importlib
 import importlib.util
-from typing import Union, Type
-import torchvision
-from einops import rearrange
+import logging
+import os
+import sys
+from datetime import datetime
+from typing import Type, Union
+
 import torch
 import torch.distributed as dist
+import torchvision
+from einops import rearrange
 
 
 class Tee:
@@ -49,8 +50,8 @@ def init_logging(log_dir, rank):
 
 def import_custom_class(
     class_name: str,
-    source: Union[str, os.PathLike],
-) -> Type:
+    source: str | os.PathLike,
+) -> type:
     """
     Intelligently import CustomClass, supporting both installed packages and absolute paths
 

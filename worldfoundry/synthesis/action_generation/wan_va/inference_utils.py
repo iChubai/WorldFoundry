@@ -7,7 +7,7 @@ import torch
 
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-__all__ = ["get_mesh_id", "save_async", "data_seq_to_patch"]
+__all__ = ["data_seq_to_patch", "get_mesh_id", "save_async"]
 
 
 def data_seq_to_patch(

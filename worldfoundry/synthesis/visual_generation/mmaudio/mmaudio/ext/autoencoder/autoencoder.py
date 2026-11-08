@@ -2,11 +2,11 @@ from typing import Literal, Optional
 
 import torch
 import torch.nn as nn
-
 from mmaudio.ext.autoencoder.vae import VAE, get_my_vae
 from mmaudio.ext.bigvgan import BigVGAN
 from mmaudio.ext.bigvgan_v2.bigvgan import BigVGAN as BigVGANv2
 from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
+
 from worldfoundry.synthesis.visual_generation.mmaudio.checkpoints import (
     resolve_bigvgan_v2_checkpoint,
 )
@@ -17,7 +17,7 @@ class AutoEncoderModule(nn.Module):
         self,
         *,
         vae_ckpt_path,
-        vocoder_ckpt_path: Optional[str] = None,
+        vocoder_ckpt_path: str | None = None,
         mode: Literal["16k", "44k"],
         need_vae_encoder: bool = True,
     ):

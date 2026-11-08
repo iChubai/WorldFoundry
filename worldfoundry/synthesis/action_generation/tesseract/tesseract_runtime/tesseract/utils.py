@@ -1,14 +1,12 @@
 import gc
-import cv2
-import numpy as np
-
 from typing import Optional, Tuple, Union
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 from accelerate.logging import get_logger
 from diffusers.models.embeddings import get_3d_rotary_pos_embed
-
 
 logger = get_logger(__name__)
 
@@ -40,10 +38,10 @@ def prepare_rotary_positional_embeddings(
     patch_size: int = 2,
     patch_size_t: int = None,
     attention_head_dim: int = 64,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
     base_height: int = 480,
     base_width: int = 720,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     grid_height = height // (vae_scale_factor_spatial * patch_size)
     grid_width = width // (vae_scale_factor_spatial * patch_size)
     base_size_width = base_width // (vae_scale_factor_spatial * patch_size)
@@ -78,14 +76,14 @@ def prepare_rotary_positional_embeddings(
     return freqs_cos, freqs_sin
 
 
-def reset_memory(device: Union[str, torch.device]) -> None:
+def reset_memory(device: str | torch.device) -> None:
     gc.collect()
     torch.cuda.empty_cache()
     torch.cuda.reset_peak_memory_stats(device)
     torch.cuda.reset_accumulated_memory_stats(device)
 
 
-def print_memory(device: Union[str, torch.device]) -> None:
+def print_memory(device: str | torch.device) -> None:
     memory_allocated = torch.cuda.memory_allocated(device) / 1024**3
     max_memory_allocated = torch.cuda.max_memory_allocated(device) / 1024**3
     max_memory_reserved = torch.cuda.max_memory_reserved(device) / 1024**3

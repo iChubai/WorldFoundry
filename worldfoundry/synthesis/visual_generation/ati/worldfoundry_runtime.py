@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -134,7 +135,7 @@ class ATIRuntime:
         self.config = i2v_14B
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "ATIRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> ATIRuntime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["checkpoint_path"] = pretrained_model_path
@@ -279,4 +280,4 @@ class ATIRuntime:
             pass
 
 
-__all__ = ["ATIRuntime", "DEFAULT_ATI_REPO", "DEFAULT_WAN_I2V_REPO"]
+__all__ = ["DEFAULT_ATI_REPO", "DEFAULT_WAN_I2V_REPO", "ATIRuntime"]

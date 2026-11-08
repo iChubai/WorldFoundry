@@ -1,26 +1,26 @@
 import math
 import os
 from typing import Optional, Tuple, Union
-from einops import rearrange
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.modeling_outputs import AutoencoderKLOutput
-from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
-from diffusers.models.attention_processor import SpatialNorm
-
 from allegro.models.vae.modules import DownEncoderBlock3D, UNetMidBlock3DConv, UpDecoderBlock3D
+from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models.attention_processor import SpatialNorm
+from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
+from diffusers.models.modeling_outputs import AutoencoderKLOutput
+from diffusers.models.modeling_utils import ModelMixin
+from einops import rearrange
 
 
 def _pad_to_tiling_grid(tensor, kernel, stride):
     """Cover partial boundary tiles while preserving the original sample extent."""
     sizes = tensor.shape[-3:]
-    padded = [k + max(0, math.ceil((n - k) / s)) * s for n, k, s in zip(sizes, kernel, stride)]
-    padding = tuple(value for n, target in reversed(list(zip(sizes, padded))) for value in (0, target - n))
+    padded = [k + max(0, math.ceil((n - k) / s)) * s for n, k, s in zip(sizes, kernel, stride, strict=False)]
+    padding = tuple(
+        value for n, target in reversed(list(zip(sizes, padded, strict=False))) for value in (0, target - n)
+    )
     return F.pad(tensor, padding, mode="replicate") if any(padding) else tensor
 
 
@@ -304,7 +304,7 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
         out_channels: int = 3,
         down_block_num: int = 4,
         up_block_num: int = 4,
-        block_out_channels: Tuple[int] = (128, 256, 512, 512),
+        block_out_channels: tuple[int] = (128, 256, 512, 512),
         layers_per_block: int = 2,
         act_fn: str = "silu",
         latent_channels: int = 4,
@@ -374,7 +374,7 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
 
     def encode(
         self, input_imgs: torch.Tensor, return_dict: bool = True, local_batch_size=1
-    ) -> Union[AutoencoderKLOutput, Tuple[DiagonalGaussianDistribution]]:
+    ) -> AutoencoderKLOutput | tuple[DiagonalGaussianDistribution]:
         KERNEL = self.kernel
         STRIDE = self.stride
         LOCAL_BS = local_batch_size
@@ -464,7 +464,7 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
 
     def decode(
         self, input_latents: torch.Tensor, return_dict: bool = True, local_batch_size=1
-    ) -> Union[DecoderOutput, torch.Tensor]:
+    ) -> DecoderOutput | torch.Tensor:
         KERNEL = self.kernel
         STRIDE = self.stride
 
@@ -552,10 +552,10 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
         sample: torch.Tensor,
         sample_posterior: bool = False,
         return_dict: bool = True,
-        generator: Optional[torch.Generator] = None,
+        generator: torch.Generator | None = None,
         encoder_local_batch_size: int = 2,
         decoder_local_batch_size: int = 2,
-    ) -> Union[DecoderOutput, torch.Tensor]:
+    ) -> DecoderOutput | torch.Tensor:
         r"""
         Args:
             sample (`torch.Tensor`): Input sample.
@@ -584,7 +584,7 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
         return DecoderOutput(sample=dec)
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Optional[Union[str, os.PathLike]], **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike | None, **kwargs):
         kwargs["torch_type"] = torch.float32
         return super().from_pretrained(pretrained_model_name_or_path, **kwargs)
 

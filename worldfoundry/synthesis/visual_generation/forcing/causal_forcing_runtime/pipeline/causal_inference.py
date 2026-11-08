@@ -1,12 +1,8 @@
-from typing import List, Optional
 import time
-import torch
+from typing import List, Optional
 
-from worldfoundry.synthesis.visual_generation.forcing.shared.wan_wrapper import (
-    WanDiffusionWrapper,
-    WanTextEncoder,
-    WanVAEWrapper,
-)
+import torch
+import tqdm
 
 from worldfoundry.synthesis.visual_generation.forcing.self_forcing_runtime.runtime_utils.memory import (
     DynamicSwapInstaller,
@@ -14,7 +10,11 @@ from worldfoundry.synthesis.visual_generation.forcing.self_forcing_runtime.runti
     gpu,
     move_model_to_device_with_memory_preservation,
 )
-import tqdm
+from worldfoundry.synthesis.visual_generation.forcing.shared.wan_wrapper import (
+    WanDiffusionWrapper,
+    WanTextEncoder,
+    WanVAEWrapper,
+)
 
 
 class CausalInferencePipeline(torch.nn.Module):
@@ -67,8 +67,8 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,

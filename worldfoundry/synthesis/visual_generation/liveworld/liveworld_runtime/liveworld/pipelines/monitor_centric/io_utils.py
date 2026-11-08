@@ -20,7 +20,7 @@ def ensure_dir(path: str | Path) -> Path:
     return out
 
 
-def save_json(path: str | Path, payload: Dict[str, Any]) -> None:
+def save_json(path: str | Path, payload: dict[str, Any]) -> None:
     """Save a JSON file with deterministic formatting."""
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -30,7 +30,7 @@ def save_json(path: str | Path, payload: Dict[str, Any]) -> None:
 
 def save_video(
     path: str | Path,
-    frames: Union[List[np.ndarray], np.ndarray],
+    frames: list[np.ndarray] | np.ndarray,
     fps: float = 16.0,
 ) -> None:
     """Save frames as an MP4 video.
@@ -61,7 +61,7 @@ def save_image(path: str | Path, image: np.ndarray) -> None:
 def save_pointcloud_ply(
     path: str | Path,
     points: np.ndarray,
-    colors: Optional[np.ndarray] = None,
+    colors: np.ndarray | None = None,
 ) -> None:
     """Save point cloud as PLY file.
 

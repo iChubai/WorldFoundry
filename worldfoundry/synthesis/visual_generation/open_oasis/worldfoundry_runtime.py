@@ -8,7 +8,6 @@ from worldfoundry.synthesis.visual_generation.runtime_manifest import (
     plan_payload,
 )
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "generate.py"
 # The model-specific requirement hook below is the source of truth. Keeping a

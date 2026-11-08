@@ -2,23 +2,25 @@
 Adapted from TTT-LM-JAX and LaCT repository.
 """
 
+from functools import partial
+
+import einops
 import flax.nnx as nnx
 import jax
 import jax.numpy as jnp
-import einops
+from jax import vmap
+
 from ...openpi import array_typing as at
 from ...openpi import sharding
-from functools import partial
-from jax import vmap
 from .memory_utils import (
+    apply_layer_norm,
+    inv_softplus,
     kernel_init,
     kernel_init_out_proj,
-    kernel_init_ttt_v,
     kernel_init_ttt_out_proj,
-    apply_layer_norm,
-    rms_normalize,
+    kernel_init_ttt_v,
     precompute_freqs_cis,
-    inv_softplus,
+    rms_normalize,
     scan_remat_every_n_iterations_scan,
 )
 

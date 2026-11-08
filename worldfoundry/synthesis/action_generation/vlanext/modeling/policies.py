@@ -230,7 +230,7 @@ class ActionDiffusionTransformerMoE(nn.Module):
         if gen_hidden_states is not None:
             relevant_gen_states = gen_hidden_states[-len(self.blocks) :]
 
-        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states):
+        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states, strict=False):
             vlm_state = vlm_state.to(dtype=x.dtype)
             if gen_state is not None:
                 gen_state = gen_state.to(dtype=x.dtype)
@@ -379,7 +379,7 @@ class ActionRegressionTransformerMoE(nn.Module):
         if gen_hidden_states is not None:
             relevant_gen_states = gen_hidden_states[-len(self.blocks) :]
 
-        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states):
+        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states, strict=False):
             vlm_state = vlm_state.to(dtype=dtype)
             if gen_state is not None:
                 gen_state = gen_state.to(dtype=dtype)
@@ -619,7 +619,7 @@ class ActionClassificationTransformerMoE(nn.Module):
         if gen_hidden_states is not None:
             relevant_gen_states = gen_hidden_states[-len(self.blocks) :]
 
-        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states):
+        for block, vlm_state, gen_state in zip(self.blocks, relevant_vlm_states, relevant_gen_states, strict=False):
             vlm_state = vlm_state.to(dtype=dtype)
             if gen_state is not None:
                 gen_state = gen_state.to(dtype=dtype)

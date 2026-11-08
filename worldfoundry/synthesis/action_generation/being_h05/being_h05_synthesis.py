@@ -12,17 +12,19 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-from ..base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.being_h05.runtime import (
     BeingH05Runtime,
     BeingH05RuntimeConfig,
     select_being_h05_checkpoint,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 class BeingH05Synthesis(ActionModelSynthesis):
@@ -82,7 +84,7 @@ class BeingH05Synthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "BeingH05Synthesis":
+    ) -> BeingH05Synthesis:
         """Create Being-H0.5 from profile metadata without importing torch.
 
         This factory method simplifies the instantiation of `BeingH05Synthesis`

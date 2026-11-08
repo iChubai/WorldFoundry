@@ -17,8 +17,9 @@ from __future__ import annotations
 import importlib.util
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
@@ -366,8 +367,8 @@ __all__ = [
     "OFFICIAL_REPO_URL",
     "PUBLIC_CHECKPOINT_SIZES",
     "REQUIRED_MODULES",
-    "RUNTIME_ENV_NAME",
     "RUNTIME_DIR",
+    "RUNTIME_ENV_NAME",
     "build_command",
     "missing_requirements",
 ]

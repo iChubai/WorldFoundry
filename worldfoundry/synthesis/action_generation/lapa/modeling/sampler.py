@@ -1,27 +1,29 @@
 # Inference-only LAPA source retained in-tree.
 from functools import cached_property
-import numpy as np
+
+import albumentations
 import jax
+import numpy as np
 from jax.experimental.pjit import pjit
 from jax.sharding import PartitionSpec as PS
 from transformers import GenerationConfig
 from tux import (
-    define_flags_with_default,
-    StreamingCheckpointer,
     JaxDistributedConfig,
-    set_random_seed,
-    get_float_dtype_by_name,
     JaxRNG,
-    next_rng,
-    match_partition_rules,
+    StreamingCheckpointer,
+    define_flags_with_default,
+    get_float_dtype_by_name,
     make_shard_and_gather_fns,
-    with_sharding_constraint,
-    tree_apply,
+    match_partition_rules,
+    next_rng,
     open_file,
+    set_random_seed,
+    tree_apply,
+    with_sharding_constraint,
 )
-from .delta_llama import VideoLLaMAConfig, FlaxVideoLLaMAForCausalLM
+
+from .delta_llama import FlaxVideoLLaMAForCausalLM, VideoLLaMAConfig
 from .vqgan import VQGAN
-import albumentations
 
 
 class DeltaSampler:

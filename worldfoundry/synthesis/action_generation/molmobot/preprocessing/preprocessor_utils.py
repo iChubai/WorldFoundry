@@ -1,12 +1,11 @@
 import dataclasses
 from collections import namedtuple
-from typing import Optional, Dict, Tuple, List
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from einops import einops
 
 from ..utils import get_all_keys
-
 
 TOKEN_POOLING_KEYS = ["token_pooling", "low_res_token_pooling"]
 
@@ -21,19 +20,19 @@ class TokenizedVisionData:
     images: np.ndarray
     """Images in [n_images, n_patches, patch_size] format"""
 
-    image_masks: Optional[np.ndarray] = None
+    image_masks: np.ndarray | None = None
     """Images in [n_images, n_patches] format"""
 
-    token_pooling: Optional[np.ndarray] = None
+    token_pooling: np.ndarray | None = None
     """[n_visual_tokens, pooling_dim] array of of how to pool ViT patches for patch_id tokens"""
 
-    low_res_token_pooling: Optional[np.ndarray] = None
+    low_res_token_pooling: np.ndarray | None = None
     """[n_visual_tokens, pooling_dim] array of of how to pool ViT patches for low_res tokens"""
 
-    position_ids: Optional[np.ndarray] = None
+    position_ids: np.ndarray | None = None
     """Position id for each token if not sequential"""
 
-    other_data: Optional[Dict[str, np.ndarray]] = None
+    other_data: dict[str, np.ndarray] | None = None
     """Any extra data that needs to be passed to the model"""
 
 
@@ -41,7 +40,7 @@ class TokenizedVisionData:
 class TensorSpec:
     """The expected shape and dtype of a tensor"""
 
-    shape: Tuple[int]
+    shape: tuple[int]
     dtype: np.dtype
 
     def __post_init__(self):
@@ -63,7 +62,7 @@ class TensorSpec:
         return TensorSpec(data.shape, data.dtype)
 
     @classmethod
-    def get_spec(cls, src: TokenizedVisionData) -> Dict[str, "TensorSpec"]:
+    def get_spec(cls, src: TokenizedVisionData) -> dict[str, "TensorSpec"]:
         spec = {} if src.other_data is None else src.other_data
         for k in ["tokens", "images", "image_masks", "token_pooling", "low_res_token_pooling"]:
             v = getattr(src, k)
@@ -82,7 +81,7 @@ class TensorSpec:
         assert all(dtype == o.dtype for o in other)
         return TensorSpec([max([o.shape[i] for o in other]) for i in range(rank)], dtype)
 
-    def max_dictionaries(*other: Dict[str, "TensorSpec"]):
+    def max_dictionaries(*other: dict[str, "TensorSpec"]):
         return {k: TensorSpec.max(*(o[k] for o in other if k in o)) for k in get_all_keys(other)}
 
 
@@ -90,7 +89,7 @@ class TensorSpec:
 class VariablePaddingSpec:
     """Indicates a key can have a variable shape after collation"""
 
-    shape: Tuple[int]
+    shape: tuple[int]
     """Shape of padding tensor if key is not in batch and padding is required"""
 
     dtype: np.dtype

@@ -1,6 +1,7 @@
 import logging
 import re
-from typing import Dict, Optional, Sequence
+from collections.abc import Sequence
+from typing import Dict, Optional
 
 import flax
 import flax.linen as nn
@@ -10,16 +11,16 @@ import numpy as np
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
+from ..spec import ModuleSpec
 from .base import TokenGroup
 from .transformer import MAPHead
-from ..spec import ModuleSpec
 
 EPS = 1e-6
 
 
 def generate_proper_pad_mask(
     tokens: jax.Array,
-    pad_mask_dict: Optional[Dict[str, jax.Array]],
+    pad_mask_dict: dict[str, jax.Array] | None,
     keys: Sequence[str],
 ) -> jax.Array:
     if pad_mask_dict is None:

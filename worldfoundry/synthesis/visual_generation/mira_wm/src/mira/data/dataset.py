@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 N_PLAYERS = 4
 
 
-def _read_member(tar: tarfile.TarFile, member: "tarfile.TarInfo | str") -> bytes:
+def _read_member(tar: tarfile.TarFile, member: tarfile.TarInfo | str) -> bytes:
     """Read a tar member's bytes, raising if it is missing or not a regular file."""
     info = tar.getmember(member) if isinstance(member, str) else member
     f = tar.extractfile(info)
@@ -103,9 +103,9 @@ class MatchClip:
     teams: list[int]  # per selected perspective
     recording_offsets: list[float]  # recording_offset_sec per selected perspective (master clock)
     metadata: list[dict]  # full per-perspective metadata
-    actions: "torch.Tensor"  # (P, T, n_keys) int32 multi-hot
+    actions: torch.Tensor  # (P, T, n_keys) int32 multi-hot
     events: list[Event]  # events overlapping this window (mapped via the first selected perspective)
-    frames: "torch.Tensor | None" = None  # (P, T, C, H, W) uint8; None if decode=False
+    frames: torch.Tensor | None = None  # (P, T, C, H, W) uint8; None if decode=False
     physics: list[list[FrameState]] | None = None  # per perspective, T per-frame game-state dicts
     # (None if the dataset carries no physics). All perspectives share the same world state; kept
     # per-perspective so it stays frame-aligned with that perspective's frames/actions.
@@ -116,7 +116,7 @@ class MatchClip:
     # bytes (set when decode=False and carry_video=True), for decoding a drawn clip later via
     # `decode_perspective`. Shared by reference across all clips read from the same chunk.
 
-    def decode_perspective(self, p: int, frame_size: tuple[int, int] | None = None) -> "torch.Tensor":
+    def decode_perspective(self, p: int, frame_size: tuple[int, int] | None = None) -> torch.Tensor:
         """Decode selected perspective `p`'s carried video bytes to a (T, C, H, W) uint8 tensor."""
         if self.video_bytes is None:
             raise ValueError("clip carries no video_bytes; read it with carry_video=True")
@@ -163,7 +163,7 @@ class RocketScienceDataset:
             self._chunk_pos[e.match_id] = {e.chunk_id(pos): pos for pos in range(len(e.chunk_frames))}
 
     @classmethod
-    def from_local(cls, path: str | Path, **kwargs) -> "RocketScienceDataset":
+    def from_local(cls, path: str | Path, **kwargs) -> RocketScienceDataset:
         """`path` may be the dataset directory (containing index.json) or the index.json itself."""
         path = Path(path)
         if path.is_dir():
@@ -181,7 +181,7 @@ class RocketScienceDataset:
         revision: str | None = None,
         shards: int | None = None,
         **kwargs,
-    ) -> "RocketScienceDataset":
+    ) -> RocketScienceDataset:
         """Load one split from a WorldFoundry-local Hugging Face snapshot.
 
         The repo holds each split under its own prefix: `{split}/index.json` plus WebDataset shards,
@@ -321,7 +321,7 @@ class RocketScienceDataset:
         return out
 
     @staticmethod
-    def _select_perspectives(perspective: str | int, n: int, rng: "random.Random") -> list[int]:
+    def _select_perspectives(perspective: str | int, n: int, rng: random.Random) -> list[int]:
         """Resolve the `perspective` selector to a list of source-perspective indices.
 
         "all" -> [0..n-1]; "random" -> one random index (per call, so per clip when streaming);

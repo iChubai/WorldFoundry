@@ -6,24 +6,24 @@
 # --------------------------------------------------------
 from functools import cache
 
+import cv2
 import numpy as np
+import roma
 import scipy.sparse as sp
 import torch
-import cv2
-import roma
 from tqdm import tqdm
 
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.post_process import estimate_focal_knowing_depth
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import (
     geotrf,
     get_med_dist_between_poses,
     inv,
 )
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.post_process import estimate_focal_knowing_depth
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.viz import (
     to_numpy,
 )
 
-from ..commons import edge_str, i_j_ij, compute_edge_scores
+from ..commons import compute_edge_scores, edge_str, i_j_ij
 
 
 @torch.no_grad()
@@ -165,7 +165,7 @@ def minimum_spanning_tree(
     # temp variable to store 3d points
     pts3d = [None] * len(imshapes)
 
-    todo = sorted(zip(-msp.data, msp.row, msp.col))  # sorted edges
+    todo = sorted(zip(-msp.data, msp.row, msp.col, strict=False))  # sorted edges
     im_poses = [None] * n_imgs
     im_focals = [None] * n_imgs
 

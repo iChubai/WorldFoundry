@@ -1,6 +1,7 @@
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -16,14 +17,7 @@ from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
 from PIL import Image
-from transformers import T5Tokenizer
-
-from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
-    WanDiffusersInferenceMixin,
-    resize_mask,
-    retrieve_timesteps,
-)
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, T5Tokenizer
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (
     AutoencoderKLWan,
@@ -35,6 +29,11 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.verse
     VerseCrafterWanTransformer3DModel,
 )
 from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowUniPCMultistepScheduler
+from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
+    WanDiffusersInferenceMixin,
+    resize_mask,
+    retrieve_timesteps,
+)
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -115,11 +114,11 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         """
         Get T5 text embeddings from prompts.
@@ -174,7 +173,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         prompt_embeds = prompt_embeds.view(batch_size * num_videos_per_prompt, seq_len, -1)
 
         # Return trimmed embeddings based on actual sequence lengths
-        return [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+        return [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
 
     def prepare_latents(
         self,
@@ -291,12 +290,12 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
         # Concatenate latents from different control videos along the batch dimension
         latents = []
-        for items in zip(*encoded_latents):
+        for items in zip(*encoded_latents, strict=False):
             latents.append(torch.cat(items, dim=0))
 
         # Add reference image latents if provided, padded with zeros for other frames
         cat_latents = []
-        for latent, refs in zip(latents, ref_images):
+        for latent, refs in zip(latents, ref_images, strict=False):
             if refs is not None:
                 ref_latent = self._vae_encode_mode(vae, refs)
                 # Pad reference latent with zeros for non-reference control frames
@@ -327,7 +326,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             assert len(masks) == len(ref_images)
 
         result_masks = []
-        for mask, refs in zip(masks, ref_images):
+        for mask, refs in zip(masks, ref_images, strict=False):
             c, depth, height, width = mask.shape
             # Calculate new spatial dimensions after VAE stride compression
             new_depth = int((depth + 3) // vae_stride[0])
@@ -354,7 +353,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         return result_masks
 
     def geoada_latent(self, z, m):
-        return [torch.cat([zz, mm], dim=0) for zz, mm in zip(z, m)]
+        return [torch.cat([zz, mm], dim=0) for zz, mm in zip(z, m, strict=False)]
 
     def prepare_control_latents(
         self, control, control_image, batch_size, height, width, dtype, device, generator, do_classifier_free_guidance
@@ -493,36 +492,37 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 720,
-        video: Union[torch.FloatTensor] = None,
-        mask_video: Union[torch.FloatTensor] = None,
-        control_video: Union[torch.FloatTensor, List[torch.FloatTensor]] = None,
-        subject_ref_images: Union[torch.FloatTensor] = None,
+        video: torch.FloatTensor = None,
+        mask_video: torch.FloatTensor = None,
+        control_video: torch.FloatTensor | list[torch.FloatTensor] = None,
+        subject_ref_images: torch.FloatTensor = None,
         num_frames: int = 49,
         num_inference_steps: int = 50,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 6,
         num_videos_per_prompt: int = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
         output_type: str = "numpy",
         return_dict: bool = False,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,
         shift: int = 5,
         geoada_context_scale: float = 1.0,
-    ) -> Union[WanPipelineOutput, Tuple]:
+    ) -> WanPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
         Args:

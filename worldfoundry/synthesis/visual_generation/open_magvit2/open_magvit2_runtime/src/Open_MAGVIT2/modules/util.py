@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from einops import rearrange
 import torch.nn.functional as F
+from einops import rearrange
 
 
 def flatten_t_dim(x):

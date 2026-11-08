@@ -1,6 +1,7 @@
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -16,11 +17,6 @@ from einops import rearrange
 from PIL import Image
 from transformers import AutoTokenizer
 
-from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
-    WanDiffusersInferenceMixin,
-    resize_mask,
-    retrieve_timesteps,
-)
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.dreamx_world.vae import (
     AutoencoderKLWan3_8,
 )
@@ -30,8 +26,13 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dream
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamx_world.transformer import (
     Wan2_2Transformer3DModel,
 )
-from ..utils.prompt_embeddings import validate_prompt_embedding_pair
+from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
+    WanDiffusersInferenceMixin,
+    resize_mask,
+    retrieve_timesteps,
+)
 
+from ..utils.prompt_embeddings import validate_prompt_embedding_pair
 
 EXAMPLE_DOC_STRING = """
     Examples:
@@ -103,15 +104,15 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         do_classifier_free_guidance: bool = True,
         num_videos_per_prompt: int = 1,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -255,34 +256,35 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 720,
-        video: Union[torch.FloatTensor] = None,
-        control_camera_video: Union[torch.FloatTensor] = None,
-        start_image: Union[torch.FloatTensor] = None,
+        video: torch.FloatTensor = None,
+        control_camera_video: torch.FloatTensor = None,
+        start_image: torch.FloatTensor = None,
         num_frames: int = 49,
         num_inference_steps: int = 50,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 6,
         num_videos_per_prompt: int = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
         output_type: str = "numpy",
         return_dict: bool = False,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
         boundary: float = 0.875,
         comfyui_progressbar: bool = False,
-    ) -> Union[WanPipelineOutput, Tuple]:
+    ) -> WanPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
         Args:

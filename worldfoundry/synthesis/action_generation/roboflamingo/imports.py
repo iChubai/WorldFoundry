@@ -5,9 +5,10 @@ from pathlib import Path
 
 from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo import (
     PACKAGE_ROOT as OPEN_FLAMINGO_ROOT,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo import (
     ensure_import_paths as ensure_open_flamingo_import_paths,
 )
-
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
 

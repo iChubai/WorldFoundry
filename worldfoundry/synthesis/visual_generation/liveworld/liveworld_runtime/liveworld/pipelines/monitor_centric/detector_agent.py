@@ -7,8 +7,8 @@ then segments them with SAM3 and produces cropped images.
 from __future__ import annotations
 
 import tempfile
-from typing import List, Tuple
 from contextlib import contextmanager
+from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -30,7 +30,7 @@ def _unwrap_torch_module(obj):
     if obj is None:
         return None
     if hasattr(obj, "model"):
-        return getattr(obj, "model")
+        return obj.model
     return obj
 
 
@@ -62,7 +62,7 @@ def _crop_entity_on_black_square(
     frame: np.ndarray,
     mask: np.ndarray,
     padding: int = 10,
-) -> Tuple[np.ndarray, Tuple[int, int, int, int], np.ndarray]:
+) -> tuple[np.ndarray, tuple[int, int, int, int], np.ndarray]:
     """Crop entity from frame using mask, place on black square background.
 
     Args:
@@ -189,8 +189,8 @@ class DetectorAgent:
         frame_path: str,
         frame: np.ndarray,
         frame_index: int = 0,
-        preset_entity_names: List[str] | None = None,
-    ) -> List[EntityDetectionResult]:
+        preset_entity_names: list[str] | None = None,
+    ) -> list[EntityDetectionResult]:
         """Detect and segment entities from a frame.
 
         Args:

@@ -1,11 +1,12 @@
-import torch
-import random
-import numbers
-import numpy as np
-from torchvision.transforms import RandomCrop, RandomResizedCrop
-from torchvision import transforms
 import math
+import numbers
+import random
+
+import numpy as np
+import torch
 from PIL import Image
+from torchvision import transforms
+from torchvision.transforms import RandomCrop, RandomResizedCrop
 
 
 def get_video_transform(resize_height, resize_width, norm_fun):
@@ -522,7 +523,7 @@ class RandomHorizontalFlipVideo:
 #  ------------------------------------------------------------
 #  ---------------------  Sampling  ---------------------------
 #  ------------------------------------------------------------
-class TemporalRandomCrop(object):
+class TemporalRandomCrop:
     """Temporally crop the given frame indices at a random location.
 
     Args:
@@ -541,7 +542,7 @@ class TemporalRandomCrop(object):
         return begin_index, end_index
 
 
-class DynamicSampleDuration(object):
+class DynamicSampleDuration:
     """Temporally crop the given frame indices at a random location.
 
     Args:
@@ -563,11 +564,12 @@ class DynamicSampleDuration(object):
 
 
 if __name__ == "__main__":
-    from torchvision import transforms
-    import torchvision.io as io
-    import numpy as np
-    from torchvision.utils import save_image
     import os
+
+    import numpy as np
+    import torchvision.io as io
+    from torchvision import transforms
+    from torchvision.utils import save_image
 
     vframes, aframes, info = io.read_video(filename="./v_Archery_g01_c03.avi", pts_unit="sec", output_format="TCHW")
 

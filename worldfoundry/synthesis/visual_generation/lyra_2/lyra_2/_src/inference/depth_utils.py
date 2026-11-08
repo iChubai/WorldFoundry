@@ -62,9 +62,9 @@ def load_moge_model(device: torch.device):
 def moge_infer_depth_intrinsics(
     moge_model,
     img_rgb_uint8: torch.Tensor,
-    depth_pred_hw: Tuple[int, int] = (720, 1280),
-    target_hw: Tuple[int, int] = (704, 1280),
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    depth_pred_hw: tuple[int, int] = (720, 1280),
+    target_hw: tuple[int, int] = (704, 1280),
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Args:
         img_rgb_uint8: [H,W,3] uint8 on CPU

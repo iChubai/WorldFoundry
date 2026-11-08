@@ -1,43 +1,40 @@
 # Inference-only LAPA source retained in-tree.
-import os
-from shutil import copyfile
-from typing import Any, Dict, List, Optional, Tuple, Union
 import json
+import os
 import tempfile
 from functools import partial
+from shutil import copyfile
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
-import jax
-from jax.lib import xla_bridge
-import jax.numpy as jnp
-from jax import lax
-from jax.sharding import PartitionSpec as PS
-from jax.experimental.shard_map import shard_map
 import flax.linen as nn
+import jax
+import jax.numpy as jnp
+import numpy as np
+import sentencepiece as spm
 from flax.core.frozen_dict import FrozenDict, freeze, unfreeze
 from flax.linen import combine_masks, make_causal_mask
-from flax.traverse_util import flatten_dict, unflatten_dict
 from flax.linen import partitioning as nn_partitioning
-
-import sentencepiece as spm
+from flax.traverse_util import flatten_dict, unflatten_dict
+from jax import lax
+from jax.experimental.shard_map import shard_map
+from jax.lib import xla_bridge
+from jax.sharding import PartitionSpec as PS
+from ml_collections import ConfigDict
 from transformers.configuration_utils import PretrainedConfig
-from transformers.utils import logging
-from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.modeling_flax_outputs import FlaxBaseModelOutput, FlaxCausalLMOutput
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
+from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.utils import add_start_docstrings, add_start_docstrings_to_model_forward, logging
-
-from ml_collections import ConfigDict
 from tux import (
     function_args_to_config,
+    get_gradient_checkpoint_policy,
+    get_jax_mesh,
     load_pickle,
     open_file,
     with_sharding_constraint,
-    get_jax_mesh,
-    get_gradient_checkpoint_policy,
 )
-from .ring_attention import blockwise_ffn, ring_flash_attention_tpu, ring_attention_standard, ring_attention
 
+from .ring_attention import blockwise_ffn, ring_attention, ring_attention_standard, ring_flash_attention_tpu
 
 LLAMA_STANDARD_CONFIGS = {
     "200m": {
@@ -447,7 +444,7 @@ def apply_rotary_emb(
     xk: jnp.ndarray,
     freqs_cis: jnp.ndarray,
     dtype: jnp.dtype = jnp.float32,
-) -> Tuple[jnp.ndarray, jnp.ndarray]:
+) -> tuple[jnp.ndarray, jnp.ndarray]:
     reshape_xq = xq.astype(jnp.float32).reshape(*xq.shape[:-1], -1, 2)
     reshape_xk = xk.astype(jnp.float32).reshape(*xk.shape[:-1], -1, 2)
 
@@ -470,7 +467,7 @@ class FlaxLLaMAAttention(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self):
         config = self.config
@@ -724,7 +721,7 @@ class FlaxLLaMAMLP(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self) -> None:
         config = self.config
@@ -765,7 +762,7 @@ class FlaxLLaMABlock(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self) -> None:
         attention_module = FlaxLLaMAAttention
@@ -819,7 +816,7 @@ class FlaxLLaMABlock(nn.Module):
         deterministic: bool = True,
         init_cache: bool = False,
         output_attentions: bool = False,
-        fcm_mask: Optional[jnp.ndarray] = None,
+        fcm_mask: jnp.ndarray | None = None,
     ):
         attn_outputs = self.attention(
             self.attention_norm(hidden_states),
@@ -874,7 +871,7 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
     def __init__(
         self,
         config: LLaMAConfig,
-        input_shape: Tuple = (1, 1),
+        input_shape: tuple = (1, 1),
         seed: int = 0,
         dtype: jnp.dtype = jnp.float32,
         _do_init: bool = True,
@@ -883,7 +880,7 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
         module = self.module_class(config=config, dtype=dtype, **kwargs)
         super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype, _do_init=_do_init)
 
-    def init_weights(self, rng: jax.random.PRNGKey, input_shape: Tuple, params: FrozenDict = None) -> FrozenDict:
+    def init_weights(self, rng: jax.random.PRNGKey, input_shape: tuple, params: FrozenDict = None) -> FrozenDict:
         # init input tensors
         input_ids = jnp.zeros(input_shape, dtype="i4")
         attention_mask = jnp.ones_like(input_ids)
@@ -957,9 +954,9 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
         past_key_values: dict = None,
         dropout_rng: jax.random.PRNGKey = None,
         train: bool = False,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -1025,7 +1022,7 @@ class FlaxLLaMABlockCollection(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     @nn.compact
     def __call__(
@@ -1143,7 +1140,7 @@ class FlaxLLaMAModule(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self):
         self.embed_dim = self.config.hidden_size
@@ -1219,7 +1216,7 @@ class FlaxLLaMAForCausalLMModule(nn.Module):
     config: LLaMAConfig
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]] = None
+    precision: jax.lax.Precision | str | None = None
 
     def setup(self):
         self.transformer = FlaxLLaMAModule(self.config, dtype=self.dtype)
@@ -1287,7 +1284,7 @@ class FlaxLLaMAForCausalLM(FlaxLLaMAPreTrainedModel):
         self,
         input_ids,
         max_length,
-        attention_mask: Optional[jax.Array] = None,
+        attention_mask: jax.Array | None = None,
     ):
         # initializing the cache
         batch_size, seq_length = input_ids.shape
@@ -1338,7 +1335,7 @@ class LLaMATokenizer(PreTrainedTokenizer):
         unk_token="<unk>",
         bos_token="<s>",
         eos_token="</s>",
-        sp_model_kwargs: Optional[Dict[str, Any]] = None,
+        sp_model_kwargs: dict[str, Any] | None = None,
         add_bos_token=False,
         add_eos_token=False,
         **kwargs,
@@ -1372,11 +1369,11 @@ class LLaMATokenizer(PreTrainedTokenizer):
         return self.sp_model.get_piece_size()
 
     @property
-    def bos_token_id(self) -> Optional[int]:
+    def bos_token_id(self) -> int | None:
         return self.sp_model.bos_id()
 
     @property
-    def eos_token_id(self) -> Optional[int]:
+    def eos_token_id(self) -> int | None:
         return self.sp_model.eos_id()
 
     def get_vocab(self):
@@ -1417,7 +1414,7 @@ class LLaMATokenizer(PreTrainedTokenizer):
         out_string += self.sp_model.decode(current_sub_tokens)
         return out_string.strip()
 
-    def save_vocabulary(self, save_directory, filename_prefix: Optional[str] = None) -> Tuple[str]:
+    def save_vocabulary(self, save_directory, filename_prefix: str | None = None) -> tuple[str]:
         """
         Save the vocabulary and special tokens file to a directory.
         Args:
@@ -1459,8 +1456,8 @@ class LLaMATokenizer(PreTrainedTokenizer):
         return output
 
     def get_special_tokens_mask(
-        self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None, already_has_special_tokens: bool = False
-    ) -> List[int]:
+        self, token_ids_0: list[int], token_ids_1: list[int] | None = None, already_has_special_tokens: bool = False
+    ) -> list[int]:
         """
         Retrieve sequence ids from a token list that has no special tokens added. This method is called when adding
         special tokens using the tokenizer `prepare_for_model` method.
@@ -1484,8 +1481,8 @@ class LLaMATokenizer(PreTrainedTokenizer):
         return [1] + ([0] * len(token_ids_0)) + [1, 1] + ([0] * len(token_ids_1)) + [1]
 
     def create_token_type_ids_from_sequences(
-        self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
-    ) -> List[int]:
+        self, token_ids_0: list[int], token_ids_1: list[int] | None = None
+    ) -> list[int]:
         """
         Create a mask from the two sequences passed to be used in a sequence-pair classification task. T5 does not make
         use of token type ids, therefore a list of zeros is returned.

@@ -302,7 +302,7 @@ class MatrixGame2Runtime:
         device=None,
         weight_dtype: torch.dtype | None = None,
         **kwargs,
-    ) -> "MatrixGame2Runtime":
+    ) -> MatrixGame2Runtime:
         checkpoint_path = kwargs.pop("checkpoint_path", None)
         if mode not in ["universal", "gta_drive", "templerun"]:
             raise NotImplementedError("mode should be one of ['universal', 'gta_drive', 'templerun']")

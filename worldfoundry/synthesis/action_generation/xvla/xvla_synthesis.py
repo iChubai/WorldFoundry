@@ -1,6 +1,7 @@
 """WorldFoundry synthesis facade for X-VLA."""
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from worldfoundry.core.model_loading.checkpoints import select_profile_checkpoint, selected_checkpoint_options
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis

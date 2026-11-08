@@ -1,6 +1,6 @@
+import inspect
 import math
 import os
-import inspect
 import socket
 from typing import Dict, List, Optional, Tuple
 
@@ -81,7 +81,7 @@ class YumeRuntime:
         sp_size = int(getattr(self.model, "sp_size", 1) or 1)
         return int(math.ceil(seq_len / sp_size)) * sp_size
 
-    def _ensure_arg_seq_len(self, *arg_dicts: Optional[Dict[str, torch.Tensor]], latent: torch.Tensor) -> None:
+    def _ensure_arg_seq_len(self, *arg_dicts: dict[str, torch.Tensor] | None, latent: torch.Tensor) -> None:
         required_seq_len = self._patchified_seq_len(latent)
         for arg_dict in arg_dicts:
             if arg_dict is None:
@@ -178,12 +178,12 @@ class YumeRuntime:
 
     def _build_initial_visual_condition(
         self,
-        image: Optional[torch.Tensor],
-        video: Optional[torch.Tensor],
+        image: torch.Tensor | None,
+        video: torch.Tensor | None,
         task_type: str,
-        size: Tuple[int, int],
+        size: tuple[int, int],
         current_frame_num: int,
-    ) -> Tuple[torch.Tensor, Image.Image]:
+    ) -> tuple[torch.Tensor, Image.Image]:
         if task_type == "i2v":
             if image is None:
                 if video is None:
@@ -218,7 +218,7 @@ class YumeRuntime:
         return model_input_de, anchor_img
 
     @staticmethod
-    def _normalize_sampling_method(sampling_method: Optional[str]) -> str:
+    def _normalize_sampling_method(sampling_method: str | None) -> str:
         if sampling_method is None:
             return "ode"
         method = sampling_method.lower()
@@ -463,7 +463,7 @@ class YumeRuntime:
         size,
         seed,
         num_euler_timesteps,
-        sampling_method: Optional[str] = None,
+        sampling_method: str | None = None,
     ):
         if size not in YUME_SIZE_CONFIGS:
             raise ValueError(f"Unsupported size: {size}. Supported sizes: {list(YUME_SIZE_CONFIGS.keys())}")
@@ -471,7 +471,7 @@ class YumeRuntime:
 
         current_latent_num = 8
         current_frame_num = 32
-        output_video_list: List[torch.Tensor] = []
+        output_video_list: list[torch.Tensor] = []
 
         if image is not None:
             image = image.to(self.device)
@@ -486,7 +486,7 @@ class YumeRuntime:
             current_frame_num=current_frame_num,
         )
 
-        history_state: Optional[Dict[str, torch.Tensor]] = None
+        history_state: dict[str, torch.Tensor] | None = None
         for interaction_idx, interaction_caption in enumerate(interaction_captions):
             next_caption = (
                 interaction_captions[interaction_idx + 1] if interaction_idx + 1 < len(interaction_captions) else None

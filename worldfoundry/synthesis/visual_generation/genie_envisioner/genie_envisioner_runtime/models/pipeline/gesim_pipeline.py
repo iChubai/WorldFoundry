@@ -16,31 +16,27 @@
 
 
 import inspect
-from typing import Callable, Dict, List, Optional, Union
+import os.path as osp
+from collections.abc import Callable
+from typing import Dict, List, Optional, Union
 
 import numpy as np
-import os.path as osp
 import torch
-from einops import rearrange
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.utils import is_torch_xla_available, logging, replace_example_docstring
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from einops import rearrange
+from models.pipeline.custom_pipeline import retrieve_latents, retrieve_timesteps
+from utils.geometry_utils import resize_traj_and_ray
 
 from worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_runtime.models.pipeline.cosmos2_utils.pipeline_output import (
     CosmosPipelineOutput,
 )
-
-from models.pipeline.custom_pipeline import retrieve_timesteps, retrieve_latents
-
 from worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_runtime.models.pipeline.cosmos2_utils.video_processor import (
     VideoProcessor,
 )
-
-from utils.geometry_utils import resize_traj_and_ray
-
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -55,10 +51,10 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     r"""
@@ -114,7 +110,7 @@ def retrieve_timesteps(
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
 def retrieve_latents(
-    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+    encoder_output: torch.Tensor, generator: torch.Generator | None = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
@@ -196,10 +192,10 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline._get_t5_prompt_embeds
     def _get_t5_prompt_embeds(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         device = device or self._execution_device
         dtype = dtype or self.text_encoder.dtype
@@ -239,15 +235,15 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline.encode_prompt
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         do_classifier_free_guidance: bool = True,
         num_videos_per_prompt: int = 1,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -375,27 +371,28 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     def infer(
         self,
         image: PipelineImageInput = None,
-        video: List[PipelineImageInput] = None,  # input video is (b v) t c h w (t is ahead of c)
-        cond_to_concat: List[PipelineImageInput] = None,  # (b v) c t h w, could have different t than video t
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        video: list[PipelineImageInput] = None,  # input video is (b v) t c h w (t is ahead of c)
+        cond_to_concat: list[PipelineImageInput] = None,  # (b v) c t h w, could have different t than video t
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 704,
         width: int = 1280,
         num_frames: int = 93,  # equals chunk size
         num_inference_steps: int = 35,
         guidance_scale: float = 7.0,
         fps: int = 16,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
         sigma_conditioning: float = 0.0001,
         n_view: int = 3,
@@ -748,10 +745,10 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
         width: int = 1280,
         num_frames: int = 93,  # memory not included
         do_classifier_free_guidance: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(

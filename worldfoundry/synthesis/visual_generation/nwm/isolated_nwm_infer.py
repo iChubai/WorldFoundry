@@ -139,7 +139,7 @@ def generate_rollout(args, output_dir, rollout_fps, idxs, all_models, obs_image,
 
 def generate_time(args, output_dir, idxs, all_models, obs_image, gt_output, delta, secs, num_cond, device):
     eval_timesteps = [sec * args.input_fps for sec in secs]
-    for sec, timestep in zip(secs, eval_timesteps):
+    for sec, timestep in zip(secs, eval_timesteps, strict=False):
         curr_delta = delta[:, :timestep].sum(dim=1, keepdim=True)
         if args.gt:
             x_pred_pixels = gt_output[:, timestep - 1].clone().to(device)
@@ -209,7 +209,7 @@ def main(args):
         model.to(device)
         model = torch.compile(model)
         diffusion = create_diffusion(str(250))
-        vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-ema").to(device)
+        vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-ema").to(device)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device], find_unused_parameters=False)
         model_lst = (model, diffusion, vae)
 
@@ -273,7 +273,7 @@ def main(args):
                             device,
                         )
                 elif args.eval_type == "time":
-                    secs = np.array([2**i for i in range(0, args.num_sec_eval)])
+                    secs = np.array([2**i for i in range(args.num_sec_eval)])
                     curr_time_output_dir = os.path.join(dataset_save_output_dir, "time")
                     os.makedirs(curr_time_output_dir, exist_ok=True)
                     generate_time(

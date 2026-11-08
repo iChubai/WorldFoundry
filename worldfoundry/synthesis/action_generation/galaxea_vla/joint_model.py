@@ -31,15 +31,14 @@ KV caches --- There are a few different modes depending on the setting:
 
 import logging
 import math
-
 from typing import List, Optional
 
 import torch
 import torch.nn as nn
 
-from .mixture import Mixture
 from .configuration import merge_config
 from .kv_cache import KVCache
+from .mixture import Mixture
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ def forward_mixture_layers(
     layer_idx: int,
     kv_caches: dict[str, KVCache] | None = None,
     cache_mode: str = "append_non_active",
-    time_cond: Optional[torch.FloatTensor] = None,
+    time_cond: torch.FloatTensor | None = None,
 ) -> dict[torch.FloatTensor]:
     """the usual norm + attn + res + norm + mlp + res"""
     active_mixture_names = list(embeds_all.keys())
@@ -267,7 +266,7 @@ def forward_mixture_attn(
 
     # Split into the different mixtures
     attn_outputs = torch.split(attn_output, q_lens, dim=1)
-    attn_outputs = {key: value for key, value in zip(active_mixture_names, attn_outputs)}
+    attn_outputs = {key: value for key, value in zip(active_mixture_names, attn_outputs, strict=False)}
 
     # Multiply by W_o. [Batch_Size, Seq_Len_Q, Hidden_Size]
     attn_outputs_final = {}
@@ -312,7 +311,7 @@ class JointModel(nn.Module):
         attention_mask: torch.Tensor,
         position_ids_all: dict[torch.LongTensor],
         embeds_all: dict[torch.FloatTensor],
-        time_cond: Optional[torch.FloatTensor] = None,
+        time_cond: torch.FloatTensor | None = None,
         kv_caches: dict[str, KVCache] | None = None,
         cache_mode: str = "append_non_active",
         return_caches: bool = False,
@@ -338,7 +337,7 @@ class JointModel(nn.Module):
                 )
                 embeds_all[name] = embeds_all[name] * normalizer
 
-        intermediates = {k: [embeds_all[k]] for k in embeds_all.keys()} if return_intermediate_layers else None
+        intermediates = {k: [embeds_all[k]] for k in embeds_all} if return_intermediate_layers else None
         # layers
         for layer_idx in range(self.num_hidden_layers):
             embeds_all = forward_mixture_layers(

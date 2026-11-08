@@ -61,19 +61,9 @@ class Upsample(nn.Upsample):
         return super().forward(x.float()).type_as(x)
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Resample
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
-
-
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AttentionBlock
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Encoder3d
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d, Encoder3d, Resample
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
 
 
 def count_conv3d(model):

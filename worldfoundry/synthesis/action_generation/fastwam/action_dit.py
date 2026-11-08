@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: MIT
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
+import logging
 import os
-import torch
-import torch.nn as nn
 from typing import Any, Dict, Optional
 
-import logging
+import torch
+import torch.nn as nn
 
 from .gradient import gradient_checkpoint_forward
 from .wan_video_dit import (
     DiTBlock,
-    sinusoidal_embedding_1d,
     precompute_freqs_cis,
+    sinusoidal_embedding_1d,
 )
 
 logger = logging.getLogger(__name__)
@@ -227,8 +227,8 @@ class ActionDiT(nn.Module):
         action_tokens: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-    ) -> Dict[str, Any]:
+        context_mask: torch.Tensor | None = None,
+    ) -> dict[str, Any]:
         if action_tokens.ndim != 3:
             raise ValueError(f"`action_tokens` must be 3D [B, T, action_dim], got shape {tuple(action_tokens.shape)}")
         if action_tokens.shape[2] != self.action_dim:
@@ -285,7 +285,7 @@ class ActionDiT(nn.Module):
             },
         }
 
-    def post_dit(self, tokens: torch.Tensor, pre_state: Dict[str, Any]) -> torch.Tensor:
+    def post_dit(self, tokens: torch.Tensor, pre_state: dict[str, Any]) -> torch.Tensor:
         return self.head(tokens)
 
     def forward(
@@ -293,7 +293,7 @@ class ActionDiT(nn.Module):
         action_tokens: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         pre_state = self.pre_dit(
             action_tokens=action_tokens,

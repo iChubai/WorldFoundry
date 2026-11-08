@@ -1,24 +1,26 @@
-import torch
+import dataclasses
 import os
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-import matplotlib as mpl
+import time
+
 import cv2
-import numpy as np
+import matplotlib as mpl
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import trimesh
 import viser
 import viser.transforms as tf
-import time
-import trimesh
-import dataclasses
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 from scipy.spatial.transform import Rotation
+
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.viz import (
-    add_scene_cam,
     CAM_COLORS,
     OPENGL,
-    pts3d_to_trimesh,
+    add_scene_cam,
     cat_meshes,
+    pts3d_to_trimesh,
 )
 
 
@@ -121,8 +123,8 @@ def convert_scene_output_to_glb(
 
     # full pointcloud
     if as_pointcloud:
-        pts = np.concatenate([p[m] for p, m in zip(pts3d, mask)])
-        col = np.concatenate([p[m] for p, m in zip(imgs, mask)])
+        pts = np.concatenate([p[m] for p, m in zip(pts3d, mask, strict=False)])
+        col = np.concatenate([p[m] for p, m in zip(imgs, mask, strict=False)])
         pct = trimesh.PointCloud(pts.reshape(-1, 3), colors=col.reshape(-1, 3))
         scene.add_geometry(pct)
     else:
@@ -162,7 +164,7 @@ def convert_scene_output_to_glb(
 
 
 @dataclasses.dataclass
-class CameraState(object):
+class CameraState:
     fov: float
     aspect: float
     c2w: np.ndarray

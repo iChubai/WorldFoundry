@@ -1,6 +1,7 @@
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -41,8 +42,8 @@ class ActionExpertAttention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        kv: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        kv: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -128,7 +129,7 @@ class ActionExpertBlock(nn.Module):
         x: torch.Tensor,
         timestep_embed: torch.Tensor,
         cross_context: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         (
             shift_msa,
@@ -273,7 +274,7 @@ class ActionExpert(nn.Module):
         )
         self.final_layer = ActionExpertFinalLayer(config.hidden_size, config.action_dim)
 
-    def _encode_states(self, states: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
+    def _encode_states(self, states: torch.Tensor | None) -> torch.Tensor | None:
         if states is None:
             return None
         if states.dim() == 2:
@@ -291,7 +292,7 @@ class ActionExpert(nn.Module):
     def _prepare_context(
         self,
         encoder_hidden_states: Sequence[torch.Tensor],
-        encoded_states: Optional[torch.Tensor],
+        encoded_states: torch.Tensor | None,
     ) -> Sequence[torch.Tensor]:
         contexts = []
         for hidden in encoder_hidden_states:
@@ -304,11 +305,11 @@ class ActionExpert(nn.Module):
 
     def _build_cross_attention_mask(
         self,
-        encoder_attention_mask: Optional[torch.Tensor],
-        encoded_states: Optional[torch.Tensor],
+        encoder_attention_mask: torch.Tensor | None,
+        encoded_states: torch.Tensor | None,
         batch_size: int,
         dtype: torch.dtype,
-    ) -> Optional[torch.Tensor]:
+    ) -> torch.Tensor | None:
         """Build a mask for cross-attention operations.
 
         This function creates an attention mask that determines which tokens in the context
@@ -365,8 +366,8 @@ class ActionExpert(nn.Module):
         actions: torch.Tensor,
         timesteps: torch.Tensor,
         encoder_hidden_states: Sequence[torch.Tensor],
-        encoder_attention_mask: Optional[torch.Tensor] = None,
-        state_embeddings: Optional[torch.Tensor] = None,
+        encoder_attention_mask: torch.Tensor | None = None,
+        state_embeddings: torch.Tensor | None = None,
         states_mode: str = "cross_attn",
     ) -> torch.Tensor:
         """Forward pass of the ActionExpert model.
@@ -453,7 +454,7 @@ class ActionExpert(nn.Module):
 
         # Process the embedded actions through each transformer block
         # Each block uses the corresponding context tensor for cross-attention
-        for block, context in zip(self.blocks, contexts):
+        for block, context in zip(self.blocks, contexts, strict=False):
             x = block(x, timestep_embed, context, attn_mask=cross_mask)
 
         # Apply final projection to get the denoised action prediction

@@ -5,11 +5,11 @@
 #     IDDPM: https://github.com/openai/improved-diffusion/blob/main/improved_diffusion/gaussian_diffusion.py
 
 
+import enum
 import math
 
 import numpy as np
 import torch as th
-import enum
 
 
 class ModelMeanType(enum.Enum):

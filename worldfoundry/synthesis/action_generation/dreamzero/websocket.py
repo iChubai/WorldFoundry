@@ -10,10 +10,11 @@ import dataclasses
 import logging
 import traceback
 
-from .protocol import BasePolicy
-from . import protocol as msgpack_numpy
 import websockets.asyncio.server
 import websockets.frames
+
+from . import protocol as msgpack_numpy
+from .protocol import BasePolicy
 
 
 @dataclasses.dataclass

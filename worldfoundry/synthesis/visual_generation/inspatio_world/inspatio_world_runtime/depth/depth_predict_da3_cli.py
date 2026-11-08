@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """CLI entry point for Depth-Anything-3 depth estimation.
 
 Usage:
@@ -40,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_video_files(input_path: str, video_extensions: List[str]) -> List[str]:
+def get_video_files(input_path: str, video_extensions: list[str]) -> list[str]:
     """Find video files from a path (file or directory)."""
     video_files = []
     if os.path.isfile(input_path):

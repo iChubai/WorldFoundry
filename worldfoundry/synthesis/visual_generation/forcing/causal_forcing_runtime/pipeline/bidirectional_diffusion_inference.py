@@ -1,6 +1,7 @@
-from tqdm import tqdm
 from typing import List
+
 import torch
+from tqdm import tqdm
 
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
@@ -35,7 +36,7 @@ class BidirectionalDiffusionInferencePipeline(torch.nn.Module):
 
         self.args = args
 
-    def inference(self, noise: torch.Tensor, text_prompts: List[str], return_latents=False) -> torch.Tensor:
+    def inference(self, noise: torch.Tensor, text_prompts: list[str], return_latents=False) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.
         Inputs:

@@ -1,25 +1,26 @@
-from typing import Callable, Dict, List, Optional, Union
-import torch
-from einops import rearrange, repeat
-import PIL
+from collections.abc import Callable
+from typing import Dict, List, Optional, Union
+
 import einops
+import PIL
+import torch
 
 # from diffusers import TextToVideoSDPipeline, StableVideoDiffusionPipeline
 from diffusers import TextToVideoSDPipeline
+from einops import rearrange, repeat
 from models.pipeline_stable_video_diffusion import StableVideoDiffusionPipeline
-
 
 try:
     from diffusers.pipelines.text_to_video_synthesis.pipeline_text_to_video_synth import TextToVideoSDPipelineOutput
 except ModuleNotFoundError:
     # diffusers>=0.35 moved the legacy text-to-video pipeline under deprecated/.
     from diffusers.pipelines.deprecated.text_to_video_synthesis.pipeline_output import TextToVideoSDPipelineOutput
+from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import (
     StableVideoDiffusionPipelineOutput,
+    _resize_with_antialiasing,
 )
-from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import _resize_with_antialiasing
 
 
 def svd_tensor2vid(video: torch.Tensor, processor, output_type="np"):
@@ -258,20 +259,20 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         text,
         height: int = 576,
         width: int = 1024,
-        num_frames: Optional[int] = None,
+        num_frames: int | None = None,
         num_inference_steps: int = 25,
         min_guidance_scale: float = 1.0,
         max_guidance_scale: float = 3.0,
         fps: int = 7,
         motion_bucket_id: int = 127,
         noise_aug_strength: int = 0.02,
-        decode_chunk_size: Optional[int] = None,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "pil",
-        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        decode_chunk_size: int | None = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        output_type: str | None = "pil",
+        callback_on_step_end: Callable[[int, int, dict], None] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         return_dict: bool = True,
         mask=None,
         cond_wrist=None,
@@ -579,20 +580,20 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
         negative_prompt_embeds=None,
         height: int = 576,
         width: int = 1024,
-        num_frames: Optional[int] = None,
+        num_frames: int | None = None,
         num_inference_steps: int = 25,
         min_guidance_scale: float = 1.0,
         max_guidance_scale: float = 3.0,
         fps: int = 7,
         motion_bucket_id: int = 127,
         noise_aug_strength: int = 0.02,
-        decode_chunk_size: Optional[int] = None,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "pil",
-        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        decode_chunk_size: int | None = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        output_type: str | None = "pil",
+        callback_on_step_end: Callable[[int, int, dict], None] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         return_dict: bool = True,
         mask=None,
         condition_type="image",

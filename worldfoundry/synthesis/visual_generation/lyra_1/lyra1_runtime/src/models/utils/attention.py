@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
-import torch
-from torch import Tensor
-from torch import nn
-import torch.nn.functional as F
-from itertools import repeat
 import collections.abc
+import warnings
+from itertools import repeat
+
+import torch
+import torch.nn.functional as F
 from einops import rearrange
+from torch import Tensor, nn
 
 try:
     from flash_attn import flash_attn_func
@@ -48,9 +48,11 @@ try:
 except:
     warnings.warn("flex_attn is not available")
 
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import math
 from functools import partial
+
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 

@@ -22,7 +22,6 @@ from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.frustu
     frustum_frontmost_mask_triton,
 )
 
-
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR
 UTILS_DIR = SCRIPT_DIR / "utils"

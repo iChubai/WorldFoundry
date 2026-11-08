@@ -11,16 +11,18 @@
 # This modified file is released under the same license.
 
 import io
-import torchvision.transforms as T
-from PIL import Image
 from collections import Counter
 from typing import List
+
+import torchvision.transforms as T
+from PIL import Image
+
 from .constants import CLIP_MEAN, CLIP_STD, IMAGENET_MEAN, IMAGENET_STD, SIGLIP_MEAN, SIGLIP_STD
 
 try:
     from petrel_client.client import Client
     from petrel_client.common.config import Config
-except ImportError as E:
+except ImportError:
     print("petrel_client is not installed. If you read data locally instead of from ceph, ignore it.")
 
 

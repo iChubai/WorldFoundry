@@ -1,4 +1,5 @@
-from typing import Generator, List, Optional
+from collections.abc import Generator
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -15,7 +16,7 @@ class BatchSampler(torch.utils.data.Sampler):
         world_size: int,
         batch_size: int,
         seq_length: int,
-        sample_weights: Optional[List[float]] = None,
+        sample_weights: list[float] | None = None,
         can_sample_beyond_end: bool = False,
     ) -> None:
         super().__init__()
@@ -31,11 +32,11 @@ class BatchSampler(torch.utils.data.Sampler):
     def __len__(self):
         raise NotImplementedError
 
-    def __iter__(self) -> Generator[List[SegmentId], None, None]:
+    def __iter__(self) -> Generator[list[SegmentId], None, None]:
         while True:
             yield self.sample()
 
-    def sample(self) -> List[SegmentId]:
+    def sample(self) -> list[SegmentId]:
         num_episodes = self.dataset.num_episodes
 
         if (self.sample_weights is None) or num_episodes < len(self.sample_weights):
@@ -48,7 +49,7 @@ class BatchSampler(torch.utils.data.Sampler):
                 num_episodes // num_weights + (num_episodes % num_weights) * (i == num_weights - 1)
                 for i in range(num_weights)
             ]
-            weights = [w / s for (w, s) in zip(weights, sizes) for _ in range(s)]
+            weights = [w / s for (w, s) in zip(weights, sizes, strict=False) for _ in range(s)]
 
         episodes_partition = np.arange(self.rank, num_episodes, self.world_size)
         weights = np.array(weights[self.rank :: self.world_size])
@@ -69,4 +70,4 @@ class BatchSampler(torch.utils.data.Sampler):
             )
             starts = stops - self.seq_length
 
-        return [SegmentId(*x) for x in zip(episode_ids, starts, stops)]
+        return [SegmentId(*x) for x in zip(episode_ids, starts, stops, strict=False)]

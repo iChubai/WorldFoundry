@@ -68,9 +68,9 @@ class AttnProcessorSP:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
@@ -252,7 +252,7 @@ class RealisDanceDiT(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOriginalMode
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
         num_attention_heads: int = 40,
         attention_head_dim: int = 128,
         in_channels: int = 36,
@@ -262,10 +262,10 @@ class RealisDanceDiT(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOriginalMode
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = "rms_norm_across_heads",
+        qk_norm: str | None = "rms_norm_across_heads",
         eps: float = 1e-6,
-        image_dim: Optional[int] = None,
-        added_kv_proj_dim: Optional[int] = None,
+        image_dim: int | None = None,
+        added_kv_proj_dim: int | None = None,
         rope_max_seq_len: int = 1024,
         add_cond_in_dim: int = 32,
         attn_cond_in_dim: int = 16,
@@ -356,15 +356,15 @@ class RealisDanceDiT(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOriginalMode
         hidden_states: torch.Tensor,
         timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        add_cond: Optional[torch.Tensor] = None,
-        attn_cond: Optional[torch.Tensor] = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        add_cond: torch.Tensor | None = None,
+        attn_cond: torch.Tensor | None = None,
         render_latent=None,
         render_mask=None,
         camera_embedding=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
             lora_scale = attention_kwargs.pop("scale", 1.0)

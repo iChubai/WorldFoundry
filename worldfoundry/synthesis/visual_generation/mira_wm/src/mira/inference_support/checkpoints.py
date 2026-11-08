@@ -39,7 +39,7 @@ def resolve_checkpoint(checkpoint: str | Path) -> Path:
         if match:
             entity, project, run_id = match.groups()
 
-            import wandb  # noqa: PLC0415 -- optional dep, used only for W&B-URL checkpoints
+            import wandb  # optional dep, used only for W&B-URL checkpoints
 
             api = wandb.Api()
             run = api.run(f"{entity}/{project}/{run_id}")

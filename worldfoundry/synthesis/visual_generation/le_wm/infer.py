@@ -25,7 +25,6 @@ from worldfoundry.core.io.paths import (
     worldfoundry_path_tokens,
 )
 
-
 DEFAULT_CONFIG_DIR = resolve_data_path("models", "runtime", "configs", "le_wm", "config", "eval")
 
 
@@ -100,7 +99,7 @@ def _dataset(cfg: DictConfig, swm: Any):
                         "event": "leworldmodel_dataset_loaded",
                         "dataset_name": _portable_path(resolve_worldfoundry_path(dataset_name)),
                         "dataset_path": _portable_path(candidate),
-                        "num_episodes": int(len(dataset.lengths)),
+                        "num_episodes": len(dataset.lengths),
                         "num_rows": int(np.asarray(dataset.lengths).sum()),
                         "columns": list(dataset.column_names),
                     },

@@ -1,13 +1,12 @@
 import functools
 
 import jax
+import src.utils.sharding as sharding_utils
 from absl import logging
 from flax import nnx
-
 from src.runners.base_mp_runner import BaseMPRunner
 from src.runners.base_runner import restore_nnx_checkpoint
 from src.utils.config import instantiate_from_config
-import src.utils.sharding as sharding_utils
 
 
 class Inference(BaseMPRunner):

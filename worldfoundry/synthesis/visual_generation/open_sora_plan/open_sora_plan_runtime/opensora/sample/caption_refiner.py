@@ -1,7 +1,6 @@
 import torch
 from torch import nn
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 TEMPLATE = """
 Refine the sentence: \"{}\" to contain subject description, action, scene description. " \
@@ -28,7 +27,8 @@ class OpenSoraCaptionRefiner(nn.Module):
         model_inputs = self.tokenizer([input_ids], return_tensors="pt").to(self.device)
         generated_ids = self.model.generate(model_inputs.input_ids, max_new_tokens=512)
         generated_ids = [
-            output_ids[len(input_ids) :] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+            output_ids[len(input_ids) :]
+            for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids, strict=False)
         ]
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return response

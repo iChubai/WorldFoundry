@@ -1,12 +1,13 @@
-import torch
-from diffusers import ModelMixin, ConfigMixin
-from torch import nn
-import os
+import glob
 import json
+import os
+from typing import Optional, Union
+
+import torch
+from diffusers import ConfigMixin, ModelMixin
 from diffusers.configuration_utils import ConfigMixin
 from diffusers.models.modeling_utils import ModelMixin
-from typing import Optional, Union
-import glob
+from torch import nn
 
 
 class VideoBaseAE(ModelMixin, ConfigMixin):
@@ -22,7 +23,7 @@ class VideoBaseAE(ModelMixin, ConfigMixin):
         pass
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Optional[Union[str, os.PathLike]], **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike | None, **kwargs):
         ckpt_files = glob.glob(os.path.join(pretrained_model_name_or_path, "*.ckpt"))
         if ckpt_files:
             # Adapt to checkpoint

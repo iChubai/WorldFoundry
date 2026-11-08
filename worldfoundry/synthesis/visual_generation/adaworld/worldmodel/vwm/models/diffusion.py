@@ -4,6 +4,7 @@ import torch
 from einops import rearrange
 from omegaconf import ListConfig, OmegaConf
 from pytorch_lightning import LightningModule
+
 from vwm.modules import UNCONDITIONAL_CONFIG
 from vwm.modules.autoencoding.temporal_ae import VideoDecoder
 from vwm.modules.diffusionmodules.wrappers import OPENAIUNETWRAPPER
@@ -16,14 +17,14 @@ class DiffusionEngine(LightningModule):
         network_config,
         denoiser_config,
         first_stage_config,
-        conditioner_config: Union[None, Dict, ListConfig, OmegaConf] = None,
-        sampler_config: Union[None, Dict, ListConfig, OmegaConf] = None,
-        network_wrapper: Union[None, str] = None,
+        conditioner_config: None | dict | ListConfig | OmegaConf = None,
+        sampler_config: None | dict | ListConfig | OmegaConf = None,
+        network_wrapper: None | str = None,
         scale_factor: float = 1.0,
         disable_first_stage_autocast=False,
         input_key: str = "img",
         compile_model: bool = False,
-        en_and_decode_n_samples_a_time: Optional[int] = None,
+        en_and_decode_n_samples_a_time: int | None = None,
         n_context_frames: int = 5,
     ):
         super(DiffusionEngine, self).__init__()
@@ -89,11 +90,11 @@ class DiffusionEngine(LightningModule):
     @torch.no_grad()
     def sample(
         self,
-        cond: Dict,
+        cond: dict,
         x_ori: torch.Tensor,
-        uc: Union[Dict, None] = None,
+        uc: dict | None = None,
         N: int = 10,
-        shape: Union[None, Tuple, List] = None,
+        shape: None | tuple | list = None,
         **kwargs,
     ):
         randn = torch.randn(N, *shape).to(self.device)

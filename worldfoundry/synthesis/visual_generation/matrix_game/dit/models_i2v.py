@@ -11,13 +11,6 @@ from diffusers.models import ModelMixin
 from diffusers.utils import is_torch_version
 from einops import rearrange
 
-from worldfoundry.core.nn import (
-    DiTModulation as ModulateDiT,
-    activation_layer as get_activation_layer,
-    apply_gate_with_prefix as apply_gate,
-    modulate_sequence_with_prefix as modulate,
-    normalization_layer as get_norm_layer,
-)
 from worldfoundry.core.attention import (
     apply_nd_rotary_embedding as apply_rotary_emb,
 )
@@ -26,6 +19,21 @@ from worldfoundry.core.attention import (
     get_nd_rotary_pos_embed,
 )
 from worldfoundry.core.attention.backends.hybrid import attention, parallel_attention
+from worldfoundry.core.nn import (
+    DiTModulation as ModulateDiT,
+)
+from worldfoundry.core.nn import (
+    activation_layer as get_activation_layer,
+)
+from worldfoundry.core.nn import (
+    apply_gate_with_prefix as apply_gate,
+)
+from worldfoundry.core.nn import (
+    modulate_sequence_with_prefix as modulate,
+)
+from worldfoundry.core.nn import (
+    normalization_layer as get_norm_layer,
+)
 
 from .embed_layers import PatchEmbed, TextProjection, TimestepEmbedder
 from .layernorm import FusedLayerNorm
@@ -51,8 +59,8 @@ class MMDoubleStreamBlock(nn.Module):
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
         action_config: dict = {},
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -135,10 +143,10 @@ class MMDoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
         freqs_cis: tuple = None,
         kwargs=None,
         mouse_condition=None,
@@ -146,7 +154,7 @@ class MMDoubleStreamBlock(nn.Module):
         condition_type: str = None,
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if condition_type == "token_replace":
             img_mod1, token_replace_img_mod1 = self.img_mod(vec, secondary_value=token_replace_vec)
             (img_mod1_shift, img_mod1_scale, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate) = (
@@ -475,10 +483,10 @@ class MMDoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
         freqs_cis: tuple = None,
         kwargs=None,
         mouse_condition=None,
@@ -487,7 +495,7 @@ class MMDoubleStreamBlock(nn.Module):
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
     ):
-        ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
+        ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
         q, k, v, img_q, img_k, img_mod1_gate, txt_mod1_gate, img_mod2, txt_mod2, tr_mod1 = (
             torch.utils.checkpoint.checkpoint(
                 self.pre_attention,
@@ -550,10 +558,10 @@ class MMDoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
         freqs_cis: tuple = None,
         kwargs=None,
         mouse_condition=None,
@@ -616,8 +624,8 @@ class MMSingleStreamBlock(nn.Module):
         qk_norm_type: str = "rms",
         qk_scale: float = None,
         action_config: dict = {},
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -670,11 +678,11 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
@@ -771,7 +779,7 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         condition_type: str = None,
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
@@ -853,11 +861,11 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
@@ -865,7 +873,7 @@ class MMSingleStreamBlock(nn.Module):
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
     ) -> torch.Tensor:
-        ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False}
+        ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
         q, k, v, img_q, img_k, mod_gate, mlp, tr_mod_gate = torch.utils.checkpoint.checkpoint(
             self.pre_attention,
             x,
@@ -926,11 +934,11 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
@@ -998,7 +1006,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         mlp_act_type: str = "gelu_tanh",
         mm_double_blocks_depth: int = 20,
         mm_single_blocks_depth: int = 40,
-        rope_dim_list: List[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
@@ -1008,8 +1016,8 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         rope_theta=256,
         action_config={},
         i2v_condition_type="token_replace",
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -1172,13 +1180,13 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         timestep: torch.Tensor,  # Should be in range(0, 1000).
         encoder_hidden_states: torch.Tensor = None,
         encoder_attention_mask: torch.Tensor = None,  # Now we don't use it.
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
         mouse_condition=None,
         keyboard_condition=None,
         return_dict: bool = True,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         x = hidden_states
         t = timestep
         text_states, text_states_2 = encoder_hidden_states
@@ -1233,9 +1241,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
 
         freqs_cis = (freqs_cos, freqs_sin) if freqs_cos is not None else None
         self.single_stream_block_no_attn_recompute_layers = 0
-        if img_seq_len < 20 * 1024:
-            self.single_stream_block_no_attn_recompute_layers = 10
-        elif img_seq_len < 30 * 1024:
+        if img_seq_len < 20 * 1024 or img_seq_len < 30 * 1024:
             self.single_stream_block_no_attn_recompute_layers = 10
         elif img_seq_len < 40 * 1024:
             self.single_stream_block_no_attn_recompute_layers = 5
@@ -1253,8 +1259,8 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
-                image_kwargs: Dict[str, Any] = {
+                ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                image_kwargs: dict[str, Any] = {
                     "tt": hidden_states.shape[2] // self.patch_size[0],
                     "th": hidden_states.shape[3] // self.patch_size[1],
                     "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -1279,7 +1285,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
                     **ckpt_kwargs,
                 )
             else:
-                image_kwargs: Dict[str, Any] = {
+                image_kwargs: dict[str, Any] = {
                     "tt": hidden_states.shape[2] // self.patch_size[0],
                     "th": hidden_states.shape[3] // self.patch_size[1],
                     "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -1320,8 +1326,8 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
 
                         return custom_forward
 
-                    ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
-                    image_kwargs: Dict[str, Any] = {
+                    ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],
@@ -1346,7 +1352,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
                         **ckpt_kwargs,
                     )
                 else:
-                    image_kwargs: Dict[str, Any] = {
+                    image_kwargs: dict[str, Any] = {
                         "tt": hidden_states.shape[2] // self.patch_size[0],
                         "th": hidden_states.shape[3] // self.patch_size[1],
                         "tw": hidden_states.shape[4] // self.patch_size[2],

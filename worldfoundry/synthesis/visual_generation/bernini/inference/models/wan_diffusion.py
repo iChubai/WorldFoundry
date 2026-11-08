@@ -32,15 +32,14 @@ from transformers.utils import logging
 from .scheduler import FlowMatchScheduler
 from .transformer_wan import WanTransformer3DModel
 
-
 logger = logging.get_logger(__name__)
 
 
-def _load_json_config(config_path: Optional[str]):
+def _load_json_config(config_path: str | None):
     if config_path is None:
         return None
     if os.path.isfile(config_path):
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             return json.load(f)
     return None
 

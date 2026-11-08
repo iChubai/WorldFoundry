@@ -1,7 +1,8 @@
 import os
+from contextlib import contextmanager
+
 import torch
 from safetensors import safe_open
-from contextlib import contextmanager
 
 
 @contextmanager

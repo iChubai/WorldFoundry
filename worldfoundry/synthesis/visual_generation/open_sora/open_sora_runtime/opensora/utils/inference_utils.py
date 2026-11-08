@@ -28,7 +28,7 @@ def prepare_multi_resolution_info(info_type, batch_size, image_size, num_frames,
 
 
 def load_prompts(prompt_path, start_idx=None, end_idx=None):
-    with open(prompt_path, "r") as f:
+    with open(prompt_path) as f:
         prompts = [line.strip() for line in f.readlines()]
     prompts = prompts[start_idx:end_idx]
     return prompts

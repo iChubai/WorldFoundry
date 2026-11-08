@@ -4,8 +4,9 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import package_module_root as package_root
@@ -95,7 +96,7 @@ class SCOPERuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "SCOPERuntime":
+    ) -> SCOPERuntime:
         """Create a lazy SCOPE runtime without importing torch or pandas."""
 
         del args, model_id

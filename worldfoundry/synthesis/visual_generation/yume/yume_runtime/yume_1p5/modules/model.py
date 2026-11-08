@@ -1,20 +1,21 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.cuda import amp
-from worldfoundry.core.model_loading.model_configuration import register_to_config
-from typing import Tuple
 
-from worldfoundry.core.attention.sequence.varlen import flash_attention
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
-    WanModel,
     Head,
-    rope_params,
-    sinusoidal_embedding_1d,
-    WanSelfAttention,
     WanCrossAttention,
     WanLayerNorm,
+    WanModel,
+    WanSelfAttention,
+    rope_params,
+    sinusoidal_embedding_1d,
 )
+from worldfoundry.core.attention.sequence.varlen import flash_attention
+from worldfoundry.core.model_loading.model_configuration import register_to_config
 
 
 def convpadd(tensor, pad_num):
@@ -46,7 +47,7 @@ def up_fre(f_1, f_2, f_3, u, f_z, scale=False):
     return freqs_i
 
 
-def upsample_conv3d_weights_auto(conv_small: nn.Conv3d, size: Tuple[int, int, int]):
+def upsample_conv3d_weights_auto(conv_small: nn.Conv3d, size: tuple[int, int, int]):
     # small: (OC_small, IC_small, kT, kH, kW)
     OC, IC, _, _, _ = conv_small.weight.shape
     with torch.no_grad():
@@ -411,7 +412,7 @@ class Yume1p5WanModel(WanModel):
             self.freqs = self.freqs.to(device)
         # print(x[0].shape,"nscdbf09-vmifjw0")
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         if flag:
             x_pack = []

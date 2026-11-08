@@ -10,8 +10,9 @@ and specialized CameraCtrl components.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -106,7 +107,7 @@ class CameraCtrlRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "CameraCtrlRuntime":
+    ) -> CameraCtrlRuntime:
         """
         Builds a lazy CameraCtrl runtime instance from pretrained model options.
 

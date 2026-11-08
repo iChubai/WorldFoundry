@@ -1,8 +1,9 @@
 import argparse
 import dataclasses
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable, Tuple, Union, cast, List
+from typing import Any, List, Tuple, Union, cast
 
 from omegaconf import OmegaConf
 
@@ -53,7 +54,7 @@ class DataclassArgParser(argparse.ArgumentParser):
 
     def __init__(
         self,
-        dataclass_types: Union[DataClassType, Iterable[DataClassType]],
+        dataclass_types: DataClassType | Iterable[DataClassType],
         **kwargs,
     ):
         """
@@ -104,7 +105,7 @@ class DataclassArgParser(argparse.ArgumentParser):
     def parse_args_into_dataclasses(
         self,
         args=None,
-    ) -> Tuple[DataClass, ...]:
+    ) -> tuple[DataClass, ...]:
         """
         Parse command-line args into instances of the specified dataclass
         types.  This relies on argparse's `ArgumentParser.parse_known_args`.
@@ -216,7 +217,7 @@ def omegaconf_parse(cls):
     return omegaconf_parse_files_vals(cls, args.configs, args.values)
 
 
-def omegaconf_parse_files_vals(cls, files_paths: List[str], dotlist: List[str]):
+def omegaconf_parse_files_vals(cls, files_paths: list[str], dotlist: list[str]):
     configs = [OmegaConf.structured(cls)]
     for path in files_paths:
         configs.append(OmegaConf.load(path))

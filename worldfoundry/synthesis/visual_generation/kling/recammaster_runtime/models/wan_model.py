@@ -1,17 +1,18 @@
+import math
+from typing import Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Tuple, Optional
 from einops import rearrange
 
-from worldfoundry.core.model_loading import hash_state_dict_keys
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    MLPProj,
     WanRMSNorm,
     sinusoidal_embedding_1d,
-    MLPProj,
 )
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.model_loading import hash_state_dict_keys
 
 try:
     import flash_attn_interface
@@ -224,7 +225,7 @@ def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -248,7 +249,7 @@ class WanModel(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -297,8 +298,8 @@ class WanModel(torch.nn.Module):
         timestep: torch.Tensor,
         cam_emb: torch.Tensor,
         context: torch.Tensor,
-        clip_feature: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        clip_feature: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
         **kwargs,

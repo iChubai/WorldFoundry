@@ -11,8 +11,9 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from PIL import Image
 
@@ -210,7 +211,7 @@ class HYWorld2WorldgenRuntime:
         return Path(__file__).resolve().parent / "hy_world_2p0_worldgen_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "HYWorld2WorldgenRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> HYWorld2WorldgenRuntime:
         if pretrained_model_path and "scene_path" not in kwargs:
             kwargs["scene_path"] = pretrained_model_path
         return cls(**kwargs)
@@ -290,11 +291,11 @@ class HYWorld2WorldgenRuntime:
 
 
 __all__ = [
-    "HYWorld2WorldgenNotIntegratedError",
     "OFFICIAL_WORLDGEN_REQUIRED_FILES",
     "OFFICIAL_WORLDGEN_STAGES",
     "SUPPORTED_IN_TREE_TASKS",
     "UNSUPPORTED_WORLDGEN_TASKS",
+    "HYWorld2WorldgenNotIntegratedError",
     "HYWorld2WorldgenRuntime",
     "get_hy_world_2p0_worldgen_plan",
     "inspect_official_worldgen_checkout",

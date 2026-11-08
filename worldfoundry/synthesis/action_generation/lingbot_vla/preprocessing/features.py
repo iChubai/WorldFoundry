@@ -1,23 +1,24 @@
 """LingBot-VLA v1 observation preprocessing and action postprocessing."""
 
-import json
-import yaml
-import torch
-import numpy as np
-from collections import defaultdict, OrderedDict
-from pydantic import BaseModel
-from typing import List
 import ast
-import torch.nn.functional as F
+import json
+from collections import OrderedDict, defaultdict
+from typing import List
 
-from .transforms import Normalizer, prepare_images, prepare_state, prepare_language, prepare_action, prepare_joint_pad
+import numpy as np
+import torch
+import torch.nn.functional as F
+import yaml
+from pydantic import BaseModel
+
+from .transforms import Normalizer, prepare_action, prepare_images, prepare_joint_pad, prepare_language, prepare_state
 
 
 class FeatureInfo(BaseModel):
     # Stores metadata about robot joints and camera images used for feature extraction.
     # Parsed from the training data config to determine which joints/images to process.
-    joints: List[str] | None = None
-    images: List[str] | None = None
+    joints: list[str] | None = None
+    images: list[str] | None = None
     joints_max_dim: dict | None = None
 
     def update_info(self, data_config):
@@ -51,7 +52,7 @@ class FeatureTransform:
         norm_stats_path=None,
         load_image=True,
     ):
-        with open(robot_config_path, "r") as f:
+        with open(robot_config_path) as f:
             robot_config = yaml.safe_load(f)
         f.close()
 

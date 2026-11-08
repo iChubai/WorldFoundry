@@ -1,13 +1,13 @@
 import math
 
 import torch
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from torch import Tensor, nn
 
-from .paligemma2 import PaliGemma2WithExpertModel
 from .paligemma import PaliGemmaWithExpertModel
+from .paligemma2 import PaliGemma2WithExpertModel
 
 
 class GigaBrain0Policy(ModelMixin, ConfigMixin):

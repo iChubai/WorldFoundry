@@ -1,9 +1,10 @@
 # worldfoundry/synthesis/visual_generation/kling/astra/models/model_manager.py
 
-import os
-import torch
 import json
-from typing import List, TypeAlias, Literal, Optional
+import os
+from typing import List, Literal, Optional, TypeAlias
+
+import torch
 
 # =========================================================================
 # 1. 手动定义类型别名，解决 NameError
@@ -11,10 +12,10 @@ from typing import List, TypeAlias, Literal, Optional
 Preset_model_id: TypeAlias = str
 Preset_model_website: TypeAlias = str
 
-from ..model_registry import model_loader_configs, huggingface_model_loader_configs, patch_model_loader_configs
-
 from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict, split_state_dict_with_prefix
 from worldfoundry.core.vram import init_weights_on_device
+
+from ..model_registry import huggingface_model_loader_configs, model_loader_configs, patch_model_loader_configs
 
 # =========================================================================
 # 3. 核心加载函数 (保持原样，删除了不必要的引用)
@@ -23,7 +24,7 @@ from worldfoundry.core.vram import init_weights_on_device
 
 def load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device):
     loaded_model_names, loaded_models = [], []
-    for model_name, model_class in zip(model_names, model_classes):
+    for model_name, model_class in zip(model_names, model_classes, strict=False):
         print(f"    model_name: {model_name} model_class: {model_class.__name__}")
 
         # 尝试使用 state_dict_converter，如果没有则直接加载
@@ -128,9 +129,9 @@ class ModelManager:
         self,
         torch_dtype=torch.float16,
         device="cuda",
-        model_id_list: List[Preset_model_id] = [],  # 这里的 Preset_model_id 现在是 str，不会报错了
-        downloading_priority: List[Preset_model_website] = ["ModelScope", "HuggingFace"],
-        file_path_list: List[str] = [],
+        model_id_list: list[Preset_model_id] = [],  # 这里的 Preset_model_id 现在是 str，不会报错了
+        downloading_priority: list[Preset_model_website] = ["ModelScope", "HuggingFace"],
+        file_path_list: list[str] = [],
     ):
         self.torch_dtype = torch_dtype
         self.device = device
@@ -175,14 +176,14 @@ class ModelManager:
                     allowed_model_names=model_names,
                     model_manager=self,
                 )
-                for model_name, model in zip(model_names, models):
+                for model_name, model in zip(model_names, models, strict=False):
                     self.model.append(model)
                     self.model_path.append(file_path)
                     self.model_name.append(model_name)
                 print(f"    The following models are loaded: {model_names}.")
                 break
         else:
-            print(f"    We cannot detect the model type. No models are loaded.")
+            print("    We cannot detect the model type. No models are loaded.")
 
     def load_models(self, file_path_list, model_names=None, device=None, torch_dtype=None):
         for file_path in file_path_list:
@@ -191,7 +192,7 @@ class ModelManager:
     def fetch_model(self, model_name, file_path=None, require_model_path=False):
         fetched_models = []
         fetched_model_paths = []
-        for model, model_path, model_name_ in zip(self.model, self.model_path, self.model_name):
+        for model, model_path, model_name_ in zip(self.model, self.model_path, self.model_name, strict=False):
             if file_path is not None and file_path != model_path:
                 continue
             if model_name == model_name_:

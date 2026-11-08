@@ -1,4 +1,5 @@
 import torch
+
 from .wan_video_dit import WanModel
 
 

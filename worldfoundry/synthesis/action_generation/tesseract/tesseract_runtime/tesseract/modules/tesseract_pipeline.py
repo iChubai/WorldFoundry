@@ -1,28 +1,28 @@
 import gc
 import math
-import torch
-from typing import Optional, Union
-from torch import randn as randn_tensor
-import torch
-import numpy as np
-from transformers import T5Tokenizer
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from transformers import T5EncoderModel, T5Tokenizer
+import numpy as np
+import torch
 from diffusers import (
     AutoencoderKLCogVideoX,
+    CogVideoXDDIMScheduler,
     CogVideoXDPMScheduler,
     CogVideoXImageToVideoPipeline,
     CogVideoXTransformer3DModel,
-    CogVideoXDDIMScheduler,
 )
-
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
-from diffusers.utils import is_peft_version, USE_PEFT_BACKEND, replace_example_docstring
-from diffusers.image_processor import PipelineImageInput
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
+from diffusers.image_processor import PipelineImageInput
 from diffusers.pipelines.cogvideo.pipeline_output import CogVideoXPipelineOutput
-from diffusers.pipelines.cogvideo.pipeline_cogvideox_image2video import retrieve_timesteps, retrieve_latents
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+from diffusers.utils import USE_PEFT_BACKEND, is_peft_version, replace_example_docstring
+from torch import randn as randn_tensor
+from transformers import T5EncoderModel, T5Tokenizer
+
+# isort: split
+# CogVideoX supplies the latent-extraction helper used by both pipelines.
+from diffusers.pipelines.cogvideo.pipeline_cogvideox_image2video import retrieve_latents, retrieve_timesteps
 
 _LOW_CPU_MEM_USAGE_DEFAULT_LORA = False
 
@@ -34,7 +34,7 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
         text_encoder: T5EncoderModel,
         vae: AutoencoderKLCogVideoX,
         transformer: CogVideoXTransformer3DModel,
-        scheduler: Union[CogVideoXDDIMScheduler, CogVideoXDPMScheduler],
+        scheduler: CogVideoXDDIMScheduler | CogVideoXDPMScheduler,
     ):
         super().__init__(
             tokenizer=tokenizer,
@@ -52,10 +52,10 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
         num_frames: int = 13,
         height: int = 60,
         width: int = 90,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[torch.Generator] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | None = None,
+        latents: torch.Tensor | None = None,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -190,30 +190,31 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
     def __call__(
         self,
         image: PipelineImageInput,
-        prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
+        height: int | None = None,
+        width: int | None = None,
         num_frames: int = 49,
         num_inference_steps: int = 50,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 6,
         use_dynamic_cfg: bool = False,
         num_videos_per_prompt: int = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
         output_type: str = "pil",
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 226,
-    ) -> Union[CogVideoXPipelineOutput, Tuple]:
+    ) -> CogVideoXPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
 
@@ -499,7 +500,7 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
         text_encoder: T5EncoderModel,
         vae: AutoencoderKLCogVideoX,
         transformer: CogVideoXTransformer3DModel,
-        scheduler: Union[CogVideoXDDIMScheduler, CogVideoXDPMScheduler],
+        scheduler: CogVideoXDDIMScheduler | CogVideoXDPMScheduler,
     ):
         super().__init__(
             tokenizer=tokenizer,
@@ -517,10 +518,10 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
         num_frames: int = 13,
         height: int = 60,
         width: int = 90,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[torch.Generator] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | None = None,
+        latents: torch.Tensor | None = None,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -662,31 +663,32 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
     def __call__(
         self,
         image: PipelineImageInput,
-        prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
+        height: int | None = None,
+        width: int | None = None,
         num_frames: int = 49,
         num_inference_steps: int = 50,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 6,
         image_guidance_scale: float = 1,
         use_dynamic_cfg: bool = False,
         num_videos_per_prompt: int = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        prompt_embeds: torch.FloatTensor | None = None,
+        negative_prompt_embeds: torch.FloatTensor | None = None,
         output_type: str = "np",
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 226,
-    ) -> Union[CogVideoXPipelineOutput, Tuple]:
+    ) -> CogVideoXPipelineOutput | tuple:
         """
         Function invoked when calling the pipeline for generation.
 

@@ -1,24 +1,25 @@
 # Adapted from https://github.com/showlab/Tune-A-Video/blob/main/tuneavideo/pipelines/pipeline_tuneavideo.py
 
 import inspect
-from typing import Callable, List, Optional, Union
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import List, Optional, Union
 
 import numpy as np
 import torch
-from tqdm import tqdm
-
-from diffusers.utils import is_accelerate_available
-from packaging import version
-from transformers import CLIPTextModel, CLIPTokenizer
-
 from diffusers.configuration_utils import FrozenDict
 from diffusers.models import AutoencoderKL
+from diffusers.utils import is_accelerate_available
+from packaging import version
+from tqdm import tqdm
+from transformers import CLIPTextModel, CLIPTokenizer
 
 try:
     from diffusers.pipeline_utils import DiffusionPipeline
 except ImportError:  # diffusers >= 0.38
     from diffusers import DiffusionPipeline
+import pdb
+
 from diffusers.schedulers import (
     DDIMScheduler,
     DPMSolverMultistepScheduler,
@@ -27,20 +28,18 @@ from diffusers.schedulers import (
     LMSDiscreteScheduler,
     PNDMScheduler,
 )
-from diffusers.utils import deprecate, logging, BaseOutput
-
+from diffusers.utils import BaseOutput, deprecate, logging
 from einops import rearrange
 
-from ..models.unet import UNet3DConditionModel
 from ..models.sparse_controlnet import SparseControlNetModel
-import pdb
+from ..models.unet import UNet3DConditionModel
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 @dataclass
 class AnimationPipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 class AnimationPipeline(DiffusionPipeline):
@@ -52,15 +51,13 @@ class AnimationPipeline(DiffusionPipeline):
         text_encoder: CLIPTextModel,
         tokenizer: CLIPTokenizer,
         unet: UNet3DConditionModel,
-        scheduler: Union[
-            DDIMScheduler,
-            PNDMScheduler,
-            LMSDiscreteScheduler,
-            EulerDiscreteScheduler,
-            EulerAncestralDiscreteScheduler,
-            DPMSolverMultistepScheduler,
-        ],
-        controlnet: Union[SparseControlNetModel, None] = None,
+        scheduler: DDIMScheduler
+        | PNDMScheduler
+        | LMSDiscreteScheduler
+        | EulerDiscreteScheduler
+        | EulerAncestralDiscreteScheduler
+        | DPMSolverMultistepScheduler,
+        controlnet: SparseControlNetModel | None = None,
     ):
         super().__init__()
 
@@ -191,7 +188,7 @@ class AnimationPipeline(DiffusionPipeline):
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif type(prompt) is not type(negative_prompt):
@@ -328,25 +325,25 @@ class AnimationPipeline(DiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
-        video_length: Optional[int],
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        prompt: str | list[str],
+        video_length: int | None,
+        height: int | None = None,
+        width: int | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_videos_per_prompt: Optional[int] = 1,
+        negative_prompt: str | list[str] | None = None,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "tensor",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.FloatTensor | None = None,
+        output_type: str | None = "tensor",
         return_dict: bool = True,
-        callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
-        callback_steps: Optional[int] = 1,
+        callback: Callable[[int, int, torch.FloatTensor], None] | None = None,
+        callback_steps: int | None = 1,
         # support controlnet
         controlnet_images: torch.FloatTensor = None,
         controlnet_image_index: list = [0],
-        controlnet_conditioning_scale: Union[float, List[float]] = 1.0,
+        controlnet_conditioning_scale: float | list[float] = 1.0,
         **kwargs,
     ):
         # Default height and width to unet

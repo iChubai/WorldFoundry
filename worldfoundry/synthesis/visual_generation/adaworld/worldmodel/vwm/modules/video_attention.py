@@ -239,7 +239,7 @@ class SpatialVideoTransformer(SpatialTransformer):
         emb = self.time_pos_embed(t_emb)
         emb = emb[:, None]
 
-        for block, mix_block in zip(self.transformer_blocks, self.time_stack):
+        for block, mix_block in zip(self.transformer_blocks, self.time_stack, strict=False):
             x = block(x, context=spatial_context)
 
             x_mix = x

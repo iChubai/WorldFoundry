@@ -69,7 +69,7 @@ class Patch1D(nn.Module):
         self,
         channels: int,
         use_conv: bool = False,
-        out_channels: Optional[int] = None,
+        out_channels: int | None = None,
         stride: int = 2,
         padding: int = 0,
         name: str = "conv",
@@ -103,7 +103,7 @@ class UnPatch1D(nn.Module):
         channels: int,
         use_conv: bool = False,
         use_conv_transpose: bool = False,
-        out_channels: Optional[int] = None,
+        out_channels: int | None = None,
         name: str = "conv",
     ):
         super().__init__()

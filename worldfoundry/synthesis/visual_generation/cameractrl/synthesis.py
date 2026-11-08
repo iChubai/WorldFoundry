@@ -39,10 +39,10 @@ class CameraCtrlSynthesis(RuntimeAdapterSynthesis):
 
 
 __all__ = [
-    "CameraCtrlSynthesis",
     "DEFAULT_CAMERACTRL_CKPT",
     "DEFAULT_CAMERACTRL_CONFIG",
     "DEFAULT_CAMERACTRL_IMAGE_LORA",
     "DEFAULT_CAMERACTRL_MOTION_ADAPTER",
     "DEFAULT_SD15_ROOT",
+    "CameraCtrlSynthesis",
 ]

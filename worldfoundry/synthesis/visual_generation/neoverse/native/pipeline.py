@@ -1,22 +1,21 @@
 """Native NeoVerse inference on the shared Wan execution infrastructure."""
 
 import os
+from typing import Optional, Union
 
+import numpy as np
 import torch
 import torch.nn.functional as F
-from einops import repeat
-from typing import Optional, Union
-from einops import rearrange
-import numpy as np
+from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
 try:
-    from gsplat.rendering import rasterization
     from gsplat.cuda._torch_impl import (
         _fully_fused_projection,
         _quat_scale_to_covar_preci,
     )
+    from gsplat.rendering import rasterization
 
     _GSPLAT_PIPELINE_IMPORT_ERROR = None
 except ModuleNotFoundError as error:
@@ -26,31 +25,36 @@ except ModuleNotFoundError as error:
     _GSPLAT_PIPELINE_IMPORT_ERROR = error
 
 
-from worldfoundry.core.model_loading import GeneralLoRALoader, LightX2VLoRALoader, load_state_dict
 from worldfoundry.base_models.diffusion_model.runners.staged import (
     InferenceStage,
     InferenceStageRunner,
     StagedDiffusionPipeline,
 )
+from worldfoundry.core.model_loading import GeneralLoRALoader, LightX2VLoRALoader, load_state_dict
+
 from .auxiliary import (
     average_filter,
     fast_perceptual_color_distance,
     homo_matrix_inverse,
     pixel_to_world_coords,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import WanModel
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import NeoVerseControlBranch
-from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanPrompter, WanTextEncoder
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding, T5LayerNorm
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
-    WanVideoVAE,
-    RMS_norm,
     CausalConv3d,
+    RMS_norm,
     Upsample,
+    WanVideoVAE,
 )
-from worldfoundry.core.nn import FlowMatchScheduler, RMSNorm, sinusoidal_embedding_1d
-from worldfoundry.core.vram import enable_vram_management, AutoWrappedModule, AutoWrappedLinear, WanAutoCastLayerNorm
+from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanPrompter, WanTextEncoder
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5LayerNorm, T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import NeoVerseControlBranch
 from worldfoundry.core.io import save_video
+from worldfoundry.core.nn import FlowMatchScheduler, RMSNorm, sinusoidal_embedding_1d
+from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule, WanAutoCastLayerNorm, enable_vram_management
 
 
 class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
@@ -242,9 +246,9 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
         reconstructor: torch.nn.Module,
         tokenizer_path: str,
         pipeline_kwargs: dict | None = None,
-        lora_path: Optional[str] = None,
+        lora_path: str | None = None,
         lora_alpha: float = 1.0,
-        device: Union[str, torch.device] = "cuda",
+        device: str | torch.device = "cuda",
         torch_dtype: torch.dtype = torch.bfloat16,
         enable_vram_management: bool = False,
     ) -> "WanVideoNeoVersePipeline":
@@ -284,36 +288,36 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
         self,
         # Prompt
         prompt: str,
-        negative_prompt: Optional[str] = "",
-        input_video: Optional[list[Image.Image]] = None,
-        denoising_strength: Optional[float] = 1.0,
+        negative_prompt: str | None = "",
+        input_video: list[Image.Image] | None = None,
+        denoising_strength: float | None = 1.0,
         # Control
-        control_scale: Optional[float] = 1.0,
-        source_views: Optional[dict] = None,
-        target_rgb: Optional[torch.Tensor] = None,
-        target_depth: Optional[torch.Tensor] = None,
-        target_mask: Optional[torch.Tensor] = None,
-        target_poses: Optional[torch.Tensor] = None,
-        target_intrs: Optional[torch.Tensor] = None,
+        control_scale: float | None = 1.0,
+        source_views: dict | None = None,
+        target_rgb: torch.Tensor | None = None,
+        target_depth: torch.Tensor | None = None,
+        target_mask: torch.Tensor | None = None,
+        target_poses: torch.Tensor | None = None,
+        target_intrs: torch.Tensor | None = None,
         # Randomness
-        seed: Optional[int] = None,
-        rand_device: Optional[str] = "cpu",
+        seed: int | None = None,
+        rand_device: str | None = "cpu",
         # Shape
-        height: Optional[int] = 480,
-        width: Optional[int] = 832,
+        height: int | None = 480,
+        width: int | None = 832,
         num_frames=81,
         # Classifier-free guidance
-        cfg_scale: Optional[float] = 5.0,
+        cfg_scale: float | None = 5.0,
         # Scheduler
-        num_inference_steps: Optional[int] = 50,
-        sigma_shift: Optional[float] = 5.0,
+        num_inference_steps: int | None = 50,
+        sigma_shift: float | None = 5.0,
         # VAE tiling
-        tiled: Optional[bool] = True,
-        tile_size: Optional[tuple[int, int]] = (30, 52),
-        tile_stride: Optional[tuple[int, int]] = (15, 26),
+        tiled: bool | None = True,
+        tile_size: tuple[int, int] | None = (30, 52),
+        tile_stride: tuple[int, int] | None = (15, 26),
         # Sliding window
-        sliding_window_size: Optional[int] = None,
-        sliding_window_stride: Optional[int] = None,
+        sliding_window_size: int | None = None,
+        sliding_window_stride: int | None = None,
         # progress_bar
         progress_bar_cmd=tqdm,
     ):

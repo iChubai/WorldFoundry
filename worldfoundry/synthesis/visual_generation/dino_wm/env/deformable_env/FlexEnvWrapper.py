@@ -1,14 +1,18 @@
 from .src.sim.sim_env.flex_env import FlexEnv
 
-import os
-import numpy as np
-import gym
-import torch
+# isort: split
+
 import math
+import os
 from pathlib import Path
 
-from .src.sim.utils import load_yaml
+import gym
+import numpy as np
+import torch
+
 from worldfoundry.core.io.paths import resolve_data_path
+
+from .src.sim.utils import load_yaml
 
 ENV_ACTION_DIM = 4
 BASE_DIR = os.path.abspath(os.path.join(__file__, "../../../"))

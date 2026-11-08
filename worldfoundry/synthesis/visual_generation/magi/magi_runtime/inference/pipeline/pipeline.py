@@ -14,9 +14,9 @@
 
 
 import torch
-
 from inference.common.config import MagiConfig
 from inference.model.dit import get_dit
+
 from worldfoundry.core import print_rank_0, set_random_seed
 from worldfoundry.core.distributed import dist_init
 

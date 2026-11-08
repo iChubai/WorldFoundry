@@ -19,11 +19,11 @@ from torchvision.io.video import (
 
 def read_video_av(
     filename: str,
-    start_pts: Union[float, Fraction] = 0,
-    end_pts: Optional[Union[float, Fraction]] = None,
+    start_pts: float | Fraction = 0,
+    end_pts: float | Fraction | None = None,
     pts_unit: str = "pts",
     output_format: str = "THWC",
-) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, Any]]:
+) -> tuple[torch.Tensor, torch.Tensor, dict[str, Any]]:
     """
     Reads a video from a file, returning both the video frames and the audio frames
 

@@ -1,7 +1,9 @@
 # Inference-only LAPA source retained in-tree.
 from typing import Optional
+
 import numpy as np
 from PIL import Image
+
 from .sampler import DeltaSampler
 
 
@@ -25,7 +27,7 @@ class LAPAInference:
         self.task_description = None
 
     def inference(
-        self, image: np.ndarray, task_description: Optional[str] = None, *args, **kwargs
+        self, image: np.ndarray, task_description: str | None = None, *args, **kwargs
     ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         assert image.dtype == np.uint8
         image = Image.fromarray(image)

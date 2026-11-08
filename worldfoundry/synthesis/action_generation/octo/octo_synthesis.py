@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
 from ..base_action_synthesis import ActionModelSynthesis
 
 
@@ -67,7 +69,7 @@ class OctoSynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "OctoSynthesis":
+    ) -> OctoSynthesis:
         """
         Creates an OctoSynthesis instance from a pre-trained model.
 

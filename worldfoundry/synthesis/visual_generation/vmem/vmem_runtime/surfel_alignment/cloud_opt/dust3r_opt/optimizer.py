@@ -8,8 +8,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import xy_grid, geotrf
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_cpu, to_numpy
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf, xy_grid
 
 from .base_opt import BasePCOptimizer
 
@@ -94,7 +94,7 @@ class PointCloudOptimizer(BasePCOptimizer):
 
         if isinstance(known_poses, torch.Tensor) and known_poses.ndim == 2:
             known_poses = [known_poses]
-        for idx, pose in zip(self._get_msk_indices(pose_msk), known_poses):
+        for idx, pose in zip(self._get_msk_indices(pose_msk), known_poses, strict=False):
             if self.verbose:
                 print(f" (setting pose #{idx} = {pose[:3, 3]})")
             self._no_grad(self._set_pose(self.im_poses, idx, torch.tensor(pose)))
@@ -109,7 +109,7 @@ class PointCloudOptimizer(BasePCOptimizer):
     def preset_focal(self, known_focals, msk=None):
         self._check_all_imgs_are_selected(msk)
 
-        for idx, focal in zip(self._get_msk_indices(msk), known_focals):
+        for idx, focal in zip(self._get_msk_indices(msk), known_focals, strict=False):
             if self.verbose:
                 print(f" (setting focal #{idx} = {focal})")
             self._no_grad(self._set_focal(idx, focal))
@@ -119,7 +119,7 @@ class PointCloudOptimizer(BasePCOptimizer):
     def preset_principal_point(self, known_pp, msk=None):
         self._check_all_imgs_are_selected(msk)
 
-        for idx, pp in zip(self._get_msk_indices(msk), known_pp):
+        for idx, pp in zip(self._get_msk_indices(msk), known_pp, strict=False):
             if self.verbose:
                 print(f" (setting principal point #{idx} = {pp})")
             self._no_grad(self._set_principal_point(idx, pp))
@@ -191,7 +191,7 @@ class PointCloudOptimizer(BasePCOptimizer):
         if isinstance(known_depths, (torch.Tensor, np.ndarray)) and known_depths.ndim == 2:
             known_depths = [known_depths]
 
-        for idx, depth in zip(self._get_msk_indices(msk), known_depths):
+        for idx, depth in zip(self._get_msk_indices(msk), known_depths, strict=False):
             if self.verbose:
                 print(f" (setting depth #{idx})")
             # No need to take log here since _set_depthmap already expects depths in normal space
@@ -218,7 +218,7 @@ class PointCloudOptimizer(BasePCOptimizer):
     def get_depthmaps(self, raw=False):
         res = ParameterStack(self.im_depthmaps, is_param=False).exp()
         if not raw:
-            res = [dm[: h * w].view(h, w) for dm, (h, w) in zip(res, self.imshapes)]
+            res = [dm[: h * w].view(h, w) for dm, (h, w) in zip(res, self.imshapes, strict=False)]
         return res
 
     def depth_to_pts3d(self):
@@ -236,7 +236,7 @@ class PointCloudOptimizer(BasePCOptimizer):
     def get_pts3d(self, raw=False):
         res = self.depth_to_pts3d()
         if not raw:
-            res = [dm[: h * w].view(h, w, 3) for dm, (h, w) in zip(res, self.imshapes)]
+            res = [dm[: h * w].view(h, w, 3) for dm, (h, w) in zip(res, self.imshapes, strict=False)]
         return res
 
     def forward(self):

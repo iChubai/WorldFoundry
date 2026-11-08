@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import pickle
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 
 class _DatasetStatsUnpickler(pickle.Unpickler):

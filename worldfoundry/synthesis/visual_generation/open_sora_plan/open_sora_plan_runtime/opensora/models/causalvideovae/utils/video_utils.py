@@ -1,7 +1,7 @@
-import torch
+import cv2
 import numpy as np
 import numpy.typing as npt
-import cv2
+import torch
 from decord import VideoReader, cpu
 
 

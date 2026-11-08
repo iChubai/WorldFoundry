@@ -244,7 +244,7 @@ class Encoder(nn.Module):
     ) -> torch.Tensor:
         # x: (B, C, T, H, W)
         if torch.is_grad_enabled() and self.gradient_checkpointing:
-            ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+            ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
         if previous_features is not None and after_features is None:
             x = torch.concat([previous_features, x], 2)
         elif previous_features is None and after_features is not None:
@@ -303,25 +303,7 @@ class Encoder(nn.Module):
                 next_frames = self.single_forward(x[:, :, i : i + self.mini_batch_encoder, :, :], None, None)
                 new_pixel_values.append(next_frames)
             new_pixel_values = torch.cat(new_pixel_values, dim=2)
-        elif self.cache_compression_vae:
-            _, _, f, _, _ = x.size()
-            if f % 2 != 0:
-                self.set_padding_one_frame()
-                first_frames = self.single_forward(x[:, :, 0:1, :, :], None, None)
-                self.set_padding_more_frame()
-
-                new_pixel_values = [first_frames]
-                start_index = 1
-            else:
-                self.set_padding_more_frame()
-                new_pixel_values = []
-                start_index = 0
-
-            for i in range(start_index, x.shape[2], self.mini_batch_encoder):
-                next_frames = self.single_forward(x[:, :, i : i + self.mini_batch_encoder, :, :], None, None)
-                new_pixel_values.append(next_frames)
-            new_pixel_values = torch.cat(new_pixel_values, dim=2)
-        elif self.slice_compression_vae:
+        elif self.cache_compression_vae or self.slice_compression_vae:
             _, _, f, _, _ = x.size()
             if f % 2 != 0:
                 self.set_padding_one_frame()
@@ -583,7 +565,7 @@ class Decoder(nn.Module):
     ) -> torch.Tensor:
         # x: (B, C, T, H, W)
         if torch.is_grad_enabled() and self.gradient_checkpointing:
-            ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+            ckpt_kwargs: dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
         if previous_features is not None and after_features is None:
             b, c, t, h, w = x.size()
             x = torch.concat([previous_features, x], 2)

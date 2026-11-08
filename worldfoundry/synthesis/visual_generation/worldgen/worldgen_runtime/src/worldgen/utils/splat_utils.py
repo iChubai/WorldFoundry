@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from pytorch3d.transforms import matrix_to_quaternion
 from plyfile import PlyData, PlyElement
+from pytorch3d.transforms import matrix_to_quaternion
 
 
 class SplatFile:
@@ -34,12 +34,12 @@ class SplatFile:
 
         attribute_names = ["x", "y", "z", "nx", "ny", "nz"]
         for i in range(f_dc.shape[1]):
-            attribute_names.append("f_dc_{}".format(i))
+            attribute_names.append(f"f_dc_{i}")
         attribute_names.append("opacity")
         for i in range(scale.shape[1]):
-            attribute_names.append("scale_{}".format(i))
+            attribute_names.append(f"scale_{i}")
         for i in range(rotation.shape[1]):
-            attribute_names.append("rot_{}".format(i))
+            attribute_names.append(f"rot_{i}")
 
         dtype_full = [(name, "f4") for name in attribute_names]
         elements = np.empty(xyz.shape[0], dtype=dtype_full)

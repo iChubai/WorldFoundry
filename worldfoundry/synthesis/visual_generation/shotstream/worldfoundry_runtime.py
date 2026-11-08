@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import importlib.util
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, official_runtime_repo_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
-
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"

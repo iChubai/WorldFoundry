@@ -48,7 +48,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         **kwargs,
     ):
         """文本到音视频生成。
@@ -88,7 +88,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         **kwargs,
     ):
         """图像到音视频生成。
@@ -122,7 +122,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
 
     def predict(
         self,
-        processed_data: Dict[str, Any],
+        processed_data: dict[str, Any],
         task_type: str = "auto",
         size: str = "832*480",
         resolution: str = "480P",
@@ -131,9 +131,9 @@ class Wan2p5Synthesis(CredentialedSynthesis):
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """生成预测结果。
 
         Args:
@@ -150,7 +150,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             ValueError: 任务类型不支持，或 i2av 缺少 ``encoded_image``。
         """
         prompt = processed_data.get("prompt", "")
-        encoded_image = processed_data.get("encoded_image", None)
+        encoded_image = processed_data.get("encoded_image")
 
         if task_type == "auto":
             task_type = "i2av" if encoded_image is not None else "t2av"

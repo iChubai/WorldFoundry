@@ -1,22 +1,21 @@
-from typing import Dict, List, Optional, Union
 import random
-from PIL import Image
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from diffusers.utils.torch_utils import randn_tensor
-from einops import rearrange
-
 import torchvision
 import torchvision.transforms as transforms
+from diffusers.utils.torch_utils import randn_tensor
+from einops import rearrange
+from PIL import Image
 
 
 def _encode_prompt(
     tokenizer,
     text_encoder,
-    prompt: List[str],
+    prompt: list[str],
     device: torch.device,
     dtype: torch.dtype,
     max_sequence_length,
@@ -45,9 +44,9 @@ def _encode_prompt(
 def prepare_conditions(
     tokenizer,
     text_encoder,
-    prompt: Union[str, List[str]],
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    prompt: str | list[str],
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
     max_sequence_length: int = 128,
     **kwargs,
 ) -> torch.Tensor:
@@ -78,9 +77,9 @@ def read_img(img_file, target_shape=(512, 384)):
 def get_text_conditions(
     tokenizer,
     text_encoder,
-    prompt: Union[str, List[str]],
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    prompt: str | list[str],
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
     max_sequence_length: int = 128,
     **kwargs,
 ) -> torch.Tensor:
@@ -100,9 +99,9 @@ def get_latents(
     video: torch.Tensor,
     patch_size: int = 1,
     patch_size_t: int = 1,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
-    generator: Optional[torch.Generator] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+    generator: torch.Generator | None = None,
 ):
     """
     mem: (b v) c m h w [-1,1]
@@ -170,9 +169,9 @@ def prepare_latents(
     image_or_video: torch.Tensor,
     patch_size: int = 1,
     patch_size_t: int = 1,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
-    generator: Optional[torch.Generator] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+    generator: torch.Generator | None = None,
     precompute: bool = False,
 ) -> torch.Tensor:
     device = device or vae.device

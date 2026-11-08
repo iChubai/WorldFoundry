@@ -149,7 +149,7 @@ class MagiConfig:
                 dct["params_dtype"] = dtype_map[dct["params_dtype"]]
             return dct
 
-        with open(json_path, "r") as f:
+        with open(json_path) as f:
             config_dict = json.load(f, object_hook=simple_json_decoder)
         magi_config = cls._create_config_from_dict(config_dict)
 

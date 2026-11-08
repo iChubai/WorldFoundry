@@ -7,11 +7,11 @@ robot/simulator clients are never consulted at runtime.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path, resolve_worldfoundry_path
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     collect_images,
     completed_action_result,
@@ -20,6 +20,7 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     option_int,
     runtime_options_cache_key,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
 _DATA_CONFIG = load_vla_va_wam_runtime_config("xvla")
 _REQUIRED_CHECKPOINT_FILES = tuple(str(item) for item in _DATA_CONFIG["required_checkpoint_files"])

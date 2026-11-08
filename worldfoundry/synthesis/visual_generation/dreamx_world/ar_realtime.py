@@ -11,8 +11,9 @@ from __future__ import annotations
 import math
 import os
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch

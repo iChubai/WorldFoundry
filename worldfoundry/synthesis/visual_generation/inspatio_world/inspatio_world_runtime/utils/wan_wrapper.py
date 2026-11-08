@@ -1,19 +1,20 @@
+import os
+import time
 import types
 from contextlib import nullcontext
 from typing import List, Optional, Tuple
-import torch
-from torch import nn
 
-import time
-from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_camera_21 import CausalWanModel
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import WanModel
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.camera_21 import _video_vae
-import os
+import torch
 import torch.distributed.checkpoint as dcp
+from torch import nn
 from torch.distributed.checkpoint.filesystem import FileSystemReader
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.camera_21 import _video_vae
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import WanModel
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_camera_21 import CausalWanModel
+from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
 
 # from settings import MODEL_FOLDER
 MODEL_FOLDER = None  # Set via config: text_encoder_path / vae_path, or wan_model_folder
@@ -46,7 +47,7 @@ class WanTextEncoder(torch.nn.Module):
         # Assume we are always on GPU
         return torch.cuda.current_device()
 
-    def forward(self, text_prompts: List[str]) -> dict:
+    def forward(self, text_prompts: list[str]) -> dict:
         stime = time.time()
         ids, mask = self.tokenizer(text_prompts, return_mask=True, add_special_tokens=True)
         ids = ids.to(self.device)
@@ -54,7 +55,7 @@ class WanTextEncoder(torch.nn.Module):
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.text_encoder(ids, mask)
 
-        for u, v in zip(context, seq_lens):
+        for u, v in zip(context, seq_lens, strict=False):
             u[v:] = 0.0  # set padding to 0.0
         result = {"prompt_embeds": context}
         return result
@@ -394,11 +395,11 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        kv_size: Optional[Tuple[int, int]] = (0, 0),
-        image_latent_input: Optional[torch.Tensor] = None,
-        render_latent_input: Optional[torch.Tensor] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        kv_size: tuple[int, int] | None = (0, 0),
+        image_latent_input: torch.Tensor | None = None,
+        render_latent_input: torch.Tensor | None = None,
         freqs_offset: int = 0,
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
@@ -460,8 +461,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         return flow_pred, pred_x0
 
     def forward_wan22(
-        self, latent_list: List[torch.Tensor], t: torch.Tensor, context: torch.Tensor, seq_len: int, **kwargs
-    ) -> List[torch.Tensor]:
+        self, latent_list: list[torch.Tensor], t: torch.Tensor, context: torch.Tensor, seq_len: int, **kwargs
+    ) -> list[torch.Tensor]:
         """
         Forward method specifically for Wan2.2 dual-model inference.
         Compatible with T2VAlignedInferencePipeline's direct model call signature.

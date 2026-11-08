@@ -15,7 +15,7 @@ class VideoInfo:
     fps: Fraction
     clip_frames: torch.Tensor
     sync_frames: torch.Tensor
-    all_frames: Optional[list[np.ndarray]]
+    all_frames: list[np.ndarray] | None
 
     @property
     def height(self):
@@ -42,7 +42,7 @@ class VideoInfo:
 class ImageInfo:
     clip_frames: torch.Tensor
     sync_frames: torch.Tensor
-    original_frame: Optional[np.ndarray]
+    original_frame: np.ndarray | None
 
     @property
     def height(self):

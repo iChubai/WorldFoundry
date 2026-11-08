@@ -1,23 +1,23 @@
-from functools import partial
 import json
 import logging
+from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple
 
 import flax
-from flax import struct
 import jax
 import jax.numpy as jnp
-from jax.typing import ArrayLike
 import numpy as np
 import orbax.checkpoint
+from flax import struct
+from jax.typing import ArrayLike
 
-from enum import Enum
 from ..preprocessing.text import TextProcessor
-from .action_heads import ActionHead
-from .module import OctoModule
 from ..spec import ModuleSpec
 from ..types import Config, Data, Params, PRNGKey, Sequence
+from .action_heads import ActionHead
+from .module import OctoModule
 
 
 class NormalizationType(str, Enum):
@@ -54,9 +54,9 @@ class OctoModel:
     config: Config = struct.field(pytree_node=False)
     params: Params
     example_batch: Data
-    dataset_statistics: Optional[Data]
+    dataset_statistics: Data | None
 
-    def create_tasks(self, goals: Optional[Data] = None, texts: Optional[Sequence[str]] = None):
+    def create_tasks(self, goals: Data | None = None, texts: Sequence[str] | None = None):
         """Creates tasks dict from goals and texts.
 
         Args:
@@ -80,9 +80,7 @@ class OctoModel:
                     if k not in ("pad_mask_dict", "language_instruction")
                 }
             )
-            tasks["pad_mask_dict"].update(
-                {k: np.zeros(batch_size, dtype=bool) for k in tasks.keys() if k != "pad_mask_dict"}
-            )
+            tasks["pad_mask_dict"].update({k: np.zeros(batch_size, dtype=bool) for k in tasks if k != "pad_mask_dict"})
 
         if texts is not None:
             assert self.text_processor is not None
@@ -142,12 +140,12 @@ class OctoModel:
         self,
         observations: Data,
         tasks: Data,
-        unnormalization_statistics: Optional[Data] = None,
+        unnormalization_statistics: Data | None = None,
         normalization_type: NormalizationType = NormalizationType.NORMAL,
-        timestep_pad_mask: Optional[ArrayLike] = None,
+        timestep_pad_mask: ArrayLike | None = None,
         argmax: bool = False,
-        sample_shape: Tuple[int, ...] = (),
-        rng: Optional[PRNGKey] = None,
+        sample_shape: tuple[int, ...] = (),
+        rng: PRNGKey | None = None,
         temperature: float = 1.0,
     ):
         """Samples actions from the model. See `action_heads.py` for more info.
@@ -210,7 +208,7 @@ class OctoModel:
     def load_pretrained(
         cls,
         checkpoint_path: str,
-        step: Optional[int] = None,
+        step: int | None = None,
     ) -> "OctoModel":
         """Load an exported Octo checkpoint from a local directory.
 

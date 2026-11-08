@@ -1,7 +1,8 @@
 import time
-from tqdm import tqdm
 from typing import List, Optional
+
 import torch
+from tqdm import tqdm
 
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
@@ -55,13 +56,13 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
-        start_frame_index: Optional[int] = 0,
+        start_frame_index: int | None = 0,
         return_video=True,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.
@@ -341,9 +342,9 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
     def inference_for_cd(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        record_step_indices: List[int],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        record_step_indices: list[int],
+        initial_latent: torch.Tensor | None = None,
         start_frame_index: int = 0,
     ):
         """
@@ -547,7 +548,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
         conditional_dict=None,
         unconditional_dict=None,
         text_prompts=None,
-        initial_latent: Optional[torch.Tensor] = None,
+        initial_latent: torch.Tensor | None = None,
         timestep_idx=0,
         sampling_steps=48,
         chunksize=3,

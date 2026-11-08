@@ -16,8 +16,9 @@ import subprocess
 import sys
 import tempfile
 from collections import deque
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import imageio.v3 as iio
 import numpy as np
@@ -307,7 +308,7 @@ class KairosRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "KairosRuntime":
+    ) -> KairosRuntime:
         """
         Alternative constructor to create a KairosRuntime instance from pretrained model information.
 

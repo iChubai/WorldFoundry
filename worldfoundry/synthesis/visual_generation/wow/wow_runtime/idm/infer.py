@@ -164,7 +164,7 @@ def infer_from_h5_files_simple(h5_files, model_path, output_path=None, device="c
                 print(f"  Done, cumulative actions processed: {total_actions}")
 
         except Exception as e:
-            print(f"  Error processing file {h5_file}: {str(e)}")
+            print(f"  Error processing file {h5_file}: {e!s}")
             continue
 
     print(f"\nTotal predicted actions: {len(all_results)}")
@@ -221,7 +221,7 @@ def main():
         )
 
     except Exception as e:
-        print(f"Inference failed: {str(e)}")
+        print(f"Inference failed: {e!s}")
         raise
 
 

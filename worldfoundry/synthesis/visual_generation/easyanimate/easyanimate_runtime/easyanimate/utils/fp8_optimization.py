@@ -30,9 +30,7 @@ def convert_weight_dtype_wrapper(module, origin_dtype):
             continue
         original_forward = module.forward
         if hasattr(module, "weight"):
-            setattr(module, "original_forward", original_forward)
-            setattr(
-                module,
-                "forward",
-                lambda *inputs, m=module, **kwargs: autocast_model_forward(m, origin_dtype, *inputs, **kwargs),
+            module.original_forward = original_forward
+            module.forward = lambda *inputs, m=module, **kwargs: autocast_model_forward(
+                m, origin_dtype, *inputs, **kwargs
             )

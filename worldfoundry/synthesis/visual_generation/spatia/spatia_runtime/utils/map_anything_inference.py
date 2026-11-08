@@ -1,17 +1,18 @@
 import os
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-import numpy as np
-import decord
 import argparse
 import time
-from PIL import Image
+
+import decord
+import numpy as np
+import open3d as o3d
 import torch
 import torchvision.transforms as TF
-from uniception.models.encoders.image_normalizations import IMAGE_NORMALIZATION_DICT
-import open3d as o3d
 from mapanything.models import MapAnything
 from mapanything.utils.geometry import closed_form_pose_inverse
+from PIL import Image
+from uniception.models.encoders.image_normalizations import IMAGE_NORMALIZATION_DICT
 
 from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.camera_io import (
     read_intrinsics_from_txt,
@@ -186,7 +187,7 @@ if __name__ == "__main__":
     frames = torch.cat([view_i["img"] for view_i in views])
     frames = denormalize_image(frames)
     frames = frames.permute(0, 2, 3, 1).contiguous()
-    for prediction_i, frame_i, mask_i in zip(predictions, frames, masks):
+    for prediction_i, frame_i, mask_i in zip(predictions, frames, masks, strict=False):
         w2c = closed_form_pose_inverse(prediction_i["camera_poses"])[0, :3, :4]
         intrinsics_i = prediction_i["intrinsics"][0]
         extrinsics.append(w2c)

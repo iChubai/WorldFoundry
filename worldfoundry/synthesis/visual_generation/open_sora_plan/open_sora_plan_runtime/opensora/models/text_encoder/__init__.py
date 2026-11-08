@@ -16,10 +16,10 @@ text_encoder = {
 def get_text_warpper(text_encoder_name):
     """deprecation"""
     encoder_key = None
-    for key in text_encoder.keys():
+    for key in text_encoder:
         if key in text_encoder_name:
             encoder_key = key
             break
-    text_enc = text_encoder.get(encoder_key, None)
+    text_enc = text_encoder.get(encoder_key)
     assert text_enc is not None
     return text_enc

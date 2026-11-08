@@ -1,7 +1,8 @@
 import torch
 import torch.distributed as dist
 from einops import rearrange
-from opensora.acceleration.parallel_states import hccl_info, lccl_info, enable_LCCL
+
+from opensora.acceleration.parallel_states import enable_LCCL, hccl_info, lccl_info
 
 try:
     from lcalib.functional import lcal_all2allvc

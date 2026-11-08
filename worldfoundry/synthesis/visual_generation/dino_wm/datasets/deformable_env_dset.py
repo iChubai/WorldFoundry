@@ -1,10 +1,13 @@
-import yaml
-import torch
+from collections.abc import Callable
+from pathlib import Path
+from typing import Optional
+
 import decord
 import numpy as np
+import torch
+import yaml
 from einops import rearrange
-from pathlib import Path
-from typing import Callable, Optional
+
 from .traj_dset import TrajDataset, get_train_val_sliced
 
 decord.bridge.set_bridge("torch")
@@ -12,7 +15,7 @@ decord.bridge.set_bridge("torch")
 
 def load_yaml(filename):
     # load YAML file
-    return yaml.safe_load(open(filename, "r"))
+    return yaml.safe_load(open(filename))
 
 
 class DeformDataset(TrajDataset):
@@ -20,8 +23,8 @@ class DeformDataset(TrajDataset):
         self,
         data_path: str = "data/deformable",
         object_name: str = "rope",
-        n_rollout: Optional[int] = None,
-        transform: Optional[Callable] = None,
+        n_rollout: int | None = None,
+        transform: Callable | None = None,
         normalize_action: bool = False,
         action_scale=1.0,
     ):

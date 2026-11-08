@@ -1,17 +1,16 @@
-import os
-import numpy as np
-from torch import nn
-import torch
-from einops import rearrange, repeat
-from typing import Any, Dict, Optional, Tuple
-from diffusers.configuration_utils import register_to_config
-from opensora.models.diffusion.common import PatchEmbed2D
-from opensora.utils.utils import to_2tuple
-
-
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3 as OpenSoraT2V
-
 import glob
+import os
+from typing import Any, Dict, Optional, Tuple
+
+import numpy as np
+import torch
+from diffusers.configuration_utils import register_to_config
+from einops import rearrange, repeat
+from torch import nn
+
+from opensora.models.diffusion.common import PatchEmbed2D
+from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3 as OpenSoraT2V
+from opensora.utils.utils import to_2tuple
 
 
 def zero_module(module):
@@ -28,17 +27,17 @@ class OpenSoraInpaint_v1_3(OpenSoraT2V):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = True,
-        sample_size_h: Optional[int] = None,
-        sample_size_w: Optional[int] = None,
-        sample_size_t: Optional[int] = None,
-        patch_size: Optional[int] = None,
-        patch_size_t: Optional[int] = None,
+        sample_size_h: int | None = None,
+        sample_size_w: int | None = None,
+        sample_size_t: int | None = None,
+        patch_size: int | None = None,
+        patch_size_t: int | None = None,
         activation_fn: str = "geglu",
         only_cross_attention: bool = False,
         double_self_attention: bool = False,

@@ -1,8 +1,8 @@
-from dataclasses import dataclass
 import importlib.util
 import os
-from pathlib import Path
 import random
+from dataclasses import dataclass
+from pathlib import Path
 
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 
@@ -192,8 +192,8 @@ class DynamiCrafter:
                 "Weights are external assets and must be provided separately."
             )
 
-        from omegaconf import OmegaConf
         import torch
+        from omegaconf import OmegaConf
 
         from worldfoundry.core.model_loading.factory import (
             instantiate_from_config,

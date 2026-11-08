@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-
 
 ALLEGRO_RUNTIME_UNAVAILABLE = (
     "Allegro source code is not available from the in-tree runtime package. "

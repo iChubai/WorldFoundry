@@ -23,18 +23,18 @@ import os
 
 import numpy as np
 import torch
+import torchvision.transforms.v2 as T
 from einops import rearrange, repeat
 from PIL import Image
-import torchvision.transforms.v2 as T
 from tqdm import tqdm
 
-from worldfoundry.core.configuration.lazy_config import LazyCall as L, LazyDict, instantiate
+from worldfoundry.core.configuration.lazy_config import LazyCall as L
+from worldfoundry.core.configuration.lazy_config import LazyDict, instantiate
 from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.synthesis.visual_generation.rcm.kv_cache_plan import make_kv_cache_plan
 from worldfoundry.synthesis.visual_generation.rcm.policy_kv_cache import policy_cache_factory
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.io_compat import save_image_or_video
-
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.datasets.utils import VIDEO_RES_SIZE_INFO
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.io_compat import save_image_or_video
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.networks.wan2pt1 import WanModel
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.tokenizers.wan2pt1 import Wan2pt1VAEInterface
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import AttnMaskSpec, BlockPattern
@@ -328,7 +328,7 @@ def causal_rollout_sampling(
         x = init_noise[:, :, frame_start:frame_end].to(torch.float64) * t_steps_block[0]
 
         step_bar = tqdm(
-            zip(t_steps_block[:-1], t_steps_block[1:]),
+            zip(t_steps_block[:-1], t_steps_block[1:], strict=False),
             total=num_steps,
             desc=f"  Chunk {i}/{num_blocks}",
             position=1,
@@ -525,7 +525,7 @@ def causal_i2v_rollout_sampling(
         x = init_noise[:, :, noise_start : noise_start + block_size].to(torch.float64) * t_steps_block[0]
 
         step_bar = tqdm(
-            zip(t_steps_block[:-1], t_steps_block[1:]),
+            zip(t_steps_block[:-1], t_steps_block[1:], strict=False),
             total=num_steps,
             desc=f"  Chunk {i}/{num_blocks}",
             position=1,
@@ -749,7 +749,7 @@ if __name__ == "__main__":
         image_latent = None
 
     # --- Text embeddings ---
-    log.info(f"Computing text embeddings...")
+    log.info("Computing text embeddings...")
     text_emb = (
         get_umt5_embedding(checkpoint_path=args.text_encoder_path, prompts=args.prompt).to(dtype=torch.bfloat16).cuda()
     )

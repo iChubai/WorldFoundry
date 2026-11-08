@@ -71,8 +71,8 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 @dataclass
 class HunyuanVideoPipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
-    sr_videos: Optional[Union[torch.Tensor, np.ndarray]] = None
+    videos: torch.Tensor | np.ndarray
+    sr_videos: torch.Tensor | np.ndarray | None = None
 
 
 class HunyuanWorldPlayRuntime:
@@ -86,11 +86,11 @@ class HunyuanWorldPlayRuntime:
         text_encoder: TextEncoder = None,
         transformer: HunyuanVideo_1_5_DiffusionTransformer = None,
         scheduler: KarrasDiffusionSchedulers = None,
-        text_encoder_2: Optional[TextEncoder] = None,
+        text_encoder_2: TextEncoder | None = None,
         flow_shift: float = 7.0,
         guidance_scale: float = 6.0,
-        embedded_guidance_scale: Optional[float] = None,
-        progress_bar_config: Dict[str, Any] = None,
+        embedded_guidance_scale: float | None = None,
+        progress_bar_config: dict[str, Any] = None,
         vision_num_semantic_tokens: int = 729,
         vision_states_dim: int = 1152,
         glyph_byT5_v2: bool = True,
@@ -196,7 +196,6 @@ class HunyuanWorldPlayRuntime:
         """
         API 初始化（可选）
         """
-        pass
 
     @torch.no_grad()
     def predict(self, *, data):
@@ -248,11 +247,11 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
         text_encoder: TextEncoder,
         transformer: HunyuanVideo_1_5_DiffusionTransformer,
         scheduler: KarrasDiffusionSchedulers,
-        text_encoder_2: Optional[TextEncoder] = None,
+        text_encoder_2: TextEncoder | None = None,
         flow_shift: float = 7.0,
         guidance_scale: float = 6.0,
-        embedded_guidance_scale: Optional[float] = None,
-        progress_bar_config: Dict[str, Any] = None,
+        embedded_guidance_scale: float | None = None,
+        progress_bar_config: dict[str, Any] = None,
         vision_num_semantic_tokens=729,
         vision_states_dim=1152,
         glyph_byT5_v2=True,
@@ -346,13 +345,13 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
         num_videos_per_prompt,
         do_classifier_free_guidance,
         negative_prompt=None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        clip_skip: Optional[int] = None,
-        text_encoder: Optional[TextEncoder] = None,
-        data_type: Optional[str] = "image",
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        clip_skip: int | None = None,
+        text_encoder: TextEncoder | None = None,
+        data_type: str | None = "image",
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -449,7 +448,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
 
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance and negative_prompt_embeds is None:
-            uncond_tokens: List[str]
+            uncond_tokens: list[str]
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif prompt is not None and type(prompt) is not type(negative_prompt):
@@ -1449,31 +1448,31 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         aspect_ratio: str,
         video_length: int,
         prompt_rewrite: bool = True,
         num_inference_steps: int = 50,
-        guidance_scale: Optional[float] = None,
+        guidance_scale: float | None = None,
         enable_sr: bool = True,
-        sr_num_inference_steps: Optional[int] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        seed: Optional[int] = None,
-        flow_shift: Optional[float] = None,
-        embedded_guidance_scale: Optional[float] = None,
+        sr_num_inference_steps: int | None = None,
+        negative_prompt: str | list[str] | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        seed: int | None = None,
+        flow_shift: float | None = None,
+        embedded_guidance_scale: float | None = None,
         reference_image=None,  # For i2v tasks: PIL Image or path to image file
-        output_type: Optional[str] = "pt",
+        output_type: str | None = "pt",
         return_dict: bool = True,
         return_pre_sr_video: bool = False,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
         few_step: bool = False,
         chunk_latent_frames: int = 4,
         model_type: str = "ar",
-        user_height: Optional[int] = None,
-        user_width: Optional[int] = None,
+        user_height: int | None = None,
+        user_width: int | None = None,
         **kwargs,
     ):
         r"""
@@ -1668,7 +1667,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
 
         self._guidance_scale = guidance_scale
         self._guidance_rescale = kwargs.get("guidance_rescale", 0.0)
-        self._clip_skip = kwargs.get("clip_skip", None)
+        self._clip_skip = kwargs.get("clip_skip")
 
         if prompt is not None and isinstance(prompt, str):
             batch_size = 1

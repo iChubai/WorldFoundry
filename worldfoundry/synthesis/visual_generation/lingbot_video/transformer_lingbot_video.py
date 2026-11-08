@@ -1,16 +1,15 @@
+import inspect
 import math
 import os
-import inspect
 from typing import Optional, Tuple
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributed as dist
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.models.attention_dispatch import dispatch_attention_fn
 from diffusers.models._modeling_parallel import ContextParallelInput, ContextParallelOutput
+from diffusers.models.attention_dispatch import dispatch_attention_fn
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
@@ -140,7 +139,7 @@ def apply_rotary_emb(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
 class LingBotVideoRotaryEmbedding(nn.Module):
     """Complex64 RoPE table indexed by position ids."""
 
-    def __init__(self, axes_dims: Tuple[int, ...], axes_lens: Tuple[int, ...], theta: float):
+    def __init__(self, axes_dims: tuple[int, ...], axes_lens: tuple[int, ...], theta: float):
         super().__init__()
         self.axes_dims = tuple(axes_dims)
         self.axes_lens = list(axes_lens)
@@ -148,9 +147,9 @@ class LingBotVideoRotaryEmbedding(nn.Module):
         self.freqs_cis = None
 
     @staticmethod
-    def precompute_freqs_cis(dim: Tuple[int, ...], end: Tuple[int, ...], theta: float):
+    def precompute_freqs_cis(dim: tuple[int, ...], end: tuple[int, ...], theta: float):
         freqs_cis = []
-        for d, e in zip(dim, end):
+        for d, e in zip(dim, end, strict=False):
             freqs = 1.0 / (theta ** (torch.arange(0, d, 2, dtype=torch.float64, device="cpu") / d))
             timestep = torch.arange(e, device=freqs.device, dtype=torch.float64)
             freqs = torch.outer(timestep, freqs).float()
@@ -161,7 +160,7 @@ class LingBotVideoRotaryEmbedding(nn.Module):
         # position_ids: (S, 3) int → (S, head_dim/2) complex64
         device = position_ids.device
         max_vals = position_ids.max(dim=0).values.tolist()
-        needs_rebuild = self.freqs_cis is None or any(m >= l for m, l in zip(max_vals, self.axes_lens))
+        needs_rebuild = self.freqs_cis is None or any(m >= l for m, l in zip(max_vals, self.axes_lens, strict=False))
         if needs_rebuild:
             for i in range(len(self.axes_lens)):
                 if max_vals[i] >= self.axes_lens[i]:
@@ -198,7 +197,7 @@ def _cat_interleave(
     a_split = torch.split(a, len_a, dim=1)
     b_split = torch.split(b, len_b, dim=1)
     blocks: list[torch.Tensor] = []
-    for x_part, text_part in zip(a_split, b_split):
+    for x_part, text_part in zip(a_split, b_split, strict=False):
         blocks.extend([x_part, text_part])
     return torch.cat(blocks, dim=1)
 
@@ -234,7 +233,7 @@ class LingBotVideoAttention(nn.Module):
         x,
         rotary_emb,
         attention_mask=None,
-        packed_indices: Optional[dict[str, torch.Tensor]] = None,
+        packed_indices: dict[str, torch.Tensor] | None = None,
         parallel_config=None,
     ):
         B, S, _ = x.shape
@@ -431,7 +430,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
             routed_scaling_factor,
         )
         self.experts = LingBotVideoGroupedExperts(num_experts, hidden_size, moe_intermediate_size)
-        self._sglang_w13_cache: Optional[torch.Tensor] = None
+        self._sglang_w13_cache: torch.Tensor | None = None
         self._sglang_w13_cache_key = None
         self._sglang_fp8_cache = None
         self._sglang_fp8_cache_key = None
@@ -591,13 +590,13 @@ class LingBotVideoSparseMoeBlock(nn.Module):
         return self._sglang_w13_cache
 
     @staticmethod
-    def _quantize_fp8_weight_per_expert(weight: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _quantize_fp8_weight_per_expert(weight: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         weight_float = weight.float()
         scale = fp8_scale_from_amax(weight_float.abs().amax(dim=(1, 2)))
         quantized = quantize_to_fp8_e4m3fn(weight_float, scale[:, None, None]).contiguous()
         return quantized, scale.contiguous()
 
-    def _get_sglang_fp8_weights(self) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _get_sglang_fp8_weights(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         key = (
             self.experts.w1.data_ptr(),
             self.experts.w2.data_ptr(),
@@ -856,7 +855,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
         out.index_add_(0, token_indices, weighted)
         return out.to(expert_output.dtype)
 
-    def forward(self, hidden_states: torch.Tensor, padding_mask: Optional[torch.Tensor] = None):
+    def forward(self, hidden_states: torch.Tensor, padding_mask: torch.Tensor | None = None):
         # hidden_states: (B, S, H); padding_mask: (B*S,) with 1=valid (only needed when B>1)
         B = hidden_states.shape[0]
         tokens = hidden_states.view(-1, self.hidden_size)
@@ -933,7 +932,7 @@ class LingBotVideoBlock(nn.Module):
         rotary_emb,
         attention_mask=None,
         moe_padding_mask=None,
-        packed_indices: Optional[dict[str, torch.Tensor]] = None,
+        packed_indices: dict[str, torch.Tensor] | None = None,
         parallel_config=None,
     ):
         expected_tokens = x.shape[0] * x.shape[1]
@@ -1009,7 +1008,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
         in_channels: int = 16,
         out_channels: int = 16,
         hidden_size: int = 2048,
@@ -1020,8 +1019,8 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
         freq_dim: int = 256,
         norm_eps: float = 1e-6,
         rope_theta: float = 256.0,
-        axes_dims: Tuple[int, int, int] = (32, 48, 48),
-        axes_lens: Tuple[int, int, int] = (8192, 1024, 1024),
+        axes_dims: tuple[int, int, int] = (32, 48, 48),
+        axes_lens: tuple[int, int, int] = (8192, 1024, 1024),
         qkv_bias: bool = False,
         out_bias: bool = True,
         patch_embed_bias: bool = True,
@@ -1030,12 +1029,12 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
         num_experts_per_tok: int = 8,
         moe_intermediate_size: int = 512,
         decoder_sparse_step: int = 1,
-        mlp_only_layers: Tuple[int, ...] = (),
-        n_shared_experts: Optional[int] = None,
+        mlp_only_layers: tuple[int, ...] = (),
+        n_shared_experts: int | None = None,
         score_func: str = "sigmoid",
         norm_topk_prob: bool = True,
-        n_group: Optional[int] = None,
-        topk_group: Optional[int] = None,
+        n_group: int | None = None,
+        topk_group: int | None = None,
         routed_scaling_factor: float = 1.0,
     ):
         super().__init__()
@@ -1103,7 +1102,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
         hidden_states: torch.Tensor,  # (B, C, T, H, W)
         timestep: torch.Tensor,  # (B,) ∈ [0, 1000](= sigma*1000)
         encoder_hidden_states: torch.Tensor,  # (B, L, text_dim)
-        encoder_attention_mask: Optional[torch.Tensor] = None,  # (B, L) 1=valid
+        encoder_attention_mask: torch.Tensor | None = None,  # (B, L) 1=valid
         return_dict: bool = True,
     ):
         B, C, T, H, W = hidden_states.shape

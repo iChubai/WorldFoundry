@@ -6,8 +6,9 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -60,7 +61,7 @@ class VerseCrafterRuntime:
         return Path(__file__).resolve().parent / "versecrafter_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "VerseCrafterRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> VerseCrafterRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     @staticmethod

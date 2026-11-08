@@ -323,7 +323,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
             try:
                 state_dict[weight_name] = adapt_input_conv(in_chans, state_dict[weight_name], agg="avg")
                 print(f"Converted input conv {input_conv_name} pretrained weights from 3 to {in_chans} channel(s)")
-            except NotImplementedError as e:
+            except NotImplementedError:
                 del state_dict[weight_name]
                 strict = False
                 print(f"Unable to convert pretrained {input_conv_name} weights, using random init for this layer.")

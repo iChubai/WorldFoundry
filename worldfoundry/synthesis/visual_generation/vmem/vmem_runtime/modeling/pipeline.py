@@ -1,38 +1,42 @@
-import os
-from typing import List, Union
-from copy import deepcopy
-
 import math
+import os
+from copy import deepcopy
+from typing import List, Union
 
-
-import PIL
 import numpy as np
-from einops import repeat
-
+import PIL
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as tvf
+from einops import repeat
 
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r import ARCroco3DStereo
 from worldfoundry.core.io.paths import resolve_local_checkpoint_file
+
+# isort: split
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.surfel_inference import (
     run_inference_from_pil,
 )
+
+# isort: split
+# isort: split
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.cloud_opt.dust3r_opt import (
     GlobalAlignerMode,
     global_aligner,
 )
 
-from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.network import (
-    VMemModel,
-    VMemModelParams,
-    VMemWrapper,
-)
+# isort: split
+
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.modules.autoencoder import (
     AutoEncoder,
 )
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.modules.conditioner import (
     CLIPConditioner,
+)
+from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.network import (
+    VMemModel,
+    VMemModelParams,
+    VMemWrapper,
 )
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.sampling import (
     DDPMDiscretization,
@@ -49,7 +53,6 @@ from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.utils.util impor
     get_plucker_coordinates,
     tensor_to_pil,
 )
-
 
 ImgNorm = tvf.Compose([tvf.ToTensor(), tvf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
@@ -443,7 +446,7 @@ class VMemPipeline:
             result[i] += floored[i]
 
         # Sort by the fractional remainder, descending
-        remainders = [(p - f, i) for i, (p, f) in enumerate(zip(products, floored))]
+        remainders = [(p - f, i) for i, (p, f) in enumerate(zip(products, floored, strict=False))]
         remainders.sort(key=lambda x: x[0], reverse=True)
 
         # Distribute the leftover2 among the largest fractional remainders
@@ -483,7 +486,7 @@ class VMemPipeline:
         timestep_weights = {k: timestep_count_ratios[i] for i, k in enumerate(timestep_count)}
         num_retrieved_frames = min(self.config.model.context_num_frames + 10, len(timestep_weights))
         frame_count = self.get_frame_distribution(num_retrieved_frames, list(timestep_weights.values()))  # hard code
-        frame_count = {k: int(v) for k, v in zip(timestep_count.keys(), frame_count)}
+        frame_count = {k: int(v) for k, v in zip(timestep_count.keys(), frame_count, strict=False)}
 
         # sort timestep_weights and frame_distribution by timestep without
         timestep_weights = sorted(timestep_weights.items(), key=lambda x: x[0])
@@ -748,7 +751,7 @@ class VMemPipeline:
         current_timestep: str,
         existing_surfels: list,
         existing_surfel_to_timestep: dict,
-        position_threshold: Union[float, None] = None,  # Now optional
+        position_threshold: float | None = None,  # Now optional
         normal_threshold: float = 0.7,
         max_points_per_node: int = 10,
     ):
@@ -876,7 +879,7 @@ class VMemPipeline:
         radii = radii.detach().cpu().numpy()
 
         # Create surfels list using list comprehension
-        surfels = [Surfel(pos, norm, rad) for pos, norm, rad in zip(positions, normals, radii)]
+        surfels = [Surfel(pos, norm, rad) for pos, norm, rad in zip(positions, normals, radii, strict=False)]
 
         return surfels
 
@@ -929,7 +932,7 @@ class VMemPipeline:
 
     def construct_and_store_scene(
         self,
-        input_images: List[PIL.Image.Image],
+        input_images: list[PIL.Image.Image],
         time_indices,
         niter=1000,
         lr=0.01,
@@ -1298,7 +1301,7 @@ class VMemPipeline:
         )
 
     def generate_trajectory_frames(
-        self, c2ws: List[np.ndarray], Ks: List[np.ndarray], use_non_maximum_suppression=None
+        self, c2ws: list[np.ndarray], Ks: list[np.ndarray], use_non_maximum_suppression=None
     ):
         """
         Generate frames for a new trajectory segment while maintaining the pipeline state.
@@ -1385,7 +1388,7 @@ class VMemPipeline:
         print(f"Successfully removed the latest {frames_to_remove} frames. {len(self.pil_frames)} frames remaining.")
         return True
 
-    def __call__(self, image: torch.Tensor, c2ws: List[np.ndarray], Ks: List[np.ndarray]):
+    def __call__(self, image: torch.Tensor, c2ws: list[np.ndarray], Ks: list[np.ndarray]):
         """
         Process an initial image and generate frames for a trajectory.
 

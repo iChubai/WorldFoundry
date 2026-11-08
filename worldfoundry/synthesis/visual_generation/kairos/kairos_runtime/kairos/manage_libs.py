@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import sys
-import subprocess
-from pathlib import Path
-import re
 import os
+import re
+import subprocess
+import sys
+from pathlib import Path
 
-from kairos.modules.utils import FLAGS_KAIROS_IS_METAX, FLAGS_KAIROS_CUDA_SM
+from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM, FLAGS_KAIROS_IS_METAX
 
 
 def _find_thirdparty_root() -> Path:

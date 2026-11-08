@@ -1,9 +1,10 @@
 from typing import List, Optional
+
 import torch
 import torch.distributed as dist
 
 
-def _prefix_sum(xs: List[int]) -> List[int]:
+def _prefix_sum(xs: list[int]) -> list[int]:
     ps = [0]
     s = 0
     for v in xs:
@@ -12,7 +13,7 @@ def _prefix_sum(xs: List[int]) -> List[int]:
     return ps
 
 
-def build_tp_chunk_list(num_heads: int, tp_size: int) -> List[int]:
+def build_tp_chunk_list(num_heads: int, tp_size: int) -> list[int]:
     if tp_size <= 0:
         raise RuntimeError(f"tp_size must be > 0, got {tp_size}")
     if num_heads <= 0:
@@ -23,7 +24,7 @@ def build_tp_chunk_list(num_heads: int, tp_size: int) -> List[int]:
     return [base + (1 if r < rem else 0) for r in range(tp_size)]
 
 
-def build_plan(full_dim: int, tp_rank: int, tp_size: int, tp_chunk_list: Optional[List[int]] = None):
+def build_plan(full_dim: int, tp_rank: int, tp_size: int, tp_chunk_list: list[int] | None = None):
     if tp_chunk_list is None:
         if full_dim % tp_size != 0:
             raise RuntimeError(f"full_dim({full_dim}) must be divisible by tp_size({tp_size}) in balanced mode")
@@ -69,7 +70,7 @@ def _distribute_input_sp(x, context_group):
 
     B, N, D = x.shape
 
-    assert N % context_group_world_size == 0, "cannot split tensor {} vs {}".format(x.shape, context_group_world_size)
+    assert N % context_group_world_size == 0, f"cannot split tensor {x.shape} vs {context_group_world_size}"
 
     local_dim = N // context_group_world_size
     start_idx = context_group_rank * local_dim

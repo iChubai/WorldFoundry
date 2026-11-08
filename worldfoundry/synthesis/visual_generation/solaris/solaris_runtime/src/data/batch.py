@@ -14,7 +14,7 @@ class Batch:
     act: np.ndarray
     real_lengths: np.ndarray
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "obs": self.obs,
             "act": self.act,

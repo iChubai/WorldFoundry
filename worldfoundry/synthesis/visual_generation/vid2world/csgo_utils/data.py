@@ -1,21 +1,22 @@
 # Adapted from https://github.com/eloialonso/diamond/tree/csgo
 from __future__ import annotations
 
-import h5py
-import torch
-import numpy as np
-import torch.nn.functional as F
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from torchvision import transforms
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import h5py
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 
 @dataclass
 class SegmentId:
-    episode_id: Union[int, str]
+    episode_id: int | str
     start: int
     stop: int
 
@@ -28,7 +29,7 @@ class Segment:
     end: torch.ByteTensor
     trunc: torch.ByteTensor
     mask_padding: torch.BoolTensor
-    info: Dict[str, Any]
+    info: dict[str, Any]
     id: SegmentId
 
     @property
@@ -50,12 +51,12 @@ class StateDictMixin:
     def _set_field(self, k: str, v: Any) -> None:
         getattr(self, k).load_state_dict(v) if k in self._fields_sd else setattr(self, k, v)
 
-    def state_dict(self) -> Dict[str, Any]:
+    def state_dict(self) -> dict[str, Any]:
         if not hasattr(self, "_all_fields"):
             self._init_fields()
         return {k: self._get_field(k) for k in self._all_fields}
 
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
         if not hasattr(self, "_all_fields"):
             self._init_fields()
         assert set(list(state_dict.keys())) == self._all_fields
@@ -70,7 +71,7 @@ class Episode:
     rew: torch.FloatTensor
     end: torch.ByteTensor
     trunc: torch.ByteTensor
-    info: Dict[str, Any]
+    info: dict[str, Any]
 
     def __len__(self) -> int:
         return self.obs.size(0)
@@ -87,11 +88,11 @@ class Episode:
     def dead(self) -> torch.ByteTensor:
         return (self.end + self.trunc).clip(max=1)
 
-    def compute_metrics(self) -> Dict[str, Any]:
+    def compute_metrics(self) -> dict[str, Any]:
         return {"length": len(self), "return": self.rew.sum().item()}
 
     @classmethod
-    def load(cls, path: Path, map_location: Optional[torch.device] = None) -> Episode:
+    def load(cls, path: Path, map_location: torch.device | None = None) -> Episode:
         return cls(
             **{
                 k: v.div(255).mul(2).sub(1) if k == "obs" else v

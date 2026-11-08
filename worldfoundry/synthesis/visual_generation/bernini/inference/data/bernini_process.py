@@ -15,7 +15,8 @@ import copy
 import io
 import json
 import random
-from typing import TYPE_CHECKING, Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Dict, List
 
 import torch
 from diffusers.models.autoencoders.vae import DiagonalGaussianDistribution
@@ -45,7 +46,7 @@ def filt_out_source_vae(
 ):
     vae_latents_filted, vae_latents_filted_shape, vae_mask = [], [], []
     if drop_vision:
-        for vae_emb, shape, is_target in zip(vae_latents, vae_latent_shape, target_mask):
+        for vae_emb, shape, is_target in zip(vae_latents, vae_latent_shape, target_mask, strict=False):
             if is_target:
                 vae_mask.extend([is_target])
                 vae_latents_filted.append(vae_emb)
@@ -84,9 +85,9 @@ def rearrange_vae_feature(vae_emb):
 
 def packing_vae(
     vae_rope_func: "Callable",
-    vae_type_list: "List[int]",
-    image_inputs: "Dict[str, Any]",
-    video_inputs: "Dict[str, Any]",
+    vae_type_list: "list[int]",
+    image_inputs: "dict[str, Any]",
+    video_inputs: "dict[str, Any]",
     noise_sigma: float,
     max_vae_frames: int = None,
     interpolate_src_id: bool = True,
@@ -191,7 +192,7 @@ def packing_vae(
 
 
 def bernini_process_sample(
-    sample: Dict[str, Any],
+    sample: dict[str, Any],
     processor: "ProcessorMixin",
     chat_template: "ChatTemplate",
     position_id_func: "Callable",
@@ -224,7 +225,7 @@ def bernini_process_sample(
     if "image_embeds" in sample and sample["image_embeds"] is not None and len(sample["image_embeds"]) > 0:
         raw_image_embeds = []
         raw_image_grid_thw = []
-        for vit_emb, thw in zip(sample["image_embeds"], sample["image_grid_thw"]):
+        for vit_emb, thw in zip(sample["image_embeds"], sample["image_grid_thw"], strict=False):
             vit_emb = _load_tensor_blob(vit_emb, source="Bernini image embedding")
             raw_image_embeds.append(vit_emb)
             raw_image_grid_thw.append(thw)
@@ -235,7 +236,7 @@ def bernini_process_sample(
     if "video_embeds" in sample and sample["video_embeds"] is not None and len(sample["video_embeds"]) > 0:
         raw_video_embeds = []
         raw_video_grid_thw = []
-        for vit_emb, thw in zip(sample["video_embeds"], sample["video_grid_thw"]):
+        for vit_emb, thw in zip(sample["video_embeds"], sample["video_grid_thw"], strict=False):
             vit_emb = _load_tensor_blob(vit_emb, source="Bernini video embedding")
             raw_video_embeds.append(vit_emb)
             raw_video_grid_thw.append(thw)
@@ -269,7 +270,7 @@ def bernini_process_sample(
     )
     visual_embeds = []
     image_grid_thw, video_grid_thw = [], []
-    for vit_type, vit_id in zip(vit_type_list, vit_img_and_vid_id_list):
+    for vit_type, vit_id in zip(vit_type_list, vit_img_and_vid_id_list, strict=False):
         if vit_type == 0:  # image
             image_grid_thw.append(raw_image_grid_thw[vit_id])
             visual_embeds.append(raw_image_embeds[vit_id])
@@ -307,10 +308,10 @@ def bernini_process_sample(
         tokenized_example.pop("video_target_mask"),
     )
 
-    if sample.get("image_vae_latents", None) is not None and len(sample["image_vae_latents"]) > 0:
+    if sample.get("image_vae_latents") is not None and len(sample["image_vae_latents"]) > 0:
         image_vae_latents = []
         image_vae_shape = []
-        for vae_emb, _ in zip(sample["image_vae_latents"], image_target_mask):
+        for vae_emb, _ in zip(sample["image_vae_latents"], image_target_mask, strict=False):
             vae_emb = _load_tensor_blob(vae_emb, source="Bernini image VAE latent")
             _, _, t, h, w = vae_emb.shape
             image_vae_shape.append([t, h, w])
@@ -332,7 +333,7 @@ def bernini_process_sample(
     if "video_vae_latents" in sample and len(sample["video_vae_latents"]) > 0:
         video_vae_latents = []
         video_vae_shape = []
-        for vae_emb, _ in zip(sample["video_vae_latents"], video_target_mask):
+        for vae_emb, _ in zip(sample["video_vae_latents"], video_target_mask, strict=False):
             vae_emb = _load_tensor_blob(vae_emb, source="Bernini video VAE latent")
             _, _, t, h, w = vae_emb.shape
             video_vae_shape.append([t, h, w])

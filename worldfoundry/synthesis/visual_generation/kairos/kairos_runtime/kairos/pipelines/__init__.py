@@ -1,3 +1,3 @@
-from .base_pipeline import BasePipeline, PipelineUnitRunner, PipelineUnit
+from .base_pipeline import BasePipeline, PipelineUnit, PipelineUnitRunner
 from .kairos_embodied_pipeline import KairosEmbodiedPipeline
 from .kairos_embodied_pipeline_dmd import KairosEmbodiedPipeline_DMD

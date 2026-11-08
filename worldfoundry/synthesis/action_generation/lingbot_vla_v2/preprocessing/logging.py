@@ -25,7 +25,6 @@ import threading
 from functools import lru_cache
 from typing import Optional
 
-
 _thread_lock = threading.RLock()
 _default_handler: Optional["logging.Handler"] = None
 _default_log_level: "logging._Level" = logging.INFO
@@ -92,7 +91,7 @@ def _configure_library_root_logger() -> None:
         library_root_logger.propagate = False
 
 
-def get_logger(name: Optional[str] = None) -> "_Logger":
+def get_logger(name: str | None = None) -> "_Logger":
     """
     Returns a logger with the specified name. It is not supposed to be accessed by external scripts.
     """

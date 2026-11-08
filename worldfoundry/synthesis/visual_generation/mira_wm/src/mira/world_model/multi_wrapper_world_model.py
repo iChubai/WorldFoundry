@@ -172,7 +172,7 @@ class MultiWrapperWorldModel(nn.Module):
         streaming_kv_caches = None
 
         for start in tqdm(
-            range(0, z.shape[1] - window_size + 1),
+            range(z.shape[1] - window_size + 1),
             desc="Diffusion inference",
             disable=not progress_bar,
         ):
@@ -276,7 +276,7 @@ class MultiWrapperWorldModel(nn.Module):
             ``{"viz_video": ..., "pred_video": ...}`` uint8 tensors of shape ``(B, T, C, P*H, W)``.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.inference_support.visualization import (  # noqa: PLC0415
+        from mira.inference_support.visualization import (
             add_prediction_border,
             video_to_uint8,
             visualize_batch,
@@ -377,7 +377,7 @@ class MultiWrapperWorldModel(nn.Module):
     def load_from_checkpoint(
         cls, checkpoint_path: str | Path, device: str | torch.device | None = None, **kwargs
     ) -> MultiWrapperWorldModel:
-        from omegaconf import OmegaConf  # noqa: PLC0415 -- optional dep, used only here
+        from omegaconf import OmegaConf  # optional dep, used only here
 
         # We reuse the same config filename as the single-player model.
         config_path = LatentWorldModel._find_config(checkpoint_path)

@@ -222,7 +222,7 @@ class LingBotVideoNativePipeline:
         *,
         model_path: str | Path,
         server_args: Any | None = None,
-    ) -> "LingBotVideoNativePipeline":
+    ) -> LingBotVideoNativePipeline:
         return cls(diffusers_pipe, model_path=model_path, server_args=server_args)
 
     @classmethod
@@ -235,7 +235,7 @@ class LingBotVideoNativePipeline:
         mode: str = "t2v",
         transformer_subfolder: str = "transformer",
         **kwargs: Any,
-    ) -> "LingBotVideoNativePipeline":
+    ) -> LingBotVideoNativePipeline:
         return cls(
             model_path,
             model_path=model_path,

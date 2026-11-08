@@ -15,7 +15,7 @@ IMAGENET_MEAN_RGB = np.asarray([123.675, 116.28, 103.53], dtype=np.float32)
 
 def _read_jsonl(path):
     rows = []
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line_no, line in enumerate(f, 1):
             line = line.strip()
             if not line:
@@ -180,7 +180,7 @@ class SubjectRefMemoryDA3MosaicVideoDataset(DA3MosaicVideoDataset):
         selected_track_ids = []
         track_path = os.path.join(ref_dir, "track.json")
         if os.path.exists(track_path):
-            with open(track_path, "r", encoding="utf-8") as f:
+            with open(track_path, encoding="utf-8") as f:
                 track = json.load(f) or {}
             for value in track.get("selected_track_ids") or []:
                 try:
@@ -448,7 +448,7 @@ class SubjectRefMemoryDA3MosaicVideoDataset(DA3MosaicVideoDataset):
                 "status": "ok",
                 "ref_dir": ref_dir,
                 "actual_ref_count": int(ref_images.shape[0]),
-                "num_available_refs": int(len(candidates)),
+                "num_available_refs": len(candidates),
                 "selected_ref_indices": [int(v) for v in selected],
                 "selected_frame_indices": [int(v) for v in frame_ids],
                 "selected_track_ids": [int(v) for v in refs["selected_track_ids"]],

@@ -4,19 +4,20 @@
 
 import random
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+
 from pydantic import BaseModel, Field
-from typing import Optional
+
+from .constants import (
+    TARGET_ACTION_ROTATION_DIM,
+    TARGET_ACTION_ROTATION_TYPE,
+    TARGET_STATE_ROTATION_DIM,
+    TARGET_STATE_ROTATION_TYPE,
+)
 from .schema import RotationType
 from .transform_base import ComposedModalityTransform, ModalityTransform
 from .transform_concat import ConcatTransform
 from .transform_state_action import StateActionToTensor, StateActionTransform
-from .constants import (
-    TARGET_STATE_ROTATION_TYPE,
-    TARGET_ACTION_ROTATION_TYPE,
-    TARGET_STATE_ROTATION_DIM,
-    TARGET_ACTION_ROTATION_DIM,
-)
 
 
 class ModalityConfig(BaseModel):
@@ -34,7 +35,7 @@ class ModalityDef(BaseModel):
     end: int = Field(..., description="End dimension index in the column (exclusive)")
     absolute: bool = True
 
-    rotation_type: Optional[RotationType] = Field(None, description="Rotation representation type, if applicable")
+    rotation_type: RotationType | None = Field(None, description="Rotation representation type, if applicable")
     continuous: bool = Field(True, description="Whether the data is continuous (floating point)")
 
 
@@ -54,14 +55,13 @@ class BaseDataConfig(ABC):
         self.action_indices = action_indices
 
     @abstractmethod
-    def define_modalities(self) -> Dict[str, ModalityDef]:
+    def define_modalities(self) -> dict[str, ModalityDef]:
         """
         Define how to extract and name new modalities from raw Parquet columns.
         Returns: {'modality.key': ModalityDef(...), ...}
         """
-        pass
 
-    def get_sampling_indices(self) -> Dict[str, List[int]]:
+    def get_sampling_indices(self) -> dict[str, list[int]]:
         """Define sampling indices"""
         sampling_map = {}
         for key in self.VIDEO_KEYS + self.STATE_KEYS:
@@ -76,7 +76,6 @@ class BaseDataConfig(ABC):
         Define a complete, ordered data transformation pipeline.
         Returns a ComposedModalityTransform object.
         """
-        pass
 
     def add_video_modality(self, modalities):
         if self.use_fixed_view:
@@ -111,7 +110,7 @@ class LiberoOriginDataConfig(BaseDataConfig):
         "action.action": "6-d relative action (xyz,roll,pitch,yaw) + 1-d gripper pos",
     }
 
-    def define_modalities(self) -> Dict[str, ModalityDef]:
+    def define_modalities(self) -> dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
             "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),
@@ -141,7 +140,7 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
     STATE_KEYS = ["state.eef_position", "state.eef_rotation", "state.libero_gripper_position"]
     ACTION_KEYS = ["action.eef_position", "action.eef_rotation", "action.gripper_position"]
 
-    UNIFIED_MAPPING: Dict[str, Tuple[int, int]] = {
+    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {
         "state.eef_position": (0, 3),
         "state.eef_rotation": (3, 6),
         "state.libero_gripper_position": (44, 46),
@@ -170,7 +169,7 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
             "action.gripper_position": ("1-d gripper position"),
         }
 
-    def define_modalities(self) -> Dict[str, ModalityDef]:
+    def define_modalities(self) -> dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
             "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),
@@ -212,7 +211,7 @@ class RobocasaHumanDataConfig(BaseDataConfig):
         "action.control_mode",
     ]
 
-    UNIFIED_MAPPING: Dict[str, Tuple[int, int]] = {
+    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {
         "state.eef_position": (0, 3),
         "state.eef_rotation": (3, 6),
         "state.gripper_qpos": (44, 46),
@@ -254,7 +253,7 @@ class RobocasaHumanDataConfig(BaseDataConfig):
             "action.gripper_position": ("1-d gripper position"),
         }
 
-    def define_modalities(self) -> Dict[str, ModalityDef]:
+    def define_modalities(self) -> dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
             "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),

@@ -33,7 +33,7 @@ class Sora2Synthesis(OpenAiVideoSynthesis):
 
     def generate_i2av(
         self,
-        encoded_image: Tuple[str, bytes, str],
+        encoded_image: tuple[str, bytes, str],
         input_prompt: str,
         size: str = "1280x720",
         duration: int = 8,
@@ -56,19 +56,19 @@ class Sora2Synthesis(OpenAiVideoSynthesis):
 
     def predict(
         self,
-        processed_data: Dict[str, Any],
+        processed_data: dict[str, Any],
         task_type: str = "auto",
         size: str = "1280x720",
         duration: int = 8,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """按输入自动选择 T2V 或 I2V 并提交生成任务。
 
         Raises:
             ValueError: 任务类型不支持，或 i2av 缺少 ``encoded_image``。
         """
         prompt = processed_data.get("prompt", "")
-        encoded_image = processed_data.get("encoded_image", None)
+        encoded_image = processed_data.get("encoded_image")
 
         if task_type == "auto":
             task_type = "i2av" if encoded_image is not None else "t2av"

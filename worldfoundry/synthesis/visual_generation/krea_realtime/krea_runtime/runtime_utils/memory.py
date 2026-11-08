@@ -4,7 +4,6 @@
 
 import torch
 
-
 cpu = torch.device("cpu")
 gpu = torch.device(f"cuda:{torch.cuda.current_device()}")
 gpu_complete_modules = []

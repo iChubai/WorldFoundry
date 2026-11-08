@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 import io
 import json
-from pathlib import Path
 import pickle
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import resolve_data_path, resolve_worldfoundry_path

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2023 The HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,17 +19,6 @@ from typing import Optional
 
 import requests
 import torch
-from transformers import (
-    AutoFeatureExtractor,
-    BertTokenizerFast,
-    CLIPImageProcessor,
-    CLIPTextModel,
-    CLIPTextModelWithProjection,
-    CLIPTokenizer,
-    CLIPVisionConfig,
-    CLIPVisionModelWithProjection,
-)
-
 from diffusers.models import (
     AutoencoderKL,
     PriorTransformer,
@@ -48,6 +36,17 @@ from diffusers.schedulers import (
     UnCLIPScheduler,
 )
 from diffusers.utils.import_utils import BACKENDS_MAPPING
+from transformers import (
+    AutoFeatureExtractor,
+    BertTokenizerFast,
+    CLIPImageProcessor,
+    CLIPTextModel,
+    CLIPTextModelWithProjection,
+    CLIPTokenizer,
+    CLIPVisionConfig,
+    CLIPVisionModelWithProjection,
+)
+
 from worldfoundry.core.io.paths import checkpoint_root_path
 
 
@@ -909,7 +908,7 @@ def stable_unclip_image_encoder(original_config):
 
 
 def stable_unclip_image_noising_components(
-    original_config, clip_stats_path: Optional[str] = None, device: Optional[str] = None
+    original_config, clip_stats_path: str | None = None, device: str | None = None
 ):
     """
     Returns the noising components for the img2img and txt2img unclip pipelines.

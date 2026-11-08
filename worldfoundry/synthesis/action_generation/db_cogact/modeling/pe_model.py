@@ -3,11 +3,12 @@
 """This is basically a copy from perception_models/core/vision_encoder/pe.py"""
 
 from collections import OrderedDict
+from collections.abc import Callable
 from functools import partial
 
 # SPDX-License-Identifier: Apache-2.0
 from math import pi
-from typing import Callable, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 import torch
 from einops import rearrange, repeat
@@ -33,7 +34,7 @@ def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
     end_index = start_index + rot_dim
 
     assert rot_dim <= t.shape[-1], (
-        "feature dimension {} is not of sufficient size to rotate in all the positions {}".format(t.shape[-1], rot_dim)
+        f"feature dimension {t.shape[-1]} is not of sufficient size to rotate in all the positions {rot_dim}"
     )
 
     t_left, t, t_right = (
@@ -72,7 +73,7 @@ class Rope2D(nn.Module):
         self._freqs_runtime_cache = OrderedDict()
         self._max_runtime_cache_entries = 4
 
-    def _compute_inv_freq(self, base: Union[int, float], dim: int) -> torch.Tensor:
+    def _compute_inv_freq(self, base: int | float, dim: int) -> torch.Tensor:
         if self.freqs_for == "lang":
             freqs = 1.0 / (base ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
         elif self.freqs_for == "pixel":
@@ -92,7 +93,7 @@ class Rope2D(nn.Module):
         self,
         grid_height: int,
         grid_width: int,
-        device: Optional[torch.device] = None,
+        device: torch.device | None = None,
     ) -> torch.Tensor:
         grid_h_range = torch.arange(grid_height, dtype=torch.float, device=device)
         grid_w_range = torch.arange(grid_width, dtype=torch.float, device=device)
@@ -371,7 +372,7 @@ class PerceptionEncoderWithDownsample(nn.Module):
         use_abs_posemb: bool = True,
         use_rope2d: bool = True,
         use_cls_token: bool = False,
-        output_dim: Optional[int] = 1280,
+        output_dim: int | None = 1280,
         attn_pooler_heads: int = 8,
         pool_type: Literal["attn", "tok", "avg", "none"] = "attn",
         layer_types: list[str] = [],

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (C) 2025 THL A29 Limited, a Tencent company and the HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,10 +22,10 @@ compatible with both BF16 and FP16 inference.
 
 import logging
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import (
-    Callable,
     Final,
     Literal,
     Optional,
@@ -133,11 +132,11 @@ class HunYuanVLMoTModelOutputWithPast(ModelOutput):
         Pre-computed hidden-states for fast sequential decoding.
     """
 
-    logits: Optional[torch.FloatTensor] = None
-    last_hidden_state: Optional[torch.FloatTensor] = None
-    past_key_values: Optional[Cache] = None
-    hidden_states: Optional[tuple[torch.FloatTensor, ...]] = None
-    attentions: Optional[tuple[torch.FloatTensor, ...]] = None
+    logits: torch.FloatTensor | None = None
+    last_hidden_state: Optional[torch.FloatTensor] = None  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+    past_key_values: Cache | None = None
+    hidden_states: Optional[tuple[torch.FloatTensor, ...]] = None  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+    attentions: Optional[tuple[torch.FloatTensor, ...]] = None  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
 
 
 # ============================================================================
@@ -677,7 +676,7 @@ def _sdpa_spatial_attention(
                 f"expected [0, ..., {sequence_length}], got {boundaries}"
             )
         output = torch.empty_like(query)
-        for start, end in zip(boundaries, boundaries[1:]):
+        for start, end in zip(boundaries, boundaries[1:], strict=False):
             if end < start:
                 raise ValueError(f"HYViT2 cu_seqlens are not monotonic: {boundaries}")
             if end == start:
@@ -796,7 +795,7 @@ def _modality_mask_to_segments_single(mask_1d):
     zero_run_ends = (diff == -1).nonzero(as_tuple=True)[0] - 1
 
     separators = []
-    for s, e in zip(zero_run_starts, zero_run_ends):
+    for s, e in zip(zero_run_starts, zero_run_ends, strict=False):
         if (e - s + 1) >= 2:
             separators.append((s, e))
 
@@ -908,12 +907,12 @@ class HunYuanVLMoTAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         position_embeddings: tuple[torch.Tensor, torch.Tensor],
-        attention_mask: Optional[torch.Tensor],
-        past_key_values: Optional[Cache] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        modality_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None,
+        past_key_values: Cache | None = None,
+        cache_position: torch.LongTensor | None = None,
+        modality_mask: torch.Tensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -998,13 +997,13 @@ class HunYuanVLMoTDecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        use_cache: Optional[bool] = False,
-        cache_position: Optional[torch.LongTensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
-        modality_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        use_cache: bool | None = False,
+        cache_position: torch.LongTensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,
+        modality_mask: torch.Tensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> torch.Tensor:
         # Extract padding_mask for excluding padding from GEMM
@@ -1102,14 +1101,14 @@ class _HunYuanVLMoTTextModel(_HunYuanVLMoTInnerPreTrainedModel):
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        modality_mask: Optional[torch.Tensor] = None,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        modality_mask: torch.Tensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> BaseModelOutputWithPast:
         if (input_ids is None) ^ (inputs_embeds is not None):
@@ -1205,15 +1204,15 @@ class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, Generation
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        logits_to_keep: Union[int, torch.Tensor] = 0,
-        modality_mask: Optional[torch.Tensor] = None,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        cache_position: torch.LongTensor | None = None,
+        logits_to_keep: int | torch.Tensor = 0,
+        modality_mask: torch.Tensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> CausalLMOutputWithPast:
         outputs: BaseModelOutputWithPast = self.model(
@@ -1328,7 +1327,7 @@ class _ViTBlock(nn.Module):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
@@ -1370,8 +1369,8 @@ class _HYViT2VisionTransformer(nn.Module):
 
     def __init__(
         self,
-        img_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
         in_chans: int = 3,
         num_classes: int = 1000,
         global_pool: Literal["", "avg", "token", "map"] = "token",
@@ -1381,12 +1380,12 @@ class _HYViT2VisionTransformer(nn.Module):
         mlp_ratio: float = 4.0,
         qkv_bias: bool = True,
         qk_norm: bool = False,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         class_token: bool = True,
         no_embed_class: bool = False,
         reg_tokens: int = 0,
         pre_norm: bool = False,
-        fc_norm: Optional[bool] = None,
+        fc_norm: bool | None = None,
         dynamic_img_size: bool = False,
         dynamic_img_pad: bool = False,
         drop_rate: float = 0.0,
@@ -1396,11 +1395,11 @@ class _HYViT2VisionTransformer(nn.Module):
         attn_drop_rate: float = 0.0,
         drop_path_rate: float = 0.0,
         embed_layer: Callable = None,
-        norm_layer: Optional[LayerType] = None,
-        act_layer: Optional[LayerType] = None,
+        norm_layer: LayerType | None = None,
+        act_layer: LayerType | None = None,
         strict_img_size: bool = False,
-        block_fn: Type[nn.Module] = None,
-        mlp_layer: Type[nn.Module] = None,
+        block_fn: type[nn.Module] = None,
+        mlp_layer: type[nn.Module] = None,
         ignore_head: bool = False,
     ) -> None:
         super().__init__()
@@ -1659,10 +1658,10 @@ class _HYViT2VisionTransformer(nn.Module):
 @dataclass
 class _HYViT2VisionCfg:
     width: int = 1152
-    layers: Union[Tuple[int, int, int, int], int] = 27
+    layers: tuple[int, int, int, int] | int = 27
     heads: int = 16
     patch_size: int = 16
-    image_size: Union[Tuple[int, int], int] = 384
+    image_size: tuple[int, int] | int = 384
     global_pool: str = "map"
     mlp_ratio: float = 3.7362
     class_token: bool = False
@@ -1762,7 +1761,7 @@ class _HYViT2MLPProjector(nn.Module):
                 xs2 = self._forward_list(x2, size2)
                 dtype = xs[0].dtype
                 sep = self.image_sep.reshape(1, 1, -1).expand(1, 1, self.out_channels).to(dtype)
-                xs = [torch.cat([xi, sep, x2i], dim=1) for xi, x2i in zip(xs, xs2)]
+                xs = [torch.cat([xi, sep, x2i], dim=1) for xi, x2i in zip(xs, xs2, strict=False)]
             return xs
         else:
             h, w = size
@@ -1816,7 +1815,7 @@ class HYViT2_400MAnyRes(nn.Module):
             image_features, img_size, cls_token = self._forward_func(images, cal_attn_pool=cal_attn_pool)
 
         if isinstance(images, list):
-            image_features = [self.merger(x, s).squeeze(0) for x, s in zip(image_features, img_size)]
+            image_features = [self.merger(x, s).squeeze(0) for x, s in zip(image_features, img_size, strict=False)]
         else:
             image_features = self.merger(image_features, img_size)
             C = image_features.shape[-1]
@@ -1951,13 +1950,13 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
             images.append(pv)
         return images
 
-    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: Optional[torch.LongTensor] = None):
+    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: torch.LongTensor | None = None):
         pixel_values = pixel_values.type(self.visual.dtype)
         images = self._reshape_pixel_values(pixel_values, image_grid_thw)
         return self.visual(images)
 
     def get_video_features(
-        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: Optional[torch.LongTensor] = None
+        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: torch.LongTensor | None = None
     ):
         pixel_values_videos = pixel_values_videos.type(self.visual.dtype)
         frames = []
@@ -2017,16 +2016,16 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
-        pixel_values_videos: Optional[torch.FloatTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
-        video_grid_thw: Optional[torch.LongTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        logits_to_keep: Union[int, torch.Tensor] = 0,
+        attention_mask: Optional[torch.Tensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        position_ids: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        past_key_values: Optional[Cache] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        inputs_embeds: Optional[torch.FloatTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        pixel_values: Optional[torch.Tensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        pixel_values_videos: Optional[torch.FloatTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        image_grid_thw: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        video_grid_thw: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        cache_position: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        logits_to_keep: Union[int, torch.Tensor] = 0,  # noqa: UP007 - Transformers auto_docstring formats typing.Union annotations.
         **kwargs: Unpack[TransformersKwargs],
     ) -> HunYuanVLMoTModelOutputWithPast:
         r"""
@@ -2143,16 +2142,16 @@ class HunYuanVLMoTForConditionalGeneration(HunYuanVLMoTPreTrainedModel, Generati
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
-        pixel_values_videos: Optional[torch.FloatTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
-        video_grid_thw: Optional[torch.LongTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        logits_to_keep: Union[int, torch.Tensor] = 0,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        pixel_values: torch.Tensor | None = None,
+        pixel_values_videos: torch.FloatTensor | None = None,
+        image_grid_thw: torch.LongTensor | None = None,
+        video_grid_thw: torch.LongTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
+        logits_to_keep: int | torch.Tensor = 0,
         **kwargs: Unpack[TransformersKwargs],
     ) -> HunYuanVLMoTModelOutputWithPast:
         r"""
@@ -2225,7 +2224,7 @@ class HunYuanVLMoTForConditionalGeneration(HunYuanVLMoTPreTrainedModel, Generati
 
 
 __all__ = [
-    "HunYuanVLMoTPreTrainedModel",
-    "HunYuanVLMoTModel",
     "HunYuanVLMoTForConditionalGeneration",
+    "HunYuanVLMoTModel",
+    "HunYuanVLMoTPreTrainedModel",
 ]

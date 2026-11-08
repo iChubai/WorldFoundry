@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config, variant_defaults
 from worldfoundry.synthesis.action_generation.gr00t.runtime import (
     GR00TRuntime,
     GR00TRuntimeConfig,
     select_gr00t_checkpoint,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config, variant_defaults
+
 from ..base_action_synthesis import ActionModelSynthesis
 
 
@@ -71,7 +73,7 @@ class GR00TSynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "GR00TSynthesis":
+    ) -> GR00TSynthesis:
         """
         Create a lazy in-tree GR00T synthesis wrapper from profile/runtime options.
 

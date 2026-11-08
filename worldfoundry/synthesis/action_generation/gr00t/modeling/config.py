@@ -16,7 +16,9 @@
 """GR00T N1.7 inference configuration."""
 
 from dataclasses import MISSING, dataclass, field
+
 from transformers import PretrainedConfig
+
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
 _ARCHITECTURE_DEFAULTS = load_vla_va_wam_runtime_config("gr00t")["architecture_defaults"]

@@ -1,12 +1,12 @@
-import os
-import numpy as np
-import pyflex
-import gym
 import math
-from scipy.spatial.distance import cdist
+import os
 
+import gym
+import numpy as np
 import pybullet as p
 import pybullet_data
+import pyflex
+from scipy.spatial.distance import cdist
 
 from .robot_env import FlexRobotHelper
 
@@ -14,9 +14,9 @@ pyflex.loadURDF = FlexRobotHelper.loadURDF
 pyflex.resetJointState = FlexRobotHelper.resetJointState
 pyflex.getRobotShapeStates = FlexRobotHelper.getRobotShapeStates
 
-from .flex_scene import FlexScene
+from ..utils import find_min_distance, fps_with_idx, quatFromAxisAngle, rand_float
 from .cameras import Camera
-from ..utils import fps_with_idx, quatFromAxisAngle, find_min_distance, rand_float
+from .flex_scene import FlexScene
 
 BASE_DIR = os.path.abspath(os.path.join(__file__, "../../../../../../"))
 
@@ -456,9 +456,9 @@ class FlexEnv(gym.Env):
                     rob_obj_dist_thresh = self.dataset_config["rob_obj_dist_thresh"]
                     contact_interval = self.dataset_config["contact_interval"]
                     non_contact_interval = self.dataset_config["non_contact_interval"]
-                    if robot_obj_dist < rob_obj_dist_thresh and i % contact_interval == 0:  # robot-object contact
-                        self.store_data()
-                    elif i % non_contact_interval == 0:  # not contact
+                    if (
+                        robot_obj_dist < rob_obj_dist_thresh and i % contact_interval == 0  # robot-object contact
+                    ) or i % non_contact_interval == 0:  # not contact
                         self.store_data()
 
                 self.reset_robot()
@@ -516,7 +516,7 @@ class FlexEnv(gym.Env):
         pos_x, pos_z = positions[:, 0], positions[:, 2]
         center_x, center_z = np.median(pos_x), np.median(pos_z)
         chosen_points = []
-        for idx, (x, z) in enumerate(zip(pos_x, pos_z)):
+        for idx, (x, z) in enumerate(zip(pos_x, pos_z, strict=False)):
             if np.sqrt((x - center_x) ** 2 + (z - center_z) ** 2) < 2.0:
                 chosen_points.append(idx)
         # print(f'chosen points {len(chosen_points)} out of {num_points}.')

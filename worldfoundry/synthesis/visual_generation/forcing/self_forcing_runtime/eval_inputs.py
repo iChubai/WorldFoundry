@@ -1,12 +1,13 @@
-from utils.lmdb import get_array_shape_from_lmdb, retrieve_row_from_lmdb
-from torch.utils.data import Dataset
+import json
+import os
+from pathlib import Path
+
+import lmdb
 import numpy as np
 import torch
-import lmdb
-import json
-from pathlib import Path
 from PIL import Image
-import os
+from torch.utils.data import Dataset
+from utils.lmdb import get_array_shape_from_lmdb, retrieve_row_from_lmdb
 
 
 class TextDataset(Dataset):
@@ -131,7 +132,7 @@ class TextImagePairDataset(Dataset):
             raise FileNotFoundError(f"Image directory not found: {self.image_dir}")
 
         # Load metadata
-        with open(metadata_path, "r") as f:
+        with open(metadata_path) as f:
             self.metadata = json.load(f)
 
         eval_first_n = eval_first_n if eval_first_n != -1 else len(self.metadata)

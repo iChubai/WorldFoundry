@@ -1,13 +1,12 @@
 import math
 
 import torch
-from torch import Tensor
-from torch import nn
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
+from torch import Tensor, nn
 
 from . import gemma as _gemma
-from .pytorch_gemma import PaliGemmaWithExpertModel
 from . import pytorch_preprocessing as _preprocessing
+from .pytorch_gemma import PaliGemmaWithExpertModel
 
 
 def get_safe_dtype(target_dtype, device_type):
@@ -250,7 +249,7 @@ class PI0Pytorch(nn.Module):
 
         # Compute image and language key value cache
         prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks)
-        self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"  # noqa: SLF001
+        self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"
 
         _, past_key_values = self.paligemma_with_expert.forward(
             attention_mask=prefix_att_2d_masks_4d,
@@ -306,7 +305,7 @@ class PI0Pytorch(nn.Module):
 
         # Prepare attention masks
         full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
-        self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = "eager"  # noqa: SLF001
+        self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = "eager"
 
         outputs_embeds, _ = self.paligemma_with_expert.forward(
             attention_mask=full_att_2d_masks_4d,

@@ -1,16 +1,16 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
-from typing import Tuple, Optional, List
+from typing import List, Optional, Tuple
 
 import einops
 import torch
 from torch import nn
 
 from ..config import BaseConfig, D, StrEnum
-from .image_vit import VitConfig, VisionTransformer
-from .llm import Activation
 from ..preprocessing.image_preprocessor import ImagePreprocessor
+from .image_vit import VisionTransformer, VitConfig
+from .llm import Activation
 
 log = logging.getLogger(__name__)
 
@@ -61,12 +61,12 @@ class MolmoVisionBackboneConfig(BaseConfig):
     image_projector: ImageProjectType = ImageProjectType.mlp
     """Layer to project pooled image features to the LLM embedding space"""
 
-    image_padding_embed: Optional[ImagePaddingEmbed] = None
+    image_padding_embed: ImagePaddingEmbed | None = None
     """
     Image padding mode to use to tell the model what parts of the image are padding
     """
 
-    vit_layers: Tuple = (-1,)
+    vit_layers: tuple = (-1,)
     """What layers to use from the VIT"""
 
     skip_unused_layers: bool = True
@@ -84,12 +84,12 @@ class MolmoVisionBackboneConfig(BaseConfig):
     connector_activation_checkpointing: bool = True
     """Allow activation checkpoint on the connector components"""
 
-    compile_vit: Optional[str] = "blocks"
+    compile_vit: str | None = "blocks"
     """How to compile the ViT"""
 
-    pool_size_embeds: Optional[List[int]] = None
+    pool_size_embeds: list[int] | None = None
 
-    compile_connector: Optional[str] = "dynamic"
+    compile_connector: str | None = "dynamic"
 
     normalize_on_gpu: bool = False
     """Run image normalization on the GPU
@@ -206,7 +206,8 @@ class MolmoVisionBackbone(nn.Module):
             self.image_pooling_2d, self.image_projector = self.build_connector(llm_config, device)
         else:
             image_pooling_2d_list, image_project_list = map(
-                list, zip(*[self.build_connector(llm_config, device) for _ in range(len(config.vit_layers))])
+                list,
+                zip(*[self.build_connector(llm_config, device) for _ in range(len(config.vit_layers))], strict=False),
             )
             self.image_pooling_2d = nn.ModuleList(image_pooling_2d_list)
             self.image_projector = nn.ModuleList(image_project_list)
@@ -444,7 +445,7 @@ class MolmoVisionBackbone(nn.Module):
     def forward(
         self,
         images: torch.Tensor,
-        image_masks: Optional[torch.Tensor],
+        image_masks: torch.Tensor | None,
         pooled_patches_idx,
     ):
         """Encode and pool image patches for ordinary action inference."""
@@ -479,7 +480,7 @@ class MolmoVisionBackbone(nn.Module):
             valid_token = torch.any(pooling_indices >= 0, dim=-1)
             pooled_features = [
                 self.apply_connector(pooling_fn, projector_fn, features, pooling_indices)
-                for features, pooling_fn, projector_fn in zip(image_features, pooling_fns, projector_fns)
+                for features, pooling_fn, projector_fn in zip(image_features, pooling_fns, projector_fns, strict=False)
             ]
             value = pooled_features if len(pooled_features) > 1 else pooled_features[0]
             all_pooled_features.append((value, valid_token))

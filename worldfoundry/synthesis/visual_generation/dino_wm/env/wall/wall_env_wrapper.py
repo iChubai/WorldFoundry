@@ -1,12 +1,11 @@
-from .envs.wall import DotWall
-from .envs.wall import WallDatasetConfig
+import random
+
 import numpy as np
 import torch
-import random
 from torchvision import transforms
-
-
 from utils import aggregate_dct
+
+from .envs.wall import DotWall, WallDatasetConfig
 from .layouts.wall_utils import generate_wall_layouts
 
 ENV_ACTION_DIM = 2

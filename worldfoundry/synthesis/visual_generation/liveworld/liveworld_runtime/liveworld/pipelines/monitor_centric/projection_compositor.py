@@ -21,11 +21,11 @@ from .io_utils import decode_latent_to_rgb
 
 
 def merge_event_projections(
-    event_projs: List[torch.Tensor],
+    event_projs: list[torch.Tensor],
     vae=None,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
-) -> Optional[torch.Tensor]:
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
+) -> torch.Tensor | None:
     """Merge multiple event projections into a single fg_proj.
 
     When multiple projections exist, merges in pixel space to avoid
@@ -84,7 +84,7 @@ def overlay_fg_on_scene(
     vae,
     device: torch.device,
     dtype: torch.dtype,
-) -> Tuple[torch.Tensor, np.ndarray]:
+) -> tuple[torch.Tensor, np.ndarray]:
     """Overlay fg projection onto scene projection in pixel space.
 
     Computes filled-contour mask of fg to black out the scene in that region,
@@ -160,11 +160,11 @@ class ProjectionCompositor:
     def compose(
         self,
         scene_proj: torch.Tensor,
-        event_projs: List[torch.Tensor],
+        event_projs: list[torch.Tensor],
         vae=None,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Compose scene projection with event projections.
 
         Args:

@@ -1,8 +1,7 @@
 # Inference-only DB-CogACT source retained in-tree.
 import torch
 import torch.nn as nn
-
-from transformers import PretrainedConfig, SiglipVisionModel, SiglipImageProcessor, SiglipVisionConfig
+from transformers import PretrainedConfig, SiglipImageProcessor, SiglipVisionConfig, SiglipVisionModel
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 

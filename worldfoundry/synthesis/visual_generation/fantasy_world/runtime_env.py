@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import sys
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
-
 
 DEFAULT_FANTASY_WORLD_WAN21_REPO = "acvlab/FantasyWorld-Wan2.1-I2V-14B-480P"
 DEFAULT_FANTASY_WORLD_WAN22_REPO = "acvlab/FantasyWorld-Wan2.2-Fun-A14B-Control-Camera"

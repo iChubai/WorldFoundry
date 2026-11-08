@@ -2,11 +2,12 @@ from typing import Dict
 
 import torch
 import torch.nn as nn
+from torch import Tensor
+
 from worldfoundry.synthesis.visual_generation.adaworld.lam.modules.blocks import (
     SpatioTemporalTransformer,
     patchify,
 )
-from torch import Tensor
 
 
 class LatentActionModel(nn.Module):
@@ -44,7 +45,7 @@ class LatentActionModel(nn.Module):
         self.fc = nn.Linear(model_dim, latent_dim * 2)
         del dec_blocks
 
-    def encode(self, videos: Tensor) -> Dict:
+    def encode(self, videos: Tensor) -> dict:
         # AdaWorld supplies two source frames and one target frame. The target
         # is for reconstruction during LAM training; its latent action is
         # encoded from the two source frames, as in the official LAM runtime.
@@ -70,5 +71,5 @@ class LatentActionModel(nn.Module):
         z_mu = torch.chunk(moments, 2, dim=1)[0]
         return {"z_rep": z_mu.reshape(B, T - 1, 1, self.latent_dim)}
 
-    def forward(self, batch: Dict) -> Dict:
+    def forward(self, batch: dict) -> dict:
         return self.encode(batch["videos"])

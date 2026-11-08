@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import json
 import logging
 import os
+from dataclasses import dataclass, field
 
-from hydra.utils import instantiate
 import numpy as np
-from safetensors.torch import load_file
 import torch
 import torch.distributed as dist
-from torch.distributed.device_mesh import DeviceMesh
 import tree
+from hydra.utils import instantiate
+from safetensors.torch import load_file
+from torch.distributed.device_mesh import DeviceMesh
 from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
 from transformers.feature_extraction_utils import BatchFeature
 
 from .targets import rewrite_targets, validate_inference_targets
-
 
 BACKBONE_FEATURE_KEY = "backbone_features"
 ACTION_KEY = "action_pred"
@@ -167,7 +166,7 @@ class VLA(PreTrainedModel):
         *,
         load_base_components: bool,
         config: VLAConfig | None = None,
-    ) -> "VLA":
+    ) -> VLA:
         if config is None:
             config_path = os.path.join(checkpoint_dir, "config.json")
             with open(config_path, encoding="utf-8") as handle:
@@ -206,7 +205,7 @@ class VLA(PreTrainedModel):
         return model
 
     @classmethod
-    def load_lora(cls, pretrained_model_name_or_path: str) -> "VLA":
+    def load_lora(cls, pretrained_model_name_or_path: str) -> VLA:
         """Load an adapter-only checkpoint on top of its frozen Wan components."""
 
         return cls._from_local_checkpoint(
@@ -221,7 +220,7 @@ class VLA(PreTrainedModel):
         pretrained_model_name_or_path: str,
         config: VLAConfig | None = None,
         **_: object,
-    ) -> "VLA":
+    ) -> VLA:
         return cls._from_local_checkpoint(
             pretrained_model_name_or_path,
             load_base_components=False,

@@ -1,10 +1,9 @@
-from functools import partial
 import math
+from functools import partial
 from typing import List, Optional
 
 import torch
-from torch import Tensor
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import functional as F
 
 # Settings for GroupNorm and Attention
@@ -153,8 +152,8 @@ class ResBlock(nn.Module):
 class ResBlocks(nn.Module):
     def __init__(
         self,
-        list_in_channels: List[int],
-        list_out_channels: List[int],
+        list_in_channels: list[int],
+        list_out_channels: list[int],
         cond_channels: int,
         attn: bool,
     ) -> None:
@@ -164,11 +163,11 @@ class ResBlocks(nn.Module):
         self.resblocks = nn.ModuleList(
             [
                 ResBlock(in_ch, out_ch, cond_channels, attn)
-                for (in_ch, out_ch) in zip(list_in_channels, list_out_channels)
+                for (in_ch, out_ch) in zip(list_in_channels, list_out_channels, strict=False)
             ]
         )
 
-    def forward(self, x: Tensor, cond: Tensor, to_cat: Optional[List[Tensor]] = None) -> Tensor:
+    def forward(self, x: Tensor, cond: Tensor, to_cat: list[Tensor] | None = None) -> Tensor:
         outputs = []
         for i, resblock in enumerate(self.resblocks):
             x = x if to_cat is None else torch.cat((x, to_cat[i]), dim=1)
@@ -181,7 +180,7 @@ class ResBlocks(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, cond_channels: int, depths: List[int], channels: List[int], attn_depths: List[int]) -> None:
+    def __init__(self, cond_channels: int, depths: list[int], channels: list[int], attn_depths: list[int]) -> None:
         super().__init__()
         assert len(depths) == len(channels) == len(attn_depths)
         self._num_down = len(channels) - 1
@@ -229,7 +228,7 @@ class UNet(nn.Module):
         x = F.pad(x, (0, padding_w, 0, padding_h))
 
         d_outputs = []
-        for block, down in zip(self.d_blocks, self.downsamples):
+        for block, down in zip(self.d_blocks, self.downsamples, strict=False):
             x_down = down(x)
             x, block_outputs = block(x_down, cond)
             d_outputs.append((x_down, *block_outputs))
@@ -237,7 +236,7 @@ class UNet(nn.Module):
         x, _ = self.mid_blocks(x, cond)
 
         u_outputs = []
-        for block, up, skip in zip(self.u_blocks, self.upsamples, reversed(d_outputs)):
+        for block, up, skip in zip(self.u_blocks, self.upsamples, reversed(d_outputs), strict=False):
             x_up = up(x)
             x, block_outputs = block(x_up, cond, skip[::-1])
             u_outputs.append((x_up, *block_outputs))

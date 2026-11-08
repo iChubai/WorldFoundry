@@ -11,7 +11,6 @@ from typing import Any
 
 from worldfoundry.core import as_list, cuda_visible_devices_from_device, jsonable, resolve_hf_snapshot_path
 
-
 _REPO_SRC = Path(__file__).resolve().parents[4]
 
 

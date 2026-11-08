@@ -441,7 +441,7 @@ class PromptTokenizerTransform:
         if self.text_token_length is not None:
             vocab_size = min(vocab_size, self.text_token_length)
         base_token_id = vocab_size - 1 - self.fast_skip_tokens
-        fast_tokens = [base_token_id - token for token in action_ids if 0 <= base_token_id - token]
+        fast_tokens = [base_token_id - token for token in action_ids if base_token_id - token >= 0]
         if not fast_tokens:
             return torch.zeros((1, 0, action_dim), dtype=torch.float32)
         decoded = self.fast_tokenizer.decode(

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 NUS Show Lab.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -347,7 +346,6 @@ class UniversalPrompting:
         :param video_ids:
         :return:
         """
-        pass
 
     def lvg_prompt(self, text_ids, image_ids, labels):
         device = image_ids.device

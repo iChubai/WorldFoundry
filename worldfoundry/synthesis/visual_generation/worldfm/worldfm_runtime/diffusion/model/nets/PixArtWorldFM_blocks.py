@@ -6,15 +6,19 @@
 #   https://github.com/PixArt-alpha/PixArt-sigma/blob/master/diffusion/model/nets/PixArt_blocks.py
 # --------------------------------------------------------
 import math
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import xformers.ops
-import os
 from einops import rearrange
-from timm.models.vision_transformer import Mlp, Attention as Attention_
-from ...utils.logger import get_root_logger
+from timm.models.vision_transformer import Attention as Attention_
+from timm.models.vision_transformer import Mlp
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+
+from ...utils.logger import get_root_logger
 
 
 def modulate(x, shift, scale):
@@ -263,18 +267,19 @@ class AttentionKVCompress(Attention_):
                             setattr(self, _logged_key, True)
                         # Fallback: per-layer compute (old behavior).
                         from functools import partial as _partial
+
                         from .prope import (
                             get_rope_coeffs_2d,
                             prepare_prope_apply_fns,
-                            reorder_tokens_to_camera_major,
                             reorder_tokens_from_camera_major,
+                            reorder_tokens_to_camera_major,
                         )
 
                         cache_key = (patches_x, patches_y, q.shape[-1], str(q.device), str(q.dtype))
                         coeff_cache = getattr(self, "_prope_coeff_cache", None)
                         if coeff_cache is None:
                             coeff_cache = {}
-                            setattr(self, "_prope_coeff_cache", coeff_cache)
+                            self._prope_coeff_cache = coeff_cache
                         if cache_key not in coeff_cache:
                             coeff_cache[cache_key] = get_rope_coeffs_2d(
                                 patches_x=patches_x,

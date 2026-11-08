@@ -1,11 +1,12 @@
 """NeoVerse geometry, color, video, and camera-trajectory inference helpers."""
 
-import torch
-import numpy as np
 import json
 import os
-from PIL import Image
+
+import numpy as np
+import torch
 from decord import VideoReader
+from PIL import Image
 from scipy.spatial.transform import Rotation, Slerp
 
 
@@ -373,7 +374,7 @@ class CameraTrajectory:
         if not os.path.exists(filepath):
             raise ValueError(f"Trajectory file not found: {filepath}")
         try:
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON format: {e}")

@@ -44,7 +44,6 @@ class BaseSynthesis(ABC):
         While the base class constructor is empty, subclasses may implement
         their own initialization logic.
         """
-        pass
 
     @classmethod
     def from_pretrained(cls, pretrained_model_path, args, device=None, **kwargs):

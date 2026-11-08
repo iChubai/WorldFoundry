@@ -25,14 +25,14 @@ class ObserverIterationInput:
     num_frames: int
     infer_steps: int
     target_scene_proj: torch.Tensor
-    guidance_scale: Optional[float] = None
+    guidance_scale: float | None = None
     cpu_offload: bool = False
-    preceding_scene_proj: Optional[torch.Tensor] = None
-    reference_frames: Optional[np.ndarray] = None
-    instance_reference_frames: Optional[np.ndarray] = None  # [R_inst, H, W, 3]
-    target_fg_proj: Optional[torch.Tensor] = None
-    preceding_fg_proj: Optional[torch.Tensor] = None
-    seed: Optional[int] = None
+    preceding_scene_proj: torch.Tensor | None = None
+    reference_frames: np.ndarray | None = None
+    instance_reference_frames: np.ndarray | None = None  # [R_inst, H, W, 3]
+    target_fg_proj: torch.Tensor | None = None
+    preceding_fg_proj: torch.Tensor | None = None
+    seed: int | None = None
     sp_context_scale: float = 1.0
 
 
@@ -42,7 +42,7 @@ class ObserverIterationOutput:
 
     frames: torch.Tensor
     # Optional static point cloud update (points, colors).
-    static_update: Optional[Tuple[np.ndarray, np.ndarray]]
+    static_update: tuple[np.ndarray, np.ndarray] | None
 
 
 class ObserverAdapter:

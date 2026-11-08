@@ -1,12 +1,16 @@
 from typing import List, Optional
+
 import torch
 
+# isort: split
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
+# isort: split
+
 from runtime_utils.memory import (
-    gpu,
-    get_cuda_free_memory_gb,
     DynamicSwapInstaller,
+    get_cuda_free_memory_gb,
+    gpu,
     move_model_to_device_with_memory_preservation,
 )
 
@@ -46,8 +50,8 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,

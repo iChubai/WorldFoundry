@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import os
-from typing import MutableMapping, TypeVar
+from collections.abc import MutableMapping
+from typing import TypeVar
 
 import torch
 import torch.distributed as dist

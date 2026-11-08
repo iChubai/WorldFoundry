@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     collect_images,
@@ -13,7 +14,6 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     runtime_options_cache_key,
     to_numpy_image,
 )
-
 
 _RUNTIME_CACHE: dict[tuple[Any, ...], Any] = {}
 

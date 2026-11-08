@@ -3,10 +3,11 @@ from __future__ import annotations
 import math
 import tempfile
 import threading
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import torch
@@ -17,13 +18,16 @@ from diffusers.utils.torch_utils import randn_tensor
 from PIL import Image
 from safetensors.torch import load_file, save_file
 
+# isort: split
 from helios.diffusers_version.pipeline_helios_diffusers import (
     XLA_AVAILABLE,
-    HeliosPipelineOutput,
     HeliosPipeline,
+    HeliosPipelineOutput,
     calculate_shift,
     optimized_scale,
 )
+
+# isort: split
 
 from .camera_warp import (
     CAMERA_CONTROL_DEFAULT_MESH_BREAK_MODE,
@@ -54,7 +58,6 @@ from .defaults import (
     WAH_PYRAMID_STEPS,
     WAH_VISIBLE_TOKEN_THRESHOLD,
 )
-
 
 _PEFT_TORCHAO_COMPAT_LOCK = threading.RLock()
 
@@ -558,7 +561,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             raise ValueError(
                 f"sum(prev_chunk_history_sizes) must be <= {history_capacity}, got {prev_chunk_history_sizes!r}."
             )
-        if any(size > cap for size, cap in zip(prev_chunk_history_sizes, WAH_HISTORY_SIZES)):
+        if any(size > cap for size, cap in zip(prev_chunk_history_sizes, WAH_HISTORY_SIZES, strict=False)):
             raise ValueError(
                 "prev_chunk_history_sizes cannot exceed the official WAH history slots "
                 f"{WAH_HISTORY_SIZES!r}, got {prev_chunk_history_sizes!r}."
@@ -858,7 +861,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                     transformer.register_to_config(image_dim=None)
                 else:
                     try:
-                        setattr(transformer_config, "image_dim", None)
+                        transformer_config.image_dim = None
                     except Exception:
                         pass
             lora_source, weight_name = _diffusers_lora_source(adapter_path)
@@ -1089,24 +1092,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             else:
                 prefix_latent = cached_prefix.to(device=device, dtype=prefix_latent.dtype)
 
-        if state.get("using_camera_warp", False):
-            latents_mean, latents_std = self._latent_stats(device)
-            _, warp_latents = self.prepare_video_latents(
-                warp_video_chunk,
-                latents_mean=latents_mean,
-                latents_std=latents_std,
-                num_latent_frames_per_chunk=WAH_NUM_LATENT_FRAMES_PER_CHUNK,
-                dtype=torch.float32,
-                device=device,
-                generator=generator,
-            )
-            warp_latents = self._add_noise_to_warp_history_latents(
-                state=state,
-                warp_latents=warp_latents,
-                device=device,
-                generator=generator,
-            )
-        elif online_conditioning_type == "warp":
+        if state.get("using_camera_warp", False) or online_conditioning_type == "warp":
             latents_mean, latents_std = self._latent_stats(device)
             _, warp_latents = self.prepare_video_latents(
                 warp_video_chunk,

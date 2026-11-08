@@ -1,13 +1,13 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/unet_2d_blocks.py
 
+import pdb
+
 import torch
 from torch import nn
 
 from .attention import Transformer3DModel
-from .resnet import Downsample3D, ResnetBlock3D, Upsample3D
 from .motion_module import get_motion_module
-
-import pdb
+from .resnet import Downsample3D, ResnetBlock3D, Upsample3D
 
 
 def get_down_block(
@@ -254,7 +254,7 @@ class UNetMidBlock3DCrossAttn(nn.Module):
 
     def forward(self, hidden_states, temb=None, encoder_hidden_states=None, attention_mask=None):
         hidden_states = self.resnets[0](hidden_states, temb)
-        for attn, resnet, motion_module in zip(self.attentions, self.resnets[1:], self.motion_modules):
+        for attn, resnet, motion_module in zip(self.attentions, self.resnets[1:], self.motion_modules, strict=False):
             hidden_states = attn(hidden_states, encoder_hidden_states=encoder_hidden_states).sample
             hidden_states = (
                 motion_module(hidden_states, temb, encoder_hidden_states=encoder_hidden_states)
@@ -367,7 +367,7 @@ class CrossAttnDownBlock3D(nn.Module):
     def forward(self, hidden_states, temb=None, encoder_hidden_states=None, attention_mask=None):
         output_states = ()
 
-        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules):
+        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules, strict=False):
             if self.training and self.gradient_checkpointing:
 
                 def create_custom_forward(module, return_dict=None):
@@ -486,7 +486,7 @@ class DownBlock3D(nn.Module):
     def forward(self, hidden_states, temb=None, encoder_hidden_states=None):
         output_states = ()
 
-        for resnet, motion_module in zip(self.resnets, self.motion_modules):
+        for resnet, motion_module in zip(self.resnets, self.motion_modules, strict=False):
             if self.training and self.gradient_checkpointing:
 
                 def create_custom_forward(module):
@@ -627,7 +627,7 @@ class CrossAttnUpBlock3D(nn.Module):
         upsample_size=None,
         attention_mask=None,
     ):
-        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules):
+        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules, strict=False):
             # pop res hidden states
             res_hidden_states = res_hidden_states_tuple[-1]
             res_hidden_states_tuple = res_hidden_states_tuple[:-1]
@@ -748,7 +748,7 @@ class UpBlock3D(nn.Module):
         upsample_size=None,
         encoder_hidden_states=None,
     ):
-        for resnet, motion_module in zip(self.resnets, self.motion_modules):
+        for resnet, motion_module in zip(self.resnets, self.motion_modules, strict=False):
             # pop res hidden states
             res_hidden_states = res_hidden_states_tuple[-1]
             res_hidden_states_tuple = res_hidden_states_tuple[:-1]

@@ -1,11 +1,11 @@
-import numpy as np
 import math
+
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.utils.data
-from pytorch3d.transforms import quaternion_to_matrix
 from PIL import Image
-
+from pytorch3d.transforms import quaternion_to_matrix
 from sharp.models import (
     PredictorParams,
     RGBGaussianPredictor,
@@ -19,11 +19,10 @@ from sharp.utils.gaussians import (
 
 from worldgen.utils.equirectangular import (
     extract_cubemap_from_equirectangular,
-    get_cubemap_face_params,
     get_cubemap_extrinsics,
+    get_cubemap_face_params,
     rotate_quaternions,
 )
-
 from worldgen.utils.splat_utils import SplatFile
 
 DEFAULT_MODEL_URL = "https://ml-site.cdn-apple.com/models/sharp/sharp_2572gikvuh.pt"
@@ -159,7 +158,7 @@ def predict_equirectangular(
     all_colors = []
     all_opacities = []
 
-    print(f"Processing 6 cubemap faces through Sharp model...")
+    print("Processing 6 cubemap faces through Sharp model...")
     for i, face_name in enumerate(CUBEMAP_FACE_NAMES):
         print(f"  Face {i + 1}/6: {face_name}...")
         face_rgb = getattr(cubemap_rgb, face_name)  # (3, H, W)

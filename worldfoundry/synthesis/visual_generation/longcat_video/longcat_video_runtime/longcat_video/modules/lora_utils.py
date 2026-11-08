@@ -3,10 +3,9 @@
 # https://github.com/cloneofsimo/lora/blob/master/lora_diffusion/lora.py
 # https://github.com/bmaltais/kohya_ss
 
-import math
 import functools
+import math
 from collections import defaultdict
-
 from typing import Optional
 
 import torch
@@ -171,8 +170,8 @@ def create_lora_network(
     transformer,
     lora_network_state_dict_loaded,
     multiplier: float,
-    network_dim: Optional[int],
-    network_alpha: Optional[float],
+    network_dim: int | None,
+    network_alpha: float | None,
 ):
     network = LoRANetwork(
         transformer,

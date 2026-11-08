@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class Dynamics(nn.Module):

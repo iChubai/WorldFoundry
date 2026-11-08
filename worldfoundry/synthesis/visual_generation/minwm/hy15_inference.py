@@ -20,14 +20,13 @@ from PIL import Image
 from safetensors.torch import load_file
 from torchvision import transforms
 
+from worldfoundry.base_models.diffusion_model.schedulers.hunyuan_compat import (
+    HunyuanVideoFlowMatchDiscreteScheduler as FlowMatchDiscreteScheduler,
+)
 from worldfoundry.core.geometry.trajectory import (
     camera_trajectory_action_labels,
     camera_trajectory_tensors,
 )
-from worldfoundry.base_models.diffusion_model.schedulers.hunyuan_compat import (
-    HunyuanVideoFlowMatchDiscreteScheduler as FlowMatchDiscreteScheduler,
-)
-
 
 # ---------------------------------------------------------------------------
 # Camera trajectory (ProPE) utilities

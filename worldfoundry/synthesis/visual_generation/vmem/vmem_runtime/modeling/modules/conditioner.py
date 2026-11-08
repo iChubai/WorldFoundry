@@ -5,7 +5,6 @@ from torch import nn
 
 from worldfoundry.core.io.paths import resolve_local_checkpoint_file
 
-
 DEFAULT_OPENCLIP_REPO = "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
 
 

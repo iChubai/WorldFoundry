@@ -52,7 +52,7 @@ class Wan2Interface(nn.Module):
       head can consume — analogous to VLM hidden_states.
     """
 
-    def __init__(self, config: Optional[dict] = None, **kwargs):
+    def __init__(self, config: dict | None = None, **kwargs):
         super().__init__()
 
         wm_cfg = config.framework.get("world_model", {})

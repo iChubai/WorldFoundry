@@ -5,8 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from worldfoundry.synthesis.visual_generation.adaworld.lam.modules.embeddings import RotaryEmbedding
 from torch import Tensor
+
+from worldfoundry.synthesis.visual_generation.adaworld.lam.modules.embeddings import RotaryEmbedding
 
 
 def patchify(videos: Tensor, size: int) -> Tensor:

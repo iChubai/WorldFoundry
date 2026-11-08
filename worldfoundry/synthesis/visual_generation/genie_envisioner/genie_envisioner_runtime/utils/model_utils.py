@@ -1,13 +1,13 @@
-from typing import Dict, Optional, Union
 import json
 import os
 import sys
+from typing import Dict, Optional, Union
 
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
 from diffusers.utils.torch_utils import is_compiled_module
-from safetensors.torch import save_model, load_file, save_file
+from safetensors.torch import load_file, save_file, save_model
 
 
 def unwrap_model(accelerator: Accelerator, model):
@@ -92,11 +92,11 @@ def load_condition_models(
     textenc_class,
     model_id: str = "a-r-r-o-w/LTX-Video-0.9.1-diffusers",
     text_encoder_dtype: torch.dtype = torch.bfloat16,
-    revision: Optional[str] = None,
-    cache_dir: Optional[str] = None,
+    revision: str | None = None,
+    cache_dir: str | None = None,
     load_weights: bool = True,
     **kwargs,
-) -> Dict[str, nn.Module]:
+) -> dict[str, nn.Module]:
     tokenizer = tokenizer_class.from_pretrained(model_id, subfolder="tokenizer", revision=revision, cache_dir=cache_dir)
 
     if load_weights:
@@ -117,10 +117,10 @@ def load_latent_models(
     model_cls,
     model_id,
     vae_dtype: torch.dtype = torch.bfloat16,
-    revision: Optional[str] = None,
-    cache_dir: Optional[str] = None,
+    revision: str | None = None,
+    cache_dir: str | None = None,
     **kwargs,
-) -> Dict[str, nn.Module]:
+) -> dict[str, nn.Module]:
     vae = model_cls.from_pretrained(
         model_id, subfolder="vae", torch_dtype=vae_dtype, revision=revision, cache_dir=cache_dir
     )
@@ -136,14 +136,13 @@ def load_diffusion_model(model_cls, model_dir, load_weights=True, **kwargs):
 
 
 def load_vae_models(model_cls, model_dir, load_weights=True):
-    with open(os.path.join(model_dir, "config.json"), "r", encoding="utf-8") as f:
+    with open(os.path.join(model_dir, "config.json"), encoding="utf-8") as f:
         vae_kwargs = json.load(f)
     model = model_cls(**vae_kwargs)
     if load_weights:
         load_checkpoints(model, pretrained_ckpt=os.path.join(model_dir, "diffusion_pytorch_model.safetensors"))
     else:
         print("You are not loading the weights of the vae model, please check your code.")
-        pass
     return model
 
 

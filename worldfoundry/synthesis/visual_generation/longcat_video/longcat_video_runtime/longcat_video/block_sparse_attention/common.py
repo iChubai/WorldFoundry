@@ -1,6 +1,7 @@
+import os
+
 import triton
 import triton.language as tl
-import os
 
 if os.environ.get("TRITON_AUTOTUNE_ENBALE", "0") == "1":
     autotune = triton.autotune

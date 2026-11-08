@@ -3,11 +3,10 @@
 Consolidated from DeployService/utils/ and DeployService/model/pi3/utils/.
 """
 
-import numpy as np
 import cv2
+import numpy as np
 import torch
 from PIL import Image
-
 
 # ──────────────────────────────────────────────
 # Depth I/O (from image_utils.py)
@@ -79,17 +78,17 @@ def write_ply(xyz, rgb=None, path="output.ply"):
         m = hsv[:, 2:] - c
 
         rgb = np.zeros_like(hsv)
-        cond = (0 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 1)
+        cond = (hsv[:, 0] * 6 % 6 >= 0) & (hsv[:, 0] * 6 % 6 < 1)
         rgb[cond] = np.hstack([c[cond], x_val[cond], np.zeros_like(x_val[cond])])
-        cond = (1 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 2)
+        cond = (hsv[:, 0] * 6 % 6 >= 1) & (hsv[:, 0] * 6 % 6 < 2)
         rgb[cond] = np.hstack([x_val[cond], c[cond], np.zeros_like(x_val[cond])])
-        cond = (2 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 3)
+        cond = (hsv[:, 0] * 6 % 6 >= 2) & (hsv[:, 0] * 6 % 6 < 3)
         rgb[cond] = np.hstack([np.zeros_like(x_val[cond]), c[cond], x_val[cond]])
-        cond = (3 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 4)
+        cond = (hsv[:, 0] * 6 % 6 >= 3) & (hsv[:, 0] * 6 % 6 < 4)
         rgb[cond] = np.hstack([np.zeros_like(x_val[cond]), x_val[cond], c[cond]])
-        cond = (4 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 5)
+        cond = (hsv[:, 0] * 6 % 6 >= 4) & (hsv[:, 0] * 6 % 6 < 5)
         rgb[cond] = np.hstack([x_val[cond], np.zeros_like(x_val[cond]), c[cond]])
-        cond = (5 <= hsv[:, 0] * 6 % 6) & (hsv[:, 0] * 6 % 6 < 6)
+        cond = (hsv[:, 0] * 6 % 6 >= 5) & (hsv[:, 0] * 6 % 6 < 6)
         rgb[cond] = np.hstack([c[cond], np.zeros_like(x_val[cond]), x_val[cond]])
         rgb = rgb + m
 
@@ -320,7 +319,7 @@ def smooth_gaussian(poses, sigma=1.0):
     smooth_quats = smooth_quats / norms[:, np.newaxis]
 
     smooth_poses = []
-    for q, t in zip(smooth_quats, smooth_trans):
+    for q, t in zip(smooth_quats, smooth_trans, strict=False):
         rot = R.from_quat(q).as_matrix()
         pose = np.eye(4)
         pose[:3, :3] = rot

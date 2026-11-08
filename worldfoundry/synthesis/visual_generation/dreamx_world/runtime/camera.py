@@ -84,7 +84,7 @@ def camera_condition_from_actions(
     position = np.zeros(3)
     rotation = np.zeros(3)
     w2cs = [np.eye(4)]
-    for action_id, speed in zip(action_ids, speeds):
+    for action_id, speed in zip(action_ids, speeds, strict=False):
         actions = [_ACTIONS[key] for key in action_id]
         translation = sum(
             (_translation_step(action, rotation, speed, duration) for action in actions),

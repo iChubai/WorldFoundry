@@ -69,11 +69,11 @@ class WanAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor],
-        rotary_emb: Optional[torch.Tensor],
-        origin_hidden_states_seq_len: Optional[int],
+        encoder_hidden_states: torch.Tensor | None,
+        rotary_emb: torch.Tensor | None,
+        origin_hidden_states_seq_len: int | None,
         is_cross_attn: bool,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if not is_cross_attn:
             encoder_hidden_states = hidden_states
 
@@ -111,13 +111,13 @@ class WanAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: torch.Tensor | None = None,
         batch_image_vae_seqlen=None,
         text_features_length=None,
-        origin_hidden_states_seq_len: Optional[int] = None,
-        split_hidden_states_seq_len: Optional[int] = None,
+        origin_hidden_states_seq_len: int | None = None,
+        split_hidden_states_seq_len: int | None = None,
         cu_seqlens_q_cache=None,
         max_seqlen_q_cache=None,
         cu_seqlens_k_cross_cache=None,
@@ -200,7 +200,7 @@ class WanTimeTextImageEmbedding(nn.Module):
         time_freq_dim: int,
         time_proj_dim: int,
         text_embed_dim: int,
-        image_embed_dim: Optional[int] = None,
+        image_embed_dim: int | None = None,
     ):
         super().__init__()
         self.timesteps_proj = Timesteps(num_channels=time_freq_dim, flip_sin_to_cos=True, downscale_freq_shift=0)
@@ -214,7 +214,7 @@ class WanTimeTextImageEmbedding(nn.Module):
         self,
         timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
     ):
         timestep = self.timesteps_proj(timestep)
         time_embedder_dtype = self.time_embedder.linear_1.weight.dtype
@@ -234,7 +234,7 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         max_seq_len: int,
         theta: float = 10000.0,
         use_src_id_rotary_emb: bool = False,
@@ -311,7 +311,7 @@ class WanTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        added_kv_proj_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
     ):
         super().__init__()
 
@@ -355,7 +355,7 @@ class WanTransformerBlock(nn.Module):
         rotary_emb: torch.Tensor,
         batch_image_vae_seqlen=None,
         text_features_length=None,
-        origin_hidden_states_seq_len: Optional[int] = None,
+        origin_hidden_states_seq_len: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         scale_shift_table = self.scale_shift_table.float()
@@ -416,7 +416,7 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int] = (1, 2, 2),
+        patch_size: tuple[int] = (1, 2, 2),
         num_attention_heads: int = 40,
         attention_head_dim: int = 128,
         in_channels: int = 16,
@@ -426,10 +426,10 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = "rms_norm_across_heads",
+        qk_norm: str | None = "rms_norm_across_heads",
         eps: float = 1e-6,
-        image_dim: Optional[int] = None,
-        added_kv_proj_dim: Optional[int] = None,
+        image_dim: int | None = None,
+        added_kv_proj_dim: int | None = None,
         rope_max_seq_len: int = 1024,
         use_src_id_rotary_emb: bool = False,
     ) -> None:

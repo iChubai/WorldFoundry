@@ -1,10 +1,9 @@
-from einops import rearrange, repeat
-
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange, repeat
 from tqdm import tqdm
-import torch.distributed as dist
 
 CACHE_T = 2
 
@@ -76,6 +75,8 @@ class Upsample(nn.Upsample):
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
     CausalConv3d as ReferenceCausalConv3d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
     Resample,
 )
 
@@ -138,6 +139,8 @@ class Resample38(Resample):
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
     CausalConv3d as ActionCausalConv3d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
     ResidualBlock,
 )
 
@@ -182,10 +185,7 @@ class AttentionBlock(nn.Module):
         return x + identity
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import DupUp3D
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
 
 
 class Down_ResidualBlock(nn.Module):
@@ -287,7 +287,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -385,7 +385,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -501,7 +501,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -599,7 +599,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(

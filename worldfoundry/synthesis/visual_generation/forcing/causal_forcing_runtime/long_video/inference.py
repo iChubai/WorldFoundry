@@ -1,20 +1,21 @@
 import argparse
-import torch
 import os
-from pathlib import Path
-from omegaconf import OmegaConf
 from collections import OrderedDict
-from tqdm import tqdm
-from torchvision import transforms
-from torchvision.io import write_video
-from einops import rearrange
-import torch.distributed as dist
+from pathlib import Path
+
 import imageio
+import torch
+import torch.distributed as dist
+from einops import rearrange
+from eval_inputs import TextDataset, TextImagePairDataset
+from omegaconf import OmegaConf
+from pipeline import CausalDiffusionInferencePipeline, CausalInferencePipeline
 from torch.utils.data import DataLoader, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
+from torchvision import transforms
+from torchvision.io import write_video
+from tqdm import tqdm
 
-from pipeline import CausalDiffusionInferencePipeline, CausalInferencePipeline
-from eval_inputs import TextDataset, TextImagePairDataset
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
 
 parser = argparse.ArgumentParser()

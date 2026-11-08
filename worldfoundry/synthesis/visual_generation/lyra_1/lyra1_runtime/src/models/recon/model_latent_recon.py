@@ -15,24 +15,25 @@
 
 import math
 from functools import partial
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
-
 from src.models.utils.attention import PatchEmbed3D
+from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_decoder
+from src.models.utils.render import query_z_with_indices, subsample_pixels_spatio_temporal, subsample_x_and_rays
 from src.rendering.gs import GaussianRenderer
 from src.rendering.gs_deferred import GaussianRendererDeferred
 
-from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_decoder
-from src.models.utils.render import subsample_pixels_spatio_temporal, query_z_with_indices, subsample_x_and_rays
+# isort: split
 from src.models.utils.model import (
-    get_model_blocks,
     ConvTranspose3dFactorized,
-    MultiStageConvTranspose3d,
     ConvTranspose3dReduced,
-    forward_checkpointing,
+    MultiStageConvTranspose3d,
     PositionalEmbedding,
+    forward_checkpointing,
+    get_model_blocks,
 )
 
 

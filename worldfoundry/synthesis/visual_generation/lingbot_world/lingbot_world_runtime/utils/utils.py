@@ -10,7 +10,7 @@ import imageio
 import torch
 import torchvision
 
-__all__ = ["save_video", "save_image", "str2bool", "merge_video_audio"]
+__all__ = ["merge_video_audio", "save_image", "save_video", "str2bool"]
 
 
 def rand_name(length=8, suffix=""):

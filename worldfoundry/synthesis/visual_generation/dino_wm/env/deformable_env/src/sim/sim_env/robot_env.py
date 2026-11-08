@@ -1,8 +1,8 @@
 import os
-import numpy as np
-import pyflex
 
+import numpy as np
 import pybullet as p
+import pyflex
 from bs4 import BeautifulSoup
 
 from .transformations import quaternion_from_matrix, quaternion_matrix
@@ -24,7 +24,7 @@ class FlexRobotHelper:
 
         robot_path = fileName  # changed the urdf file
         robot_path_par = os.path.abspath(os.path.join(robot_path, os.pardir))
-        with open(robot_path, "r") as f:
+        with open(robot_path) as f:
             robot = f.read()
         robot_data = BeautifulSoup(robot, "xml")
         links = robot_data.find_all("link")

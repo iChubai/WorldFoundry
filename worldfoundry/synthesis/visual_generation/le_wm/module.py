@@ -1,7 +1,8 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
 from einops import rearrange
+from torch import nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 

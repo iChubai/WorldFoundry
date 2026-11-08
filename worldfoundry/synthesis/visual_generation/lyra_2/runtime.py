@@ -4,8 +4,9 @@ import importlib
 import json
 import os
 from argparse import Namespace
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Optional
 
 from worldfoundry.core.io.paths import checkpoint_root_candidates
 from worldfoundry.synthesis.visual_generation.lyra_2 import (
@@ -100,10 +101,10 @@ class Lyra2Runtime:
         args: Any = None,
         device: str | None = None,
         weight_dtype: Any = DEFAULT_WEIGHT_DTYPE,
-        checkpoint_dir: Optional[str] = None,
-        negative_prompt_path: Optional[str] = None,
+        checkpoint_dir: str | None = None,
+        negative_prompt_path: str | None = None,
         da3_model_name: str = DEFAULT_DA3_MODEL_NAME,
-        da3_model_path_custom: Optional[str] = None,
+        da3_model_path_custom: str | None = None,
         experiment: str = "lyra2",
         context_parallel_size: int = 1,
         guidance: float = 5.0,
@@ -115,7 +116,7 @@ class Lyra2Runtime:
         load_runtime: bool = False,
         strict: bool = True,
         **kwargs: Any,
-    ) -> "Lyra2Runtime":
+    ) -> Lyra2Runtime:
         """
         Build a lazy Lyra-2 wrapper or explicitly load the vendored runtime.
 
@@ -339,7 +340,7 @@ class Lyra2Runtime:
 
         install_da3_legacy_aliases()
 
-    def load_runtime(self, strict: bool = True) -> "Lyra2Runtime":
+    def load_runtime(self, strict: bool = True) -> Lyra2Runtime:
         """
         Load Lyra-2 model, DA3 model, and negative prompt embeddings.
 
@@ -433,10 +434,10 @@ class Lyra2Runtime:
         *,
         num_frames: int,
         seed: int,
-        guidance: Optional[float],
-        shift: Optional[float],
-        num_sampling_step: Optional[int],
-        offload: Optional[bool],
+        guidance: float | None,
+        shift: float | None,
+        num_sampling_step: int | None,
+        offload: bool | None,
     ) -> Namespace:
         """
         Build Lyra-2 runtime argument namespace.
@@ -506,7 +507,7 @@ class Lyra2Runtime:
     def _build_prompt_batch(
         self,
         prompt: str,
-        chunk_captions: Optional[dict[str, str]],
+        chunk_captions: dict[str, str] | None,
         num_frames: int,
         offload_when_prompt: bool,
     ) -> dict[str, Any]:
@@ -619,16 +620,16 @@ class Lyra2Runtime:
         input_image: Any = None,
         camera_w2c: Any = None,
         prompt: str = "",
-        chunk_captions: Optional[dict[str, str]] = None,
+        chunk_captions: dict[str, str] | None = None,
         zoom_factors: Any = None,
         fps: int = 16,
         seed: int = 1,
         resolution: Sequence[int] = (480, 832),
-        guidance: Optional[float] = None,
-        shift: Optional[float] = None,
-        num_sampling_step: Optional[int] = None,
-        offload: Optional[bool] = None,
-        offload_when_prompt: Optional[bool] = None,
+        guidance: float | None = None,
+        shift: float | None = None,
+        num_sampling_step: int | None = None,
+        offload: bool | None = None,
+        offload_when_prompt: bool | None = None,
         show_progress: bool = True,
         execute: bool = False,
         output_path: str | Path | None = None,
@@ -785,16 +786,16 @@ class Lyra2Runtime:
         input_image: Any,
         camera_w2c: Any,
         prompt: str,
-        chunk_captions: Optional[dict[str, str]],
+        chunk_captions: dict[str, str] | None,
         zoom_factors: Any,
         fps: int,
         seed: int,
         resolution: Sequence[int],
-        guidance: Optional[float],
-        shift: Optional[float],
-        num_sampling_step: Optional[int],
-        offload: Optional[bool],
-        offload_when_prompt: Optional[bool],
+        guidance: float | None,
+        shift: float | None,
+        num_sampling_step: int | None,
+        offload: bool | None,
+        offload_when_prompt: bool | None,
         extra: dict[str, Any],
     ) -> dict[str, Any]:
         """

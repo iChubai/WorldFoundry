@@ -5,12 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.core.media.types import MediaKind, infer_media_kind
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
+from worldfoundry.core.media.types import MediaKind, infer_media_kind
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 
 
@@ -430,12 +431,12 @@ def _runner_class() -> type[Any]:
     import torch
     from einops import rearrange
 
-    from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import WanVAE_
     from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+    from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
     from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (
         FlowUniPCMultistepScheduler,
     )
-    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import WanVAE_
 
     from .modeling import XWAMModel
 
@@ -873,8 +874,8 @@ class XWAMRuntime:
             return
         import torch
 
-        from worldfoundry.core.model_loading.checkpoints import assign_state_dict_strict
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.model_loading.checkpoints import assign_state_dict_strict
 
         _variant_root, config_path, weight_path = _resolve_policy_assets(self.config, self.variant)
         base_root, model_config_path, tokenizer_path = _resolve_base_assets(self.config)

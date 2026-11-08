@@ -3,53 +3,47 @@
 
 # DeepSpeed Team
 
-import torch
 import os
 import pdb
-from deepspeed import comm as dist
-from packaging import version as pkg_version
 from collections import OrderedDict
-from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
-from deepspeed.runtime import ZeROOptimizer
-from deepspeed.runtime.fp16.loss_scaler import CreateLossScaler
-from deepspeed.runtime.utils import (
-    bwc_tensor_model_parallel_rank,
-    get_global_norm,
-    empty_cache,
-    see_memory_usage,
-    inf,
-    is_model_parallel_parameter,
-    align_dense_tensors,
-    all_gather_dp_groups,
-)
-
-from deepspeed.runtime.zero.config import ZeroStageEnum
-from deepspeed.runtime.zero.offload_config import OffloadDeviceEnum
-from deepspeed.ops.adam import DeepSpeedCPUAdam
-from deepspeed.utils import logger
-from deepspeed.moe.utils import is_moe_param
-from deepspeed.git_version_info import version
-
-from deepspeed.runtime.constants import PIPE_REPLICATED
+import torch
+from deepspeed import comm as dist
 from deepspeed.accelerator import get_accelerator
-
+from deepspeed.checkpoint import enable_universal_checkpoint
 from deepspeed.checkpoint.constants import (
-    DS_VERSION,
-    GROUP_PADDINGS,
-    PARTITION_COUNT,
-    LOSS_SCALER,
-    SINGLE_PARTITION_OF_FP32_GROUPS,
     BASE_OPTIMIZER_STATE,
     BASE_OPTIMIZER_STATE_STEP,
     CLIP_GRAD,
-    ZERO_STAGE,
+    DS_VERSION,
+    GROUP_PADDINGS,
+    LOSS_SCALER,
     PARAM_SLICE_MAPPINGS,
+    PARTITION_COUNT,
+    SINGLE_PARTITION_OF_FP32_GROUPS,
+    ZERO_STAGE,
 )
-from deepspeed.utils import link_hp_params
-from deepspeed.checkpoint import enable_universal_checkpoint
-
-from deepspeed.utils import groups
+from deepspeed.git_version_info import version
+from deepspeed.moe.utils import is_moe_param
+from deepspeed.ops.adam import DeepSpeedCPUAdam
+from deepspeed.runtime import ZeROOptimizer
+from deepspeed.runtime.constants import PIPE_REPLICATED
+from deepspeed.runtime.fp16.loss_scaler import CreateLossScaler
+from deepspeed.runtime.utils import (
+    align_dense_tensors,
+    all_gather_dp_groups,
+    bwc_tensor_model_parallel_rank,
+    empty_cache,
+    get_global_norm,
+    inf,
+    is_model_parallel_parameter,
+    see_memory_usage,
+)
+from deepspeed.runtime.zero.config import ZeroStageEnum
+from deepspeed.runtime.zero.offload_config import OffloadDeviceEnum
+from deepspeed.utils import groups, link_hp_params, logger
+from packaging import version as pkg_version
+from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
 from opensora.adaptor.zp_manager import zp_manager
 
@@ -70,10 +64,10 @@ def input(msg):
 def split_half_float_double(tensors):
     device_type = get_accelerator().device_name()
     dtypes = [
-        "torch.{}.HalfTensor".format(device_type),
-        "torch.{}.FloatTensor".format(device_type),
-        "torch.{}.DoubleTensor".format(device_type),
-        "torch.{}.BFloat16Tensor".format(device_type),
+        f"torch.{device_type}.HalfTensor",
+        f"torch.{device_type}.FloatTensor",
+        f"torch.{device_type}.DoubleTensor",
+        f"torch.{device_type}.BFloat16Tensor",
     ]
     buckets = []
     for i, dtype in enumerate(dtypes):
@@ -122,7 +116,9 @@ def contigous_flatten(tensors):
 
 
 def all_gather_into_tensor_dp_groups(groups_flat, partitioned_param_groups, zp_process_group):
-    for group_id, (group_flat, partitioned_params) in enumerate(zip(groups_flat, partitioned_param_groups)):
+    for group_id, (group_flat, partitioned_params) in enumerate(
+        zip(groups_flat, partitioned_param_groups, strict=False)
+    ):
         partition_id = dist.get_rank(group=zp_process_group[group_id])
         dp_world_size = dist.get_world_size(group=zp_process_group[group_id])
         if dp_world_size == 1:
@@ -583,10 +579,10 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         see_memory_usage("After initializing optimizer states", force=True)
 
         if dist.get_rank() == 0:
-            logger.info(f"optimizer state initialized")
+            logger.info("optimizer state initialized")
 
         if dist.get_rank(group=self.zp_process_group) == 0:
-            see_memory_usage(f"After initializing ZeRO optimizer", force=True)
+            see_memory_usage("After initializing ZeRO optimizer", force=True)
 
         self._link_all_hp_params()
         self._enable_universal_checkpoint()
@@ -669,7 +665,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
     def _update_model_bit16_weights(self, group_index):
         updated_params = self.unflatten(self.bit16_groups_flat[group_index], self.round_robin_bit16_groups[group_index])
-        for p, q in zip(self.round_robin_bit16_groups[group_index], updated_params):
+        for p, q in zip(self.round_robin_bit16_groups[group_index], updated_params, strict=False):
             p.data = q.data
 
         # set model fp16 weight to slices of reordered flattened buffer
@@ -685,14 +681,14 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
         for i, tensor in enumerate(tensor_list):
             j = i % num_partitions
-            if not j in partition_tensors:
+            if j not in partition_tensors:
                 partition_tensors[j] = []
             partition_tensors[j].append((i, tensor))
 
         reordered_tensors = []
         reordered_indices = {}
 
-        for partition_index in partition_tensors.keys():
+        for partition_index in partition_tensors:
             for i, (original_index, tensor) in enumerate(partition_tensors[partition_index]):
                 reordered_indices[original_index] = len(reordered_tensors)
                 reordered_tensors.append(tensor)
@@ -791,9 +787,9 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 )
 
     def independent_gradient_partition_epilogue(self):
-        self.report_ipg_memory_usage(f"In ipg_epilogue before reduce_ipg_grads", 0)
+        self.report_ipg_memory_usage("In ipg_epilogue before reduce_ipg_grads", 0)
         self.reduce_ipg_grads()
-        self.report_ipg_memory_usage(f"In ipg_epilogue after reduce_ipg_grads", 0)
+        self.report_ipg_memory_usage("In ipg_epilogue after reduce_ipg_grads", 0)
 
         # if dist.get_rank() == 0:
         #    logger.info("Params already reduced %s", self.params_already_reduced)
@@ -807,7 +803,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
         if self.cpu_offload is False:
             for i, _ in enumerate(self.bit16_groups):
-                if not i in self.averaged_gradients or self.averaged_gradients[i] is None:
+                if i not in self.averaged_gradients or self.averaged_gradients[i] is None:
                     self.averaged_gradients[i] = self.get_flat_partition(
                         self.params_in_partition[i],
                         self.first_offset[i],
@@ -826,7 +822,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                         return_tensor_list=True,
                     )
 
-                    for accumulated_grad, new_avg_grad in zip(self.averaged_gradients[i], avg_new):
+                    for accumulated_grad, new_avg_grad in zip(self.averaged_gradients[i], avg_new, strict=False):
                         accumulated_grad.add_(new_avg_grad)
 
         self._release_ipg_buffers()
@@ -835,7 +831,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         # All gradients required by the step
         # are in self.averaged_gradients
         self.zero_grad(set_to_none=True)
-        see_memory_usage(f"End ipg_epilogue")
+        see_memory_usage("End ipg_epilogue")
 
     # resets all partition to no reduced
     # sets remaining grads to the total number of grads in each partition
@@ -1040,7 +1036,9 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     ):
         process_group = self.zp_process_group if process_group is None else process_group
         allreduced = self.allreduce_bucket(small_bucket, log=log, divide=divide, process_group=process_group)
-        for buf, synced, bucket_rank in zip(small_bucket, self.unflatten(allreduced, small_bucket), bucket_ranks):
+        for buf, synced, bucket_rank in zip(
+            small_bucket, self.unflatten(allreduced, small_bucket), bucket_ranks, strict=False
+        ):
             if dist.get_rank(group=process_group) == bucket_rank:
                 buf.copy_(synced)
 
@@ -1587,7 +1585,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 process_group=process_group,
             )
             if rank is None or rank == dist.get_rank(group=self.zp_process_group):
-                for buf, synced in zip(small_bucket, self.unflatten(allreduced, small_bucket)):
+                for buf, synced in zip(small_bucket, self.unflatten(allreduced, small_bucket), strict=False):
                     buf.copy_(synced)
 
     def allreduce_no_retain(
@@ -1731,7 +1729,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             total_norm = 0.0
             # if dist.get_rank() == 0:
             #    logger.info(f"Total Norm beginning {total_norm}")
-            for g, p in zip(gradients, params):
+            for g, p in zip(gradients, params, strict=False):
                 # Pipeline parallelism may replicate parameters. Avoid multi-counting.
                 if hasattr(p, PIPE_REPLICATED) and p.ds_pipe_replicated:
                     continue
@@ -1858,7 +1856,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         """
         self.micro_step_id = -1
 
-        see_memory_usage(f"In step before checking overflow")
+        see_memory_usage("In step before checking overflow")
 
         # First compute norm for all group so we know if there is overflow
         if self.dtype == torch.float16:
@@ -1925,9 +1923,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                         self.single_partition_of_fp32_groups[i].dtype
                     )
                 assert single_grad_partition.numel() == self.partition_size[i], (
-                    "averaged gradients have different number of elements that partition size {} {} {} {}".format(
-                        single_grad_partition.numel(), self.partition_size[i], i, partition_id
-                    )
+                    f"averaged gradients have different number of elements that partition size {single_grad_partition.numel()} {self.partition_size[i]} {i} {partition_id}"
                 )
 
                 self.single_partition_of_fp32_groups[i].grad = single_grad_partition
@@ -1981,7 +1977,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     @torch.no_grad()
     def update_lp_params(self):
         for i, (bit16_partitions, fp32_partition) in enumerate(
-            zip(self.parallel_partitioned_bit16_groups, self.single_partition_of_fp32_groups)
+            zip(self.parallel_partitioned_bit16_groups, self.single_partition_of_fp32_groups, strict=False)
         ):
             partition_id = dist.get_rank(group=self.real_zp_process_group[i])
             bit16_partitions[partition_id].data.copy_(fp32_partition.data)
@@ -2253,13 +2249,15 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             dp_partitions = self.get_data_parallel_partitions(flat_merged_partitions, i)
             merged_single_partition_of_fp32_groups.append(dp_partitions[partition_id])
 
-        for current, saved in zip(self.single_partition_of_fp32_groups, merged_single_partition_of_fp32_groups):
+        for current, saved in zip(
+            self.single_partition_of_fp32_groups, merged_single_partition_of_fp32_groups, strict=False
+        ):
             current.data.copy_(saved.data)
 
     # Restore base optimizer fp32 weights from ZeRO fp16 or bfloat16 weights
     def _restore_from_bit16_weights(self):
         for group_id, (bit16_partitions, fp32_partition) in enumerate(
-            zip(self.parallel_partitioned_bit16_groups, self.single_partition_of_fp32_groups)
+            zip(self.parallel_partitioned_bit16_groups, self.single_partition_of_fp32_groups, strict=False)
         ):
             partition_id = dist.get_rank(group=self.real_zp_process_group[group_id])
             fp32_partition.data.copy_(bit16_partitions[partition_id].data)
@@ -2384,7 +2382,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         self.clip_grad = sd.get(CLIP_GRAD, self.clip_grad)
 
         ckpt_version = sd.get(DS_VERSION, False)
-        assert ckpt_version, f"Empty ds_version in checkpoint, not clear how to proceed"
+        assert ckpt_version, "Empty ds_version in checkpoint, not clear how to proceed"
         ckpt_version = pkg_version.parse(ckpt_version)
 
         # zero stage 1 mode
@@ -2475,7 +2473,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             else:
                 # For non-elastic checkpoint, simply copying from saved weights of current rank is sufficient.
                 for current, saved in zip(
-                    self.single_partition_of_fp32_groups, current_rank_sd[SINGLE_PARTITION_OF_FP32_GROUPS]
+                    self.single_partition_of_fp32_groups, current_rank_sd[SINGLE_PARTITION_OF_FP32_GROUPS], strict=False
                 ):
                     src_tensor = _get_padded_tensor(saved, current.numel())
                     current.data.copy_(src_tensor.data)

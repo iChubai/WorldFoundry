@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -103,7 +104,7 @@ class A1Config:
     normalization: str = "bounds_q99"
 
     @classmethod
-    def from_mapping(cls, raw: Mapping[str, Any]) -> "A1Config":
+    def from_mapping(cls, raw: Mapping[str, Any]) -> A1Config:
         root = _mapping(raw)
         if isinstance(root.get("model"), Mapping):
             root = _mapping(root["model"])
@@ -139,7 +140,7 @@ class A1Config:
         return cfg
 
     @classmethod
-    def from_checkpoint(cls, checkpoint_dir: str | Path) -> "A1Config":
+    def from_checkpoint(cls, checkpoint_dir: str | Path) -> A1Config:
         root = Path(checkpoint_dir).expanduser().resolve()
         candidates = (root / "model.yaml", root / "config.yaml", root / "model.yml", root / "config.yml")
         for path in candidates:
@@ -150,7 +151,7 @@ class A1Config:
                 return cls.from_mapping(payload)
         raise FileNotFoundError(f"A1 checkpoint requires model.yaml or config.yaml under {root}")
 
-    def with_weight_shapes(self, shapes: Mapping[str, tuple[int, ...]]) -> "A1Config":
+    def with_weight_shapes(self, shapes: Mapping[str, tuple[int, ...]]) -> A1Config:
         """Resolve ambiguous action dimensions from checkpoint tensors."""
 
         updates: dict[str, Any] = {}
@@ -242,8 +243,8 @@ class A1Config:
         from worldfoundry.synthesis.action_generation.molmobot.modeling.image_vit import (
             ActivationType,
             AttentionType,
-            VitConfig,
             VisionBackboneType,
+            VitConfig,
         )
         from worldfoundry.synthesis.action_generation.molmobot.modeling.vision_backbone import (
             ImagePaddingEmbed,

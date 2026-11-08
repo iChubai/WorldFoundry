@@ -17,22 +17,27 @@
 #
 # ==============================================================================
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Union, Tuple
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from dataclasses import dataclass
-from packaging import version
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.configuration_utils import FrozenDict
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
+from diffusers.loaders import (
+    LoraLoaderMixin,
+    TextualInversionLoaderMixin,
+)
 from diffusers.models import AutoencoderKL
 from diffusers.models.lora import adjust_lora_scale_text_encoder
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import (
     USE_PEFT_BACKEND,
+    BaseOutput,
     deprecate,
     logging,
     replace_example_docstring,
@@ -40,18 +45,15 @@ from diffusers.utils import (
     unscale_lora_layers,
 )
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.utils import BaseOutput
-from diffusers.loaders import (
-    LoraLoaderMixin,
-)
+from diffusers.video_processor import VideoProcessor
 from matrixgame.encoder_variants.matrixgame_i2v import TextEncoder
-from matrixgame.utils.utils import numpy_to_pil, black_image
+from matrixgame.utils.utils import black_image, numpy_to_pil
+from packaging import version
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video import (
     AutoencoderKLCausal3D,
 )
 from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
-from diffusers.video_processor import VideoProcessor
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -80,10 +82,10 @@ def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
 
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     """
@@ -139,7 +141,7 @@ def retrieve_timesteps(
 
 @dataclass
 class MatrixGameVideoPipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 class MatrixGameVideoPipeline(DiffusionPipeline):
@@ -225,14 +227,14 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         num_videos_per_prompt,
         do_classifier_free_guidance,
         negative_prompt=None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        lora_scale: Optional[float] = None,
-        clip_skip: Optional[int] = None,
-        text_encoder: Optional[TextEncoder] = None,
-        data_type: Optional[str] = "image",
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        lora_scale: float | None = None,
+        clip_skip: int | None = None,
+        text_encoder: TextEncoder | None = None,
+        data_type: str | None = "image",
         semantic_images=None,
     ):
         r"""
@@ -563,34 +565,31 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         keyboard_condition=None,
         data_type: str = "video",
         num_inference_steps: int = 50,
-        timesteps: List[int] = None,
-        sigmas: List[float] = None,
+        timesteps: list[int] = None,
+        sigmas: list[float] = None,
         guidance_scale: float = 7.5,
-        num_videos_per_prompt: Optional[int] = 1,
+        num_videos_per_prompt: int | None = 1,
         eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_attention_mask: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_attention_mask: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         guidance_rescale: float = 0.0,
-        clip_skip: Optional[int] = None,
-        callback_on_step_end: Optional[
-            Union[
-                Callable[[int, int, Dict], None],
-                PipelineCallback,
-                MultiPipelineCallbacks,
-            ]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        clip_skip: int | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
-        embedded_guidance_scale: Optional[float] = None,
+        embedded_guidance_scale: float | None = None,
         i2v_type="refiner",
         args=None,
         semantic_images=None,

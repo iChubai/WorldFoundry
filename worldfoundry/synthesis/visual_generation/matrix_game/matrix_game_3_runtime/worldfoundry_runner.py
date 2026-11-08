@@ -187,7 +187,7 @@ def main():
         sys.path.insert(0, root_str)
     patch_torch_dynamo_config_aliases()
 
-    with open(args.actions_json, "r", encoding="utf-8") as file:
+    with open(args.actions_json, encoding="utf-8") as file:
         action_spec = json.load(file)
     keyboard_condition_np = np.asarray(action_spec["keyboard_condition"], dtype=np.float32)
     mouse_condition_np = np.asarray(action_spec["mouse_condition"], dtype=np.float32)
@@ -195,12 +195,17 @@ def main():
     from PIL import Image
 
     from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import MAX_AREA_CONFIGS, WAN_CONFIGS
+
+    # isort: split
     import pipeline.inference_pipeline as mg3_inference
+
+    # isort: split
+    import utils.visualize as visualize_utils
     from utils.cam_utils import get_extrinsics
-    from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
     from utils.transform import get_video_transform
     from utils.utils import compute_all_poses_from_actions
-    import utils.visualize as visualize_utils
+
+    from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
 
     def custom_get_data(num_frames, height, width, pil_image, device=None, dtype=None):
         if keyboard_condition_np.shape[0] != num_frames or mouse_condition_np.shape[0] != num_frames:

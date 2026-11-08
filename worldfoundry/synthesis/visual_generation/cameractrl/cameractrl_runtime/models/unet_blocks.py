@@ -1,9 +1,9 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/unet_2d_blocks.py
 
 import torch
-from torch import nn
+from diffusers.models.resnet import Downsample2D, ResnetBlock2D, Upsample2D
 from einops import rearrange, repeat
-from diffusers.models.resnet import Downsample2D, Upsample2D, ResnetBlock2D
+from torch import nn
 
 try:
     from diffusers.models.transformer_2d import Transformer2DModel
@@ -261,7 +261,7 @@ class UNetMidBlock3DCrossAttn(nn.Module):
             else:
                 motion_cross_attention_kwargs.update({"scale": motion_lora_scale})
 
-        for attn, resnet, motion_module in zip(self.attentions, self.resnets[1:], self.motion_modules):
+        for attn, resnet, motion_module in zip(self.attentions, self.resnets[1:], self.motion_modules, strict=False):
             hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
             hidden_states = attn(
                 hidden_states,
@@ -405,7 +405,7 @@ class CrossAttnDownBlock3D(nn.Module):
             else:
                 motion_cross_attention_kwargs.update({"scale": motion_lora_scale})
 
-        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules):
+        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules, strict=False):
             if self.training and self.gradient_checkpointing:
                 raise NotImplementedError
             else:
@@ -529,7 +529,7 @@ class DownBlock3D(nn.Module):
             else:
                 motion_cross_attention_kwargs.update({"scale": motion_lora_scale})
 
-        for resnet, motion_module in zip(self.resnets, self.motion_modules):
+        for resnet, motion_module in zip(self.resnets, self.motion_modules, strict=False):
             if self.training and self.gradient_checkpointing:
                 raise NotImplementedError
             else:
@@ -673,7 +673,7 @@ class CrossAttnUpBlock3D(nn.Module):
             else:
                 motion_cross_attention_kwargs.update({"scale": motion_lora_scale})
 
-        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules):
+        for resnet, attn, motion_module in zip(self.resnets, self.attentions, self.motion_modules, strict=False):
             # pop res hidden states
             res_hidden_states = res_hidden_states_tuple[-1]
             res_hidden_states_tuple = res_hidden_states_tuple[:-1]
@@ -796,7 +796,7 @@ class UpBlock3D(nn.Module):
             else:
                 motion_cross_attention_kwargs.update({"scale": motion_lora_scale})
 
-        for resnet, motion_module in zip(self.resnets, self.motion_modules):
+        for resnet, motion_module in zip(self.resnets, self.motion_modules, strict=False):
             # pop res hidden states
             res_hidden_states = res_hidden_states_tuple[-1]
             res_hidden_states_tuple = res_hidden_states_tuple[:-1]

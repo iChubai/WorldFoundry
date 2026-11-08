@@ -1,20 +1,20 @@
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
 from typing import Dict, Optional, Tuple
 
-from einops import rearrange
 import flax.linen as nn
 import jax
-from jax import Array
 import jax.numpy as jnp
+from einops import rearrange
+from jax import Array
 from jax.typing import ArrayLike
 
+from ..types import PRNGKey
 from .base import TokenGroup
 from .diffusion import cosine_beta_schedule, create_diffusion_model
 from .tokenizers import BinTokenizer
 from .transformer import MAPHead
 from .unet import ConditionalUnet1D, unet_squaredcos_cap_v2
-from ..types import PRNGKey
 
 
 class ActionHead(ABC):
@@ -28,13 +28,13 @@ class ActionHead(ABC):
     @abstractmethod
     def predict_action(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
+        transformer_outputs: dict[str, TokenGroup],
         argmax: bool = False,
-        sample_shape: Tuple[int, ...] = (),
-        rng: Optional[PRNGKey] = None,
+        sample_shape: tuple[int, ...] = (),
+        rng: PRNGKey | None = None,
         temperature: float = 1.0,
         train: bool = False,
-        embodiment_action_dim: Optional[int] = None,
+        embodiment_action_dim: int | None = None,
     ) -> Array:
         """Predict the action for the last timestep in the window. Returns shape
         (*sample_shape, batch_size, action_horizon, action_dim).
@@ -65,7 +65,7 @@ class ContinuousActionHead(nn.Module, ActionHead):
             self.map_head = MAPHead()
         self.mean_proj = nn.Dense(self.action_horizon * self.action_dim)
 
-    def __call__(self, transformer_outputs: Dict[str, TokenGroup], train: bool = False) -> jax.Array:
+    def __call__(self, transformer_outputs: dict[str, TokenGroup], train: bool = False) -> jax.Array:
         """
         Returns:
             mean: Predicted actions w/ shape (batch_size, window_size, action_horizon, action_dim)
@@ -88,7 +88,7 @@ class ContinuousActionHead(nn.Module, ActionHead):
 
     def predict_action(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
+        transformer_outputs: dict[str, TokenGroup],
         train: bool = False,
         *args,
         sample_shape: tuple = (),
@@ -149,7 +149,7 @@ class DiscreteActionHead(nn.Module, ActionHead):
             bin_type=self.normalization_type,
         )
 
-    def __call__(self, transformer_outputs: Dict[str, TokenGroup], train: bool = False) -> jax.Array:
+    def __call__(self, transformer_outputs: dict[str, TokenGroup], train: bool = False) -> jax.Array:
         """
         Returns:
             logits: array w/ shape (batch_size, window_size, action_horizon, action_dim, vocab_size)
@@ -180,11 +180,11 @@ class DiscreteActionHead(nn.Module, ActionHead):
 
     def predict_action(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
+        transformer_outputs: dict[str, TokenGroup],
         train: bool = False,
         argmax: bool = False,
         sample_shape: tuple = (),
-        rng: Optional[PRNGKey] = None,
+        rng: PRNGKey | None = None,
         temperature: float = 1.0,
         **unused_kwargs,
     ) -> jax.Array:
@@ -274,9 +274,9 @@ class DiffusionActionHead(nn.Module):
 
     def __call__(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
-        time: Optional[ArrayLike] = None,
-        noisy_actions: Optional[ArrayLike] = None,
+        transformer_outputs: dict[str, TokenGroup],
+        time: ArrayLike | None = None,
+        noisy_actions: ArrayLike | None = None,
         train: bool = False,
     ) -> jax.Array:
         """Performs a single forward pass through the diffusion model."""
@@ -305,10 +305,10 @@ class DiffusionActionHead(nn.Module):
 
     def predict_action(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
+        transformer_outputs: dict[str, TokenGroup],
         rng: PRNGKey,
         train: bool = False,
-        embodiment_action_dim: Optional[int] = None,
+        embodiment_action_dim: int | None = None,
         *args,
         sample_shape: tuple = (),
         **kwargs,
@@ -404,7 +404,7 @@ class UNetDDPMActionHead(nn.Module):
     flatten_tokens: bool = False
     timesteps: int = 100
     max_action: float = 1.0
-    clip_sample: Optional[float] = None
+    clip_sample: float | None = None
     variance_type: str = "fixed_large"
 
     def setup(self):
@@ -422,9 +422,9 @@ class UNetDDPMActionHead(nn.Module):
 
     def __call__(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
-        time: Optional[ArrayLike] = None,
-        noisy_actions: Optional[ArrayLike] = None,
+        transformer_outputs: dict[str, TokenGroup],
+        time: ArrayLike | None = None,
+        noisy_actions: ArrayLike | None = None,
         train: bool = False,
     ) -> jax.Array:
         """Performs a single forward pass through the diffusion model."""
@@ -458,10 +458,10 @@ class UNetDDPMActionHead(nn.Module):
 
     def predict_action(
         self,
-        transformer_outputs: Dict[str, TokenGroup],
+        transformer_outputs: dict[str, TokenGroup],
         rng: PRNGKey,
         train: bool = False,
-        embodiment_action_dim: Optional[int] = None,
+        embodiment_action_dim: int | None = None,
         *args,
         **kwargs,
     ) -> jax.Array:

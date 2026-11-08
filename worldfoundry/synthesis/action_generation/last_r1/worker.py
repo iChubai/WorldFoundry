@@ -1,7 +1,7 @@
 """Isolated LaST-R1 step using the pinned official Qwen3-VL implementation."""
 
-import json
 import importlib.util
+import json
 import os
 import sys
 import time
@@ -13,7 +13,6 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
-
 
 if len(sys.argv) != 2:
     raise SystemExit("usage: python -m worldfoundry.synthesis.action_generation.last_r1.worker REQUEST_JSON")

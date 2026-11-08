@@ -6,9 +6,10 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
@@ -539,7 +540,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "WorldModelRuntimeSynthesis":
+    ) -> WorldModelRuntimeSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):

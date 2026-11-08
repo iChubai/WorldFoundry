@@ -12,8 +12,8 @@ def get_nd_rotary_pos_embed_new(
     *args,
     theta=10000.0,
     use_real=False,
-    theta_rescale_factor: Union[float, List[float]] = 1.0,
-    interpolation_factor: Union[float, List[float]] = 1.0,
+    theta_rescale_factor: float | list[float] = 1.0,
+    interpolation_factor: float | list[float] = 1.0,
     concat_dict={},
 ):
     """

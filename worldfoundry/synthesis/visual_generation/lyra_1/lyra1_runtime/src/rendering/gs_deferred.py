@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import einops
+import kiui
 import numpy as np
 import torch
-from gsplat.rendering import rasterization
-import kiui
 import torch.nn.functional as F
-import einops
-
+from gsplat.rendering import rasterization
 from src.models.utils.render import downscale_intrinsics
 from src.rendering.gs_deferred_patch import DeferredBPPatch
 
@@ -396,7 +395,7 @@ class GaussianRendererDeferred:
                 render_mode="RGB+ED",
                 **self.raster_kwargs,
             )
-            for rendered_image, rendered_alpha in zip(rendered_image_all, rendered_alpha_all):
+            for rendered_image, rendered_alpha in zip(rendered_image_all, rendered_alpha_all, strict=False):
                 depths.append(rendered_image[..., 3:].permute(2, 0, 1))
                 images.append(rendered_image[..., :3].permute(2, 0, 1))
                 alphas.append(rendered_alpha.permute(2, 0, 1))
@@ -451,12 +450,12 @@ class GaussianRendererDeferred:
         l = ["x", "y", "z"]
         # All channels except the 3 DC
         for i in range(f_dc.shape[1]):
-            l.append("f_dc_{}".format(i))
+            l.append(f"f_dc_{i}")
         l.append("opacity")
         for i in range(scales.shape[1]):
-            l.append("scale_{}".format(i))
+            l.append(f"scale_{i}")
         for i in range(rotations.shape[1]):
-            l.append("rot_{}".format(i))
+            l.append(f"rot_{i}")
 
         dtype_full = [(attribute, "f4") for attribute in l]
 

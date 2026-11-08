@@ -84,7 +84,7 @@ if __name__ == "__main__":
     init_dist(launcher="pytorch")
     rank, world_size = get_dist_info()
 
-    print("RANK: {} || WORLD_SIZE: {}".format(rank, world_size))
+    print(f"RANK: {rank} || WORLD_SIZE: {world_size}")
 
     args = parse_args()
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     if not is_multi_gpu_dist:
         use_cfg_parallel = False  # treat cfg-parallel as OFF
         if rank == 0:
-            print(f"[init] dist=OFF or WORLD_SIZE=1 -> force parallel OFF ", flush=True)
+            print("[init] dist=OFF or WORLD_SIZE=1 -> force parallel OFF ", flush=True)
     else:
         parallel_state.set_vae_group(dist.group.WORLD)
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
         input_args_d["raw_prompt"] = raw_prompt
         input_args_d["prompt"] = rewritten_prompt
 
-        print("rewritten prompt from [{}] to [{}]".format(raw_prompt, rewritten_prompt))
+        print(f"rewritten prompt from [{raw_prompt}] to [{rewritten_prompt}]")
 
     input_args_d.pop("output_dir")
     input_args_d.pop("use_prompt_rewriter")
@@ -209,12 +209,12 @@ if __name__ == "__main__":
 
     warmup = bool(input_args_d.pop("warmup", False))
     if warmup:
-        print(f"=====================warmup====================")
+        print("=====================warmup====================")
         pipeline(**input_args_d)
 
     print_gpu_memory()
 
-    print(f"=====================infer====================")
+    print("=====================infer====================")
 
     start_time = time.perf_counter()
     video = pipeline(**input_args_d)

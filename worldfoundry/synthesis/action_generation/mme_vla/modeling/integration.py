@@ -10,7 +10,6 @@ from ...openpi import array_typing as at
 from ...openpi.modeling import lora
 from ...openpi.modeling.gemma import Config, _apply_rope, _name
 
-
 Variant = Literal["dummy", "gemma_300m", "gemma_300m_lora", "gemma_2b", "gemma_2b_lora", "gemma_150m"]
 
 

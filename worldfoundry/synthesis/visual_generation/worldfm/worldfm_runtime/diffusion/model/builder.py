@@ -14,7 +14,9 @@ def build_model(cfg, use_grad_checkpoint=False, use_fp32_attention=False, gc_ste
     # Use lazy import to avoid circular-import issues during module init.
     global _NETS_IMPORTED
     if not _NETS_IMPORTED:
-        from worldfoundry.synthesis.visual_generation.worldfm.worldfm_runtime.diffusion.model.nets import nets  # noqa: F401
+        from worldfoundry.synthesis.visual_generation.worldfm.worldfm_runtime.diffusion.model.nets import (
+            nets,  # noqa: F401
+        )
 
         _NETS_IMPORTED = True
     model = MODELS.build(cfg, default_args=kwargs)

@@ -9,7 +9,7 @@ from torch import Tensor
 
 
 def compute_rope_rotations(
-    length: int, dim: int, theta: int, *, freq_scaling: float = 1.0, device: Union[torch.device, str] = "cpu"
+    length: int, dim: int, theta: int, *, freq_scaling: float = 1.0, device: torch.device | str = "cpu"
 ) -> Tensor:
     assert dim % 2 == 0
 

@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: MIT
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
+import html
 import math
+import string
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoTokenizer
-import html
-import string
 
 try:
     import ftfy
@@ -73,10 +74,7 @@ class T5FeedForward(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5SelfAttention
-
-
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding, T5SelfAttention
 
 
 def init_weights(m):

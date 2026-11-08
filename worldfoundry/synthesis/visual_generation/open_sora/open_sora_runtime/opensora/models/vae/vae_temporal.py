@@ -37,7 +37,7 @@ class CausalConv3d(nn.Module):
         self,
         chan_in,
         chan_out,
-        kernel_size: Union[int, Tuple[int, int, int]],
+        kernel_size: int | tuple[int, int, int],
         pad_mode="constant",
         strides=None,  # allow custom stride
         **kwargs,

@@ -221,7 +221,7 @@ def cast_tuple(t, length=1):
 
 
 class CausalConv3d(nn.Module):
-    def __init__(self, chan_in, chan_out, kernel_size: Union[int, Tuple[int, int, int]], pad_mode="constant", **kwargs):
+    def __init__(self, chan_in, chan_out, kernel_size: int | tuple[int, int, int], pad_mode="constant", **kwargs):
         super().__init__()
         kernel_size = cast_tuple(kernel_size, 3)
 
@@ -256,7 +256,7 @@ class CausalConv3d(nn.Module):
         return self.conv(x)
 
 
-def ResnetBlockCausal3D(dim, kernel_size: Union[int, Tuple[int, int, int]], pad_mode: str = "constant"):
+def ResnetBlockCausal3D(dim, kernel_size: int | tuple[int, int, int], pad_mode: str = "constant"):
     net = nn.Sequential(
         Normalize(dim),
         nn.SiLU(),

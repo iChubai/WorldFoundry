@@ -3,12 +3,11 @@ from typing import Dict, List, Tuple
 import gymnasium
 import pygame
 
+ActionNames = list[str]
+Keymap = dict[tuple[int], int]
 
-ActionNames = List[str]
-Keymap = Dict[Tuple[int], int]
 
-
-def get_keymap_and_action_names(name: str) -> Tuple[Keymap, ActionNames]:
+def get_keymap_and_action_names(name: str) -> tuple[Keymap, ActionNames]:
     if name == "empty":
         return EMPTY_KEYMAP, EMPTY_ACTION_NAMES
 

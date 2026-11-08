@@ -22,19 +22,17 @@ import numpy as np
 import PIL.Image
 import torch
 import torch.nn.functional as F
-from PIL import Image, ImageFilter, ImageOps
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.utils import CONFIG_NAME, PIL_INTERPOLATION, deprecate
-
+from PIL import Image, ImageFilter, ImageOps
 
 PipelineImageInput = Union[
     PIL.Image.Image,
     np.ndarray,
     torch.Tensor,
-    List[PIL.Image.Image],
-    List[np.ndarray],
-    List[torch.Tensor],
+    list[PIL.Image.Image],
+    list[np.ndarray],
+    list[torch.Tensor],
 ]
 
 PipelineDepthInput = PipelineImageInput
@@ -56,7 +54,9 @@ def is_valid_image(image) -> bool:
         `bool`:
             `True` if the input is a valid image, `False` otherwise.
     """
-    return isinstance(image, PIL.Image.Image) or isinstance(image, (np.ndarray, torch.Tensor)) and image.ndim in (2, 3)
+    return isinstance(image, PIL.Image.Image) or (
+        isinstance(image, (np.ndarray, torch.Tensor)) and image.ndim in (2, 3)
+    )
 
 
 def is_valid_image_imagelist(images):
@@ -78,9 +78,7 @@ def is_valid_image_imagelist(images):
         `bool`:
             `True` if the input is valid, `False` otherwise.
     """
-    if isinstance(images, (np.ndarray, torch.Tensor)) and images.ndim == 4:
-        return True
-    elif is_valid_image(images):
+    if (isinstance(images, (np.ndarray, torch.Tensor)) and images.ndim == 4) or is_valid_image(images):
         return True
     elif isinstance(images, list):
         return all(is_valid_image(image) for image in images)
@@ -146,7 +144,7 @@ class VaeImageProcessor(ConfigMixin):
             )
 
     @staticmethod
-    def numpy_to_pil(images: np.ndarray) -> List[PIL.Image.Image]:
+    def numpy_to_pil(images: np.ndarray) -> list[PIL.Image.Image]:
         r"""
         Convert a numpy image or a batch of images to a PIL image.
 
@@ -170,7 +168,7 @@ class VaeImageProcessor(ConfigMixin):
         return pil_images
 
     @staticmethod
-    def pil_to_numpy(images: Union[List[PIL.Image.Image], PIL.Image.Image]) -> np.ndarray:
+    def pil_to_numpy(images: list[PIL.Image.Image] | PIL.Image.Image) -> np.ndarray:
         r"""
         Convert a PIL image or a list of PIL images to NumPy arrays.
 
@@ -225,7 +223,7 @@ class VaeImageProcessor(ConfigMixin):
         return images
 
     @staticmethod
-    def normalize(images: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
+    def normalize(images: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
         r"""
         Normalize an image array to [-1,1].
 
@@ -240,7 +238,7 @@ class VaeImageProcessor(ConfigMixin):
         return 2.0 * images - 1.0
 
     @staticmethod
-    def denormalize(images: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
+    def denormalize(images: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
         r"""
         Denormalize an image array to [0,1].
 
@@ -482,11 +480,11 @@ class VaeImageProcessor(ConfigMixin):
 
     def resize(
         self,
-        image: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
+        image: PIL.Image.Image | np.ndarray | torch.Tensor,
         height: int,
         width: int,
         resize_mode: str = "default",  # "default", "fill", "crop"
-    ) -> Union[PIL.Image.Image, np.ndarray, torch.Tensor]:
+    ) -> PIL.Image.Image | np.ndarray | torch.Tensor:
         """
         Resize image.
 
@@ -558,7 +556,7 @@ class VaeImageProcessor(ConfigMixin):
         return image
 
     def _denormalize_conditionally(
-        self, images: torch.Tensor, do_denormalize: Optional[List[bool]] = None
+        self, images: torch.Tensor, do_denormalize: list[bool] | None = None
     ) -> torch.Tensor:
         r"""
         Denormalize a batch of images based on a condition list.
@@ -579,10 +577,10 @@ class VaeImageProcessor(ConfigMixin):
 
     def get_default_height_width(
         self,
-        image: Union[PIL.Image.Image, np.ndarray, torch.Tensor],
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-    ) -> Tuple[int, int]:
+        image: PIL.Image.Image | np.ndarray | torch.Tensor,
+        height: int | None = None,
+        width: int | None = None,
+    ) -> tuple[int, int]:
         r"""
         Returns the height and width of the image, downscaled to the next integer multiple of `vae_scale_factor`.
 
@@ -627,10 +625,10 @@ class VaeImageProcessor(ConfigMixin):
     def preprocess(
         self,
         image: PipelineImageInput,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        height: int | None = None,
+        width: int | None = None,
         resize_mode: str = "default",  # "default", "fill", "crop"
-        crops_coords: Optional[Tuple[int, int, int, int]] = None,
+        crops_coords: tuple[int, int, int, int] | None = None,
     ) -> torch.Tensor:
         """
         Preprocess the image input.
@@ -760,8 +758,8 @@ class VaeImageProcessor(ConfigMixin):
         self,
         image: torch.Tensor,
         output_type: str = "pil",
-        do_denormalize: Optional[List[bool]] = None,
-    ) -> Union[PIL.Image.Image, np.ndarray, torch.Tensor]:
+        do_denormalize: list[bool] | None = None,
+    ) -> PIL.Image.Image | np.ndarray | torch.Tensor:
         """
         Postprocess the image output from tensor to `output_type`.
 
@@ -811,7 +809,7 @@ class VaeImageProcessor(ConfigMixin):
         mask: PIL.Image.Image,
         init_image: PIL.Image.Image,
         image: PIL.Image.Image,
-        crop_coords: Optional[Tuple[int, int, int, int]] = None,
+        crop_coords: tuple[int, int, int, int] | None = None,
     ) -> PIL.Image.Image:
         r"""
         Applies an overlay of the mask and the inpainted image on the original image.
@@ -890,7 +888,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         super().__init__()
 
     @staticmethod
-    def numpy_to_pil(images: np.ndarray) -> List[PIL.Image.Image]:
+    def numpy_to_pil(images: np.ndarray) -> list[PIL.Image.Image]:
         r"""
         Convert a NumPy image or a batch of images to a list of PIL images.
 
@@ -914,7 +912,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         return pil_images
 
     @staticmethod
-    def depth_pil_to_numpy(images: Union[List[PIL.Image.Image], PIL.Image.Image]) -> np.ndarray:
+    def depth_pil_to_numpy(images: list[PIL.Image.Image] | PIL.Image.Image) -> np.ndarray:
         r"""
         Convert a PIL image or a list of PIL images to NumPy arrays.
 
@@ -934,7 +932,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         return images
 
     @staticmethod
-    def rgblike_to_depthmap(image: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
+    def rgblike_to_depthmap(image: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
         r"""
         Convert an RGB-like depth image to a depth map.
 
@@ -948,7 +946,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         """
         return image[:, :, 1] * 2**8 + image[:, :, 2]
 
-    def numpy_to_depth(self, images: np.ndarray) -> List[PIL.Image.Image]:
+    def numpy_to_depth(self, images: np.ndarray) -> list[PIL.Image.Image]:
         r"""
         Convert a NumPy depth image or a batch of images to a list of PIL images.
 
@@ -980,8 +978,8 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         self,
         image: torch.Tensor,
         output_type: str = "pil",
-        do_denormalize: Optional[List[bool]] = None,
-    ) -> Union[PIL.Image.Image, np.ndarray, torch.Tensor]:
+        do_denormalize: list[bool] | None = None,
+    ) -> PIL.Image.Image | np.ndarray | torch.Tensor:
         """
         Postprocess the image output from tensor to `output_type`.
 
@@ -1028,11 +1026,11 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
 
     def preprocess(
         self,
-        rgb: Union[torch.Tensor, PIL.Image.Image, np.ndarray],
-        depth: Union[torch.Tensor, PIL.Image.Image, np.ndarray],
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        target_res: Optional[int] = None,
+        rgb: torch.Tensor | PIL.Image.Image | np.ndarray,
+        depth: torch.Tensor | PIL.Image.Image | np.ndarray,
+        height: int | None = None,
+        width: int | None = None,
+        target_res: int | None = None,
     ) -> torch.Tensor:
         r"""
         Preprocess the image input. Accepted formats are PIL images, NumPy arrays, or PyTorch tensors.
@@ -1308,7 +1306,7 @@ class PixArtImageProcessor(VaeImageProcessor):
         )
 
     @staticmethod
-    def classify_height_width_bin(height: int, width: int, ratios: dict) -> Tuple[int, int]:
+    def classify_height_width_bin(height: int, width: int, ratios: dict) -> tuple[int, int]:
         r"""
         Returns the binned height and width based on the aspect ratio.
 

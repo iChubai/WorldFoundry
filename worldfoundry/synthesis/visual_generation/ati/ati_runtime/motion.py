@@ -28,7 +28,7 @@ def load_packed_tracks(path: str) -> bytes:
     return bytes(payload)
 
 
-def get_tracks_inference(tracks, height, width, quant_multi: Optional[int] = 8, **kwargs):
+def get_tracks_inference(tracks, height, width, quant_multi: int | None = 8, **kwargs):
     if isinstance(tracks, str):
         tracks = load_packed_tracks(tracks)
 
@@ -39,7 +39,7 @@ def get_tracks_inference(tracks, height, width, quant_multi: Optional[int] = 8, 
     return tracks
 
 
-def unzip_to_array(data: bytes, key: Union[str, List[str]] = "array") -> Union[np.ndarray, Dict[str, np.ndarray]]:
+def unzip_to_array(data: bytes, key: str | list[str] = "array") -> np.ndarray | dict[str, np.ndarray]:
     bytes_io = io.BytesIO(data)
 
     if isinstance(key, str):
@@ -54,7 +54,7 @@ def unzip_to_array(data: bytes, key: Union[str, List[str]] = "array") -> Union[n
         return get
 
 
-def process_tracks(tracks_np: np.ndarray, frame_size: Tuple[int, int], quant_multi: int = 8, **kwargs):
+def process_tracks(tracks_np: np.ndarray, frame_size: tuple[int, int], quant_multi: int = 8, **kwargs):
     # tracks: shape [t, h, w, 3] => samples align with 24 fps, model trained with 16 fps.
     # frame_size: tuple (W, H)
 

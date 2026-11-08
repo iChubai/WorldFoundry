@@ -1,5 +1,6 @@
 import logging
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import torch
 
@@ -39,7 +40,7 @@ class FlowMatching:
         return (predicted_v - target_v).pow(2).mean(dim=reduce_dim)
 
     def get_x0_xt_c(
-        self, x1: torch.Tensor, t: torch.Tensor, Cs: list[torch.Tensor], generator: Optional[torch.Generator] = None
+        self, x1: torch.Tensor, t: torch.Tensor, Cs: list[torch.Tensor], generator: torch.Generator | None = None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         x0 = torch.empty_like(x1).normal_(generator=generator)
 

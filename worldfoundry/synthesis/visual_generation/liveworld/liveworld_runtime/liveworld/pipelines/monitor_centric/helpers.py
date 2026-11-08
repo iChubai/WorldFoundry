@@ -15,15 +15,14 @@ import cv2
 import numpy as np
 import torch
 from omegaconf import OmegaConf
+from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
 from PIL import Image
-from peft import get_peft_model, LoraConfig, set_peft_model_state_dict
 from safetensors.torch import load_file
 
 from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
-from liveworld.wrapper import BidirectionalWanWrapperSP
-from liveworld.wrapper import WanTextEncoder, WanVAEWrapper
-from .logger import logger
+from liveworld.wrapper import BidirectionalWanWrapperSP, WanTextEncoder, WanVAEWrapper
 
+from .logger import logger
 
 # =============================================================================
 # Project path utilities
@@ -121,7 +120,7 @@ def create_generator(
     state_dict: dict,
     device: torch.device,
     dtype: torch.dtype,
-    state_source: Optional[str] = None,
+    state_source: str | None = None,
 ):
     """Create the LiveWorld generator model and load weights."""
     generator = BidirectionalWanWrapperSP(config=config, role="generator")
@@ -244,7 +243,7 @@ def create_generator(
 
 
 def load_unified_backbone_pipeline(
-    observer_cfg: Dict,
+    observer_cfg: dict,
     device: torch.device,
     cpu_offload: bool,
 ) -> UnifiedBackbonePipeline:
@@ -271,10 +270,10 @@ def load_unified_backbone_pipeline(
     # - lora_path: LoRA checkpoint used to populate PEFT adapters
     # - sp_path: State Adapter checkpoint used by create_generator() priority load
     # Keep backward compatibility with legacy single observer.ckpt_path.
-    backbone_path = observer_cfg.get("backbone_path", None)
-    lora_path = observer_cfg.get("lora_path", None)
-    sp_path = observer_cfg.get("sp_path", None)
-    legacy_ckpt_path = observer_cfg.get("ckpt_path", None)
+    backbone_path = observer_cfg.get("backbone_path")
+    lora_path = observer_cfg.get("lora_path")
+    sp_path = observer_cfg.get("sp_path")
+    legacy_ckpt_path = observer_cfg.get("ckpt_path")
 
     if backbone_path:
         train_config.generator_backbone_ckpt_path = backbone_path
@@ -354,7 +353,7 @@ def load_unified_backbone_pipeline(
 # =============================================================================
 
 
-def parse_target_resolution(observer_cfg: Dict) -> Tuple[int, int]:
+def parse_target_resolution(observer_cfg: dict) -> tuple[int, int]:
     """Parse target resolution (H, W) from observer config.
 
     Reads the image_or_video_shape from the training config and computes
@@ -399,7 +398,7 @@ def load_geometry_poses(geometry_path: str) -> np.ndarray:
     raise KeyError(f"No poses_c2w/poses/c2w found in geometry: {geometry_path}")
 
 
-def load_frame_from_image(image_path: str, target_size: Optional[Tuple[int, int]] = None) -> Image.Image:
+def load_frame_from_image(image_path: str, target_size: tuple[int, int] | None = None) -> Image.Image:
     """Load the first frame from an image file.
 
     Args:

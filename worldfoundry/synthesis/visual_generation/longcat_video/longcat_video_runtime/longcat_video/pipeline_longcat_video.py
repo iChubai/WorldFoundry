@@ -1,26 +1,32 @@
-from typing import Any, Dict, List, Optional, Union, Literal
-
 import gc
 import math
-import torch
+from typing import Any, Dict, List, Literal, Optional, Union
+
 import loguru
 import numpy as np
+import torch
 import torch.nn.functional as F
-from tqdm import tqdm
-from PIL import Image
-from diffusers.video_processor import VideoProcessor
 from diffusers.image_processor import PipelineImageInput
+from diffusers.video_processor import VideoProcessor
+from PIL import Image
+from tqdm import tqdm
 from transformers import AutoTokenizer, UMT5EncoderModel
 
-from .scheduling_flow_match_euler import FlowMatchEulerDiscreteScheduler
 from .modules.autoencoder_kl_wan import AutoencoderKLWan
+from .scheduling_flow_match_euler import FlowMatchEulerDiscreteScheduler
+
+# isort: split
 from .modules.longcat_video_dit import LongCatVideoTransformer3DModel
-from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
-from .utils.bukcet_config import get_bucket_config
+
+# isort: split
+import html
 
 import ftfy
 import regex as re
-import html
+
+from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
+
+from .utils.bukcet_config import get_bucket_config
 
 
 def torch_gc():
@@ -30,7 +36,7 @@ def torch_gc():
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
 def retrieve_latents(
-    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+    encoder_output: torch.Tensor, generator: torch.Generator | None = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
@@ -135,11 +141,11 @@ class LongCatVideoPipeline:
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         dtype = dtype or self.text_encoder.dtype
 
@@ -171,13 +177,13 @@ class LongCatVideoPipeline:
 
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         do_classifier_free_guidance: bool = True,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -256,18 +262,18 @@ class LongCatVideoPipeline:
 
     def prepare_latents(
         self,
-        image: Optional[torch.Tensor] = None,
-        video: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        video: torch.Tensor | None = None,
         batch_size: int = 1,
         num_channels_latents: int = 16,
         height: int = 480,
         width: int = 832,
         num_frames: int = 93,
         num_cond_frames: int = 0,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
         num_cond_frames_added: int = 0,
     ) -> torch.Tensor:
         if (image is not None) and (video is not None):
@@ -398,8 +404,8 @@ class LongCatVideoPipeline:
 
         obj = condition[0] if isinstance(condition, list) and condition else condition
         try:
-            height = getattr(obj, "height")
-            width = getattr(obj, "width")
+            height = obj.height
+            width = obj.width
         except AttributeError:
             raise ValueError("Unsupported condition type")
 
@@ -444,19 +450,19 @@ class LongCatVideoPipeline:
     @torch.no_grad()
     def generate_t2v(
         self,
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] = None,
         height: int = 480,
         width: int = 832,
         num_frames: int = 93,
         num_inference_steps: int = 50,
         use_distill: bool = False,
         guidance_scale: float = 4.0,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "np",
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        output_type: str | None = "np",
+        attention_kwargs: dict[str, Any] | None = None,
         max_sequence_length: int = 512,
     ):
         r"""
@@ -676,18 +682,18 @@ class LongCatVideoPipeline:
     def generate_i2v(
         self,
         image: PipelineImageInput,
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] = None,
         resolution: Literal["480p", "720p"] = "480p",
         num_frames: int = 93,
         num_inference_steps: int = 50,
         use_distill: bool = False,
         guidance_scale: float = 4.0,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "np",
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        output_type: str | None = "np",
+        attention_kwargs: dict[str, Any] | None = None,
         max_sequence_length: int = 512,
     ):
         r"""
@@ -901,20 +907,20 @@ class LongCatVideoPipeline:
     @torch.no_grad()
     def generate_vc(
         self,
-        video: List[Image.Image],
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Union[str, List[str]] = None,
+        video: list[Image.Image],
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] = None,
         resolution: Literal["480p", "720p"] = "480p",
         num_frames: int = 93,
         num_cond_frames: int = 13,
         num_inference_steps: int = 50,
         use_distill: bool = False,
         guidance_scale: float = 4.0,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "np",
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        output_type: str | None = "np",
+        attention_kwargs: dict[str, Any] | None = None,
         max_sequence_length: int = 512,
         use_kv_cache=True,
         offload_kv_cache=False,
@@ -1179,18 +1185,18 @@ class LongCatVideoPipeline:
     @torch.no_grad()
     def generate_refine(
         self,
-        image: Optional[PipelineImageInput] = None,
-        video: Optional[List[Image.Image]] = None,
-        prompt: Union[str, List[str]] = None,
-        stage1_video: Optional[str] = None,
+        image: PipelineImageInput | None = None,
+        video: list[Image.Image] | None = None,
+        prompt: str | list[str] = None,
+        stage1_video: str | None = None,
         num_cond_frames: int = 0,
         num_inference_steps: int = 50,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "np",
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        output_type: str | None = "np",
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        attention_kwargs: dict[str, Any] | None = None,
         max_sequence_length: int = 512,
         t_thresh=0.5,
         spatial_refine_only=False,

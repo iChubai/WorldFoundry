@@ -349,7 +349,7 @@ class TemporalTransformerBlock(nn.Module):
         height=None,
         weight=None,
     ):
-        for attention_block, norm in zip(self.attention_blocks, self.norms):
+        for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
                 attention_block(

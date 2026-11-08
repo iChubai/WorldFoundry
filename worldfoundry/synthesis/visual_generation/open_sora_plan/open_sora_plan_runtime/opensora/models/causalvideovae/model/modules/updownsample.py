@@ -1,15 +1,18 @@
-from typing import Union, Tuple
 from collections import deque
+from typing import Tuple, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .ops import cast_tuple, video_to_image
-from .conv import CausalConv3d, CausalConv3d_GC
 from einops import rearrange
+
 from .block import Block
+from .conv import CausalConv3d, CausalConv3d_GC
+from .ops import cast_tuple, video_to_image
 
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
@@ -73,8 +76,8 @@ class SpatialDownsample2x(Block):
         self,
         chan_in,
         chan_out,
-        kernel_size: Union[int, Tuple[int]] = (3, 3),
-        stride: Union[int, Tuple[int]] = (2, 2),
+        kernel_size: int | tuple[int] = (3, 3),
+        stride: int | tuple[int] = (2, 2),
         **kwargs,
     ):
         super().__init__()
@@ -97,8 +100,8 @@ class SpatialUpsample2x_GC(Block):
         self,
         chan_in,
         chan_out,
-        kernel_size: Union[int, Tuple[int]] = (3, 3),
-        stride: Union[int, Tuple[int]] = (1, 1),
+        kernel_size: int | tuple[int] = (3, 3),
+        stride: int | tuple[int] = (1, 1),
         unup=False,
     ):
         super().__init__()
@@ -125,8 +128,8 @@ class SpatialUpsample2x(Block):
         self,
         chan_in,
         chan_out,
-        kernel_size: Union[int, Tuple[int]] = (3, 3),
-        stride: Union[int, Tuple[int]] = (1, 1),
+        kernel_size: int | tuple[int] = (3, 3),
+        stride: int | tuple[int] = (1, 1),
         unup=False,
     ):
         super().__init__()

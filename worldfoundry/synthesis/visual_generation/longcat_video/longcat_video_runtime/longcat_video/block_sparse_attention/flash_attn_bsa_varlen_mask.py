@@ -1,6 +1,7 @@
+import os
+
 import triton
 import triton.language as tl
-import os
 
 from .common import autotune
 

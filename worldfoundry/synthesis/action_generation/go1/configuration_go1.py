@@ -3,10 +3,9 @@ import copy
 from transformers.configuration_utils import PretrainedConfig
 from transformers.utils import logging
 
-from .configuration_internlm2 import InternLM2Config
-from .configuration_intern_vit import InternVisionConfig
-
 from .configuration_action_expert import ActionExpertConfig, LatentPlannerConfig
+from .configuration_intern_vit import InternVisionConfig
+from .configuration_internlm2 import InternLM2Config
 
 logger = logging.get_logger(__name__)
 

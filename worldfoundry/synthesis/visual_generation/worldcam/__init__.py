@@ -9,6 +9,7 @@ used throughout the WorldCam synthesis and evaluation framework.
 
 from __future__ import annotations
 
+from worldfoundry.synthesis.visual_generation.worldcam.worldcam_runtime import runtime_root
 from worldfoundry.synthesis.visual_generation.worldcam.worldcam_synthesis import WorldCamSynthesis
 from worldfoundry.synthesis.visual_generation.worldcam.worldfoundry_runtime import (
     DEFAULT_NEGATIVE_PROMPT,
@@ -22,7 +23,6 @@ from worldfoundry.synthesis.visual_generation.worldcam.worldfoundry_runtime impo
     OFFICIAL_SOURCE_REPO,
     WorldCamRuntime,
 )
-from worldfoundry.synthesis.visual_generation.worldcam.worldcam_runtime import runtime_root
 
 RUNTIME_ROOT = runtime_root()
 

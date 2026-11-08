@@ -43,7 +43,7 @@ def embeddings_pca_to_rgb(
     Returns:
         Tensor of shape (B, T, 3, output_height, output_width), dtype uint8.
     """
-    from sklearn.decomposition import PCA  # type: ignore[import-not-found]  # noqa: PLC0415 -- optional dep
+    from sklearn.decomposition import PCA  # type: ignore[import-not-found]  # optional dep
 
     b, t, _c, h, w = embeddings.shape
 
@@ -156,7 +156,7 @@ def videos_for_wandb(videos: dict[str, VideoForWandb], fps: float = 10) -> Itera
     Creating ``wandb.Video`` from a video Tensor directly can hang in some cases and crash training.
     Writing the video to a temporary file first and uploading that works reliably.
     """
-    import wandb  # noqa: PLC0415 -- optional dep, used only here
+    import wandb  # optional dep, used only here
 
     tmp_files: list[tempfile._TemporaryFileWrapper] = []
     try:
@@ -329,7 +329,7 @@ def draw_keyboard_video(
             frames_since_press = t - last_pressed_frame[key_to_idx[key_name]]
             alpha = 1.0 - max(0, min(1, frames_since_press / fade_frames))
             faded_color = tuple(
-                int(bg * (1 - alpha) + pressed * alpha) for bg, pressed in zip(key_color, pressed_color)
+                int(bg * (1 - alpha) + pressed * alpha) for bg, pressed in zip(key_color, pressed_color, strict=False)
             )
             draw.rectangle([x, y, x + w, y + h], fill=faded_color, width=outline_width)
 

@@ -3,9 +3,8 @@
 import math
 
 import torch
-from tqdm.auto import trange
-
 from diffusers_helper.utils import repeat_to_batch_size
+from tqdm.auto import trange
 
 
 def append_dims(x, target_dims):

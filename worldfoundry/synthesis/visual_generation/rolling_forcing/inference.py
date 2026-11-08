@@ -12,8 +12,9 @@ import argparse
 import os
 import re
 from collections import OrderedDict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import torch
@@ -112,8 +113,8 @@ def main() -> None:
     from einops import rearrange
     from omegaconf import OmegaConf
 
-    from worldfoundry.core.model_loading.checkpoints import load_weights_only
     from worldfoundry.core.media.codecs.video import write_video_torchvision
+    from worldfoundry.core.model_loading.checkpoints import load_weights_only
 
     # The causal Wan variant is placed on PYTHONPATH by RollingForcingRuntime.
     # Delaying this import keeps module discovery and ``--help`` lightweight.

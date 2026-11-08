@@ -3,9 +3,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 import numpy as np
-from numpy.core.numeric import full
 import torch
 import torch.nn as nn
+from numpy.core.numeric import full
 from torch.nn.modules.activation import Sigmoid
 
 epsilon = 1e-8
@@ -14,7 +14,7 @@ epsilon = 1e-8
 class LangEncoder(nn.Module):
     def __init__(self, device, finetune=False, scratch=False):
         super().__init__()
-        from transformers import AutoTokenizer, AutoModel, AutoConfig
+        from transformers import AutoConfig, AutoModel, AutoTokenizer
 
         self.device = device
         self.modelname = "distilbert-base-uncased"

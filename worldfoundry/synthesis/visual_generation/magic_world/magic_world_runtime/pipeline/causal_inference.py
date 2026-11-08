@@ -1,6 +1,6 @@
 from typing import List, Optional
-import torch
 
+import torch
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 from worldfoundry.core.vram import (
@@ -59,12 +59,12 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
-        y_input: Optional[torch.Tensor] = None,
-        y_history: Optional[torch.Tensor] = None,
-        y_camera_input: Optional[torch.Tensor] = None,
-        clip_context: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
+        y_input: torch.Tensor | None = None,
+        y_history: torch.Tensor | None = None,
+        y_camera_input: torch.Tensor | None = None,
+        clip_context: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
         low_memory: bool = False,

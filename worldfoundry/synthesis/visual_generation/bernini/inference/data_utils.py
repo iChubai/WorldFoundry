@@ -103,13 +103,13 @@ class VAEVideoTransform:
 
 def smart_video_nframes(
     total_frames: int,
-    video_fps: Union[int, float],
+    video_fps: int | float,
     fps: int = 2.0,
     frame_factor: int = None,
     min_frames: int = None,
     max_frames: int = None,
     add_one: bool = False,
-) -> List[int]:
+) -> list[int]:
     """Pick frame indices so the sampled clip matches the target `fps`/frame count."""
     nframes = total_frames / video_fps * fps
     if frame_factor is not None:
@@ -147,7 +147,7 @@ class VideoFrameReader:
         self.fps = self.vr.get_avg_fps()
         self.length = len(self.vr)
 
-    def sample(self, frame_indices: List[int]) -> List[Image.Image]:
+    def sample(self, frame_indices: list[int]) -> list[Image.Image]:
         indices = [max(0, min(int(i), self.length - 1)) for i in frame_indices]
         frames = self.vr.get_batch(indices).asnumpy()
         return [Image.fromarray(f).convert("RGB") for f in frames]
@@ -173,7 +173,7 @@ class FakeVideoReader:
         self.width = width
         self._frame = Image.new("RGB", (width, height), color=0)
 
-    def sample(self, frame_indices: List[int]) -> List[Image.Image]:
+    def sample(self, frame_indices: list[int]) -> list[Image.Image]:
         """Return fake frames for the given indices."""
         indices = [max(0, min(int(i), self.length - 1)) for i in frame_indices]
         return [self._frame.copy() for _ in indices]

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
-
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 RUNTIME_DIR = PACKAGE_DIR / "giga_world_0_runtime"

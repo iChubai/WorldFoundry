@@ -314,7 +314,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
             return []
         import yaml
 
-        with open(yaml_path, "r") as f:
+        with open(yaml_path) as f:
             payload = yaml.safe_load(f) or []
         if isinstance(payload, dict):
             for key in ("include", "include_hashes", "hashes", "items"):
@@ -348,7 +348,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
         if inference_assign_yaml is not None:
             import yaml
 
-            with open(inference_assign_yaml, "r") as f:
+            with open(inference_assign_yaml) as f:
                 inference_assigns = yaml.safe_load(f) or []
             matched = []
             for path in rawpath:
@@ -587,7 +587,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
 
     def _dataset_cache_try_load(self, cache_path, expected_fingerprint):
         try:
-            with open(cache_path, "r", encoding="utf-8") as f:
+            with open(cache_path, encoding="utf-8") as f:
                 payload = json.load(f)
         except (OSError, ValueError):
             return None
@@ -1045,7 +1045,7 @@ class _MosaicVideoSharedDataset(_MosaicDatasetBase):
         if cached is not None:
             return cached
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
+            with open(json_path, encoding="utf-8") as f:
                 payload = json.load(f)
         except (OSError, ValueError):
             result = {"format": "segments", "segments": []}
@@ -1483,7 +1483,7 @@ def _resolve_depth_metadata_for_npz(depth_path, depth_format=None, depth_metadat
     if not os.path.isfile(metadata_path):
         return depth_format, depth_metadata
     try:
-        with open(metadata_path, "r", encoding="utf-8") as f:
+        with open(metadata_path, encoding="utf-8") as f:
             payload = json.load(f) or {}
     except (OSError, ValueError):
         return depth_format, depth_metadata
@@ -2203,7 +2203,7 @@ class DA3MosaicVideoDataset(_MosaicVideoDatasetBase):
 
         import yaml
 
-        with open(filter_yaml, "r") as f:
+        with open(filter_yaml) as f:
             filter_criteria = yaml.safe_load(f) or []
         filtered = [path for path in rawpath if not any(filter_token in path for filter_token in filter_criteria)]
         self._da3_index_debug(f"filter_yaml applied: before={before_filter} after={len(filtered)} path={filter_yaml}")

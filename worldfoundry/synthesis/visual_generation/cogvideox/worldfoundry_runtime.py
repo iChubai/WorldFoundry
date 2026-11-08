@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-
 _RESOLUTION_MAP = {
     "cogvideox-2b": (480, 720),
     "cogvideox-5b": (480, 720),

@@ -13,26 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from copy import deepcopy
 import json
-from pathlib import Path
 import re
-from typing import Any
 import warnings
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 from transformers import AutoProcessor
 from transformers.feature_extraction_utils import BatchFeature
 
-from .types import ModalityConfig
-from .embodiment import EmbodimentTag
 from .base import BaseProcessor
-from .state_action import StateActionProcessor
-from .utils import parse_modality_configs
+from .embodiment import EmbodimentTag
 from .image import build_image_transformations
-
+from .state_action import StateActionProcessor
+from .types import ModalityConfig
+from .utils import parse_modality_configs
 
 try:
     from transformers import Qwen3VLProcessor
@@ -558,12 +557,12 @@ class Gr00tN1d7Processor(BaseProcessor):
                 f"GR00T processor must be loaded from a staged local directory: {pretrained_model_name_or_path}"
             )
 
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
-        with open(statistics_file, "r") as f:
+        with open(statistics_file) as f:
             statistics = json.load(f)
         if embodiment_id_file.exists():
-            with open(embodiment_id_file, "r") as f:
+            with open(embodiment_id_file) as f:
                 embodiment_id_mapping = json.load(f)
         else:
             embodiment_id_mapping = None

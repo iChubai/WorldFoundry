@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 
 def to_pil_image(value: Any) -> Any:

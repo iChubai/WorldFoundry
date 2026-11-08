@@ -1,7 +1,7 @@
-from typing import NamedTuple, Optional
-from dataclasses import dataclass
-import random
 import math
+import random
+from dataclasses import dataclass
+from typing import NamedTuple, Optional
 
 import torch
 
@@ -21,7 +21,7 @@ class WallSample(NamedTuple):
 @dataclass
 class WallDatasetConfig(DotDatasetConfig):
     fix_wall: bool = True
-    fix_wall_batch_k: Optional[int] = None
+    fix_wall_batch_k: int | None = None
 
     fix_wall: bool = True
     wall_padding: int = 20
@@ -32,9 +32,9 @@ class WallDatasetConfig(DotDatasetConfig):
     exclude_door_train: str = ""  # don't generate door at these y-axis values
     only_wall_val: str = ""  # only evalaute wall at these x-axis values
     only_door_val: str = ""  # only evaluate door at these y-axis values
-    fix_wall_location: Optional[int] = None
-    fix_door_location: Optional[int] = None
-    num_train_layouts: Optional[int] = -1
+    fix_wall_location: int | None = None
+    fix_door_location: int | None = None
+    num_train_layouts: int | None = -1
 
 
 class WallDataset(DotDataset):

@@ -82,7 +82,7 @@ class Qwen3VLInterface(nn.Module):
         if vla_data is not None:
             cot_prompt = str(vla_data.get("CoT_prompt", ""))
 
-        for sample_images, instruction in zip(images, instructions):
+        for sample_images, instruction in zip(images, instructions, strict=False):
             content = [{"type": "image", "image": image} for image in sample_images]
             prompt = cot_prompt.replace("{instruction}", instruction) if cot_prompt else instruction
             content.append({"type": "text", "text": prompt})

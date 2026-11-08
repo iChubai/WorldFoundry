@@ -2,21 +2,22 @@
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-import torch.nn.functional as F
 import os
-import torch
-import torch.utils.checkpoint
 from typing import List, Optional, Tuple, Union
+
+import torch
+import torch.nn.functional as F
+import torch.utils.checkpoint
 from torch import nn
-from torch.nn.attention.flex_attention import create_block_mask, or_masks, and_masks
-from transformers.modeling_utils import PreTrainedModel
+from torch.nn.attention.flex_attention import and_masks, create_block_mask, or_masks
 from transformers.configuration_utils import PretrainedConfig
+from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
+
+from ..preprocessing.constants import CONNECTOR_ARCH, LLM_MODEL_ARCH, VIT_MODEL_ARCH
 from ..preprocessing.conversation import get_conv_template
-from ..preprocessing.constants import LLM_MODEL_ARCH, VIT_MODEL_ARCH, CONNECTOR_ARCH
 from .internvit import has_flash_attn
 from .layers import *
-
 
 logger = logging.get_logger(__name__)
 
@@ -42,7 +43,7 @@ def create_sparse_mask(document_lens, split_lens, attn_modes, device):
 
     # Assign split_id to each token
     split_seq_id_list = []
-    for i, (length, mode) in enumerate(zip(split_lens, attn_modes)):
+    for i, (length, mode) in enumerate(zip(split_lens, attn_modes, strict=False)):
         # Splits in full mode get unique id, causal mode gets -1
         value = i if mode == "full" else -1
         split_seq_id_list.extend([value] * length)
@@ -61,7 +62,7 @@ def create_sparse_mask(document_lens, split_lens, attn_modes, device):
 def create_dense_attention_masks(document_lens, split_lens, attn_modes, device):
     split_ranges = []
     split_start = 0
-    for length, mode in zip(split_lens, attn_modes):
+    for length, mode in zip(split_lens, attn_modes, strict=False):
         split_end = split_start + int(length)
         split_ranges.append((split_start, split_end, mode))
         split_start = split_end
@@ -332,18 +333,18 @@ class BeingH(PreTrainedModel):
         sequence_length: int,
         packed_text_ids: torch.LongTensor,
         packed_text_indexes: torch.LongTensor,
-        sample_lens: Union[List[int], torch.Tensor],
+        sample_lens: list[int] | torch.Tensor,
         packed_position_ids: torch.LongTensor,
-        split_lens: List[int],
-        attn_modes: List[str],
-        packed_vit_tokens: Optional[torch.Tensor] = None,
-        packed_vit_token_indexes: Optional[torch.LongTensor] = None,
-        packed_action_indexes: Optional[torch.Tensor] = None,
-        padded_state: Optional[torch.Tensor] = None,
-        packed_state_indexes: Optional[torch.Tensor] = None,
-        embodiment_ids: Optional[torch.Tensor] = None,  # (B,)
+        split_lens: list[int],
+        attn_modes: list[str],
+        packed_vit_tokens: torch.Tensor | None = None,
+        packed_vit_token_indexes: torch.LongTensor | None = None,
+        packed_action_indexes: torch.Tensor | None = None,
+        padded_state: torch.Tensor | None = None,
+        packed_state_indexes: torch.Tensor | None = None,
+        embodiment_ids: torch.Tensor | None = None,  # (B,)
         # RTC inference parameters
-        prev_chunk: Optional[torch.Tensor] = None,  # Previous action chunk for prefix conditioning
+        prev_chunk: torch.Tensor | None = None,  # Previous action chunk for prefix conditioning
         inference_delay: int = 0,  # Number of prefix actions for RTC
         **kwargs,
     ):
@@ -761,11 +762,12 @@ class BeingH(PreTrainedModel):
             index_file = os.path.join(pretrained_model_name_or_path, "model.safetensors.index.json")
             if os.path.exists(index_file):
                 # Load sharded safetensors model
-                from safetensors.torch import load_file
                 import json
 
+                from safetensors.torch import load_file
+
                 print(f"Loading sharded model from {pretrained_model_name_or_path}")
-                with open(index_file, "r") as f:
+                with open(index_file) as f:
                     index = json.load(f)
 
                 # Load all unique shard files
@@ -808,7 +810,7 @@ class BeingH(PreTrainedModel):
             raise FileNotFoundError(f"No supported Being-H0.5 checkpoint found at {pretrained_model_name_or_path}")
 
         # Handle dtype conversion if specified
-        torch_dtype = kwargs.get("torch_dtype", None)
+        torch_dtype = kwargs.get("torch_dtype")
         if torch_dtype is not None:
             model = model.to(torch_dtype)
 

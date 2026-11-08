@@ -1,8 +1,9 @@
-from PIL import Image
 import cv2
-import torch
 import numpy as np
-from .utils.general_utils import pano_to_cube, cube_to_pano
+import torch
+from PIL import Image
+
+from .utils.general_utils import cube_to_pano, pano_to_cube
 
 
 def build_inpaint_model(device: torch.device = "cuda"):
@@ -32,7 +33,7 @@ def inpaint_pano(model, image: Image.Image, mask: np.ndarray):
     cube_masks = pano_to_cube(mask, face_w=cube_face_res, mode="nearest")
 
     cube_inpainted_faces = []
-    for face, mask in zip(cube_faces, cube_masks):
+    for face, mask in zip(cube_faces, cube_masks, strict=False):
         inpainted_face = inpaint_image(model, face, mask)
         cube_inpainted_faces.append(inpainted_face)
 

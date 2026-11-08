@@ -40,10 +40,10 @@ try:
 except ImportError:
     _TransformerEngineDotProductAttention = None
 
-from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.distributed.model_parallel.context import split_inputs_cp
 from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
 
 T5_CONTEXT_TOKEN_NUMBER = 512
 FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER = 257 * 2
@@ -178,9 +178,9 @@ class VideoRopePosition3DEmb(VideoPositionEmb):
     def generate_embeddings(
         self,
         B_T_H_W_C: torch.Size,
-        h_ntk_factor: Optional[float] = None,
-        w_ntk_factor: Optional[float] = None,
-        t_ntk_factor: Optional[float] = None,
+        h_ntk_factor: float | None = None,
+        w_ntk_factor: float | None = None,
+        t_ntk_factor: float | None = None,
     ):
         """
         Generate embeddings for the given input size.
@@ -210,7 +210,7 @@ class VideoRopePosition3DEmb(VideoPositionEmb):
         temporal_freqs = 1.0 / (t_theta**self.dim_temporal_range)
 
         B, T, H, W, _ = B_T_H_W_C
-        assert H <= self.max_h and W <= self.max_w, (
+        assert self.max_h >= H and self.max_w >= W, (
             f"Input dimensions (H={H}, W={W}) exceed the maximum dimensions (max_h={self.max_h}, max_w={self.max_w})"
         )
         freqs_h = torch.outer(self.seq[:H], h_spatial_freqs)
@@ -321,7 +321,7 @@ class SelfAttnOp(DotProductAttention):
         q_B_L_H_D,
         k_B_L_H_D,
         v_B_L_H_D,
-        video_size: Optional[VideoSize] = None,
+        video_size: VideoSize | None = None,
     ):
         return super().forward(q_B_L_H_D, k_B_L_H_D, v_B_L_H_D)
 
@@ -799,7 +799,7 @@ class WanModel(nn.Module):
         seq_len=None,
         frame_cond_crossattn_emb_B_L_D=None,
         y_B_C_T_H_W=None,
-        padding_mask: Optional[torch.Tensor] = None,
+        padding_mask: torch.Tensor | None = None,
         is_uncond=False,
         slg_layers=None,
         **kwargs,
@@ -975,7 +975,7 @@ class WanModel(nn.Module):
 
         self._is_context_parallel_enabled = False
 
-    def enable_context_parallel(self, process_group: Optional[ProcessGroup] = None):
+    def enable_context_parallel(self, process_group: ProcessGroup | None = None):
         # pos_embedder
         self.rope_position_embedding.enable_context_parallel(process_group=process_group)
         cp_ranks = get_process_group_ranks(process_group)

@@ -4,24 +4,24 @@ import os
 
 import numpy as np
 import torch
-from tqdm import tqdm
-from einops import rearrange
-from safetensors import safe_open
-
-from omegaconf import OmegaConf
 from diffusers import AutoencoderKL, DDIMScheduler
-from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers.pipelines.stable_diffusion.convert_from_ckpt import (
-    convert_ldm_vae_checkpoint,
     convert_ldm_clip_checkpoint,
+    convert_ldm_vae_checkpoint,
 )
+from einops import rearrange
+from omegaconf import OmegaConf
+from safetensors import safe_open
+from tqdm import tqdm
+from transformers import CLIPTextModel, CLIPTokenizer
 
 from worldfoundry.core.media.codecs.video import save_videos_grid
-from .models.unet import UNet3DConditionModelPoseCond
+
+from .camera_geometry import Camera, get_relative_pose, ray_condition
 from .models.pose_adaptor import CameraPoseEncoder
+from .models.unet import UNet3DConditionModelPoseCond
 from .pipelines.pipeline_animation import CameraCtrlPipeline
 from .utils.convert_from_ckpt import convert_ldm_unet_checkpoint
-from .camera_geometry import Camera, get_relative_pose, ray_condition
 
 
 def setup_for_distributed(is_master):
@@ -154,7 +154,7 @@ def get_pipeline(
         fused_count = fuse_motion_adapter(unet, motion_adapter_ckpt)
         print(f"Fused {fused_count} AnimateDiff V3 adapter weight pairs")
     pose_encoder = CameraPoseEncoder(**pose_encoder_kwargs)
-    print(f"Setting the attention processors")
+    print("Setting the attention processors")
     unet.set_all_attn_processor(
         add_spatial_lora=image_lora_ckpt is not None,
         add_motion_lora=False,
@@ -174,7 +174,7 @@ def get_pipeline(
             lora_checkpoints = lora_checkpoints["lora_state_dict"]
         _, lora_u = unet.load_state_dict(lora_checkpoints, strict=False)
         assert len(lora_u) == 0
-        print(f"Loading done")
+        print("Loading done")
 
     if unet_mm_ckpt is not None:
         print(f"Loading the motion module checkpoint from {unet_mm_ckpt}")
@@ -187,7 +187,7 @@ def get_pipeline(
         assert len(mm_u) == 0
         print("Loading done")
 
-    print(f"Loading pose adaptor")
+    print("Loading pose adaptor")
     pose_adaptor_checkpoint = torch.load(
         pose_adaptor_ckpt,
         map_location="cpu",
@@ -199,7 +199,7 @@ def get_pipeline(
     attention_processor_state_dict = pose_adaptor_checkpoint["attention_processor_state_dict"]
     _, attn_proc_u = unet.load_state_dict(attention_processor_state_dict, strict=False)
     assert len(attn_proc_u) == 0
-    print(f"Loading done")
+    print("Loading done")
 
     noise_scheduler = DDIMScheduler(**OmegaConf.to_container(noise_scheduler_kwargs))
     vae.to(gpu_id)
@@ -235,7 +235,7 @@ def main(args):
     pose_encoder_kwargs = model_configs["pose_encoder_kwargs"]
     attention_processor_kwargs = model_configs["attention_processor_kwargs"]
 
-    print(f"Constructing pipeline")
+    print("Constructing pipeline")
     pipeline = get_pipeline(
         args.ori_model_path,
         args.unet_subfolder,
@@ -254,7 +254,7 @@ def main(args):
     device = torch.device(f"cuda:{gpu_id}")
     print("Done")
     print("Loading K, R, t matrix")
-    with open(args.trajectory_file, "r") as f:
+    with open(args.trajectory_file) as f:
         poses = f.readlines()
     poses = [pose.strip().split(" ") for pose in poses[1:]]
 
@@ -292,7 +292,7 @@ def main(args):
     plucker_embedding = plucker_embedding[None].to(device)  # B V 6 H W
     plucker_embedding = rearrange(plucker_embedding, "b f c h w -> b c f h w")
     if args.visualization_captions.endswith(".json"):
-        json_file = json.load(open(args.visualization_captions, "r"))
+        json_file = json.load(open(args.visualization_captions))
         captions = json_file["captions"] if "captions" in json_file else json_file["prompts"]
         if args.use_negative_prompt:
             negative_prompts = json_file["negative_prompts"]
@@ -305,7 +305,7 @@ def main(args):
         else:
             specific_seeds = None
     elif args.visualization_captions.endswith(".txt"):
-        with open(args.visualization_captions, "r") as f:
+        with open(args.visualization_captions) as f:
             captions = f.readlines()
         captions = [cap.strip() for cap in captions]
         negative_prompts = None

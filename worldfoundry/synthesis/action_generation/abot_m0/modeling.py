@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from contextlib import nullcontext
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import torch
 from torch import nn
@@ -71,6 +72,7 @@ class Qwen3VLInterface(nn.Module):
     ) -> None:
         super().__init__()
         from transformers import AutoConfig, AutoProcessor, Qwen3VLForConditionalGeneration
+
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
 
         attention = resolve_transformers_attention_implementation(attention_backend)

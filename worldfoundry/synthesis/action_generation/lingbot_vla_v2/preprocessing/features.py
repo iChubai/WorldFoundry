@@ -1,30 +1,32 @@
 """LingBot-VLA v2 observation preprocessing and action postprocessing."""
 
-import os
-import json
-import yaml
-import torch
-import numpy as np
-from collections import defaultdict, OrderedDict
-from pydantic import BaseModel
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Literal
-
 import ast
+import json
+import os
+from collections import OrderedDict, defaultdict
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
+
+import numpy as np
+import torch
 import torch.nn.functional as F
+import yaml
+from pydantic import BaseModel
 
 from . import logging as logging_utils
+
+# isort: split
 from .transforms import (
     Normalizer,
-    prepare_images,
-    prepare_state,
-    prepare_language,
-    prepare_action,
     expert_visual_transform,
+    prepare_action,
+    prepare_images,
+    prepare_language,
+    prepare_state,
 )
+
+# isort: split
 from .ee_pose import *
-from typing import Dict, List, Optional
-import ast
-import torch.nn.functional as F
 
 logger = logging_utils.get_logger(__name__)
 
@@ -52,8 +54,8 @@ def compute_image_token_count(images, image_grid_thw=None, merge_size=2, use_vis
 
 
 class FeatureInfo(BaseModel):
-    joints: List[str] | None = None
-    images: List[str] | None = None
+    joints: list[str] | None = None
+    images: list[str] | None = None
     joints_max_dim: dict | None = None
 
     def update_info(self, data_config):
@@ -91,7 +93,7 @@ class FeatureTransform:
         use_future_image=False,
     ):
         assert os.path.exists(robot_config_path), f"{robot_config_path} does not exist."
-        with open(robot_config_path, "r") as f:
+        with open(robot_config_path) as f:
             robot_config = yaml.safe_load(f)
         f.close()
 

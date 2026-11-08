@@ -1,8 +1,9 @@
-import torch
 import numpy as np
+import torch
 from einops import rearrange, repeat
-from .base_planner import BasePlanner
 from utils import move_to_device
+
+from .base_planner import BasePlanner
 
 
 class CEMPlanner(BasePlanner):

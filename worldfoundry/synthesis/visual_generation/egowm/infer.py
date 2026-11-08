@@ -206,14 +206,13 @@ def run(args: argparse.Namespace) -> Path:
         sys.path.insert(0, source_text)
     try:
         import torch
-        from PIL import Image
-
         from models.svd_wrapper import (
             DebugActionUnetFwise2,
             DebugActionUnetFwise2state,
             DebugSVDActionPipeline,
             DebugSVDActionStateConstcfgPipeline,
         )
+        from PIL import Image
 
         with torch.serialization.safe_globals([argparse.Namespace]):
             checkpoint = torch.load(

@@ -1,7 +1,7 @@
 # adapted from https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
 import torch
-from torch import nn
 from einops import rearrange, repeat
+from torch import nn
 
 # helpers
 NUM_FRAMES = 1

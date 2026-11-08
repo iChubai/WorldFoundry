@@ -1,12 +1,14 @@
-import torch
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any, Optional
+
 import decord
 import numpy as np
-from pathlib import Path
-from einops import rearrange
+import torch
 from decord import VideoReader
-from typing import Callable, Optional
+from einops import rearrange
+
 from .traj_dset import TrajDataset, get_train_val_sliced
-from typing import Optional, Callable, Any
 
 decord.bridge.set_bridge("torch")
 
@@ -15,8 +17,8 @@ class PointMazeDataset(TrajDataset):
     def __init__(
         self,
         data_path: str = "data/point_maze",
-        n_rollout: Optional[int] = None,
-        transform: Optional[Callable] = None,
+        n_rollout: int | None = None,
+        transform: Callable | None = None,
         normalize_action: bool = False,
         action_scale=1.0,
     ):

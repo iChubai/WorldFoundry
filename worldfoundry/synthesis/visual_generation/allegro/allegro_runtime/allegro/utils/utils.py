@@ -1,31 +1,27 @@
-import os
-
-import torch
-
-import os
-import math
-import torch
-import pytz
+import collections
+import html
 import logging
+import math
+import os
 import random
+import re
 import subprocess
-import numpy as np
-import torch.distributed as dist
+import urllib.parse as ul
+from collections import OrderedDict
+from collections.abc import Iterable
 
 # from torch._six import inf
 from datetime import datetime
-from torch import inf
-from PIL import Image
-from typing import Union, Iterable
-import collections
-from collections import OrderedDict
-from torch.utils.tensorboard import SummaryWriter
+from typing import Union
 
+import numpy as np
+import pytz
+import torch
+import torch.distributed as dist
 from diffusers.utils import is_bs4_available, is_ftfy_available
-
-import html
-import re
-import urllib.parse as ul
+from PIL import Image
+from torch import inf
+from torch.utils.tensorboard import SummaryWriter
 
 if is_bs4_available():
     from bs4 import BeautifulSoup
@@ -367,7 +363,7 @@ def collect_env():
 
 bad_punct_regex = re.compile(
     r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
-)  # noqa
+)
 
 
 def text_preprocessing(text):
@@ -390,12 +386,12 @@ def clean_caption(caption):
     caption = re.sub("<person>", "person", caption)
     # urls:
     caption = re.sub(
-        r"\b((?:https?:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",  # noqa
+        r"\b((?:https?:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
         "",
         caption,
     )  # regex for urls
     caption = re.sub(
-        r"\b((?:www:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",  # noqa
+        r"\b((?:www:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
         "",
         caption,
     )  # regex for urls
@@ -423,7 +419,7 @@ def clean_caption(caption):
 
     # все виды тире / all types of dash --> "-"
     caption = re.sub(
-        r"[\u002D\u058A\u05BE\u1400\u1806\u2010-\u2015\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D]+",  # noqa
+        r"[\u002D\u058A\u05BE\u1400\u1806\u2010-\u2015\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D]+",
         "-",
         caption,
     )

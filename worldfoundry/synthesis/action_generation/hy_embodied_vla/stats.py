@@ -52,7 +52,7 @@ class HyVLANormalizationStats:
         return int(self.action_mean.shape[0])
 
     @classmethod
-    def load(cls, path: str | Path) -> "HyVLANormalizationStats":
+    def load(cls, path: str | Path) -> HyVLANormalizationStats:
         """Load an official stats pickle without allowing arbitrary Python globals."""
 
         source = Path(path).expanduser().resolve()

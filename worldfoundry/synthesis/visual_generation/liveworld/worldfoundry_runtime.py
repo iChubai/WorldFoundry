@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -99,7 +100,7 @@ class LiveWorldRuntime:
         return Path(__file__).resolve().parent / "liveworld_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "LiveWorldRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> LiveWorldRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def plan(self, **kwargs: Any) -> dict[str, Any]:

@@ -9,8 +9,9 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.core.media.codecs.video import load_video_frames, save_image_or_video_tensor
@@ -136,7 +137,7 @@ class LingBotWorldV2Runtime:
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "LingBotWorldV2Runtime":
+    ) -> LingBotWorldV2Runtime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["checkpoint_source"] = pretrained_model_path
@@ -709,7 +710,7 @@ class LingBotWorldV2Runtime:
 __all__ = [
     "DEFAULT_CHECKPOINT",
     "DISPLAY_NAME",
-    "LingBotWorldV2Runtime",
     "MODEL_ID",
     "SOURCE_COMMIT",
+    "LingBotWorldV2Runtime",
 ]

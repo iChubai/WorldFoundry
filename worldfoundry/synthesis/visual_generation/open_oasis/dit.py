@@ -5,15 +5,16 @@ References:
     - Latte: https://github.com/Vchitect/Latte/blob/main/models/latte.py
 """
 
-from typing import Optional, Literal
-import torch
-from torch import nn
-from rotary_embedding_torch import RotaryEmbedding
-from einops import rearrange
-from attention import SpatialAxialAttention, TemporalAxialAttention
-from timm.models.vision_transformer import Mlp
-from timm.layers.helpers import to_2tuple
 import math
+from typing import Literal, Optional
+
+import torch
+from attention import SpatialAxialAttention, TemporalAxialAttention
+from einops import rearrange
+from rotary_embedding_torch import RotaryEmbedding
+from timm.layers.helpers import to_2tuple
+from timm.models.vision_transformer import Mlp
+from torch import nn
 
 
 def modulate(x, shift, scale):
@@ -61,7 +62,7 @@ class PatchEmbed(nn.Module):
 
     def forward(self, x, random_sample=False):
         B, C, H, W = x.shape
-        assert random_sample or (H == self.img_size[0] and W == self.img_size[1]), (
+        assert random_sample or (self.img_size[0] == H and self.img_size[1] == W), (
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x)
@@ -139,8 +140,8 @@ class SpatioTemporalDiTBlock(nn.Module):
         num_heads,
         mlp_ratio=4.0,
         is_causal=True,
-        spatial_rotary_emb: Optional[RotaryEmbedding] = None,
-        temporal_rotary_emb: Optional[RotaryEmbedding] = None,
+        spatial_rotary_emb: RotaryEmbedding | None = None,
+        temporal_rotary_emb: RotaryEmbedding | None = None,
     ):
         super().__init__()
         self.is_causal = is_causal

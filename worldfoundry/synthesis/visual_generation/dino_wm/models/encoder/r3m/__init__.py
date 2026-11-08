@@ -2,15 +2,16 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-from .models.models_r3m import R3M
-
+import copy
 import os
 from os.path import expanduser
-import omegaconf
-import hydra
+
 import gdown
+import hydra
+import omegaconf
 import torch
-import copy
+
+from .models.models_r3m import R3M
 
 VALID_ARGS = [
     "_target_",

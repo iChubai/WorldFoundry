@@ -28,17 +28,17 @@ Potentially customized to add/remove mixtures, e.g., remove proprio or add anoth
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
-from safetensors import safe_open
 
 import torch
+from safetensors import safe_open
 from torch import nn
 
+from .joint_model import JointModel
 from .modules import (
-    ActionEncoder,
     ActionDecoder,
+    ActionEncoder,
     SinusoidalPosEmb,
 )
-from .joint_model import JointModel
 from .siglip import PaliGemmaMultiModalProjector, SiglipVisionModel
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ class GalaxeaZero(nn.Module):
 
     def build_causal_mask_and_position_ids(
         self, attention_mask: torch.Tensor, dtype: torch.dtype
-    ) -> Tuple[torch.FloatTensor]:
+    ) -> tuple[torch.FloatTensor]:
         """
         block attention --- padding for unused text tokens
 
@@ -233,7 +233,7 @@ class GalaxeaZero(nn.Module):
 
     def split_full_mask_into_submasks(
         self, causal_mask: torch.FloatTensor
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    ) -> tuple[torch.FloatTensor, torch.FloatTensor]:
         """split into ones for paligemma and action"""
         image_text_proprio_mask = causal_mask[
             ...,

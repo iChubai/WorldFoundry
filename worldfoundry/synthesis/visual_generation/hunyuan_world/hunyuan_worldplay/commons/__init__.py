@@ -134,7 +134,7 @@ def is_flash3_available():
     try:
         from flash_attn_interface import (
             flash_attn_varlen_func as flash_attn_varlen_func_v3,  # noqa: F401
-        )  # noqa: F401
+        )
 
         return True
     except Exception:

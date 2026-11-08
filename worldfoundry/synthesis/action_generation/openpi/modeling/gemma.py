@@ -25,8 +25,8 @@ We follow this einsum axis naming convention:
   D: d_model ("features")
 """
 
-from collections.abc import Sequence
 import dataclasses
+from collections.abc import Sequence
 from typing import Literal, TypeAlias
 
 import einops
@@ -34,9 +34,9 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from . import lora
 from .. import array_typing as at
 from .. import sharding
+from . import lora
 
 PALIGEMMA_VOCAB_SIZE = 257_152
 
@@ -296,7 +296,7 @@ class Block(nn.Module):
         gates = []
         for i, x in enumerate(xs):
             if x is not None:
-                x, gate = RMSNorm(name=_name("pre_attention_norm", i))(x, adarms_cond[i])  # noqa: PLW2901
+                x, gate = RMSNorm(name=_name("pre_attention_norm", i))(x, adarms_cond[i])
             pre_attn.append(x)
             gates.append(gate if x is not None else None)
 
@@ -310,8 +310,8 @@ class Block(nn.Module):
         gates = []
         for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)):
             if x is not None:
-                x, gate = RMSNorm(name=_name("pre_ffw_norm", i))(x, adarms_cond[i])  # noqa: PLW2901
-                x = lora.FeedForward(  # noqa: PLW2901
+                x, gate = RMSNorm(name=_name("pre_ffw_norm", i))(x, adarms_cond[i])
+                x = lora.FeedForward(
                     features=config.width,
                     hidden_dim=config.mlp_dim,
                     name=_name("mlp", i),

@@ -79,9 +79,9 @@ class WanAttnProcessor:
         self,
         attn: "WanAttention",
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
     ) -> torch.Tensor:
         encoder_hidden_states_img = None
         if attn.add_k_proj is not None:
@@ -181,8 +181,8 @@ class WanAttention(torch.nn.Module, AttentionModuleMixin):
         dim_head: int = 64,
         eps: float = 1e-5,
         dropout: float = 0.0,
-        added_kv_proj_dim: Optional[int] = None,
-        cross_attention_dim_head: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
+        cross_attention_dim_head: int | None = None,
         processor=None,
         is_cross_attention=None,
     ):
@@ -268,9 +268,9 @@ class WanAttention(torch.nn.Module, AttentionModuleMixin):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         **kwargs,
     ) -> torch.Tensor:
         return self.processor(self, hidden_states, encoder_hidden_states, attention_mask, rotary_emb, **kwargs)
@@ -307,8 +307,8 @@ class WanTimeTextImageEmbedding(nn.Module):
         time_freq_dim: int,
         time_proj_dim: int,
         text_embed_dim: int,
-        image_embed_dim: Optional[int] = None,
-        pos_embed_seq_len: Optional[int] = None,
+        image_embed_dim: int | None = None,
+        pos_embed_seq_len: int | None = None,
     ):
         super().__init__()
 
@@ -326,8 +326,8 @@ class WanTimeTextImageEmbedding(nn.Module):
         self,
         timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
-        timestep_seq_len: Optional[int] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
+        timestep_seq_len: int | None = None,
     ):
         timestep = self.timesteps_proj(timestep)
         if timestep_seq_len is not None:
@@ -350,7 +350,7 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         max_seq_len: int,
         theta: float = 10000.0,
     ):
@@ -453,7 +453,7 @@ class WanTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        added_kv_proj_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
     ):
         super().__init__()
 
@@ -492,7 +492,7 @@ class WanTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        self_attention_mask: Optional[torch.Tensor] = None,
+        self_attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if temb.ndim == 4:
             # temb: batch_size, seq_len, 6, inner_dim (wan2.2 ti2v)
@@ -597,7 +597,7 @@ class CasualWorldActionTransformer(
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int, ...] = (1, 2, 2),
+        patch_size: tuple[int, ...] = (1, 2, 2),
         num_attention_heads: int = 40,
         attention_head_dim: int = 128,
         in_channels: int = 16,
@@ -607,12 +607,12 @@ class CasualWorldActionTransformer(
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = "rms_norm_across_heads",
+        qk_norm: str | None = "rms_norm_across_heads",
         eps: float = 1e-6,
-        image_dim: Optional[int] = None,
-        added_kv_proj_dim: Optional[int] = None,
+        image_dim: int | None = None,
+        added_kv_proj_dim: int | None = None,
         rope_max_seq_len: int = 1024,
-        pos_embed_seq_len: Optional[int] = None,
+        pos_embed_seq_len: int | None = None,
         in_action_channels: int = 32,
         out_action_channels: int = 32,
         num_embodiments: int = 4,
@@ -667,14 +667,12 @@ class CasualWorldActionTransformer(
             num_embodiments=num_embodiments,
         )
 
-    def _encode_action_tokens(self, action: torch.Tensor, emb_ids: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def _encode_action_tokens(self, action: torch.Tensor, emb_ids: torch.Tensor | None = None) -> torch.Tensor:
         if getattr(self.action_encoder, "uses_emb_ids", False):
             return self.action_encoder(action, emb_ids=emb_ids)
         return self.action_encoder(action)
 
-    def _decode_action_tokens(
-        self, action_states: torch.Tensor, emb_ids: Optional[torch.Tensor] = None
-    ) -> torch.Tensor:
+    def _decode_action_tokens(self, action_states: torch.Tensor, emb_ids: torch.Tensor | None = None) -> torch.Tensor:
         if getattr(self.action_decoder, "uses_emb_ids", False):
             return self.action_decoder(action_states, emb_ids=emb_ids)
         return self.action_decoder(action_states)
@@ -698,13 +696,13 @@ class CasualWorldActionTransformer(
         noisy_latents: torch.Tensor = None,
         timestep: torch.LongTensor = None,
         encoder_hidden_states: torch.Tensor = None,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        state: Optional[Dict[str, Any]] = None,
-        action: Optional[torch.Tensor] = None,
-        emb_ids: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+        state: dict[str, Any] | None = None,
+        action: torch.Tensor | None = None,
+        emb_ids: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
             lora_scale = attention_kwargs.pop("scale", 1.0)
@@ -828,13 +826,13 @@ class CasualWorldActionTransformer(
         ref_latents: torch.Tensor = None,
         timestep: torch.LongTensor = None,
         encoder_hidden_states: torch.Tensor = None,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        state: Optional[Dict[str, Any]] = None,
-        action: Optional[torch.Tensor] = None,
-        emb_ids: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+        state: dict[str, Any] | None = None,
+        action: torch.Tensor | None = None,
+        emb_ids: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
             lora_scale = attention_kwargs.pop("scale", 1.0)
@@ -964,13 +962,13 @@ class CasualWorldActionTransformer(
         ref_latents: torch.Tensor = None,
         timestep: torch.LongTensor = None,
         encoder_hidden_states: torch.Tensor = None,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        state: Optional[Dict[str, Any]] = None,
-        action: Optional[torch.Tensor] = None,
-        emb_ids: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+        state: dict[str, Any] | None = None,
+        action: torch.Tensor | None = None,
+        emb_ids: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         # 1. 处理 LoRA 缩放 (与训练一致)
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
@@ -1120,13 +1118,13 @@ class CasualWorldActionTransformer(
         ref_latents: torch.Tensor = None,
         timestep: torch.LongTensor = None,
         encoder_hidden_states: torch.Tensor = None,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        state: Optional[Dict[str, Any]] = None,
-        action: Optional[torch.Tensor] = None,
-        emb_ids: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+        state: dict[str, Any] | None = None,
+        action: torch.Tensor | None = None,
+        emb_ids: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         # 1. 处理 LoRA 缩放 (与训练一致)
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
@@ -1275,13 +1273,13 @@ class CasualWorldActionTransformer(
         ref_latents: torch.Tensor = None,
         timestep: torch.LongTensor = None,
         encoder_hidden_states: torch.Tensor = None,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        state: Optional[Dict[str, Any]] = None,
-        action: Optional[torch.Tensor] = None,
-        emb_ids: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+        state: dict[str, Any] | None = None,
+        action: torch.Tensor | None = None,
+        emb_ids: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
             lora_scale = attention_kwargs.pop("scale", 1.0)

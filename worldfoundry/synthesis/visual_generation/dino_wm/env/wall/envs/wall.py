@@ -1,27 +1,27 @@
 import math
+import random
 from typing import Optional
 
-import torch
 import gym
 import numpy as np
-import random
+import torch
 
+from ..layouts.single import DotDataset
 from ..layouts.wall import WallDatasetConfig
 from ..layouts.wall_utils import generate_wall_layouts
 from .utils import check_wall_intersect
-from ..layouts.single import DotDataset
 
 
 class DotWall(gym.Env):
     def __init__(
         self,
-        rng: Optional[np.random.Generator] = None,
-        wall_config: Optional[WallDatasetConfig] = None,
+        rng: np.random.Generator | None = None,
+        wall_config: WallDatasetConfig | None = None,
         fix_wall: bool = True,
         cross_wall: bool = False,
         level: str = "normal",
-        fix_wall_location: Optional[int] = None,
-        fix_door_location: Optional[int] = None,
+        fix_wall_location: int | None = None,
+        fix_door_location: int | None = None,
         device="cpu",
     ):
         super().__init__()

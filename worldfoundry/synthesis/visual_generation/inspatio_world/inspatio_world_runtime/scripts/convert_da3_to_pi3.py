@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Convert DA3 depth output to Pi3 format expected by the v2v pipeline.
 
 DA3 outputs:
@@ -114,7 +113,7 @@ def convert_intrinsics(da3_dir, output_dir):
         line = line.replace("\n", "")
         f.write(line + "\n")
 
-    print(f"  Converted intrinsics (first frame)")
+    print("  Converted intrinsics (first frame)")
 
 
 def convert_images(da3_dir, output_dir, video_path=None, target_width=832, target_height=480):
@@ -198,7 +197,7 @@ def main():
     )
     args = parser.parse_args()
 
-    print(f"Converting DA3 -> Pi3 format:")
+    print("Converting DA3 -> Pi3 format:")
     print(f"  DA3 dir:    {args.da3_dir}")
     print(f"  Output dir: {args.output_dir}")
     if args.video_path:

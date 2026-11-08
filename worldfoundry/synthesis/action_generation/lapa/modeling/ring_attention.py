@@ -4,18 +4,19 @@ It features blockwise computation for feedforward networks to reduce memory cost
 For more details, refer to 'RingAttention' at https://arxiv.org/abs/2305.19370 and 'Blockwise Parallel Transformers' at https://arxiv.org/abs/2310.01889.
 """
 
-import numpy as np
+import dataclasses
+import functools
+from functools import partial
+from typing import Any, NamedTuple
+
 import flax.linen as nn
 import jax
 import jax.lax as lax
 import jax.numpy as jnp
+import numpy as np
+from einops import rearrange
 from jax.experimental import pallas as pl
 from jax.experimental.pallas import tpu as pltpu
-from einops import rearrange
-from functools import partial
-import dataclasses
-import functools
-from typing import Any, NamedTuple
 
 
 def _ring_attention_fwd(q, k, v, attn_bias, segment_ids, axis_name, float32_logits, blockwise_kwargs):

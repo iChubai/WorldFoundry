@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 NUS Show Lab, HuggingFace.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +15,10 @@
 import torch
 import torch.nn.functional as F
 from transformers import AutoConfig
+
 from .modeling_utils import ConfigMixin, ModelMixin, register_to_config
-from .sampling import cosine_schedule, mask_by_random_topk
 from .phi import PhiForCausalLM
+from .sampling import cosine_schedule, mask_by_random_topk
 
 
 class Showo(ModelMixin, ConfigMixin):

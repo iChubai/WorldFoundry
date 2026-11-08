@@ -121,7 +121,7 @@ class VideoCrafter:
         ddim_eta: float = 1.0,
         unconditional_guidance_scale: float = 12.0,
         seed: int = 123,
-        device: Optional[str] = None,
+        device: str | None = None,
     ):
         """
         Initialize VideoCrafter from packaged runtime code and external weights.
@@ -162,9 +162,8 @@ class VideoCrafter:
 
         components = load_videocrafter_components()
 
-        from omegaconf import OmegaConf
-
         import torch
+        from omegaconf import OmegaConf
 
         torch.manual_seed(seed)
         if torch.cuda.is_available():
@@ -180,7 +179,7 @@ class VideoCrafter:
         self.model = components.load_model_checkpoint(model, self.ckpt_path).float().to(target_device)
         self.model.eval()
 
-    def generate_video(self, prompt: str, image_path: Optional[str] = None):
+    def generate_video(self, prompt: str, image_path: str | None = None):
         """
         Generate video frames through the packaged VideoCrafter implementation.
 

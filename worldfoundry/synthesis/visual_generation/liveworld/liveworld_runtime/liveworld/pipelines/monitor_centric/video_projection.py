@@ -17,26 +17,27 @@
 5. (视频模式) 从偏移视角渲染累积点云
 """
 
+import json
 import sys
 import tempfile
 from pathlib import Path
 
-
 import cv2
-import torch
 import numpy as np
+import torch
 from PIL import Image
 from tqdm import tqdm
-import json
 
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import STream3R
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.load_fn import (
     load_and_preprocess_images,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (
     pose_encoding_to_extri_intri,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import STream3R
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.stream_session import StreamSession
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (
     Sam3VideoSegmenter,
 )
@@ -549,7 +550,7 @@ def save_pointcloud_ply(path: str, points: np.ndarray, colors: np.ndarray):
         f.write("property uchar blue\n")
         f.write("end_header\n")
 
-        for (x, y, z), (r, g, b) in zip(points, colors):
+        for (x, y, z), (r, g, b) in zip(points, colors, strict=False):
             f.write(f"{x:.6f} {y:.6f} {z:.6f} {int(r)} {int(g)} {int(b)}\n")
 
 
@@ -889,15 +890,15 @@ def update_dynamic_object_depth(
     print("Done!")
     print("=" * 60)
     print(f"Output directory: {output_dir}")
-    print(f"  - pointcloud_image1_complete.ply: 第一帧完整点云")
-    print(f"  - pointcloud_image1_background.ply: 第一帧背景点云")
-    print(f"  - pointcloud_image1_foreground.ply: 第一帧前景点云")
-    print(f"  - pointcloud_image2_foreground_scaled.ply: 第二帧前景点云（scaled）")
-    print(f"  - pointcloud_merged.ply: 合并后的点云（第一帧背景 + 第二帧前景）")
-    print(f"  - depth1.png, depth2.png: 深度可视化")
-    print(f"  - foreground_mask1.png, foreground_mask2.png: 前景分割可视化")
-    print(f"  - metadata.json: 元数据")
-    print(f"  - depth_data.npz: 深度数据")
+    print("  - pointcloud_image1_complete.ply: 第一帧完整点云")
+    print("  - pointcloud_image1_background.ply: 第一帧背景点云")
+    print("  - pointcloud_image1_foreground.ply: 第一帧前景点云")
+    print("  - pointcloud_image2_foreground_scaled.ply: 第二帧前景点云（scaled）")
+    print("  - pointcloud_merged.ply: 合并后的点云（第一帧背景 + 第二帧前景）")
+    print("  - depth1.png, depth2.png: 深度可视化")
+    print("  - foreground_mask1.png, foreground_mask2.png: 前景分割可视化")
+    print("  - metadata.json: 元数据")
+    print("  - depth_data.npz: 深度数据")
     print(f"\nScale factor: {scale:.4f}")
     print(f"Merged points: {len(merged_points)}")
 
@@ -1038,7 +1039,7 @@ def merge_video_foregrounds(
     _log(f"  Got depth for {len(depth_results)} frames via session (total fed: {stream3r_frames_fed})")
 
     # ========== Step 3: 逐帧分割 + 点云提取 ==========
-    _log(f"\n[Step 3] Segmenting and extracting point clouds...")
+    _log("\n[Step 3] Segmenting and extracting point clouds...")
 
     # 创建深度图保存目录（可选）
     depths_dir = output_dir / "depths"
@@ -1242,7 +1243,7 @@ def merge_video_foregrounds(
         if abs(rotation_angle) < 1e-6:
             # 原视角：点云本身就在相机坐标系下，不需要变换
             c2w_render = None
-            _log(f"  Using original viewpoint (no rotation)")
+            _log("  Using original viewpoint (no rotation)")
         else:
             # 计算点云中心（用于确定观察目标）
             bg_parts = [points_bg1] if points_bg1 is not None else []

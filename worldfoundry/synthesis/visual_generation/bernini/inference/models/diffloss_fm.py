@@ -16,9 +16,9 @@ import math
 import os
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributed as dist
 from torch.utils.checkpoint import checkpoint
 from tqdm import tqdm
 from transformers.utils import logging

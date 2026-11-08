@@ -85,7 +85,7 @@ class BerniniRendererModel(PreTrainedModel):
         seq_lens = attention_mask.gt(0).sum(dim=1).long()
         with torch.no_grad():
             prompt_embeds = self.t5_text_encoder(input_ids, attention_mask).last_hidden_state
-        prompt_embeds = [u[: min(v, self.max_sequence_length)] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [u[: min(v, self.max_sequence_length)] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(self.max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds],
             dim=0,

@@ -1,10 +1,12 @@
+import math
+from typing import Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-import numpy as np
-from typing import Tuple, Optional
 from einops import rearrange
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
 
 try:
@@ -27,19 +29,29 @@ try:
     SAGE_ATTN_AVAILABLE = True
 except ModuleNotFoundError:
     SAGE_ATTN_AVAILABLE = False
-from .wan_video_dit import SelfAttention
 from worldfoundry.core.attention import (
     apply_complex_rotary_embedding as rope_apply,
+)
+from worldfoundry.core.attention import (
     complex_rotary_frequencies as precompute_freqs_cis,
+)
+from worldfoundry.core.attention import (
     complex_rotary_frequencies_3d as precompute_freqs_cis_3d,
+)
+from worldfoundry.core.attention import (
     packed_sequence_attention as flash_attention,
 )
-from worldfoundry.core.nn import RMSNorm, scale_shift as modulate, sinusoidal_embedding_1d
+from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
+from worldfoundry.core.nn import scale_shift as modulate
+
+from .wan_video_dit import SelfAttention
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import (
+    MLP,
     AttentionModule,
     CrossAttention,
     Head,
-    MLP,
     WanModelStateDictConverter,
 )
 
@@ -108,7 +120,7 @@ class MultiModalMoE(nn.Module):
 
     def forward(
         self, x: torch.Tensor, expert_weights: torch.Tensor, top_k_indices: torch.Tensor, modality_type: str = "unknown"
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x: [batch_size, seq_len, unified_dim]
@@ -208,7 +220,7 @@ class DiTBlockWithMoE(nn.Module):
         ffn_dim: int,
         eps: float = 1e-6,
         use_moe: bool = True,
-        moe_config: Optional[dict] = None,
+        moe_config: dict | None = None,
     ):
         super().__init__()
         self.dim = dim
@@ -243,9 +255,9 @@ class DiTBlockWithMoE(nn.Module):
         cam_emb,
         t_mod,
         freqs,
-        modality_inputs: Optional[dict] = None,
-        router_weights: Optional[torch.Tensor] = None,
-        router_indices: Optional[torch.Tensor] = None,
+        modality_inputs: dict | None = None,
+        router_weights: torch.Tensor | None = None,
+        router_indices: torch.Tensor | None = None,
     ):
         # 原有的modulation
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
@@ -307,13 +319,13 @@ class WanModelMoe(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
         # 🔧 新增MoE参数
         use_moe: bool = True,
-        moe_config: Optional[dict] = None,
+        moe_config: dict | None = None,
     ):
         super().__init__()
         self.dim = dim
@@ -520,7 +532,7 @@ class WanModelMoe(torch.nn.Module):
         clean_latents_4x=None,
         clean_latent_4x_indices=None,
         cam_emb=None,
-        modality_inputs: Optional[dict] = None,
+        modality_inputs: dict | None = None,
     ):  # 🔧 新增modality_inputs参数
         """🔧 处理FramePack风格的多尺度输入 + MoE模态输入处理 - 完全照wan_video_dit_recam_future实现"""
 
@@ -791,7 +803,7 @@ class WanModelMoe(torch.nn.Module):
         clean_latents_4x=None,
         clean_latent_4x_indices=None,
         # 🔧 MoE参数
-        modality_inputs: Optional[dict] = None,
+        modality_inputs: dict | None = None,
         **kwargs,
     ):
         modality_inputs, cam_emb = self.process_modality_inputs(modality_inputs)
@@ -826,7 +838,7 @@ class WanModelMoe(torch.nn.Module):
         original_context_length = post_patch_num_frames * post_patch_height * post_patch_width
 
         # 处理其他embeddings
-        context = kwargs.get("context", None)
+        context = kwargs.get("context")
         if context is not None:
             context = self.text_embedding(context)
         t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep))
@@ -946,12 +958,12 @@ class WanModelMoe(torch.nn.Module):
             print(f"   expected expert: Expert-{target_expert_id}")
             print(f"   expected expert usage: {avg_target_expert_usage:.3f} ({avg_target_expert_usage * 100:.1f}%)")
 
-            print(f"   Expert chosen weight (global Router decision):")
+            print("   Expert chosen weight (global Router decision):")
             for i, ratio in enumerate(avg_selection_ratio):
                 status = "🔥" if i == target_expert_id else "  "
                 print(f"    {status} Expert-{i}: {ratio:.3f} ({ratio * 100:.1f}%)")
 
-            print(f"    Expert avg weight:")
+            print("    Expert avg weight:")
             for i, weight in enumerate(avg_expert_weights):
                 status = "🔥" if i == target_expert_id else "  "
                 print(f"    {status} Expert-{i}: {weight:.3f}")

@@ -6,7 +6,6 @@ from typing import Any
 import numpy as np
 import torch
 
-
 try:
     from torchvision.io import write_video as _torchvision_write_video
 except Exception:  # pragma: no cover - depends on torchvision build features.

@@ -23,8 +23,8 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (  
 from worldfoundry.base_models.diffusion_model.models.denoisers.wan import WAN21_T2V_1P3B_CONFIG  # noqa: E402
 from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanTextEncoder  # noqa: E402
 from worldfoundry.base_models.diffusion_model.models.networks.wan import WanModel  # noqa: E402
-from worldfoundry.core.model_loading import load_model  # noqa: E402
 from worldfoundry.core.io import save_video  # noqa: E402
+from worldfoundry.core.model_loading import load_model  # noqa: E402
 from worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.hydra_model import (  # noqa: E402
     HyDRAAttentionConfig,
 )
@@ -59,7 +59,7 @@ def load_condition_video(
     )
 
     reader = imageio.get_reader(path)
-    frames: List[torch.Tensor] = []
+    frames: list[torch.Tensor] = []
     try:
         for i in range(num_frames):
             try:
@@ -113,8 +113,8 @@ def _apply_coordinate_transform(c2w: torch.Tensor) -> torch.Tensor:
     return c2w_t
 
 
-def _dict77_to_tensor(cam_dict: Dict[str, Any], name: str) -> torch.Tensor:
-    mats: List[torch.Tensor] = []
+def _dict77_to_tensor(cam_dict: dict[str, Any], name: str) -> torch.Tensor:
+    mats: list[torch.Tensor] = []
     for i in range(77):
         key = str(i)
         if key not in cam_dict:
@@ -128,13 +128,13 @@ def _dict77_to_tensor(cam_dict: Dict[str, Any], name: str) -> torch.Tensor:
 
 def _compute_relative_20x12_from_77x4x4(
     context_77: torch.Tensor, target_77: torch.Tensor
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     cam_idx = list(range(77))[::4]  # 20
     ref_c2w = _apply_coordinate_transform(target_77[0])
     ref_w2c = torch.inverse(ref_c2w)
 
     def to_rel(seq_77: torch.Tensor) -> torch.Tensor:
-        rel_list: List[torch.Tensor] = []
+        rel_list: list[torch.Tensor] = []
         for idx in cam_idx:
             c2w = _apply_coordinate_transform(seq_77[idx])
             rel = ref_w2c @ c2w
@@ -144,7 +144,7 @@ def _compute_relative_20x12_from_77x4x4(
     return to_rel(context_77), to_rel(target_77)
 
 
-def load_condition_json(path: str) -> Tuple[torch.Tensor, torch.Tensor]:
+def load_condition_json(path: str) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Camera loader for inference.
 
@@ -154,8 +154,8 @@ def load_condition_json(path: str) -> Tuple[torch.Tensor, torch.Tensor]:
     - Also accepts {"context_camera": ..., "video_camera": ...}
     Returns (ref_camera, target_camera)
     """
-    with open(path, "r", encoding="utf-8") as f:
-        data: Dict[str, Any] = json.load(f)
+    with open(path, encoding="utf-8") as f:
+        data: dict[str, Any] = json.load(f)
 
     if "cond_cam" in data and "tgt_cam" in data:
         ctx77 = _dict77_to_tensor(data["cond_cam"], "cond_cam")
@@ -171,7 +171,7 @@ def load_condition_json(path: str) -> Tuple[torch.Tensor, torch.Tensor]:
             return _compute_relative_20x12_from_77x4x4(ctx, tgt)
         raise ValueError(f"Unsupported context/video_camera shapes: {tuple(ctx.shape)} / {tuple(tgt.shape)}")
 
-    raw_matrices: List[torch.Tensor] = []
+    raw_matrices: list[torch.Tensor] = []
     for i in range(149):
         key = str(i)
         if key in data:
@@ -187,7 +187,7 @@ def load_condition_json(path: str) -> Tuple[torch.Tensor, torch.Tensor]:
     context_mats = raw_matrices[:75]
     target_mats = raw_matrices[75:]
 
-    def pad_mats(mats: List[torch.Tensor]) -> List[torch.Tensor]:
+    def pad_mats(mats: list[torch.Tensor]) -> list[torch.Tensor]:
         return [mats[0]] + mats + [mats[-1]]
 
     context_final = pad_mats(context_mats)  # 77
@@ -198,8 +198,8 @@ def load_condition_json(path: str) -> Tuple[torch.Tensor, torch.Tensor]:
     ref_c2w = _apply_coordinate_transform(target_final[0])
     ref_w2c = torch.inverse(ref_c2w)
 
-    def to_rel(mats_final: List[torch.Tensor]) -> torch.Tensor:
-        rel_list: List[torch.Tensor] = []
+    def to_rel(mats_final: list[torch.Tensor]) -> torch.Tensor:
+        rel_list: list[torch.Tensor] = []
         for idx in cam_idx:
             c2w = _apply_coordinate_transform(mats_final[idx])
             rel = ref_w2c @ c2w
@@ -359,12 +359,12 @@ def main() -> None:
         os.makedirs(out_dir, exist_ok=True)
 
         caption_path = os.path.join(examples_dir, "caption.txt")
-        with open(caption_path, "r", encoding="utf-8") as f:
+        with open(caption_path, encoding="utf-8") as f:
             captions = [line.rstrip("\n") for line in f.readlines()]
 
         mp4s = [f for f in os.listdir(examples_dir) if f.lower().endswith(".mp4")]
 
-        def _sort_key(name: str) -> Tuple[int, str]:
+        def _sort_key(name: str) -> tuple[int, str]:
             base = os.path.splitext(name)[0]
             try:
                 return int(base), name
@@ -412,7 +412,7 @@ def main() -> None:
             "Provide --examples_dir for batch mode, or --cond_video/--cond_json/--caption_txt for single mode."
         )
 
-    with open(args.caption_txt, "r", encoding="utf-8") as f:
+    with open(args.caption_txt, encoding="utf-8") as f:
         prompt = f.read().strip()
     if not prompt:
         raise ValueError("caption_txt is empty.")

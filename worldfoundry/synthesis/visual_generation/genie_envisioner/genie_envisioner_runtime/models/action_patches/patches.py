@@ -1,10 +1,8 @@
 import math
 from typing import Any, Dict, Optional, Tuple
 
-
 import torch
 import torch.nn as nn
-
 from diffusers.models.attention import FeedForward
 from diffusers.models.normalization import AdaLayerNormSingle, RMSNorm
 from diffusers.utils.torch_utils import maybe_allow_in_graph
@@ -27,7 +25,7 @@ class ActionRotaryPosEmbed(nn.Module):
         self,
         hidden_states: torch.Tensor,
         seq_length: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         # Always compute rope in fp32
         grid = torch.arange(seq_length, dtype=torch.float32, device=hidden_states.device).unsqueeze(0)
 
@@ -123,8 +121,8 @@ class ActionTransformerBlock(nn.Module):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
-        rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         attn3_hidden_states: torch.Tensor = None,
     ) -> torch.Tensor:
         batch_size = hidden_states.size(0)
@@ -271,7 +269,7 @@ def preprocessing_action_states(
 
     action_seq_length = action_states.shape[1]
 
-    if getattr(self, "learnable_action_state") and self.learnable_action_state:
+    if self.learnable_action_state and self.learnable_action_state:
         action_states = self.action_state.repeat(batch_size, action_seq_length, 1).to(
             dtype=action_states.dtype, device=action_states.device
         )

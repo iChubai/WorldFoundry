@@ -1,10 +1,11 @@
-import json
 import argparse
-import requests
-import re
-import os
-from tqdm import tqdm
 import concurrent.futures
+import json
+import os
+import re
+
+import requests
+from tqdm import tqdm
 
 
 def process_prompt(original_content, mode):
@@ -99,10 +100,10 @@ def main():
     args = parser.parse_args()
 
     if args.input_file.endswith(".json"):
-        with open(args.input_file, "r", encoding="utf-8") as f:
+        with open(args.input_file, encoding="utf-8") as f:
             data = json.load(f)
     elif args.input_file.endswith(".jsonl"):
-        with open(args.input_file, "r", encoding="utf-8") as f:
+        with open(args.input_file, encoding="utf-8") as f:
             data = [json.loads(line.strip()) for line in f]
 
     flag = True

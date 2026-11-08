@@ -2,12 +2,12 @@
 Implementation of Diffusion Policy https://diffusion-policy.cs.columbia.edu/ by Cheng Chi
 """
 
-from typing import Union
 import math
+from typing import Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 # =================== UNet for Diffusion ==============
 
@@ -200,7 +200,7 @@ class ConditionalUnet1D(nn.Module):
         )
         cond_dim = dsed + global_cond_dim
 
-        in_out = list(zip(all_dims[:-1], all_dims[1:]))
+        in_out = list(zip(all_dims[:-1], all_dims[1:], strict=False))
         mid_dim = all_dims[-1]
         self.mid_modules = nn.ModuleList(
             [
@@ -257,9 +257,9 @@ class ConditionalUnet1D(nn.Module):
         self.down_modules = down_modules
         self.final_conv = final_conv
 
-        print("number of parameters: {:e}".format(sum(p.numel() for p in self.parameters())))
+        print(f"number of parameters: {sum(p.numel() for p in self.parameters()):e}")
 
-    def forward(self, sample: torch.Tensor, timestep: Union[torch.Tensor, float, int], global_cond=None, states=None):
+    def forward(self, sample: torch.Tensor, timestep: torch.Tensor | float | int, global_cond=None, states=None):
         """
         Forward pass for the Conditional UNet.
 

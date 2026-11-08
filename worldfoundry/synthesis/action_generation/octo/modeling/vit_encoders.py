@@ -7,10 +7,11 @@ Encoders more suitable for ViT architectures.
 """
 
 import functools as ft
-from typing import Callable, Sequence, TypeVar
+from collections.abc import Callable, Sequence
+from typing import TypeVar
 
-from flax import linen as nn
 import jax.numpy as jnp
+from flax import linen as nn
 
 from .film_conditioning import FilmConditioning
 
@@ -117,6 +118,7 @@ class SmallStem(nn.Module):
                 self.strides,
                 self.features,
                 self.padding,
+                strict=False,
             )
         ):
             x = StdConv(

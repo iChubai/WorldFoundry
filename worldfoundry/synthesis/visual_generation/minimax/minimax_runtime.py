@@ -6,10 +6,10 @@ query their status, and fetch the results. It handles API key authentication
 and structured logging of API events.
 """
 
+import base64
+import json
 import os
 import time
-import json
-import base64
 from typing import Literal
 
 from worldfoundry.core.io import extract_frames_from_video_url

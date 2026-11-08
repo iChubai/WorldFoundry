@@ -1,6 +1,7 @@
 """Base iterable dataset contract for Vid2World evaluation inputs."""
 
 from abc import abstractmethod
+
 from torch.utils.data import IterableDataset
 
 
@@ -32,4 +33,3 @@ class Txt2ImgIterableBaseDataset(IterableDataset):
     @abstractmethod
     def __iter__(self):
         """Iter."""
-        pass

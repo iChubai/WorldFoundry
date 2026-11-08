@@ -10,9 +10,9 @@ from .base import ActionOutputForCausalLM, CausalLMOutputDexbotic, DexboticConfi
 
 class CogActConfig(DexboticConfig):
     model_type = "dexbotic_cogact"
-    action_model_type: Optional[str] = None
-    action_dim: Optional[int] = None
-    chunk_size: Optional[int] = None
+    action_model_type: str | None = None
+    action_dim: int | None = None
+    chunk_size: int | None = None
 
 
 class CogActModel(DexboticVLMModel):
@@ -55,16 +55,16 @@ class CogACTForCausalLM(DexboticForCausalLM, ActionOutputForCausalLM):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
-        return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        images: torch.FloatTensor | None = None,
+        return_dict: bool | None = None,
+        cache_position: torch.LongTensor | None = None,
         **kwargs,
     ) -> CausalLMOutputDexbotic:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions

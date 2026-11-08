@@ -1,5 +1,5 @@
-import torch
 import peft
+import torch
 
 
 def configure_lora_for_model(transformer, model_name, lora_config, is_main_process=True):

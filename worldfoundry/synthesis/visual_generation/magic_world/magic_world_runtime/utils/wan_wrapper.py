@@ -4,8 +4,8 @@ from typing import List, Optional
 import torch
 from omegaconf import OmegaConf
 
-from worldfoundry.base_models.diffusion_model.schedulers import (
-    InferenceFlowMatchScheduler,
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (
+    load_wan_transformer,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.resident import (
     WanVAEWrapper as _WanVAEWrapper,
@@ -13,13 +13,12 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.resident i
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.resident import (
     WanTextEncoder as _WanTextEncoder,
 )
-from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.magic_world.causal import CausalWanModel
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.magic_world.model import WanModel
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (
-    load_wan_transformer,
+from worldfoundry.base_models.diffusion_model.schedulers import (
+    InferenceFlowMatchScheduler,
 )
-
+from worldfoundry.core.io.paths import resolve_data_path
 
 _WAN_ROOT = os.environ.get(
     "WORLDFOUNDRY_MAGICWORLD_WAN_ROOT",
@@ -101,10 +100,10 @@ class WanDiffusionWrapper(torch.nn.Module):
         noisy_image_or_video: torch.Tensor,
         conditional_dict: dict,
         timestep: torch.Tensor,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        current_start: Optional[int] = None,
-        cache_start: Optional[int] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        current_start: int | None = None,
+        cache_start: int | None = None,
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
         clip_fea = conditional_dict["clip_fea"]

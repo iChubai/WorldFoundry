@@ -1,22 +1,22 @@
-from PIL import Image
-from PIL import ImageFilter
+import io
+import os
+import shutil
+from collections import deque
+from datetime import datetime
+from pathlib import Path
+
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import scipy.signal
-from scipy.spatial import cKDTree
-import matplotlib.pyplot as plt
 import torch
-import io
-
-from collections import deque
-from torchvision.transforms import ToTensor
-import os
 import yaml
-import shutil
-from pathlib import Path
+from PIL import Image, ImageFilter
+from scipy.spatial import cKDTree
+from torchvision.transforms import ToTensor
+
 from .general_utils import save_video
-from datetime import datetime
 
 
 def find_biggest_connected_inpaint_region(mask):
@@ -63,7 +63,7 @@ def edge_pad(img, mask, mode=1):
         p1 = np.stack(res1.nonzero(), axis=0).transpose()
         min_dists, min_dist_idx = cKDTree(p1).query(p0, 1)
         loc = p1[min_dist_idx]
-        for (a, b), (c, d) in zip(p0, loc):
+        for (a, b), (c, d) in zip(p0, loc, strict=False):
             img[a, b] = img[c, d]
     elif mode == 1:
         record = {}
@@ -75,7 +75,7 @@ def edge_pad(img, mask, mode=1):
         res[res == 9] = 0
         res[res > 0] = 1
         ylst, xlst = res.nonzero()
-        queue = [(y, x) for y, x in zip(ylst, xlst)]
+        queue = [(y, x) for y, x in zip(ylst, xlst, strict=False)]
         # bfs here
         cnt = res.astype(np.float32)
         acc = img.astype(np.float32)

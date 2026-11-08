@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
-from ..utils import rand_float, quaternion_multuply
+
+from ..utils import quaternion_multuply, rand_float
 
 """
 Support Scenes:

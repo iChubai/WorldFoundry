@@ -4,23 +4,25 @@ import json
 import os
 import subprocess
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
-from ..base_action_synthesis import ActionModelSynthesis
+from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
-    LingBotVARuntimeConfig,
-    LingBotVAWebsocketRuntime,
     RUNTIME_ROOT,
     WAN_VA_PACKAGE,
+    LingBotVARuntimeConfig,
+    LingBotVAWebsocketRuntime,
     build_server_command,
     config_name_for_checkpoint,
     read_transformer_attn_mode,
     select_lingbot_va_checkpoint,
 )
+from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+
+from ..base_action_synthesis import ActionModelSynthesis
 
 
 def _string_mapping(value: Any, *, name: str) -> dict[str, str]:
@@ -92,7 +94,7 @@ class LingBotVASynthesis(ActionModelSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "LingBotVASynthesis":
+    ) -> LingBotVASynthesis:
         """Create a LingBot-VA wrapper without importing model-heavy deps.
 
         Args:

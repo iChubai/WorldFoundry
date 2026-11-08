@@ -19,9 +19,9 @@ import torch
 
 from .config import LlavaPythiaVisionConfig, ProjectorConfig
 from .constants import (
-    DEFAULT_IMAGE_PATCH_TOKEN,
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
     IGNORE_INDEX,
     IMAGE_TOKEN_INDEX,
 )
@@ -246,7 +246,7 @@ class LlavaMetaForCausalLM(ABC):
             if attention_mask is not None:
                 new_attention_mask = []
                 for cur_attention_mask, cur_new_labels, cur_new_labels_align in zip(
-                    attention_mask, _new_labels, new_labels
+                    attention_mask, _new_labels, new_labels, strict=False
                 ):
                     new_attn_mask_pad_left = torch.full(
                         (cur_new_labels.shape[0] - labels.shape[1],),

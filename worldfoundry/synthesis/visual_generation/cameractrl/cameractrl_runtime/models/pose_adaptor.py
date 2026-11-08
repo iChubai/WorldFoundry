@@ -1,7 +1,9 @@
 import math
+
 import torch
 import torch.nn as nn
 from einops import rearrange
+
 from .motion_module import TemporalTransformerBlock
 
 
@@ -230,8 +232,10 @@ class CameraPoseEncoder(nn.Module):
         # extract features
         features = []
         x = self.encoder_conv_in(x)
-        for res_block, attention_block in zip(self.encoder_down_conv_blocks, self.encoder_down_attention_blocks):
-            for res_layer, attention_layer in zip(res_block, attention_block):
+        for res_block, attention_block in zip(
+            self.encoder_down_conv_blocks, self.encoder_down_attention_blocks, strict=False
+        ):
+            for res_layer, attention_layer in zip(res_block, attention_block, strict=False):
                 x = res_layer(x)
                 h, w = x.shape[-2:]
                 x = rearrange(x, "(b f) c h w -> (b h w) f c", b=bs)

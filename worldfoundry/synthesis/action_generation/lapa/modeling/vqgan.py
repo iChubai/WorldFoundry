@@ -1,14 +1,15 @@
 # Inference-only LAPA source retained in-tree.
-from typing import Optional
-from functools import cached_property, partial
 import pickle
-import numpy as np
+from functools import cached_property, partial
+from typing import Optional
+
+import flax.linen as nn
 import jax
 import jax.numpy as jnp
-import flax.linen as nn
+import numpy as np
 from flax import jax_utils
-from transformers.configuration_utils import PretrainedConfig
 from ml_collections import ConfigDict
+from transformers.configuration_utils import PretrainedConfig
 from tux import function_args_to_config, open_file
 
 
@@ -232,7 +233,7 @@ class DownsamplingBlock(nn.Module):
 
 
 class ResnetBlock(nn.Module):
-    out_channels: Optional[int] = None
+    out_channels: int | None = None
     use_conv_shortcut: bool = False
     dropout_prob: float = 0.0
 

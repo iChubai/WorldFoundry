@@ -6,7 +6,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_data_path, resolve_worldfoundry_path
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
 CONFIG_DIR = resolve_data_path("models", "runtime", "configs", "le_wm", "config", "eval")

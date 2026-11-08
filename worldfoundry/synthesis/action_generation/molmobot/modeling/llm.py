@@ -10,8 +10,9 @@ import dataclasses
 import logging
 import math
 from abc import abstractmethod
-from dataclasses import field, dataclass
-from typing import Callable, Optional, Sequence, Tuple, Union
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.backends.cuda
@@ -21,8 +22,7 @@ from torch import einsum
 
 from ..config import BaseConfig, StrEnum
 from ..tokenizer import TokenizerConfig
-from ..torch_utils import ensure_finite_, BufferCache
-
+from ..torch_utils import BufferCache, ensure_finite_
 
 log = logging.getLogger(__name__)
 
@@ -181,11 +181,11 @@ class RopeType(StrEnum):
 
 def init_weights(
     config: LlmConfig,
-    module: Union[nn.Linear, nn.Embedding],
-    d: Optional[int] = None,
-    layer_id: Optional[int] = None,
+    module: nn.Linear | nn.Embedding,
+    d: int | None = None,
+    layer_id: int | None = None,
     std_factor: float = 1.0,
-    type_of_module: Optional[ModuleType] = None,
+    type_of_module: ModuleType | None = None,
 ) -> None:
     """
     Initialize weights of a linear or embedding module.
@@ -224,9 +224,9 @@ def init_weights(
 
 
 def init_normal(
-    module: Union[nn.Linear, nn.Embedding],
+    module: nn.Linear | nn.Embedding,
     std: float,
-    init_cutoff_factor: Optional[float] = None,
+    init_cutoff_factor: float | None = None,
 ):
     # weights
     if init_cutoff_factor is not None:
@@ -259,7 +259,7 @@ class LlmConfig(BaseConfig):
     The number of self-attention heads.
     """
 
-    n_kv_heads: Optional[int] = None
+    n_kv_heads: int | None = None
     """
     The number of heads to use for keys and values. Defaults to `n_heads`.
     Set this to ``None`` or ``n_heads`` for normal multi-head attention.
@@ -267,7 +267,7 @@ class LlmConfig(BaseConfig):
     Set it to some in-between value for Llama2-style grouped query attention.
     """
 
-    head_dim: Optional[int] = None
+    head_dim: int | None = None
     """
     The head dimensionality for the attention mechanism.
     """
@@ -277,7 +277,7 @@ class LlmConfig(BaseConfig):
     Do QKV projection a bias
     """
 
-    clip_qkv: Optional[float] = None
+    clip_qkv: float | None = None
     """
     Clip QKV to this value when set.
     """
@@ -293,7 +293,7 @@ class LlmConfig(BaseConfig):
     This is only used when ``mlp_hidden_size`` is not set.
     """
 
-    mlp_hidden_size: Optional[int] = None
+    mlp_hidden_size: int | None = None
     """
     Set the exact hidden size for the MLP. Otherwise the inner MLP hidden size will be set to `mlp_ratio * d_model`.
     """
@@ -329,47 +329,47 @@ class LlmConfig(BaseConfig):
     RoPE type to use. Default is the original RoPE, llama3 is the new RoPE used in Llama3.
     """
 
-    rope_factor: Optional[float] = None
+    rope_factor: float | None = None
     """
     RoPE scaling factor. Used for Llama3/YaRN style RoPE.
     """
 
-    rope_high_freq_factor: Optional[float] = None
+    rope_high_freq_factor: float | None = None
     """
     RoPE high frequency scaling factor. Used for Llama3 style RoPE.
     """
 
-    rope_low_freq_factor: Optional[float] = None
+    rope_low_freq_factor: float | None = None
     """
     RoPE low frequency scaling factor. Used for Llama3 style RoPE.
     """
 
-    rope_original_max_position_embeddings: Optional[int] = None
+    rope_original_max_position_embeddings: int | None = None
     """
     The original max position embeddings used during pretraining.
     Used for Llama3/YaRN style RoPE.
     """
 
-    rope_attention_factor: Optional[float] = None
+    rope_attention_factor: float | None = None
     """
     RoPE scaling factor to be applied to the computed cos/sin.
     If None, the value is inferred from `factor`, `mscale`, and `mscale_all_dim` as avaialble.
     Used for YaRN style RoPE.
     """
 
-    rope_beta_fast: Optional[float] = None
+    rope_beta_fast: float | None = None
     """
     RoPE parameter to set the boundary for extrapolation (only) in the linear ramp function.
     Used for YaRN style RoPE.
     """
 
-    rope_beta_slow: Optional[float] = None
+    rope_beta_slow: float | None = None
     """
     RoPE parameter to set the boundary for interpolation (only) in the linear ramp function.
     Used for YaRN style RoPE.
     """
 
-    rope_mscale: Optional[float] = None
+    rope_mscale: float | None = None
     """
     Used for YaRN style RoPE.
     If `rope_attention_factor` is None and both `rope_mscale` and `rope_mscale_all_dim` are provided,
@@ -378,7 +378,7 @@ class LlmConfig(BaseConfig):
     `factor` only.
     """
 
-    rope_mscale_all_dim: Optional[float] = None
+    rope_mscale_all_dim: float | None = None
     """
     Used for YaRN style RoPE.
     If `rope_attention_factor` is None and both `rope_mscale` and `rope_mscale_all_dim` are provided,
@@ -387,7 +387,7 @@ class LlmConfig(BaseConfig):
     calculated based on `factor` only.
     """
 
-    rope_truncate: Optional[bool] = None
+    rope_truncate: bool | None = None
     """
     Whether to truncate the correction range. Used for YaRN style RoPE.
     """
@@ -397,7 +397,7 @@ class LlmConfig(BaseConfig):
     Attention implementation to use.
     """
 
-    full_attention_layers: Optional[Tuple[int]] = None
+    full_attention_layers: tuple[int] | None = None
     """
     If provided, apply full attention to the layers in the list while applying sliding attention to the rest.
     """
@@ -451,7 +451,7 @@ class LlmConfig(BaseConfig):
     to ``False``.
     """
 
-    layer_norm_eps: Optional[float] = None
+    layer_norm_eps: float | None = None
     """
     epsilon for layer norms
     """
@@ -466,7 +466,7 @@ class LlmConfig(BaseConfig):
     The maximum input sequence length supported by the model.
     """
 
-    max_position_embeddings: Optional[int] = None
+    max_position_embeddings: int | None = None
     """
     Max positional embeddings to use in RoPE cache
     """
@@ -476,7 +476,7 @@ class LlmConfig(BaseConfig):
     Whether or not to include bias parameters in linear layers.
     """
 
-    bias_for_layer_norm: Optional[bool] = None
+    bias_for_layer_norm: bool | None = None
     """
     Whether or not to include bias parameters in layer norm.
     When this is None (the default), it inherits the setting from include_bias.
@@ -484,57 +484,57 @@ class LlmConfig(BaseConfig):
 
     norm_after: bool = False
 
-    moe_num_experts: Optional[int] = 8
+    moe_num_experts: int | None = 8
     """
     The number of experts to use in the MoE block.
     """
 
-    moe_top_k: Optional[int] = 2
+    moe_top_k: int | None = 2
     """
     The number of experts to select for each token.
     """
 
-    moe_mlp_impl: Optional[str] = "sparse"
+    moe_mlp_impl: str | None = "sparse"
     """
     Choose "grouped" for grouped GEMM installable via `pip install git+https://git@github.com/tgale96/grouped_gemm.git@66c7195e35e8c4f22fa6a014037ef511bfa397cb`.
     """
 
-    moe_log_expert_assignment: Optional[bool] = False
+    moe_log_expert_assignment: bool | None = False
     """
     Whether to log the expert assignment.
     """
 
-    moe_shared_expert: Optional[bool] = False
+    moe_shared_expert: bool | None = False
     """
     Whether to have an always-used expert like in [DeepSeekMoE](https://arxiv.org/abs/2401.06066).
     """
 
-    moe_lbl_in_fp32: Optional[bool] = False
+    moe_lbl_in_fp32: bool | None = False
     """
     Whether to perform load balancing in FP32.
     """
 
-    moe_interleave: Optional[bool] = False
+    moe_interleave: bool | None = False
     """
     Interleave sequential with MoE blocks starting with sequential.
     """
 
-    moe_loss_weight: Optional[float] = 0.1
+    moe_loss_weight: float | None = 0.1
     """
     The weight to use for the MoE load balancing loss.
     """
 
-    moe_zloss_weight: Optional[float] = None
+    moe_zloss_weight: float | None = None
     """
     Weight for MoE router z-loss where None means no router z-loss. 0.001 is a common value.
     """
 
-    moe_dropless: Optional[bool] = True
+    moe_dropless: bool | None = True
     """
     Whether to use [dMoE](https://arxiv.org/abs/2211.15841).
     """
 
-    moe_capacity_factor: Optional[float] = 1.25
+    moe_capacity_factor: float | None = 1.25
     """
     The capacity factor to use in the MoE block. Only applies if not using dMoE.
     """
@@ -548,13 +548,13 @@ class LlmConfig(BaseConfig):
     vocab_size: int = 50257
     """Vocabulary size of the model."""
 
-    additional_vocab_size: Optional[int] = 128
+    additional_vocab_size: int | None = 128
     """Number of additional tokens to have the input embeddings for"""
 
     weight_tying: bool = True
     """Whether to tie output linear weights to the input embedding"""
 
-    embedding_size: Optional[int] = 50304
+    embedding_size: int | None = 50304
     """
     The number of embeddings, i.e. the number of tokens. If set to ``None`` it will default
     to ``vocab_size``. If ``vocab_size`` is not a multiple of 128, setting this to the
@@ -573,10 +573,10 @@ class LlmConfig(BaseConfig):
     Tokenizer configuration.
     """
 
-    init_path: Optional[str] = None
+    init_path: str | None = None
     """Path to initial the LLM with"""
 
-    init_incremental: Optional[int] = None
+    init_incremental: int | None = None
 
     new_embedding_init_range: float = 0.02
     """How to initialize embedding for new tokens"""
@@ -591,12 +591,12 @@ class LlmConfig(BaseConfig):
     Normalize input embeddings (both for text and images) before
     """
 
-    activation_checkpoint: Optional[LlmActivationCheckpointMode] = LlmActivationCheckpointMode.whole_layer
+    activation_checkpoint: LlmActivationCheckpointMode | None = LlmActivationCheckpointMode.whole_layer
     """
     Where to use activation checkpoint if activation_checkpoint is enabled
     """
 
-    compile: Optional[str] = "blocks"
+    compile: str | None = "blocks"
     """
     How to compile the transformer if compilation is requested
     """
@@ -606,15 +606,15 @@ class LlmConfig(BaseConfig):
     Use embedding_size instead of vocab_size for padding the tokenizer
     """
 
-    init_std: Optional[float] = 0.02
+    init_std: float | None = 0.02
     init_fn: InitFnType = InitFnType.normal
-    init_cutoff_factor: Optional[float] = None
+    init_cutoff_factor: float | None = None
 
     def __post_init__(self):
         if self.full_attention_layers is not None:
             self.full_attention_layers = tuple(self.full_attention_layers)  # type: ignore[assignment]
 
-    def build(self, cache, device=None) -> "Llm":
+    def build(self, cache, device=None) -> Llm:
         return Llm(self, cache, device)
 
     def build_tokenizer(self):
@@ -725,7 +725,7 @@ class Embedding(nn.Module):
         num_embeddings: int,
         num_new_embeddings: int,
         features: int,
-        device: Union[str, torch.device],
+        device: str | torch.device,
         initializer_range: float = 0.02,
         new_embed_initializer_range: float = 0.02,
     ):
@@ -763,7 +763,7 @@ class Dropout(nn.Dropout):
         self.mask_p = mask_p
         self.broadcast_dims = broadcast_dims
 
-    def forward(self, input: torch.Tensor, drop_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, drop_mask: torch.Tensor | None = None) -> torch.Tensor:
         """
         :param input: A tensor of shape `(batch_size, seq_len, embed_dim)`
         :param drop_mask: A tensor of shape `(batch_size, seq_len)` with values of zero or one.
@@ -801,11 +801,11 @@ class LayerNormBase(nn.Module):
         self,
         config: LlmConfig,
         *,
-        size: Optional[int] = None,
-        elementwise_affine: Optional[bool] = True,
+        size: int | None = None,
+        elementwise_affine: bool | None = True,
         eps: float = 1e-05,
-        weight_initializer: Optional[Callable] = torch.ones,
-        bias_initializer: Optional[Callable] = torch.zeros,
+        weight_initializer: Callable | None = torch.ones,
+        bias_initializer: Callable | None = torch.zeros,
         device=None,
     ):
         super().__init__()
@@ -830,7 +830,7 @@ class LayerNormBase(nn.Module):
         raise NotImplementedError
 
     @classmethod
-    def build(cls, config: LlmConfig, size: Optional[int] = None, **kwargs) -> LayerNormBase:
+    def build(cls, config: LlmConfig, size: int | None = None, **kwargs) -> LayerNormBase:
         if config.layer_norm_type == LayerNormType.default:
             return LayerNorm(config, size=size, low_precision=False, **kwargs)
         elif config.layer_norm_type == LayerNormType.low_precision:
@@ -840,7 +840,7 @@ class LayerNormBase(nn.Module):
         else:
             raise NotImplementedError(f"Unknown LayerNorm type: '{config.layer_norm_type}'")
 
-    def _cast_if_autocast_enabled(self, tensor: torch.Tensor, dtype: Optional[torch.dtype] = None) -> torch.Tensor:
+    def _cast_if_autocast_enabled(self, tensor: torch.Tensor, dtype: torch.dtype | None = None) -> torch.Tensor:
         # NOTE: `is_autocast_enabled()` only checks for CUDA autocast, so we use the separate function
         # `is_autocast_cpu_enabled()` for CPU autocast.
         # See https://github.com/pytorch/pytorch/issues/110966.
@@ -866,9 +866,9 @@ class LayerNorm(LayerNormBase):
     def __init__(
         self,
         config: LlmConfig,
-        size: Optional[int] = None,
+        size: int | None = None,
         low_precision: bool = False,
-        elementwise_affine: Optional[bool] = None,
+        elementwise_affine: bool | None = None,
         eps: float = 1e-05,
     ):
         super().__init__(config, size=size, elementwise_affine=elementwise_affine, eps=eps)
@@ -896,8 +896,8 @@ class RMSLayerNorm(LayerNormBase):
     def __init__(
         self,
         config: LlmConfig,
-        size: Optional[int] = None,
-        elementwise_affine: Optional[bool] = None,
+        size: int | None = None,
+        elementwise_affine: bool | None = None,
         eps: float = 1e-5,
     ):
         super().__init__(config, size=size, elementwise_affine=elementwise_affine, eps=eps)
@@ -924,7 +924,7 @@ class RotaryEmbedding(nn.Module):
     [Rotary positional embeddings (RoPE)](https://arxiv.org/abs/2104.09864).
     """
 
-    def __init__(self, config: LlmConfig, cache: BufferCache, device=None, rope_type: Optional[RopeType] = None):
+    def __init__(self, config: LlmConfig, cache: BufferCache, device=None, rope_type: RopeType | None = None):
         super().__init__()
         self.config = config
         self.__cache = cache
@@ -1051,10 +1051,10 @@ class RotaryEmbedding(nn.Module):
         self,
         seq_len: int,
         device: torch.device,
-        rope_type: Optional[RopeType] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        rope_type: RopeType | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         rope_type = rope_type or self.rope_type
-        prefix = f"{str(rope_type)}_" if rope_type != RopeType.default else ""
+        prefix = f"{rope_type!s}_" if rope_type != RopeType.default else ""
         sin_key = f"{prefix}rope_pos_sin"
         cos_key = f"{prefix}rope_pos_cos"
         if (
@@ -1110,8 +1110,8 @@ class RotaryEmbedding(nn.Module):
         self,
         q: torch.Tensor,
         k: torch.Tensor,
-        position_ids: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        position_ids: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply rotary position embeddings on the ordinary inference path."""
         if self.config.rope_full_precision:
             q_, k_ = q.float(), k.float()
@@ -1268,8 +1268,8 @@ class OLMoBlock(nn.Module):
         self.dropout = Dropout(config.residual_dropout, mask_p=config.response_residual_dropout)
 
         # Layer norms.
-        self.k_norm: Optional[LayerNormBase] = None
-        self.q_norm: Optional[LayerNormBase] = None
+        self.k_norm: LayerNormBase | None = None
+        self.q_norm: LayerNormBase | None = None
         if config.attention_layer_norm:
             assert config.effective_n_kv_heads is not None
             k_norm_size = (
@@ -1311,7 +1311,7 @@ class OLMoBlock(nn.Module):
 
         # Rotary embeddings.
         if self.config.rope:
-            rope_type: Optional[RopeType] = None
+            rope_type: RopeType | None = None
             if config.full_attention_layers is not None:
                 if config.sliding_attention_rope_scaling:
                     rope_type = RopeType.default if layer_id in config.full_attention_layers else config.rope_type
@@ -1359,8 +1359,8 @@ class OLMoBlock(nn.Module):
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
         dropout_p: float = 0.0,
         is_causal: bool = False,
     ) -> torch.Tensor:
@@ -1388,13 +1388,13 @@ class OLMoBlock(nn.Module):
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        attention_bias: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
-        layer_past: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_bias: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
+        layer_past: tuple[torch.Tensor, torch.Tensor] | None = None,
         use_cache: bool = False,
         value_scaling=None,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor] | None]:
         B, T, C = q.size()  # batch size, sequence length, d_model
         dtype = k.dtype
 
@@ -1469,12 +1469,12 @@ class OLMoBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attention_bias: Optional[torch.FloatTensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
-        layer_past: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_bias: torch.FloatTensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
+        layer_past: tuple[torch.Tensor, torch.Tensor] | None = None,
         use_cache: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor] | None]:
         raise NotImplementedError
 
     @classmethod
@@ -1558,14 +1558,14 @@ class OLMoEBlock(OLMoBlock):
     def forward(
         self,
         x: torch.Tensor,
-        attention_bias: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
-        layer_past: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_bias: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
+        layer_past: tuple[torch.Tensor, torch.Tensor] | None = None,
         use_cache: bool = False,
-        max_doc_len: Optional[int] = None,
-        cu_doc_lens: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+        max_doc_len: int | None = None,
+        cu_doc_lens: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor] | None]:
         # Get query, key, value projections.
         # shape:
         #  - for regular attn q, k, v: (batch_size, seq_len, d_model)
@@ -1684,13 +1684,13 @@ class OLMoSequentialBlock(OLMoBlock):
     def forward(
         self,
         x: torch.Tensor,
-        attention_bias: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
-        layer_past: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        value_scaling: Optional[torch.Tensor] = None,
+        attention_bias: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
+        layer_past: tuple[torch.Tensor, torch.Tensor] | None = None,
+        value_scaling: torch.Tensor | None = None,
         use_cache: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor] | None]:
         # Get query, key, value projections.
         # shape:
         #  - for regular attn q, k, v: (batch_size, seq_len, d_model)
@@ -1825,8 +1825,8 @@ class OLMoLlamaBlock(OLMoBlock):
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
         dropout_p: float = 0.0,
         response_dropout_p: float = 0.0,
         is_causal: bool = False,
@@ -1887,12 +1887,12 @@ class OLMoLlamaBlock(OLMoBlock):
     def forward(
         self,
         x: torch.Tensor,
-        attention_bias: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        drop_mask: Optional[torch.Tensor] = None,
-        layer_past: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        attention_bias: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        drop_mask: torch.Tensor | None = None,
+        layer_past: tuple[torch.Tensor, torch.Tensor] | None = None,
         use_cache: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor] | None]:
         # Get query, key, value projections.
         # shape:
         #  - for regular attn q, k, v: (batch_size, seq_len, d_model)

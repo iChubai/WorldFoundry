@@ -13,17 +13,17 @@
 # limitations under the License.
 import inspect
 import math
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
-from torch import nn
-
 from diffusers.utils import deprecate, is_torch_xla_available, logging
 from diffusers.utils.import_utils import is_torch_npu_available, is_torch_xla_version, is_xformers_available
 from diffusers.utils.torch_utils import is_torch_version, maybe_allow_in_graph
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from torch import nn
 
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -103,20 +103,20 @@ class Attention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         heads: int = 8,
-        kv_heads: Optional[int] = None,
+        kv_heads: int | None = None,
         dim_head: int = 64,
         dropout: float = 0.0,
         bias: bool = False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
-        cross_attention_norm: Optional[str] = None,
+        cross_attention_norm: str | None = None,
         cross_attention_norm_num_groups: int = 32,
-        qk_norm: Optional[str] = None,
-        added_kv_proj_dim: Optional[int] = None,
-        added_proj_bias: Optional[bool] = True,
-        norm_num_groups: Optional[int] = None,
+        qk_norm: str | None = None,
+        added_kv_proj_dim: int | None = None,
+        added_proj_bias: bool | None = True,
+        norm_num_groups: int | None = None,
         out_bias: bool = True,
         scale_qk: bool = True,
         only_cross_attention: bool = False,
@@ -326,8 +326,8 @@ class Attention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
         **cross_attention_kwargs,
     ) -> torch.Tensor:
         r"""
@@ -414,7 +414,7 @@ class Attention(nn.Module):
         return tensor
 
     def get_attention_scores(
-        self, query: torch.Tensor, key: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+        self, query: torch.Tensor, key: torch.Tensor, attention_mask: torch.Tensor | None = None
     ) -> torch.Tensor:
         r"""
         Compute the attention scores.
@@ -599,13 +599,13 @@ class AttnProcessor:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        temb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        temb: torch.Tensor | None = None,
         *args,
         **kwargs,
     ) -> torch.Tensor:
-        if len(args) > 0 or kwargs.get("scale", None) is not None:
+        if len(args) > 0 or kwargs.get("scale") is not None:
             deprecation_message = "The `scale` argument is deprecated and will be ignored. Please remove it, as passing it will raise an error in the future. `scale` should directly be passed while calling the underlying pipeline component i.e., via `cross_attention_kwargs`."
             deprecate("scale", "1.0.0", deprecation_message)
 

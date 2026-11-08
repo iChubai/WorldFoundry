@@ -8,9 +8,10 @@ asset path resolution, JAX/Tux compatibility fixes, and model inference.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
@@ -62,8 +63,8 @@ def _install_tux_checkpoint_compat() -> None:
     preventing out-of-memory issues during streaming loading.
     """
     try:
-        from tux import StreamingCheckpointer
         import tux.checkpoint as tux_checkpoint
+        from tux import StreamingCheckpointer
     except Exception:
         # If tux is not available, skip compatibility patches.
         return

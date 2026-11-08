@@ -59,7 +59,7 @@ class EvalBatchSampler(torch.utils.data.Sampler):
                 "eval_ids",
                 f"eval_ids_{dataset.dataset_name}.json",
             )
-            with open(eval_ids_path, "r") as f:
+            with open(eval_ids_path) as f:
                 self.ids = json.load(f)
 
         assert num_frames <= 1024, "num_frames must be at most 1024"

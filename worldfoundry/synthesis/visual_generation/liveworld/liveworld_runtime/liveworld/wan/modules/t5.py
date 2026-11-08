@@ -10,10 +10,10 @@ import torch.nn.functional as F
 from .tokenizers import HuggingfaceTokenizer
 
 __all__ = [
-    "T5Model",
-    "T5Encoder",
     "T5Decoder",
+    "T5Encoder",
     "T5EncoderModel",
+    "T5Model",
 ]
 
 
@@ -341,4 +341,4 @@ class T5EncoderModel:
         mask = mask.to(device)
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.model(ids, mask)
-        return [u[:v] for u, v in zip(context, seq_lens)]
+        return [u[:v] for u, v in zip(context, seq_lens, strict=False)]

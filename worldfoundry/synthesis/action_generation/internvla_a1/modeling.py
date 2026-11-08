@@ -21,16 +21,15 @@ import math
 from typing import Literal
 
 import torch
-import torch.nn.functional as F  # noqa: N812
-from torch import Tensor, nn
 import torch._dynamo as dynamo
+import torch.nn.functional as F
 from einops import rearrange
-
+from torch import Tensor, nn
 from transformers.models.auto import CONFIG_MAPPING
-from . import qwen3_vl as modeling_qwen3_vl
-from .qwen3_vl import Qwen3VLForConditionalGeneration, Qwen3VLTextModel
 
+from . import qwen3_vl as modeling_qwen3_vl
 from .configuration import InternVLAA1Config
+from .qwen3_vl import Qwen3VLForConditionalGeneration, Qwen3VLTextModel
 
 OPENPI_ATTENTION_MASK_VALUE = -2.3819763e38
 _QWEN3_VL_ROPE_THETA = 5_000_000.0
@@ -150,7 +149,7 @@ def compute_layer_complete(layer_idx, inputs_embeds, attention_mask, position_id
     value_states = []
     for i, hidden_states in enumerate(inputs_embeds):
         layer = models[i].layers[layer_idx]
-        hidden_states = layer.input_layernorm(hidden_states)  # noqa: PLW2901
+        hidden_states = layer.input_layernorm(hidden_states)
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, layer.self_attn.head_dim)
         projection_dtype = layer.self_attn.q_proj.weight.dtype
@@ -862,7 +861,7 @@ class QwenA1(nn.Module):
         prefix_position_ids, rope_deltas = self.get_position_ids(lang_tokens, image_grid_thw, prefix_pad_masks)
 
         prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks)
-        self.qwen3_vl_with_expert.und_expert.language_model.config._attn_implementation = "eager"  # noqa: SLF001
+        self.qwen3_vl_with_expert.und_expert.language_model.config._attn_implementation = "eager"
 
         _, past_key_values = self.qwen3_vl_with_expert.forward(
             attention_mask=prefix_att_2d_masks_4d,
@@ -890,7 +889,7 @@ class QwenA1(nn.Module):
         )
 
         full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
-        self.qwen3_vl_with_expert.gen_expert.config._attn_implementation = "eager"  # noqa: SLF001
+        self.qwen3_vl_with_expert.gen_expert.config._attn_implementation = "eager"
 
         (_, middle_out, _), past_key_values = self.qwen3_vl_with_expert.forward(
             attention_mask=full_att_2d_masks_4d,
@@ -962,7 +961,7 @@ class QwenA1(nn.Module):
         )
 
         full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
-        self.qwen3_vl_with_expert.act_expert.config._attn_implementation = "eager"  # noqa: SLF001
+        self.qwen3_vl_with_expert.act_expert.config._attn_implementation = "eager"
 
         outputs_embeds, _ = self.qwen3_vl_with_expert.forward(
             attention_mask=full_att_2d_masks_4d,

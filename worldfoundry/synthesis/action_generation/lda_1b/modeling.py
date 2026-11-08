@@ -6,15 +6,15 @@ removing trainers, dataset readers, servers, and video-generation entrypoints.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from types import SimpleNamespace
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor, nn
-
 from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
+from torch import Tensor, nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention
 
@@ -104,7 +104,7 @@ class JointAttention(nn.Module):
         keep_masks: list[Tensor] = []
         lengths: list[int] = []
         for value, mask, projection, q_norm, k_norm in zip(
-            inputs, masks, self.to_qkv, self.q_rmsnorms, self.k_rmsnorms
+            inputs, masks, self.to_qkv, self.q_rmsnorms, self.k_rmsnorms, strict=False
         ):
             batch, length, _ = value.shape
             lengths.append(length)
@@ -124,7 +124,7 @@ class JointAttention(nn.Module):
         output = scaled_dot_product_attention(query, key, value, attn_mask=key_mask)
         output = output.transpose(1, 2).reshape(output.shape[0], -1, self.heads * self.dim_head)
         chunks = output.split(lengths, dim=1)
-        return tuple(projection(chunk) for chunk, projection in zip(chunks, self.to_out))
+        return tuple(projection(chunk) for chunk, projection in zip(chunks, self.to_out, strict=False))
 
 
 class MultiHeadRMSNorm(nn.Module):

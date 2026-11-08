@@ -1,10 +1,11 @@
+import math
 import os
 import warnings
+from typing import Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-from typing import Tuple, Optional
 from einops import rearrange
 from transformers.activations import ACT2CLS
 
@@ -45,25 +46,31 @@ from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
 SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
     try:
-        from sageattention import sageattn, sag_attention_with_window, sageattn_qk_int8_pv_fp16_cuda_with_window
+        from sageattention import sag_attention_with_window, sageattn, sageattn_qk_int8_pv_fp16_cuda_with_window
 
         SAGE_ATTN_AVAILABLE = True
     except ModuleNotFoundError:
         SAGE_ATTN_AVAILABLE = False
+import torch.distributed as dist
 from fla.layers import GatedDeltaNet
 from fla.models.utils import Cache as FlaCache
-
 from kairos.apis.builder import DITS
 from torch.distributed import ProcessGroup, get_process_group_ranks
-import torch.distributed as dist
-from kairos.modules.utils import parallel_state, FLAGS_KAIROS_IS_METAX
+
+# isort: split
+from kairos.modules.utils import FLAGS_KAIROS_IS_METAX, parallel_state
+
+# isort: split
+# isort: split
 from kairos.modules.utils.tp_utils import (
-    build_tp_chunk_list,
-    all2all_seq_to_head,
-    all2all_head_to_seq,
-    _gather_input_sp,
     _distribute_input_sp,
+    _gather_input_sp,
+    all2all_head_to_seq,
+    all2all_seq_to_head,
+    build_tp_chunk_list,
 )
+
+# isort: split
 
 # ================================================================
 # ====================rope_apply_for3d_triton当前只适用于沐曦========
@@ -153,7 +160,7 @@ def rope_apply_for_3d_kernel(
     # 复数通道 index: 0..C-1
     offs_c = tl.arange(0, C)  # [C]
 
-    for dt in range(0, BT):
+    for dt in range(BT):
         t = t_start + dt
         mask_t = t < T  # 当前这一行是否有效（标量 bool）
 
@@ -639,9 +646,7 @@ def _distribute_freqs_sp(freqs, context_group):
         return freqs
 
     N, B, D = freqs.shape
-    assert N % context_group_world_size == 0, "cannot split tensor {} vs {}".format(
-        freqs.shape, context_group_world_size
-    )
+    assert N % context_group_world_size == 0, f"cannot split tensor {freqs.shape} vs {context_group_world_size}"
     local_dim = N // context_group_world_size
     start_idx = context_group_rank * local_dim
     end_idx = start_idx + local_dim if context_group_rank != context_group_world_size - 1 else N
@@ -1111,13 +1116,13 @@ class PosEmbed2D(nn.Module):
     def forward(self, x: torch.Tensor, h: int, w: int):
         # x: (B, N, C), N = h*w
         B, N, C = x.shape
-        assert C == self.embed_dim and N == h * w
+        assert self.embed_dim == C and h * w == N
         pos = build_2d_sincos_pos_embed(C, h, w, device=x.device, dtype=torch.float32)
         return x + pos.to(x.dtype)
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -1148,7 +1153,7 @@ class KairosDiT(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -1242,11 +1247,11 @@ class KairosDiT(torch.nn.Module):
         self.has_ref_conv = has_ref_conv
         self.control_adapter = None
 
-    def patchify(self, x: torch.Tensor, control_camera_latents_input: Optional[torch.Tensor] = None):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor | None = None):
         x = self.patch_embedding(x)
         if self.control_adapter is not None and control_camera_latents_input is not None:
             y_camera = self.control_adapter(control_camera_latents_input)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
             x = x[0].unsqueeze(0)
         grid_size = x.shape[2:]
         return x, grid_size
@@ -1268,12 +1273,12 @@ class KairosDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-        clip_feature: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
+        clip_feature: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
-        first_frame_latents: Optional[torch.Tensor] = None,
+        first_frame_latents: torch.Tensor | None = None,
         **kwargs,
     ):
         t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep))

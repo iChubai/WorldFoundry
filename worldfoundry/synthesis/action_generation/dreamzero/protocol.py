@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import functools
 import math
-from typing import Any, Mapping
+from abc import ABC, abstractmethod
+from collections.abc import Mapping
+from typing import Any
 
 import msgpack
 import numpy as np

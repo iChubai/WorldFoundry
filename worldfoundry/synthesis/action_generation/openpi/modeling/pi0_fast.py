@@ -9,10 +9,10 @@ import jax
 import jax.numpy as jnp
 from typing_extensions import override
 
-from . import model as _model
-from . import gemma_fast as _gemma
-from . import siglip as _siglip
 from .. import array_typing as at
+from . import gemma_fast as _gemma
+from . import model as _model
+from . import siglip as _siglip
 
 logger = logging.getLogger("openpi")
 

@@ -6,8 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-from worldfoundry.core.nn import activation_layer as get_activation_layer
-from worldfoundry.core.nn import normalization_layer as get_norm_layer
 from worldfoundry.core.attention import (
     apply_nd_rotary_embedding as apply_rotary_emb,
 )
@@ -16,6 +14,8 @@ from worldfoundry.core.attention import (
     scaled_dot_product_attention,
 )
 from worldfoundry.core.attention.backends.hybrid import parallel_attention
+from worldfoundry.core.nn import activation_layer as get_activation_layer
+from worldfoundry.core.nn import normalization_layer as get_norm_layer
 
 from .mlp_layers import MLP, MLPEmbedder
 
@@ -153,8 +153,8 @@ class ActionModule(nn.Module):
         qkv_bias: bool = False,
         drop: float = 0.0,
         rope_dim_list: list = [16, 56, 56],
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
         rope_theta=256,
         mouse_qk_dim_list=[24, 4, 4],
         enable_mouse=True,

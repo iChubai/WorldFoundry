@@ -15,16 +15,14 @@
 
 import html
 import math
+from collections.abc import Callable
 from enum import Enum
 from itertools import accumulate
-from typing import Any, Callable, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import regex as re
 import torch
 import torch.nn.functional as F
-from einops import rearrange
-from transformers import AutoTokenizer, UMT5EncoderModel
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
 from diffusers.loaders import WanLoraLoaderMixin
@@ -34,9 +32,12 @@ from diffusers.schedulers import UniPCMultistepScheduler
 from diffusers.utils import is_ftfy_available, is_torch_xla_available, logging, replace_example_docstring
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
+from einops import rearrange
+from transformers import AutoTokenizer, UMT5EncoderModel
 
-from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
 from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
+from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
+
 from ..utils.inference_utils import (
     AdaptiveAntiDrifting,
     add_noise,
@@ -46,7 +47,6 @@ from ..utils.inference_utils import (
     vigeo_opts_from_cfg,
 )
 from .pipeline_output import EvokePipelineOutput
-
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -183,11 +183,11 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 226,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         device = device or self._execution_device
         dtype = dtype or self.text_encoder.dtype
@@ -210,7 +210,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
         prompt_embeds = self.text_encoder(text_input_ids.to(device), mask.to(device)).last_hidden_state
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
-        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0
         )
@@ -224,15 +224,15 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         do_classifier_free_guidance: bool = True,
         num_videos_per_prompt: int = 1,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
         max_sequence_length: int = 226,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -352,10 +352,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         height: int = 480,
         width: int = 832,
         num_frames: int = 81,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if latents is not None:
             return latents.to(device=device, dtype=dtype)
@@ -382,11 +382,11 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         image: torch.Tensor,
         latents_mean: torch.Tensor,
         latents_std: torch.Tensor,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        fake_latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        fake_latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         device = device or self._execution_device
         if latents is None:
@@ -406,10 +406,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         latents_mean: torch.Tensor,
         latents_std: torch.Tensor,
         latent_window_size: int,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         device = device or self._execution_device
         video = video.to(device=device, dtype=self.vae.dtype)
@@ -448,7 +448,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         latents_mean: torch.Tensor,
         latents_std: torch.Tensor,
         vae_dtype: torch.dtype,
-        warm_latents: Optional[torch.Tensor] = None,
+        warm_latents: torch.Tensor | None = None,
         warm_repeat: int = 0,
         warm_as_prior: bool = False,
     ) -> torch.Tensor:
@@ -592,7 +592,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     # ---------------- geometric state helpers ----------------
 
-    def _geo_init_state(self, source_image_pixel: torch.Tensor, bank_max_size: Optional[int] = None) -> dict:
+    def _geo_init_state(self, source_image_pixel: torch.Tensor, bank_max_size: int | None = None) -> dict:
         """Initialize per-call GEO state with a FrameBank (warp render goes through DA3, see _geo_da3_setup)."""
         from evoke.modules.geometric_state.frame_bank import FrameBank
 
@@ -608,9 +608,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
     # ---------------- DA3 FrameBank recall-based warp (inference/validation;) ----------------
     def _geo_da3_setup(self, geo_state, cfg, lingbot_Ks, height, width, pix_stride, device):
         """Init DA3FrameBank + estimator + render-resolution intrinsics (adaptively rescaled from lingbot_Ks)."""
+        import numpy as _np
+
         from evoke.modules.geometric_state.da3_cloud import DA3FrameBank
         from evoke.modules.geometric_state.depth_backend import build_estimator
-        import numpy as _np
 
         kn = lingbot_Ks.detach().cpu().numpy().reshape(-1)[:4]  # [fx,fy,cx,cy] @ pose source resolution
         fx, fy, cx, cy = float(kn[0]), float(kn[1]), float(kn[2]), float(kn[3])
@@ -752,8 +753,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 )
             if bool(cfg.get("consist_scale_align", False)):
                 print(
-                    f"[GEO-da3] [P1a] per-window ingest scale alignment ON: correct the whole window depth by median(d/d_cloud) before gating "
-                    f"(clip[0.75,1.33], overlap<2000px or absurd ratio -> skip)",
+                    "[GEO-da3] [P1a] per-window ingest scale alignment ON: correct the whole window depth by median(d/d_cloud) before gating "
+                    "(clip[0.75,1.33], overlap<2000px or absurd ratio -> skip)",
                     flush=True,
                 )
             if bool(cfg.get("self_reanchor", False)):
@@ -970,7 +971,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         _dump_dir = getattr(self, "_geo_dump_dir", None)
         if _dump_dir is not None:
             try:
-                import os, cv2, numpy as np
+                import os
+
+                import cv2
+                import numpy as np
 
                 os.makedirs(_dump_dir, exist_ok=True)
                 _warp = warp_video[0].permute(1, 2, 3, 0).clamp(-1, 1).cpu().numpy()
@@ -1022,12 +1026,12 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         height: int,
         width: int,
         device: torch.device,
-        anchor_c2w: Optional[torch.Tensor] = None,  # anchor pose for this chunk
+        anchor_c2w: torch.Tensor | None = None,  # anchor pose for this chunk
         top_k: int = 8,  # retrieve up to K frames from FrameBank
         nearby_k: int = 0,  # take N most-recent frames by pixel_idx
-        select_k: Optional[int] = None,  # score-based selection count; None=top_k
+        select_k: int | None = None,  # score-based selection count; None=top_k
         metric: str = "v1",  # FrameBank score: v1/v2/v3
-        metric_kwargs: Optional[dict] = None,  # per-metric kwargs
+        metric_kwargs: dict | None = None,  # per-metric kwargs
     ):
         """Render warp_video and visibility_mask for the current chunk (DA3 backend)."""
         # Prepend anchor pose so the renderer emits one extra frame; the first output frame is dropped.
@@ -1335,7 +1339,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         prompt_embeds: torch.Tensor = None,
         negative_prompt_embeds: torch.Tensor = None,
         timesteps: torch.Tensor = None,
-        guidance_scale: Optional[float] = 5.0,
+        guidance_scale: float | None = 5.0,
         indices_hidden_states: torch.Tensor = None,
         indices_latents_history_short: torch.Tensor = None,
         indices_latents_history_mid: torch.Tensor = None,
@@ -1347,26 +1351,26 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         nearby_sink_latents: torch.Tensor = None,
         nearby_sink_indices: torch.Tensor = None,  # explicit sink indices for GEO + raw_sink mode
         # GEO visibility masks; None = baseline.
-        history_visible_mask_short: Optional[torch.Tensor] = None,
-        history_visible_mask_mid: Optional[torch.Tensor] = None,
-        history_visible_mask_long: Optional[torch.Tensor] = None,
-        attention_kwargs: Optional[dict] = None,
-        device: Optional[torch.device] = None,
+        history_visible_mask_short: torch.Tensor | None = None,
+        history_visible_mask_mid: torch.Tensor | None = None,
+        history_visible_mask_long: torch.Tensor | None = None,
+        attention_kwargs: dict | None = None,
+        device: torch.device | None = None,
         transformer_dtype: torch.dtype = None,
-        generator: Optional[torch.Generator] = None,
+        generator: torch.Generator | None = None,
         # Camera plucker embedding for the current section; None skips cam control path.
-        cam_plucker_emb: Optional[torch.Tensor] = None,
+        cam_plucker_emb: torch.Tensor | None = None,
         # ------------ CFG Zero ------------
-        use_cfg_zero_star: Optional[bool] = False,
-        use_zero_init: Optional[bool] = True,
-        zero_steps: Optional[int] = 1,
+        use_cfg_zero_star: bool | None = False,
+        use_zero_init: bool | None = True,
+        zero_steps: int | None = 1,
         # -------------- DMD --------------
         use_dmd: bool = False,
         dmd_sigmas: torch.Tensor = None,
         dmd_timesteps: torch.Tensor = None,
         is_amplify_first_chunk: bool = False,
         # ------------ Callback ------------
-        callback_on_step_end: Optional[callable] = None,
+        callback_on_step_end: Optional[callable] = None,  # noqa: UP045 - callable is a function in the upstream annotation.
         callback_on_step_end_tensor_inputs: list = None,
         progress_bar=None,
     ):
@@ -1492,10 +1496,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         self,
         latents: torch.Tensor = None,
         stage2_num_stages: int = None,
-        stage2_num_inference_steps_list: List[int] = None,
+        stage2_num_inference_steps_list: list[int] = None,
         prompt_embeds: torch.Tensor = None,
         negative_prompt_embeds: torch.Tensor = None,
-        guidance_scale: Optional[float] = 5.0,
+        guidance_scale: float | None = 5.0,
         indices_hidden_states: torch.Tensor = None,
         indices_latents_history_short: torch.Tensor = None,
         indices_latents_history_mid: torch.Tensor = None,
@@ -1507,37 +1511,37 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         nearby_sink_latents: torch.Tensor = None,
         nearby_sink_indices: torch.Tensor = None,  # explicit sink indices for GEO + raw_sink mode
         # GEO visibility masks; None = baseline.
-        history_visible_mask_short: Optional[torch.Tensor] = None,
-        history_visible_mask_mid: Optional[torch.Tensor] = None,
-        history_visible_mask_long: Optional[torch.Tensor] = None,
+        history_visible_mask_short: torch.Tensor | None = None,
+        history_visible_mask_mid: torch.Tensor | None = None,
+        history_visible_mask_long: torch.Tensor | None = None,
         # GEO LoRA: fused only at pyramid stage 0, unfused at other stages.
         geo_lora_active: bool = False,
         # Geo: inject warp into the short tier ONLY at pyramid stage 0 (matches the Geo
         # reference, which builds the warp-bearing short history only at the coarsest stage and
         # conditions finer stages on [prefix|prev_short]). At i_s>0 the warp segment is stripped.
         geo_warp_stage0_only: bool = False,
-        attention_kwargs: Optional[dict] = None,
-        device: Optional[torch.device] = None,
+        attention_kwargs: dict | None = None,
+        device: torch.device | None = None,
         transformer_dtype: torch.dtype = None,
         scheduler_type: str = "unipc",  # unipc, euler
         use_dynamic_shifting: bool = False,
         time_shift_type: Literal["exponential", "linear"] = "linear",
         generator: torch.Generator | list[torch.Generator] | None = None,
         # Per-stage cam plucker is recomputed from c2ws_chunk + Ks at each pyramid stage resolution.
-        cam_lingbot_Ks_chunk: Optional[torch.Tensor] = None,  # [B, 4]
-        cam_lingbot_c2ws_chunk: Optional[torch.Tensor] = None,  # [B, F_pix_chunk, 4, 4]
-        cam_base_height_pix: Optional[int] = None,
-        cam_base_width_pix: Optional[int] = None,
+        cam_lingbot_Ks_chunk: torch.Tensor | None = None,  # [B, 4]
+        cam_lingbot_c2ws_chunk: torch.Tensor | None = None,  # [B, F_pix_chunk, 4, 4]
+        cam_base_height_pix: int | None = None,
+        cam_base_width_pix: int | None = None,
         cam_pc_resolution_strategy: str = "scale_ks",
         # ------------ CFG Zero ------------
-        use_cfg_zero_star: Optional[bool] = False,
-        use_zero_init: Optional[bool] = True,
-        zero_steps: Optional[int] = 1,
+        use_cfg_zero_star: bool | None = False,
+        use_zero_init: bool | None = True,
+        zero_steps: int | None = 1,
         # -------------- DMD --------------
         use_dmd: bool = False,
         is_amplify_first_chunk: bool = False,
         # ------------ Callback ------------
-        callback_on_step_end: Optional[callable] = None,
+        callback_on_step_end: Optional[callable] = None,  # noqa: UP045 - callable is a function in the upstream annotation.
         callback_on_step_end_tensor_inputs: list = None,
         progress_bar=None,
     ):
@@ -1561,11 +1565,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         latents = rearrange(latents, "(b t) c h w -> b c t h w", t=num_frames)
 
         batch_size = latents.shape[0]
-        import time as _time  # [difftime] per-step DiT timing below
-
         # Per-step timing is debug output: it fires 3x per chunk and, being newline-terminated while a
         #   progress bar is not, it lands in the middle of the bar. Opt in with EVOKE_INFER_DEBUG=1.
         import os as _os_dt
+        import time as _time  # [difftime] per-step DiT timing below
 
         _difftime_log = _os_dt.environ.get("EVOKE_INFER_DEBUG", "0") == "1"
         if use_dmd:
@@ -1861,47 +1864,48 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] = None,
         height: int = 384,
         width: int = 640,
         num_frames: int = 73,
         num_inference_steps: int = 50,
         guidance_scale: float = 5.0,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "np",
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        output_type: str | None = "np",
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
         # ------------ I2V ------------
-        image: Optional[PipelineImageInput] = None,
-        image_latents: Optional[torch.Tensor] = None,
-        fake_image_latents: Optional[torch.Tensor] = None,
+        image: PipelineImageInput | None = None,
+        image_latents: torch.Tensor | None = None,
+        fake_image_latents: torch.Tensor | None = None,
         add_noise_to_image_latents: bool = True,
         image_noise_sigma_min: float = 0.111,
         image_noise_sigma_max: float = 0.135,
         # ------------ V2V ------------
-        video: Optional[PipelineImageInput] = None,
-        video_latents: Optional[torch.Tensor] = None,
+        video: PipelineImageInput | None = None,
+        video_latents: torch.Tensor | None = None,
         add_noise_to_video_latents: bool = True,
         video_noise_sigma_min: float = 0.111,
         video_noise_sigma_max: float = 0.135,
         # ------------ Camera control (lingbot-style AdaLN, optional) ------------
         # lingbot_Ks: [B,4] or [4] camera intrinsics [fx,fy,cx,cy]; lingbot_c2ws: frame-wise c2w poses.
         # Skipped when None or transformer has no cam control.
-        lingbot_Ks: Optional[torch.Tensor] = None,
-        lingbot_c2ws: Optional[torch.Tensor] = None,
+        lingbot_Ks: torch.Tensor | None = None,
+        lingbot_c2ws: torch.Tensor | None = None,
         cam_pc_resolution_strategy: str = "scale_ks",  # "scale_ks" | "resample"
-        cam_base_height_pix: Optional[int] = None,  # None defaults to pipeline `height`
-        cam_base_width_pix: Optional[int] = None,  # None defaults to pipeline `width`
+        cam_base_height_pix: int | None = None,  # None defaults to pipeline `height`
+        cam_base_width_pix: int | None = None,  # None defaults to pipeline `width`
         # ------------ Interactive ------------
         use_interpolate_prompt: bool = False,
         interpolate_time_list: list = [7, 7, 7],
@@ -1918,9 +1922,9 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         stage2_num_inference_steps_list: list = [10, 10, 10],
         scheduler_type: str = "unipc",  # unipc, euler
         # ------------ CFG Zero ------------
-        use_cfg_zero_star: Optional[bool] = False,
-        use_zero_init: Optional[bool] = True,
-        zero_steps: Optional[int] = 1,
+        use_cfg_zero_star: bool | None = False,
+        use_zero_init: bool | None = True,
+        zero_steps: int | None = 1,
         # ------------ DMD ------------
         use_dmd: bool = False,
         is_skip_first_section: bool = False,
@@ -1938,22 +1942,22 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         # Diagnostic: skip the prev_short token -> short tier reverts to [prefix, warp] (geo_prev_short_frames=0).
         geo_disable_prev_short: bool = False,
         # Path to GEO LoRA weights; None disables LoRA.
-        geo_lora_path: Optional[str] = None,
+        geo_lora_path: str | None = None,
         # Number of keyframes retrieved from FrameBank per chunk for Pi3X.
         geo_top_k: int = 8,
         # FrameBank retrieval config: nearby_k = most-recent frames; select_k = score-based; score = metric.
         geo_nearby_k: int = 0,
-        geo_select_k: Optional[int] = None,
+        geo_select_k: int | None = None,
         geo_score: str = "v1",
-        geo_score_kwargs: Optional[dict] = None,
+        geo_score_kwargs: dict | None = None,
         # FrameBank size cap and v2v seeding limit.
-        geo_bank_max: Optional[int] = None,
+        geo_bank_max: int | None = None,
         geo_init_k: int = 10,
         # Per-chunk skill/VFX event control. event_chunks = 0-indexed rollout chunks marked as "event":
         # for those chunks warp is dropped, the camera is frozen (static plucker), the chunk's frames are
         # NOT added to the frame bank (warp retrieval source), and event_prompt (if non-empty) is used.
         # event_chunks=None/[] => no event chunks => rollout path is byte-for-byte identical to baseline.
-        event_chunks: Optional[list] = None,
+        event_chunks: list | None = None,
         event_prompt: str = "",
         # Per-chunk prompt schedule (segment prompts). {chunk_index: prompt_text}; a chunk keeps the
         # global `prompt` until an entry takes over, and the entry stays in force until the next one.
@@ -1961,7 +1965,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         # (data caption_key=segments + use_full_rollout_interleave). Unlike event_chunks it ONLY
         # swaps the text embedding: warp, camera and the frame bank are untouched.
         # None/{} => every chunk uses `prompt` => rollout is byte-for-byte identical to baseline.
-        chunk_prompts: Optional[dict] = None,
+        chunk_prompts: dict | None = None,
         # ------------ other ------------
         use_kv_cache: bool = False,
         vae_decode_type: VAEDecodeType = "default",  # "default", "default_batch", "long", "persistent"
@@ -2512,6 +2516,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         _prog_bar = None
         if _prog_on:
             import sys as _psys
+
             from tqdm.auto import tqdm as _tqdm
 
             # file=stdout on purpose: tqdm draws to stderr but tqdm.write() goes to stdout, and once the
@@ -3444,8 +3449,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         if stream_output:
             # streaming: there is no accumulated history_video to post-process; the caller stitches the segments.
             print(
-                f"[stream_output] history_video was not accumulated (frames=None); stitch the full video from the per-chunk "
-                f"segment mp4 files.",
+                "[stream_output] history_video was not accumulated (frames=None); stitch the full video from the per-chunk "
+                "segment mp4 files.",
                 flush=True,
             )
             video = None

@@ -19,11 +19,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import torch
 from torch import nn
-
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.masking_utils import create_causal_mask
@@ -33,15 +33,16 @@ from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_u
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, can_return_tuple, logging
-from worldfoundry.core.attention import scaled_dot_product_attention
-from .hf_gemma_config import GemmaConfig
 
+from worldfoundry.core.attention import scaled_dot_product_attention
+
+from .hf_gemma_config import GemmaConfig
 
 logger = logging.get_logger(__name__)
 
 
 class GemmaRMSNorm(nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-6, cond_dim: Optional[int] = None):
+    def __init__(self, dim: int, eps: float = 1e-6, cond_dim: int | None = None):
         super().__init__()
         self.eps = eps
         self.dim = dim
@@ -225,7 +226,7 @@ def eager_attention_forward(
     query: torch.Tensor,
     key: torch.Tensor,
     value: torch.Tensor,
-    attention_mask: Optional[torch.Tensor],
+    attention_mask: torch.Tensor | None,
     scaling: float,
     dropout: float = 0.0,
     **kwargs,
@@ -277,12 +278,12 @@ class GemmaAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         position_embeddings: tuple[torch.Tensor, torch.Tensor],
-        attention_mask: Optional[torch.Tensor],
-        past_key_value: Optional[Cache] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None,
+        past_key_value: Cache | None = None,
+        cache_position: torch.LongTensor | None = None,
         use_cache: bool = False,
         **kwargs: Unpack[FlashAttentionKwargs],
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor], Optional[tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -338,16 +339,16 @@ class GemmaDecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Cache] = None,
-        output_attentions: Optional[bool] = False,
-        use_cache: Optional[bool] = False,
-        cache_position: Optional[torch.LongTensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,  # necessary, but kept here for BC
-        adarms_cond: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: Cache | None = None,
+        output_attentions: bool | None = False,
+        use_cache: bool | None = False,
+        cache_position: torch.LongTensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # necessary, but kept here for BC
+        adarms_cond: torch.Tensor | None = None,
         **kwargs: Unpack[FlashAttentionKwargs],
-    ) -> tuple[torch.FloatTensor, Optional[tuple[torch.FloatTensor, torch.FloatTensor]]]:
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         residual = hidden_states
         hidden_states, gate = self.input_layernorm(hidden_states, adarms_cond)
 
@@ -437,16 +438,16 @@ class GemmaModel(GemmaPreTrainedModel):
     @auto_docstring
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-        adarms_cond: Optional[torch.Tensor] = None,
+        input_ids: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        attention_mask: Optional[torch.Tensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        position_ids: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        past_key_values: Optional[Cache] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        inputs_embeds: Optional[torch.FloatTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        use_cache: Optional[bool] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        output_attentions: Optional[bool] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        output_hidden_states: Optional[bool] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        cache_position: Optional[torch.LongTensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
+        adarms_cond: Optional[torch.Tensor] = None,  # noqa: UP045 - Transformers auto_docstring formats typing.Optional annotations.
         **kwargs: Unpack[FlashAttentionKwargs],
     ) -> BaseModelOutputWithPast:
         """

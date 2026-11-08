@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.core.model_loading.checkpoints import load_weights_only
-from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
-    WanVideoCameraPipeline,
-)
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     local_model_root_path,
@@ -21,7 +18,11 @@ from worldfoundry.core.io.paths import (
 )
 from worldfoundry.core.media.codecs.video import write_video
 from worldfoundry.core.model_loading import ModelConfig, load_state_dict
+from worldfoundry.core.model_loading.checkpoints import load_weights_only
 from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
+    WanVideoCameraPipeline,
+)
 
 MODEL_ID = "dualcamctrl"
 DISPLAY_NAME = "DualCamCtrl"
@@ -213,7 +214,7 @@ class DualCamCtrlRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "DualCamCtrlRuntime":
+    ) -> DualCamCtrlRuntime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             model_ref = str(pretrained_model_path)
@@ -600,8 +601,8 @@ __all__ = [
     "DEFAULT_DUALCAMCTRL_REPO",
     "DEFAULT_NEGATIVE_PROMPT",
     "DEFAULT_TEST_CASE_DIR",
-    "DualCamCtrlRuntime",
     "OFFICIAL_DEMO_FILES",
     "OFFICIAL_DEMO_PROMPTS",
     "OFFICIAL_SOURCE_REPO",
+    "DualCamCtrlRuntime",
 ]

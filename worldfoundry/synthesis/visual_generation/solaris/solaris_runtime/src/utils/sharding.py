@@ -44,7 +44,7 @@ def create_device_mesh(
         allow_split_physical_axes: Whether to allow splitting physical axes.
     """
     devices = jax.devices()
-    mesh_axes, mesh_size = tuple(zip(*config_mesh))
+    mesh_axes, mesh_size = tuple(zip(*config_mesh, strict=False))
     # Because jax.utils do not support `-1` shape size.
     mesh_size = np.array(devices).reshape(mesh_size).shape
     device_mesh = mesh_utils.create_device_mesh(

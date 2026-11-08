@@ -409,7 +409,7 @@ __all__ = [
     "DEFAULT_CHECKPOINT_ROOT",
     "DEFAULT_COMPONENTS",
     "DEFAULT_SOURCE_ROOT",
+    "UPSTREAM_REVISION",
     "LTX25DistilledRuntime",
     "LTX25RuntimePlan",
-    "UPSTREAM_REVISION",
 ]

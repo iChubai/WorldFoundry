@@ -10,9 +10,10 @@ from __future__ import annotations
 import json
 import os
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
 from worldfoundry.synthesis.action_generation.gr00t.architecture import (

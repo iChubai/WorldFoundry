@@ -3,17 +3,18 @@ References:
     - Diffusion Forcing: https://github.com/buoyancy99/diffusion-forcing
 """
 
+import argparse
+import os
+from pprint import pprint
+
 import torch
 from dit import DiT_models
-from vae import VAE_models
-from utils import load_prompt, load_actions, sigmoid_beta_schedule, write_video_compat
-from tqdm import tqdm
 from einops import rearrange
-from torch import autocast
 from safetensors.torch import load_model
-import argparse
-from pprint import pprint
-import os
+from torch import autocast
+from tqdm import tqdm
+from utils import load_actions, load_prompt, sigmoid_beta_schedule, write_video_compat
+from vae import VAE_models
 
 device = os.environ.get("WORLDFOUNDRY_DEVICE") or ("cuda:0" if torch.cuda.is_available() else "cpu")
 device_type = torch.device(device).type

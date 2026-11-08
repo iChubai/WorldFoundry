@@ -1,5 +1,7 @@
 import os
+
 import torch
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.light_22 import Wan2_2_VAE
 
 VAE_DTYPE = torch.bfloat16

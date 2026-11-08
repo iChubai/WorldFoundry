@@ -54,7 +54,7 @@ def load_video(video_path: str, max_frames: int = 81):
     frames_list = []
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
-        raise IOError(f"Cannot open video file: {video_path}")
+        raise OSError(f"Cannot open video file: {video_path}")
     frame_idx = 0
     while frame_idx < max_frames:
         ret, frame = cap.read()
@@ -66,7 +66,7 @@ def load_video(video_path: str, max_frames: int = 81):
     return frames_list
 
 
-def load_images(image_paths: List[str], max_frames: int = None):
+def load_images(image_paths: list[str], max_frames: int = None):
     frames_list = []
     if max_frames is None:
         max_frames = len(image_paths)
@@ -75,7 +75,7 @@ def load_images(image_paths: List[str], max_frames: int = None):
     for i in range(max_frames):
         img_bgr = cv2.imread(image_paths[i])
         if img_bgr is None:
-            raise IOError(f"Failed to load image: {image_paths[i]}")
+            raise OSError(f"Failed to load image: {image_paths[i]}")
         frames_list.append(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     return frames_list
 
@@ -173,7 +173,7 @@ class DepthPredictDA3:
         sources = []
         cap = cv2.VideoCapture(mask_path)
         if not cap.isOpened():
-            raise IOError(f"Cannot open video file: {mask_path}")
+            raise OSError(f"Cannot open video file: {mask_path}")
         frame_idx = 0
         while frame_idx < max_frames:
             ret, frame = cap.read()
@@ -203,7 +203,7 @@ class DepthPredictDA3:
 
     # ── main pipeline ──
 
-    def run(self, input_files: Dict[str, Union[str, List[str]]], output_dir: str) -> bool:
+    def run(self, input_files: dict[str, str | list[str]], output_dir: str) -> bool:
         st = time.time()
 
         image_files = input_files.get("images")

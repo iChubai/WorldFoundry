@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import copy
-import torch
-import torch.nn as nn
-import torch.distributed as dist
 import os
-from transformers import UMT5EncoderModel, Qwen2_5_VLConfig
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from transformers import Qwen2_5_VLConfig, UMT5EncoderModel
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
 from .diffloss_fm import DiffLoss_FM
-from .wan_diffusion import GEN_Wanx22
 from .modeling_qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
-
+from .wan_diffusion import GEN_Wanx22
 
 logger = logging.get_logger(__name__)
 
@@ -371,7 +371,7 @@ class BerniniModel(PreTrainedModel):
         # Pad each sample to t5_max_sequence_length
         padded_input_ids = []
         padded_attention_mask = []
-        for ids, mask in zip(input_ids_list, attention_mask_list):
+        for ids, mask in zip(input_ids_list, attention_mask_list, strict=False):
             seq_len = ids.size(0)
             if seq_len < self.t5_max_sequence_length:
                 pad_len = self.t5_max_sequence_length - seq_len
@@ -402,7 +402,7 @@ class BerniniModel(PreTrainedModel):
 
         # Zero out padding positions
         if pad_text_embeds:
-            prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+            prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
             prompt_embeds = torch.stack(
                 [
                     torch.cat([u, u.new_zeros(self.t5_max_sequence_length - u.size(0), u.size(1))])
@@ -417,7 +417,7 @@ class BerniniModel(PreTrainedModel):
             return batch_text_embs, batch_text_seqlen
 
         else:
-            prompt_embeds = [u[:v].unsqueeze(0) for u, v in zip(prompt_embeds, seq_lens)]
+            prompt_embeds = [u[:v].unsqueeze(0) for u, v in zip(prompt_embeds, seq_lens, strict=False)]
             seq_lens = seq_lens.to(dtype=torch.long).cpu().tolist()
             batch_text_embs = torch.cat(prompt_embeds, dim=1)
             return batch_text_embs, seq_lens
@@ -429,7 +429,9 @@ class BerniniModel(PreTrainedModel):
         seq_lens = attention_mask.gt(0).sum(dim=1).long()
         with torch.no_grad():
             prompt_embeds = self.t5_text_encoder(input_ids, attention_mask).last_hidden_state
-        prompt_embeds = [u[: min(v, self.t5_max_sequence_length)] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [
+            u[: min(v, self.t5_max_sequence_length)] for u, v in zip(prompt_embeds, seq_lens, strict=False)
+        ]
         prompt_embeds = torch.stack(prompt_embeds, dim=0)
         return prompt_embeds
 

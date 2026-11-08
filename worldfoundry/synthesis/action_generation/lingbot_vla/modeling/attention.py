@@ -14,10 +14,10 @@
 
 """LingBot-VLA v1 inference attention implementations."""
 
-import torch
-import torch.nn.functional as F  # noqa: N812
-from packaging.version import Version
 import einops
+import torch
+import torch.nn.functional as F
+from packaging.version import Version
 
 if Version(torch.__version__) > Version("2.5.0"):
     # Ffex attention is only available from torch 2.5 onwards

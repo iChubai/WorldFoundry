@@ -66,7 +66,7 @@ SizeMap = {
 
 @dataclass
 class HunyuanVideo_1_5_SR_PipelineOutput(BaseOutput):
-    videos: Union[torch.Tensor, np.ndarray]
+    videos: torch.Tensor | np.ndarray
 
 
 class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
@@ -80,10 +80,10 @@ class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
         flow_shift: float = 6.0,
         guidance_scale: float = 6.0,
         num_inference_steps: int = 30,
-        embedded_guidance_scale: Optional[float] = None,
+        embedded_guidance_scale: float | None = None,
         base_resolution: str = "480p",
-        text_encoder_2: Optional[TextEncoder] = None,
-        progress_bar_config: Dict[str, Any] = None,
+        text_encoder_2: TextEncoder | None = None,
+        progress_bar_config: dict[str, Any] = None,
         vision_num_semantic_tokens=729,
         vision_states_dim=1152,
         glyph_byT5_v2=True,
@@ -149,18 +149,18 @@ class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str | list[str],
         video_length: int,
-        num_inference_steps: Optional[int] = None,
-        guidance_scale: Optional[float] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        seed: Optional[int] = None,
-        embedded_guidance_scale: Optional[float] = None,
+        num_inference_steps: int | None = None,
+        guidance_scale: float | None = None,
+        negative_prompt: str | list[str] | None = None,
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        seed: int | None = None,
+        embedded_guidance_scale: float | None = None,
         reference_image=None,
         lq_latents=None,
-        output_type: Optional[str] = "pt",
+        output_type: str | None = "pt",
         return_dict: bool = True,
         **kwargs,
     ):
@@ -243,7 +243,7 @@ class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
 
         self._guidance_scale = guidance_scale
         self._guidance_rescale = kwargs.get("guidance_rescale", 0.0)
-        self._clip_skip = kwargs.get("clip_skip", None)
+        self._clip_skip = kwargs.get("clip_skip")
 
         if prompt is not None and isinstance(prompt, str):
             batch_size = 1

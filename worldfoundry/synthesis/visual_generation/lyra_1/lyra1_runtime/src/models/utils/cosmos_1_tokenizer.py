@@ -23,7 +23,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.cosmos1 import
     load_cosmos1_video_codec,
 )
 
-
 _TOKENIZER_CONFIG = {
     "name": "CV",
     "channels": 128,

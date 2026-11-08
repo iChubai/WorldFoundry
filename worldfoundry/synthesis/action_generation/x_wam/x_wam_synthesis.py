@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
 from worldfoundry.synthesis.action_generation.official_policy import OfficialPolicySynthesis

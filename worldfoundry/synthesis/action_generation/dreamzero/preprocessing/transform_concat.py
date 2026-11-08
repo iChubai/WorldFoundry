@@ -2,8 +2,8 @@
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from pydantic import Field, PrivateAttr
 import torch
+from pydantic import Field, PrivateAttr
 
 from .schema import DatasetMetadata, StateActionMetadata
 from .transform_base import InvertibleModalityTransform, ModalityTransform
@@ -22,12 +22,12 @@ class ConcatTransform(InvertibleModalityTransform):
         description="Concatenation order for each video modality. Format: ['video.ego_view_pad_res224_freq20', ...]",
     )
 
-    state_concat_order: Optional[list[str]] = Field(
+    state_concat_order: list[str] | None = Field(
         default=None,
         description="Concatenation order for each state modality. Format: ['state.position', 'state.velocity', ...].",
     )
 
-    action_concat_order: Optional[list[str]] = Field(
+    action_concat_order: list[str] | None = Field(
         default=None,
         description="Concatenation order for each action modality. "
         "Format: ['action.position', 'action.velocity', ...].",
@@ -51,7 +51,7 @@ class ConcatTransform(InvertibleModalityTransform):
         description="The new dimensions of the state keys after transform is applied.",
     )
     # Store the transform pipeline to examine for dimension changes
-    _transform_pipeline: List[ModalityTransform] = PrivateAttr(default_factory=list)
+    _transform_pipeline: list[ModalityTransform] = PrivateAttr(default_factory=list)
 
     def model_dump(self, *args, **kwargs):
         if kwargs.get("mode", "python") == "json":
@@ -66,11 +66,11 @@ class ConcatTransform(InvertibleModalityTransform):
 
         return super().model_dump(*args, include=include, **kwargs)
 
-    def set_transform_pipeline(self, transforms: List[ModalityTransform]):
+    def set_transform_pipeline(self, transforms: list[ModalityTransform]):
         """Set the transform pipeline so this transform can examine it for dimension changes."""
         self._transform_pipeline = transforms
 
-    def _get_target_rotations_from_pipeline(self) -> Dict[str, str]:
+    def _get_target_rotations_from_pipeline(self) -> dict[str, str]:
         """Extract target_rotations from StateActionTransform instances in the pipeline."""
         target_rotations = {}
         for transform in self._transform_pipeline:
@@ -80,9 +80,9 @@ class ConcatTransform(InvertibleModalityTransform):
                     target_rotations.update(transform_target_rotations)
         return target_rotations
 
-    def apply(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         grouped_keys = {}
-        for key in data.keys():
+        for key in data:
             try:
                 modality, _ = key.split(".")
             except:  # noqa: E722

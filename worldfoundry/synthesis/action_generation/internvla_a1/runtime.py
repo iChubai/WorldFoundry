@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from collections import deque
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     collect_images,
@@ -159,8 +160,8 @@ class InternVLAA1Runtime:
         if self._model is not None:
             return self._model
         import torch
-        from torch import nn
         from safetensors.torch import load_model as load_safetensors_model
+        from torch import nn
 
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
@@ -350,7 +351,7 @@ class InternVLAA1Runtime:
             for value in self._camera_values(observation, image)
         ]
         pairs = []
-        for history, frame in zip(self._histories, current):
+        for history, frame in zip(self._histories, current, strict=False):
             history.append(frame)
             past_index = max(len(history) - int(self.config.image_history_interval) - 1, 0)
             pair = np.stack([history[past_index], history[-1]], axis=0)

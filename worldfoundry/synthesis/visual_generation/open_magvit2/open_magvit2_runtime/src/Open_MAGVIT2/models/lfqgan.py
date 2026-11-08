@@ -1,9 +1,8 @@
-import torch
-import torch.nn as nn
-
 from collections import OrderedDict
 
-from src.Open_MAGVIT2.modules.diffusionmodules.improved_model import Encoder, Decoder
+import torch
+import torch.nn as nn
+from src.Open_MAGVIT2.modules.diffusionmodules.improved_model import Decoder, Encoder
 from src.Open_MAGVIT2.modules.vqvae.lookup_free_quantize import LFQ
 
 

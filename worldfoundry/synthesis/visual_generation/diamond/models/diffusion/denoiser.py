@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+
 import torch
-from torch import Tensor
 import torch.nn as nn
+from torch import Tensor
+
 from .inner_model import InnerModel, InnerModelConfig
 
 
@@ -40,7 +42,9 @@ class Denoiser(nn.Module):
         c_skip = self.cfg.sigma_data**2 / (sigma**2 + self.cfg.sigma_data**2)
         c_out = sigma * c_skip.sqrt()
         c_noise = sigma.log() / 4
-        return Conditioners(*(add_dims(c, n) for c, n in zip((c_in, c_out, c_skip, c_noise), (4, 4, 4, 1, 1))))
+        return Conditioners(
+            *(add_dims(c, n) for c, n in zip((c_in, c_out, c_skip, c_noise), (4, 4, 4, 1, 1), strict=False))
+        )
 
     def compute_model_output(self, noisy_next_obs: Tensor, obs: Tensor, act: Tensor, cs: Conditioners) -> Tensor:
         rescaled_obs = obs / self.cfg.sigma_data

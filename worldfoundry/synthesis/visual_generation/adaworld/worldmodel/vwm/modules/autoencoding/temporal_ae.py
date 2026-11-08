@@ -1,4 +1,5 @@
-from typing import Callable, Iterable, Union
+from collections.abc import Callable, Iterable
+from typing import Union
 
 import torch
 from einops import rearrange
@@ -95,7 +96,7 @@ class VideoDecoder(Decoder):
     def __init__(
         self,
         *args,
-        video_kernel_size: Union[int, list] = 3,
+        video_kernel_size: int | list = 3,
         alpha: float = 0.0,
         merge_strategy: str = "learned",
         time_mode: str = "conv-only",

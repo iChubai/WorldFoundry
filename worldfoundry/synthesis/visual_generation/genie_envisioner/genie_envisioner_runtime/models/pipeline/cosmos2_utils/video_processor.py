@@ -27,7 +27,7 @@ from .image_processor import VaeImageProcessor, is_valid_image, is_valid_image_i
 class VideoProcessor(VaeImageProcessor):
     r"""Simple video processor."""
 
-    def preprocess_video(self, video, height: Optional[int] = None, width: Optional[int] = None) -> torch.Tensor:
+    def preprocess_video(self, video, height: int | None = None, width: int | None = None) -> torch.Tensor:
         r"""
         Preprocesses input video(s).
 
@@ -72,7 +72,7 @@ class VideoProcessor(VaeImageProcessor):
         # - if it is a single video, it is converted to a list of one video.
         if isinstance(video, (np.ndarray, torch.Tensor)) and video.ndim == 5:
             video = list(video)
-        elif isinstance(video, list) and is_valid_image(video[0]) or is_valid_image_imagelist(video):
+        elif (isinstance(video, list) and is_valid_image(video[0])) or is_valid_image_imagelist(video):
             video = [video]
         elif isinstance(video, list) and is_valid_image_imagelist(video[0]):
             video = video
@@ -90,7 +90,7 @@ class VideoProcessor(VaeImageProcessor):
 
     def postprocess_video(
         self, video: torch.Tensor, output_type: str = "np"
-    ) -> Union[np.ndarray, torch.Tensor, List[PIL.Image.Image]]:
+    ) -> np.ndarray | torch.Tensor | list[PIL.Image.Image]:
         r"""
         Converts a video tensor to a list of frames for export.
 

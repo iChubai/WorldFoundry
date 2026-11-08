@@ -1,20 +1,20 @@
-from pathlib import Path
+import math
+import os
 import struct
+from pathlib import Path
+
+import cv2
+import numpy as np
+import PIL
+import torch
+from PIL import Image
+
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.geometry import (
     closed_form_inverse_se3,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.variants.fantasy_world.utils.pose_enc import (
     pose_encoding_to_extri_intri,
 )
-import math
-import os
-
-import cv2
-import numpy as np
-from PIL import Image
-import PIL
-
-import torch
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
@@ -1021,6 +1021,7 @@ def save_colored_pointcloud_ply(
         for (x, y, z), (r, g, b) in zip(
             pts.astype(np.float32),
             cols.astype(np.uint8),
+            strict=False,
         ):
             f.write(
                 struct.pack(

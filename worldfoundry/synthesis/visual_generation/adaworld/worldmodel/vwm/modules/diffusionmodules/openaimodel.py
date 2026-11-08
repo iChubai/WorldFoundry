@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -31,9 +32,9 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
         self,
         x: torch.Tensor,
         emb: torch.Tensor,
-        context: Optional[torch.Tensor] = None,
-        time_context: Optional[int] = None,
-        num_frames: Optional[int] = None,
+        context: torch.Tensor | None = None,
+        time_context: int | None = None,
+        num_frames: int | None = None,
     ):
         from .video_model import VideoResBlock
 
@@ -59,7 +60,7 @@ class Upsample(nn.Module):
     """
 
     def __init__(
-        self, channels: int, use_conv: bool, dims: int = 2, out_channels: Optional[int] = None, third_up: bool = False
+        self, channels: int, use_conv: bool, dims: int = 2, out_channels: int | None = None, third_up: bool = False
     ):
         super(Upsample, self).__init__()
         self.channels = channels
@@ -92,7 +93,7 @@ class Downsample(nn.Module):
     """
 
     def __init__(
-        self, channels: int, use_conv: bool, dims: int = 2, out_channels: Optional[int] = None, third_down: bool = False
+        self, channels: int, use_conv: bool, dims: int = 2, out_channels: int | None = None, third_down: bool = False
     ):
         super(Downsample, self).__init__()
         self.channels = channels
@@ -136,7 +137,7 @@ class ResBlock(TimestepBlock):
         channels: int,
         emb_channels: int,
         dropout: float,
-        out_channels: Optional[int] = None,
+        out_channels: int | None = None,
         use_conv: bool = False,
         use_scale_shift_norm: bool = False,
         dims: int = 2,

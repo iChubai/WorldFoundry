@@ -4,21 +4,19 @@ import warnings
 from io import BytesIO
 from typing import Tuple
 
-import PIL
-from PIL import ImageFile, ImageOps, Image
-
-from ..io import get_bytes_range
-
 import numpy as np
+import PIL
 import torch
 import torchvision.transforms
+from PIL import Image, ImageFile, ImageOps
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import convert_image_dtype
-
 from transformers.image_utils import (
     OPENAI_CLIP_MEAN,
     OPENAI_CLIP_STD,
 )
+
+from ..io import get_bytes_range
 
 
 def setup_pil():
@@ -109,7 +107,7 @@ def metaclip_resize(image, desired_output_size):
         image = torchvision.transforms.Resize(desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
         image = torch.clip(image, 0.0, 1.0)
     else:
-        assert image.dtype == torch.uint8, "Expected float images or uint8 images, but got {}".format(image.dtype)
+        assert image.dtype == torch.uint8, f"Expected float images or uint8 images, but got {image.dtype}"
         image = torchvision.transforms.Resize(desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
         image = image.to(torch.float32)
         image = torch.clip(image, 0, 255)
@@ -120,8 +118,8 @@ def metaclip_resize(image, desired_output_size):
 
 
 def siglip_resize_and_pad(
-    image: np.ndarray, desired_output_size: Tuple[int, int], float32=True
-) -> Tuple[np.ndarray, np.ndarray]:
+    image: np.ndarray, desired_output_size: tuple[int, int], float32=True
+) -> tuple[np.ndarray, np.ndarray]:
     in_min = 0.0
     in_max = 255.0
 
@@ -140,7 +138,7 @@ def siglip_resize_and_pad(
         )(image)
         resized = torch.clip(resized, 0.0, 1.0).to(dtype)
     else:
-        assert image.dtype == torch.uint8, "SigLIP expects float images or uint8 images, but got {}".format(image.dtype)
+        assert image.dtype == torch.uint8, f"SigLIP expects float images or uint8 images, but got {image.dtype}"
         resized = torchvision.transforms.Resize(
             desired_output_size,
             InterpolationMode.BILINEAR,
@@ -164,8 +162,8 @@ def siglip_resize_and_pad(
 
 def dino_resize_and_pad(
     image: np.ndarray,
-    desired_output_size: Tuple[int, int],
-) -> Tuple[np.ndarray, np.ndarray]:
+    desired_output_size: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray]:
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
     dtype = image.dtype
     if torch.is_floating_point(image):
@@ -176,7 +174,7 @@ def dino_resize_and_pad(
         )(image)
         resized = torch.clip(resized, 0.0, 1.0).to(torch.float32)
     else:
-        assert image.dtype == torch.uint8, "DINOv2 expects float images or uint8 images, but got {}".format(image.dtype)
+        assert image.dtype == torch.uint8, f"DINOv2 expects float images or uint8 images, but got {image.dtype}"
         resized = torchvision.transforms.Resize(
             desired_output_size,
             InterpolationMode.BICUBIC,
@@ -224,7 +222,7 @@ def select_tiling(h, w, patch_size, max_num_crops):
     return candidate_tilings[ix]
 
 
-def bottleneck_resize(image: np.ndarray, bottleneck_size: Tuple[int, int] = (224, 224)) -> np.ndarray:
+def bottleneck_resize(image: np.ndarray, bottleneck_size: tuple[int, int] = (224, 224)) -> np.ndarray:
     """Resize image to bottleneck size without preserving aspect ratio."""
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
     dtype = image.dtype
@@ -237,7 +235,7 @@ def bottleneck_resize(image: np.ndarray, bottleneck_size: Tuple[int, int] = (224
         )(image)
         resized = torch.clip(resized, 0.0, 1.0).to(dtype)
     else:
-        assert image.dtype == torch.uint8, "Expected float images or uint8 images, but got {}".format(image.dtype)
+        assert image.dtype == torch.uint8, f"Expected float images or uint8 images, but got {image.dtype}"
         resized = torchvision.transforms.Resize(
             bottleneck_size,
             InterpolationMode.BILINEAR,
@@ -257,12 +255,12 @@ class ImagePreprocessor:
     resize: str = "siglip"
     pad_value: float = 0
     image_patch_size: int = 14
-    base_image_input_size: Tuple[int, int] = (336, 336)
+    base_image_input_size: tuple[int, int] = (336, 336)
     use_image_mask: bool = False
     normalize_on_gpu: bool = False
     use_image_augmentation: bool = False
     use_resize_bottleneck: bool = False  # New parameter
-    bottleneck_size: Tuple[int, int] = (224, 224)  # New parameter
+    bottleneck_size: tuple[int, int] = (224, 224)  # New parameter
 
     def unnormalize_image(self, image: np.ndarray):
         if self.normalize_on_gpu:

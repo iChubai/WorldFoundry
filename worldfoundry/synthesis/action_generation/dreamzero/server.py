@@ -6,29 +6,32 @@ import http
 import logging
 import os
 import socket
-import traceback
 import time
+import traceback
 
 import torch
 import tyro
 from einops import rearrange
 
+# isort: split
 from .modeling.policy import GrootSimPolicy
-from .preprocessing import EmbodimentTag
+
+# isort: split
 import imageio
 import numpy as np
-
-from . import protocol as _base_policy
-from . import protocol as msgpack_numpy
+import torch.distributed as dist
 import websockets.asyncio.server as _server
 import websockets.frames
 from tianshou.data import Batch
-import torch.distributed as dist
 from torch.distributed.device_mesh import DeviceMesh, init_device_mesh
+
+from . import protocol as _base_policy
+from . import protocol as msgpack_numpy
+from .preprocessing import EmbodimentTag
+from .websocket import PolicyServerConfig
 
 # Use roboarena policy server interface
 from .websocket import WebsocketPolicyServer as RoboarenaServer
-from .websocket import PolicyServerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +254,7 @@ class ARDroidRoboarenaPolicy:
             action: (N, 8) action array
         """
         # Check for session change - reset state if new session
-        session_id = obs.get("session_id", None)
+        session_id = obs.get("session_id")
         if session_id is not None and session_id != self._current_session_id:
             if self._current_session_id is not None:
                 logger.info(f"Session changed from '{self._current_session_id}' to '{session_id}', resetting state")
@@ -731,7 +734,7 @@ class WebsocketPolicyServer:
                     )
                     raise
         finally:
-            logger.info(f"Rank 0: Client session ended. Sending idle signal (2) to workers.")
+            logger.info("Rank 0: Client session ended. Sending idle signal (2) to workers.")
             signal_tensor.fill_(2)  # Set tensor value to 2
             dist.broadcast(signal_tensor, src=0, group=self._signal_group)
             # When connection closes, signal other ranks to continue waiting for next connection

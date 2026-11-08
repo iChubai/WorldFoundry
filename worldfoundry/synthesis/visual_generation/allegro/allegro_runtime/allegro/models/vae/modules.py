@@ -1,12 +1,12 @@
 from typing import Optional, Tuple, Union
-from einops import rearrange
 
 import torch
 import torch.nn as nn
 from diffusers.models.attention_processor import Attention
+from diffusers.models.downsampling import Downsample2D
 from diffusers.models.resnet import ResnetBlock2D
 from diffusers.models.upsampling import Upsample2D
-from diffusers.models.downsampling import Downsample2D
+from einops import rearrange
 
 
 class TemporalConvBlock(nn.Module):
@@ -181,7 +181,7 @@ class DownEncoderBlock3D(nn.Module):
     def forward(self, hidden_states):
         bz = hidden_states.shape[0]
 
-        for resnet, temp_conv in zip(self.resnets, self.temp_convs):
+        for resnet, temp_conv in zip(self.resnets, self.temp_convs, strict=False):
             hidden_states = rearrange(hidden_states, "b c n h w -> (b n) c h w")
             hidden_states = resnet(hidden_states, temb=None)
             hidden_states = rearrange(hidden_states, "(b n) c h w -> b c n h w", b=bz)
@@ -267,7 +267,7 @@ class UpDecoderBlock3D(nn.Module):
     def forward(self, hidden_states):
         bz = hidden_states.shape[0]
 
-        for resnet, temp_conv in zip(self.resnets, self.temp_convs):
+        for resnet, temp_conv in zip(self.resnets, self.temp_convs, strict=False):
             hidden_states = rearrange(hidden_states, "b c n h w -> (b n) c h w")
             hidden_states = resnet(hidden_states, temb=None)
             hidden_states = rearrange(hidden_states, "(b n) c h w -> b c n h w", b=bz)
@@ -393,7 +393,7 @@ class UNetMidBlock3DConv(nn.Module):
         hidden_states = self.temp_convs[0](hidden_states)
         hidden_states = rearrange(hidden_states, "b c n h w -> (b n) c h w")
 
-        for attn, resnet, temp_conv in zip(self.attentions, self.resnets[1:], self.temp_convs[1:]):
+        for attn, resnet, temp_conv in zip(self.attentions, self.resnets[1:], self.temp_convs[1:], strict=False):
             hidden_states = attn(hidden_states)
             hidden_states = resnet(hidden_states, temb=None)
             hidden_states = rearrange(hidden_states, "(b n) c h w -> b c n h w", b=bz)

@@ -96,7 +96,7 @@ def read_act_slice_vpt(
     last_hotbar = 0
 
     episode_actions = []
-    for i in range(0, stop):
+    for i in range(stop):
         step_data = actions_json[i]
         if i == 0:
             # Check if attack will be stuck down
@@ -115,7 +115,7 @@ def read_act_slice_vpt(
         # Update hotbar selection
         current_hotbar = step_data["hotbar"]
         if current_hotbar != last_hotbar:
-            action["hotbar.{}".format(current_hotbar + 1)] = 1
+            action[f"hotbar.{current_hotbar + 1}"] = 1
         last_hotbar = current_hotbar
 
         if i < start:
@@ -271,8 +271,8 @@ def convert_act_slice_mineflayer(
         if action_data["mine"]:
             actions_one_hot[i, ACTION_KEYS.index("attack")] = 1  # LMB
         for hotbar_idx in range(HOTBAR_KEYS_NUM):
-            if action_data.get("hotbar.{}".format(hotbar_idx + 1)):
-                actions_one_hot[i, ACTION_KEYS.index("hotbar.{}".format(hotbar_idx + 1))] = 1
+            if action_data.get(f"hotbar.{hotbar_idx + 1}"):
+                actions_one_hot[i, ACTION_KEYS.index(f"hotbar.{hotbar_idx + 1}")] = 1
 
         # Convert camera values from radians to degrees (no normalization)
         # MineFlayer camera: [yaw, pitch] in radians

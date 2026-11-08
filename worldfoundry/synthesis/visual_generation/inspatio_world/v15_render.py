@@ -211,7 +211,7 @@ def render_one(record, device, output_root):
                     source_indices.extend(choices)
                     chunk_views.extend(views)
                     overlap_pixels.extend(chunk_scores)
-                    for frames, selected in zip(chunk, choices):
+                    for frames, selected in zip(chunk, choices, strict=False):
                         pixels = sources[selected][0].tobytes()
                         for _ in frames:
                             source_video.write(pixels)

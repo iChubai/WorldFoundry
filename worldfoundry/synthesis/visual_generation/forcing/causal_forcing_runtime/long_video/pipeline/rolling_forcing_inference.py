@@ -49,8 +49,8 @@ class CausalInferencePipeline(torch.nn.Module):
     def inference_rolling_forcing(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
         profile: bool = False,
     ) -> torch.Tensor:

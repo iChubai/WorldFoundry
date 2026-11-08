@@ -30,15 +30,15 @@ class SolarisSynthesis(BaseSynthesis):
 
     def __init__(
         self,
-        runtime_root: Optional[str] = None,
-        pretrained_model_dir: Optional[str] = None,
-        eval_data_dir: Optional[str] = None,
-        output_dir: Optional[str] = None,
-        checkpoint_dir: Optional[str] = None,
-        jax_cache_dir: Optional[str] = None,
-        model_weights_path: Optional[str] = None,
+        runtime_root: str | None = None,
+        pretrained_model_dir: str | None = None,
+        eval_data_dir: str | None = None,
+        output_dir: str | None = None,
+        checkpoint_dir: str | None = None,
+        jax_cache_dir: str | None = None,
+        model_weights_path: str | None = None,
         *,
-        runtime: Optional[SolarisRuntime] = None,
+        runtime: SolarisRuntime | None = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -119,7 +119,7 @@ class SolarisSynthesis(BaseSynthesis):
         return getattr(self.runtime, name)
 
     @classmethod
-    def from_pretrained(cls, *args: Any, **kwargs: Any) -> "SolarisSynthesis":
+    def from_pretrained(cls, *args: Any, **kwargs: Any) -> SolarisSynthesis:
         """
         Creates a `SolarisSynthesis` instance by loading a pretrained `SolarisRuntime`.
 

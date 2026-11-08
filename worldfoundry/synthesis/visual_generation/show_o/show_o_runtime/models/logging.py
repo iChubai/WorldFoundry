@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2023 Optuna, Hugging Face
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,20 +17,22 @@ import logging
 import os
 import sys
 import threading
-from logging import CRITICAL  # NOQA
-from logging import DEBUG  # NOQA
-from logging import ERROR  # NOQA
-from logging import FATAL  # NOQA
-from logging import INFO  # NOQA
-from logging import NOTSET  # NOQA
-from logging import WARN  # NOQA
-from logging import WARNING  # NOQA
+from logging import (
+    CRITICAL,  # NOQA
+    DEBUG,
+    ERROR,
+    FATAL,  # NOQA
+    INFO,
+    NOTSET,  # NOQA
+    WARN,  # NOQA
+    WARNING,
+)
 from typing import Optional
 
 from tqdm import auto as tqdm_lib
 
 _lock = threading.Lock()
-_default_handler: Optional[logging.Handler] = None
+_default_handler: logging.Handler | None = None
 
 log_levels = {
     "debug": logging.DEBUG,
@@ -104,7 +105,7 @@ def get_log_levels_dict():
     return log_levels
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """
     Return a logger with the specified name.
 

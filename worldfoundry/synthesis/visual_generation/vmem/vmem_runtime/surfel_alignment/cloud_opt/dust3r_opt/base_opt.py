@@ -6,36 +6,48 @@
 # --------------------------------------------------------
 from copy import deepcopy
 
+import cv2
 import numpy as np
+import roma
 import torch
 import torch.nn as nn
-import roma
-from copy import deepcopy
 import tqdm
-import cv2
 from PIL import Image
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import inv, geotrf
+
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf, inv
+
+# isort: split
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.image import rgb
+
+# isort: split
+# isort: split
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.viz import (
     SceneViz,
     auto_cam_size,
     segment_sky,
 )
 
+# isort: split
+
 from ..commons import (
-    edge_str,
     ALL_DISTS,
     NoGradParamDict,
+    cosine_schedule,
+    edge_str,
+    get_conf_trf,
     get_imshapes,
+    linear_schedule,
     signed_expm1,
     signed_log1p,
-    cosine_schedule,
-    linear_schedule,
-    get_conf_trf,
 )
+
+# isort: split
 from . import init_im_poses as init_fun
+
+# isort: split
 from pathlib import Path
+
 from scipy.spatial.transform import Rotation
 
 try:
@@ -110,10 +122,30 @@ class BasePCOptimizer(nn.Module):
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0:
             other = deepcopy(args[0])
-            attrs = """edges is_symmetrized dist n_imgs pred_i pred_j imshapes 
-                        min_conf_thr conf_thr conf_i conf_j im_conf
-                        base_scale norm_pw_scale POSE_DIM pw_poses 
-                        pw_adaptors pw_adaptors has_im_poses rand_pose imgs verbose""".split()
+            attrs = [
+                "edges",
+                "is_symmetrized",
+                "dist",
+                "n_imgs",
+                "pred_i",
+                "pred_j",
+                "imshapes",
+                "min_conf_thr",
+                "conf_thr",
+                "conf_i",
+                "conf_j",
+                "im_conf",
+                "base_scale",
+                "norm_pw_scale",
+                "POSE_DIM",
+                "pw_poses",
+                "pw_adaptors",
+                "pw_adaptors",
+                "has_im_poses",
+                "rand_pose",
+                "imgs",
+                "verbose",
+            ]
             self.__dict__.update({k: other[k] for k in attrs})
         else:
             self._init_from_views(*args, **kwargs)
@@ -139,7 +171,7 @@ class BasePCOptimizer(nn.Module):
             view1["idx"] = view1["idx"].tolist()
         if not isinstance(view2["idx"], list):
             view2["idx"] = view2["idx"].tolist()
-        self.edges = [(int(i), int(j)) for i, j in zip(view1["idx"], view2["idx"])]
+        self.edges = [(int(i), int(j)) for i, j in zip(view1["idx"], view2["idx"], strict=False)]
         self.is_symmetrized = set(self.edges) == {(j, i) for i, j in self.edges}
         self.dist = ALL_DISTS[dist]
         self.verbose = verbose
@@ -290,7 +322,7 @@ class BasePCOptimizer(nn.Module):
     def get_pts3d(self, raw=False):
         res = self.depth_to_pts3d()
         if not raw:
-            res = [dm[: h * w].view(h, w, 3) for dm, (h, w) in zip(res, self.imshapes)]
+            res = [dm[: h * w].view(h, w, 3) for dm, (h, w) in zip(res, self.imshapes, strict=False)]
         return res
 
     def _set_focal(self, idx, focal, force=False):
@@ -572,8 +604,8 @@ def clean_pointcloud(im_confs, K, cams, depthmaps, all_pts3d, tol=0.001, bad_con
     res = [c.clone() for c in im_confs]
 
     # reshape appropriately
-    all_pts3d = [p.view(*c.shape, 3) for p, c in zip(all_pts3d, im_confs)]
-    depthmaps = [d.view(*c.shape) for d, c in zip(depthmaps, im_confs)]
+    all_pts3d = [p.view(*c.shape, 3) for p, c in zip(all_pts3d, im_confs, strict=False)]
+    depthmaps = [d.view(*c.shape) for d, c in zip(depthmaps, im_confs, strict=False)]
 
     for i, pts3d in enumerate(all_pts3d):
         for j in range(len(all_pts3d)):
@@ -587,7 +619,7 @@ def clean_pointcloud(im_confs, K, cams, depthmaps, all_pts3d, tol=0.001, bad_con
 
             # check which points are actually in the visible cone
             H, W = im_confs[j].shape
-            msk_i = (proj_depth > 0) & (0 <= u) & (u < W) & (0 <= v) & (v < H)
+            msk_i = (proj_depth > 0) & (u >= 0) & (u < W) & (v >= 0) & (v < H)
             msk_j = v[msk_i], u[msk_i]
 
             # find bad points = those in front but less confident

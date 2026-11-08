@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+
 import numpy as np
 import torch
 from scipy.interpolate import CubicSpline
@@ -38,7 +39,7 @@ def load_trajectory(file_path: str) -> tuple:
         (theta_seq, phi_seq, r_seq) as numpy float64 arrays
     """
     sequences = []
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):

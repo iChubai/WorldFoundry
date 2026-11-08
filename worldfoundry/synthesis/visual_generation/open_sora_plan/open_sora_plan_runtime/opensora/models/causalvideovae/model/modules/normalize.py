@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-from .block import Block
 from einops import rearrange
+
+from .block import Block
 
 
 class GroupNorm(Block):

@@ -82,7 +82,7 @@ class ActionTraceMemory(BaseMemory):
             return self.records
         raise AttributeError(name)
 
-    def record(self, data: Any, metadata: Optional[Dict[str, Any]] = None, **kwargs: Any):
+    def record(self, data: Any, metadata: dict[str, Any] | None = None, **kwargs: Any):
         """
         Append one action trace entry with model metadata.
 
@@ -325,8 +325,8 @@ __all__ = [
     "BeingH05Memory",
     "DiffusionPolicyMemory",
     "DreamZeroMemory",
-    "GigaBrain0Memory",
     "GR00TMemory",
+    "GigaBrain0Memory",
     "LAPAMemory",
     "LingBotVAMemory",
     "MolmoAct2Memory",

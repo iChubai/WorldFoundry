@@ -1,19 +1,21 @@
 try:
     import torch_npu
+
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
 
-import torch.nn as nn
-from typing import Union, Tuple
-import torch
-from .block import Block
-from .ops import cast_tuple
-from .ops import video_to_image
-from torch.utils.checkpoint import checkpoint
-import torch.nn.functional as F
 from collections import deque
+from typing import Tuple, Union
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
+
+from .block import Block
+from .ops import cast_tuple, video_to_image
 
 
 class Conv2d(nn.Conv2d):
@@ -21,10 +23,10 @@ class Conv2d(nn.Conv2d):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int]] = 3,
-        stride: Union[int, Tuple[int]] = 1,
-        padding: Union[str, int, Tuple[int]] = 0,
-        dilation: Union[int, Tuple[int]] = 1,
+        kernel_size: int | tuple[int] = 3,
+        stride: int | tuple[int] = 1,
+        padding: str | int | tuple[int] = 0,
+        dilation: int | tuple[int] = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
@@ -52,7 +54,7 @@ class Conv2d(nn.Conv2d):
 
 class CausalConv3d(Block):
     def __init__(
-        self, chan_in, chan_out, kernel_size: Union[int, Tuple[int, int, int]], enable_cached=False, bias=True, **kwargs
+        self, chan_in, chan_out, kernel_size: int | tuple[int, int, int], enable_cached=False, bias=True, **kwargs
     ):
         super().__init__()
         self.kernel_size = cast_tuple(kernel_size, 3)
@@ -98,7 +100,7 @@ class CausalConv3d(Block):
 
 
 class CausalConv3d_GC(CausalConv3d):
-    def __init__(self, chan_in, chan_out, kernel_size: Union[int, Tuple[int]], init_method="random", **kwargs):
+    def __init__(self, chan_in, chan_out, kernel_size: int | tuple[int], init_method="random", **kwargs):
         super().__init__(chan_in, chan_out, kernel_size, init_method, **kwargs)
 
     def forward(self, x):

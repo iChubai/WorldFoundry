@@ -1,18 +1,19 @@
 import random
-from typing import Generator, Tuple, Union
+from collections.abc import Generator
+from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
+from envs import TorchEnv, WorldModelEnv
 from torch.distributions.categorical import Categorical
 
 from . import coroutine
-from envs import TorchEnv, WorldModelEnv
 
 
 @coroutine
 def make_env_loop(
-    env: Union[TorchEnv, WorldModelEnv], model: nn.Module, epsilon: float = 0.0
-) -> Generator[Tuple[torch.Tensor, ...], int, None]:
+    env: TorchEnv | WorldModelEnv, model: nn.Module, epsilon: float = 0.0
+) -> Generator[tuple[torch.Tensor, ...], int, None]:
     num_steps = yield
 
     hx = torch.zeros(env.num_envs, model.lstm_dim, device=model.device)
@@ -69,6 +70,8 @@ def make_env_loop(
 
         all_[-1][-1] = val_bootstrap
 
-        all_obs, act, rew, end, trunc, logits_act, val, val_bootstrap = (torch.stack(x, dim=1) for x in zip(*all_))
+        all_obs, act, rew, end, trunc, logits_act, val, val_bootstrap = (
+            torch.stack(x, dim=1) for x in zip(*all_, strict=False)
+        )
 
         num_steps = yield all_obs, act, rew, end, trunc, logits_act, val, val_bootstrap, infos

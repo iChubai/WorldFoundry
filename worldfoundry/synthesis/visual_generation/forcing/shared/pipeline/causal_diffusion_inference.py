@@ -1,8 +1,9 @@
 """Causal diffusion inference shared by compatible forcing runtimes."""
 
-from tqdm import tqdm
 from typing import List, Optional
+
 import torch
+from tqdm import tqdm
 
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
@@ -53,10 +54,10 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        initial_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        initial_latent: torch.Tensor | None = None,
         return_latents: bool = False,
-        start_frame_index: Optional[int] = 0,
+        start_frame_index: int | None = 0,
     ) -> torch.Tensor:
         """
         Perform inference on the given noise and text prompts.

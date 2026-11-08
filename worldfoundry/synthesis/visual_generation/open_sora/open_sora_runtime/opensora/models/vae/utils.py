@@ -4,7 +4,7 @@ import torch
 """Stripped version of https://github.com/richzhang/PerceptualSimilarity/tree/master/models"""
 
 
-class DiagonalGaussianDistribution(object):
+class DiagonalGaussianDistribution:
     def __init__(
         self,
         parameters,

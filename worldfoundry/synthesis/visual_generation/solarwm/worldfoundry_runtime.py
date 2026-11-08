@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, local_data_root_path, official_runtime_repo_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path

@@ -7,15 +7,13 @@
 # Open-Sora-Plan: https://github.com/PKU-YuanGroup/Open-Sora-Plan
 # --------------------------------------------------------
 
-import torch
 import collections
-from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 
+import torch
+from diffusers.models.embeddings import TimestepEmbedding, Timesteps
+from diffusers.utils import logging
 from einops import rearrange
 from torch import nn
-
-
-from diffusers.utils import logging
 
 logger = logging.get_logger(__name__)
 

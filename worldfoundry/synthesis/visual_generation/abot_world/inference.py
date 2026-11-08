@@ -15,22 +15,21 @@ import numpy as np
 import torch
 from PIL import Image, ImageOps
 
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.abot_world import (
-    ABotWorldModel,
-)
-from worldfoundry.base_models.diffusion_model.schedulers import (
-    InferenceFlowMatchScheduler,
-)
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.tae_22 import (
     TAEW22StreamingDecoder,
 )
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import (
     T5EncoderModel,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.abot_world import (
+    ABotWorldModel,
+)
+from worldfoundry.base_models.diffusion_model.schedulers import (
+    InferenceFlowMatchScheduler,
+)
 from worldfoundry.core.acceleration.quantization.linear import replace_linear_with_float8
 from worldfoundry.core.kernels.capabilities import kernel_device_profile
 from worldfoundry.core.media.processing.image_utils import load_pil_image
-
 
 ACTION_KEYS = ("W", "A", "S", "D", "I", "J", "K", "L")
 REFERENCE_SLOTS = ("head", "left", "right", "front", "back")
@@ -413,7 +412,7 @@ class ABotWorldInference:
                 raise ValueError("action tensor must contain 8 or 32 channels")
             expected = (1, self.num_frame_per_block, self.height, self.width)
             actual = (value.shape[0], value.shape[2], value.shape[3], value.shape[4])
-            if any(got not in {1, want} for got, want in zip(actual, expected)):
+            if any(got not in {1, want} for got, want in zip(actual, expected, strict=False)):
                 raise ValueError(
                     f"action tensor batch/time/height/width must be singleton or match {expected}, got {actual}"
                 )
@@ -622,4 +621,4 @@ class ABotWorldInference:
         self._empty_cuda_cache()
 
 
-__all__ = ["ABotWorldInference", "ACTION_KEYS", "REFERENCE_SLOTS"]
+__all__ = ["ACTION_KEYS", "REFERENCE_SLOTS", "ABotWorldInference"]

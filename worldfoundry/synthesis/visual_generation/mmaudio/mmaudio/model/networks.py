@@ -5,7 +5,6 @@ from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from mmaudio.ext.rotary_embeddings import compute_rope_rotations
 from mmaudio.model.embeddings import TimestepEmbedder
 from mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
@@ -41,9 +40,9 @@ class MMAudio(nn.Module):
         clip_seq_len: int,
         sync_seq_len: int,
         text_seq_len: int = 77,
-        latent_mean: Optional[torch.Tensor] = None,
-        latent_std: Optional[torch.Tensor] = None,
-        empty_string_feat: Optional[torch.Tensor] = None,
+        latent_mean: torch.Tensor | None = None,
+        latent_std: torch.Tensor | None = None,
+        empty_string_feat: torch.Tensor | None = None,
         v2: bool = False,
     ) -> None:
         super().__init__()
@@ -303,7 +302,7 @@ class MMAudio(nn.Module):
         return self.empty_sync_feat.unsqueeze(0).expand(bs, self._sync_seq_len, -1)
 
     def get_empty_conditions(
-        self, bs: int, *, negative_text_features: Optional[torch.Tensor] = None
+        self, bs: int, *, negative_text_features: torch.Tensor | None = None
     ) -> PreprocessedConditions:
         if negative_text_features is not None:
             empty_text = negative_text_features

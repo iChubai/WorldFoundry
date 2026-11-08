@@ -4,10 +4,11 @@ action_model.py
 
 """
 
-from .dit import DiT
-from .diffusion_factory import create_diffusion
-from . import diffusion as gd
 from torch import nn
+
+from . import diffusion as gd
+from .diffusion_factory import create_diffusion
+from .dit import DiT
 
 
 # Create model sizes of ActionModels

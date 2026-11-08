@@ -10,12 +10,11 @@ import torch
 import torch.nn.functional as F
 from einops import rearrange
 from pytorch_lightning import seed_everything
+from sample_utils import *
 from torch import autocast
 from tqdm import tqdm
+
 from worldfoundry.core.io.paths import resolve_data_path
-
-from sample_utils import *
-
 
 DEFAULT_CONFIG = resolve_data_path("models", "runtime", "configs", "adaworld", "worldmodel/inference/adaworld.yaml")
 DEFAULT_OUTPUT = Path("outputs") / "adaworld.mp4"

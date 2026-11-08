@@ -390,9 +390,9 @@ def count_conv3d(module):
         for layer in module:
             if isinstance(layer, CausalConv3d):
                 count += 1
-            elif isinstance(layer, (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d)):
-                count += count_conv3d(layer)
-            elif hasattr(layer, "__iter__"):
+            elif isinstance(layer, (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d)) or hasattr(
+                layer, "__iter__"
+            ):
                 count += count_conv3d(layer)
     elif hasattr(module, "__dict__"):
         for attr_name in dir(module):
@@ -403,9 +403,7 @@ def count_conv3d(module):
                 elif isinstance(
                     attr,
                     (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d),
-                ):
-                    count += count_conv3d(attr)
-                elif isinstance(attr, list):
+                ) or isinstance(attr, list):
                     count += count_conv3d(attr)
     return count
 
@@ -670,7 +668,7 @@ class Encoder3d(nnx.Module):
 
         # downsample blocks
         self.downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 self.downsamples.append(ResidualBlock(in_dim, out_dim, rngs, dropout))
@@ -790,7 +788,7 @@ class Decoder3d(nnx.Module):
 
         # upsample blocks
         self.upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2

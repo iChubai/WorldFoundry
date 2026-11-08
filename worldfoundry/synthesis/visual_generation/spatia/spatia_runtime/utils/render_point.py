@@ -1,17 +1,19 @@
-import torch
+import argparse
 import os
-import decord
 import time
+
+import decord
 import numpy as np
-from PIL import Image
+import open3d as o3d
+import torch
 from diffusers.utils import export_to_video
+from PIL import Image
 from render_point_torch3d import render_multi_view_pointcloud
+
 from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.camera_io import (
     read_intrinsics_from_txt,
     read_w2cs_from_txt,
 )
-import argparse
-import open3d as o3d
 
 
 def get_args():

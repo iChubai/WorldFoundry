@@ -17,19 +17,19 @@ import argparse
 import glob
 import logging
 import os
-import subprocess
 import shutil
+import subprocess
 
 import cv2
 import numpy as np
 import open3d as o3d
 import torch
 
-from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.trajectory import (
-    generate_traj_txt,
-)
 from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (
     initialize_reproducibility,
+)
+from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.trajectory import (
+    generate_traj_txt,
 )
 
 logging.basicConfig(
@@ -242,7 +242,7 @@ def generate_target_c2ws(
     Returns:
         list of (4, 4) c2w tensors, length = num_frames
     """
-    with open(traj_txt_path, "r") as f:
+    with open(traj_txt_path) as f:
         lines = f.readlines()
     x_up_angle = [float(i) for i in lines[0].split()]
     y_left_angle = [float(i) for i in lines[1].split()]

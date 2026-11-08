@@ -27,7 +27,7 @@ def _candidate_official_runtime_roots() -> tuple[Path, ...]:
     return tuple()
 
 
-def _official_runtime_root() -> Optional[Path]:
+def _official_runtime_root() -> Path | None:
     for root in _candidate_official_runtime_roots():
         if (root / "wan" / "image2video.py").is_file() and (root / "wan" / "configs").is_dir():
             return root
@@ -98,9 +98,9 @@ class LingBotWorldRuntime:
         t5_cpu=False,
         offload_model=True,
         convert_model_dtype=False,
-        runtime_variant: Optional[str] = None,
-        fast_model_path: Optional[str] = None,
-        control_type: Optional[str] = None,
+        runtime_variant: str | None = None,
+        fast_model_path: str | None = None,
+        control_type: str | None = None,
         **kwargs,
     ):
         if task not in SUPPORTED_LINGBOT_TASKS:
@@ -194,7 +194,7 @@ class LingBotWorldRuntime:
             raise ValueError(f"LingBot-World num_heads={num_heads} is not divisible by ulysses_size={ulysses_size}.")
 
     @staticmethod
-    def _looks_like_fast_repo(path_or_repo: Optional[str]) -> bool:
+    def _looks_like_fast_repo(path_or_repo: str | None) -> bool:
         """Identify LingBot fast checkpoint refs by repo id or local directory name."""
 
         if not isinstance(path_or_repo, str):
@@ -211,8 +211,8 @@ class LingBotWorldRuntime:
         cls,
         *,
         pretrained_model_path,
-        runtime_variant: Optional[str],
-        fast_model_path: Optional[str],
+        runtime_variant: str | None,
+        fast_model_path: str | None,
     ) -> bool:
         """Resolve whether the fast runtime is requested by variant or checkpoint ref."""
 
@@ -250,7 +250,7 @@ class LingBotWorldRuntime:
         return names
 
     @classmethod
-    def _resolve_cached_sibling(cls, path_or_repo: Optional[str], repo_id: str) -> Optional[str]:
+    def _resolve_cached_sibling(cls, path_or_repo: str | None, repo_id: str) -> str | None:
         """Find a locally staged checkpoint next to a requested HFD path or cache root."""
 
         if not isinstance(path_or_repo, str) or not path_or_repo.strip():
@@ -310,10 +310,10 @@ class LingBotWorldRuntime:
         cls,
         *,
         pretrained_model_path,
-        fast_model_path: Optional[str],
+        fast_model_path: str | None,
         use_fast: bool,
         rank: int,
-    ) -> tuple[str, Optional[str]]:
+    ) -> tuple[str, str | None]:
         """Resolve base and optional fast checkpoint directories from local storage."""
 
         if not isinstance(pretrained_model_path, str) or not pretrained_model_path.strip():
@@ -350,8 +350,8 @@ class LingBotWorldRuntime:
         cls,
         pretrained_model_path,
         task: str = "i2v-A14B",
-        runtime_variant: Optional[str] = None,
-        fast_model_path: Optional[str] = None,
+        runtime_variant: str | None = None,
+        fast_model_path: str | None = None,
         rank: int = 0,
         **kwargs: Any,
     ) -> dict[str, Any]:
@@ -394,8 +394,8 @@ class LingBotWorldRuntime:
 
     @staticmethod
     def _to_pil_image(
-        pil_image: Optional[Image.Image] = None,
-        image_tensor: Optional[torch.Tensor] = None,
+        pil_image: Image.Image | None = None,
+        image_tensor: torch.Tensor | None = None,
     ) -> Image.Image:
         if pil_image is not None:
             return pil_image.convert("RGB")
@@ -419,7 +419,7 @@ class LingBotWorldRuntime:
         return Image.fromarray((array * 255.0).round().astype(np.uint8))
 
     @staticmethod
-    def _video_to_numpy(video: Optional[torch.Tensor]) -> Optional[np.ndarray]:
+    def _video_to_numpy(video: torch.Tensor | None) -> np.ndarray | None:
         if video is None:
             return None
 
@@ -436,7 +436,7 @@ class LingBotWorldRuntime:
         action_dir: str,
         c2ws: np.ndarray,
         Ks: np.ndarray,
-        action_matrix: Optional[np.ndarray] = None,
+        action_matrix: np.ndarray | None = None,
     ) -> None:
         np.save(os.path.join(action_dir, "poses.npy"), np.asarray(c2ws, dtype=np.float32))
         np.save(os.path.join(action_dir, "intrinsics.npy"), np.asarray(Ks, dtype=np.float32))
@@ -476,11 +476,11 @@ class LingBotWorldRuntime:
     def predict(
         self,
         prompt: str,
-        pil_image: Optional[Image.Image] = None,
-        image_tensor: Optional[torch.Tensor] = None,
-        action_path: Optional[str] = None,
-        c2ws: Optional[np.ndarray] = None,
-        Ks: Optional[np.ndarray] = None,
+        pil_image: Image.Image | None = None,
+        image_tensor: torch.Tensor | None = None,
+        action_path: str | None = None,
+        c2ws: np.ndarray | None = None,
+        Ks: np.ndarray | None = None,
         num_output_frames: int = 81,
         max_area: int = 720 * 1280,
         shift=None,
@@ -489,11 +489,11 @@ class LingBotWorldRuntime:
         guide_scale=None,
         n_prompt: str = "",
         seed: int = -1,
-        offload_model: Optional[bool] = None,
+        offload_model: bool | None = None,
         vis_ui: bool = False,
         allow_act2cam: bool = False,
-        action_string: Optional[str] = None,
-        action_matrix: Optional[np.ndarray] = None,
+        action_string: str | None = None,
+        action_matrix: np.ndarray | None = None,
         **kwargs,
     ):
         if self.runtime_variant == "fast":
@@ -572,9 +572,9 @@ __all__ = [
     "DEFAULT_LINGBOT_BASE_REPO",
     "DEFAULT_LINGBOT_FAST_REPO",
     "DEFAULT_LINGBOT_HFD_ROOT",
+    "SUPPORTED_LINGBOT_TASKS",
     "LingBotRuntime",
     "LingBotWorldRuntime",
-    "SUPPORTED_LINGBOT_TASKS",
     "lingbot_runtime_root",
     "load_runtime",
 ]

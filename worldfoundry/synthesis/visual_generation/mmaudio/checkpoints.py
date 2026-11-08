@@ -6,7 +6,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 
-
 DFN5B_MODEL_ID = "apple/DFN5B-CLIP-ViT-H-14-384"
 DFN5B_REQUIRED_FILES = (
     "open_clip_config.json",

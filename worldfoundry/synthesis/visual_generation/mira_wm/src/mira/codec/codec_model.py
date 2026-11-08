@@ -166,7 +166,7 @@ class VideoCodec(nn.Module):
         # restores tensors to the device they were saved from (typically cuda:0), which
         # causes every DDP rank to materialise the codec on cuda:0 and silently leaks
         # several GiB onto rank 0's GPU. Callers that want GPU loading pass device explicitly.
-        from omegaconf import OmegaConf  # noqa: PLC0415 -- optional dep, used only here
+        from omegaconf import OmegaConf  # optional dep, used only here
 
         config_path = _find_codec_config(checkpoint_path)
 

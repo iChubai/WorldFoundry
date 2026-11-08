@@ -10,19 +10,18 @@ key components and constants from the `lingbot_world` module for convenience.
 
 from typing import Any
 
+from ...base_synthesis import BaseSynthesis
 from .runtime import (
     DEFAULT_LINGBOT_ACT_REPO,
     DEFAULT_LINGBOT_BASE_REPO,
     DEFAULT_LINGBOT_FAST_REPO,
     DEFAULT_LINGBOT_HFD_ROOT,
+    SUPPORTED_LINGBOT_TASKS,
     LingBotRuntime,
     LingBotWorldRuntime,
-    SUPPORTED_LINGBOT_TASKS,
     lingbot_runtime_root,
     load_runtime,
 )
-
-from ...base_synthesis import BaseSynthesis
 
 
 class LingBotSynthesis(BaseSynthesis):
@@ -123,10 +122,10 @@ __all__ = [
     "DEFAULT_LINGBOT_BASE_REPO",
     "DEFAULT_LINGBOT_FAST_REPO",
     "DEFAULT_LINGBOT_HFD_ROOT",
+    "SUPPORTED_LINGBOT_TASKS",
     "LingBotRuntime",
     "LingBotSynthesis",
     "LingBotWorldRuntime",
-    "SUPPORTED_LINGBOT_TASKS",
     "lingbot_runtime_root",
     "load_runtime",
 ]

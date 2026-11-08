@@ -143,7 +143,7 @@ class DinoModel(nn.Module):
     def image_normalization(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.mean) / self.std
 
-    def dino_forward(self, x: Tensor) -> List[Tensor]:
+    def dino_forward(self, x: Tensor) -> list[Tensor]:
         b, t, _, h, w = x.shape
         x = rearrange(x, "b t c h w -> (b t) c h w")  # x must be in [0, 1]
         x = self.image_normalization(x)
@@ -204,7 +204,7 @@ class DinoPerceptualLoss(DinoModel):
                 target_features = tuple(self.dino_forward(target_image))
 
         layer_terms: list[Tensor] = []
-        for p, t in zip(pred_features, target_features):
+        for p, t in zip(pred_features, target_features, strict=False):
             if self.normalize:
                 p = nn.functional.normalize(p, dim=2, eps=1e-6)
                 t = nn.functional.normalize(t, dim=2, eps=1e-6)

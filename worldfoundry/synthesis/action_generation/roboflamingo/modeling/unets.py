@@ -3,18 +3,19 @@
 Diffusion polices.
 """
 
-import torch, torch.nn as nn, torch.nn.functional as F
-from torch.distributions import Bernoulli
-from typing import Tuple, Union
-from copy import copy, deepcopy
-import einops
-from einops import rearrange
-from einops.layers.torch import Rearrange
-
-import numpy as np
 import math
 import time
+from copy import copy, deepcopy
+from typing import Tuple, Union
 
+import einops
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from einops import rearrange
+from einops.layers.torch import Rearrange
+from torch.distributions import Bernoulli
 
 # -----------------------------------------------------------------------------#
 # ----------------------------------- Unets -----------------------------------#
@@ -174,7 +175,7 @@ class ConditionalUnet1D(nn.Module):
         if global_cond_dim is not None:
             cond_dim += global_cond_dim
 
-        in_out = list(zip(all_dims[:-1], all_dims[1:]))
+        in_out = list(zip(all_dims[:-1], all_dims[1:], strict=False))
         # print("cond_dim", cond_dim)
         # print("inout", in_out)
 
@@ -295,7 +296,7 @@ class ConditionalUnet1D(nn.Module):
     def forward(
         self,
         sample: torch.Tensor,
-        timestep: Union[torch.Tensor, float, int],
+        timestep: torch.Tensor | float | int,
         local_cond=None,
         global_cond=None,
         returns=None,
@@ -597,7 +598,7 @@ class Progress:
         self._incomplete_pbar = " " * self._pbar_size
 
         self.lines = [""]
-        self.fraction = "{} / {}".format(0, self.total)
+        self.fraction = f"{0} / {self.total}"
 
         self.resume()
 
@@ -647,7 +648,7 @@ class Progress:
         params_string, lines = self._format(params_split)
         self.lines = lines
 
-        description = "{} | {}{}".format(percent, speed, params_string)
+        description = f"{percent} | {speed}{params_string}"
         print(description)
         self._skip_lines = nrow + 1
 
@@ -669,18 +670,18 @@ class Progress:
             incomplete_entries = self._pbar_size - complete_entries
 
             pbar = self._complete_pbar[:complete_entries] + self._incomplete_pbar[:incomplete_entries]
-            fraction = "{} / {}".format(n, total)
-            string = "{} [{}] {:3d}%".format(fraction, pbar, int(percent * 100))
+            fraction = f"{n} / {total}"
+            string = f"{fraction} [{pbar}] {int(percent * 100):3d}%"
         else:
-            fraction = "{}".format(n)
-            string = "{} iterations".format(n)
+            fraction = f"{n}"
+            string = f"{n} iterations"
         return string, fraction
 
     def _format_speed(self, n):
         num_steps = n - self._step0
         t = time.time() - self._time0
         speed = num_steps / t
-        string = "{:.1f} Hz".format(speed)
+        string = f"{speed:.1f} Hz"
         if num_steps > 0:
             self._speed = string
         return string
@@ -701,12 +702,12 @@ class Progress:
 
     def _format_param(self, param):
         k, v = param
-        return "{} : {}".format(k, v)[: self.max_length]
+        return f"{k} : {v}"[: self.max_length]
 
     def stamp(self):
         if self.lines != [""]:
             params = " | ".join(self.lines)
-            string = "[ {} ] {}{} | {}".format(self.name, self.fraction, params, self._speed)
+            string = f"[ {self.name} ] {self.fraction}{params} | {self._speed}"
             self._clear()
             print(string, end="\n")
             self._skip_lines = 1

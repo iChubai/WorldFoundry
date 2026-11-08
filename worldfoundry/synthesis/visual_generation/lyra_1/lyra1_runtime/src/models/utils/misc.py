@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-from omegaconf import OmegaConf
 from typing import List
 
+import torch
+from omegaconf import OmegaConf
 
-def load_and_merge_configs(config_paths: List[str]):
+
+def load_and_merge_configs(config_paths: list[str]):
     """
     Load and merge multiple OmegaConf configs in order.
     Later configs override earlier ones.
@@ -53,7 +54,9 @@ def load_and_merge_configs(config_paths: List[str]):
 
 
 def seed_everything(seed: int):
-    import random, os
+    import os
+    import random
+
     import numpy as np
     import torch
 

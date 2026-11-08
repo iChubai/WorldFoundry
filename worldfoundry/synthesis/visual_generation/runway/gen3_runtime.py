@@ -5,8 +5,8 @@ It encapsulates the logic for model initialization, task submission,
 and polling for results from the RunwayML API.
 """
 
-import time
 import base64
+import time
 from typing import Literal
 
 from worldfoundry.core.io import extract_frames_from_video_url

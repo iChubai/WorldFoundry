@@ -16,18 +16,19 @@ Example:
         --seq_path /path/to/frames --device cuda --size 512
 """
 
+import argparse
+import glob
 import os
+import random
+import shutil
+import tempfile
+import time
+from copy import deepcopy
+
+import cv2
+import imageio.v2 as iio
 import numpy as np
 import torch
-import time
-import glob
-import random
-import cv2
-import argparse
-import tempfile
-import shutil
-from copy import deepcopy
-import imageio.v2 as iio
 
 # Set random seed for reproducibility.
 random.seed(42)
@@ -52,7 +53,7 @@ def collate_with_cat(whatever, lists=False):
         if isinstance(elem, (bool, float, int, str)):
             return whatever
         if isinstance(elem, tuple):
-            return T(collate_with_cat(x, lists=lists) for x in zip(*whatever))
+            return T(collate_with_cat(x, lists=lists) for x in zip(*whatever, strict=False))
         if isinstance(elem, dict):
             return {k: collate_with_cat([e[k] for e in whatever], lists=lists) for k in elem}
 
@@ -450,6 +451,8 @@ def prepare_input_from_pil(pil_images, size, square_ok=False, raymaps=None, raym
         _resize_pil_image,
         exif_transpose,
     )
+
+    # isort: split
     import PIL
 
     # Process PIL images to have the same format as the load_images output

@@ -12,23 +12,23 @@ Key features:
 - Support for camera trajectories and Gaussian parameter sequences
 """
 
-import logging
 import argparse
-import os
 import json
+import logging
+import os
 from pathlib import Path
-from typing import Optional, Tuple, Dict, List
 from time import time
+from typing import Dict, List, Optional, Tuple
 
-import torch
-import numpy as np
 import cv2
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import imageio.v2 as imageio
-from tqdm import tqdm
+import matplotlib
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from kornia.geometry.depth import depth_to_3d_v2
+from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat import (
     configure_pytorch3d_extension,
@@ -36,22 +36,22 @@ from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat i
 
 configure_pytorch3d_extension()
 
-from pytorch3d.structures import Pointclouds, Meshes, join_meshes_as_batch
-from pytorch3d.renderer import (
-    PerspectiveCameras,
-    PointsRasterizationSettings,
-    PointsRenderer,
-    PointsRasterizer,
-    AlphaCompositor,
-    MeshRenderer,
-    MeshRasterizer,
-    RasterizationSettings,
-    HardPhongShader,
-    TexturesVertex,
-    PointLights,
-)
-from pytorch3d.utils import ico_sphere
 import torchvision.transforms.functional as TF
+from pytorch3d.renderer import (
+    AlphaCompositor,
+    HardPhongShader,
+    MeshRasterizer,
+    MeshRenderer,
+    PerspectiveCameras,
+    PointLights,
+    PointsRasterizationSettings,
+    PointsRasterizer,
+    PointsRenderer,
+    RasterizationSettings,
+    TexturesVertex,
+)
+from pytorch3d.structures import Meshes, Pointclouds, join_meshes_as_batch
+from pytorch3d.utils import ico_sphere
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -77,7 +77,7 @@ def make_ellipsoid_mesh(
     cov: torch.Tensor,
     scale_factor: float = 2.0,
     subdivisions: int = 3,
-    color_rgb255: Optional[torch.Tensor] = None,
+    color_rgb255: torch.Tensor | None = None,
     device: str = "cuda",
 ) -> Meshes:
     """Create an ellipsoid mesh from a 3D Gaussian (mean and covariance).
@@ -127,7 +127,7 @@ def make_ellipsoid_mesh(
     return Meshes(verts=[verts_world], faces=[faces], textures=textures)
 
 
-def combine_meshes_for_scene(mesh_list: List[Meshes]) -> Optional[Meshes]:
+def combine_meshes_for_scene(mesh_list: list[Meshes]) -> Meshes | None:
     """Combine multiple meshes into a single batch for rendering.
 
     Merges vertices, faces, and colors from all meshes with proper face indexing.
@@ -165,13 +165,13 @@ def combine_meshes_for_scene(mesh_list: List[Meshes]) -> Optional[Meshes]:
 
 
 def render_meshes_pytorch3d_batch(
-    meshes_list: List[Optional[Meshes]],
+    meshes_list: list[Meshes | None],
     Ks: torch.Tensor,
     Ts: torch.Tensor,
-    image_size: Tuple[int, int],
-    background_color: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+    image_size: tuple[int, int],
+    background_color: tuple[float, float, float] = (0.0, 0.0, 0.0),
     use_fp16: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Render multiple meshes in batch using PyTorch3D.
 
     Args:
@@ -254,11 +254,11 @@ def render_point_cloud_pytorch3d_batch(
     colors: torch.Tensor,
     Ks: torch.Tensor,
     Ts: torch.Tensor,
-    image_size: Tuple[int, int],
+    image_size: tuple[int, int],
     point_size: float = 0.01,
-    background_color: Tuple[float, float, float] = (0.5, 0.5, 0.5),
+    background_color: tuple[float, float, float] = (0.5, 0.5, 0.5),
     use_fp16: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Render point cloud in batch using PyTorch3D.
 
     Args:
@@ -345,7 +345,7 @@ def render_point_cloud_pytorch3d_batch(
     return rendered_rgb, depth_maps, masks
 
 
-def _build_cam_from_extrinsics(Ks: torch.Tensor, Ts: torch.Tensor, image_size: Tuple[int, int]):
+def _build_cam_from_extrinsics(Ks: torch.Tensor, Ts: torch.Tensor, image_size: tuple[int, int]):
     """Build PyTorch3D camera objects from intrinsics and extrinsics.
 
     Args:
@@ -410,7 +410,7 @@ def composite_by_depth_batch(
     fg_rgb: torch.Tensor,
     fg_depth: torch.Tensor,
     fg_mask: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     take_fg = fg_mask & ((bg_depth <= 0) | ((fg_depth > 0) & (fg_depth < bg_depth - 1e-6)))
     out_rgb = bg_rgb.clone()
     out_rgb[take_fg] = fg_rgb[take_fg]
@@ -420,20 +420,20 @@ def composite_by_depth_batch(
 
 
 def merge_bg_and_fg_sequences(
-    bg_rgb_frames: List[torch.Tensor],
-    bg_depth_frames: List[torch.Tensor],
-    bg_masks: List[torch.Tensor],
-    fg_rgb_frames: List[torch.Tensor],
-    fg_depth_frames: List[torch.Tensor],
-    fg_masks: List[torch.Tensor],
-) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
+    bg_rgb_frames: list[torch.Tensor],
+    bg_depth_frames: list[torch.Tensor],
+    bg_masks: list[torch.Tensor],
+    fg_rgb_frames: list[torch.Tensor],
+    fg_depth_frames: list[torch.Tensor],
+    fg_masks: list[torch.Tensor],
+) -> tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]:
     assert len(bg_rgb_frames) == len(fg_rgb_frames), "Background and foreground frame counts must match"
 
     rgb_frames = []
     depth_frames = []
 
     for bg_rgb, bg_depth, bg_mask, fg_rgb, fg_depth, fg_mask in zip(
-        bg_rgb_frames, bg_depth_frames, bg_masks, fg_rgb_frames, fg_depth_frames, fg_masks
+        bg_rgb_frames, bg_depth_frames, bg_masks, fg_rgb_frames, fg_depth_frames, fg_masks, strict=False
     ):
         rgb_out, depth_out = composite_by_depth(bg_rgb, bg_depth, fg_rgb, fg_depth, fg_mask)
         rgb_frames.append(rgb_out)
@@ -448,7 +448,7 @@ def composite_by_depth(
     fg_rgb: torch.Tensor,
     fg_depth: torch.Tensor,
     fg_mask: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     assert bg_rgb.shape[:2] == bg_depth.shape and fg_rgb.shape[:2] == fg_depth.shape
     H, W, _ = bg_rgb.shape
     device = bg_rgb.device
@@ -460,7 +460,7 @@ def composite_by_depth(
     return out_rgb, out_depth
 
 
-def save_video_from_frames(frames: List[torch.Tensor], output_path: Path, fps: int = 10):
+def save_video_from_frames(frames: list[torch.Tensor], output_path: Path, fps: int = 10):
     """Save a list of image frames as an MP4 video.
 
     Args:
@@ -498,8 +498,8 @@ def save_video_from_frames(frames: List[torch.Tensor], output_path: Path, fps: i
 
 
 def visualize_depth_as_grayscale(
-    depth_frames: List[torch.Tensor], global_min_depth: Optional[float] = None, global_max_depth: Optional[float] = None
-) -> List[torch.Tensor]:
+    depth_frames: list[torch.Tensor], global_min_depth: float | None = None, global_max_depth: float | None = None
+) -> list[torch.Tensor]:
     grayscale_frames = []
 
     # Determine depth range if not provided. Sample if dataset is large.
@@ -550,7 +550,7 @@ def visualize_depth_as_grayscale(
     return grayscale_frames
 
 
-def compute_global_depth_range(depth_frames_list: List[List[torch.Tensor]]) -> Tuple[float, float]:
+def compute_global_depth_range(depth_frames_list: list[list[torch.Tensor]]) -> tuple[float, float]:
     all_valid_depths = []
 
     for depth_frames in depth_frames_list:
@@ -582,14 +582,14 @@ def compute_global_depth_range(depth_frames_list: List[List[torch.Tensor]]) -> T
 
 
 def project_3d_gaussians_to_2d(
-    gaussian_params_per_frame: List[Dict[int, Tuple[torch.Tensor, torch.Tensor]]],
-    obj_id_to_color_idx: Dict[int, int],
-    intrinsics: List[np.ndarray],
-    extrinsics: List[np.ndarray],
-    image_size: Tuple[int, int],
+    gaussian_params_per_frame: list[dict[int, tuple[torch.Tensor, torch.Tensor]]],
+    obj_id_to_color_idx: dict[int, int],
+    intrinsics: list[np.ndarray],
+    extrinsics: list[np.ndarray],
+    image_size: tuple[int, int],
     threshold: float = 0.05,
     device: str = "cuda",
-) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+) -> tuple[list[torch.Tensor], list[torch.Tensor]]:
     """Project 3D Gaussians to 2D image plane for each frame.
 
     Renders 3D Gaussian density maps to 2D using perspective projection,
@@ -693,10 +693,10 @@ def project_3d_gaussians_to_2d(
 
 
 def blend_gaussian_projection_with_bg(
-    gaussian_rgb_frames: List[torch.Tensor],
-    gaussian_alpha_frames: List[torch.Tensor],
-    background_frames: List[torch.Tensor],
-) -> List[torch.Tensor]:
+    gaussian_rgb_frames: list[torch.Tensor],
+    gaussian_alpha_frames: list[torch.Tensor],
+    background_frames: list[torch.Tensor],
+) -> list[torch.Tensor]:
     """Blend Gaussian RGB projections with background using alpha compositing.
 
     Performs over operation: C_out = C_fg * alpha_fg + C_bg * (1 - alpha_fg)
@@ -715,7 +715,7 @@ def blend_gaussian_projection_with_bg(
 
     merged_frames = []
 
-    for gaussian_rgb, alpha, bg_rgb in zip(gaussian_rgb_frames, gaussian_alpha_frames, background_frames):
+    for gaussian_rgb, alpha, bg_rgb in zip(gaussian_rgb_frames, gaussian_alpha_frames, background_frames, strict=False):
         device = gaussian_rgb.device
         bg_rgb = bg_rgb.to(device)
 
@@ -734,16 +734,16 @@ def blend_gaussian_projection_with_bg(
 
 
 def merge_bg_and_fg_mask(
-    background_depth_frames: List[torch.Tensor],
-    foreground_depth_frames: List[torch.Tensor],
-    background_masks: List[torch.Tensor],
-    foreground_masks: List[torch.Tensor],
+    background_depth_frames: list[torch.Tensor],
+    foreground_depth_frames: list[torch.Tensor],
+    background_masks: list[torch.Tensor],
+    foreground_masks: list[torch.Tensor],
     device: str = "cuda",
-) -> List[torch.Tensor]:
+) -> list[torch.Tensor]:
     mask_frames = []
 
     for bg_depth, fg_depth, bg_mask, fg_mask in zip(
-        background_depth_frames, foreground_depth_frames, background_masks, foreground_masks
+        background_depth_frames, foreground_depth_frames, background_masks, foreground_masks, strict=False
     ):
         # Foreground visible condition: has foreground mask AND (background has no depth OR foreground is closer)
         take_fg = fg_mask & ((bg_depth <= 0) | ((fg_depth > 0) & (fg_depth < bg_depth - 1e-6)))
@@ -768,9 +768,9 @@ def project_gaussian_to_2d_gpu(
     K: torch.Tensor,
     R: torch.Tensor,
     t: torch.Tensor,
-    image_size: Tuple[int, int],
+    image_size: tuple[int, int],
     device="cuda",
-) -> Tuple[torch.Tensor, float]:
+) -> tuple[torch.Tensor, float]:
     if isinstance(mean, np.ndarray):
         mean = torch.from_numpy(mean).float().to(device)
     if isinstance(cov, np.ndarray):
@@ -803,7 +803,7 @@ def compute_probability_density_map_gpu(
     K: torch.Tensor,
     R: torch.Tensor,
     t: torch.Tensor,
-    image_size: Tuple[int, int],
+    image_size: tuple[int, int],
     device="cuda",
 ) -> torch.Tensor:
     width, height = image_size
@@ -879,7 +879,7 @@ def compute_probability_density_map_gpu(
 
 
 def get_object_color(
-    obj_id: int, obj_id_to_color_idx: Dict[int, int], device: str = "cuda", return_float: bool = False
+    obj_id: int, obj_id_to_color_idx: dict[int, int], device: str = "cuda", return_float: bool = False
 ) -> torch.Tensor:
     """Get distinct color for an object using tab20 colormap.
 
@@ -910,7 +910,7 @@ def build_background(
     device: str = "cuda",
     target_height: int = None,
     target_width: int = None,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """Load background RGB, depth, masks and return 3D point cloud.
 
     Args:
@@ -997,7 +997,7 @@ def build_background(
     # Convert point cloud from OpenCV coordinates to Blender coordinates
     coord_transform = torch.from_numpy(COORD_TRANSFORM_CV2BLENDER).to(device)
     pts3d_world = (coord_transform @ pts3d_world_opencv.T).T
-    logger.info(f"Point cloud coordinates converted from OpenCV to Blender convention")
+    logger.info("Point cloud coordinates converted from OpenCV to Blender convention")
 
     # Extract background point cloud (inverse of combined mask)
     bg_mask = ~combined_mask
@@ -1034,8 +1034,8 @@ def load_camera_trajectory(trajectory_npz: str, device: str = "cuda") -> torch.T
 
 def load_ellipsoid_parameters(
     json_path: str, device: str = "cuda"
-) -> Tuple[List[Dict[int, Tuple[torch.Tensor, torch.Tensor]]], Dict[int, int], Dict[int, Dict[int, torch.Tensor]]]:
-    with open(json_path, "r") as f:
+) -> tuple[list[dict[int, tuple[torch.Tensor, torch.Tensor]]], dict[int, int], dict[int, dict[int, torch.Tensor]]]:
+    with open(json_path) as f:
         data = json.load(f)
 
     num_frames = data["metadata"]["num_frames"]
@@ -1075,17 +1075,17 @@ def load_ellipsoid_parameters(
 def render_video_with_bg_and_fg(
     background_points: torch.Tensor,
     background_colors: torch.Tensor,
-    foreground_meshes_per_frame: List[Optional[Meshes]],
+    foreground_meshes_per_frame: list[Meshes | None],
     intrinsics: torch.Tensor,
     extrinsics: torch.Tensor,
-    image_size: Tuple[int, int],
+    image_size: tuple[int, int],
     mode: str = "full",
     point_size: float = 0.01,
     device: str = "cuda",
     batch_size: int = 1,
     use_fp16: bool = False,
     pin_memory: bool = False,
-) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[torch.Tensor], List[torch.Tensor]]:
+) -> tuple[list[torch.Tensor], list[torch.Tensor], list[torch.Tensor], list[torch.Tensor]]:
     num_frames = len(foreground_meshes_per_frame)
     rgb_frames = [None] * num_frames
     depth_frames = [None] * num_frames
@@ -1347,7 +1347,7 @@ def main():
         )
 
         gaussian_projection_frames = []
-        for rgb, alpha in zip(gaussian_rgb_frames, gaussian_alpha_frames):
+        for rgb, alpha in zip(gaussian_rgb_frames, gaussian_alpha_frames, strict=False):
             alpha_3d = alpha.unsqueeze(-1)  # (H, W, 1)
             rgb_normalized = rgb.float() / 255.0
             masked_gaussian_rgb = (rgb_normalized * alpha_3d * 255).to(torch.uint8)

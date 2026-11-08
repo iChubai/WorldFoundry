@@ -20,8 +20,8 @@ from tqdm import tqdm
 
 from mira.codec.codec_model import VideoCodec
 from mira.data.batch import VideoActionBatch
-from mira.ml.config_loading import drop_removed_fields, strip_hydra_targets
 from mira.inference_support.checkpoints import resolve_checkpoint
+from mira.ml.config_loading import drop_removed_fields, strip_hydra_targets
 from mira.world_model.actions_config import ActionTensors
 from mira.world_model.config import LatentWorldModelConfig, WorldModelInferenceConfig
 from mira.world_model.diffusion_transformer import DiffusionTransformer
@@ -43,7 +43,7 @@ REMOVED_CONFIG_FIELDS: dict[str, object] = {
 
 def _config_dict_from_yaml(config_node: object) -> dict:
     """Resolve a saved architecture config to a plain dict, stripping hydra/removed-field cruft."""
-    from omegaconf import OmegaConf  # noqa: PLC0415 -- optional dep, used only here
+    from omegaconf import OmegaConf  # optional dep, used only here
 
     raw = OmegaConf.to_container(config_node, resolve=True)  # type: ignore[arg-type]
     assert isinstance(raw, dict), "expected a mapping at model.architecture.config"
@@ -307,7 +307,7 @@ class LatentWorldModel(nn.Module):
         clean_past = z_t[:, -2:-1] if self.config.use_clean_past else None
 
         last_kv_cache = None
-        for step_idx, (timestep, delta_t) in enumerate(zip(timesteps[:-1], delta_ts)):
+        for step_idx, (timestep, delta_t) in enumerate(zip(timesteps[:-1], delta_ts, strict=False)):
             tau = timestep * torch.ones((batch_size, 1, 1, 1, 1), device=device, dtype=z_t.dtype)
             # PSD-trained models take the integration-step size as input; None means no delta.
             tau_delta = delta_t * torch.ones_like(tau) if self.config.psd_enabled else None
@@ -409,7 +409,7 @@ class LatentWorldModel(nn.Module):
 
         # denoise autoregressively one frame at a time
         for start in tqdm(
-            range(0, z.shape[1] - window_size + 1),
+            range(z.shape[1] - window_size + 1),
             desc="Diffusion inference",
             disable=not progress_bar,
         ):
@@ -502,7 +502,7 @@ class LatentWorldModel(nn.Module):
             where ``viz_video`` stacks the HUD-annotated prediction over the ground truth vertically.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.inference_support.visualization import (  # noqa: PLC0415
+        from mira.inference_support.visualization import (
             add_prediction_border,
             video_to_uint8,
             visualize_batch,
@@ -576,7 +576,7 @@ class LatentWorldModel(nn.Module):
     def load_from_checkpoint(
         cls, checkpoint_path: str | Path, device: str | torch.device | None = None, **kwargs
     ) -> LatentWorldModel:
-        from omegaconf import OmegaConf  # noqa: PLC0415 -- optional dep, used only here
+        from omegaconf import OmegaConf  # optional dep, used only here
 
         config_path = LatentWorldModel._find_config(checkpoint_path)
 

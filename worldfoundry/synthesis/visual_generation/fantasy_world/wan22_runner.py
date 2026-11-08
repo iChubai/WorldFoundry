@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from contextlib import nullcontext
-from pathlib import Path
 import random
 import sys
+from contextlib import nullcontext
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -34,9 +34,9 @@ class FantasyWorldWan22Runner:
     def _auto_device_layout(
         cls,
         base_device: str,
-        high_model_device: Optional[str],
-        low_model_device: Optional[str],
-        moge_device: Optional[str],
+        high_model_device: str | None,
+        low_model_device: str | None,
+        moge_device: str | None,
     ) -> tuple[str, str, str]:
         resolved_base = cls._canonical_cuda_device(base_device)
         if not resolved_base.startswith("cuda"):
@@ -67,8 +67,8 @@ class FantasyWorldWan22Runner:
         lora_dir: str,
         model_ckpt_high: str,
         model_ckpt_low: str,
-        moge_path: Optional[str] = None,
-        moge_pretrained: Optional[str] = None,
+        moge_path: str | None = None,
+        moge_pretrained: str | None = None,
         base_seed: int = -1,
         sample_steps: int = 50,
         cfg_scale: float = 5.0,
@@ -78,9 +78,9 @@ class FantasyWorldWan22Runner:
         height: int = 480,
         width: int = 832,
         device: str = "cuda",
-        high_model_device: Optional[str] = None,
-        low_model_device: Optional[str] = None,
-        moge_device: Optional[str] = None,
+        high_model_device: str | None = None,
+        low_model_device: str | None = None,
+        moge_device: str | None = None,
         weight_dtype: torch.dtype = torch.bfloat16,
     ) -> None:
         if not str(device).startswith("cuda") or not torch.cuda.is_available():
@@ -240,9 +240,9 @@ class FantasyWorldWan22Runner:
         self,
         *,
         image: Image.Image,
-        end_image: Optional[Image.Image],
+        end_image: Image.Image | None,
         prompt: str,
-        neg_prompt: Optional[str],
+        neg_prompt: str | None,
         camera_params,
         using_scale: bool = True,
     ):
@@ -326,8 +326,8 @@ def build_wan22_runner(
     lora_dir: str,
     model_ckpt_high: str,
     model_ckpt_low: str,
-    moge_path: Optional[str] = None,
-    moge_pretrained: Optional[str] = None,
+    moge_path: str | None = None,
+    moge_pretrained: str | None = None,
     base_seed: int = -1,
     sample_steps: int = 50,
     cfg_scale: float = 5.0,
@@ -337,9 +337,9 @@ def build_wan22_runner(
     height: int = 480,
     width: int = 832,
     device: str = "cuda",
-    high_model_device: Optional[str] = None,
-    low_model_device: Optional[str] = None,
-    moge_device: Optional[str] = None,
+    high_model_device: str | None = None,
+    low_model_device: str | None = None,
+    moge_device: str | None = None,
     weight_dtype: torch.dtype = torch.bfloat16,
 ) -> FantasyWorldWan22Runner:
     return FantasyWorldWan22Runner(

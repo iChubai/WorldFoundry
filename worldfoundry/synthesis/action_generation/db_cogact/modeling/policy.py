@@ -5,11 +5,12 @@ from typing import Optional
 
 import numpy as np
 import torch
+
+from ..preprocessing import conversation as conversation_lib
 from ..preprocessing.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
+from ..preprocessing.tokenization import tokenizer_image_token
 from .policy_base import BasePolicy
 from .types import ActionOutput, SamplingConfig
-from ..preprocessing import conversation as conversation_lib
-from ..preprocessing.tokenization import tokenizer_image_token
 
 
 class CogACTPolicy(BasePolicy):
@@ -30,7 +31,7 @@ class CogACTPolicy(BasePolicy):
     def select_action(
         self,
         observation: dict,
-        sampling_config: Optional[SamplingConfig] = None,
+        sampling_config: SamplingConfig | None = None,
     ) -> list[ActionOutput]:
         batch_size = self._infer_batch_size(observation)
         obs = self._normalize_obs(observation, batch_size)
@@ -39,7 +40,7 @@ class CogACTPolicy(BasePolicy):
     def _infer_single(
         self,
         obs_single: dict,
-        sampling_config: Optional[SamplingConfig],
+        sampling_config: SamplingConfig | None,
     ) -> ActionOutput:
         text = obs_single["prompt"]
 

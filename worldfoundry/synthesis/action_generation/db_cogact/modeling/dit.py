@@ -6,9 +6,10 @@
 # All rights reserved.
 # --------------------------------------------------------
 
+import math
+
 import torch
 import torch.nn as nn
-import math
 
 from worldfoundry.core.attention import QKVSelfAttention as Attention
 from worldfoundry.core.nn import Mlp

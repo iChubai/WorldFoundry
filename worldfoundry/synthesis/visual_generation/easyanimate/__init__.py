@@ -28,7 +28,6 @@ def runtime_root() -> Path:
 
 from .worldfoundry_runtime import EasyAnimate, default_model_path, resolve_config_path
 
-
 # Defines the public API of this module when a user imports using `from easyanimate import *`.
 # It ensures that only the specified names are exported, making the module's interface clear.
 __all__ = ["EasyAnimate", "default_model_path", "resolve_config_path", "runtime_root"]

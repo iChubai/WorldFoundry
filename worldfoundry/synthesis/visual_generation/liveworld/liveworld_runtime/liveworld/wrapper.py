@@ -1,21 +1,20 @@
-import types
-import json
-from typing import List, Optional
-import torch
-from torch import nn
-import os
-import numpy as np
 import gc
+import json
+import os
+import types
+from typing import List, Optional
 
+import numpy as np
+import torch
 from safetensors.torch import load_file
+from torch import nn
 
-from .utils import SchedulerInterface, FlowMatchScheduler
-from .wan.modules.tokenizers import HuggingfaceTokenizer
-from .wan.modules.model import WanModel
-from .wan.modules.vae import _video_vae
-from .wan.modules.t5 import umt5_xxl
+from .utils import FlowMatchScheduler, GeneralLoRALoader, SchedulerInterface
 from .wan.modules.clip import CLIPModel
-from .utils import GeneralLoRALoader
+from .wan.modules.model import WanModel
+from .wan.modules.t5 import umt5_xxl
+from .wan.modules.tokenizers import HuggingfaceTokenizer
+from .wan.modules.vae import _video_vae
 
 
 class WanTextEncoder(torch.nn.Module):
@@ -42,14 +41,14 @@ class WanTextEncoder(torch.nn.Module):
         # Return actual device of text_encoder parameters
         return next(self.text_encoder.parameters()).device
 
-    def forward(self, text_prompts: List[str]) -> dict:
+    def forward(self, text_prompts: list[str]) -> dict:
         ids, mask = self.tokenizer(text_prompts, return_mask=True, add_special_tokens=True)
         ids = ids.to(self.device)
         mask = mask.to(self.device)
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.text_encoder(ids, mask)
 
-        for u, v in zip(context, seq_lens):
+        for u, v in zip(context, seq_lens, strict=False):
             u[v:] = 0.0  # set padding to 0.0
 
         return {"prompt_embeds": context}
@@ -367,7 +366,7 @@ class WanWrapperBase(torch.nn.Module):
         del wan_state_dict, backbone_state_dict
         gc.collect()
         torch.cuda.empty_cache()
-        print(f"[Wrapper] Official weights loaded successfully")
+        print("[Wrapper] Official weights loaded successfully")
 
     def _is_submodule_key(self, key: str) -> bool:
         """
@@ -400,7 +399,7 @@ class WanWrapperBase(torch.nn.Module):
                 f"Backbone checkpoint load failed! Unexpected keys: {non_lora_unexpected}"
             )
 
-        print(f"[Wrapper] Backbone weights loaded successfully")
+        print("[Wrapper] Backbone weights loaded successfully")
         del state_dict, backbone_state_dict
         gc.collect()
         torch.cuda.empty_cache()
@@ -426,7 +425,7 @@ class WanWrapperBase(torch.nn.Module):
         if "generator" in state_dict or "generator_ema" in state_dict:
             if load_ema and "generator_ema" in state_dict:
                 # Prefer EMA weights
-                print(f"[Wrapper] Loading generator_ema weights (load_ema=True)")
+                print("[Wrapper] Loading generator_ema weights (load_ema=True)")
                 state_dict = state_dict["generator_ema"]
             elif "generator" in state_dict:
                 # Use non-EMA weights
@@ -434,7 +433,7 @@ class WanWrapperBase(torch.nn.Module):
                 state_dict = state_dict["generator"]
             else:
                 # Only EMA available but load_ema=False, use EMA anyway with warning
-                print(f"[Wrapper] WARNING: load_ema=False but only generator_ema found, using it anyway")
+                print("[Wrapper] WARNING: load_ema=False but only generator_ema found, using it anyway")
                 state_dict = state_dict["generator_ema"]
 
             state_dict = {k.replace("model.", ""): v for k, v in state_dict.items()}
@@ -462,7 +461,7 @@ class WanWrapperBase(torch.nn.Module):
         index_file = os.path.join(model_path, "diffusion_pytorch_model.safetensors.index.json")
         if os.path.exists(index_file):
             print(f"Loading state_dict from sharded files: {index_file}")
-            with open(index_file, "r") as f:
+            with open(index_file) as f:
                 index = json.load(f)
 
             # Get unique shard files
@@ -526,11 +525,11 @@ class WanWrapperBase(torch.nn.Module):
         context,
         clip_fea=None,
         y=None,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        kv_start: Optional[int] = None,
-        kv_end: Optional[int] = None,
-        rope_start: Optional[int] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        kv_start: int | None = None,
+        kv_end: int | None = None,
+        rope_start: int | None = None,
         y_camera=None,
         **kwargs,
     ) -> torch.Tensor:
@@ -595,10 +594,11 @@ class WanWrapperBase(torch.nn.Module):
 
 
 # --- Additional import for BidirectionalWanWrapperSP ---
-from .wan.modules.model_state_adapter import StateAdapterWanModel
+from typing import List, Optional
 
-from typing import Optional, List
 import torch
+
+from .wan.modules.model_state_adapter import StateAdapterWanModel
 
 
 class BidirectionalWanWrapperSP(WanWrapperBase):
@@ -633,11 +633,11 @@ class BidirectionalWanWrapperSP(WanWrapperBase):
         sp_context=None,
         sp_context_scale=1.0,
         sp_hint_offset=0,
-        kv_cache: Optional[List[dict]] = None,
-        crossattn_cache: Optional[List[dict]] = None,
-        kv_start: Optional[int] = None,
-        kv_end: Optional[int] = None,
-        rope_start: Optional[int] = None,
+        kv_cache: list[dict] | None = None,
+        crossattn_cache: list[dict] | None = None,
+        kv_start: int | None = None,
+        kv_end: int | None = None,
+        rope_start: int | None = None,
         y_camera=None,
         **kwargs,
     ) -> torch.Tensor:

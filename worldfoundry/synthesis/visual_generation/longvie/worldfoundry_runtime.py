@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import inspect
 import os
+from collections.abc import Mapping, Sequence
 from importlib import metadata as importlib_metadata
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -16,7 +17,6 @@ from .runtime_env import (
     resolve_wan21_i2v_dir,
     resolve_wan21_tokenizer_dir,
 )
-
 
 LONGVIE_NEGATIVE_PROMPT = (
     "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，"

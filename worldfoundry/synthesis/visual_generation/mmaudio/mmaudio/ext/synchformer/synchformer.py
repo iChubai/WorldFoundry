@@ -1,10 +1,10 @@
 import logging
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import torch
-from torch import nn
-
 from mmaudio.ext.synchformer.motionformer import MotionFormer
+from torch import nn
 
 
 class Synchformer(nn.Module):

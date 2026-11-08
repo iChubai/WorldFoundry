@@ -11,8 +11,11 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image, ImageOps
+
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     SOURCE_ROOT as PI3_SOURCE_ROOT,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     ensure_import_paths as ensure_pi3_import_paths,
 )
 

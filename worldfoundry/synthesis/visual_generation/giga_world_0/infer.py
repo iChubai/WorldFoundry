@@ -6,7 +6,6 @@ import argparse
 import json
 from pathlib import Path
 
-
 NEGATIVE_PROMPT = (
     "static, motion blur, low resolution, grainy, pixelated, poorly lit, "
     "choppy motion, artifacts, unnatural transitions, visual noise, flickering"

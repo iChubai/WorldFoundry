@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import List
 
 
-def require_config_keys(required_keys: List[str]):
+def require_config_keys(required_keys: list[str]):
     def decorator(func):
         def wrapper(config, *args, **kwargs):
             missing = [key for key in required_keys if not hasattr(config, key)]

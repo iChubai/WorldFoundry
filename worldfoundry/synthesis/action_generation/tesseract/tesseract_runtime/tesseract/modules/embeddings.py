@@ -1,6 +1,7 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional
 from diffusers.models.embeddings import get_3d_sincos_pos_embed
 
 
@@ -8,7 +9,7 @@ class TesserActDepthPatchEmbed(nn.Module):
     def __init__(
         self,
         patch_size: int = 2,
-        patch_size_t: Optional[int] = None,
+        patch_size_t: int | None = None,
         in_channels: int = 16,
         embed_dim: int = 1920,
         text_embed_dim: int = 4096,

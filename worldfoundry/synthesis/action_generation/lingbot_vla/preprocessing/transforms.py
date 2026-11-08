@@ -1,15 +1,14 @@
 """LingBot-VLA v1 inference tensor transforms."""
 
+import math
 from typing import Dict
 
+import einops
 import numpy as np
 import torch
-import math
-import einops
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-
 
 IMAGE_KEYS = (
     "base_0_rgb",
@@ -34,14 +33,14 @@ def dict_apply(func, d):
 class Normalizer:
     def __init__(
         self,
-        norm_stats: Dict[str, Dict[str, np.ndarray]],
+        norm_stats: dict[str, dict[str, np.ndarray]],
         data_type: str = None,
-        norm_type: Dict[str, str] | None = None,
+        norm_type: dict[str, str] | None = None,
     ):
         self.norm_stats = dict_apply(lambda x: np.array(x).astype(np.float32), norm_stats)
         self.norm_type = norm_type or {}
 
-    def normalize(self, data: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
+    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, torch.Tensor]:
         normalized_data = {}
         for key, value in data.items():
             if key in self.norm_stats:
@@ -70,7 +69,7 @@ class Normalizer:
                 normalized_data[key] = value
         return normalized_data
 
-    def unnormalize(self, data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def unnormalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """
         Unnormalize the given data using stored normalization statistics.
 
@@ -255,9 +254,9 @@ def prepare_language(language_tokenizer, observation: dict[str, Tensor], tokeniz
         lang_tokens (torch.Tensor): (*b, l) language tokens
         lang_masks (torch.Tensor): (*b, l) masks for language tokens, True if token is present, False if missing
     """
-    lang_tokens = observation.get("lang_tokens", None)
-    lang_masks = observation.get("lang_masks", None)
-    prompt = observation.get("prompt", None)
+    lang_tokens = observation.get("lang_tokens")
+    lang_masks = observation.get("lang_masks")
+    prompt = observation.get("prompt")
 
     # either provide `prompt` or (`lang_tokens`, `lang_masks`)
     if prompt is None and (lang_tokens is None or lang_masks is None):

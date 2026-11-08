@@ -20,6 +20,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import Optional
+
 from transformers.configuration_utils import PretrainedConfig
 
 
@@ -135,7 +136,7 @@ class GemmaConfig(PretrainedConfig):
         attention_bias=False,
         attention_dropout=0.0,
         use_adarms: bool = False,
-        adarms_cond_dim: Optional[int] = None,
+        adarms_cond_dim: int | None = None,
         **kwargs,
     ):
         self.vocab_size = vocab_size

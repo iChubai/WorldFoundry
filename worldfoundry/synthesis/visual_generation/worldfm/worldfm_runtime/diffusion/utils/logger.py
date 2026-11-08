@@ -1,7 +1,9 @@
 import logging
 import os
-import torch.distributed as dist
 from datetime import datetime
+
+import torch.distributed as dist
+
 from worldfoundry.core.distributed.collectives.generic import is_local_master
 
 try:

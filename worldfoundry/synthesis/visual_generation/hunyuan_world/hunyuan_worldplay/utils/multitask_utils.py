@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 
 
-def numpy_to_pil(images: np.ndarray) -> List[Image.Image]:
+def numpy_to_pil(images: np.ndarray) -> list[Image.Image]:
     """
     Convert a numpy image or a batch of images to a PIL image.
 

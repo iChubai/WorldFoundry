@@ -25,14 +25,16 @@ Handles:
 
 from copy import deepcopy
 
+import numpy as np
+
+from .action_chunking import EndEffectorActionChunk, JointActionChunk
+from .pose import EndEffectorPose, JointPose
 from .types import (
     ActionFormat,
     ActionRepresentation,
     ActionType,
     ModalityConfig,
 )
-from .action_chunking import EndEffectorActionChunk, JointActionChunk
-from .pose import EndEffectorPose, JointPose
 from .utils import (
     apply_sin_cos_encoding,
     nested_dict_to_numpy,
@@ -42,7 +44,6 @@ from .utils import (
     unnormalize_values_meanstd,
     unnormalize_values_minmax,
 )
-import numpy as np
 
 
 class StateActionProcessor:
@@ -160,7 +161,7 @@ class StateActionProcessor:
                 action_configs = self.modality_configs[embodiment_tag]["action"].action_configs
 
                 if action_configs is not None:
-                    for key, action_config in zip(modality_keys, action_configs):
+                    for key, action_config in zip(modality_keys, action_configs, strict=False):
                         if action_config.rep == ActionRepresentation.RELATIVE and self.use_relative_action:
                             if "relative_action" not in self.statistics[embodiment_tag]:
                                 raise ValueError(
@@ -332,7 +333,7 @@ class StateActionProcessor:
         action_configs = self.modality_configs[embodiment_tag]["action"].action_configs
 
         if action_configs is not None:
-            for key, action_config in zip(modality_keys, action_configs):
+            for key, action_config in zip(modality_keys, action_configs, strict=False):
                 if action_config.rep == ActionRepresentation.RELATIVE and self.use_relative_action:
                     if state is None:
                         raise ValueError(
@@ -439,7 +440,7 @@ class StateActionProcessor:
         action_configs = self.modality_configs[embodiment_tag]["action"].action_configs
 
         if action_configs is not None:
-            for key, action_config in zip(modality_keys, action_configs):
+            for key, action_config in zip(modality_keys, action_configs, strict=False):
                 if action_config.rep == ActionRepresentation.RELATIVE and self.use_relative_action:
                     if state is None:
                         raise ValueError(
@@ -473,7 +474,7 @@ class StateActionProcessor:
 
                     # Convert batched relative actions to absolute
                     absolute_actions = []
-                    for s, a in zip(reference_state, relative_action):
+                    for s, a in zip(reference_state, relative_action, strict=False):
                         # Use last timestep of state as reference
                         absolute_action = self._convert_to_absolute_action(
                             action=a,

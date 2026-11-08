@@ -8,8 +8,12 @@ from pathlib import Path
 import numpy as np
 from omegaconf import OmegaConf, open_dict
 
+# isort: split
 from official_plan import planning_main
+
+# isort: split
 from utils import cfg_to_dict
+
 from worldfoundry.core.io.paths import resolve_data_path
 
 

@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import inspect
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from dataclasses import dataclass
 from diffusers import DiffusionPipeline
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
@@ -45,9 +46,9 @@ from transformers import (
     BertModel,
     BertTokenizer,
     CLIPImageProcessor,
+    CLIPVisionModelWithProjection,
     Qwen2Tokenizer,
     Qwen2VLForConditionalGeneration,
-    CLIPVisionModelWithProjection,
     T5EncoderModel,
     T5Tokenizer,
 )
@@ -172,10 +173,10 @@ def add_noise_to_reference_video(image, ratio=None, generator=None):
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
 def retrieve_timesteps(
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     """
@@ -297,10 +298,10 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
     def __init__(
         self,
         vae: AutoencoderKLMagvit,
-        text_encoder: Union[Qwen2VLForConditionalGeneration, BertModel],
-        tokenizer: Union[Qwen2Tokenizer, BertTokenizer],
-        text_encoder_2: Optional[Union[T5EncoderModel, Qwen2VLForConditionalGeneration]],
-        tokenizer_2: Optional[Union[T5Tokenizer, Qwen2Tokenizer]],
+        text_encoder: Qwen2VLForConditionalGeneration | BertModel,
+        tokenizer: Qwen2Tokenizer | BertTokenizer,
+        text_encoder_2: T5EncoderModel | Qwen2VLForConditionalGeneration | None,
+        tokenizer_2: T5Tokenizer | Qwen2Tokenizer | None,
         transformer: EasyAnimateTransformer3DModel,
         scheduler: FlowMatchEulerDiscreteScheduler,
         clip_image_processor: CLIPImageProcessor = None,
@@ -327,12 +328,11 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
         )
         self.manual_cpu_offload_flag = False
 
-    def enable_sequential_cpu_offload(self, gpu_id: Optional[int] = None, device: Union[torch.device, str] = "cuda"):
+    def enable_sequential_cpu_offload(self, gpu_id: int | None = None, device: torch.device | str = "cuda"):
         from diffusers.pipelines.pipeline_utils import is_accelerate_available, is_accelerate_version
 
         if is_accelerate_available() and is_accelerate_version(">=", "0.14.0"):
-            from accelerate import cpu_offload
-            from accelerate import cpu_offload_with_hook
+            from accelerate import cpu_offload, cpu_offload_with_hook
         else:
             raise ImportError("`enable_sequential_cpu_offload` requires `accelerate v0.14.0` or higher")
         self.remove_all_hooks()
@@ -396,12 +396,12 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
         dtype: torch.dtype,
         num_images_per_prompt: int = 1,
         do_classifier_free_guidance: bool = True,
-        negative_prompt: Optional[str] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask: Optional[torch.Tensor] = None,
-        max_sequence_length: Optional[int] = None,
+        negative_prompt: str | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        prompt_attention_mask: torch.Tensor | None = None,
+        negative_prompt_attention_mask: torch.Tensor | None = None,
+        max_sequence_length: int | None = None,
         text_encoder_index: int = 0,
         actual_max_sequence_length: int = 256,
     ):
@@ -557,7 +557,7 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance and negative_prompt_embeds is None:
             if type(tokenizer) in [BertTokenizer, T5Tokenizer]:
-                uncond_tokens: List[str]
+                uncond_tokens: list[str]
                 if negative_prompt is None:
                     uncond_tokens = [""] * batch_size
                 elif prompt is not None and type(prompt) is not type(negative_prompt):
@@ -1008,44 +1008,45 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: Union[str, List[str]] = None,
-        video_length: Optional[int] = None,
-        video: Union[torch.FloatTensor] = None,
-        mask_video: Union[torch.FloatTensor] = None,
-        masked_video_latents: Union[torch.FloatTensor] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        num_inference_steps: Optional[int] = 50,
-        guidance_scale: Optional[float] = 5.0,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        num_images_per_prompt: Optional[int] = 1,
-        eta: Optional[float] = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_embeds_2: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds_2: Optional[torch.Tensor] = None,
-        prompt_attention_mask: Optional[torch.Tensor] = None,
-        prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask: Optional[torch.Tensor] = None,
-        negative_prompt_attention_mask_2: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "latent",
+        prompt: str | list[str] = None,
+        video_length: int | None = None,
+        video: torch.FloatTensor = None,
+        mask_video: torch.FloatTensor = None,
+        masked_video_latents: torch.FloatTensor = None,
+        height: int | None = None,
+        width: int | None = None,
+        num_inference_steps: int | None = 50,
+        guidance_scale: float | None = 5.0,
+        negative_prompt: str | list[str] | None = None,
+        num_images_per_prompt: int | None = 1,
+        eta: float | None = 0.0,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_embeds_2: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds_2: torch.Tensor | None = None,
+        prompt_attention_mask: torch.Tensor | None = None,
+        prompt_attention_mask_2: torch.Tensor | None = None,
+        negative_prompt_attention_mask: torch.Tensor | None = None,
+        negative_prompt_attention_mask_2: torch.Tensor | None = None,
+        output_type: str | None = "latent",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         guidance_rescale: float = 0.0,
-        original_size: Optional[Tuple[int, int]] = (1024, 1024),
-        target_size: Optional[Tuple[int, int]] = None,
-        crops_coords_top_left: Tuple[int, int] = (0, 0),
+        original_size: tuple[int, int] | None = (1024, 1024),
+        target_size: tuple[int, int] | None = None,
+        crops_coords_top_left: tuple[int, int] = (0, 0),
         clip_image: Image = None,
         clip_apply_ratio: float = 0.40,
         strength: float = 1.0,
         noise_aug_strength: float = 0.0563,
         comfyui_progressbar: bool = False,
-        timesteps: Optional[List[int]] = None,
+        timesteps: list[int] | None = None,
     ):
         r"""
         The call function to the pipeline for generation with HunyuanDiT.

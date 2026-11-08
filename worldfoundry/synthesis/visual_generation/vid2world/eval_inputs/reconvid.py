@@ -1,23 +1,22 @@
 # adapted from https://github.com/facebookresearch/nwm/tree/main
 """Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> eval_inputs -> reconvid.py functionality."""
 
+import json
+import math
 import os
 import random
 from importlib.resources import files
+from typing import List, Optional, Tuple
 
 import numpy as np
-from tqdm import tqdm
-from PIL import Image
-
 import torch
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+from PIL import Image
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.transforms import functional as F
-import json
-from torch import Tensor
-from typing import Optional, List, Tuple
-import math
+from tqdm import tqdm
+
 from worldfoundry.synthesis.visual_generation.vid2world.nvm_utils.eval_inputs import (
     RECONEvalDataset,
     RECONVIDDataset,
@@ -25,7 +24,6 @@ from worldfoundry.synthesis.visual_generation.vid2world.nvm_utils.eval_inputs im
 from worldfoundry.synthesis.visual_generation.vid2world.nvm_utils.misc import (
     transform,
 )
-
 
 _VID2WORLD_RUNTIME_ROOT = str(files("worldfoundry.synthesis.visual_generation.vid2world"))
 
@@ -220,10 +218,7 @@ class RECONVID(Dataset):
         """
 
         # Load data
-        if self.mode == "training":
-            frames = self.dataset[index][0]  # [T, H, W, C] # [115, 256, 320, 3]
-            actions = self.dataset[index][1]  # [T, M]
-        elif self.mode == "validation":
+        if self.mode == "training" or self.mode == "validation":
             frames = self.dataset[index][0]  # [T, H, W, C] # [115, 256, 320, 3]
             actions = self.dataset[index][1]  # [T, M]
         else:
@@ -349,7 +344,7 @@ class RECONVID(Dataset):
         return torch.stack(new_frames, dim=1)  # [C, T, H, W]
 
     @staticmethod
-    def get_crop_params(img: Tensor, scale: List[float], ratio: List[float]) -> Tuple[int, int, int, int]:
+    def get_crop_params(img: Tensor, scale: list[float], ratio: list[float]) -> tuple[int, int, int, int]:
         """Get parameters for ``crop`` for a random sized crop.
 
         Args:
@@ -395,11 +390,11 @@ class RECONVID(Dataset):
 
     @staticmethod
     def get_jittor_params(
-        brightness: Optional[List[float]],
-        contrast: Optional[List[float]],
-        saturation: Optional[List[float]],
-        hue: Optional[List[float]],
-    ) -> Tuple[Tensor, Optional[float], Optional[float], Optional[float], Optional[float]]:
+        brightness: list[float] | None,
+        contrast: list[float] | None,
+        saturation: list[float] | None,
+        hue: list[float] | None,
+    ) -> tuple[Tensor, float | None, float | None, float | None, float | None]:
         """Get the parameters for the randomized transform to be applied on image.
 
         Args:

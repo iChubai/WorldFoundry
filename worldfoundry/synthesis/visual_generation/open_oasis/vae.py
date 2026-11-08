@@ -4,22 +4,24 @@ References:
     - MAE: https://github.com/facebookresearch/mae
 """
 
-import numpy as np
-import math
 import functools
+import math
 from collections import namedtuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
-from timm.models.vision_transformer import Mlp
-from timm.layers.helpers import to_2tuple
-from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
 from dit import PatchEmbed
+from einops import rearrange
+from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
+from timm.layers.helpers import to_2tuple
+from timm.models.vision_transformer import Mlp
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
-class DiagonalGaussianDistribution(object):
+class DiagonalGaussianDistribution:
     def __init__(self, parameters, deterministic=False, dim=1):
         self.parameters = parameters
         self.mean, self.logvar = torch.chunk(parameters, 2, dim=dim)
@@ -71,7 +73,7 @@ class Attention(nn.Module):
 
     def forward(self, x):
         B, N, C = x.shape
-        assert N == self.frame_height * self.frame_width
+        assert self.frame_height * self.frame_width == N
 
         q, k, v = self.qkv(x).chunk(3, dim=-1)
 

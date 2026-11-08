@@ -8,7 +8,6 @@ from pathlib import Path
 
 import numpy as np
 
-
 _NUMBER_PATTERN = re.compile(r"[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?")
 
 

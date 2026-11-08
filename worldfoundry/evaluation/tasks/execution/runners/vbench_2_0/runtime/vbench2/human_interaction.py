@@ -1,29 +1,17 @@
-import argparse
 import copy
-import json
-import os
 import re
-import sys
 import warnings
 
-import requests
-import torch
-from PIL import Image
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from vbench2.utils import load_dimension_info
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    DEFAULT_IM_END_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
-    IGNORE_INDEX,
     IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
-    get_model_name_from_path,
-    process_images,
     tokenizer_image_token,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
@@ -166,7 +154,7 @@ def compute_human_interaction(json_dir, device, submodules_dict, **kwargs):
         llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(
             pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map
         )  # Add any other thing you want to pass in llava_model_args
-    except:
+    except BaseException:
         pretrained = "lmms-lab/LLaVA-Video-7B-Qwen2"
         llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(
             pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map
@@ -179,7 +167,7 @@ def compute_human_interaction(json_dir, device, submodules_dict, **kwargs):
             qwen_model_name, torch_dtype="auto", device_map="auto", cache_dir=submodules_dict["qwen"]
         )
         qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_model_name, cache_dir=submodules_dict["qwen"])
-    except:
+    except BaseException:
         qwen_model_name = "Qwen/Qwen2.5-7B-Instruct"
         qwen_model = AutoModelForCausalLM.from_pretrained(
             qwen_model_name, torch_dtype="auto", device_map="auto", cache_dir=submodules_dict["qwen"]

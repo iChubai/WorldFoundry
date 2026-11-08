@@ -50,9 +50,6 @@ def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
     src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
-    # 匹配点对数
-    num_pts = len(src_pts)
-
     # 使用基础矩阵RANSAC去除误匹配
     F, inliers_F = cv2.findFundamentalMat(src_pts, dst_pts, cv2.RANSAC, ransac_th)
     if inliers_F is None:

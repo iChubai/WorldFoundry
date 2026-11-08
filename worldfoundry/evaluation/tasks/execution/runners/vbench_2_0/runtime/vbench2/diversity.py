@@ -1,12 +1,5 @@
-import json
-import os
-from collections import OrderedDict
-
-import cv2
-import numpy as np
 import torch
 from torch import nn
-from torchvision import transforms
 from torchvision.models import vgg19
 from tqdm import tqdm
 from vbench2.utils import get_frames, load_dimension_info
@@ -14,7 +7,7 @@ from vbench2.utils import get_frames, load_dimension_info
 
 class VGG(nn.Module):
     def __init__(self):
-        super(VGG, self).__init__()
+        super().__init__()
         self.features = vgg19(pretrained=True).features.eval()
 
     def forward(self, x):

@@ -1,15 +1,9 @@
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-import json
 import logging
 
-import cv2
-import numpy as np
-import torch
-import vbench2.hack_registry
-from tqdm import tqdm
-from vbench2.utils import load_dimension_info, load_video, read_frames_decord_by_fps
+from vbench2.utils import load_dimension_info
 
 from worldfoundry.base_models.perception_core.human_anatomy.vit_detector import compute_abnormality
 

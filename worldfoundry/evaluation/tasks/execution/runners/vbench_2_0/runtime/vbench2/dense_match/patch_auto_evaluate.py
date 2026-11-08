@@ -41,7 +41,6 @@ def extract_frame(frame_list, skip_frame, end_frame, match_inter, interval_num):
 
 def PatchAutoEvaluate(video_path, skip_frame, end_frame, flow, fps):
     interval_nums = 40
-    begin_frame = 0
     ransac_th = 3
     err_list = []
     if flow != -1:
@@ -60,7 +59,7 @@ def PatchAutoEvaluate(video_path, skip_frame, end_frame, flow, fps):
         frame_list = extract_frame(frame_list, skip_frame, end_frame, match_inter, interval_num)
     if len(frame_list) <= 1:
         return -1
-    for idx, (left_img, right_img) in enumerate(frame_list):
+    for _idx, (left_img, right_img) in enumerate(frame_list):
         valid_point = EvaluateErrBetweenTwoImage(left_img[0], right_img[0], ransac_th)
         if valid_point is None:
             err_list.append(0)

@@ -1,17 +1,22 @@
+import itertools
+
 import cv2
 import decord
 import numpy as np
-import torch
 
 decord.bridge.set_bridge("torch")
-import json
-import os
-from math import ceil
+from math import ceil  # noqa: E402 - Follows the decord torch bridge setup.
 
-from tqdm import tqdm
-from vbench2.utils import load_dimension_info, split_video_into_scenes
+from tqdm import tqdm  # noqa: E402 - Follows the decord torch bridge setup.
+from vbench2.utils import (  # noqa: E402 - Follows the decord torch bridge setup.
+    load_dimension_info,
+    split_video_into_scenes,
+)
 
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
+from worldfoundry.base_models.perception_core.tracking.cotracker import (  # noqa: E402 - Follows the decord torch bridge setup.
+    CoTrackerPredictor,
+    Visualizer,
+)
 
 
 def transform(vector):
@@ -63,14 +68,8 @@ class CameraPredict:
             else:
                 up.append(item[0])
         y = np.mean([item[1] for item in vector])
-        if len(up) > 0:
-            mean_up = sum(up) / len(up)
-        else:
-            mean_up = 0
-        if len(down) > 0:
-            mean_down = sum(down) / len(down)
-        else:
-            mean_down = 0
+        mean_up = sum(up) / len(up) if len(up) > 0 else 0
+        mean_down = sum(down) / len(down) if len(down) > 0 else 0
         return [mean_up, mean_down, y]
 
     def infer(self, video, fps=16, end_frame=-1, save_video=False, save_dir="./saved_videos"):
@@ -100,8 +99,6 @@ class CameraPredict:
         return top, down, left, right
 
     def get_edge_point_360(self, track):
-        middle = self.grid_size // 2
-        number = 2
         lists = [0, 1, self.grid_size - 2, self.grid_size - 1]
         idx = 2
         res = []
@@ -114,7 +111,7 @@ class CameraPredict:
 
     def get_edge_direction_360(self, tracks):
         alls = []
-        for track1, track2 in zip(tracks[:-1], tracks[1:], strict=False):
+        for track1, track2 in itertools.pairwise(tracks):
             edge_points1 = self.get_edge_point_360(track1)
             edge_points2 = self.get_edge_point_360(track2)
             vector_results = []
@@ -130,10 +127,7 @@ class CameraPredict:
 
     def check_valid(self, point):
         if point is not None:
-            if point[0] > 0 and point[0] < self.width and point[1] > 0 and point[1] < self.height:
-                return True
-            else:
-                return False
+            return bool(point[0] > 0 and point[0] < self.width and point[1] > 0 and point[1] < self.height)
         else:
             return False
 

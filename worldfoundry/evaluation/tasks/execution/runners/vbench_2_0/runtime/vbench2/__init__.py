@@ -3,11 +3,15 @@ import sys
 
 sys.modules.setdefault("vbench2", sys.modules[__name__])
 
-import importlib
-from itertools import chain
-from pathlib import Path
+import importlib  # noqa: E402 - Follows the vbench2 package alias.
+from pathlib import Path  # noqa: E402 - Follows the vbench2 package alias.
 
-from .utils import get_prompt_from_filename, init_submodules, load_json, save_json
+from .utils import (  # noqa: E402 - Follows the vbench2 package alias.
+    get_prompt_from_filename,
+    init_submodules,
+    load_json,
+    save_json,
+)
 
 
 class VBench2:
@@ -42,23 +46,21 @@ class VBench2:
         ]
 
     def check_dimension_requires_extra_info(self, dimension_list):
-        dim_custom_not_supported = set(dimension_list) & set(
-            [
-                "Composition",
-                "Dynamic_Attribute",
-                "Dynamic_Spatial_Relationship",
-                "Instance_Preservation",
-                "Complex_Plot",
-                "Complex_Landscape",
-                "Motion_Rationality",
-                "Motion_Order_Understanding",
-                "Mechanics",
-                "Thermotics",
-                "Material",
-                "Camera_Motion",
-                "Human_Interaction",
-            ]
-        )
+        dim_custom_not_supported = set(dimension_list) & {
+            "Composition",
+            "Dynamic_Attribute",
+            "Dynamic_Spatial_Relationship",
+            "Instance_Preservation",
+            "Complex_Plot",
+            "Complex_Landscape",
+            "Motion_Rationality",
+            "Motion_Order_Understanding",
+            "Mechanics",
+            "Thermotics",
+            "Material",
+            "Camera_Motion",
+            "Human_Interaction",
+        }
 
         assert len(dim_custom_not_supported) == 0, (
             f"dimensions : {dim_custom_not_supported} not supported for custom input"
@@ -69,7 +71,7 @@ class VBench2:
         videos_path,
         name,
         dimension_list,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Read-only default; retain the public signature.
         special_str="",
         verbose=False,
         mode="vbench_standard",
@@ -116,10 +118,7 @@ class VBench2:
                 if set(dimension_list) & set(prompt_dict["dimension"]):
                     prompt = prompt_dict["prompt_en"]
                     prompt_dict["video_list"] = []
-                    if prompt_dict["dimension"][0] == "Diversity":
-                        num = 20
-                    else:
-                        num = 3
+                    num = 20 if prompt_dict["dimension"][0] == "Diversity" else 3
                     for i in range(num):  # video index for the same prompt
                         intended_video_name = f"{prompt[:180]}{special_str}-{i!s}{postfix}"
                         if intended_video_name in video_names:  # if the video exists
@@ -143,7 +142,7 @@ class VBench2:
         self,
         videos_path,
         name,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Read-only default; retain the public signature.
         dimension_list=None,
         local=False,
         read_frame=False,
@@ -160,14 +159,11 @@ class VBench2:
 
         for dimension in dimension_list:
             try:
-                if dimension == "Multi-View_Consistency":
-                    dimension_change = "Multi_View_Consistency"
-                else:
-                    dimension_change = dimension
+                dimension_change = "Multi_View_Consistency" if dimension == "Multi-View_Consistency" else dimension
                 dimension_module = importlib.import_module(f"vbench2.{dimension_change.lower()}")
                 evaluate_func = getattr(dimension_module, f"compute_{dimension_change.lower()}")
             except Exception as e:
-                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")
+                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")  # noqa: B904 - Preserve the implicit context.
             submodules_list = submodules_dict[dimension]
             print(f"cur_full_info_path: {cur_full_info_path}")  # TODO: to delete
             results = evaluate_func(cur_full_info_path, self.device, submodules_list, **kwargs)

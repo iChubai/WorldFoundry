@@ -4,21 +4,17 @@ import numpy as np
 import torch
 
 decord.bridge.set_bridge("torch")
-import json
-import os
-from collections import Counter
+from collections import Counter  # noqa: E402 - Follows the decord torch bridge setup.
 
-import imageio
-import torchvision
-from einops import rearrange
-from PIL import Image
-from scipy.spatial.distance import cosine
-from tqdm import tqdm
-from vbench2.utils import load_dimension_info
+from tqdm import tqdm  # noqa: E402 - Follows the decord torch bridge setup.
+from vbench2.utils import load_dimension_info  # noqa: E402 - Follows the decord torch bridge setup.
 
-from worldfoundry.base_models.perception_core.face.arcface import resnet_face18
-from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
-from worldfoundry.base_models.perception_core.tracking.cotracker import Visualizer
+from worldfoundry.base_models.perception_core.face.arcface import (  # noqa: E402 - Follows the decord torch bridge setup.
+    resnet_face18,
+)
+from worldfoundry.base_models.perception_core.face.retinaface import (  # noqa: E402 - Follows the decord torch bridge setup.
+    load_retinaface_state_dict,
+)
 
 
 def most_frequent_number(numbers):

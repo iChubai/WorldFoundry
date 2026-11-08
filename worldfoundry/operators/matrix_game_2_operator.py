@@ -57,6 +57,35 @@ def _combine_official_action_data(data, num_frames=57, keyboard_dim=6, mouse=Tru
     return {"keyboard_condition": keyboard_condition}
 
 
+def _official_keyboard_mouse_data(
+    actions_to_test, base_action, keyboard_idx, camera_value_map, keyboard_dim, num_samples_per_action
+):
+    """Build per-action keyboard and mouse condition tensors as the official benchmark does.
+
+    A base action applies when its name is a substring of the tested action name.
+    """
+    data = []
+    for action_name in actions_to_test:
+        keyboard_condition = [[0] * keyboard_dim for _ in range(num_samples_per_action)]
+        mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
+        for sub_act in base_action:
+            if sub_act not in action_name:
+                continue
+            if sub_act in camera_value_map:
+                mouse_condition = [camera_value_map[sub_act] for _ in range(num_samples_per_action)]
+            elif sub_act in keyboard_idx:
+                col = keyboard_idx[sub_act]
+                for row in keyboard_condition:
+                    row[col] = 1
+        data.append(
+            {
+                "keyboard_condition": torch.tensor(keyboard_condition),
+                "mouse_condition": torch.tensor(mouse_condition),
+            }
+        )
+    return data
+
+
 def official_bench_actions_universal(num_frames, num_samples_per_action=4, seed=None):
     """Official bench actions universal implementation."""
     actions_single_action = ["forward", "left", "right"]
@@ -81,25 +110,9 @@ def official_bench_actions_universal(num_frames, num_samples_per_action=4, seed=
         "camera_dl": [-cam_value, -cam_value],
     }
 
-    data = []
-    for action_name in actions_to_test:
-        keyboard_condition = [[0, 0, 0, 0] for _ in range(num_samples_per_action)]
-        mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
-        for sub_act in base_action:
-            if sub_act not in action_name:
-                continue
-            if sub_act in camera_value_map:
-                mouse_condition = [camera_value_map[sub_act] for _ in range(num_samples_per_action)]
-            elif sub_act in keyboard_idx:
-                col = keyboard_idx[sub_act]
-                for row in keyboard_condition:
-                    row[col] = 1
-        data.append(
-            {
-                "keyboard_condition": torch.tensor(keyboard_condition),
-                "mouse_condition": torch.tensor(mouse_condition),
-            }
-        )
+    data = _official_keyboard_mouse_data(
+        actions_to_test, base_action, keyboard_idx, camera_value_map, 4, num_samples_per_action
+    )
     rng = random.Random(seed) if seed is not None else None
     return _combine_official_action_data(data, num_frames, keyboard_dim=4, mouse=True, rng=rng)
 
@@ -118,25 +131,9 @@ def official_bench_actions_gta_drive(num_frames, num_samples_per_action=4, seed=
     cam_value = 0.1
     camera_value_map = {"camera_l": [0, -cam_value], "camera_r": [0, cam_value]}
 
-    data = []
-    for action_name in actions_to_test:
-        keyboard_condition = [[0, 0] for _ in range(num_samples_per_action)]
-        mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
-        for sub_act in base_action:
-            if sub_act not in action_name:
-                continue
-            if sub_act in camera_value_map:
-                mouse_condition = [camera_value_map[sub_act] for _ in range(num_samples_per_action)]
-            elif sub_act in keyboard_idx:
-                col = keyboard_idx[sub_act]
-                for row in keyboard_condition:
-                    row[col] = 1
-        data.append(
-            {
-                "keyboard_condition": torch.tensor(keyboard_condition),
-                "mouse_condition": torch.tensor(mouse_condition),
-            }
-        )
+    data = _official_keyboard_mouse_data(
+        actions_to_test, base_action, keyboard_idx, camera_value_map, 2, num_samples_per_action
+    )
     rng = random.Random(seed) if seed is not None else None
     return _combine_official_action_data(data, num_frames, keyboard_dim=2, mouse=True, rng=rng)
 
@@ -342,12 +339,11 @@ class MatrixGame2Operator(BaseOperator):
         """Process the recorded interactions and return the generated actions."""
         if self.mode == "universal":
             return self.process_action_universal(num_frames)
-        elif self.mode == "gta_drive":
+        if self.mode == "gta_drive":
             return self.process_action_gta_drive(num_frames)
-        elif self.mode == "templerun":
+        if self.mode == "templerun":
             return self.process_action_templerun(num_frames)
-        else:
-            raise ValueError(f"Unknown mode {self.mode}")
+        raise ValueError(f"Unknown mode {self.mode}")
 
     def process_official_bench_actions(self, num_frames, seed=None):
         """Process official bench actions implementation.

@@ -59,17 +59,12 @@ class KlingApiOperator(BaseOperator):
             return result
 
         if isinstance(images, str) and images.startswith(("http://", "https://")):
-            result["image_payload"] = {
-                "field": image_field or "image_url",
-                "value": images,
-            }
-            result["images"] = images
-            return result
-
-        encoded = _image_to_data_url(images)
+            value = images
+        else:
+            value = _image_to_data_url(images)
         result["image_payload"] = {
             "field": image_field or "image_url",
-            "value": encoded,
+            "value": value,
         }
         result["images"] = images
         return result

@@ -48,8 +48,6 @@ IMAGE_TOKENS = [
 
 
 class MolmoAct2ProcessorKwargs(ProcessingKwargs, total=False):
-    """MolmoAct2 processor kwargs"""
-
     images_kwargs: MolmoAct2ImagesKwargs
     videos_kwargs: MolmoAct2VideoProcessorKwargs
     _defaults = {  # noqa: RUF012 - TypedDict subclass; Transformers reads these defaults and ClassVar is invalid here.

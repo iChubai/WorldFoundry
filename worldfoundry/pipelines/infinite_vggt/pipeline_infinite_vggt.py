@@ -110,7 +110,6 @@ class InfiniteVGGTResult:
 
 
 def _write_ascii_pointcloud(out_path: Path, points: np.ndarray, colors: np.ndarray) -> Path:
-    """Write ascii pointcloud helper function."""
     lines = [
         "ply",
         "format ascii 1.0",

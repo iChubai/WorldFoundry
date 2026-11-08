@@ -27,14 +27,9 @@ def gather_data(data, return_np=True):
 
 
 def autocast(f):
-    """Autocast.
-
-    Args:
-        f: The f.
-    """
+    """Autocast."""
 
     def do_autocast(*args, **kwargs):
-        """Do autocast."""
         with torch.amp.autocast(
             "cuda",
             enabled=True,
@@ -47,13 +42,7 @@ def autocast(f):
 
 
 def extract_into_tensor(a, t, x_shape):
-    """Extract into tensor.
-
-    Args:
-        a: The a.
-        t: The t.
-        x_shape: The x shape.
-    """
+    """Extract into tensor."""
     b, *_ = t.shape
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
@@ -85,13 +74,7 @@ def extract_into_tensor_2d(a, t, x_shape):
 
 
 def noise_like(shape, device, repeat=False):
-    """Noise like.
-
-    Args:
-        shape: The shape.
-        device: The device.
-        repeat: The repeat.
-    """
+    """Noise like."""
 
     def repeat_noise():
         return torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
@@ -103,23 +86,14 @@ def noise_like(shape, device, repeat=False):
 
 
 def default(val, d):
-    """Default.
-
-    Args:
-        val: The val.
-        d: The d.
-    """
+    """Default."""
     if exists(val):
         return val
     return d() if isfunction(d) else d
 
 
 def exists(val):
-    """Exists.
-
-    Args:
-        val: The val.
-    """
+    """Exists."""
     return val is not None
 
 
@@ -129,11 +103,7 @@ def identity(*args, **kwargs):
 
 
 def uniq(arr):
-    """Uniq.
-
-    Args:
-        arr: The arr.
-    """
+    """Uniq."""
     return dict.fromkeys(arr, True).keys()
 
 
@@ -145,52 +115,32 @@ def mean_flat(tensor):
 
 
 def ismap(x):
-    """Ismap.
-
-    Args:
-        x: The x.
-    """
+    """Ismap."""
     if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] > 3)
 
 
 def isimage(x):
-    """Isimage.
-
-    Args:
-        x: The x.
-    """
+    """Isimage."""
     if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
 
 
 def max_neg_value(t):
-    """Max neg value.
-
-    Args:
-        t: The t.
-    """
+    """Max neg value."""
     return -torch.finfo(t.dtype).max
 
 
 def shape_to_str(x):
-    """Shape to str.
-
-    Args:
-        x: The x.
-    """
+    """Shape to str."""
     shape_str = "x".join([str(x) for x in x.shape])
     return shape_str
 
 
 def init_(tensor):
-    """Init.
-
-    Args:
-        tensor: The tensor.
-    """
+    """Init."""
     dim = tensor.shape[-1]
     # Fan-in uniform, same as the improved-diffusion residual Linear init.
     std = 1 / math.sqrt(dim)

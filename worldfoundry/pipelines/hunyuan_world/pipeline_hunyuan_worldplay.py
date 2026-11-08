@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 def _initialize_worldplay_parallel_runtime() -> None:
-    """Initialize worldplay parallel runtime helper function."""
     # Attempt to retrieve from environment variables as a fallback resolution
     world_size = int(os.getenv("WORLD_SIZE", "1") or "1")
     # Attempt to retrieve from environment variables as a fallback resolution
@@ -256,7 +255,6 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             sr_num_inference_steps: 超分辨率推理步数
             return_pre_sr_video: 是否返回超分辨率前的视频
             few_step: 是否使用少步推理
-            chunk_latent_frames: chunk latent frames
             model_type: 模型类型（"ar" 或 "bi"）
             user_height: 用户指定高度
             user_width: 用户指定宽度

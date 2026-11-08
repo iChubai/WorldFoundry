@@ -100,7 +100,6 @@ class PatchEmbed3D(nn.Module):
             self.norm = None
 
     def forward(self, x):
-        """Forward function."""
         # padding
         _, _, D, H, W = x.size()
         if W % self.patch_size[2] != 0:

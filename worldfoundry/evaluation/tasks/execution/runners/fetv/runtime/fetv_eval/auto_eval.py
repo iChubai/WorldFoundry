@@ -118,7 +118,6 @@ def populate_metrics(
     """Populate the list of metrics using a given data loader.
 
     Args:
-        dataloader (DataLoader): Data loader
         metrics (List[Metric]): List of metrics
         clip_model (Module): Evaluating CLIP model
         num_frames: the number of frame for each generated video

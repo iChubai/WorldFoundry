@@ -8,14 +8,12 @@ from ..pipeline_utils import PipelineABC
 
 
 def _recammaster_operator_cls():
-    """Recammaster operator cls helper function."""
     from ...operators.recammaster_operator import ReCamMasterOperator
 
     return ReCamMasterOperator
 
 
 def _recammaster_synthesis_cls():
-    """Recammaster synthesis cls helper function."""
     from ...synthesis.visual_generation.kling.recammaster_synthesis import ReCamMasterSynthesis
 
     return ReCamMasterSynthesis

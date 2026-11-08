@@ -28,7 +28,6 @@ class ShowOOperator(BaseOperator):
 
     @staticmethod
     def _modes(interaction) -> list[str]:
-        """Modes implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, str):

@@ -29,7 +29,6 @@ class DVLTOperator(BaseOperator):
 
     @staticmethod
     def _normalise_actions(interaction: Any) -> list[Any]:
-        """Normalise actions implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, Path):

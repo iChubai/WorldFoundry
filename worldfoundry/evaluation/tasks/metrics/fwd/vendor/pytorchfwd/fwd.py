@@ -168,8 +168,7 @@ def _save_packets(
     batch_size: int,
     resize: int | None,
 ) -> None:
-    """Save packets.
-
+    """
     Args:
         paths (List[str]): List of paths containing input and output files.
         wavelet (str): Choice of wavelet.

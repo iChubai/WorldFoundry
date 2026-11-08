@@ -129,8 +129,6 @@ class VaeHelper(metaclass=SingletonMeta):
             tile_sample_min_length (int): Minimum length of the tile sample.
             tile_sample_min_height (int): Minimum height of the tile sample.
             tile_sample_min_width (int): Minimum width of the tile sample.
-            spatial_tile_overlap_factor (float): Spatial tile overlap factor.
-            allow_spatial_tiling (bool): Allow spatial tiling.
             parallel_group (ProcessGroup): Distributed encoding group.
         Returns:
             torch.Tensor: Encoded tensor.
@@ -173,9 +171,6 @@ class VaeHelper(metaclass=SingletonMeta):
             tile_sample_min_length (int): Minimum length of the tile sample.
             tile_sample_min_height (int): Minimum height of the tile sample.
             tile_sample_min_width (int): Minimum width of the tile sample.
-            spatial_tile_overlap_factor (float): Spatial tile overlap factor.
-            temporal_tile_overlap_factor (float): Temporal tile overlap factor.
-            allow_spatial_tiling (bool): Allow spatial tiling.
             uint8_output (bool): Whether to output uint8 tensor.
             parallel_group (ProcessGroup): Distributed decoding group.
         Returns:

@@ -127,7 +127,6 @@ def generate_masked_orthogonal_rank_groups(
     """Generate orthogonal parallel groups based on the parallel size and mask.
 
     Arguments:
-        world_size (int): world size
 
         parallel_size (List[int]):
             The parallel size of each orthogonal parallel type. For example, if

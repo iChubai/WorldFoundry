@@ -11,8 +11,6 @@ from typing import Any
 
 
 class QuestionCacheManager:
-    """Question cache manager"""
-
     def __init__(self, cache_dir: str = "4DWorldBench/dimension_description_json/cache"):
         """
         Initialize cache manager
@@ -75,7 +73,6 @@ class QuestionCacheManager:
 
         Args:
             dimension: Evaluation dimension
-            cache_data: Cache data
         """
         cache_file = self._get_cache_file_path(dimension)
         try:
@@ -107,8 +104,6 @@ class QuestionCacheManager:
 
     def cache_questions(self, content: str, dimension: str, questions: list[str]) -> None:
         """
-        Cache questions
-
         Args:
             content: Content text
             dimension: Evaluation dimension
@@ -170,8 +165,6 @@ class QuestionCacheManager:
 
     def clear_cache(self, dimension: str | None = None) -> None:
         """
-        Clear cache
-
         Args:
             dimension: Dimension to clear, if None clear all caches
         """

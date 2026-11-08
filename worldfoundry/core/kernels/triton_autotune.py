@@ -56,7 +56,6 @@ class CustomAutotuner(Autotuner):
     """Custom autotuner implementation."""
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         # Use device name if CUDA is available, otherwise use a default name
         device_name = torch.cuda.get_device_name(0).replace(" ", "_") if torch.cuda.is_available() else "cpu"
@@ -145,27 +144,9 @@ def custom_autotune(
     rep=100,
     use_cuda_graph=False,
 ):
-    """Custom autotune.
-
-    Args:
-        configs: The configs.
-        key: The key.
-        prune_configs_by: The prune configs by.
-        reset_to_zero: The reset to zero.
-        restore_value: The restore value.
-        pre_hook: The pre hook.
-        post_hook: The post hook.
-        warmup: The warmup.
-        rep: The rep.
-        use_cuda_graph: The use cuda graph.
-    """
+    """Custom autotune."""
 
     def decorator(fn):
-        """Decorator.
-
-        Args:
-            fn: The fn.
-        """
         return CustomAutotuner(
             fn,
             fn.arg_names,

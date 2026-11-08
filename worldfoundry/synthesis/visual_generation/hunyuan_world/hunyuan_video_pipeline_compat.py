@@ -143,8 +143,6 @@ def retrieve_timesteps(
 
 @dataclass
 class HunyuanVideoPipelineOutput(BaseOutput):
-    """Hunyuan video pipeline output implementation."""
-
     videos: torch.Tensor | np.ndarray
 
 
@@ -183,17 +181,6 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         progress_bar_config: dict[str, Any] | None = None,
         args=None,
     ):
-        """Init.
-
-        Args:
-            vae: The vae.
-            text_encoder: The text encoder.
-            transformer: The transformer.
-            scheduler: The scheduler.
-            text_encoder_2: The text encoder 2.
-            progress_bar_config: The progress bar config.
-            args: The args.
-        """
         super().__init__()
 
         # ==========================================================================================
@@ -430,12 +417,6 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         )
 
     def decode_latents(self, latents, enable_tiling=True):
-        """Decode latents.
-
-        Args:
-            latents: The latents.
-            enable_tiling: The enable tiling.
-        """
         deprecation_message = "The decode_latents method is deprecated and will be removed in 1.0.0. Please use VaeImageProcessor.postprocess(...) instead"
         deprecate("decode_latents", "1.0.0", deprecation_message, standard_warn=False)
 
@@ -451,12 +432,6 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         return image
 
     def prepare_extra_func_kwargs(self, func, kwargs):
-        """Prepare extra func kwargs.
-
-        Args:
-            func: The func.
-            kwargs: The kwargs.
-        """
         # prepare extra kwargs for the scheduler step, since not all schedulers have the same signature
         # eta (η) is only used with the DDIMScheduler, it will be ignored for other schedulers.
         # eta corresponds to η in DDIM paper: https://arxiv.org/abs/2010.02502
@@ -482,20 +457,6 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         callback_on_step_end_tensor_inputs=None,
         vae_ver="88-4c-sd",
     ):
-        """Check inputs.
-
-        Args:
-            prompt: The prompt.
-            height: The height.
-            width: The width.
-            video_length: The video length.
-            callback_steps: The callback steps.
-            negative_prompt: The negative prompt.
-            prompt_embeds: The prompt embeds.
-            negative_prompt_embeds: The negative prompt embeds.
-            callback_on_step_end_tensor_inputs: The callback on step end tensor inputs.
-            vae_ver: The vae ver.
-        """
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
@@ -555,19 +516,6 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         generator,
         latents=None,
     ):
-        """Prepare latents.
-
-        Args:
-            batch_size: The batch size.
-            num_channels_latents: The num channels latents.
-            height: The height.
-            width: The width.
-            video_length: The video length.
-            dtype: The dtype.
-            device: The device.
-            generator: The generator.
-            latents: The latents.
-        """
         shape = (
             batch_size,
             num_channels_latents,
@@ -628,17 +576,14 @@ class HunyuanVideoPipeline(DiffusionPipeline):
 
     @property
     def guidance_scale(self):
-        """Guidance scale."""
         return self._guidance_scale
 
     @property
     def guidance_rescale(self):
-        """Guidance rescale."""
         return self._guidance_rescale
 
     @property
     def clip_skip(self):
-        """Clip skip."""
         return self._clip_skip
 
     # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
@@ -646,23 +591,19 @@ class HunyuanVideoPipeline(DiffusionPipeline):
     # corresponds to doing no classifier free guidance.
     @property
     def do_classifier_free_guidance(self):
-        """Do classifier free guidance."""
         # return self._guidance_scale > 1 and self.transformer.config.time_cond_proj_dim is None
         return self._guidance_scale > 1
 
     @property
     def cross_attention_kwargs(self):
-        """Cross attention kwargs."""
         return self._cross_attention_kwargs
 
     @property
     def num_timesteps(self):
-        """Num timesteps."""
         return self._num_timesteps
 
     @property
     def interrupt(self):
-        """Interrupt."""
         return self._interrupt
 
     @torch.no_grad()

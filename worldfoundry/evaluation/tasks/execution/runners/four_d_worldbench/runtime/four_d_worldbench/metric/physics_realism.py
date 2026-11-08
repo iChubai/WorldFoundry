@@ -31,8 +31,6 @@ warnings.filterwarnings("ignore")
 
 
 class PhysicsReasoningEvaluator:
-    """Physics reasoning evaluator"""
-
     def __init__(self, device: str = "cpu"):
         """Initialize evaluator"""
         self.device = device
@@ -175,7 +173,6 @@ class PhysicsReasoningEvaluator:
         Answer physics reasoning questions (keeping original logic)
 
         Args:
-            question: Question
             caption: Video description
 
         Returns:
@@ -399,7 +396,6 @@ def compute_physics_realism(
 
     Args:
         json_dir: JSON file path
-        device: Device
         submodules_dict: Submodules dictionary
 
     Returns:

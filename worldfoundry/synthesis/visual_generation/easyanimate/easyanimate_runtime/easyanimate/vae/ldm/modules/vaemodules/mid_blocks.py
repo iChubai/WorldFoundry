@@ -52,12 +52,10 @@ class MidBlock3D(nn.Module):
         attention_head_dim (`int`, *optional*, defaults to 1):
             Dimension of a single attention head. The number of attention heads is determined based on this value and
             the number of input channels.
-        output_scale_factor (`float`, *optional*, defaults to 1.0): The output scale factor.
 
     Returns:
         `torch.FloatTensor`: The output of the last residual block, which is a tensor of shape `(batch_size,
         in_channels, temporal_length, height, width)`.
-
     """
 
     def __init__(

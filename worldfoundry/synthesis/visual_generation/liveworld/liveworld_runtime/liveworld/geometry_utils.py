@@ -118,7 +118,6 @@ def load_image(path: str | Path, rgb: bool = True) -> np.ndarray:
 
     Args:
         path: 图片路径
-        rgb: 是否转换为 RGB 格式
 
     Returns:
         图片数组 (H, W, C)
@@ -138,7 +137,6 @@ def save_image(image: np.ndarray, path: str | Path, rgb: bool = True) -> None:
     Args:
         image: 图片数组 (H, W, C)
         path: 保存路径
-        rgb: 输入是否为 RGB 格式
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

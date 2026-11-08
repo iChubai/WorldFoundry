@@ -12,7 +12,6 @@ from .base_operator import BaseOperator
 
 
 def _image_to_data_base64(image_input: Image.Image) -> str:
-    """Image to data base64 implementation."""
     return pil_to_png_base64(image_input)
 
 
@@ -54,7 +53,6 @@ class WorldLabsOperator(BaseOperator):
         return {"processed_prompt": now_interaction or ""}
 
     def _normalize_content(self, value: object) -> dict[str, Any]:
-        """Normalize content implementation."""
         if isinstance(value, dict):
             return value
 
@@ -86,7 +84,6 @@ class WorldLabsOperator(BaseOperator):
         images: list[Image.Image | str | dict[str, Any]],
         image_azimuths: list[float] | None,
     ) -> list[dict[str, Any]]:
-        """Build multi image prompt implementation."""
         if image_azimuths is not None and len(image_azimuths) != len(images):
             raise ValueError("image_azimuths length must match images length.")
 

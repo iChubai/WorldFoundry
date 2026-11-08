@@ -757,7 +757,6 @@ def _not_available_row(
     """Build a not-available metric row with explicit blocked reason.
 
     Args:
-        metric_id: Metric id.
         reason: Human-readable blocked or unavailable reason.
         evidence: Optional evidence payload.
     """

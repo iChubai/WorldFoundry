@@ -252,7 +252,6 @@ def smooth_trajectory(traj_list, window_size=3):
     Smooth trajectory with a sliding window.
     Args:
         traj_list: trajectory list
-        window_size: window size
     Returns:
         smoothed trajectory list
     """

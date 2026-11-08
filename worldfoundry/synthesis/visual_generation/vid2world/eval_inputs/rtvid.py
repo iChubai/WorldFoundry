@@ -1,5 +1,3 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> lvdm -> eval_inputs -> rtvid.py functionality."""
-
 import json
 import math
 import os
@@ -43,20 +41,6 @@ class RTVid(Dataset):
         strong_augmentation=False,
         val_file_list_path=None,
     ):
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            resolution: The resolution.
-            video_length: The video length.
-            spatial_transform: The spatial transform.
-            crop_resolution: The crop resolution.
-            subsample: The subsample.
-            augment_data: The augment data.
-            mode: The mode.
-            strong_augmentation: The strong augmentation.
-            val_file_list_path: The val file list path.
-        """
         self.data_dir = data_dir
         self.video_length = video_length
         self.resolution = [resolution, resolution] if isinstance(resolution, int) else resolution
@@ -119,7 +103,6 @@ class RTVid(Dataset):
             assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _load_metadata(self):
-        """Helper function to load metadata."""
         # Get all npz files in the directory
         self.file_list = []
         for _i, file in enumerate(os.listdir(self.data_dir)):
@@ -150,11 +133,6 @@ class RTVid(Dataset):
         print(f"{self.mode} set size: {len(self.file_list)} episode files.")
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         # Find which file to load based on index
         file_idx = index % len(self.file_list)
         file_path = self.file_list[file_idx]
@@ -211,15 +189,9 @@ class RTVid(Dataset):
             return data
 
     def __len__(self):
-        """Len."""
         return len(self.file_list)
 
     def data_augmentation(self, images):
-        """Data augmentation.
-
-        Args:
-            images: The images.
-        """
         # Compute the random crop params
         i, j, h, w = self.get_crop_params(images, self.random_resized_crop_scale, self.random_resized_crop_ratio)
         # Generate the random color adjustment params
@@ -252,11 +224,6 @@ class RTVid(Dataset):
         return torch.stack(new_images)
 
     def augment_video_clip(self, video):
-        """Augment video clip.
-
-        Args:
-            video: The video.
-        """
         # video: [C, T, H, W]
         C, T, H, W = video.shape
         assert C == 3, f"Expected 3 channels, got {C} channels"

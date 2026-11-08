@@ -119,15 +119,7 @@ def pixel_unshuffle_3d(x, downsample_factor):
 
 
 def ceil_to_divisible(n: int, dividend: int) -> int:
-    """Ceil to divisible.
-
-    Args:
-        n: The n.
-        dividend: The dividend.
-
-    Returns:
-        The return value.
-    """
+    """Ceil to divisible."""
     return math.ceil(dividend / (dividend // n))
 
 

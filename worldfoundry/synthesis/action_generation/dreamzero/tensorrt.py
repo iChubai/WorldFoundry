@@ -306,7 +306,6 @@ class WanTrtModelAr14B(torch.nn.Module):
 
 
 def load_tensorrt_engine(engine_path="tensorrt/wan_model.trt", model_type="5B"):
-    """Load TensorRT engine"""
     if model_type == "5B":
         trt_inference = WanTrtModel5B(engine_path)
     elif model_type == "ar_5B_n6" or model_type == "ar_5B":

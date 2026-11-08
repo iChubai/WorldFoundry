@@ -1,5 +1,3 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> eval_inputs -> csgovid.py functionality."""
-
 import math
 import os
 import random
@@ -57,23 +55,6 @@ class CSGOVID(Dataset):
         use_random_action=False,
         cond_frame=4,
     ):  # training or validation
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            resolution: The resolution.
-            video_length: The video length.
-            spatial_transform: The spatial transform.
-            crop_resolution: The crop resolution.
-            subsample: The subsample.
-            augment_data: The augment data.
-            mode: The mode.
-            strong_augmentation: The strong augmentation.
-            val_file_list_path: The val file list path.
-            val_start_idx_path: The val start idx path.
-            use_random_action: The use random action.
-            cond_frame: The cond frame.
-        """
         self.data_dir = data_dir
         self.video_length = video_length
         self.resolution = [resolution, resolution] if isinstance(resolution, int) else resolution
@@ -149,7 +130,6 @@ class CSGOVID(Dataset):
             assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _load_metadata(self):
-        """Helper function to load metadata."""
         # Get all hdf5 files in the directory recursively
         self.start_indices = []
         if self.mode == "validation":
@@ -177,11 +157,6 @@ class CSGOVID(Dataset):
         print(f"{self.mode} set size: {len(self.file_list)} episode files.")
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         # Find which file to load based on index
         file_idx = index % len(self.file_list)
         file_path = self.file_list[file_idx]
@@ -225,7 +200,6 @@ class CSGOVID(Dataset):
         return data
 
     def __len__(self):
-        """Len."""
         return len(self.file_list)
 
     def generate_random_actions(self, T, real_actions):
@@ -292,11 +266,6 @@ class CSGOVID(Dataset):
         return actions_tensor
 
     def data_augmentation(self, images):
-        """Data augmentation.
-
-        Args:
-            images: The images.
-        """
         # Compute random crop parameters
         i, j, h, w = self.get_crop_params(images, self.random_resized_crop_scale, self.random_resized_crop_ratio)
         # Generate random color adjustment parameters
@@ -330,11 +299,6 @@ class CSGOVID(Dataset):
         return torch.stack(new_images)
 
     def augment_video_clip(self, video):
-        """Augment video clip.
-
-        Args:
-            video: The video.
-        """
         # video: [C, T, H, W]
         C, T, H, W = video.shape
         # print(video.shape)

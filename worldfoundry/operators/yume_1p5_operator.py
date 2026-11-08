@@ -14,7 +14,6 @@ from .base_operator import BaseOperator
 
 
 def _to_rgb_array(image: Any) -> np.ndarray:
-    """To rgb array implementation."""
     if isinstance(image, (list, tuple)):
         if len(image) != 1:
             raise ValueError(

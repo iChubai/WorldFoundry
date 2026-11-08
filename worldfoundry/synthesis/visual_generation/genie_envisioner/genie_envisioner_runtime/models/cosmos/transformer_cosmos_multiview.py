@@ -33,8 +33,6 @@ logger = logging.get_logger(__name__)
 
 
 class CosmosRotaryPosEmbed(nn.Module):
-    """Cosmos rotary pos embed implementation."""
-
     def __init__(
         self,
         hidden_size: int,
@@ -43,18 +41,6 @@ class CosmosRotaryPosEmbed(nn.Module):
         base_fps: int = 24,
         rope_scale: tuple[float, float, float] = (2.0, 1.0, 1.0),
     ) -> None:
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            max_size: The max size.
-            patch_size: The patch size.
-            base_fps: The base fps.
-            rope_scale: The rope scale.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.max_size = [size // patch for size, patch in zip(max_size, patch_size, strict=False)]
@@ -72,16 +58,6 @@ class CosmosRotaryPosEmbed(nn.Module):
     def forward(
         self, hidden_states: torch.Tensor, fps: int | None = None, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            fps: The fps.
-
-        Returns:
-            The return value.
-        """
-
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         pe_size = [num_frames // self.patch_size[0], height // self.patch_size[1], width // self.patch_size[2]]
         device = hidden_states.device
@@ -126,7 +102,6 @@ class MultiViewCosmosAttnProcessor2_0:
     """Multi view cosmos attn processor implementation."""
 
     def __init__(self):
-        """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("CosmosAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
@@ -141,21 +116,6 @@ class MultiViewCosmosAttnProcessor2_0:
         cross_view_attn: bool = False,
         is_causal: bool = False,
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            attn: The attn.
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            image_rotary_emb: The image rotary emb.
-            n_view: The n view.
-            cross_view_attn: The cross view attn.
-            is_causal: The is causal.
-
-        Returns:
-            The return value.
-        """
         # 1. QKV projections
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
@@ -224,20 +184,6 @@ class CosmosTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm",
         out_bias: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            cross_attention_dim: The cross attention dim.
-            mlp_ratio: The mlp ratio.
-            adaln_lora_dim: The adaln lora dim.
-            qk_norm: The qk norm.
-            out_bias: The out bias.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         hidden_size = num_attention_heads * attention_head_dim
@@ -283,22 +229,6 @@ class CosmosTransformerBlock(nn.Module):
         n_view: int = 1,
         cross_view_attn: bool = False,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            embedded_timestep: The embedded timestep.
-            temb: The temb.
-            image_rotary_emb: The image rotary emb.
-            extra_pos_emb: The extra pos emb.
-            attention_mask: The attention mask.
-            n_view: The n view.
-            cross_view_attn: The cross view attn.
-
-        Returns:
-            The return value.
-        """
         if extra_pos_emb is not None:
             hidden_states = hidden_states + extra_pos_emb
 
@@ -387,29 +317,6 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         action_expert: bool = False,
         **kwargs,
     ) -> None:
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            num_layers: The num layers.
-            mlp_ratio: The mlp ratio.
-            text_embed_dim: The text embed dim.
-            adaln_lora_dim: The adaln lora dim.
-            max_size: The max size.
-            patch_size: The patch size.
-            rope_scale: The rope scale.
-            concat_padding_mask: The concat padding mask.
-            extra_pos_embed_type: The extra pos embed type.
-            use_view_embed: The use view embed.
-            max_view: The max view.
-            action_expert: The action expert.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         hidden_size = num_attention_heads * attention_head_dim
 
@@ -507,34 +414,6 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         history_action_state: torch.Tensor = None,
         **kwargs,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            timestep: The timestep.
-            encoder_hidden_states: The encoder hidden states.
-            encoder_attention_mask: The encoder attention mask.
-            fps: The fps.
-            condition_mask: The condition mask.
-            padding_mask: The padding mask.
-            return_dict: The return dict.
-            n_view: The n view.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            return_video: The return video.
-            action_states: The action states.
-            action_timestep: The action timestep.
-            return_action: The return action.
-            store_buffer: The store buffer.
-            video_states_buffer: The video states buffer.
-            video_attention_mask: The video attention mask.
-            history_action_state: The history action state.
-
-        Returns:
-            The return value.
-        """
-
         if hidden_states is not None:
             if len(hidden_states.shape) == 3:
                 hidden_state_type = "flatten"
@@ -747,15 +626,6 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
     def _set_gradient_checkpointing(
         self, enable: bool = True, gradient_checkpointing_func: Callable = torch.utils.checkpoint.checkpoint
     ) -> None:
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            enable: The enable.
-            gradient_checkpointing_func: The gradient checkpointing func.
-
-        Returns:
-            The return value.
-        """
         is_gradient_checkpointing_set = False
 
         for name, module in self.named_modules():
@@ -790,11 +660,6 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         if gradient_checkpointing_func is None:
 
             def _gradient_checkpointing_func(module, *args):
-                """Helper function to gradient checkpointing func.
-
-                Args:
-                    module: The module.
-                """
                 ckpt_kwargs = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
                 return torch.utils.checkpoint.checkpoint(
                     module.__call__,

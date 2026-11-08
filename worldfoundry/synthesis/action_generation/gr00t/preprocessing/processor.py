@@ -262,7 +262,6 @@ class Gr00tN1d7Processor(BaseProcessor):
 
         Args:
             action: Normalized action array of shape (..., action_horizon, action_dim)
-            embodiment_tag: Embodiment tag
             state: State observations with "state." prefixed keys (for relative actions)
             prev_action: Unused (kept for API compatibility)
 

@@ -261,7 +261,6 @@ def predictions_to_glb(
 
 
 def _parse_frame_filter(filter_by_frames: str) -> int | None:
-    """Parse frame filter helper function."""
     if filter_by_frames in {"all", "All"}:
         return None
     try:

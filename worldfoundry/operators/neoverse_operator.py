@@ -39,7 +39,6 @@ _ACTION_ALIASES = {
 
 
 def _normalize_action(action: str) -> str:
-    """Normalize action implementation."""
     key = action.strip().lower().replace("-", "_").replace(" ", "_")
     if key not in _ACTION_ALIASES:
         raise ValueError(f"Unsupported NeoVerse interaction: {action}")
@@ -47,7 +46,6 @@ def _normalize_action(action: str) -> str:
 
 
 def _to_uint8_image(array: np.ndarray) -> np.ndarray:
-    """To uint8 image implementation."""
     data = np.asarray(array)
     if data.dtype in (np.float16, np.float32, np.float64):
         if data.min() >= -1.0 and data.max() <= 1.0:
@@ -59,7 +57,6 @@ def _to_uint8_image(array: np.ndarray) -> np.ndarray:
 
 
 def _center_crop(image: Image.Image, resolution: tuple[int, int]) -> Image.Image:
-    """Center crop implementation."""
     width, height = image.size
     target_width, target_height = resolution
 
@@ -74,7 +71,6 @@ def _center_crop(image: Image.Image, resolution: tuple[int, int]) -> Image.Image
 
 
 def _video_first_frame(path: Path) -> Image.Image:
-    """Video first frame implementation."""
     try:
         import imageio.v2 as imageio
     except Exception as exc:  # pragma: no cover - depends on optional runtime deps
@@ -89,7 +85,6 @@ def _video_first_frame(path: Path) -> Image.Image:
 
 
 def _to_pil_image(data: Any) -> Image.Image:
-    """To pil image implementation."""
     if isinstance(data, Image.Image):
         return data.convert("RGB")
     if isinstance(data, (str, Path)):
@@ -118,12 +113,10 @@ def _to_pil_image(data: Any) -> Image.Image:
 
 
 def _is_path_like_sequence(data: Any) -> bool:
-    """Is path like sequence implementation."""
     return isinstance(data, (list, tuple)) and all(isinstance(item, (str, Path)) for item in data)
 
 
 def _is_official_video_loader_input(data: Any) -> bool:
-    """Is official video loader input implementation."""
     if _is_path_like_sequence(data):
         return True
     if not isinstance(data, (str, Path)):
@@ -140,7 +133,6 @@ def _load_official_input_frames(
     resize_mode: str,
     static_scene: bool,
 ) -> list[Image.Image]:
-    """Load official input frames implementation."""
     from worldfoundry.synthesis.visual_generation.neoverse.native.auxiliary import (
         load_video,
     )
@@ -283,7 +275,6 @@ class NeoVerseOperator(BaseOperator):
         }
 
     def _action_to_operations(self, action: str) -> list[dict[str, dict[str, float]]]:
-        """Action to operations implementation."""
         distance = self.translation_distance
         angle = self.rotation_angle_deg
 

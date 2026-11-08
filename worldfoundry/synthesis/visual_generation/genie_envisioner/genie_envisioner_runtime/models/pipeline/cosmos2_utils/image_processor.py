@@ -122,19 +122,6 @@ class VaeImageProcessor(ConfigMixin):
         do_convert_rgb: bool = False,
         do_convert_grayscale: bool = False,
     ):
-        """Init.
-
-        Args:
-            do_resize: The do resize.
-            vae_scale_factor: The vae scale factor.
-            vae_latent_channels: The vae latent channels.
-            resample: The resample.
-            reducing_gap: The reducing gap.
-            do_normalize: The do normalize.
-            do_binarize: The do binarize.
-            do_convert_rgb: The do convert rgb.
-            do_convert_grayscale: The do convert grayscale.
-        """
         super().__init__()
         if do_convert_rgb and do_convert_grayscale:
             raise ValueError(
@@ -311,7 +298,6 @@ class VaeImageProcessor(ConfigMixin):
         processing are 512x512, the region will be expanded to 128x128.
 
         Args:
-            mask_image (PIL.Image.Image): Mask image.
             width (int): Width of the image to be processed.
             height (int): Height of the image to be processed.
             pad (int, optional): Padding to be added to the crop region. Defaults to 0.
@@ -876,14 +862,6 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
         resample: str = "lanczos",
         do_normalize: bool = True,
     ):
-        """Init.
-
-        Args:
-            do_resize: The do resize.
-            vae_scale_factor: The vae scale factor.
-            resample: The resample.
-            do_normalize: The do normalize.
-        """
         super().__init__()
 
     @staticmethod
@@ -1172,16 +1150,6 @@ class IPAdapterMaskProcessor(VaeImageProcessor):
         do_binarize: bool = True,
         do_convert_grayscale: bool = True,
     ):
-        """Init.
-
-        Args:
-            do_resize: The do resize.
-            vae_scale_factor: The vae scale factor.
-            resample: The resample.
-            do_normalize: The do normalize.
-            do_binarize: The do binarize.
-            do_convert_grayscale: The do convert grayscale.
-        """
         super().__init__(
             do_resize=do_resize,
             vae_scale_factor=vae_scale_factor,
@@ -1288,16 +1256,6 @@ class PixArtImageProcessor(VaeImageProcessor):
         do_binarize: bool = False,
         do_convert_grayscale: bool = False,
     ):
-        """Init.
-
-        Args:
-            do_resize: The do resize.
-            vae_scale_factor: The vae scale factor.
-            resample: The resample.
-            do_normalize: The do normalize.
-            do_binarize: The do binarize.
-            do_convert_grayscale: The do convert grayscale.
-        """
         super().__init__(
             do_resize=do_resize,
             vae_scale_factor=vae_scale_factor,

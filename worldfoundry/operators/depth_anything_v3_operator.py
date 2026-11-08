@@ -130,7 +130,6 @@ class DepthAnything3Operator(BaseOperator):
 
     @staticmethod
     def _to_uint8_rgb(image: Any) -> np.ndarray:
-        """To uint8 rgb implementation."""
         if isinstance(image, Image.Image):
             array = np.asarray(image.convert("RGB"))
         elif isinstance(image, torch.Tensor):
@@ -164,7 +163,6 @@ class DepthAnything3Operator(BaseOperator):
         return array
 
     def _coerce_single_image(self, input_signal: Any) -> str | np.ndarray:
-        """Coerce single image implementation."""
         if isinstance(input_signal, (str, Path)):
             input_path = Path(input_signal).expanduser()
             if input_path.is_dir():

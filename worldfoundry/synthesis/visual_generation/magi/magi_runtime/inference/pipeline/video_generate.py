@@ -226,7 +226,6 @@ def init_t(t_schedule_config: dict | None, num_steps: int, device: torch.device,
 
 
 def init_intervel(num_steps: int, device: torch.device, shortcut_mode: str = ""):
-    """Init intervel"""
     base_intervel = torch.ones(num_steps, device=device)
     if num_steps % 3 == 0:
         repeat_times = num_steps // 3

@@ -9,7 +9,6 @@ from .base_operator import BaseOperator
 
 
 def _image_to_data_url(image_input: Image.Image | str) -> str:
-    """Image to data url implementation."""
     return image_or_string_to_png_data_url(image_input, load_existing_path=True)
 
 

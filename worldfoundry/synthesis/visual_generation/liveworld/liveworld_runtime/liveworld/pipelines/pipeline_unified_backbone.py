@@ -201,7 +201,6 @@ class UnifiedBackbonePipeline:
             device: torch device
             generator: State Adapter generator model
             vae: VAE wrapper
-            text_encoder: Text encoder
             dtype: Model dtype
         """
         self.config = config

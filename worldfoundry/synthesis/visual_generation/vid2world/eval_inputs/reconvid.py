@@ -1,6 +1,4 @@
 # adapted from https://github.com/facebookresearch/nwm/tree/main
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> eval_inputs -> reconvid.py functionality."""
-
 import math
 import os
 import random
@@ -58,25 +56,6 @@ class RECONVID(Dataset):
         skip_processed=False,
         exp=None,
     ):  # training or validation
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            resolution: The resolution.
-            video_length: The video length.
-            spatial_transform: The spatial transform.
-            crop_resolution: The crop resolution.
-            subsample: The subsample.
-            augment_data: The augment data.
-            mode: The mode.
-            strong_augmentation: The strong augmentation.
-            data_split_folder: The data split folder.
-            train_predefined_index: The train predefined index.
-            val_predefined_index: The val predefined index.
-            processed_data_dir: The processed data dir.
-            skip_processed: The skip processed.
-            exp: The exp.
-        """
         self.data_dir = data_dir
         self.exp = exp
 
@@ -206,12 +185,6 @@ class RECONVID(Dataset):
             assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
-
         # Load data
         if self.mode == "training" or self.mode == "validation":
             frames = self.dataset[index][0]  # [T, H, W, C] # [115, 256, 320, 3]
@@ -248,15 +221,9 @@ class RECONVID(Dataset):
         return data
 
     def __len__(self):
-        """Len."""
         return len(self.dataset)
 
     def data_augmentation(self, images):
-        """Data augmentation.
-
-        Args:
-            images: The images.
-        """
         # Calculate random crop parameters
         i, j, h, w = self.get_crop_params(images, self.random_resized_crop_scale, self.random_resized_crop_ratio)
         # Generate random color adjustment parameters
@@ -290,11 +257,6 @@ class RECONVID(Dataset):
         return torch.stack(new_images)
 
     def augment_video_clip(self, video):
-        """Augment video clip.
-
-        Args:
-            video: The video.
-        """
         # video: [C, T, H, W]
         C, T, H, W = video.shape
         # print(video.shape)

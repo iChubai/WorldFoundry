@@ -67,7 +67,6 @@ def _image_intrinsics(image: str | Path | Image.Image) -> np.ndarray:
 
 
 def _as_pose_matrix(value: Any) -> np.ndarray:
-    """As pose matrix implementation."""
     if isinstance(value, dict):
         if "c2w" not in value:
             raise ValueError("WorldFM pose dict must contain a `c2w` key.")
@@ -84,7 +83,6 @@ def _as_pose_matrix(value: Any) -> np.ndarray:
 
 
 def _looks_like_single_pose(value: Any) -> bool:
-    """Looks like single pose implementation."""
     try:
         matrix = np.asarray(value, dtype=np.float64)
     except Exception:
@@ -102,7 +100,6 @@ class WorldFMOperator(BaseOperator):
         self.interaction_template_init()
 
     def _load_meta(self, meta_path: str | Path) -> dict[str, Any]:
-        """Load meta implementation."""
         meta_path = Path(meta_path).expanduser().resolve()
         with meta_path.open("r", encoding="utf-8") as file:
             meta = json.load(file)
@@ -130,7 +127,6 @@ class WorldFMOperator(BaseOperator):
         }
 
     def _normalize_interactions(self, interaction: Any) -> list[np.ndarray]:
-        """Normalize interactions implementation."""
         if isinstance(interaction, np.ndarray) and interaction.ndim == 3:
             return [_as_pose_matrix(item) for item in interaction]
 

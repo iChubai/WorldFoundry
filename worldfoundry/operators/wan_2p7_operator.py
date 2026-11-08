@@ -7,7 +7,6 @@ from .base_operator import BaseOperator
 
 
 def _validate_public_url(url: str, field_name: str) -> str:
-    """Validate public url implementation."""
     return require_public_url(url, field_name, "Wan2.7")
 
 

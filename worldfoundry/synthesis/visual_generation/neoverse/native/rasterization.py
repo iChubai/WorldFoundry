@@ -12,14 +12,7 @@ try:
 except ModuleNotFoundError:
 
     class Float:
-        """Float implementation."""
-
         def __class_getitem__(cls, item):
-            """Class getitem.
-
-            Args:
-                item: The item.
-            """
             return Tensor
 
 
@@ -31,7 +24,6 @@ except ModuleNotFoundError as error:
     _TORCH_SCATTER_IMPORT_ERROR = error
 
     def scatter_sum(*args, **kwargs):
-        """Scatter sum."""
         raise ImportError(
             "Dependency `torch_scatter` is required for NeoVerse WorldMirror rasterization."
         ) from _TORCH_SCATTER_IMPORT_ERROR
@@ -48,10 +40,9 @@ except ModuleNotFoundError as error:
     _GSPLAT_IMPORT_ERROR = error
 
     class DefaultStrategy:
-        """Default strategy implementation."""
+        pass
 
     def rasterization(*args, **kwargs):
-        """Rasterization."""
         raise ImportError(
             "Dependency `gsplat` is required for NeoVerse WorldMirror rasterization."
         ) from _GSPLAT_IMPORT_ERROR
@@ -70,8 +61,6 @@ from .geometry import (
 
 
 class Gaussians:
-    """Gaussians implementation."""
-
     def __init__(
         self,
         means: Float[Tensor, "*batch 3"],
@@ -92,27 +81,6 @@ class Gaussians:
         backward_scales: Float[Tensor, "*batch 3"] | None = None,
         backward_rotations: Float[Tensor, "*batch 3"] | None = None,
     ):
-        """Init.
-
-        Args:
-            means: The means.
-            harmonics: The harmonics.
-            opacities: The opacities.
-            scales: The scales.
-            rotations: The rotations.
-            confidences: The confidences.
-            timestamp: The timestamp.
-            life_span: The life span.
-            life_span_gamma: The life span gamma.
-            forward_timestamp: The forward timestamp.
-            forward_vel: The forward vel.
-            forward_scales: The forward scales.
-            forward_rotations: The forward rotations.
-            backward_timestamp: The backward timestamp.
-            backward_vel: The backward vel.
-            backward_scales: The backward scales.
-            backward_rotations: The backward rotations.
-        """
         self.means = means
         self.harmonics = harmonics
         self.opacities = opacities
@@ -176,32 +144,16 @@ class Gaussians:
             self.backward_rotations = None
 
     def keep_indices(self, indices):
-        """Keep indices.
-
-        Args:
-            indices: The indices.
-        """
         for name, value in self.__dict__.items():
             if isinstance(value, torch.Tensor):
                 setattr(self, name, value[indices])
 
     def to(self, dtype):
-        """To.
-
-        Args:
-            dtype: The dtype.
-        """
         for name, value in self.__dict__.items():
             if isinstance(value, torch.Tensor):
                 setattr(self, name, value.to(dtype=dtype))
 
     def transition(self, target_timestamp, mask=None):
-        """Transition.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         if mask is None:
             mask = torch.ones(len(self.means), dtype=torch.bool, device=self.means.device)
         transitioned_means = self.transition_means(target_timestamp, mask)
@@ -218,12 +170,6 @@ class Gaussians:
         )
 
     def transition_means(self, target_timestamp, mask):
-        """Transition means.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         means = self.means[mask]
         if self.timestamp == -1 or target_timestamp == self.timestamp:
             delta_means = torch.zeros_like(means)
@@ -249,12 +195,6 @@ class Gaussians:
         return transitioned_means
 
     def transition_harmonics(self, target_timestamp, mask):
-        """Transition harmonics.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         if (
             self.timestamp == -1
             or target_timestamp == self.timestamp
@@ -267,12 +207,6 @@ class Gaussians:
         return transitioned_harmonics
 
     def transition_opacities(self, target_timestamp, mask):
-        """Transition opacities.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         opacities = self.opacities[mask]
         if isinstance(self.life_span, float):
             life_span = torch.ones_like(opacities) * self.life_span
@@ -299,12 +233,6 @@ class Gaussians:
         return transitioned_opacities
 
     def transition_scales(self, target_timestamp, mask):
-        """Transition scales.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         scales = self.scales[mask]
         if self.timestamp == -1 or target_timestamp == self.timestamp:
             delta_scales = torch.ones_like(scales)
@@ -337,12 +265,6 @@ class Gaussians:
         return transitioned_scales
 
     def transition_rotations(self, target_timestamp, mask):
-        """Transition rotations.
-
-        Args:
-            target_timestamp: The target timestamp.
-            mask: The mask.
-        """
         rotations = self.rotations[mask]
         if self.timestamp == -1 or target_timestamp == self.timestamp:
             delta_rotations = torch.zeros_like(rotations[:, :3])
@@ -375,12 +297,6 @@ class Gaussians:
         return transitioned_rotations
 
     def rotate_quaternion(self, quaternion, rot_velocity):
-        """Rotate quaternion.
-
-        Args:
-            quaternion: The quaternion.
-            rot_velocity: The rot velocity.
-        """
         angle = torch.norm(rot_velocity, p=2, dim=-1, keepdim=True)
         axis = F.normalize(rot_velocity, p=2, dim=-1, eps=1e-8)
         half_angle = angle / 2
@@ -391,12 +307,6 @@ class Gaussians:
         return transitioned_rotations
 
     def quaternion_multiply(self, q1, q2):
-        """Quaternion multiply.
-
-        Args:
-            q1: The q1.
-            q2: The q2.
-        """
         w1, x1, y1, z1 = q1.unbind(-1)
         w2, x2, y2, z2 = q2.unbind(-1)
         return torch.stack(
@@ -411,8 +321,6 @@ class Gaussians:
 
 
 class Rasterizer:
-    """Rasterizer implementation."""
-
     def __init__(
         self,
         rasterization_mode="classic",
@@ -428,22 +336,6 @@ class Rasterizer:
         bidirection=True,
         backgrounds="black",
     ):
-        """Init.
-
-        Args:
-            rasterization_mode: The rasterization mode.
-            packed: The packed.
-            abs_grad: The abs grad.
-            with_eval3d: The with eval3d.
-            camera_model: The camera model.
-            sparse_grad: The sparse grad.
-            distributed: The distributed.
-            grad_strategy: The grad strategy.
-            confidence_prune_threshold: The confidence prune threshold.
-            opacity_prune_threshold: The opacity prune threshold.
-            bidirection: The bidirection.
-            backgrounds: The backgrounds.
-        """
         self.rasterization_mode = rasterization_mode
         self.packed = packed
         self.abs_grad = abs_grad
@@ -458,17 +350,6 @@ class Rasterizer:
         self.backgrounds = backgrounds
 
     def forward(self, render_splats, render_viewmats, render_Ks, render_timestamps, sh_degree, width, height):
-        """Forward.
-
-        Args:
-            render_splats: The render splats.
-            render_viewmats: The render viewmats.
-            render_Ks: The render ks.
-            render_timestamps: The render timestamps.
-            sh_degree: The sh degree.
-            width: The width.
-            height: The height.
-        """
         assert len(render_splats) == len(render_viewmats) == len(render_Ks) == len(render_timestamps), (
             "Number of batches in gaussians must match the batch size in render_viewmats and render_Ks."
         )
@@ -549,18 +430,6 @@ class Rasterizer:
         height: int,
         **kwargs,
     ) -> tuple[Tensor, Tensor, dict]:
-        """Rasterize splats.
-
-        Args:
-            splats: The splats.
-            viewmats: The viewmats.
-            Ks: The ks.
-            width: The width.
-            height: The height.
-
-        Returns:
-            The return value.
-        """
         if len(splats) > 0:
             means = torch.cat([splat.means for splat in splats], dim=0)
             quats = torch.cat([splat.rotations for splat in splats], dim=0)
@@ -600,8 +469,6 @@ class Rasterizer:
 
 
 class GaussianSplatRenderer(nn.Module):
-    """Gaussian splat renderer implementation."""
-
     def __init__(
         self,
         feature_dim: int = 256,  # Output channels of gs_feat_head
@@ -619,24 +486,6 @@ class GaussianSplatRenderer(nn.Module):
         occlusion_threshold: float = 0.05,  # Depth threshold for occlusion checking
         bidirection: bool = True,
     ):
-        """Init.
-
-        Args:
-            feature_dim: The feature dim.
-            sh_degree: The sh degree.
-            enable_prune: The enable prune.
-            voxel_size: The voxel size.
-            enable_conf_filter: The enable conf filter.
-            conf_threshold_percent: The conf threshold percent.
-            max_gaussians: The max gaussians.
-            is_4dgs: The is 4dgs.
-            life_span_gamma: The life span gamma.
-            dynamic_threshold: The dynamic threshold.
-            global_motion_tracking: The global motion tracking.
-            dynamic_threshold2: The dynamic threshold2.
-            occlusion_threshold: The occlusion threshold.
-            bidirection: The bidirection.
-        """
         super().__init__()
 
         self.feature_dim = feature_dim
@@ -964,12 +813,6 @@ class GaussianSplatRenderer(nn.Module):
         return gaussians
 
     def prepare_cameras(self, views, nums):
-        """Prepare cameras.
-
-        Args:
-            views: The views.
-            nums: The nums.
-        """
         viewmats = views["camera_poses"][:, :nums]
         Ks = views["camera_intrs"][:, :nums]
         return viewmats, Ks
@@ -977,16 +820,6 @@ class GaussianSplatRenderer(nn.Module):
     def separate_splats(
         self, splats, context_extrs=None, context_intrs=None, context_depth=None, context_vel_mag=None, static_flag=None
     ):
-        """Separate splats.
-
-        Args:
-            splats: The splats.
-            context_extrs: The context extrs.
-            context_intrs: The context intrs.
-            context_depth: The context depth.
-            context_vel_mag: The context vel mag.
-            static_flag: The static flag.
-        """
         B = splats["means"].shape[0]
         gaussian_list = []
         for b in range(B):
@@ -1017,14 +850,6 @@ class GaussianSplatRenderer(nn.Module):
         return gaussian_list
 
     def _create_constant_gaussians(self, splats, batch_idx, constant_indices, static_flag=True):
-        """Helper function to create constant gaussians.
-
-        Args:
-            splats: The splats.
-            batch_idx: The batch idx.
-            constant_indices: The constant indices.
-            static_flag: The static flag.
-        """
         if len(constant_indices) == 0:
             return None
 
@@ -1053,13 +878,6 @@ class GaussianSplatRenderer(nn.Module):
         return gaussians
 
     def _create_dynamic_gaussians(self, splats, batch_idx, dynamic_indices):
-        """Helper function to create dynamic gaussians.
-
-        Args:
-            splats: The splats.
-            batch_idx: The batch idx.
-            dynamic_indices: The dynamic indices.
-        """
         S, N, _ = splats["means"][batch_idx].shape
 
         # Create dynamic mask matrix for more efficient indexing

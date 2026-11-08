@@ -25,18 +25,6 @@ def batch_ddim_sampling(
     temporal_cfg_scale=None,
     **kwargs,
 ):
-    """Batch ddim sampling.
-
-    Args:
-        model: The model.
-        cond: The cond.
-        noise_shape: The noise shape.
-        n_samples: The n samples.
-        ddim_steps: The ddim steps.
-        ddim_eta: The ddim eta.
-        cfg_scale: The cfg scale.
-        temporal_cfg_scale: The temporal cfg scale.
-    """
     ddim_sampler = DDIMSampler(model)
     uncond_type = model.uncond_type
     batch_size = noise_shape[0]
@@ -87,11 +75,6 @@ def batch_ddim_sampling(
 
 
 def _normalized_checkpoint_state_dict(payload):
-    """Helper function to normalized checkpoint state dict.
-
-    Args:
-        payload: The payload.
-    """
     if isinstance(payload, dict) and "module" in payload and hasattr(payload["module"], "keys"):
         new_pl_sd = OrderedDict()
         for key in payload["module"].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
@@ -103,12 +86,6 @@ def _normalized_checkpoint_state_dict(payload):
 
 
 def load_model_checkpoint(model, ckpt: str):
-    """Load model checkpoint.
-
-    Args:
-        model: The model.
-        ckpt: The ckpt.
-    """
     state_dict = _normalized_checkpoint_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True))
     expected = model.state_dict()
     for key in ("scale_arr_prev",):
@@ -120,12 +97,6 @@ def load_model_checkpoint(model, ckpt: str):
 
 
 def load_image_batch(filepath_list, image_size=(256, 256)):
-    """Load image batch.
-
-    Args:
-        filepath_list: The filepath list.
-        image_size: The image size.
-    """
     batch_tensor = []
     for filepath in filepath_list:
         path = Path(filepath)

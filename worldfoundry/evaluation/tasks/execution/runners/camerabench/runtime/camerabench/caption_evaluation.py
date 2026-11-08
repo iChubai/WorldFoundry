@@ -194,8 +194,6 @@ def calculate_rouge_l_score(reference, candidate):
 
 def calculate_meteor_score(reference, candidate):
     """
-    Calculate METEOR score
-
     Args:
         reference: Reference text
         candidate: Candidate text

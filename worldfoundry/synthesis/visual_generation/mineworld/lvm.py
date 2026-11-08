@@ -52,7 +52,6 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
         k (torch.Tensor): Key tensor.
         cos (torch.Tensor): Cosine values.
         sin (torch.Tensor): Sine values.
-        position_ids (torch.Tensor): Position IDs.
 
     Returns:
         torch.Tensor: Query and key tensors with rotary position embeddings applied.

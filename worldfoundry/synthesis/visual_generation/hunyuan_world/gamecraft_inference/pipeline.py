@@ -915,12 +915,6 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         return HunyuanVideoPipelineOutput(videos=image)
 
     def prepare_extra_func_kwargs(self, func, kwargs):
-        """Prepare extra func kwargs.
-
-        Args:
-            func: The func.
-            kwargs: The kwargs.
-        """
         extra_step_kwargs = {}
         for k, v in kwargs.items():
             accepts = k in set(inspect.signature(func).parameters.keys())
@@ -930,35 +924,28 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
 
     @property
     def guidance_scale(self):
-        """Guidance scale."""
         return self._guidance_scale
 
     @property
     def guidance_rescale(self):
-        """Guidance rescale."""
         return self._guidance_rescale
 
     @property
     def clip_skip(self):
-        """Clip skip."""
         return self._clip_skip
 
     @property
     def do_classifier_free_guidance(self):
-        """Do classifier free guidance."""
         return self._guidance_scale > 1
 
     @property
     def cross_attention_kwargs(self):
-        """Cross attention kwargs."""
         return self._cross_attention_kwargs
 
     @property
     def num_timesteps(self):
-        """Num timesteps."""
         return self._num_timesteps
 
     @property
     def interrupt(self):
-        """Interrupt."""
         return self._interrupt

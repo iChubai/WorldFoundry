@@ -30,7 +30,6 @@ def _default_output_dir(name: str = "loger_output") -> str:
 
 
 def _apply_camera_delta(c2w: np.ndarray, delta: list[float]) -> np.ndarray:
-    """Apply camera delta helper function."""
     dx, dy, dz, theta_x, theta_z = delta
     result = c2w.copy()
 
@@ -160,7 +159,6 @@ class LoGeRResult:
 
 
 def _build_camera_range(camera_params: list[dict[str, Any]]) -> dict[str, Any]:
-    """Build camera range helper function."""
     n = len(camera_params)
     if n == 0:
         return {}

@@ -63,7 +63,6 @@ class HunyuanMirrorPipeline(PipelineABC):
             model_path: HuggingFace model path
             local_model_path: Local model path (priority if provided)
             output_path: Output directory path
-            device: Device
             **kwargs: Additional arguments for model
 
         Returns:

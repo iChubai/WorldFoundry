@@ -25,7 +25,6 @@ class OfficialPolicyOperator(EmbodiedActionOperator):
     }
 
     def _schema_value(self, key: str, default: Any = None) -> Any:
-        """Schema value implementation."""
         return self.input_schema.get(key, default)
 
     def operator_metadata(self, **overrides: Any) -> dict[str, Any]:

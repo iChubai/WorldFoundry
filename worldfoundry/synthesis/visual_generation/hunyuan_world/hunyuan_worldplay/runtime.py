@@ -639,7 +639,6 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
         Tokenize text prompt for byT5 model.
 
         Args:
-            byt5_tokenizer: The byT5 tokenizer.
             byt5_max_length: Maximum sequence length for tokenization.
             text_prompt: Text prompt string to tokenize.
 

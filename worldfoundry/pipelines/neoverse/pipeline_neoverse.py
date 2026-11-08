@@ -13,7 +13,6 @@ from ..pipeline_utils import PipelineABC
 
 
 def _neoverse_synthesis_cls():
-    """Neoverse synthesis cls helper function."""
     from ...synthesis.visual_generation.neoverse.neoverse_synthesis import NeoVerseSynthesis
 
     return NeoVerseSynthesis

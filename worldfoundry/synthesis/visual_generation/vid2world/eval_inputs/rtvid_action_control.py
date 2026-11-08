@@ -68,24 +68,6 @@ class RTVidActionControl(Dataset):
         samples_per_episode=6,  # 6 action variants: X+/-, Y+/-, Z+/-
         single_file=True,  # Only use one episode file for action control test
     ):
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            resolution: The resolution.
-            video_length: The video length.
-            spatial_transform: The spatial transform.
-            crop_resolution: The crop resolution.
-            subsample: The subsample.
-            augment_data: The augment data.
-            mode: The mode.
-            strong_augmentation: The strong augmentation.
-            val_file_list_path: The val file list path.
-            action_magnitude: The action magnitude.
-            action_dim: The action dim.
-            samples_per_episode: The samples per episode.
-            single_file: The single file.
-        """
         self.data_dir = data_dir
         self.video_length = video_length
         self.resolution = [resolution, resolution] if isinstance(resolution, int) else resolution
@@ -245,11 +227,6 @@ class RTVidActionControl(Dataset):
         return actions
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         # Determine which action variant to return
         if self.single_file:
             # When using single file, index directly maps to action variant (0-7)
@@ -336,7 +313,6 @@ class RTVidActionControl(Dataset):
         return data
 
     def __len__(self):
-        """Len."""
         # Return samples_per_episode * number of episodes
         if self.single_file:
             # When using single file, return only samples_per_episode samples

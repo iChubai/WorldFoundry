@@ -50,12 +50,10 @@ class DreamDojoOperator(BaseOperator):
 
     @staticmethod
     def _is_number(value: Any) -> bool:
-        """Is number implementation."""
         return isinstance(value, (int, float)) and not isinstance(value, bool)
 
     @classmethod
     def _is_numeric_vector(cls, value: Any) -> bool:
-        """Is numeric vector implementation."""
         return (
             isinstance(value, Sequence)
             and not isinstance(value, (str, bytes, bytearray))
@@ -64,7 +62,6 @@ class DreamDojoOperator(BaseOperator):
 
     @classmethod
     def _normalise_action_item(cls, item: Any) -> Any:
-        """Normalise action item implementation."""
         if isinstance(item, Path):
             return str(item)
         tolist = getattr(item, "tolist", None)
@@ -83,7 +80,6 @@ class DreamDojoOperator(BaseOperator):
 
     @classmethod
     def _extract_actions(cls, interaction: Any) -> list[Any]:
-        """Extract actions implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, Path):
@@ -124,7 +120,6 @@ class DreamDojoOperator(BaseOperator):
 
     @staticmethod
     def _controls(interaction: Any) -> dict[str, Any]:
-        """Controls implementation."""
         return {str(key): value for key, value in interaction.items()} if isinstance(interaction, Mapping) else {}
 
     def check_interaction(self, interaction):

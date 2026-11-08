@@ -11,7 +11,6 @@ from worldfoundry.core.io.paths import scratch_directory
 
 
 def _lyra1_checkpoint_layout_complete(root: Path) -> bool:
-    """Lyra1 checkpoint layout complete helper function."""
     required_files = [
         root / "Gen3C-Cosmos-7B" / "model.pt",
         root / "Cosmos-Tokenize1-CV8x8x8-720p" / "mean_std.pt",
@@ -23,7 +22,6 @@ def _lyra1_checkpoint_layout_complete(root: Path) -> bool:
 
 
 def _reset_dir(path: Path):
-    """Reset dir helper function."""
     if path.is_symlink() or path.is_file():
         path.unlink()
     elif path.is_dir():
@@ -32,7 +30,6 @@ def _reset_dir(path: Path):
 
 
 def _link_or_copy(src: Path, dst: Path):
-    """Link or copy helper function."""
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists() or dst.is_symlink():
         _reset_dir(dst)

@@ -113,7 +113,6 @@ def save_videos_with_audio_grid(
         audio: Audio tensor
         path: Output file path
         fps: Frames per second
-        audio_sample_rate: Audio sample rate
         n_rows: Number of rows for grid layout
         rescale: Whether to rescale from [-1, 1] to [0, 1]
     """

@@ -54,7 +54,6 @@ class Wan2p6Operator(BaseOperator):
         self,
         reference_urls: list[str] | None,
     ) -> list[str] | None:
-        """Validate reference urls implementation."""
         if reference_urls is None:
             return None
 

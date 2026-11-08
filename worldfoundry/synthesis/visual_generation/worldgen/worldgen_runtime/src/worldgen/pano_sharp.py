@@ -52,7 +52,6 @@ def predict_cubemap_face(
         face_rgb: (3, H, W) RGB tensor in [0, 1].
         face_depth: (1, H, W) depth from DA-2 for this face.
         face_size: Size of the cubemap face.
-        device: Device.
 
     Returns:
         Gaussians3D in camera space, with depth aligned to DA-2.

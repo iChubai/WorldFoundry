@@ -167,8 +167,6 @@ class EasyDict(dict):
 
 
 class Config:
-    """config"""
-
     @classmethod
     def pretty_text(cls, cfg: dict, indent=2) -> str:
         """format dict to a string

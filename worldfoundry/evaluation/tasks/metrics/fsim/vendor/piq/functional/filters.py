@@ -85,7 +85,6 @@ def binomial_filter1d(kernel_size: int, device: str | None = None, dtype: type |
     r"""Creates 1D normalized binomial filter
 
     Args:
-        kernel_size (int): kernel size
         device: target device for kernel generation
         dtype: target data type for kernel generation
 
@@ -100,7 +99,6 @@ def average_filter2d(kernel_size: int, device: str | None = None, dtype: type | 
     r"""Creates 2D normalized average filter
 
     Args:
-        kernel_size (int): kernel size
         device: target device for kernel generation
         dtype: target data type for kernel generation
 

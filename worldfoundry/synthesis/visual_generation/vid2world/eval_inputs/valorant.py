@@ -1,5 +1,3 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> lvdm -> eval_inputs -> valorant.py functionality."""
-
 import glob
 import os
 
@@ -35,16 +33,6 @@ class CSGOVIDStyleDataset(Dataset):
         augment_data=False,
         mode="validation",
     ):
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            resolution: The resolution.
-            video_length: The video length.
-            spatial_transform: The spatial transform.
-            augment_data: The augment data.
-            mode: The mode.
-        """
         # Convert relative path to absolute path based on project root
         if not os.path.isabs(data_dir):
             current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +67,6 @@ class CSGOVIDStyleDataset(Dataset):
             assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def __len__(self):
-        """Len."""
         return len(self.image_files)
 
     def _resize_and_pad(self, image_tensor):
@@ -134,11 +121,6 @@ class CSGOVIDStyleDataset(Dataset):
         return actions_tensor
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         # Load image
         image_path = self.image_files[index]
         image = Image.open(image_path).convert("RGB")

@@ -11,13 +11,6 @@ class Txt2ImgIterableBaseDataset(IterableDataset):
     """
 
     def __init__(self, num_records=0, valid_ids=None, size=256):
-        """Init.
-
-        Args:
-            num_records: The num records.
-            valid_ids: The valid ids.
-            size: The size.
-        """
         super().__init__()
         self.num_records = num_records
         self.valid_ids = valid_ids
@@ -27,9 +20,8 @@ class Txt2ImgIterableBaseDataset(IterableDataset):
         print(f"{self.__class__.__name__} dataset contains {self.__len__()} examples.")
 
     def __len__(self):
-        """Len."""
         return self.num_records
 
     @abstractmethod
     def __iter__(self):
-        """Iter."""
+        pass

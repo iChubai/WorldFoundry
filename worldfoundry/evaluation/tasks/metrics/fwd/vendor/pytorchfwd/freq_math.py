@@ -106,8 +106,7 @@ def generate_frequency_packet_image(packet_array: np.ndarray, degree: int):
 
 
 def compute_kl_divergence(output: torch.Tensor, target: torch.Tensor, eps: float | None = 1e-30) -> torch.Tensor:
-    """Compute KL Divergence.
-
+    """
     Args:
         output (torch.Tensor): Output Images
         target (torch.Tensor): Target Images

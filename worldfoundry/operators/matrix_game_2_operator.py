@@ -290,7 +290,6 @@ class MatrixGame2Operator(BaseOperator):
         self.current_interaction.append(interaction_list)
 
     def _build_sequence(self, num_frames, frames_per_action=4):
-        """Build sequence implementation."""
         if len(self.current_interaction) == 0:
             raise RuntimeError("No interaction registered")
 

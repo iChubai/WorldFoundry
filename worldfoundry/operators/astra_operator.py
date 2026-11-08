@@ -152,7 +152,6 @@ class AstraOperator(BaseOperator):
 
     @staticmethod
     def _crop_and_resize(image: Image.Image) -> Image.Image:
-        """Crop and resize implementation."""
         target_w, target_h = 832, 480
         resize = cast(Callable[..., Image.Image], v2.functional.resize)
         return resize(
@@ -184,13 +183,11 @@ class AstraOperator(BaseOperator):
 
     @staticmethod
     def _needed_frame_count(start_frame, initial_condition_frames, new_frames):
-        """Needed frame count implementation."""
         framepack_needed_frames = FRAMEPACK_CONTEXT_FRAMES + new_frames
         return max(start_frame + initial_condition_frames + new_frames, framepack_needed_frames, 30)
 
     @staticmethod
     def _camera_embedding_from_rows(rows, start_frame, condition_end):
-        """Camera embedding from rows implementation."""
         pose_embedding = torch.stack(rows, dim=0)
         if pose_embedding.dim() == 3:
             pose_embedding = rearrange(pose_embedding, "b c d -> b (c d)")
@@ -201,7 +198,6 @@ class AstraOperator(BaseOperator):
 
     @staticmethod
     def _relative_pose_rows_from_extrinsics(cam_extrinsic, max_needed_frames, time_compression_ratio):
-        """Relative pose rows from extrinsics implementation."""
         relative_poses = []
         for i in range(max_needed_frames):
             frame_idx = i * time_compression_ratio
@@ -217,7 +213,6 @@ class AstraOperator(BaseOperator):
 
     @staticmethod
     def _apply_yaw(pose, yaw_per_frame):
-        """Apply yaw implementation."""
         pose[0, 0] = np.cos(yaw_per_frame)
         pose[0, 2] = np.sin(yaw_per_frame)
         pose[2, 0] = -np.sin(yaw_per_frame)
@@ -225,7 +220,6 @@ class AstraOperator(BaseOperator):
 
     @classmethod
     def _sekai_synthetic_pose(cls, frame_idx, condition_frames, stage_1, stage_2, direction):
-        """Sekai synthetic pose implementation."""
         active_start = condition_frames
         active_end = condition_frames + stage_1 + stage_2
         pose = np.eye(4, dtype=np.float32)
@@ -260,7 +254,6 @@ class AstraOperator(BaseOperator):
 
     @staticmethod
     def _openx_synthetic_pose():
-        """Openx synthetic pose implementation."""
         roll_per_frame = 0.02
         pitch_per_frame = 0.01
         yaw_per_frame = 0.015

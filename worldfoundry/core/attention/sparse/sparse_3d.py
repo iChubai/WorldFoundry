@@ -261,16 +261,6 @@ def create_moba_3d_mask(
     num_blocks_w = np.ceil(image_shape[2] / block_shape[2]).astype(int)
 
     def get_block_avg_feat(x: torch.Tensor, adaptive_pool=None, pooling_type="avg") -> torch.Tensor:
-        """Get block avg feat.
-
-        Args:
-            x: The x.
-            adaptive_pool: The adaptive pool.
-            pooling_type: The pooling type.
-
-        Returns:
-            The return value.
-        """
         x_block_means = x.view(
             batch_size,
             num_heads,

@@ -33,12 +33,6 @@ def homo_matrix_inverse(homo_matrix):
 
 
 def average_filter(depth_map, kernel_size=5):
-    """Average filter.
-
-    Args:
-        depth_map: The depth map.
-        kernel_size: The kernel size.
-    """
     if kernel_size % 2 == 0:
         kernel_size += 1
 
@@ -164,11 +158,6 @@ def load_video(data, num_frames, resolution=(560, 336), resize_mode="center_crop
     """
 
     def _process_frame(image):
-        """Helper function to process frame.
-
-        Args:
-            image: The image.
-        """
         if resize_mode == "resize":
             return image.resize(resolution, resample=Image.LANCZOS)
         return center_crop(image, resolution)
@@ -237,15 +226,6 @@ class CameraTrajectory:
     }
 
     def __init__(self, c2w, mode="relative", name="trajectory", zoom_ratio=1.0, use_first_frame=False):
-        """Init.
-
-        Args:
-            c2w: The c2w.
-            mode: The mode.
-            name: The name.
-            zoom_ratio: The zoom ratio.
-            use_first_frame: The use first frame.
-        """
         if isinstance(c2w, np.ndarray):
             c2w = torch.from_numpy(c2w)
         assert c2w.ndim == 3 and c2w.shape[1:] == (4, 4), f"c2w must be [N, 4, 4], got {c2w.shape}"
@@ -366,7 +346,6 @@ class CameraTrajectory:
         )
 
     def __len__(self):
-        """Len."""
         return self.c2w.shape[0]
 
     @staticmethod
@@ -395,14 +374,6 @@ class CameraTrajectory:
 
     @staticmethod
     def _get_camera_matrix(trajectory_type, distance=0.1, orbit_radius=0.5, angle=30):
-        """Helper function to get camera matrix.
-
-        Args:
-            trajectory_type: The trajectory type.
-            distance: The distance.
-            orbit_radius: The orbit radius.
-            angle: The angle.
-        """
         angle_rad = np.deg2rad(angle)
         camera_pose = np.eye(4, dtype=np.float32)
 
@@ -516,13 +487,6 @@ class CameraTrajectory:
 
     @staticmethod
     def _interpolate_sparse_matrices(indices, matrices, num_frames):
-        """Helper function to interpolate sparse matrices.
-
-        Args:
-            indices: The indices.
-            matrices: The matrices.
-            num_frames: The num frames.
-        """
         keyframe_indices = np.array(indices)
         keyframe_matrices = np.array(matrices, dtype=np.float32)
         if len(indices) == num_frames:
@@ -548,11 +512,6 @@ class CameraTrajectory:
 
     @staticmethod
     def _validate_keyframe_format(data):
-        """Helper function to validate keyframe format.
-
-        Args:
-            data: The data.
-        """
         keyframes = data["keyframes"]
         num_frames = data.get("num_frames", 81)
         if not isinstance(keyframes, list) or len(keyframes) < 2:
@@ -592,11 +551,6 @@ class CameraTrajectory:
 
     @staticmethod
     def _validate_matrix_format(data):
-        """Helper function to validate matrix format.
-
-        Args:
-            data: The data.
-        """
         trajectory = data["trajectory"]
         if not isinstance(trajectory, dict):
             raise ValueError("trajectory must be a dict")

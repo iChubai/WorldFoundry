@@ -70,16 +70,7 @@ def _sequence_parallel_all_gather(value: torch.Tensor, *, dim: int) -> torch.Ten
 
 
 class LongViePipeline(StagedDiffusionPipeline):
-    """Long vie pipeline implementation."""
-
     def __init__(self, device="cuda", torch_dtype=torch.bfloat16, tokenizer_path=None):
-        """Init.
-
-        Args:
-            device: The device.
-            torch_dtype: The torch dtype.
-            tokenizer_path: The tokenizer path.
-        """
         super().__init__(
             device=device,
             torch_dtype=torch_dtype,
@@ -142,15 +133,6 @@ class LongViePipeline(StagedDiffusionPipeline):
         hotload=False,
         state_dict=None,
     ):
-        """Load lora.
-
-        Args:
-            module: The module.
-            lora_config: The lora config.
-            alpha: The alpha.
-            hotload: The hotload.
-            state_dict: The state dict.
-        """
         if state_dict is None:
             if isinstance(lora_config, str):
                 lora = load_state_dict(lora_config, torch_dtype=self.torch_dtype, device=self.device)
@@ -172,13 +154,6 @@ class LongViePipeline(StagedDiffusionPipeline):
             loader.load(module, lora, alpha=alpha)
 
     def enable_vram_management(self, num_persistent_param_in_dit=None, vram_limit=None, vram_buffer=0.5):
-        """Enable vram management.
-
-        Args:
-            num_persistent_param_in_dit: The num persistent param in dit.
-            vram_limit: The vram limit.
-            vram_buffer: The vram buffer.
-        """
         self.vram_management_enabled = True
         if num_persistent_param_in_dit is not None:
             vram_limit = None
@@ -410,12 +385,6 @@ class LongViePipeline(StagedDiffusionPipeline):
             )
 
     def initialize_usp(self, ring_degree=2, ulysses_degree=4):
-        """Initialize usp.
-
-        Args:
-            ring_degree: The ring degree.
-            ulysses_degree: The ulysses degree.
-        """
         local_rank = int(os.getenv("LOCAL_RANK", os.getenv("RANK", "0")))
         torch.cuda.set_device(local_rank)
         if not dist.is_initialized():
@@ -429,7 +398,6 @@ class LongViePipeline(StagedDiffusionPipeline):
             )
 
     def enable_usp(self):
-        """Enable usp."""
         from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import usp_attn_forward, usp_dit_forward
 
         for block in self.dit.blocks:
@@ -590,58 +558,6 @@ class LongViePipeline(StagedDiffusionPipeline):
         history=[],  # noqa: B006 - Keeps the upstream default object and signature.
         noise=None,
     ):
-        """Call.
-
-        Args:
-            prompt: The prompt.
-            negative_prompt: The negative prompt.
-            input_image: The input image.
-            end_image: The end image.
-            input_video: The input video.
-            denoising_strength: The denoising strength.
-            input_audio: The input audio.
-            audio_embeds: The audio embeds.
-            audio_sample_rate: The audio sample rate.
-            s2v_pose_video: The s2v pose video.
-            s2v_pose_latents: The s2v pose latents.
-            motion_video: The motion video.
-            control_video: The control video.
-            reference_image: The reference image.
-            camera_control_direction: The camera control direction.
-            camera_control_speed: The camera control speed.
-            camera_control_origin: The camera control origin.
-            vace_video: The vace video.
-            vace_video_mask: The vace video mask.
-            vace_reference_image: The vace reference image.
-            vace_scale: The vace scale.
-            animate_pose_video: The animate pose video.
-            animate_face_video: The animate face video.
-            animate_inpaint_video: The animate inpaint video.
-            animate_mask_video: The animate mask video.
-            seed: The seed.
-            rand_device: The rand device.
-            height: The height.
-            width: The width.
-            num_frames: The num frames.
-            cfg_scale: The cfg scale.
-            cfg_merge: The cfg merge.
-            switch_DiT_boundary: The switch dit boundary.
-            num_inference_steps: The num inference steps.
-            sigma_shift: The sigma shift.
-            motion_bucket_id: The motion bucket id.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-            sliding_window_size: The sliding window size.
-            sliding_window_stride: The sliding window stride.
-            tea_cache_l1_thresh: The tea cache l1 thresh.
-            tea_cache_model_id: The tea cache model id.
-            progress_bar_cmd: The progress bar cmd.
-            dense_video: The dense video.
-            sparse_video: The sparse video.
-            history: The history.
-            noise: The noise.
-        """
         # Scheduler
         self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=sigma_shift)
 
@@ -762,44 +678,19 @@ class LongViePipeline(StagedDiffusionPipeline):
 
 
 class WanVideoUnit_ShapeChecker(InferenceStage):
-    """Wan video unit shape checker implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(input_params=("height", "width", "num_frames"))
 
     def process(self, pipe: LongViePipeline, height, width, num_frames):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            height: The height.
-            width: The width.
-            num_frames: The num frames.
-        """
         height, width, num_frames = pipe.check_resize_height_width(height, width, num_frames)
         return {"height": height, "width": width, "num_frames": num_frames}
 
 
 class WanVideoUnit_NoiseInitializer(InferenceStage):
-    """Wan video unit noise initializer implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(input_params=("height", "width", "num_frames", "seed", "rand_device", "vace_reference_image"))
 
     def process(self, pipe: LongViePipeline, height, width, num_frames, seed, rand_device, vace_reference_image):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            height: The height.
-            width: The width.
-            num_frames: The num frames.
-            seed: The seed.
-            rand_device: The rand device.
-            vace_reference_image: The vace reference image.
-        """
         length = (num_frames - 1) // 4 + 1
         if vace_reference_image is not None:
             f = len(vace_reference_image) if isinstance(vace_reference_image, list) else 1
@@ -818,27 +709,13 @@ class WanVideoUnit_NoiseInitializer(InferenceStage):
 
 
 class WanVideoUnit_InputVideoEmbedder(InferenceStage):
-    """Wan video unit input video embedder implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=("input_video", "noise", "tiled", "tile_size", "tile_stride", "vace_reference_image"),
             onload_model_names=("vae",),
         )
 
     def process(self, pipe: LongViePipeline, input_video, noise, tiled, tile_size, tile_stride, vace_reference_image):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            input_video: The input video.
-            noise: The noise.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-            vace_reference_image: The vace reference image.
-        """
         if input_video is None:
             return {"latents": noise}
         pipe.load_models_to_device(["vae"])
@@ -862,24 +739,12 @@ class WanVideoUnit_InputVideoEmbedder(InferenceStage):
 
 
 class WanVideoUnit_HistoryVideoEmbedder(InferenceStage):
-    """Wan video unit history video embedder implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=("history_video", "tiled", "tile_size", "tile_stride"), onload_model_names=("vae",)
         )
 
     def process(self, pipe: LongViePipeline, history_video, tiled, tile_size, tile_stride):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            history_video: The history video.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if history_video == []:
             return {"history_latents": None}
         pipe.load_models_to_device(["vae"])
@@ -891,10 +756,7 @@ class WanVideoUnit_HistoryVideoEmbedder(InferenceStage):
 
 
 class WanVideoUnit_PromptEmbedder(InferenceStage):
-    """Wan video unit prompt embedder implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             seperate_cfg=True,
             input_params_posi={"prompt": "prompt", "positive": "positive"},
@@ -903,16 +765,6 @@ class WanVideoUnit_PromptEmbedder(InferenceStage):
         )
 
     def process(self, pipe: LongViePipeline, prompt, positive) -> dict:
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            prompt: The prompt.
-            positive: The positive.
-
-        Returns:
-            The return value.
-        """
         pipe.load_models_to_device(self.onload_model_names)
         prompt_emb = pipe.prompter.encode_prompt(prompt, positive=positive, device=pipe.device)
         return {"context": prompt_emb}
@@ -924,7 +776,6 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
     """
 
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=(
                 "input_image",
@@ -942,19 +793,6 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
     def process(
         self, pipe: LongViePipeline, input_image, end_image, num_frames, height, width, tiled, tile_size, tile_stride
     ):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            input_image: The input image.
-            end_image: The end image.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if input_image is None or pipe.image_encoder is None:
             return {}
         pipe.load_models_to_device(self.onload_model_names)
@@ -1000,24 +838,12 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
 
 
 class WanVideoUnit_ImageEmbedderCLIP(InferenceStage):
-    """Wan video unit image embedder clip implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=("input_image", "end_image", "height", "width"), onload_model_names=("image_encoder",)
         )
 
     def process(self, pipe: LongViePipeline, input_image, end_image, height, width):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            input_image: The input image.
-            end_image: The end image.
-            height: The height.
-            width: The width.
-        """
         if input_image is None or pipe.image_encoder is None or not pipe.dit.require_clip_embedding:
             return {}
         pipe.load_models_to_device(self.onload_model_names)
@@ -1032,10 +858,7 @@ class WanVideoUnit_ImageEmbedderCLIP(InferenceStage):
 
 
 class WanVideoUnit_ImageEmbedderVAE(InferenceStage):
-    """Wan video unit image embedder vae implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=(
                 "input_image",
@@ -1064,20 +887,6 @@ class WanVideoUnit_ImageEmbedderVAE(InferenceStage):
         tile_stride,
         input_image_token,
     ):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            input_image: The input image.
-            end_image: The end image.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-            input_image_token: The input image token.
-        """
         if input_image is None or not pipe.dit.require_vae_embedding:
             return {}
         pipe.load_models_to_device(self.onload_model_names)
@@ -1128,25 +937,12 @@ class WanVideoUnit_ImageEmbedderFused(InferenceStage):
     """
 
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=("input_image", "latents", "height", "width", "tiled", "tile_size", "tile_stride"),
             onload_model_names=("vae",),
         )
 
     def process(self, pipe: LongViePipeline, input_image, latents, height, width, tiled, tile_size, tile_stride):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            input_image: The input image.
-            latents: The latents.
-            height: The height.
-            width: The width.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if input_image is None or not pipe.dit.fuse_vae_embedding_in_latents:
             return {}
         pipe.load_models_to_device(self.onload_model_names)
@@ -1157,10 +953,7 @@ class WanVideoUnit_ImageEmbedderFused(InferenceStage):
 
 
 class WanVideoUnit_LongVieControlEmbedder(InferenceStage):
-    """Wan video unit long vie control embedder implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             input_params=(
                 "dense_video",
@@ -1191,21 +984,6 @@ class WanVideoUnit_LongVieControlEmbedder(InferenceStage):
         tile_size,
         tile_stride,
     ):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            dense_video: The dense video.
-            dense_image: The dense image.
-            sparse_video: The sparse video.
-            sparse_image: The sparse image.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if dense_video is None:
             return {}
         pipe.load_models_to_device(self.onload_model_names)
@@ -1266,28 +1044,17 @@ class WanVideoUnit_LongVieControlEmbedder(InferenceStage):
 
 
 class WanVideoUnit_UnifiedSequenceParallel(InferenceStage):
-    """Wan video unit unified sequence parallel implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(input_params=())
 
     def process(self, pipe: LongViePipeline):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-        """
         if hasattr(pipe, "use_unified_sequence_parallel") and pipe.use_unified_sequence_parallel:
             return {"use_unified_sequence_parallel": True}
         return {}
 
 
 class WanVideoUnit_TeaCache(InferenceStage):
-    """Wan video unit tea cache implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(
             seperate_cfg=True,
             input_params_posi={
@@ -1303,14 +1070,6 @@ class WanVideoUnit_TeaCache(InferenceStage):
         )
 
     def process(self, pipe: LongViePipeline, num_inference_steps, tea_cache_l1_thresh, tea_cache_model_id):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            num_inference_steps: The num inference steps.
-            tea_cache_l1_thresh: The tea cache l1 thresh.
-            tea_cache_model_id: The tea cache model id.
-        """
         if tea_cache_l1_thresh is None:
             return {}
         return {
@@ -1319,22 +1078,11 @@ class WanVideoUnit_TeaCache(InferenceStage):
 
 
 class WanVideoUnit_CfgMerger(InferenceStage):
-    """Wan video unit cfg merger implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__(take_over=True)
         self.concat_tensor_names = ["context", "clip_feature", "y", "reference_latents"]
 
     def process(self, pipe: LongViePipeline, inputs_shared, inputs_posi, inputs_nega):
-        """Process.
-
-        Args:
-            pipe: The pipe.
-            inputs_shared: The inputs shared.
-            inputs_posi: The inputs posi.
-            inputs_nega: The inputs nega.
-        """
         if not inputs_shared["cfg_merge"]:
             return inputs_shared, inputs_posi, inputs_nega
         for name in self.concat_tensor_names:
@@ -1351,16 +1099,7 @@ class WanVideoUnit_CfgMerger(InferenceStage):
 
 
 class TeaCache:
-    """Tea cache implementation."""
-
     def __init__(self, num_inference_steps, rel_l1_thresh, model_id):
-        """Init.
-
-        Args:
-            num_inference_steps: The num inference steps.
-            rel_l1_thresh: The rel l1 thresh.
-            model_id: The model id.
-        """
         self.num_inference_steps = num_inference_steps
         self.step = 0
         self.accumulated_rel_l1_distance = 0
@@ -1383,13 +1122,6 @@ class TeaCache:
         self.coefficients = self.coefficients_dict[model_id]
 
     def check(self, dit: WanModel, x, t_mod):
-        """Check.
-
-        Args:
-            dit: The dit.
-            x: The x.
-            t_mod: The t mod.
-        """
         modulated_inp = t_mod.clone()
         if self.step == 0 or self.step == self.num_inference_steps - 1:
             should_calc = True
@@ -1419,39 +1151,19 @@ class TeaCache:
         return not should_calc
 
     def store(self, hidden_states):
-        """Store.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         self.previous_residual = hidden_states - self.previous_hidden_states
         self.previous_hidden_states = None
 
     def update(self, hidden_states):
-        """Update.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         hidden_states = hidden_states + self.previous_residual
         return hidden_states
 
 
 class TemporalTiler_BCTHW:
-    """Temporal tiler bcthw implementation."""
-
     def __init__(self):
-        """Init."""
+        pass
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
-        """Build 1d mask.
-
-        Args:
-            length: The length.
-            left_bound: The left bound.
-            right_bound: The right bound.
-            border_width: The border width.
-        """
         x = torch.ones((length,))
         if border_width == 0:
             return x
@@ -1464,13 +1176,6 @@ class TemporalTiler_BCTHW:
         return x
 
     def build_mask(self, data, is_bound, border_width):
-        """Build mask.
-
-        Args:
-            data: The data.
-            is_bound: The is bound.
-            border_width: The border width.
-        """
         _, _, T, _, _ = data.shape
         t = self.build_1d_mask(T, is_bound[0], is_bound[1], border_width[0])
         mask = repeat(t, "T -> 1 1 T 1 1")
@@ -1487,18 +1192,6 @@ class TemporalTiler_BCTHW:
         tensor_names,
         batch_size=None,
     ):
-        """Run.
-
-        Args:
-            model_fn: The model fn.
-            sliding_window_size: The sliding window size.
-            sliding_window_stride: The sliding window stride.
-            computation_device: The computation device.
-            computation_dtype: The computation dtype.
-            model_kwargs: The model kwargs.
-            tensor_names: The tensor names.
-            batch_size: The batch size.
-        """
         tensor_names = [tensor_name for tensor_name in tensor_names if model_kwargs.get(tensor_name) is not None]
         tensor_dict = {tensor_name: model_kwargs[tensor_name] for tensor_name in tensor_names}
         B, C, T, H, W = tensor_dict[tensor_names[0]].shape
@@ -1565,42 +1258,6 @@ def model_fn_wan_video(
     history_latents=None,
     **kwargs,
 ):
-    """Model fn wan video.
-
-    Args:
-        dit: The dit.
-        dual_controller: The dual controller.
-        motion_controller: The motion controller.
-        vace: The vace.
-        animate_adapter: The animate adapter.
-        latents: The latents.
-        timestep: The timestep.
-        context: The context.
-        clip_feature: The clip feature.
-        y: The y.
-        reference_latents: The reference latents.
-        vace_context: The vace context.
-        vace_scale: The vace scale.
-        audio_embeds: The audio embeds.
-        motion_latents: The motion latents.
-        s2v_pose_latents: The s2v pose latents.
-        drop_motion_frames: The drop motion frames.
-        tea_cache: The tea cache.
-        use_unified_sequence_parallel: The use unified sequence parallel.
-        motion_bucket_id: The motion bucket id.
-        pose_latents: The pose latents.
-        face_pixel_values: The face pixel values.
-        sliding_window_size: The sliding window size.
-        sliding_window_stride: The sliding window stride.
-        cfg_merge: The cfg merge.
-        use_gradient_checkpointing: The use gradient checkpointing.
-        use_gradient_checkpointing_offload: The use gradient checkpointing offload.
-        control_camera_latents_input: The control camera latents input.
-        fuse_vae_embedding_in_latents: The fuse vae embedding in latents.
-        dense: The dense.
-        sparse: The sparse.
-        history_latents: The history latents.
-    """
     if sliding_window_size is not None and sliding_window_stride is not None:
         model_kwargs = {
             "dit": dit,
@@ -1790,14 +1447,7 @@ def model_fn_wan_video(
     else:
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs):
-                """Custom forward."""
                 return module(*inputs)
 
             return custom_forward

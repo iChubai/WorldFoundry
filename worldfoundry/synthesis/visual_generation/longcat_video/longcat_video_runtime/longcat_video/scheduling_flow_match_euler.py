@@ -105,24 +105,6 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         time_shift_type: str = "exponential",
         stochastic_sampling: bool = False,
     ):
-        """Init.
-
-        Args:
-            num_train_timesteps: The num train timesteps.
-            shift: The shift.
-            use_dynamic_shifting: The use dynamic shifting.
-            base_shift: The base shift.
-            max_shift: The max shift.
-            base_image_seq_len: The base image seq len.
-            max_image_seq_len: The max image seq len.
-            invert_sigmas: The invert sigmas.
-            shift_terminal: The shift terminal.
-            use_karras_sigmas: The use karras sigmas.
-            use_exponential_sigmas: The use exponential sigmas.
-            use_beta_sigmas: The use beta sigmas.
-            time_shift_type: The time shift type.
-            stochastic_sampling: The stochastic sampling.
-        """
         if self.config.use_beta_sigmas and not is_scipy_available():
             raise ImportError("Make sure to install scipy if you want to use beta sigmas.")
         if sum([self.config.use_beta_sigmas, self.config.use_exponential_sigmas, self.config.use_karras_sigmas]) > 1:
@@ -184,11 +166,6 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         self._begin_index = begin_index
 
     def set_shift(self, shift: float):
-        """Set shift.
-
-        Args:
-            shift: The shift.
-        """
         self._shift = shift
 
     def scale_noise(
@@ -240,21 +217,9 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         return sample
 
     def _sigma_to_t(self, sigma):
-        """Helper function to sigma to t.
-
-        Args:
-            sigma: The sigma.
-        """
         return sigma * self.config.num_train_timesteps
 
     def time_shift(self, mu: float, sigma: float, t: torch.Tensor):
-        """Time shift.
-
-        Args:
-            mu: The mu.
-            sigma: The sigma.
-            t: The t.
-        """
         if self.config.time_shift_type == "exponential":
             return self._time_shift_exponential(mu, sigma, t)
         elif self.config.time_shift_type == "linear":
@@ -383,12 +348,6 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         self._begin_index = None
 
     def index_for_timestep(self, timestep, schedule_timesteps=None):
-        """Index for timestep.
-
-        Args:
-            timestep: The timestep.
-            schedule_timesteps: The schedule timesteps.
-        """
         if schedule_timesteps is None:
             schedule_timesteps = self.timesteps
 
@@ -403,11 +362,6 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         return indices[pos].item()
 
     def _init_step_index(self, timestep):
-        """Helper function to init step index.
-
-        Args:
-            timestep: The timestep.
-        """
         if self.begin_index is None:
             if isinstance(timestep, torch.Tensor):
                 timestep = timestep.to(self.timesteps.device)
@@ -575,25 +529,10 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
         return sigmas
 
     def _time_shift_exponential(self, mu, sigma, t):
-        """Helper function to time shift exponential.
-
-        Args:
-            mu: The mu.
-            sigma: The sigma.
-            t: The t.
-        """
         return math.exp(mu) / (math.exp(mu) + (1 / t - 1) ** sigma)
 
     def _time_shift_linear(self, mu, sigma, t):
-        """Helper function to time shift linear.
-
-        Args:
-            mu: The mu.
-            sigma: The sigma.
-            t: The t.
-        """
         return mu / (mu + (1 / t - 1) ** sigma)
 
     def __len__(self):
-        """Len."""
         return self.config.num_train_timesteps

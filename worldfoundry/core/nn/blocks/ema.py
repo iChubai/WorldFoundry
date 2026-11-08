@@ -24,13 +24,6 @@ class LitEma(nn.Module):
     num_updates: torch.Tensor
 
     def __init__(self, model, decay=0.9999, use_num_upates=True):
-        """Init.
-
-        Args:
-            model: The model.
-            decay: The decay.
-            use_num_upates: The use num upates.
-        """
         super().__init__()
         if decay < 0.0 or decay > 1.0:
             raise ValueError("Decay must be between 0 and 1")
@@ -53,11 +46,7 @@ class LitEma(nn.Module):
         self.collected_params = []
 
     def forward(self, model):
-        """Forward.
-
-        Args:
-            model: The model.
-        """
+        """Forward."""
         updates_enabled = self.num_updates.ge(0)
         self.num_updates.add_(updates_enabled.to(dtype=self.num_updates.dtype))
         scheduled_decay = (1 + self.num_updates) / (10 + self.num_updates)
@@ -98,11 +87,7 @@ class LitEma(nn.Module):
     # ──────────────────────────────────────────────────────────────────────
 
     def copy_to(self, model):
-        """Copy to.
-
-        Args:
-            model: The model.
-        """
+        """Copy to."""
         m_param = dict(model.named_parameters())
         shadow_params = dict(self.named_buffers())
         for key in m_param:

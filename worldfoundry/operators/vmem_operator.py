@@ -41,7 +41,6 @@ _ACTION_TO_VMEM_COMMANDS = {
 
 
 def _normalize_action(action: str) -> str:
-    """Normalize action implementation."""
     key = action.strip().lower().replace("-", "_").replace(" ", "_")
     if key not in _ACTION_ALIASES:
         raise ValueError(f"Unsupported VMem interaction: {action}")
@@ -49,7 +48,6 @@ def _normalize_action(action: str) -> str:
 
 
 def _to_pil_image(data: Any) -> Image.Image:
-    """To pil image implementation."""
     if isinstance(data, Image.Image):
         return data.convert("RGB")
     if isinstance(data, str):

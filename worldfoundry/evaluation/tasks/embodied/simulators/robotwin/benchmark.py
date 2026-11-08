@@ -78,7 +78,6 @@ class _EvalGripperPlanner:
 
         Args:
             world_pcd: Input point cloud.
-            resolution: Resolution.
         """
         return None
 

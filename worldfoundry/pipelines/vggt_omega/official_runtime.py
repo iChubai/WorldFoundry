@@ -175,7 +175,6 @@ def run_model(
 
 
 def _normalize_preprocess_mode(preprocess_mode: str) -> str:
-    """Normalize preprocess mode helper function."""
     if preprocess_mode in {"balanced", "max_size"}:
         return preprocess_mode
     if preprocess_mode in {"crop", "pad", "square"}:
@@ -288,14 +287,12 @@ def predictions_to_glb(
 
 
 def _images_to_rgb(images: np.ndarray) -> np.ndarray:
-    """Images to rgb helper function."""
     if images.ndim == 4 and images.shape[1] == 3:
         return np.transpose(images, (0, 2, 3, 1))
     return images
 
 
 def _limit_points(vertices: np.ndarray, colors: np.ndarray, max_points: int) -> tuple[np.ndarray, np.ndarray]:
-    """Limit points helper function."""
     if max_points <= 0 or len(vertices) <= max_points:
         return vertices, colors
     indices = np.linspace(0, len(vertices) - 1, max_points).astype(np.int64)

@@ -58,6 +58,53 @@ WorldFoundry `CausalForcingPipeline` 默认值（共享 forcing 运行时；`use
 
 `worldfoundry-eval run causal-forcing`，环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。与 Self-Forcing 同一环境族。可选根目录：`$WORLDFOUNDRY_CAUSAL_FORCING_CKPT_ROOT`、`$WORLDFOUNDRY_CAUSAL_FORCING_REPO_ROOT`。catalog 许可证为 **unknown**——生产使用前请核对本仓库 GitHub / Hugging Face 卡片。catalog 未记录 VRAM。缺 Wan 或学生权重时运行时报错，不会下载。
 
+## 原生路线
+
+WorldFoundry 也能不经内置官方运行时、直接运行每个已发布的 Causal-Forcing 学生。原生 recipe 复用原生 [Self-Forcing](/zh/docs/guides/supported-models/self-forcing) 的部件：带 21 个 latent 帧全局 KV cache 的因果 Wan2.1 1.3B 网络，在 shift 5 时间表上做蒸馏 x0 预测的 `autoregressive-window` runner，Wan2.1 umT5 文本编码器，以及 bf16 的 Wan2.1 VAE。入口是 `NativeCausalForcingPipeline`（`worldfoundry.pipelines.forcing.pipeline_native_forcing`）。上文 catalog 的 `causal-forcing` binding 仍运行官方运行时，因此原生 recipe 使用各自的 ID：
+
+| 模型 ID | Checkpoint（`zhuhz22/Causal-Forcing`） | 权重 | 每块 latent 帧数 | 每块步数 | 图像输入 |
+| --- | --- | --- | --- | --- | --- |
+| `causal-forcing-chunkwise`（默认） | `chunkwise/causal_forcing.pt` | `generator` | 3 | 4：`[1000, 750, 500, 250]` | 否 |
+| `causal-forcing-framewise` | `framewise/causal_forcing.pt` | `generator_ema` | 1 | 4：`[1000, 750, 500, 250]` | 可选首帧 |
+| `causal-forcing-framewise-1step` | `causal-forcing++/framewise-1step.pt` | `generator_ema` | 1 | 首帧 4 步，之后 1 步：`[1000]` | 否 |
+| `causal-forcing-framewise-2step` | `causal-forcing++/framewise-2step.pt` | `generator_ema` | 1 | 首帧 4 步，之后 2 步：`[1000, 500]` | 否 |
+
+每个发布文件只含一份 generator state dict。加载时去掉 `model.` 与 FSDP 前缀并严格加载。默认值与官方 CLI 一致：480×832、81 帧（21 个 latent 帧）、guidance 1.0、16 fps，推理步数等于该变体步数列表的长度。
+
+```python
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeCausalForcingPipeline
+
+wan = "<ckpts>/Wan-AI--Wan2.1-T2V-1.3B"
+pipeline = NativeCausalForcingPipeline.from_pretrained(
+    model_id="causal-forcing-framewise",
+    device="cuda",
+    torch_dtype="bf16",
+    offload_mode="none",
+    checkpoint_overrides={
+        "dit": "<ckpts>/zhuhz22--Causal-Forcing/framewise/causal_forcing.pt",
+        "text-encoder": wan,
+        "tokenizer": wan,
+        "vae": wan,
+    },
+)
+t2v = pipeline(prompt="A red fox walks through a sunlit forest.", seed=42, return_dict=True)
+i2v = pipeline(prompt="An abandoned room.", images="testcase/012_abandoned-room.png", seed=42, return_dict=True)
+```
+
+**图生视频**沿用官方 `--i2v` 路线，只在 frame-wise 学生上提供。图像用 torchvision `Resize((height, width))` 缩放（不保持宽高比、不裁剪），归一化到 [-1, 1]，再由 bf16 的 Wan2.1 VAE 编码。其 latent 作为第 0 个 latent 帧、在时间步 0 写入 KV cache，rollout 生成其余 20 个 latent 帧。
+
+frame-wise 学生在步间重加噪时用 bf16 计算，与官方调度器对单样本单帧块的做法一致；chunk-wise 块用 float32 重加噪。
+
+**实时。** `NativeCausalForcingPipeline` 提供与原生 Self-Forcing 相同的常驻会话（`prepare_realtime`、`configure_realtime`、`stream_realtime`、`reset_realtime`）。每次 `stream_realtime` 提交并解码一个 latent 块，16 fps，`advance="continuous"`：
+
+| 变体 | 首块 | 之后每块 | 81 帧时的块数 |
+| --- | --- | --- | --- |
+| chunk-wise | 9 帧 | 12 帧 | 7 |
+| frame-wise 与 Causal Forcing++，纯文本 | 1 帧 | 4 帧 | 21 |
+| frame-wise 带图像 | 5 帧（图像帧加第一块） | 4 帧 | 20 |
+
+**证据。** `tests/manual/self_forcing_parity.py --model-id <id>` 把一个变体与内置官方运行时录制的一次运行逐项对比：MovieGenVideoBench 第一条提示词、seed 42、480×832、21 个 latent 帧、bf16、单张 H100，并注入官方的初始噪声与重加噪采样。四个文生视频变体和 frame-wise 图生视频（图像 `testcase/012_abandoned-room.png`）在每一环节都与官方逐位一致：checkpoint 严格加载（0 缺失、0 多余、0 形状不符）、提示词嵌入、图生视频的预处理图像及其 latent、以录制输入逐次调用 generator、rollout 最终 latent，以及参考 latent 的整段解码与分块流式解码。回放案例 `causal-forcing-chunkwise-t2v-short` 与 `causal-forcing-framewise-short`（含一次图像首帧调用）在 128×224 下覆盖原生路线。
+
 ## 最小评测
 
 chunk-wise 文生视频，再跑 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`。批量提示词列表需单独准备，并通过 `$WORLDFOUNDRY_FORCING_PROMPTS_ROOT` 选择目录。demo 一致性仍为 pending；有界 VBench 主键仍是 `aesthetic_quality`。

@@ -324,7 +324,7 @@ Never auto-selected. The run is marked `quality_tier="approximate"`. Only the Wa
   { name: "LightX2V sparse kinds", hintLabel: "Kinds", hint: "dynamic_sparse, sparge, nbhd, lightx2v_sla_mask, flexblock, lightx2v_spas_sage, draft_attn, radial_attn, rainfusion_attn, svg_attn, svg2_attn, lightx2v_svg_mask", description: "Pinned LightX2V training-free sparse lanes. Each call must hit the pinned provider. Ambiguous aliases sla / sagesla are not accepted.", reads: [{ label: "Needs", value: "the pinned LightX2V checkout and a matching operator" }] }
 ]} />
 
-STA / VSA / VMoBA symbols come from the vendored `thirdparty/fastvideo-kernel` tree (or a matching installed `fastvideo_kernel` wheel). Local build: set `CUDA_HOME` and `CUDACXX`, then `./build.sh` in that directory. ThunderKittens C++ kernels compile only on Hopper `sm_90a` (never on aarch64 hosts); otherwise Triton fallbacks run. FP4 attention / quant CUDA extensions need Blackwell `sm_120a` and CUDA ≥ 12.8. FA4 CuTe block-sparse is an optional `flash_attn.cute` extra, not part of the default build.
+STA / VSA / VMoBA symbols come from the vendored `thirdparty/fastvideo-kernel` tree (or a matching installed `fastvideo_kernel` wheel). Local build: set `CUDA_HOME` and `CUDACXX`, then run `./fetch_headers.sh` (pinned CUTLASS and ThunderKittens headers) and `./build.sh` in that directory. ThunderKittens C++ kernels compile only on Hopper `sm_90a` (never on aarch64 hosts); otherwise Triton fallbacks run. FP4 attention / quant CUDA extensions need Blackwell `sm_120a` and CUDA ≥ 12.8. FA4 CuTe block-sparse is an optional `flash_attn.cute` extra, not part of the default build.
 
 ### Quantization (experimental)
 

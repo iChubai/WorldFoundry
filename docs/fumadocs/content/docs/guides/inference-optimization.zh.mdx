@@ -289,7 +289,7 @@ Wan2.2 公开管线接受 `peft_adapter_path`，在校验 adapter / 基模 / tar
   { name: "LightX2V sparse kinds", hintLabel: "种类", hint: "dynamic_sparse, sparge, nbhd, lightx2v_sla_mask, flexblock, lightx2v_spas_sage, draft_attn, radial_attn, rainfusion_attn, svg_attn, svg2_attn, lightx2v_svg_mask", description: "Pinned LightX2V 免训练稀疏通路。每次调用必须命中 pinned provider。有歧义的 sla / sagesla 别名不接受。", reads: [{ label: "依赖", value: "pinned LightX2V checkout 与匹配的 operator" }] }
 ]} />
 
-STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已安装的匹配 `fastvideo_kernel` wheel）。本地编译：设置 `CUDA_HOME` 和 `CUDACXX`，在该目录跑 `./build.sh`。ThunderKittens C++ kernel 只在 Hopper `sm_90a` 编译（aarch64 宿主永远不编）；否则走 Triton fallback。FP4 attention / 量化 CUDA 扩展需要 Blackwell `sm_120a` 且 CUDA ≥ 12.8。FA4 CuTe block-sparse 是可选的 `flash_attn.cute` 附加件，不在默认构建里。
+STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已安装的匹配 `fastvideo_kernel` wheel）。本地编译：设置 `CUDA_HOME` 和 `CUDACXX`，在该目录先跑 `./fetch_headers.sh`（拉取固定 commit 的 CUTLASS 与 ThunderKittens 头文件），再跑 `./build.sh`。ThunderKittens C++ kernel 只在 Hopper `sm_90a` 编译（aarch64 宿主永远不编）；否则走 Triton fallback。FP4 attention / 量化 CUDA 扩展需要 Blackwell `sm_120a` 且 CUDA ≥ 12.8。FA4 CuTe block-sparse 是可选的 `flash_attn.cute` 附加件，不在默认构建里。
 
 ### 量化（实验性）
 

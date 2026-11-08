@@ -446,6 +446,7 @@ worldfoundry/studio/assets/vendor/
 /worldfoundry/synthesis/visual_generation/vmem/vmem_runtime/extern/CUT3R/
 /worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime/
 /thirdparty/diff-gaussian-rasterization/
+/thirdparty/fastvideo-kernel/include/
 /thirdparty/SageAttention/
 /thirdparty/simple-knn/
 

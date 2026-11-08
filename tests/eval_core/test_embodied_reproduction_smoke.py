@@ -11,7 +11,6 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURES_ROOT = REPO_ROOT / "worldfoundry" / "data" / "test_cases" / "evaluation" / "embodied_fixtures"
-VERIFY_SCRIPT = REPO_ROOT / "scripts" / "benchmark_zoo" / "verify_embodied_reproduction.sh"
 PYTHON = sys.executable
 
 
@@ -108,16 +107,3 @@ def test_embodied_fixture_manifest_matches_parametrize() -> None:
     contract_ids = set(manifest["contract_benchmark_ids"])
     assert {"libero", "robomme", "robotwin"}.issubset(fixture_ids)
     assert {"libero", "robomme", "robotwin"}.issubset(contract_ids)
-
-
-def test_verify_embodied_reproduction_smoke_script(tmp_path: Path) -> None:
-    assert VERIFY_SCRIPT.is_file()
-    completed = subprocess.run(
-        ["bash", str(VERIFY_SCRIPT), "smoke", str(tmp_path / "verify")],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        env=_subprocess_env(),
-    )
-    assert completed.returncode == 0, completed.stdout + completed.stderr

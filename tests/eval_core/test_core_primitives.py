@@ -5,12 +5,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from scripts.model_zoo.foundation_inventory import (
-    ast_duplicate_groups,
-    build_foundation_layer_inventory,
-    file_duplicate_groups,
-    iter_foundation_layer_files,
-)
 from worldfoundry.core import (
     DuplicateRegistryKeyError,
     PatchGridSpec,
@@ -143,9 +137,9 @@ def test_core_model_runtime_path_helpers_are_env_driven(tmp_path: Path) -> None:
     assert hfd_root_path("org--model", env=env) == tmp_path / "hfd" / "org--model"
     assert conda_root_path(env) == tmp_path / "conda"
     assert conda_envs_root_path(env) == tmp_path / "envs"
-    assert resolve_worldfoundry_path("${WORLDFOUNDRY_HFD_ROOT}/mirror", {"WORLDFOUNDRY_HFD_ROOT": str(tmp_path / "hfd")}) == (
-        tmp_path / "hfd" / "mirror"
-    )
+    assert resolve_worldfoundry_path(
+        "${WORLDFOUNDRY_HFD_ROOT}/mirror", {"WORLDFOUNDRY_HFD_ROOT": str(tmp_path / "hfd")}
+    ) == (tmp_path / "hfd" / "mirror")
 
 
 def test_core_media_inference_handles_paths_urls_and_queries() -> None:
@@ -180,6 +174,7 @@ def test_core_artifact_visualization_helpers_are_canonical() -> None:
         visualize_tensor_bcthw,
         visualize_wasd_and_rotation_ui,
     )
+
     depth = np.array([[0.0, 1.0], [2.0, np.nan]], dtype=np.float32)
     depth_uint8 = depth_to_uint8(depth)
     assert depth_uint8 is not None
@@ -499,7 +494,9 @@ def test_attention_helper_matches_torch_sdpa_shape_if_torch_available() -> None:
 def test_attention_backend_probe_normalizes_sparse_attention_names() -> None:
     assert normalize_attention_backend("FLASH_ATTN") == "flash_attention"
     assert normalize_attention_backend("SAGE_ATTN_THREE") == "sage_attention_3"
-    assert attention_backend_from_env({"WORLDFOUNDRY_ATTENTION_BACKEND": "VIDEO_SPARSE_ATTN"}) == "video_sparse_attention"
+    assert (
+        attention_backend_from_env({"WORLDFOUNDRY_ATTENTION_BACKEND": "VIDEO_SPARSE_ATTN"}) == "video_sparse_attention"
+    )
     assert resolve_attention_backend("math") == "torch"
     assert any(capability.name == "torch" and capability.usable for capability in attention_backend_report())
 
@@ -614,52 +611,3 @@ def test_3d_rope_builds_cpu_frequency_table() -> None:
 
     assert freqs.shape == (12, 1, 1, 12)
     assert freqs.device.type == "cpu"
-
-
-def test_foundation_layer_inventory_groups_hashes_and_import_metadata(tmp_path: Path) -> None:
-    repo = tmp_path
-    first = repo / "worldfoundry/base_models/foo/attention.py"
-    second = repo / "worldfoundry/synthesis/bar/bar_runtime/attention.py"
-    third = repo / "worldfoundry/training/baz/rope.py"
-    shim_a = repo / "worldfoundry/base_models/foo/attn_shim.py"
-    shim_b = repo / "worldfoundry/pipelines/foo/attn_shim.py"
-    symlink = repo / "worldfoundry/base_models/foo/attention_symlink.py"
-    for path in (first, second, third, shim_a, shim_b):
-        path.parent.mkdir(parents=True, exist_ok=True)
-    source = "import torch\n\nclass AttentionBlock:\n    pass\n"
-    first.write_text(source, encoding="utf-8")
-    second.write_text(source, encoding="utf-8")
-    third.write_text("from .attention import AttentionBlock\n\ndef rotate_half(x):\n    return x\n", encoding="utf-8")
-    shim_source = "from worldfoundry.base_models.foo.attention import AttentionBlock\n\n__all__ = [\"AttentionBlock\"]\n"
-    shim_a.write_text(shim_source, encoding="utf-8")
-    shim_b.write_text(shim_source, encoding="utf-8")
-    symlink.symlink_to("attention.py")
-
-    entries = build_foundation_layer_inventory(repo, include_runtime=True)
-    paths = [entry.path for entry in entries]
-
-    assert paths == [
-        "worldfoundry/base_models/foo/attention.py",
-        "worldfoundry/base_models/foo/attn_shim.py",
-        "worldfoundry/pipelines/foo/attn_shim.py",
-        "worldfoundry/synthesis/bar/bar_runtime/attention.py",
-        "worldfoundry/training/baz/rope.py",
-    ]
-    assert file_duplicate_groups(entries) == ((
-        "worldfoundry/base_models/foo/attention.py",
-        "worldfoundry/synthesis/bar/bar_runtime/attention.py",
-    ),)
-    assert ast_duplicate_groups(entries) == file_duplicate_groups(entries)
-    assert entries[0].owner_package == "worldfoundry.base_models.foo"
-    assert entries[0].imports == ("torch",)
-    assert entries[0].public_symbols == ("AttentionBlock",)
-    assert entries[1].reexport_only is True
-    assert entries[3].runtime_owned is True
-
-    filtered = iter_foundation_layer_files(repo, include_runtime=False)
-    assert [str(path.relative_to(repo)) for path in filtered] == [
-        "worldfoundry/base_models/foo/attention.py",
-        "worldfoundry/base_models/foo/attn_shim.py",
-        "worldfoundry/pipelines/foo/attn_shim.py",
-        "worldfoundry/training/baz/rope.py",
-    ]

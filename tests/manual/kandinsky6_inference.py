@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 WorldFoundry contributors
+# SPDX-License-Identifier: Apache-2.0
 """Generate and decode a checkpoint-backed Kandinsky-6 audio-video clip."""
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ def main() -> None:
     import av
     import numpy as np
     import torch
+    import torch.version
 
     from worldfoundry.pipelines.kandinsky6 import Kandinsky6Pipeline
 

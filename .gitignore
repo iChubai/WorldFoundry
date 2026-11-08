@@ -7,6 +7,7 @@
 /scripts/benchmark*.py
 /scripts/benchmark_zoo/
 /scripts/embodied/mirror_docker_images.py
+/scripts/embodied/prepare_official_assets.py
 /scripts/embodied/resolve_official_image_digests.py
 /scripts/embodied/run_dlc_embodied_eval.sh
 /scripts/embodied/submit_dlc_embodied_eval.sh
@@ -14,6 +15,7 @@
 /scripts/inference/prepare_leworldmodel_smoke_dataset.py
 /scripts/inference/run_nav_video_gen.sh
 /scripts/inference/validate_video_artifacts.py
+/scripts/model_zoo/foundation_inventory.py
 /scripts/model_zoo/matrix_game2_demo_common.py
 /scripts/model_zoo/matrix_game_parity_worker.py
 /scripts/model_zoo/run_matrix_game2_official_demo.py
@@ -1003,3 +1005,9 @@ worldfoundry/studio/assets/vendor/
 /tests/**/logs/
 /tests/**/outputs/
 /tests/**/.env*
+# Tests of the local maintenance scripts above stay local with them.
+/tests/eval_core/test_embodied_dlc_workers.py
+/tests/eval_core/test_foundation_inventory.py
+/tests/eval_core/test_prepare_official_assets_git.py
+/tests/eval_core/test_resolve_official_image_digests.py
+/tests/evaluation/embodied/test_prepare_official_assets_revisions.py

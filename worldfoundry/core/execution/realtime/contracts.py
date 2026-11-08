@@ -41,7 +41,7 @@ class RealtimeKey:
     label: str = ""
 
     def __post_init__(self) -> None:
-        """Reject bindings that could never be pressed or never produce an action."""
+        """Reject bindings without a key or an action; the server rejects key names it cannot match."""
         if not isinstance(self.key, str) or not self.key or not isinstance(self.action, str) or not self.action:
             raise ValueError("Realtime keys require a non-empty key and action")
 

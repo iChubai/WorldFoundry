@@ -317,6 +317,12 @@ def test_realtime_spec_rejects_invalid_keys_and_axes(build: Any) -> None:
         build()
 
 
+@pytest.mark.parametrize("key", ["W", " ", "arrowup"])
+def test_realtime_resampler_rejects_key_names_it_cannot_match(key: str) -> None:
+    with pytest.raises(ValueError, match="normalized key names"):
+        RealtimeControlResampler(fps=16, realtime_keys=(RealtimeKey(key, "jump"),))
+
+
 def test_realtime_spec_from_payload_falls_back_on_malformed_axes() -> None:
     fallback = RealtimeSpec(fps=24)
     assert (

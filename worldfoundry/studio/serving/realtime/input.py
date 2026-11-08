@@ -127,6 +127,9 @@ class RealtimeControlResampler:
     ) -> None:
         if fps <= 0:
             raise ValueError("fps must be > 0")
+        unreachable = [binding.key for binding in realtime_keys if normalize_control_key(binding.key) != binding.key]
+        if unreachable:
+            raise ValueError(f"Realtime keys must use normalized key names; cannot match {unreachable!r}")
         self.fps = float(fps)
         self.dt = 1.0 / self.fps
         self.next_chunk_start = float(start_time)

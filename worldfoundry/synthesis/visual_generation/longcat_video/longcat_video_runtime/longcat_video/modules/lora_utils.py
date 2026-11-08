@@ -97,9 +97,8 @@ class LoRANetwork(torch.nn.Module):
 
         loras = []
         for lora_name in lora_module_names:
-            # 还原为模型中的真实模块名
+            # Recover the module path in the model.
             module_name = lora_name.replace("lora___lorahyphen___", "").replace("___lorahyphen___", ".")
-            # 查找模块
             try:
                 module = model
                 for part in module_name.split("."):
@@ -110,7 +109,7 @@ class LoRANetwork(torch.nn.Module):
             if module.__class__.__name__ not in ("Linear", "QuantizedLinear"):
                 continue
 
-            # 推断 n_seperate
+            # Number of lora_up.blocks keys; 1 when lora_up is not split into blocks.
             n_seperate = 1
             prefix = lora_name + ".lora_up.blocks"
             n_blocks = sum(1 for k in lora_network_state_dict_loaded if k.startswith(prefix))

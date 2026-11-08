@@ -295,7 +295,7 @@ def _attn_fwd_bsa_varlen_align(
     acc = tl.zeros([BLOCK_M, HEAD_DIM], dtype=tl.float32)
     # load scales
     qk_scale = sm_scale
-    qk_scale *= 1.44269504  # 1/ln2; exp2(x/ln2) == exp2(ln(e^x) / ln2) == exp2(log2(e^x)) == exp(x)；乘1/ln2后，exp2(x/ln2) == exp(x)，exp2速度更快
+    qk_scale *= 1.44269504  # 1/ln2: exp2(x/ln2) == exp(x), and exp2 is faster.
     # load q: it will stay in SRAM throughout
     q = tl.load(Q_block_ptr)
     S = tl.load(block_indices_lens)
@@ -321,10 +321,10 @@ def _attn_fwd_bsa_varlen_align(
         acc = acc * alpha[:, None]
         # update acc
         v = tl.load(V_block_ptr_i)
-        acc = tl.dot(p.to(v.dtype), v, acc)  # 没除se，fa2引入的优化
+        acc = tl.dot(p.to(v.dtype), v, acc)  # Normalization by the softmax sum is deferred (FlashAttention-2).
         # update m_i and l_i
         # place this at the end of the loop to reduce register pressure: https://github.com/triton-lang/triton/commit/ee6abd9
-        l_i = l_i * alpha + l_ij  # 当前总se
+        l_i = l_i * alpha + l_ij  # Running softmax sum.
         m_i = m_ij
 
     # epilogue

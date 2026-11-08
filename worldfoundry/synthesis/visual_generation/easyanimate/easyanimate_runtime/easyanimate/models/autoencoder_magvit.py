@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -30,15 +29,7 @@ try:
 except:
     from diffusers.loaders import FromOriginalModelMixin as FromOriginalVAEMixin
 
-from diffusers import AutoencoderKL
-from diffusers.models.attention_processor import (
-    ADDED_KV_ATTENTION_PROCESSORS,
-    CROSS_ATTENTION_PROCESSORS,
-    Attention,
-    AttentionProcessor,
-    AttnAddedKVProcessor,
-    AttnProcessor,
-)
+from diffusers import AutoencoderKL as AutoencoderKL
 
 from ..vae.ldm.models.cogvideox_enc_dec import (
     CogVideoXCausalConv3d,
@@ -493,7 +484,7 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
         model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)
         model_file_safetensors = model_file.replace(".bin", ".safetensors")
         if os.path.exists(model_file_safetensors):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(model_file_safetensors)
         else:

@@ -6,7 +6,6 @@ import math
 
 import numpy as np
 import torch
-import torch.nn.functional as functional
 from torch import nn
 
 from .transformer import Transformer, TransformerEncoder, TransformerEncoderLayer

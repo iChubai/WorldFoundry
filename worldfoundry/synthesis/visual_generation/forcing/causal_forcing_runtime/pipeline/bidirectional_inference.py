@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 from worldfoundry.synthesis.visual_generation.forcing.shared.wan_wrapper import (

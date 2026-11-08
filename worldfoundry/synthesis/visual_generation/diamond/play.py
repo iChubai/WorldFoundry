@@ -1,6 +1,5 @@
 import argparse
 from pathlib import Path
-from typing import Tuple
 
 import torch
 from agent import Agent

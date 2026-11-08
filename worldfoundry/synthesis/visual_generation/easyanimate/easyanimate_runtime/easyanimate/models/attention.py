@@ -11,34 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
-import diffusers
-import pkg_resources
+import pkg_resources  # noqa: F401 - Keeps the module's import-time setup.
 import torch
 import torch.nn.functional as F
 import torch.nn.init as init
-from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.attention_processor import (
     Attention,
-    AttentionProcessor,
     AttnProcessor2_0,
     HunyuanAttnProcessor2_0,
 )
 from diffusers.models.embeddings import (
     SinusoidalPositionalEmbedding,
-    TimestepEmbedding,
-    Timesteps,
-    get_3d_sincos_pos_embed,
 )
-from diffusers.models.modeling_outputs import Transformer2DModelOutput
-from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormZero, CogVideoXLayerNormZero
-from diffusers.utils import USE_PEFT_BACKEND, is_torch_version, logging
+from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormZero
 from diffusers.utils.import_utils import is_xformers_available
 from diffusers.utils.torch_utils import maybe_allow_in_graph
-from einops import rearrange, repeat
+from einops import rearrange
 from torch import nn
 
 from .motion_module import PositionalEncoding, get_motion_module

@@ -17,7 +17,7 @@ import json
 import os
 import zipfile
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 import cv2
 import numpy as np

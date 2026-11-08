@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple
-
 import gymnasium
 import pygame
 

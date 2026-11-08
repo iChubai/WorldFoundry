@@ -9,7 +9,7 @@ specifies `siglip-224px+7b`.
 # Vendored into WorldFoundry from the openvla/openvla-7b HuggingFace snapshot
 # so runtime imports do not depend on external repo code or HF remote-code cache.
 
-from typing import Any, ClassVar, List, Optional, Tuple, Union
+from typing import Any, ClassVar
 
 import timm.data
 import torch

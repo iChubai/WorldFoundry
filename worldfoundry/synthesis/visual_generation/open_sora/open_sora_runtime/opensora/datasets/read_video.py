@@ -2,7 +2,7 @@ import gc
 import math
 import os
 from fractions import Fraction
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import av
 import cv2

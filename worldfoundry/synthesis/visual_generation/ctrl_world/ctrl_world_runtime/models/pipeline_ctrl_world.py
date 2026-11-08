@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import Dict, List, Optional, Union
 
 import einops
 import PIL
@@ -7,7 +6,6 @@ import torch
 
 # from diffusers import TextToVideoSDPipeline, StableVideoDiffusionPipeline
 from diffusers import TextToVideoSDPipeline
-from einops import rearrange, repeat
 from models.pipeline_stable_video_diffusion import StableVideoDiffusionPipeline
 
 try:
@@ -15,10 +13,8 @@ try:
 except ModuleNotFoundError:
     # diffusers>=0.35 moved the legacy text-to-video pipeline under deprecated/.
     from diffusers.pipelines.deprecated.text_to_video_synthesis.pipeline_output import TextToVideoSDPipelineOutput
-from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import (
     StableVideoDiffusionPipelineOutput,
-    _resize_with_antialiasing,
 )
 from diffusers.utils.torch_utils import randn_tensor
 

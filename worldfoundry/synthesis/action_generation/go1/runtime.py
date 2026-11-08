@@ -124,7 +124,6 @@ class GO1Runtime:
     def _load_model(self) -> Any:
         if self._model is not None:
             return self._model
-        import torch
 
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 

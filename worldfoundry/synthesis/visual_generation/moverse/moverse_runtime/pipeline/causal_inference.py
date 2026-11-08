@@ -1,5 +1,4 @@
 import time
-from typing import List, Optional
 
 import torch
 from utils.misc import randn_like_fp32_cast
@@ -7,7 +6,6 @@ from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 from pipeline.causal_base import CausalPipelineBase
 from worldfoundry.core.vram import (
-    DynamicSwapInstaller,
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,

@@ -4,7 +4,6 @@ import string
 
 import ftfy
 import regex as re
-from transformers import AutoTokenizer
 
 __all__ = ["HuggingfaceTokenizer"]
 

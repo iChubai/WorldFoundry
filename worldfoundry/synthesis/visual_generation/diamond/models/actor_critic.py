@@ -1,6 +1,5 @@
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn

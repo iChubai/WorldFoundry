@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F

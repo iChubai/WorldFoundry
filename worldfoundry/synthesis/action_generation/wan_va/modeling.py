@@ -21,7 +21,6 @@ from diffusers.models.normalization import FP32LayerNorm
 from einops import rearrange
 from torch.nn.attention.flex_attention import (
     BlockMask,
-    _mask_mod_signature,
     and_masks,
     create_block_mask,
     flex_attention,

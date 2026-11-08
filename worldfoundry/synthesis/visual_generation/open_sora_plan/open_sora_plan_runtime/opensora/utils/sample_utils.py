@@ -24,16 +24,18 @@ from diffusers.schedulers import (
 from einops import rearrange
 from huggingface_hub import snapshot_download
 from torchvision.utils import save_image
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM as AutoModelForCausalLM
 
 try:
     import torch_npu
-    from opensora.acceleration.parallel_states import hccl_info, initialize_sequence_parallel_state
+    from opensora.acceleration.parallel_states import hccl_info as hccl_info
+    from opensora.acceleration.parallel_states import initialize_sequence_parallel_state
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
     npu_config = None
-    from opensora.utils.parallel_states import initialize_sequence_parallel_state, nccl_info
+    from opensora.utils.parallel_states import initialize_sequence_parallel_state
+    from opensora.utils.parallel_states import nccl_info as nccl_info
 
 
 from opensora.models.causalvideovae import ae_stride_config, ae_wrapper
@@ -42,7 +44,8 @@ from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2
 from opensora.sample.pipeline_inpaint import OpenSoraInpaintPipeline
 from opensora.sample.pipeline_opensora import OpenSoraPipeline
 from opensora.utils.utils import set_seed
-from transformers import AutoTokenizer, CLIPTextModelWithProjection, MT5EncoderModel, T5EncoderModel, T5Tokenizer
+from transformers import AutoTokenizer, CLIPTextModelWithProjection, MT5EncoderModel, T5EncoderModel
+from transformers import T5Tokenizer as T5Tokenizer
 
 
 def get_scheduler(args):

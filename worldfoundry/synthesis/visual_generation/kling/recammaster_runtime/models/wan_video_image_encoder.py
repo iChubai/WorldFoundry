@@ -1,9 +1,5 @@
-import math
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as T
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import clip_xlm_roberta_vit_h_14
 

@@ -4,7 +4,7 @@
 
 
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 try:
     from numpydantic import NDArray

@@ -1,5 +1,3 @@
-from typing import Optional, Tuple, Union
-
 import torch
 import torch.nn as nn
 from diffusers.models.attention_processor import Attention

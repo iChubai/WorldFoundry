@@ -1,5 +1,3 @@
-from typing import Optional, Union
-
 import cv2
 import numpy as np
 import open3d as o3d
@@ -49,7 +47,7 @@ class WorldGen:
 
         self.use_sharp = use_sharp
         if use_sharp:
-            from .pano_sharp import build_sharp_model, predict_equirectangular
+            from .pano_sharp import build_sharp_model
 
             self.sharp_model = build_sharp_model(device=device)
 

@@ -2,7 +2,6 @@
 
 import math
 import warnings
-from typing import List, Optional, Tuple, Union
 
 import torch
 from einops import rearrange

@@ -18,7 +18,7 @@ for project_root in project_roots:
     sys.path.insert(0, project_root) if project_root not in sys.path else None
 
 from videox_fun.data import process_pose_file
-from videox_fun.pipeline import Wan2_2FunControlPipeline, WanPipeline
+from videox_fun.pipeline import Wan2_2FunControlPipeline
 from videox_fun.utils import register_auto_device_hook, safe_enable_group_offload
 from videox_fun.utils.fp8_optimization import (
     convert_model_weight_to_float8,
@@ -37,7 +37,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.v
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (
     WanT5EncoderModel,
 )
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import CLIPModel
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import (
     Wan2_2Transformer3DModel,
 )
@@ -191,7 +190,7 @@ else:
 if transformer_path is not None:
     print(f"From checkpoint: {transformer_path}")
     if transformer_path.endswith("safetensors"):
-        from safetensors.torch import load_file, safe_open
+        from safetensors.torch import load_file
 
         state_dict = load_file(transformer_path)
     else:
@@ -204,7 +203,7 @@ if transformer_2 is not None:
     if transformer_high_path is not None:
         print(f"From checkpoint: {transformer_high_path}")
         if transformer_high_path.endswith("safetensors"):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(transformer_high_path)
         else:
@@ -225,7 +224,7 @@ vae = Chosen_AutoencoderKL.from_pretrained(
 if vae_path is not None:
     print(f"From checkpoint: {vae_path}")
     if vae_path.endswith("safetensors"):
-        from safetensors.torch import load_file, safe_open
+        from safetensors.torch import load_file
 
         state_dict = load_file(vae_path)
     else:

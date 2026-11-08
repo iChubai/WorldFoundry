@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from multiprocessing import Array, Pipe, connection
 from multiprocessing.context import Process
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import cloudpickle
 import gym

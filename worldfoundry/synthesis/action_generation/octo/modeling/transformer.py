@@ -1,6 +1,5 @@
 # adapted from https://github.com/google-research/vision_transformer/blob/main/vit_jax/models_vit.py
 from collections.abc import Callable
-from typing import Optional
 
 import flax.linen as nn
 import jax

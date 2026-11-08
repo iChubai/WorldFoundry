@@ -14,20 +14,17 @@
 #
 #  Changes were made to this source code by Yuwei Guo.
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.utils import BaseOutput, logging
-from einops import rearrange, repeat
 from torch import nn
 from torch.nn import functional as F
 
 from .resnet import InflatedConv3d
 from .unet_blocks import (
-    CrossAttnDownBlock3D,
-    DownBlock3D,
     UNetMidBlock3DCrossAttn,
     get_down_block,
 )

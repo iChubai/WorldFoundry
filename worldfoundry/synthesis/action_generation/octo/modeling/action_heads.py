@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Tuple
 
 import flax.linen as nn
 import jax

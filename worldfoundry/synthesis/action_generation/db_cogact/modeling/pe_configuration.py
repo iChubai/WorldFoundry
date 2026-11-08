@@ -1,6 +1,5 @@
 # Inference-only DB-CogACT source retained in-tree.
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .pe_model import PerceptionEncoderWithDownsample
 

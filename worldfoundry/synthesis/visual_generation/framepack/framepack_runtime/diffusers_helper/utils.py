@@ -7,7 +7,6 @@ import random
 import cv2
 import einops
 import numpy as np
-import safetensors.torch as sf
 import torch
 import torchvision
 from PIL import Image

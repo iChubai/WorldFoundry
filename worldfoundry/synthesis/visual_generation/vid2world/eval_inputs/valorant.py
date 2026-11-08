@@ -2,9 +2,7 @@
 
 import glob
 import os
-from typing import List, Optional, Tuple
 
-import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset

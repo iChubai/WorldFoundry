@@ -9,7 +9,8 @@ from ..modules.ops import video_to_image
 try:
     import torch_npu
 
-    from opensora.npu_config import npu_config, set_run_dtype
+    from opensora.npu_config import npu_config
+    from opensora.npu_config import set_run_dtype as set_run_dtype
 except Exception:
     torch_npu = None
     npu_config = None

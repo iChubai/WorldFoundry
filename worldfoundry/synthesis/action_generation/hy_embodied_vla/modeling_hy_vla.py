@@ -34,7 +34,6 @@ import os
 import sys
 from collections import deque
 from contextlib import suppress
-from pathlib import Path
 
 import torch
 import torch.nn.functional as F

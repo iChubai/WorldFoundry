@@ -1,16 +1,12 @@
 import gc
 import math
-import mmap
 import os
 import pickle
 import random
 import subprocess
-import sys
-import threading
 
 import numpy as np
 import torch
-import torch.distributed as dist
 
 from opensora.adaptor.zp_manager import zp_manager
 
@@ -18,7 +14,7 @@ try:
     import torch_npu
 
     npu_is_available = True
-    from torch_npu.contrib import transfer_to_npu
+    from torch_npu.contrib import transfer_to_npu  # noqa: F401 - Import checks optional dependency availability.
 except:
     npu_is_available = False
 
@@ -93,15 +89,13 @@ class NPUConfig:
         self.mm = dict()
 
         if self.on_npu:
-            import sys
-
-            import deepspeed
+            import deepspeed  # noqa: F401 - Keeps the module's import-time setup.
 
             torch_npu.npu.set_compile_mode(jit_compile=False)
 
             import deepspeed.runtime.utils as utils
 
-            from opensora.adaptor.utils import all_gather_dp_groups, all_gather_into_tensor_dp_groups
+            from opensora.adaptor.utils import all_gather_dp_groups
 
             utils.all_gather_dp_groups = all_gather_dp_groups
 

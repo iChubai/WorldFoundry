@@ -5,10 +5,9 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.pipelines.gen3c.constants import DEFAULT_GEN3C_NEGATIVE_PROMPT
+from worldfoundry.pipelines.gen3c.constants import DEFAULT_GEN3C_NEGATIVE_PROMPT as DEFAULT_GEN3C_NEGATIVE_PROMPT
 
 DEFAULT_GEN3C_ALIAS = "gen3c"
 DEFAULT_GEN3C_MOGE1_REPO = "Ruicheng/moge-vitl"

@@ -5,7 +5,6 @@ https://github.com/kakaobrain/rq-vae-transformer
 """
 
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn

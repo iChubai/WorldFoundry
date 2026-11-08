@@ -15,12 +15,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
 
 import cv2
 import numpy as np
 import torch
-from PIL import Image
 from scipy.ndimage import gaussian_filter
 from scipy.spatial.transform import Rotation as R
 

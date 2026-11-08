@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import torch
 from torch.nn import functional as F

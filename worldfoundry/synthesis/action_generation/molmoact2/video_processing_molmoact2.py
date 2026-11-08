@@ -4,7 +4,6 @@ import os
 import warnings
 from collections.abc import Callable
 from functools import partial
-from typing import Optional, Union
 from urllib.parse import urlparse
 
 import einops

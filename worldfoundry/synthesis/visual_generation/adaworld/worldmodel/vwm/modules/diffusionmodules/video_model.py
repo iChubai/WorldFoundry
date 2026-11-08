@@ -1,5 +1,3 @@
-from typing import List, Union
-
 from vwm.modules.diffusionmodules.openaimodel import *
 from vwm.modules.video_attention import SpatialVideoTransformer
 from vwm.util import default, repeat_img_seq

@@ -1,9 +1,7 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
-from typing import List, Optional, Tuple
 
-import einops
 import torch
 from torch import nn
 

@@ -1,7 +1,6 @@
 import importlib
 import json
 import os
-from typing import List
 
 import torch
 

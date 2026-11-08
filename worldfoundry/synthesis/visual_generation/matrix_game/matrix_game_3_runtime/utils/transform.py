@@ -1,4 +1,3 @@
-import math
 import numbers
 import random
 
@@ -6,7 +5,6 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
-from torchvision.transforms import RandomCrop, RandomResizedCrop
 
 
 def get_video_transform(resize_height, resize_width, norm_fun):

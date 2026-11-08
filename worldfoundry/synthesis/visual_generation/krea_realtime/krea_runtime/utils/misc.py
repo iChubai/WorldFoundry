@@ -1,7 +1,5 @@
 import threading
 
-import torch
-
 
 class AtomicCounter:
     def __init__(self, initial=0):

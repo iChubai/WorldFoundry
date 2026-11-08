@@ -8,16 +8,12 @@ from jax.experimental.pjit import pjit
 from jax.sharding import PartitionSpec as PS
 from transformers import GenerationConfig
 from tux import (
-    JaxDistributedConfig,
     JaxRNG,
     StreamingCheckpointer,
-    define_flags_with_default,
     get_float_dtype_by_name,
     make_shard_and_gather_fns,
     match_partition_rules,
     next_rng,
-    open_file,
-    set_random_seed,
     tree_apply,
     with_sharding_constraint,
 )

@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from PIL import Image
 

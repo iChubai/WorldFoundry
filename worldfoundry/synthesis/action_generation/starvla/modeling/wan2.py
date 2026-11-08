@@ -27,8 +27,6 @@ Key differences from CosmoPredict2:
   - No condition_mask / padding_mask (those are Cosmos-specific)
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 

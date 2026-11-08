@@ -10,7 +10,6 @@ import os
 import sys
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.core.io.paths import package_data_path
 

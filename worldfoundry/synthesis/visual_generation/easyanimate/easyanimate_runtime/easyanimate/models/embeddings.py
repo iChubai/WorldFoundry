@@ -1,7 +1,5 @@
 import math
-from typing import Optional
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from diffusers.models.embeddings import PixArtAlphaTextProjection, TimestepEmbedding, Timesteps, get_timestep_embedding

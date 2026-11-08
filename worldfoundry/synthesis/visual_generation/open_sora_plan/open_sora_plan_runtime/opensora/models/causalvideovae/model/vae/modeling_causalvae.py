@@ -6,7 +6,6 @@ except:
     torch_npu = None
     npu_config = None
 import os
-from typing import Tuple
 
 import torch
 import torch.nn as nn

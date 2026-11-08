@@ -9,26 +9,16 @@ import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import argparse
 import copy
-import json
 import logging
 import math
 
 # import oss2 as oss
-import os.path as osp
-import pickle
-import random
-import shutil
-import subprocess
 import sys
-import tempfile
-from io import BytesIO
 
 import cv2
 import dwpose.util as util
 import numpy as np
 import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
 from dwpose.wholebody import Wholebody
 
 

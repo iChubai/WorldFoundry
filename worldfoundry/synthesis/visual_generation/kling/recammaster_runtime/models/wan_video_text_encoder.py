@@ -1,8 +1,5 @@
-import math
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import (
     T5LayerNorm,

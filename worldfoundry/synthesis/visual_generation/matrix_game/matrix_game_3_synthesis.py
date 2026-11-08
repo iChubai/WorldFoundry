@@ -7,7 +7,7 @@ without directly importing the runtime module, acting as an abstraction layer.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from ...base_synthesis import BaseSynthesis
 

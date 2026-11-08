@@ -16,13 +16,10 @@
 import json
 import random
 from collections.abc import Callable
-from typing import Tuple, Union
 
 import Imath
 import numpy as np
-import OpenEXR
 import torch
-import torch.nn.functional as F
 import torchvision.transforms as transforms
 from packaging import version as pver
 

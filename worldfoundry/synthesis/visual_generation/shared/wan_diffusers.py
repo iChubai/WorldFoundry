@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import inspect
-from typing import List, Optional, Union
 
 import torch
 from diffusers.utils import logging

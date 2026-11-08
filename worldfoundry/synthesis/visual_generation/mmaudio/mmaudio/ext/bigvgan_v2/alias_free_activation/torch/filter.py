@@ -4,8 +4,8 @@
 import math
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn as nn  # noqa: F401 - Re-exported under this name.
+import torch.nn.functional as F  # noqa: F401 - Re-exported under this name.
 
 if "sinc" in dir(torch):
     sinc = torch.sinc
@@ -29,6 +29,8 @@ else:
 # https://adefossez.github.io/julius/julius/lowpass.html
 #   LICENSE is in incl_licenses directory.
 from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import (
-    LowPassFilter1d,
-    kaiser_sinc_filter1d,
+    LowPassFilter1d as LowPassFilter1d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import (
+    kaiser_sinc_filter1d as kaiser_sinc_filter1d,
 )

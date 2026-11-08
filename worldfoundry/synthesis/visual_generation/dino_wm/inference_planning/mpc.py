@@ -1,9 +1,7 @@
-import copy
-
 import hydra
 import numpy as np
 import torch
-from einops import rearrange, repeat
+from einops import rearrange
 from utils import slice_trajdict_with_t
 
 from .base_planner import BasePlanner

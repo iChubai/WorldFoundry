@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
 
-import einops
 import kiui
 import kiui.op
 import numpy as np
@@ -248,8 +246,6 @@ def save_ply_orig(gaussians, path, compatible=True, scale_factor=None, prune_fac
     # compatible: save pre-activated gaussians as in the original paper
 
     assert gaussians.shape[0] == 1, "only support batch size 1"
-
-    from plyfile import PlyData, PlyElement
 
     means3D = gaussians[0, :, 0:3].contiguous().float()
     opacity = gaussians[0, :, 3:4].contiguous().float()

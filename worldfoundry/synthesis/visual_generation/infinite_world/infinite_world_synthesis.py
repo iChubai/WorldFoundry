@@ -9,7 +9,7 @@ synthesis pipeline.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from worldfoundry.synthesis.visual_generation.infinite_world.infinite_world_runtime import (
     DEFAULT_NEGATIVE_PROMPT,

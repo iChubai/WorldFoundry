@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import io
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch

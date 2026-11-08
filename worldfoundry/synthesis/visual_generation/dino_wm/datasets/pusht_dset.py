@@ -1,7 +1,6 @@
 import pickle
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Optional
 
 import decord
 import numpy as np

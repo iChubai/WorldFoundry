@@ -4,8 +4,6 @@ WorldFoundry modifications use the shared in-tree Wan wrapper and initialize
 the optional context cursor before use.
 """
 
-from typing import List, Optional
-
 import torch
 
 from worldfoundry.synthesis.visual_generation.forcing.shared.wan_wrapper import (

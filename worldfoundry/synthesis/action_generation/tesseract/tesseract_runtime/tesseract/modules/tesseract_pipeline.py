@@ -1,7 +1,7 @@
 import gc
 import math
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import torch
@@ -16,7 +16,7 @@ from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
 from diffusers.pipelines.cogvideo.pipeline_output import CogVideoXPipelineOutput
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
-from diffusers.utils import USE_PEFT_BACKEND, is_peft_version, replace_example_docstring
+from diffusers.utils import USE_PEFT_BACKEND, is_peft_version
 from torch import randn as randn_tensor
 from transformers import T5EncoderModel, T5Tokenizer
 

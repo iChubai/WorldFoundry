@@ -1,13 +1,10 @@
-from collections import OrderedDict
-from collections.abc import Callable
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from torch import Tensor
-from torch.nn.modules.utils import _pair, _triple
+from torch.nn.modules.utils import _triple
 
 
 def swish(x):

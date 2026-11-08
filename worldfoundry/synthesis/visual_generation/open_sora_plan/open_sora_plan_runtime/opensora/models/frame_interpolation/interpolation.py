@@ -1,25 +1,18 @@
 # this script is modified from https://github.com/MCG-NKU/AMT/blob/main/demos/demo_2x.py
 import argparse
-import glob
 import os
 import os.path as osp
-from json import load
-from warnings import warn
 
 import cv2
 import numpy as np
 import torch
-from omegaconf import OmegaConf
-from torchvision.utils import make_grid
 
 # isort: split
 # Modified by WorldFoundry: removed upstream's CWD-relative `sys.path.append('.')`; all
 # AMT imports below are package-absolute and build_from_cfg canonicalizes `networks.*`
 # to the worldfoundry.base_models AMT package, so no path injection is needed.
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
-    check_dim_and_resize,
     img2tensor,
-    read,
     tensor2img,
     write,
 )

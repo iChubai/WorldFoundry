@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 from .model_registry import model_loader_configs

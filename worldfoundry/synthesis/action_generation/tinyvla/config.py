@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from typing import Union
 
 from transformers import GPTNeoXConfig, PretrainedConfig
 from transformers.utils import logging

@@ -21,7 +21,6 @@
 
 import math
 from collections.abc import Callable
-from typing import Optional
 
 import numpy as np
 import torch
@@ -29,7 +28,6 @@ from torch import nn
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
-from transformers.pytorch_utils import compile_compatible_method_lru_cache
 
 from .dinov3_configuration import DINOv3ViTConfig
 

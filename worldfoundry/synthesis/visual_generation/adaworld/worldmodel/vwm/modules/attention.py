@@ -1,6 +1,8 @@
 import math
 from inspect import isfunction
-from typing import Any, List, Optional
+from typing import Any
+from typing import List as List
+from typing import Optional as Optional
 
 import torch
 import torch.nn.functional as F

@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM, FLAGS_KAIROS_IS_METAX
+from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
 
 
 def _find_thirdparty_root() -> Path:
@@ -71,7 +71,7 @@ def install_library(lib_path: Path):
 def ensure_torch():
     """Ensure PyTorch is installed in the current environment"""
     try:
-        import torch
+        import torch  # noqa: F401 - Import checks optional dependency availability.
     except ModuleNotFoundError:
         print("PyTorch is not installed. Installing torch...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch"])

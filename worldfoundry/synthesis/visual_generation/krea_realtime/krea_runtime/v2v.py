@@ -1,14 +1,11 @@
 import json
 import subprocess
 import time
-from functools import lru_cache
 
 import cv2
-import numpy as np
 import requests
 import torch
 import torchvision.transforms.functional as TF
-from PIL import Image
 
 
 def get_rotation_metadata(video_path):
@@ -46,7 +43,6 @@ def get_rotation_metadata(video_path):
 def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_threshold=81):
     import os
     import tempfile
-    import urllib.request
 
     if video_path.startswith(("http://", "https://")):
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:

@@ -1,5 +1,4 @@
 # Inference-only Diffusion Policy source retained in-tree.
-from typing import Dict
 
 import torch
 

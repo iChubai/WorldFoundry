@@ -1,7 +1,6 @@
 """WorldFoundry synthesis runtime component."""
 
 from dataclasses import dataclass
-from typing import List, Union
 
 import numpy as np
 import PIL.Image

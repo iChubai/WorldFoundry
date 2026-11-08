@@ -1,8 +1,8 @@
 import os
 
-import torch
+import torch  # noqa: F401 - Loads torch before compiled extensions.
 import torch.distributed as dist
-import torch_npu
+import torch_npu  # noqa: F401 - Keeps the module's import-time setup.
 
 try:
     from lcalib.functional import lcal_initialize

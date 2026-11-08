@@ -1,5 +1,4 @@
 # from seva.geometry import get_camera_dist
-from typing import Union
 
 import numpy as np
 import torch

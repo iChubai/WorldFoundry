@@ -12,7 +12,6 @@ import random
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 # isort: split
 # Import logger FIRST — sets SAM3_TQDM_DISABLE env var at module level,
@@ -47,7 +46,6 @@ from liveworld.geometry_utils import (
 
 # isort: split
 from liveworld.pipelines.pipeline_unified_backbone import (
-    UnifiedBackbonePipeline,
     generate_scene_projection_from_pointcloud,
     retrieve_reference_frames,
 )
@@ -61,7 +59,6 @@ from liveworld.pipelines.pointcloud_updater import create_pointcloud_updater
 # isort: split
 # isort: split
 from liveworld.pipelines.pointcloud_updater import (
-    PointCloudUpdater,
     ReconstructionResult,
 )
 

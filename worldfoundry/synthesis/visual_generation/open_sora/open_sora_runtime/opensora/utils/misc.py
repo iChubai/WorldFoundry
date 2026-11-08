@@ -6,7 +6,6 @@ import time
 from collections import OrderedDict
 from collections.abc import Sequence
 from itertools import repeat
-from typing import Tuple
 
 import numpy as np
 import torch

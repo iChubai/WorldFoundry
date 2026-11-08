@@ -1,8 +1,6 @@
 # modified from https://github.com/mlfoundations/open_flamingo/blob/main/open_flamingo/src/helpers.py
 """Alignment resamplers retained for checkpoint-compatible inference."""
 
-import math
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

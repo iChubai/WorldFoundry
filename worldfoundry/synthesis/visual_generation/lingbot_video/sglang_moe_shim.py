@@ -6,7 +6,7 @@ import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
 from types import ModuleType, SimpleNamespace
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import torch
 import torch.nn.functional as F

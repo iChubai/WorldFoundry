@@ -1,5 +1,4 @@
 # Inference-only LAPA source retained in-tree.
-from typing import Optional
 
 import numpy as np
 from PIL import Image

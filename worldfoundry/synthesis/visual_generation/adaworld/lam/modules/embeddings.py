@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import pi
-from typing import Literal, Union
+from typing import Literal
 
 import torch
 from einops import rearrange, repeat

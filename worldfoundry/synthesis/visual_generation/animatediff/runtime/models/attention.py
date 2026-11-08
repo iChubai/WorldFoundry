@@ -1,11 +1,8 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/attention.py
 
-import pdb
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
-import torch.nn.functional as F
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.utils import BaseOutput
 from diffusers.utils.import_utils import is_xformers_available

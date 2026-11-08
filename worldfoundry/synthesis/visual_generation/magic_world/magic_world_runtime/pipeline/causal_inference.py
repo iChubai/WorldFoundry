@@ -1,10 +1,7 @@
-from typing import List, Optional
-
 import torch
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 from worldfoundry.core.vram import (
-    DynamicSwapInstaller,
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,

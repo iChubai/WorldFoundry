@@ -1,7 +1,5 @@
 """Shared checkpoint-compatible inference layers for LingBot-VLA v2."""
 
-from typing import List, Optional, Union
-
 import einops
 import torch
 import torch.nn.functional as F
@@ -23,8 +21,8 @@ from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
 try:
     from dinov3.hub.backbones import (
         dinov3_vitb16,
-        dinov3_vits16,
-        dinov3_vits16plus,
+        dinov3_vits16,  # noqa: F401 - Import checks optional dependency availability.
+        dinov3_vits16plus,  # noqa: F401 - Import checks optional dependency availability.
     )
 except:
     pass

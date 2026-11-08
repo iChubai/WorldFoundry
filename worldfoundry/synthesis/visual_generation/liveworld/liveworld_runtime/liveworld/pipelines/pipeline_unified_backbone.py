@@ -24,15 +24,12 @@ import os
 import sys
 import time as _time
 import traceback
-from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
-import open3d as o3d
 import torch
-import torchvision.transforms.functional as TF
 from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
@@ -45,34 +42,21 @@ from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity
 
 from ..geometry_utils import (
     BackboneInferenceOptions,
-    _compute_3d_iou_batched_gpu,
-    _compute_3d_iou_numpy,
     _compute_projection_density_max_pixels,
     _get_visible_points_and_coverage_gpu,
-    _iou_occupancy,
     _limit_points_by_density,
     _merge_pointcloud_incremental,
-    _occupancy_from_frame,
-    _project_points_to_pixels,
     _safe_frame_index,
-    _transform_points,
-    _unproject_depth_to_points,
     _voxel_downsample,
-    _voxel_indices,
     compute_3d_iou,
     compute_3d_iou_batched,
-    compute_depth_scale_factor,
     # Moved from this file to break circular dep with pointcloud_updater
     compute_iteration_plan,
     generate_blue_noise_tile,
     get_visible_points_for_frame,
-    load_video_frames,
     render_projection,
     save_point_cloud_ply,
-    scale_intrinsics,
     scale_intrinsics_batch,
-    select_reference_frames,
-    voxel_downsample_with_colors,
 )
 from ..geometry_utils import (
     scale_intrinsics as scale_intrinsics_from_size,

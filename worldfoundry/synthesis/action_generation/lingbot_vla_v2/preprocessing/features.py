@@ -3,11 +3,8 @@
 import ast
 import json
 import os
-from collections import OrderedDict, defaultdict
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
+from collections import OrderedDict
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 import yaml
@@ -18,7 +15,6 @@ from . import logging as logging_utils
 # isort: split
 from .transforms import (
     Normalizer,
-    expert_visual_transform,
     prepare_action,
     prepare_images,
     prepare_language,

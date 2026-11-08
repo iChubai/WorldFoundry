@@ -5,7 +5,7 @@ HuggingFace-style preprocessor definitions for Prismatic VLMs, inheriting from `
 specifies `siglip-224px+7b`.
 """
 
-from typing import Any, ClassVar, List, Optional, Tuple, TypedDict, Union
+from typing import Any, ClassVar, TypedDict
 
 import timm.data
 import torch

@@ -16,7 +16,6 @@
 # from Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
 import math
-from typing import List, Optional
 
 import torch
 import torch.amp as amp

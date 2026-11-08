@@ -1,6 +1,6 @@
 # adapted from https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
 import torch
-from einops import rearrange, repeat
+from einops import rearrange
 from torch import nn
 
 # helpers

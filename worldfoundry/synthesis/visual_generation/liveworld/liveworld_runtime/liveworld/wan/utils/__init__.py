@@ -1,1 +1,1 @@
-from .fm_solvers_unipc import FlowUniPCMultistepScheduler
+from .fm_solvers_unipc import FlowUniPCMultistepScheduler as FlowUniPCMultistepScheduler

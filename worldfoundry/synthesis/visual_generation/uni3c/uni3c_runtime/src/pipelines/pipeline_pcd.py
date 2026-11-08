@@ -14,7 +14,7 @@
 
 import html
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import PIL
 import regex as re

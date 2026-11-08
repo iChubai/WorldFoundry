@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.nn.functional as torch_F
 from einops import rearrange
 
 from .cam_utils import (

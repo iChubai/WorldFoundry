@@ -11,8 +11,7 @@ import logging
 import math
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
-from typing import Optional, Tuple, Union
+from dataclasses import field
 
 import torch
 import torch.backends.cuda

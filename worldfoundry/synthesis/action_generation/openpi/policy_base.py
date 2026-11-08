@@ -1,7 +1,6 @@
 """Minimal policy interface for in-process inference."""
 
 import abc
-from typing import Dict
 
 
 class BasePolicy(abc.ABC):

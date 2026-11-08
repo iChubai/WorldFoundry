@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import tempfile
 from contextlib import contextmanager
-from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -16,7 +15,6 @@ import torch
 
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
-    parse_entities,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (
     Sam3VideoSegmenter,

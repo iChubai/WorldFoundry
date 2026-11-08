@@ -6,10 +6,7 @@ import torch.nn.functional as F
 import triton
 import triton.language as tl
 
-from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
-
 from .common import _attn_bwd_preprocess, _attn_fwd_gating, configs_gating_preset
-from .communicate import p2p_communicate
 from .flash_attn_bsa_varlen_mask import (
     _attn_bwd_dkdv_bsa_varlen_wrapper,
     _attn_bwd_dq_bsa_varlen_align_wrapper,

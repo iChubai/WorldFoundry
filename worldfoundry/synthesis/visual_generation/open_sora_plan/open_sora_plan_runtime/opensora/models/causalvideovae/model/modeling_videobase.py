@@ -1,13 +1,10 @@
 import glob
-import json
 import os
-from typing import Optional, Union
 
 import torch
 from diffusers import ConfigMixin, ModelMixin
 from diffusers.configuration_utils import ConfigMixin
 from diffusers.models.modeling_utils import ModelMixin
-from torch import nn
 
 
 class VideoBaseAE(ModelMixin, ConfigMixin):

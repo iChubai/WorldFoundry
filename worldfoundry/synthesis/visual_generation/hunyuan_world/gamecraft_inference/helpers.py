@@ -1,5 +1,4 @@
 # Adapted from Tencent Hunyuan-GameCraft-1.0, under the Tencent Hunyuan Community License.
-from typing import List, Union
 
 import torch
 

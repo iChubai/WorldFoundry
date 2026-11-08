@@ -17,7 +17,6 @@
 
 import os
 from contextlib import nullcontext
-from typing import Optional
 
 import torch
 import torch.nn.functional as F

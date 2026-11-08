@@ -1,6 +1,5 @@
 # Written by Dibya
 import logging
-from typing import Dict, Optional
 
 import flax.linen as nn
 import jax

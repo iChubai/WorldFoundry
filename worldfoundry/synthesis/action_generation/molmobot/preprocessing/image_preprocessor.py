@@ -2,13 +2,12 @@ import dataclasses
 import os
 import warnings
 from io import BytesIO
-from typing import Tuple
 
 import numpy as np
 import PIL
 import torch
 import torchvision.transforms
-from PIL import Image, ImageFile, ImageOps
+from PIL import ImageFile, ImageOps
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import convert_image_dtype
 from transformers.image_utils import (

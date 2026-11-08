@@ -23,7 +23,6 @@ from .PixArtWorldFM_blocks import (
     MultiHeadCrossAttention,
     SizeEmbedder,
     T2IFinalLayer,
-    TimestepEmbedder,
     t2i_modulate,
 )
 from .plucker import compute_plucker_rays

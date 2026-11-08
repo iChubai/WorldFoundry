@@ -4,17 +4,14 @@ import gym
 # isort: split
 import collections
 from collections.abc import Sequence
-from typing import Dict, Optional, Tuple, Union
 
 import cv2
-import einops
 import numpy as np
 import pygame
 import pymunk
 import pymunk.pygame_util
 import shapely.geometry as sg
 import skimage.transform as st
-import torch
 from gym import spaces
 from matplotlib import cm
 from pymunk.space_debug_draw_options import SpaceDebugColor

@@ -9,7 +9,7 @@ synthesis operations like `predict`.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from worldfoundry.synthesis.visual_generation.solaris.worldfoundry_runtime import (
     SolarisRuntime,

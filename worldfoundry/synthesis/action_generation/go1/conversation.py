@@ -7,7 +7,6 @@ If you have changes in mind, please contribute back so the community can benefit
 
 import dataclasses
 from enum import IntEnum, auto
-from typing import Any, Dict, List, Tuple, Union
 
 
 class SeparatorStyle(IntEnum):

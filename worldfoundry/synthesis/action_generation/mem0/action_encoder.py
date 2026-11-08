@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import torch
-import torch.nn as nn
 
 
 def swish(x):
@@ -22,5 +21,5 @@ def swish(x):
 
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (
-    SinusoidalPositionalEncoding,
+    SinusoidalPositionalEncoding as SinusoidalPositionalEncoding,
 )

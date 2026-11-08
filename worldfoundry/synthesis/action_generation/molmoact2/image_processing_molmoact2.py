@@ -1,7 +1,5 @@
 """Image processor class for MolmoAct2"""
 
-from typing import Optional, Union
-
 import einops
 import numpy as np
 import torch

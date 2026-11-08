@@ -11,7 +11,6 @@ import stat
 from collections import OrderedDict, defaultdict, deque
 from collections.abc import Callable, Iterable
 from shutil import copyfile
-from typing import Dict, Union
 
 import deepspeed
 import torch

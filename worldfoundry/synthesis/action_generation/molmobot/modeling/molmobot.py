@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Sequence
 from dataclasses import field
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 import torch
 

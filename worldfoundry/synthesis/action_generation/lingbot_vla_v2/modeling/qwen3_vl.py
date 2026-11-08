@@ -1,7 +1,6 @@
 """Checkpoint-compatible Qwen3-VL inference layers."""
 
 from collections.abc import Callable
-from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -10,7 +9,7 @@ from torch import nn
 from transformers.generation import GenerationMixin
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
 from transformers.modeling_layers import GradientCheckpointingLayer
-from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
+from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 from transformers.models.qwen3_vl.configuration_qwen3_vl import Qwen3VLConfig, Qwen3VLTextConfig, Qwen3VLVisionConfig
 from transformers.models.qwen3_vl.modeling_qwen3_vl import (
     Qwen3VLForConditionalGeneration as _Qwen3VLForConditionalGeneration,
@@ -28,12 +27,14 @@ from transformers.models.qwen3_vl.modeling_qwen3_vl import (
     Qwen3VLTextRotaryEmbedding,
     Qwen3VLVisionMLP,
     Qwen3VLVisionModel,
-    apply_rotary_pos_emb,
     apply_rotary_pos_emb_vision,
     eager_attention_forward,
 )
 from transformers.models.qwen3_vl.modeling_qwen3_vl import (
     Qwen3VLTextModel as _Qwen3VLTextModel,
+)
+from transformers.models.qwen3_vl.modeling_qwen3_vl import (
+    apply_rotary_pos_emb as apply_rotary_pos_emb,
 )
 from transformers.processing_utils import Unpack
 from transformers.utils import logging

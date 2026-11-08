@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Union
 
 import torch
 import torch.nn as nn

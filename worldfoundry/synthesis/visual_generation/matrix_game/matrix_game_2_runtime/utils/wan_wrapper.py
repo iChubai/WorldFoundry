@@ -1,17 +1,12 @@
 import inspect
 import types
-from typing import List, Optional
 
 import torch
 from einops import rearrange
-from torch import nn
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import _video_vae
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
-    HuggingfaceTokenizer,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_21 import (
-    WanModel,
+    WanModel,  # noqa: F401 - Keeps the module's import-time setup.
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_action_21 import (
     CausalWanModel,

@@ -467,7 +467,7 @@ class GaussianRendererDeferred:
         PlyData([el]).write(path)
 
     def load_ply(self, path, compatible=True):
-        from plyfile import PlyData, PlyElement
+        from plyfile import PlyData
 
         plydata = PlyData.read(path)
 

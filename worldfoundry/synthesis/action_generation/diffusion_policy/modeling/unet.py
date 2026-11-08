@@ -1,6 +1,5 @@
 # Inference-only Diffusion Policy source retained in-tree.
 import logging
-from typing import Union
 
 import einops
 import torch

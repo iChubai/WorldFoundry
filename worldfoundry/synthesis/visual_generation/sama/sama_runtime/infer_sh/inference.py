@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import math
 import os
-from typing import List, Optional
 
 import imageio
 import numpy as np

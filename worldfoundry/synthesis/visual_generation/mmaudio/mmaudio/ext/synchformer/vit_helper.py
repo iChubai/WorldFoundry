@@ -11,7 +11,6 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from timm.layers import to_2tuple
 from torch import einsum
-from torch.nn import functional as F
 
 default_cfgs = {
     "vit_1k": "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_224-80ecf9dd.pth",

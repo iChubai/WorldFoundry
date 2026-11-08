@@ -21,10 +21,8 @@ from contextlib import nullcontext
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
 from lyra_2._src.tokenizers.interface import VideoTokenizerInterface
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict
 from worldfoundry.core.distributed.runtime.logging import log
@@ -64,9 +62,7 @@ class Upsample(nn.Upsample):
         return super().forward(x.float()).type_as(x)
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AttentionBlock
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d, Encoder3d, Resample
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d, Encoder3d
 
 
 def count_conv3d(model):

@@ -1,6 +1,5 @@
 import types
 from pathlib import Path
-from typing import List, Optional
 
 import torch
 from torch import nn

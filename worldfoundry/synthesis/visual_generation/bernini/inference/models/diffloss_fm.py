@@ -16,12 +16,10 @@ import math
 import os
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 from tqdm import tqdm
-from transformers.utils import logging
 
 try:
     from torch.utils.checkpoint import (

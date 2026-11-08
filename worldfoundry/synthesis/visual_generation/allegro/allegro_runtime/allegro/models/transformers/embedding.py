@@ -7,7 +7,6 @@
 # Open-Sora-Plan: https://github.com/PKU-YuanGroup/Open-Sora-Plan
 # --------------------------------------------------------
 
-import collections
 
 import torch
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps

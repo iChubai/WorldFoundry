@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.core.io.paths import package_module_root as package_root
 

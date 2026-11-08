@@ -1,7 +1,6 @@
 from collections import OrderedDict, defaultdict
 from collections.abc import Iterator
 from pprint import pformat
-from typing import List, Optional
 
 import numpy as np
 import torch

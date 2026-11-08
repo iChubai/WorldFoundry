@@ -1,8 +1,7 @@
 # worldfoundry/synthesis/visual_generation/kling/astra/models/model_manager.py
 
-import json
 import os
-from typing import List, Literal, Optional, TypeAlias
+from typing import TypeAlias
 
 import torch
 
@@ -12,10 +11,10 @@ import torch
 Preset_model_id: TypeAlias = str
 Preset_model_website: TypeAlias = str
 
-from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict, split_state_dict_with_prefix
+from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict
 from worldfoundry.core.vram import init_weights_on_device
 
-from ..model_registry import huggingface_model_loader_configs, model_loader_configs, patch_model_loader_configs
+from ..model_registry import model_loader_configs
 
 # =========================================================================
 # 3. 核心加载函数 (保持原样，删除了不必要的引用)

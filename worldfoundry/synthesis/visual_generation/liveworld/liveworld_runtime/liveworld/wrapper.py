@@ -2,16 +2,13 @@ import gc
 import json
 import os
 import types
-from typing import List, Optional
 
 import numpy as np
 import torch
 from safetensors.torch import load_file
-from torch import nn
 
-from .utils import FlowMatchScheduler, GeneralLoRALoader, SchedulerInterface
+from .utils import FlowMatchScheduler, SchedulerInterface
 from .wan.modules.clip import CLIPModel
-from .wan.modules.model import WanModel
 from .wan.modules.t5 import umt5_xxl
 from .wan.modules.tokenizers import HuggingfaceTokenizer
 from .wan.modules.vae import _video_vae
@@ -594,7 +591,6 @@ class WanWrapperBase(torch.nn.Module):
 
 
 # --- Additional import for BidirectionalWanWrapperSP ---
-from typing import List, Optional
 
 import torch
 

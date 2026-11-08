@@ -4,7 +4,6 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 _RUNTIME_ROOT = str(Path(__file__).resolve().parents[1])
 if _RUNTIME_ROOT in sys.path:

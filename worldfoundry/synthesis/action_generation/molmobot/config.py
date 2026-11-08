@@ -4,7 +4,7 @@ import dataclasses
 from collections.abc import Iterable
 from dataclasses import asdict
 from enum import Enum
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 import torch
 from omegaconf import DictConfig, ListConfig

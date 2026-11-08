@@ -1,5 +1,5 @@
 from .attention import *
-from .block import Block
+from .block import Block as Block
 from .conv import *
 from .normalize import *
 from .resnet_block import *

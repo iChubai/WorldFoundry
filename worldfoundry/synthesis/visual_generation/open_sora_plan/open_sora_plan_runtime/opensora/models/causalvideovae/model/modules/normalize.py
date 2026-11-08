@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+import torch.nn as nn  # noqa: F401 - Re-exported under this name.
 from einops import rearrange
 
 from .block import Block

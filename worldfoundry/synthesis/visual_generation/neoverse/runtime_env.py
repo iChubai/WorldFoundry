@@ -13,7 +13,6 @@ import os
 import sys
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Optional
 
 DEFAULT_NEOVERSE_REPO = "Yuppie1204/NeoVerse"
 DEFAULT_NEOVERSE_LORA_NAME = "Wan21_T2V_14B_lightx2v_cfg_step_distill_lora_rank64.safetensors"

@@ -16,7 +16,6 @@ import re
 import urllib.parse as ul
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
 
 import ftfy
 import numpy as np

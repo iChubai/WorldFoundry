@@ -1,8 +1,6 @@
 # Inference-only RoboFlamingo source retained in-tree.
 import copy
-from typing import Optional, Tuple
 
-import numpy as np
 import torch
 import torch.nn as nn
 from open_flamingo.src.helpers import PerceiverResampler

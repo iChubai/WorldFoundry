@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Literal, TypeAlias
+from typing import TypeAlias
 
 import einops
 import flax.linen as nn
@@ -18,7 +18,7 @@ from ...openpi.modeling.gemma import (
     _apply_rope,
     _gated_residual,
 )
-from .integration import Attention_with_MemoryExpert, Variant, _name, get_config
+from .integration import Attention_with_MemoryExpert, _name
 from .memory_utils import kernel_init_out_proj
 
 

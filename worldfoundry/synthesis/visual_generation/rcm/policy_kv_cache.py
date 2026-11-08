@@ -27,8 +27,6 @@ which is why :meth:`append` verifies it.
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import torch
 
 from worldfoundry.core.attention.cache.kv_cache_policy import (

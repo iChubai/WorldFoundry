@@ -1,13 +1,11 @@
 import json
 import os
-import sys
-from typing import Dict, Optional, Union
 
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
 from diffusers.utils.torch_utils import is_compiled_module
-from safetensors.torch import load_file, save_file, save_model
+from safetensors.torch import load_file
 
 
 def unwrap_model(accelerator: Accelerator, model):

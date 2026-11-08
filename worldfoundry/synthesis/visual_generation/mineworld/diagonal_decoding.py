@@ -1,5 +1,3 @@
-from typing import Optional
-
 import torch
 
 from worldfoundry.core.attention import attention_backend_context

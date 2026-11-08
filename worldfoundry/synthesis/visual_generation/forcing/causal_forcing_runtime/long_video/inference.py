@@ -3,7 +3,6 @@ import os
 from collections import OrderedDict
 from pathlib import Path
 
-import imageio
 import torch
 import torch.distributed as dist
 from einops import rearrange

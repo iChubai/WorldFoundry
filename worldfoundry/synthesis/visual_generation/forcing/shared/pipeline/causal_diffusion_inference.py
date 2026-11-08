@@ -1,7 +1,5 @@
 """Causal diffusion inference shared by compatible forcing runtimes."""
 
-from typing import List, Optional
-
 import torch
 from tqdm import tqdm
 

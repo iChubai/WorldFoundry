@@ -7,7 +7,7 @@ submit to one video-synthesis route with ``X-DashScope-Async`` set, then poll
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, Dict
+from typing import Any, ClassVar
 
 from ..api_video_client import REQUEST_TIMEOUT, ApiVideoSynthesis
 

@@ -19,7 +19,6 @@ import importlib
 import os
 import re
 import sys
-from typing import Tuple
 
 import cv2
 import torch

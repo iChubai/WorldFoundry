@@ -12,7 +12,6 @@
 
 import enum
 from collections.abc import Callable
-from typing import List
 
 import numpy as np
 import torch

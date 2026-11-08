@@ -1,5 +1,6 @@
 from collections import deque
-from typing import Tuple, Union
+from typing import Tuple as Tuple
+from typing import Union as Union
 
 import torch
 import torch.nn as nn

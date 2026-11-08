@@ -1,14 +1,10 @@
 """Modified from https://github.com/kijai/ComfyUI-MochiWrapper"""
 
-import importlib.util
-
 import torch
 import torch.nn as nn
 
 
 def replace_parameters_by_name(module, name_keywords, device):
-    from torch import nn
-
     for name, param in list(module.named_parameters(recurse=False)):
         if any(keyword in name for keyword in name_keywords):
             if isinstance(param, nn.Parameter):

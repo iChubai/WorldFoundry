@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import types
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional
 
 import numpy as np
 import torch

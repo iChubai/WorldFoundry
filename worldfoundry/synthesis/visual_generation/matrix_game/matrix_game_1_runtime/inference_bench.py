@@ -10,21 +10,16 @@ specified keyboard and mouse conditions.
 import argparse
 import glob
 import os
-from typing import Dict, List, Optional, Tuple
 
-import imageio
 import numpy as np
 import torch
 from condtions import Bench_actions_76, interaction_condition
-from diffusers.utils import load_image
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
 from matrixgame.encoder_variants import get_text_enc
 from matrixgame.sample.pipeline_matrixgame import MatrixGameVideoPipeline
 from matrixgame.vae_variants import get_vae
-from peft import LoraConfig, get_peft_model_state_dict, set_peft_model_state_dict
 from PIL import Image
-from safetensors.torch import load_file as safe_load
 from teacache_forward import teacache_forward
 from tools.visualize import process_video
 

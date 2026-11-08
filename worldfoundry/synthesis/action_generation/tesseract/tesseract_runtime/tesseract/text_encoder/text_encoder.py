@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 import torch
 from transformers import T5EncoderModel, T5Tokenizer
 

@@ -22,13 +22,12 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from io import BytesIO
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
-import safetensors
-from safetensors.torch import load_file, save_file
+from safetensors.torch import load_file
 
-from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
+from worldfoundry.core.nn import FlowMatchScheduler
 
 if TYPE_CHECKING:
     from pipeline import CausalInferencePipeline

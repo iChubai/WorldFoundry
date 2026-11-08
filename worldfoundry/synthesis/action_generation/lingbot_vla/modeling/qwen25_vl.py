@@ -1,13 +1,12 @@
 """Checkpoint-compatible Qwen2.5-VL inference layers for LingBot-VLA v1."""
 
 import math
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn
 from torch.nn import CrossEntropyLoss
 from transformers import (
     PreTrainedModel,
@@ -23,7 +22,6 @@ except ImportError:
         """Compatibility sentinel for Transformers releases without the legacy cache class."""
 
 
-import torch.distributed._tensor as dt
 from transformers.activations import ACT2FN
 from transformers.generation import GenerationMixin
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter

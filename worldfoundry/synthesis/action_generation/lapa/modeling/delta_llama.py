@@ -2,7 +2,6 @@
 import copy
 import json
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import flax.linen as nn
 import jax
@@ -14,7 +13,7 @@ from jax.sharding import PartitionSpec as PS
 from transformers import GenerationConfig
 from transformers.generation.flax_utils import FlaxLogitsProcessorList, FlaxSampleOutput, SampleState, logger
 from transformers.modeling_flax_outputs import FlaxBaseModelOutput, FlaxCausalLMOutput
-from transformers.modeling_flax_utils import ACT2FN, FlaxPreTrainedModel
+from transformers.modeling_flax_utils import FlaxPreTrainedModel
 from transformers.utils import add_start_docstrings, add_start_docstrings_to_model_forward
 from tux import load_pickle, open_file
 

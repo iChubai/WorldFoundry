@@ -15,10 +15,9 @@
 
 """LingBot-VLA v2 inference configuration."""
 
-from copy import deepcopy
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
-from transformers import AutoConfig, PretrainedConfig
+from transformers import PretrainedConfig
 
 
 class LingbotVLAConfig(PretrainedConfig):

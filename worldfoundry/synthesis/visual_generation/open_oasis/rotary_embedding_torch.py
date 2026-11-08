@@ -4,14 +4,14 @@ Adapted from https://github.com/lucidrains/rotary-embedding-torch/blob/main/rota
 
 from __future__ import annotations
 
-from math import log, pi
+from math import pi
 from typing import Literal
 
 import torch
 from einops import rearrange, repeat
 from torch import Tensor, broadcast_tensors, einsum, nn
 from torch.amp import autocast
-from torch.nn import Module, ModuleList
+from torch.nn import Module
 
 # helper functions
 

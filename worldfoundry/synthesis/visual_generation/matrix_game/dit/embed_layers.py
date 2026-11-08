@@ -3,8 +3,9 @@ import math
 import torch
 import torch.nn as nn
 
-from worldfoundry.base_models.diffusion_model.models.networks.hunyuan_video.layers.embed_layers import PatchEmbed
-from worldfoundry.core.nn.blocks.layers import to_2tuple
+from worldfoundry.base_models.diffusion_model.models.networks.hunyuan_video.layers.embed_layers import (
+    PatchEmbed as PatchEmbed,
+)
 
 
 class TextProjection(nn.Module):

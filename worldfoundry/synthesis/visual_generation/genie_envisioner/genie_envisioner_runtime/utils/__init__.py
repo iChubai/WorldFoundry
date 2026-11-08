@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 from datetime import datetime
-from typing import Type, Union
 
 import torch
 import torch.distributed as dist

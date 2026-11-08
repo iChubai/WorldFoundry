@@ -15,19 +15,18 @@
 
 import json
 import os
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import torch
-import torch.nn.functional as F
 from diffusers import CogVideoXTransformer3DModel
-from diffusers.models.attention import AdaLayerNorm, Attention, FeedForward
+from diffusers.models.attention import Attention, FeedForward
 from diffusers.utils import is_torch_version
 from diffusers.utils.constants import USE_PEFT_BACKEND
 from diffusers.utils.peft_utils import scale_lora_layers, unscale_lora_layers
 from huggingface_hub import snapshot_download
 from torch import nn
 
-from .embeddings import TesserActDepthNormalPatchEmbed, TesserActDepthPatchEmbed
+from .embeddings import TesserActDepthNormalPatchEmbed
 
 
 class MLP(nn.Module):
@@ -229,13 +228,13 @@ class TesserActDepth(CogVideoXTransformer3DModel):
         if os.path.exists(model_file):
             state_dict = torch.load(model_file, map_location="cpu")
         elif os.path.exists(model_file_safetensors):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(model_file_safetensors)
         else:
             import glob
 
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             model_files_safetensors = glob.glob(os.path.join(pretrained_model_path, "*.safetensors"))
             state_dict = {}

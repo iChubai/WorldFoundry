@@ -10,8 +10,6 @@ import ftfy
 import regex as re
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from transformers import AutoTokenizer
 
 from worldfoundry.core.model_loading import load_torch_state_dict
 

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple, Union
 
 import einops
 import torch

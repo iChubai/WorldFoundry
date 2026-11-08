@@ -4,8 +4,6 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from tqdm import tqdm
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-
 CACHE_T = 2
 
 

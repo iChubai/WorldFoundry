@@ -15,7 +15,6 @@
 import gc
 import math
 import os
-from typing import Tuple
 
 import torch
 import torch.distributed

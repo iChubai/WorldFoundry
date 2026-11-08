@@ -1,7 +1,6 @@
 # copied from: https://raw.githubusercontent.com/rail-berkeley/bridge_data_v2/main/jaxrl_m/networks/diffusion_nets.py
 import logging
 from collections.abc import Callable, Sequence
-from typing import Optional
 
 import flax.linen as nn
 import jax

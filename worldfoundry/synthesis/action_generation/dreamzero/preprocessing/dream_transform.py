@@ -1,8 +1,6 @@
 # Inference-only model preprocessing adapted from the official DreamZero source.
 import ast
 import html
-import os
-from typing import List, Optional
 
 import ftfy
 import numpy as np

@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 from transformers import T5EncoderModel
 

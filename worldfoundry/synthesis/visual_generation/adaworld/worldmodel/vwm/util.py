@@ -5,11 +5,13 @@ import torch
 from einops import repeat
 
 from worldfoundry.core.model_loading.factory import (
-    count_params,
-    instantiate_from_config,
+    count_params as count_params,
 )
 from worldfoundry.core.model_loading.factory import (
     get_obj_from_str as _get_obj_from_str,
+)
+from worldfoundry.core.model_loading.factory import (
+    instantiate_from_config as instantiate_from_config,
 )
 
 

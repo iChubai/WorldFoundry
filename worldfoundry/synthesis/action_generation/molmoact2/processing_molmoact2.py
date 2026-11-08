@@ -2,9 +2,6 @@
 Processor class for MolmoAct2.
 """
 
-import dataclasses
-from typing import Optional, Union
-
 import numpy as np
 from transformers import AutoTokenizer
 from transformers.feature_extraction_utils import BatchFeature

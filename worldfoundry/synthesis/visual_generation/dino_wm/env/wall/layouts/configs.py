@@ -3,7 +3,7 @@ import dataclasses
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, cast
 
 from omegaconf import OmegaConf
 

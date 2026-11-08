@@ -1,16 +1,38 @@
-from collections.abc import Callable, Iterable, Sized
+from collections.abc import Callable as Callable
+from collections.abc import Iterable as Iterable
+from collections.abc import Sized as Sized
 from typing import (
     Any,
-    Dict,
-    List,
-    Literal,
-    NamedTuple,
-    NewType,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
+)
+from typing import (
+    Dict as Dict,
+)
+from typing import (
+    List as List,
+)
+from typing import (
+    Literal as Literal,
+)
+from typing import (
+    NamedTuple as NamedTuple,
+)
+from typing import (
+    NewType as NewType,
+)
+from typing import (
+    Optional as Optional,
+)
+from typing import (
+    Tuple as Tuple,
+)
+from typing import (
+    Type as Type,
+)
+from typing import (
+    TypeVar as TypeVar,
+)
+from typing import (
+    Union as Union,
 )
 
 import torch
@@ -19,7 +41,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 
 # PyTorch Tensor type
-from torch import Tensor
+from torch import Tensor as Tensor
 
 
 def broadcast(tensor, src=0):

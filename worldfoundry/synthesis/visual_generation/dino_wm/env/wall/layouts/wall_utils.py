@@ -1,5 +1,5 @@
-import copy
-import random
+import copy as copy
+import random as random
 
 import numpy as np
 import torch

@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Literal, TypeAlias
+from typing import Literal
 
 import einops
 import flax.linen as nn

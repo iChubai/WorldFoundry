@@ -2,7 +2,7 @@ import multiprocessing as mp
 import shutil
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import torch

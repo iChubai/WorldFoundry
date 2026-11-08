@@ -16,16 +16,13 @@
 
 
 import inspect
-import os.path as osp
 from collections.abc import Callable
-from typing import Dict, List, Optional, Union
 
-import numpy as np
 import torch
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.utils import is_torch_xla_available, logging, replace_example_docstring
+from diffusers.utils import is_torch_xla_available, logging
 from diffusers.utils.torch_utils import randn_tensor
 from einops import rearrange
 from models.pipeline.custom_pipeline import retrieve_latents, retrieve_timesteps

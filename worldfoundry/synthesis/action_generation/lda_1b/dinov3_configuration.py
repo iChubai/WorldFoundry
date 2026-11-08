@@ -13,8 +13,6 @@
 # limitations under the License.
 """DINOv3 model configuration"""
 
-from typing import Optional
-
 from transformers.configuration_utils import PretrainedConfig
 from transformers.utils import logging
 

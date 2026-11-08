@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import math
-from typing import Any
+from typing import Any as Any
 
-import numpy as np
+import numpy as np  # noqa: F401 - Re-exported under this name.
 import torch
 import torch.nn.functional as F
 from torch import nn
-from transformers.activations import ACT2FN
+from transformers.activations import ACT2FN as ACT2FN
 
 
 class ProprioProjector(nn.Module):

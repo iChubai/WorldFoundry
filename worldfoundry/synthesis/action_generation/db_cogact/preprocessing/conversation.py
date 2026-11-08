@@ -1,7 +1,6 @@
 # Inference-only DB-CogACT source retained in-tree.
 import dataclasses
 from enum import Enum, auto
-from typing import List
 
 import torch
 from transformers import StoppingCriteria

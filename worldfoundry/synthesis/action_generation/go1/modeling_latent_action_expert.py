@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 import torch
 from timm.models.vision_transformer import Mlp
 from torch import nn

@@ -12,7 +12,6 @@ import os
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.core import cuda_visible_devices_from_device
 

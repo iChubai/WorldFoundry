@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from statistics import NormalDist
-from typing import Any, List, Optional, cast
+from typing import Any, cast
 
 import attrs
 import numpy as np

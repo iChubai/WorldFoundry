@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.memory.media import extract_last_frame, infer_content_type, to_pil_image
 

@@ -3,10 +3,7 @@
 # https://github.com/cloneofsimo/lora/blob/master/lora_diffusion/lora.py
 # https://github.com/bmaltais/kohya_ss
 
-import functools
 import math
-from collections import defaultdict
-from typing import Optional
 
 import torch
 

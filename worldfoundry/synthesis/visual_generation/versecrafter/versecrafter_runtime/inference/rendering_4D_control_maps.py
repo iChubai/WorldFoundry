@@ -15,16 +15,11 @@ Key features:
 import argparse
 import json
 import logging
-import os
 from pathlib import Path
-from time import time
-from typing import Dict, List, Optional, Tuple
 
 import cv2
 import imageio.v2 as imageio
 import matplotlib
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from kornia.geometry.depth import depth_to_3d_v2
@@ -36,7 +31,6 @@ from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat i
 
 configure_pytorch3d_extension()
 
-import torchvision.transforms.functional as TF
 from pytorch3d.renderer import (
     AlphaCompositor,
     HardPhongShader,

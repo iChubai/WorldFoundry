@@ -7,11 +7,12 @@ except:
     npu_config = None
 
 from collections import deque
-from typing import Tuple, Union
+from typing import Tuple as Tuple
+from typing import Union as Union
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as F  # noqa: F401 - Re-exported under this name.
 from torch.utils.checkpoint import checkpoint
 
 from .block import Block

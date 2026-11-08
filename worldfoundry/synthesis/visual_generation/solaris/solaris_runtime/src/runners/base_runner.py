@@ -1,13 +1,10 @@
 import abc
-import functools
 import os
 import time
-from collections import defaultdict
 
 import jax
 import jax.experimental
 import jax.experimental.multihost_utils
-import jax.numpy as jnp
 import orbax.checkpoint as ocp
 import src.utils.sharding as sharding_utils
 import torch.multiprocessing as mp
@@ -16,7 +13,6 @@ from flax import nnx
 from src.data.dataset import VideoReadError
 from src.models.model_loaders import get_jax_clip_model, get_vae_model
 from src.utils.config import get_obj_from_str, instantiate_from_config
-from tqdm import tqdm
 
 
 def ensure_torch_spawn_start_method():

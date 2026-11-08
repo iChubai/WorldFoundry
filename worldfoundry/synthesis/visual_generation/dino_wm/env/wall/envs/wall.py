@@ -1,12 +1,10 @@
 import math
 import random
-from typing import Optional
 
 import gym
 import numpy as np
 import torch
 
-from ..layouts.single import DotDataset
 from ..layouts.wall import WallDatasetConfig
 from ..layouts.wall_utils import generate_wall_layouts
 from .utils import check_wall_intersect

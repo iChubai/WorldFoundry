@@ -17,7 +17,7 @@ import copy
 import html
 import json
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import PIL

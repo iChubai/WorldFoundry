@@ -18,7 +18,6 @@ from collections import Counter
 from collections.abc import Generator
 from dataclasses import dataclass, field
 from queue import Queue
-from typing import Dict, List, Tuple, Union
 
 import torch
 import torch.distributed as dist

@@ -146,7 +146,6 @@ class AttentionBlock(nn.Module):
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
-    AvgDown3D,
     Down_ResidualBlock,
     DupUp3D,
 )

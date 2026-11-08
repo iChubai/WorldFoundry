@@ -1,6 +1,6 @@
 """Action diffusion transformer used by the local AHA-WAM runtime."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

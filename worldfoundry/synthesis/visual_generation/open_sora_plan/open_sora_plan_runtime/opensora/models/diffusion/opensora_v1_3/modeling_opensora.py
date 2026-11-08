@@ -1,26 +1,26 @@
-import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
-import numpy as np
 import torch
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.embeddings import PixArtAlphaTextProjection
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import AdaLayerNormSingle
-from diffusers.utils import deprecate, is_torch_version
-from einops import rearrange, repeat
+from diffusers.utils import is_torch_version
+from einops import rearrange
 from torch import nn
 from torch.nn import functional as F
 
 from opensora.models.diffusion.common import PatchEmbed2D
 from opensora.models.diffusion.opensora_v1_3.modules import Attention, BasicTransformerBlock
-from opensora.utils.utils import to_2tuple
 
 try:
     import torch_npu
 
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
+    from opensora.acceleration.parallel_states import (  # noqa: F401 - Import checks optional dependency availability.
+        get_sequence_parallel_state,
+        hccl_info,
+    )
     from opensora.npu_config import npu_config
 except:
     torch_npu = None
@@ -332,8 +332,7 @@ OpenSora_v1_3_models_class = {
 }
 
 if __name__ == "__main__":
-    from opensora.models import CausalVAEModelWrapper
-    from opensora.models.causalvideovae import ae_channel_config, ae_denorm, ae_norm, ae_stride_config
+    from opensora.models.causalvideovae import ae_stride_config
 
     args = type(
         "args",

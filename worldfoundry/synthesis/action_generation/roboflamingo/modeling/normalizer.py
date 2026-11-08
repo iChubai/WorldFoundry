@@ -1,5 +1,4 @@
 # Inference-only RoboFlamingo source retained in-tree.
-from typing import Dict, Union
 
 import numpy as np
 import torch

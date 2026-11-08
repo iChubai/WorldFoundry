@@ -27,7 +27,6 @@ from __future__ import annotations
 import argparse
 import gc
 import os
-from typing import List, Tuple
 
 import cv2
 import numpy as np

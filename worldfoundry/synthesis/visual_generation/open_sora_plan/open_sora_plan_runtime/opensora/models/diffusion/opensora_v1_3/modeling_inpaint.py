@@ -1,11 +1,5 @@
-import glob
-import os
-from typing import Any, Dict, Optional, Tuple
-
-import numpy as np
-import torch
 from diffusers.configuration_utils import register_to_config
-from einops import rearrange, repeat
+from einops import rearrange
 from torch import nn
 
 from opensora.models.diffusion.common import PatchEmbed2D

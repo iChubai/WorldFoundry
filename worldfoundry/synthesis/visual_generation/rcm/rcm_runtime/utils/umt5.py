@@ -17,14 +17,11 @@ import gc
 import html
 import math
 import string
-from typing import List, Optional, Union
 
 import ftfy
 import regex as re
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from transformers import AutoTokenizer
 
 from worldfoundry.core.distributed.runtime import torch_process_group as distributed
 from worldfoundry.core.distributed.runtime.logging import log

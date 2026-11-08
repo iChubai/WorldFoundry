@@ -7,7 +7,7 @@ import sys
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 

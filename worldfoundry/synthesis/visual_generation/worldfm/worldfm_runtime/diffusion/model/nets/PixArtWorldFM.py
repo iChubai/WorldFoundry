@@ -5,7 +5,6 @@
 # Modified from PixArt-Sigma's repos:
 #   https://github.com/PixArt-alpha/PixArt-sigma/blob/master/diffusion/model/nets/PixArt.py
 # --------------------------------------------------------
-import math
 import os
 import traceback
 
@@ -21,8 +20,6 @@ from ..utils import auto_grad_checkpoint, to_2tuple
 from .PixArtWorldFM_blocks import (
     AttentionKVCompress,
     CaptionEmbedder,
-    FinalLayer,
-    LabelEmbedder,
     MultiHeadCrossAttention,
     T2IFinalLayer,
     TimestepEmbedder,

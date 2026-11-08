@@ -4,7 +4,7 @@ import functools
 import json
 import operator
 import os
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import torch
 import torch.distributed as dist

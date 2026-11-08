@@ -7,7 +7,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Optional, Union
 
 import torch
 import torch.nn as nn

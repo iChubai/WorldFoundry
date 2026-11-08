@@ -13,7 +13,6 @@ import flax.linen as nn
 import jax
 import jax.lax as lax
 import jax.numpy as jnp
-import numpy as np
 from einops import rearrange
 from jax.experimental import pallas as pl
 from jax.experimental.pallas import tpu as pltpu

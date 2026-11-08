@@ -4,7 +4,6 @@ import contextlib
 import warnings
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np

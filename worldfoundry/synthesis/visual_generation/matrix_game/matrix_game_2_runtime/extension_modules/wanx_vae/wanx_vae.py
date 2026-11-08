@@ -1,7 +1,5 @@
 import os
 
-import torch
-
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import WanVAE
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.action_clip import CLIPModel
 

@@ -1,5 +1,3 @@
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from diffusers.models.embeddings import get_3d_sincos_pos_embed

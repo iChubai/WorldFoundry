@@ -2,7 +2,6 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import List, Union
 
 import einops
 import numpy as np

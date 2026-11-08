@@ -9,7 +9,6 @@ import json
 import os
 import re
 import time
-from types import SimpleNamespace
 
 import imageio
 import numpy as np

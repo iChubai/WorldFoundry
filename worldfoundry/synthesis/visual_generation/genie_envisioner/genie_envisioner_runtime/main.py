@@ -1,6 +1,4 @@
 import argparse
-import os
-import sys
 
 from utils import import_custom_class
 

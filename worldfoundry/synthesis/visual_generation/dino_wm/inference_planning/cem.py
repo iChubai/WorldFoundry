@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from einops import rearrange, repeat
+from einops import repeat
 from utils import move_to_device
 
 from .base_planner import BasePlanner

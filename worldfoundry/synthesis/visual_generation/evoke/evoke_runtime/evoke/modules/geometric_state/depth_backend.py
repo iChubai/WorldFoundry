@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 _VIGEO_KEYS = (
     "num_tokens",
     "mode",

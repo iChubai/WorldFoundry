@@ -1,6 +1,5 @@
 import random
 from collections.abc import Generator
-from typing import Tuple, Union
 
 import torch
 import torch.nn as nn

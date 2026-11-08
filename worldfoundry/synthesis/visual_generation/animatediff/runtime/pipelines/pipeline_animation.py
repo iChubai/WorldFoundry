@@ -3,7 +3,6 @@
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import List, Optional, Union
 
 import numpy as np
 import torch
@@ -18,7 +17,6 @@ try:
     from diffusers.pipeline_utils import DiffusionPipeline
 except ImportError:  # diffusers >= 0.38
     from diffusers import DiffusionPipeline
-import pdb
 
 from diffusers.schedulers import (
     DDIMScheduler,

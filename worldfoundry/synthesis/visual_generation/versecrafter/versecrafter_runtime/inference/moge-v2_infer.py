@@ -10,7 +10,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from PIL import Image
 from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.depth.moge.model import (

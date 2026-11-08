@@ -1,10 +1,7 @@
 # Inference-only DB-CogACT source retained in-tree.
 from __future__ import annotations
 
-from typing import Optional
-
 import numpy as np
-import torch
 
 from ..preprocessing import conversation as conversation_lib
 from ..preprocessing.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX

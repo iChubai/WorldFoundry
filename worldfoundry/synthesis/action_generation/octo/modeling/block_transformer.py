@@ -3,7 +3,7 @@ import logging
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from fnmatch import fnmatch
-from typing import Any, Dict, Tuple, Union
+from typing import Any
 
 import einops
 import flax

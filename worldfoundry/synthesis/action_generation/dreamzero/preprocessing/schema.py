@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator

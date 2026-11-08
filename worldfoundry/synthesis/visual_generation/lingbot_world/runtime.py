@@ -6,7 +6,7 @@ import sys
 import tempfile
 from inspect import signature
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import torch

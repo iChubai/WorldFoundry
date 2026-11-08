@@ -11,7 +11,7 @@ import hydra
 import omegaconf
 import torch
 
-from .models.models_r3m import R3M
+from .models.models_r3m import R3M as R3M
 
 VALID_ARGS = [
     "_target_",

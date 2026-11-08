@@ -1,44 +1,28 @@
 """Legacy Qwen2.5-VL inference layers required by v2 checkpoint structure."""
 
-import math
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
-import torch.distributed._tensor as dt
 import torch.nn.functional as F
-from torch import Tensor, nn
-from torch.nn import CrossEntropyLoss
+from torch import nn
 from transformers import (
     PreTrainedModel,
 )
-from transformers.activations import ACT2FN
-from transformers.cache_utils import Cache, DynamicCache, SlidingWindowCache, StaticCache
 from transformers.generation import GenerationMixin
-from transformers.modeling_attn_mask_utils import AttentionMaskConverter
 from transformers.modeling_flash_attention_utils import (
     FlashAttentionKwargs,
-    flash_attn_supports_top_left_mask,
     is_flash_attn_available,
 )
 from transformers.modeling_layers import GradientCheckpointingLayer
-from transformers.modeling_outputs import (
-    BaseModelOutputWithPast,
-)
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import Qwen2_5_VLConfig, Qwen2_5_VLVisionConfig
 from transformers.processing_utils import Unpack
 from transformers.utils import (
-    ModelOutput,
     logging,
 )
 
 if is_flash_attn_available():
-    from flash_attn.flash_attn_interface import flash_attn_varlen_func
-    from flash_attn.layers.rotary import apply_rotary_emb
-    from transformers.modeling_flash_attention_utils import _flash_attention_forward
+    pass
 import transformers.models.qwen2_5_vl.modeling_qwen2_5_vl as hf_qwen25vl
 from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
     Qwen2_5_VisionTransformerPretrainedModel,

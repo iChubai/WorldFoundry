@@ -6,12 +6,10 @@ No dependency on BaseModel, Ray, ConfigManager, or DeployService utilities.
 
 import gc
 import glob
-import json
 import logging
 import os
 import sys
 import time
-from typing import Any, Dict, List, Union
 
 import cv2
 import numpy as np

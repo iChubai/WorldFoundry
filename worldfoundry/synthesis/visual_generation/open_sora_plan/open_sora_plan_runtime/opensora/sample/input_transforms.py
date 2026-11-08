@@ -1,14 +1,12 @@
 import html
 import numbers
 import random
-import statistics
 
 import ftfy
 import numpy as np
 import regex as re
 import torch
 from PIL import Image
-from torchvision.transforms import RandomCrop, RandomResizedCrop
 
 
 def _is_tensor_video_clip(clip):

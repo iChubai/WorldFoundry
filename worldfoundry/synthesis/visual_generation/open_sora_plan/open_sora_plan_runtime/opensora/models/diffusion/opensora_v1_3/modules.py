@@ -1,10 +1,7 @@
-from typing import Any, Dict, Optional, Tuple
-
 import torch
 import torch.nn.functional as F
 from diffusers.models.attention import FeedForward
 from diffusers.models.attention_processor import Attention as Attention_
-from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.utils import logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 from einops import rearrange, repeat

@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import torch
 
 # isort: split
@@ -8,7 +6,6 @@ from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 # isort: split
 
 from runtime_utils.memory import (
-    DynamicSwapInstaller,
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,

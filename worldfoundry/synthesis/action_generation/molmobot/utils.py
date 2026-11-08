@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, TypeVar, Union
+from typing import TypeVar, Union
 
 from .torch_utils import barrier, get_global_rank
 

@@ -12,23 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import inspect
-import math
-from collections.abc import Callable
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import torch
 import torch.nn.functional as F
 from diffusers.utils import deprecate, is_torch_xla_available, logging
 from diffusers.utils.import_utils import is_torch_npu_available, is_torch_xla_version, is_xformers_available
-from diffusers.utils.torch_utils import is_torch_version, maybe_allow_in_graph
+from diffusers.utils.torch_utils import maybe_allow_in_graph
 from torch import nn
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 if is_torch_npu_available():
-    import torch_npu
+    import torch_npu  # noqa: F401 - Keeps the module's import-time setup.
 
 if is_xformers_available():
     import xformers
@@ -39,8 +35,10 @@ else:
 if is_torch_xla_available():
     # flash attention pallas kernel is introduced in the torch_xla 2.3 release.
     if is_torch_xla_version(">", "2.2"):
-        from torch_xla.experimental.custom_kernel import flash_attention
-        from torch_xla.runtime import is_spmd
+        from torch_xla.experimental.custom_kernel import (
+            flash_attention,  # noqa: F401 - Keeps the module's import-time setup.
+        )
+        from torch_xla.runtime import is_spmd  # noqa: F401 - Keeps the module's import-time setup.
     XLA_AVAILABLE = True
 else:
     XLA_AVAILABLE = False

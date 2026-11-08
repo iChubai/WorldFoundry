@@ -1,11 +1,9 @@
 import time
-from typing import List, Optional
 
 import torch
 import tqdm
 
 from worldfoundry.synthesis.visual_generation.forcing.self_forcing_runtime.runtime_utils.memory import (
-    DynamicSwapInstaller,
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,

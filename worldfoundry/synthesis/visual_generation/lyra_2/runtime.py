@@ -6,7 +6,7 @@ import os
 from argparse import Namespace
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_candidates
 from worldfoundry.synthesis.visual_generation.lyra_2 import (

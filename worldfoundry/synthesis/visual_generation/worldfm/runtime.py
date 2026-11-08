@@ -12,7 +12,7 @@ import random
 from collections.abc import Mapping, Sequence
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import imageio.v2 as imageio
 import numpy as np

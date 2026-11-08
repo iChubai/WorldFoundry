@@ -5,7 +5,6 @@ Wrap the Huggingface Transformers Llama to PyTorch Lightning Module.
 import inspect
 import os
 import sys
-from typing import Optional
 
 import torch
 import torch.utils.checkpoint

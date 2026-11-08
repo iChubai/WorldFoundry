@@ -11,7 +11,6 @@ import sys
 import time
 import warnings
 from contextlib import contextmanager
-from typing import List, Optional
 
 # --------------------------------------------------------------------------
 # Set env vars BEFORE any SAM3 / third-party imports evaluate them at module

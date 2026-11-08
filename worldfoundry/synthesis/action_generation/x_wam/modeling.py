@@ -2,7 +2,6 @@
 # X-WAM joint world-action extensions copyright the X-WAM contributors.
 # WorldFoundry modifications: inference-only path, core attention, and explicit mixed-dtype boundaries.
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn

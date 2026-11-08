@@ -1,10 +1,9 @@
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
-import torch.nn.functional as F
 from diffusers.models.attention import FeedForward
 from diffusers.models.attention_processor import Attention
 from diffusers.utils import BaseOutput

@@ -13,7 +13,7 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from functools import wraps
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.runtime.env import resolve_hfd_root

@@ -18,8 +18,6 @@
 import argparse
 
 import torch
-from diffusers import StableDiffusionPipeline
-from safetensors.torch import load_file
 
 
 def load_diffusers_lora(pipeline, state_dict, alpha=1.0):

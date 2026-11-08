@@ -20,10 +20,8 @@ import argparse
 import glob
 import os
 import random
-import shutil
 import tempfile
 import time
-from copy import deepcopy
 
 import cv2
 import imageio.v2 as iio
@@ -317,7 +315,6 @@ def run_inference_from_pil(
     # Import model and inference functions after adding the ckpt path
     from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.inference import (
         inference,
-        inference_recurrent,
     )
 
     # Prepare input views directly from PIL images
@@ -453,7 +450,6 @@ def prepare_input_from_pil(pil_images, size, square_ok=False, raymaps=None, raym
     )
 
     # isort: split
-    import PIL
 
     # Process PIL images to have the same format as the load_images output
     imgs = []

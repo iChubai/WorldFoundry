@@ -9,9 +9,7 @@ This module contains utility functions for:
 from __future__ import annotations
 
 import os
-from typing import Dict, Optional, Tuple
 
-import cv2
 import numpy as np
 import torch
 from omegaconf import OmegaConf

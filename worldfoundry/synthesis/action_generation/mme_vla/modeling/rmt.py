@@ -11,10 +11,8 @@ from ...openpi import sharding
 from .memory_utils import (
     apply_rotary_emb,
     kernel_init,
-    kernel_init_out_proj,
     kernel_init_out_proj_rmt,
     precompute_freqs_cis,
-    rms_normalize,
 )
 
 

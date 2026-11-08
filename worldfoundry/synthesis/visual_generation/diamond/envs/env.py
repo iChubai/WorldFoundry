@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
-import ale_py
+import ale_py  # noqa: F401 - Keeps the module's import-time setup.
 import gymnasium
 import numpy as np
 import torch

@@ -2,7 +2,7 @@
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

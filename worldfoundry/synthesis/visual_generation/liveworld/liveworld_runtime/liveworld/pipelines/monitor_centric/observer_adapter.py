@@ -6,7 +6,6 @@ This module keeps LiveWorld-specific logic isolated from the event-centric flow.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import numpy as np
 import torch

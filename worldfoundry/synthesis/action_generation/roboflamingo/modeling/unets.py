@@ -5,8 +5,6 @@ Diffusion polices.
 
 import math
 import time
-from copy import copy, deepcopy
-from typing import Tuple, Union
 
 import einops
 import numpy as np
@@ -15,7 +13,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
-from torch.distributions import Bernoulli
 
 # -----------------------------------------------------------------------------#
 # ----------------------------------- Unets -----------------------------------#

@@ -11,7 +11,6 @@
 
 import functools
 import math
-from typing import Optional
 
 import numpy as np
 import torch

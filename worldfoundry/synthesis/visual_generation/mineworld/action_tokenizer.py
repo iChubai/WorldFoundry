@@ -1,5 +1,4 @@
 import collections
-from typing import Dict, Union
 
 import attr
 import numpy as np

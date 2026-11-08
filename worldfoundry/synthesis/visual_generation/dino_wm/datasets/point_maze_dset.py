@@ -1,11 +1,9 @@
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Optional
 
 import decord
 import numpy as np
 import torch
-from decord import VideoReader
 from einops import rearrange
 
 from .traj_dset import TrajDataset, get_train_val_sliced

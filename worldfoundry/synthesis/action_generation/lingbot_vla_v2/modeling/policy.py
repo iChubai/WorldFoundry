@@ -1,7 +1,5 @@
 """LingBot-VLA v2 policy architecture for inference."""
 
-from typing import List, Optional, Union
-
 import einops
 import torch
 from torch import Tensor, nn

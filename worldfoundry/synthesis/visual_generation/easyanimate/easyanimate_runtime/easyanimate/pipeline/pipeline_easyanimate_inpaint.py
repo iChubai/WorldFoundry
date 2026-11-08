@@ -15,25 +15,17 @@
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from diffusers import DiffusionPipeline
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.models import AutoencoderKL, HunyuanDiT2DModel
 from diffusers.models.embeddings import get_2d_rotary_pos_embed, get_3d_rotary_pos_embed
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
-from diffusers.schedulers import DDIMScheduler, FlowMatchEulerDiscreteScheduler
+from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
 from diffusers.utils import (
-    BACKENDS_MAPPING,
     BaseOutput,
-    deprecate,
-    is_bs4_available,
-    is_ftfy_available,
     is_torch_xla_available,
     logging,
     replace_example_docstring,
@@ -332,7 +324,7 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
         from diffusers.pipelines.pipeline_utils import is_accelerate_available, is_accelerate_version
 
         if is_accelerate_available() and is_accelerate_version(">=", "0.14.0"):
-            from accelerate import cpu_offload, cpu_offload_with_hook
+            from accelerate import cpu_offload
         else:
             raise ImportError("`enable_sequential_cpu_offload` requires `accelerate v0.14.0` or higher")
         self.remove_all_hooks()

@@ -5,17 +5,12 @@ References:
 """
 
 import functools
-import math
-from collections import namedtuple
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from dit import PatchEmbed
 from einops import rearrange
 from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
-from timm.layers.helpers import to_2tuple
 from timm.models.vision_transformer import Mlp
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention

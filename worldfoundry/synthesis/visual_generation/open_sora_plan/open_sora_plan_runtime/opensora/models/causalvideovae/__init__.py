@@ -11,7 +11,6 @@ try:
 except:
     torch_npu = None
     npu_config = None
-import torch
 import torch.nn as nn
 
 

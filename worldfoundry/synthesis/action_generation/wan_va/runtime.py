@@ -3,7 +3,6 @@
 import argparse
 import os
 import time
-from functools import partial
 
 import numpy as np
 import torch

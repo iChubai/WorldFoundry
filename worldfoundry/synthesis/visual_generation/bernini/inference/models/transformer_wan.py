@@ -18,7 +18,6 @@
 # sequence parallel, and latents that are patch-embedded by the caller.
 
 import math
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn

@@ -16,7 +16,6 @@ import math
 import numbers
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple
 
 import flashinfer
 import torch

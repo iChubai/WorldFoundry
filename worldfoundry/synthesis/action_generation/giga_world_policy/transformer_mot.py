@@ -5,14 +5,13 @@
 # transformer parameters with global self-attention across both streams.
 
 import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
-from diffusers.models.attention import AttentionMixin, AttentionModuleMixin
+from diffusers.models.attention import AttentionMixin
 from diffusers.models.attention_dispatch import dispatch_attention_fn
 from diffusers.models.cache_utils import CacheMixin
 from diffusers.models.modeling_outputs import Transformer2DModelOutput

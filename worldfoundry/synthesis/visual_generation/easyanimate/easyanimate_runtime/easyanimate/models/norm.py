@@ -1,8 +1,6 @@
-from typing import Any, Dict, Optional, Tuple
-
 import torch
 import torch.nn.functional as F
-from diffusers.models.embeddings import CombinedTimestepLabelEmbeddings, TimestepEmbedding, Timesteps
+from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from torch import nn
 
 

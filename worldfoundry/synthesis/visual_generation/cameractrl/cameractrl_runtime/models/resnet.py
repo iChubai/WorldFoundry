@@ -1,7 +1,6 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/resnet.py
 
 from functools import partial
-from typing import Optional
 
 import torch
 import torch.nn as nn

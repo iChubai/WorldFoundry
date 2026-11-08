@@ -20,10 +20,8 @@ import math
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from einops import rearrange, repeat
+from einops import rearrange
 from mamba_ssm.ops.triton.layer_norm import RMSNorm
-from mamba_ssm.ops.triton.layernorm_gated import LayerNorm
 from mamba_ssm.ops.triton.layernorm_gated import RMSNorm as RMSNormGated
 from mamba_ssm.ops.triton.ssd_combined import mamba_split_conv1d_scan_combined
 

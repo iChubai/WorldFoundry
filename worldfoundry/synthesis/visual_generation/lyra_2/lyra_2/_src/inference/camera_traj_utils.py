@@ -4,7 +4,6 @@
 # -----------------------------------------------------------------------------
 
 import argparse
-from typing import Optional, Tuple
 
 import torch
 from lyra_2._src.inference.camera_utils import (  # type: ignore

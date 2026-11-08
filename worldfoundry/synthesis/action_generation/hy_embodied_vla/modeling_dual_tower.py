@@ -29,8 +29,6 @@ mlp}``, plus the MoT extensions ``input_layernorm_v`` /
 ``mlp_v`` for the modality-aware variant) can be dropped in.
 """
 
-from typing import List, Optional, Union
-
 import torch
 from torch import nn
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel

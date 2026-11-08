@@ -21,8 +21,7 @@ import re
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial
-from pathlib import Path
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import safetensors
 import torch
@@ -48,7 +47,8 @@ WEIGHTS_NAME = "pytorch_model.bin"
 SAFETENSORS_WEIGHTS_NAME = "pytorch_model.safetensors"
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = "https://huggingface.co"
 
-from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.configuration_utils import ConfigMixin as ConfigMixin
+from diffusers.configuration_utils import register_to_config as register_to_config
 from diffusers.models.model_loading_utils import (
     _determine_device_map,
     _fetch_index_file,
@@ -58,8 +58,6 @@ from diffusers.models.model_loading_utils import (
 )
 from diffusers.utils.hub_utils import (
     PushToHubMixin,
-    load_or_create_model_card,
-    populate_model_card,
 )
 
 logger = logging.get_logger(__name__)

@@ -1,7 +1,5 @@
 """NeoVerse Gaussian rasterization components."""
 
-from typing import Dict, Optional, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn

@@ -5,7 +5,6 @@
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F

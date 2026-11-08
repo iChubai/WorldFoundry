@@ -2,7 +2,6 @@ import gc
 import json
 import random
 from argparse import ArgumentParser
-from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
@@ -10,10 +9,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from diffusers import AutoencoderKL, DPMSolverMultistepScheduler, StableDiffusionInpaintPipeline
-from models.models import KeyframeGen, KeyframeInterp, save_point_cloud_as_ply
+from models.models import KeyframeGen, KeyframeInterp
 from omegaconf import OmegaConf
 from PIL import Image
-from torchvision.transforms import ToPILImage, ToTensor
+from torchvision.transforms import ToPILImage
 from tqdm import tqdm
 from transformers import (
     CLIPTokenizerFast,
@@ -23,7 +22,7 @@ from transformers import (
 )
 from util.chatGPT4 import TextpromptGen
 from util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
-from util.general_utils import apply_depth_colormap, save_video
+from util.general_utils import save_video
 from util.segment_utils import create_mask_generator
 from util.utils import load_inference_prompt_config, merge_frames, merge_keyframes, prepare_scheduler, save_depth_map
 

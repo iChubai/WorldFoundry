@@ -8,17 +8,12 @@ import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import glob
 import json
-import math
 import random
 
-import cv2
 import numpy as np
 import torch
-import torch.nn.functional as F
 import torchvision.transforms as transforms
-from einops import rearrange
 from eval_inputs.utils.domain_table import DomainTable
 from eval_inputs.utils.get_actions import parse_h5
 from eval_inputs.utils.statistics import StatisticInfo, load_stat_file

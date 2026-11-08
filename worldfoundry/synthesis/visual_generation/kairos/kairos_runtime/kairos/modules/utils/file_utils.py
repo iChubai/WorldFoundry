@@ -1,6 +1,5 @@
 import imageio
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
 
 

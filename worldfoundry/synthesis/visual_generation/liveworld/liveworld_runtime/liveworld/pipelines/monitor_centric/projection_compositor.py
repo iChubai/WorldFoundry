@@ -11,8 +11,6 @@ _prepare_sp_context(), which handles the channel concatenation:
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
-
 import cv2
 import numpy as np
 import torch

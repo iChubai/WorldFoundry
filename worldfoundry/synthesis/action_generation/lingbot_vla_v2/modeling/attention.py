@@ -14,7 +14,6 @@
 
 """LingBot-VLA v2 inference attention implementations."""
 
-import einops
 import torch
 import torch.nn.functional as F
 from packaging.version import Version
@@ -145,7 +144,6 @@ def build_block_mask(
     This allocates the dense 4D mask once; the returned BlockMask can be reused across layers.
     """
     from torch.nn.attention.flex_attention import (
-        _mask_mod_signature,
         _round_up_to_multiple,
         create_block_mask,
         create_mask,

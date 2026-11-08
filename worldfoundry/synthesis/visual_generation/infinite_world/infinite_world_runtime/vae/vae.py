@@ -4,10 +4,8 @@ import logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
 
 from worldfoundry.core import autocast_context
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
 
 __all__ = [
@@ -59,11 +57,6 @@ class Upsample(nn.Upsample):
         Fix bfloat16 support for nearest neighbor interpolation.
         """
         return super().forward(x.float()).type_as(x)
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AttentionBlock
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d, Encoder3d, Resample
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
 
 
 def count_conv3d(model):

@@ -1,7 +1,6 @@
 import logging
 import re
 from collections.abc import Sequence
-from typing import Dict, Optional
 
 import flax
 import flax.linen as nn

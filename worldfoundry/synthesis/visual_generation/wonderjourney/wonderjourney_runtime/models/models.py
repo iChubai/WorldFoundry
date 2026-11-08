@@ -17,7 +17,6 @@ from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat i
 
 configure_pytorch3d_extension()
 
-from typing import List, Optional, Tuple, Union
 
 from kornia.morphology import erosion
 from pytorch3d.renderer import (

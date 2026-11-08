@@ -18,7 +18,6 @@
 import gc
 import json
 import os
-from typing import List, Optional
 
 import torch
 import torch.nn as nn

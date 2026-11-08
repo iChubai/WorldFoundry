@@ -1,6 +1,5 @@
 """End-effector pose conversions used by inference postprocessing."""
 
-import numpy as np
 import torch
 from torch import Tensor
 

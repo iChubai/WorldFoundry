@@ -6,7 +6,6 @@ References:
 """
 
 import math
-from typing import Literal, Optional
 
 import torch
 from attention import SpatialAxialAttention, TemporalAxialAttention

@@ -8,7 +8,7 @@ from functools import partial
 
 # SPDX-License-Identifier: Apache-2.0
 from math import pi
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import torch
 from einops import rearrange, repeat

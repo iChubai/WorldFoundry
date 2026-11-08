@@ -1,55 +1,40 @@
-import math
-from typing import Optional, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-from worldfoundry.core.model_loading import hash_state_dict_keys
-
 try:
-    import flash_attn_interface
+    import flash_attn_interface  # noqa: F401 - Import checks optional dependency availability.
 
     FLASH_ATTN_3_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_3_AVAILABLE = False
 
 try:
-    import flash_attn
+    import flash_attn  # noqa: F401 - Import checks optional dependency availability.
 
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
 try:
-    from sageattention import sageattn
+    from sageattention import sageattn  # noqa: F401 - Import checks optional dependency availability.
 
     SAGE_ATTN_AVAILABLE = True
 except ModuleNotFoundError:
     SAGE_ATTN_AVAILABLE = False
 from worldfoundry.core.attention import (
-    apply_complex_rotary_embedding as rope_apply,
-)
-from worldfoundry.core.attention import (
-    complex_rotary_frequencies as precompute_freqs_cis,
-)
-from worldfoundry.core.attention import (
     complex_rotary_frequencies_3d as precompute_freqs_cis_3d,
 )
-from worldfoundry.core.attention import (
-    packed_sequence_attention as flash_attention,
-)
-from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.nn import scale_shift as modulate
+from worldfoundry.core.nn import sinusoidal_embedding_1d
 
 from .wan_video_dit import SelfAttention
 
 # isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import (
     MLP,
-    AttentionModule,
     CrossAttention,
     Head,
     WanModelStateDictConverter,

@@ -19,7 +19,6 @@ import logging
 import os
 import sys
 import traceback
-from typing import List
 
 # Add code/ to path so sibling packages are importable
 _code_dir = os.path.join(os.path.dirname(__file__), "..")

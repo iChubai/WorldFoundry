@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import torch
 import torch.distributed as dist
 

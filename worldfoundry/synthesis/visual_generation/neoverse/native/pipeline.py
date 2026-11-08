@@ -1,7 +1,6 @@
 """Native NeoVerse inference on the shared Wan execution infrastructure."""
 
 import os
-from typing import Optional, Union
 
 import numpy as np
 import torch

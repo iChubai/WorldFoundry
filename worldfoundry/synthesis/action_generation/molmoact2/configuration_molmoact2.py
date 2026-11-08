@@ -2,7 +2,7 @@
 MolmoAct2 configuration
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from transformers import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation

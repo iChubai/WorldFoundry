@@ -1,7 +1,6 @@
 import math
 import os
 from copy import deepcopy
-from typing import List, Union
 
 import numpy as np
 import PIL

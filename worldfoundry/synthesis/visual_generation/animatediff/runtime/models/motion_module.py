@@ -1,18 +1,14 @@
 import math
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 import torch.nn.functional as F
-import torchvision
-from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.utils import BaseOutput
 from diffusers.utils.import_utils import is_xformers_available
 from einops import rearrange, repeat
 from torch import nn
 
-from .diffusers_compat import CrossAttention, FeedForward, ModelMixin
+from .diffusers_compat import CrossAttention, FeedForward
 
 
 def zero_module(module):

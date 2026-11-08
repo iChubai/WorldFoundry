@@ -6,7 +6,7 @@ import os
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 PathOrStr = Union[str, os.PathLike]
 

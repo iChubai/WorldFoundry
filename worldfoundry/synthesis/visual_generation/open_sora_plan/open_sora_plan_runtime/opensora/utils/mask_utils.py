@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from math import ceil, floor
 
-import cv2
 import imageio
 import numpy as np
 import torch

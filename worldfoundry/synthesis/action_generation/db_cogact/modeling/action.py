@@ -7,7 +7,6 @@
 # --------------------------------------------------------
 
 
-import torch
 import torch.nn as nn
 
 from .diffusion import ModelVarType, create_diffusion

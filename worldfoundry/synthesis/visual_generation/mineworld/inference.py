@@ -14,7 +14,7 @@ from rich import print
 from torch import autocast
 from torchvision import transforms
 from tqdm import tqdm
-from utils import load_model, tensor_to_uint8
+from utils import load_model
 
 torch.backends.cuda.matmul.allow_tf32 = False
 

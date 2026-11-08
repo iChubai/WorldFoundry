@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Optional, Tuple
 
 import numpy as np
 import torch
@@ -21,9 +20,11 @@ from diffusers.models.autoencoders.autoencoder_kl_cogvideox import (
     CogVideoXCausalConv3d,
     CogVideoXDownBlock3D,
     CogVideoXMidBlock3D,
-    CogVideoXSafeConv3d,
     CogVideoXSpatialNorm3D,
     CogVideoXUpBlock3D,
+)
+from diffusers.models.autoencoders.autoencoder_kl_cogvideox import (
+    CogVideoXSafeConv3d as CogVideoXSafeConv3d,
 )
 from diffusers.utils import logging
 

@@ -29,8 +29,6 @@ from typing import (
     Final,
     Literal,
     Optional,
-    Tuple,
-    Type,
     Union,
 )
 

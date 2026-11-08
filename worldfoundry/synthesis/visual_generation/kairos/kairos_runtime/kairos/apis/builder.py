@@ -1,6 +1,6 @@
 import copy
 
-import torch.nn as nn
+import torch.nn as nn  # noqa: F401 - Loads torch before compiled extensions.
 from mmengine.registry import Registry
 
 PIPELINES_API = Registry("model_pipeline")

@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import onnxruntime
 
 
 def nms(boxes, scores, nms_thr):

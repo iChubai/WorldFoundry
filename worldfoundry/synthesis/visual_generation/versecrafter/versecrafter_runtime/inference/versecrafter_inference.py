@@ -240,7 +240,7 @@ else:
     if transformer_path is not None:
         print(f"Loading transformer weights from checkpoint: {transformer_path}")
         if transformer_path.endswith("safetensors"):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(transformer_path)
         else:
@@ -259,7 +259,7 @@ vae = AutoencoderKLWan.from_pretrained(
 if vae_path is not None:
     print(f"From checkpoint: {vae_path}")
     if vae_path.endswith("safetensors"):
-        from safetensors.torch import load_file, safe_open
+        from safetensors.torch import load_file
 
         state_dict = load_file(vae_path)
     else:

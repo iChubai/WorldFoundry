@@ -1,7 +1,4 @@
-import random
-
 import numpy as np
-import torch
 from torchvision import transforms
 from utils import aggregate_dct
 

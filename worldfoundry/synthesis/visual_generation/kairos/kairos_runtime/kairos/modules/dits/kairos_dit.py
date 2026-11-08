@@ -1,7 +1,6 @@
 import math
 import os
 import warnings
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -46,7 +45,11 @@ from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
 SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
     try:
-        from sageattention import sag_attention_with_window, sageattn, sageattn_qk_int8_pv_fp16_cuda_with_window
+        from sageattention import (  # noqa: F401 - Import checks optional dependency availability.
+            sag_attention_with_window,
+            sageattn,
+            sageattn_qk_int8_pv_fp16_cuda_with_window,
+        )
 
         SAGE_ATTN_AVAILABLE = True
     except ModuleNotFoundError:
@@ -55,7 +58,6 @@ import torch.distributed as dist
 from fla.layers import GatedDeltaNet
 from fla.models.utils import Cache as FlaCache
 from kairos.apis.builder import DITS
-from torch.distributed import ProcessGroup, get_process_group_ranks
 
 # isort: split
 from kairos.modules.utils import FLAGS_KAIROS_IS_METAX, parallel_state
@@ -63,8 +65,6 @@ from kairos.modules.utils import FLAGS_KAIROS_IS_METAX, parallel_state
 # isort: split
 # isort: split
 from kairos.modules.utils.tp_utils import (
-    _distribute_input_sp,
-    _gather_input_sp,
     all2all_head_to_seq,
     all2all_seq_to_head,
     build_tp_chunk_list,

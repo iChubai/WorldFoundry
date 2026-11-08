@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 import time
 
 import kairos.apis.kairos_embodied_api  # noqa: F401 - registers KairosEmbodiedAPI
@@ -8,7 +7,7 @@ import mmengine
 import torch
 import torch.distributed as dist
 from kairos.apis.builder import build_model_pipeline
-from kairos.modules.utils import FLAGS_KAIROS_PLAT_DEVICE, parallel_state, save_image, save_video
+from kairos.modules.utils import parallel_state, save_image, save_video
 from kairos.modules.utils.prompt_rewriter import PromptRewriter
 from mmengine import Config
 from mmengine.dist import get_dist_info, init_dist

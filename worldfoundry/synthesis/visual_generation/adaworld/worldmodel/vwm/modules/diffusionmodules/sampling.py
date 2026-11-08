@@ -2,8 +2,6 @@
 Partially ported from https://github.com/crowsonkb/k-diffusion/blob/master/k_diffusion/sampling.py
 """
 
-from typing import Dict, Union
-
 import torch
 from einops import rearrange
 from omegaconf import ListConfig, OmegaConf

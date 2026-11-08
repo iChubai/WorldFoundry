@@ -3,7 +3,6 @@ import kornia
 import numpy as np
 import torch
 from matplotlib import cm
-from torchvision.io import write_video
 
 
 def tensor2im(input_image, imtype=np.uint8):

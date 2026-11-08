@@ -16,7 +16,7 @@ from math import ceil, log2
 import torch
 import torch.nn.functional as F
 from einops import pack, rearrange, reduce, unpack
-from torch import einsum, nn
+from torch import einsum
 from torch.nn import Module
 
 # constants

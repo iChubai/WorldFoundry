@@ -12,7 +12,6 @@ import os
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -196,14 +195,8 @@ Supports:
 """
 
 import gc
-import os
-import sys
-from typing import List, Optional, Tuple
 
-import cv2
-import numpy as np
 import open3d as o3d
-import torch
 import torchvision.transforms.functional as TF
 from PIL import Image
 

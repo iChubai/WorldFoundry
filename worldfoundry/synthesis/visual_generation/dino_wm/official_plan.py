@@ -21,7 +21,7 @@ from env.venv import SubprocVectorEnv
 
 # isort: split
 # isort: split
-from custom_resolvers import replace_slash
+from custom_resolvers import replace_slash  # noqa: F401 - Keeps the module's import-time setup.
 
 # isort: split
 from inference_planning.evaluator import PlanEvaluator

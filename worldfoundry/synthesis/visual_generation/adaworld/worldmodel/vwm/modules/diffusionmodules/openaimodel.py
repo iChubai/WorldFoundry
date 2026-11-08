@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from collections.abc import Iterable
-from typing import Optional
+from typing import Optional as Optional
 
 import torch
 import torch.nn as nn

@@ -7,7 +7,6 @@ and text prompt, guided by camera motion parameters.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import torch
 

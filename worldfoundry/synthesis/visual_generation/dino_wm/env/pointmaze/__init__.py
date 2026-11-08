@@ -1,7 +1,8 @@
-from .maze_model import LARGE_MAZE, LARGE_MAZE_EVAL, MEDIUM_MAZE, MEDIUM_MAZE_EVAL, OPEN, U_MAZE, U_MAZE_EVAL, MazeEnv
+from .maze_model import LARGE_MAZE, LARGE_MAZE_EVAL, MEDIUM_MAZE, MEDIUM_MAZE_EVAL, OPEN, U_MAZE, U_MAZE_EVAL
+from .maze_model import MazeEnv as MazeEnv
 
 # isort: split
-from .point_maze_wrapper import PointMazeWrapper
+from .point_maze_wrapper import PointMazeWrapper as PointMazeWrapper
 
 # isort: split
 from gym.envs.registration import register

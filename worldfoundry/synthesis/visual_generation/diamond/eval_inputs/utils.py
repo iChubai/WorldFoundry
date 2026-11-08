@@ -1,6 +1,5 @@
 import math
 from collections.abc import Generator
-from typing import List
 
 import torch
 import torch.nn.functional as F

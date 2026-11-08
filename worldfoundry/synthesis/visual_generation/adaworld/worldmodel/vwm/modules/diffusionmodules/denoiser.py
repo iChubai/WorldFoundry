@@ -1,5 +1,3 @@
-from typing import Dict
-
 import torch
 import torch.nn as nn
 from vwm.util import append_dims, instantiate_from_config

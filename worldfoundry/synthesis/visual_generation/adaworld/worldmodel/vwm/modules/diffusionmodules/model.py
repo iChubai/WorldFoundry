@@ -1,6 +1,6 @@
 import math
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import torch

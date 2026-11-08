@@ -1,5 +1,3 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
-
 import accelerate.accelerator
 import einops
 import numpy as np
@@ -23,7 +21,6 @@ from diffusers.models.normalization import FP32LayerNorm, LayerNorm, RMSNorm
 
 # isort: split
 from diffusers.models.normalization import AdaLayerNormContinuous as _DiffusersAdaLayerNormContinuous
-from diffusers_helper.utils import zero_module
 
 from worldfoundry.core.attention import get_cu_seqlens
 

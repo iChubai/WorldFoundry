@@ -18,7 +18,6 @@
 
 import math
 from collections import namedtuple
-from typing import Optional
 
 import torch
 import torch.amp as amp

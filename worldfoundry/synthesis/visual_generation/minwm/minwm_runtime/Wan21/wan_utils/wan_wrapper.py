@@ -1,6 +1,5 @@
 import os
 import types
-from typing import Optional
 
 import torch
 

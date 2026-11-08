@@ -1,8 +1,6 @@
 # Inference-only DB-CogACT source retained in-tree.
 from __future__ import annotations
 
-from typing import List
-
 
 def require_config_keys(required_keys: list[str]):
     def decorator(func):

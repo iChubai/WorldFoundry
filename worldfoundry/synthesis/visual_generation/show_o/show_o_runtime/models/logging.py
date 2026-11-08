@@ -27,7 +27,6 @@ from logging import (
     WARN,  # NOQA
     WARNING,
 )
-from typing import Optional
 
 from tqdm import auto as tqdm_lib
 

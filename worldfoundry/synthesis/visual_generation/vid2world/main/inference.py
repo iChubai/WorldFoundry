@@ -5,7 +5,6 @@ import datetime
 import os
 from pathlib import Path
 
-import pytorch_lightning as pl
 import torch
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything

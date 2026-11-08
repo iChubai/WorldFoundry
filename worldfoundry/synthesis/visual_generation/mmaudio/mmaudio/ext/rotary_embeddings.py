@@ -1,5 +1,3 @@
-from typing import Union
-
 import torch
 from einops import rearrange
 from torch import Tensor

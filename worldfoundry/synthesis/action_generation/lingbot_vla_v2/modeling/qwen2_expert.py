@@ -1,7 +1,5 @@
 """Qwen2 action expert and routed-MoE inference layers."""
 
-from typing import Optional, Tuple
-
 import torch
 import torch.nn.functional as F
 import transformers.models.qwen2.modeling_qwen2 as hf_qwen2

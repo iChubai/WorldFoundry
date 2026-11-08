@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from importlib.resources import files
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from .components import load_videocrafter_components
 

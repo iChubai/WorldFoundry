@@ -23,7 +23,7 @@ import inspect
 import logging
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar
 
 from ..base_synthesis import BaseSynthesis
 

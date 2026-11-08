@@ -47,13 +47,15 @@ import os
 from dataclasses import dataclass
 from functools import partial
 from types import SimpleNamespace
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,  # noqa: F401 - Loads torch before compiled extensions.
+)
 from torch.nn import CrossEntropyLoss
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache, SlidingWindowCache, StaticCache
@@ -90,11 +92,10 @@ from veomni.distributed.sequence_parallel import (
     gather_outputs,
     gather_seq_scatter_heads,
     pad_tensor,
-    reduce_sequence_parallel_loss,
     unpad_tensor,
 )
 from veomni.utils.device import IS_CUDA_AVAILABLE
-from veomni.utils.import_utils import is_liger_kernel_available
+from veomni.utils.import_utils import is_liger_kernel_available  # noqa: F401 - Keeps the module's import-time setup.
 
 try:
     from liger_kernel.transformers.qwen2vl_mrope import liger_multimodal_rotary_pos_emb
@@ -2406,7 +2407,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
             labels_valid[~labels_mask] = 0  # dummy class, will be masked out
 
             try:
-                import bumi
+                import bumi  # noqa: F401 - Import checks optional dependency availability.
 
                 if flash_cross_entropy_func is None:
                     raise ImportError("flash_cross_entropy_func is unavailable")

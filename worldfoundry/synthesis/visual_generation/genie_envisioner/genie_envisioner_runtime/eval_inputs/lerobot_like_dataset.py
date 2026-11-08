@@ -1,4 +1,3 @@
-import io
 import os
 import sys
 
@@ -7,25 +6,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
-import glob
 import json
-import math
 import random
 import traceback
 
-import cv2
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn.functional as F
 import torchvision.transforms as transforms
-from einops import rearrange
 
 # from eval_inputs.utils.domain_table import DomainTable
 from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
 from eval_inputs.utils.utils import gen_crop_config, intrin_crop_transform, intrinsic_transform
 from moviepy.editor import VideoFileClip
-from PIL import Image
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 

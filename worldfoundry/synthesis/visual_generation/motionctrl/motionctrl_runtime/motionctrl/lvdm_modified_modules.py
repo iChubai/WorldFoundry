@@ -7,7 +7,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math impo
 
 try:
     import xformers
-    import xformers.ops
+    import xformers.ops  # noqa: F401 - Import checks optional dependency availability.
 
     XFORMERS_IS_AVAILBLE = True
 except:

@@ -1,12 +1,9 @@
-import glob
 import os
-import types
-import warnings
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import numpy as np
 import torch
-from einops import rearrange, reduce, repeat
+from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
@@ -37,7 +34,7 @@ from kairos.modules.utils import parallel_state
 from kairos.modules.vaes.parallel_vae_wrapper import ParallelVAEWrapper
 
 # isort: split
-from kairos.modules.utils.tp_utils import _distribute_input_sp, _gather_input_sp
+from kairos.modules.utils.tp_utils import _distribute_input_sp
 
 
 @KAIROS_PROCESSOR.register_module()

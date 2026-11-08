@@ -569,7 +569,7 @@ class SizeEmbedder(TimestepEmbedder):
         return next(self.parameters()).dtype
 
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import LabelEmbedder
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import LabelEmbedder as LabelEmbedder
 
 
 class CaptionEmbedder(nn.Module):

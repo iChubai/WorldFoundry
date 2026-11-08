@@ -1,12 +1,10 @@
 # Inference-only LAPA source retained in-tree.
 import pickle
 from functools import cached_property, partial
-from typing import Optional
 
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-import numpy as np
 from flax import jax_utils
 from ml_collections import ConfigDict
 from transformers.configuration_utils import PretrainedConfig

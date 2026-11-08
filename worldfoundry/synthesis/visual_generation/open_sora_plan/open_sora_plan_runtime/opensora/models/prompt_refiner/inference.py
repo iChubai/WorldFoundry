@@ -1,7 +1,6 @@
 import argparse
 
 import torch
-from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 

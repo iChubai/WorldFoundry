@@ -1,15 +1,9 @@
 import gc
-import glob
-import os
-import types
-import warnings
-from dataclasses import dataclass
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import numpy as np
 import torch
-from einops import rearrange, reduce, repeat
-from modelscope import snapshot_download
+from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
@@ -45,12 +39,6 @@ from kairos.modules.utils.tp_utils import _distribute_input_sp, _gather_input_sp
 # isort: split
 
 # from ..models.init_parameters import init_parameters
-import torch.nn.functional as F
-from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
-    Qwen2_5_VisionRotaryEmbedding,
-    Qwen2_5_VLRotaryEmbedding,
-    Qwen2RMSNorm,
-)
 
 
 @KAIROS_PROCESSOR.register_module()

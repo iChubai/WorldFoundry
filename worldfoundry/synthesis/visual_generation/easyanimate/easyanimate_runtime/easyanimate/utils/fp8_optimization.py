@@ -1,7 +1,6 @@
 """Modified from https://github.com/kijai/ComfyUI-MochiWrapper"""
 
 import torch
-import torch.nn as nn
 
 
 def autocast_model_forward(cls, origin_dtype, *inputs, **kwargs):

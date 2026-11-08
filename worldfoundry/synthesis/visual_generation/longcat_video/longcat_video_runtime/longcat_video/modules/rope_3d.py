@@ -1,7 +1,6 @@
 # References:
 # https://github.com/facebookresearch/fairseq/blob/main/fairseq/modules/rotary_positional_embedding.py
 
-from functools import lru_cache
 
 import numpy as np
 import torch

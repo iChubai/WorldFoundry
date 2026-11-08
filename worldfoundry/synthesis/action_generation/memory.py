@@ -12,7 +12,7 @@ ensuring consistent metadata tagging for different policy models.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from worldfoundry.core.memory import BaseMemory
 

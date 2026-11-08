@@ -11,9 +11,8 @@
 import collections
 from collections.abc import Callable
 from importlib import import_module
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from allegro.models.transformers.embedding import CombinedTimestepSizeEmbeddings

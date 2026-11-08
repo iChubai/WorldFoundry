@@ -6,7 +6,7 @@ runtime's initialization and core functionalities like `plan` and `predict`.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 from worldfoundry.synthesis.visual_generation.inspatio_world.worldfoundry_runtime import (

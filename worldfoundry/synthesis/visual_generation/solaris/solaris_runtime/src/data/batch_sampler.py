@@ -1,7 +1,6 @@
 import json
 import logging
 import math
-import os
 
 import numpy as np
 import torch

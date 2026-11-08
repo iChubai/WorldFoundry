@@ -16,11 +16,8 @@ from .memory_utils import (
     apply_layer_norm,
     inv_softplus,
     kernel_init,
-    kernel_init_out_proj,
     kernel_init_ttt_out_proj,
     kernel_init_ttt_v,
-    precompute_freqs_cis,
-    rms_normalize,
     scan_remat_every_n_iterations_scan,
 )
 

@@ -1,5 +1,4 @@
 # Inference-only DB-CogACT source retained in-tree.
-from typing import List, Optional
 
 import torch
 import torch.nn as nn

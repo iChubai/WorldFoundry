@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional, Tuple, Union
-
 import torch
 from einops import rearrange
 from omegaconf import ListConfig, OmegaConf

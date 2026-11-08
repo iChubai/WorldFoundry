@@ -1,5 +1,4 @@
 import os
-import tempfile
 from contextlib import contextmanager
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version

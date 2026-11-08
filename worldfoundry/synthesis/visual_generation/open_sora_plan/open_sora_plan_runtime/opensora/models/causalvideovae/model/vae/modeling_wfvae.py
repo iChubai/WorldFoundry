@@ -8,17 +8,13 @@ except:
 
 import os
 from collections import deque
-from copy import deepcopy
-from typing import List
 
 import torch
 import torch.nn as nn
 from diffusers.configuration_utils import register_to_config
-from einops import rearrange
 
 from ..modeling_videobase import VideoBaseAE
 from ..modules import (
-    AttnBlock3DFix,
     CausalConv3d,
     Conv2d,
     HaarWaveletTransform3D,
@@ -30,7 +26,7 @@ from ..modules import (
 )
 from ..registry import ModelRegistry
 from ..utils.distrib_utils import DiagonalGaussianDistribution
-from ..utils.module_utils import Module, resolve_str_to_obj
+from ..utils.module_utils import resolve_str_to_obj
 
 
 class Encoder(VideoBaseAE):

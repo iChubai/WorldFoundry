@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
-from typing import Optional
 
 import av
 import numpy as np

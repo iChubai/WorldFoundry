@@ -1,6 +1,5 @@
 # Inference-only Wan-VA source retained in-tree.
 # Copyright 2024-2025 The Robbyant Team Authors. All rights reserved.
-import torch
 from diffusers import AutoencoderKLWan
 from transformers import (
     T5TokenizerFast,

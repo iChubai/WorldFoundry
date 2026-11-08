@@ -9,8 +9,6 @@ parameter setup, video generation, and artifact saving.
 
 from __future__ import annotations
 
-from typing import Optional
-
 import torch
 
 from ...base_synthesis import BaseSynthesis

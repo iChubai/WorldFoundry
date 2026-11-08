@@ -20,7 +20,7 @@ import collections
 import os
 from collections.abc import Callable, Mapping
 from functools import partial
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import attrs
 import torch

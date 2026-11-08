@@ -3,7 +3,6 @@ import logging
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Optional, Tuple
 
 import flax
 import jax

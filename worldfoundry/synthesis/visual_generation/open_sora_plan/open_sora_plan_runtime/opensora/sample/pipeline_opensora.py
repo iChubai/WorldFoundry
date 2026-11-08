@@ -1,12 +1,11 @@
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 from einops import rearrange
-from transformers import CLIPImageProcessor, CLIPTextModelWithProjection, CLIPTokenizer, T5EncoderModel
+from transformers import CLIPTextModelWithProjection, CLIPTokenizer, T5EncoderModel
 
 try:  # transformers < 5 exposed the multilingual alias at package level.
     from transformers import MT5Tokenizer
@@ -14,12 +13,8 @@ except ImportError:  # transformers 5 consolidated it with the T5 tokenizer.
     from transformers import T5Tokenizer as MT5Tokenizer
 
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
-from diffusers.image_processor import VaeImageProcessor
-from diffusers.models import AutoencoderKL, HunyuanDiT2DModel
-from diffusers.models.embeddings import get_2d_rotary_pos_embed
+from diffusers.models import AutoencoderKL
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
-from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from diffusers.schedulers import DDPMScheduler, FlowMatchEulerDiscreteScheduler
 from diffusers.utils import BaseOutput, logging
 from diffusers.utils.torch_utils import randn_tensor

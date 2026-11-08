@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, TypeVar, Union
+from typing import TypeVar
 
 import numpy as np
 from numpy.typing import NDArray

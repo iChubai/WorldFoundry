@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from collections.abc import Sequence
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Generic, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray

@@ -2,10 +2,11 @@
 Modified from https://github.com/CompVis/taming-transformers/blob/master/taming/modules/diffusionmodules/model.py#L34
 """
 
-import math
-from typing import Tuple, Union
+import math as math
+from typing import Tuple as Tuple
+from typing import Union as Union
 
-import numpy as np
+import numpy as np  # noqa: F401 - Re-exported under this name.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

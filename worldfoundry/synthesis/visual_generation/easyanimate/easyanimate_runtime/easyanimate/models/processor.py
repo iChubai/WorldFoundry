@@ -1,10 +1,8 @@
-from typing import Optional
-
 import torch
 import torch.nn.functional as F
 from diffusers.models.attention import Attention
 from diffusers.models.embeddings import apply_rotary_emb
-from einops import rearrange, repeat
+from einops import rearrange
 
 
 class HunyuanAttnProcessor2_0:
@@ -315,8 +313,14 @@ class EasyAnimateAttnProcessor2_0:
 
 
 try:
-    from flash_attn import flash_attn_func, flash_attn_varlen_func
-    from flash_attn.bert_padding import pad_input, unpad_input
+    from flash_attn import (  # noqa: F401 - Import checks optional dependency availability.
+        flash_attn_func,
+        flash_attn_varlen_func,
+    )
+    from flash_attn.bert_padding import (  # noqa: F401 - Import checks optional dependency availability.
+        pad_input,
+        unpad_input,
+    )
 except:
     print("Flash Attention is not installed. Please install with `pip install flash-attn`, if you want to use SWA.")
 

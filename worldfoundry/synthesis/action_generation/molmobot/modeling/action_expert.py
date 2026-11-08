@@ -1,7 +1,6 @@
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F

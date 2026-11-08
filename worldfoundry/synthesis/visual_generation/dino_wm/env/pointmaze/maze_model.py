@@ -1,7 +1,5 @@
 """A pointmass maze env."""
 
-import random
-
 import gym
 import numpy as np
 from d4rl import offline_env

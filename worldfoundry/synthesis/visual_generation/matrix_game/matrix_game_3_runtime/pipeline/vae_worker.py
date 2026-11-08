@@ -9,7 +9,6 @@ if _repo_root not in sys.path:
 
 import argparse
 import json
-import time
 
 import numpy as np
 import torch

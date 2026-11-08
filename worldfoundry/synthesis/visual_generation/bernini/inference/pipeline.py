@@ -23,7 +23,6 @@ import random
 import re
 from functools import partial
 from types import SimpleNamespace
-from typing import Optional
 
 import ftfy
 import numpy as np

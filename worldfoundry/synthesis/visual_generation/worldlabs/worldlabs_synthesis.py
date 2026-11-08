@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import mimetypes
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..api_video_client import REQUEST_TIMEOUT, ApiVideoSynthesis
 

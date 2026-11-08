@@ -2,10 +2,8 @@
 
 import ast
 import json
-from collections import OrderedDict, defaultdict
-from typing import List
+from collections import OrderedDict
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 import yaml

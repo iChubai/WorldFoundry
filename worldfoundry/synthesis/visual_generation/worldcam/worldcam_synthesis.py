@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from worldfoundry.synthesis.visual_generation.worldcam.worldfoundry_runtime import (
     DEFAULT_NEGATIVE_PROMPT,

@@ -2,7 +2,6 @@ import argparse
 import os
 import random
 from collections.abc import Callable
-from typing import Dict
 
 import numpy as np
 import psutil

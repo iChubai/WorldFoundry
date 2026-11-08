@@ -18,7 +18,7 @@
 
 import os
 from shutil import copyfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import sentencepiece as spm
 from transformers.tokenization_utils import PreTrainedTokenizer

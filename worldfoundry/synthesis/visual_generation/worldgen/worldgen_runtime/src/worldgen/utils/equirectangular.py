@@ -4,7 +4,6 @@ import logging
 import math
 from typing import NamedTuple
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 

@@ -14,7 +14,6 @@
 
 """LingBot-VLA v1 inference attention implementations."""
 
-import einops
 import torch
 import torch.nn.functional as F
 from packaging.version import Version

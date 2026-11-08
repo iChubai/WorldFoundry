@@ -17,7 +17,7 @@ import json
 import math
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 import torch
@@ -34,8 +34,7 @@ from diffusers.models.embeddings import (
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import AdaLayerNorm, AdaLayerNormContinuous
-from diffusers.utils import USE_PEFT_BACKEND, BaseOutput, is_torch_version, logging
-from diffusers.utils.torch_utils import maybe_allow_in_graph
+from diffusers.utils import BaseOutput, is_torch_version
 from einops import rearrange
 from torch import nn
 
@@ -774,7 +773,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                     model = cls.from_config(config, **transformer_additional_kwargs)
 
                 param_device = "cpu"
-                from safetensors.torch import load_file, safe_open
+                from safetensors.torch import load_file
 
                 state_dict = load_file(model_file_safetensors)
                 model._convert_deprecated_attention_blocks(state_dict)
@@ -812,11 +811,11 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         if os.path.exists(model_file):
             state_dict = load_tensor_state_dict(model_file)
         elif os.path.exists(model_file_safetensors):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(model_file_safetensors)
         else:
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             model_files_safetensors = glob.glob(os.path.join(pretrained_model_path, "*.safetensors"))
             state_dict = {}
@@ -1346,7 +1345,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                     model = cls.from_config(config, **transformer_additional_kwargs)
 
                 param_device = "cpu"
-                from safetensors.torch import load_file, safe_open
+                from safetensors.torch import load_file
 
                 state_dict = load_file(model_file_safetensors)
                 model._convert_deprecated_attention_blocks(state_dict)
@@ -1384,11 +1383,11 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
         if os.path.exists(model_file):
             state_dict = load_tensor_state_dict(model_file)
         elif os.path.exists(model_file_safetensors):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(model_file_safetensors)
         else:
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             model_files_safetensors = glob.glob(os.path.join(pretrained_model_path, "*.safetensors"))
             state_dict = {}
@@ -1866,7 +1865,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
                     model = cls.from_config(config, **transformer_additional_kwargs)
 
                 param_device = "cpu"
-                from safetensors.torch import load_file, safe_open
+                from safetensors.torch import load_file
 
                 state_dict = load_file(model_file_safetensors)
                 model._convert_deprecated_attention_blocks(state_dict)
@@ -1904,11 +1903,11 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         if os.path.exists(model_file):
             state_dict = load_tensor_state_dict(model_file)
         elif os.path.exists(model_file_safetensors):
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             state_dict = load_file(model_file_safetensors)
         else:
-            from safetensors.torch import load_file, safe_open
+            from safetensors.torch import load_file
 
             model_files_safetensors = glob.glob(os.path.join(pretrained_model_path, "*.safetensors"))
             state_dict = {}

@@ -1,7 +1,6 @@
 from collections import defaultdict
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 import torch.nn as nn

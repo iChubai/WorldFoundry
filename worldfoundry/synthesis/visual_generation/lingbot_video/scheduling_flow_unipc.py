@@ -1,5 +1,4 @@
 import math
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -8,7 +7,7 @@ from diffusers.schedulers.scheduling_utils import KarrasDiffusionSchedulers, Sch
 from diffusers.utils import deprecate, is_scipy_available
 
 if is_scipy_available():
-    import scipy.stats
+    pass
 
 
 class FlowUniPCMultistepScheduler(SchedulerMixin, ConfigMixin):

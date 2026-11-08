@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 import attrs
 from lyra_2._src.configs.defaults.common.checkpoint import register_checkpoint

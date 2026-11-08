@@ -1,11 +1,7 @@
 import atexit
-import gc
-import json
 import logging
 import math
 import os
-import random
-import sys
 import time
 import types
 from functools import partial
@@ -15,7 +11,6 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from einops import rearrange
-from PIL import Image
 from torch.distributed.fsdp import FullyShardedDataParallel
 from tqdm import tqdm
 
@@ -34,7 +29,9 @@ from worldfoundry.base_models.diffusion_model.schedulers import FlowUniPCMultist
 from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size
 
 # isort: split
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.light_22 import Wan2_2_VAE
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.light_22 import (
+    Wan2_2_VAE,  # noqa: F401 - Keeps the module's import-time setup.
+)
 
 # isort: split
 from utils.cam_utils import (

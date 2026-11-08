@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import os
-from typing import Any, List, Optional
 
 import torch
 from src.models.eval_inputs.radym import Radym

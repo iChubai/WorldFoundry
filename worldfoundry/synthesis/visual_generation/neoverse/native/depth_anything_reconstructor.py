@@ -1,7 +1,6 @@
 """Depth Anything 3 Gaussian reconstructor used by NeoVerse inference."""
 
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.core.model_loading import hash_state_dict_keys
 

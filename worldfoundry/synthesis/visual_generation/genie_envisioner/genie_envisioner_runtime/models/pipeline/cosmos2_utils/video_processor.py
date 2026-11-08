@@ -15,7 +15,6 @@
 """Native Cosmos component."""
 
 import warnings
-from typing import List, Optional, Union
 
 import numpy as np
 import PIL

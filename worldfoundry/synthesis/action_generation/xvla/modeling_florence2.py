@@ -24,7 +24,6 @@ buffer names remain compatible with the released X-VLA checkpoints.
 
 import math
 from collections import OrderedDict
-from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F

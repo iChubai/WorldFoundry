@@ -1,6 +1,5 @@
 import math
 from functools import partial
-from typing import List, Optional
 
 import torch
 from torch import Tensor, nn

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List as List
 
 import torch
 from omegaconf import OmegaConf

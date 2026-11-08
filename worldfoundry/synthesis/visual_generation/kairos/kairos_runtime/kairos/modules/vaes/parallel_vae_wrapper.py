@@ -13,9 +13,6 @@ def broadcast_split_tensor(tensor, seq_dim=0, process_group=None):
     return chunks[rank].contiguous()
 
 
-import torch.distributed as dist
-
-
 class ParallelVAEWrapper(nn.Module):
     def __init__(
         self,

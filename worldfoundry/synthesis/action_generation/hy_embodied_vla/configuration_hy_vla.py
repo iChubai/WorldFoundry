@@ -32,7 +32,7 @@ import os
 from dataclasses import dataclass, field, fields
 from enum import Enum
 from pathlib import Path
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 

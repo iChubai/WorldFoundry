@@ -3,7 +3,6 @@ import html
 import logging
 import math
 import os
-import random
 import re
 import subprocess
 import urllib.parse as ul
@@ -14,12 +13,10 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Union
 
-import numpy as np
 import pytz
 import torch
 import torch.distributed as dist
 from diffusers.utils import is_bs4_available, is_ftfy_available
-from PIL import Image
 from torch import inf
 from torch.utils.tensorboard import SummaryWriter
 

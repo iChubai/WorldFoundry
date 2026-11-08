@@ -9,7 +9,6 @@ import time
 from collections.abc import Sequence
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Optional
 
 import numpy as np
 import torch

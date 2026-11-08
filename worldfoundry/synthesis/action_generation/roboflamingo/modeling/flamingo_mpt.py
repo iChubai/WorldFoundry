@@ -1,6 +1,5 @@
 # Inference-only RoboFlamingo source retained in-tree.
 import copy
-from collections import namedtuple
 
 import torch
 from einops import rearrange, repeat

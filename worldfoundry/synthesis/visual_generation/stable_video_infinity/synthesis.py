@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from ..runtime_video_synthesis import RuntimeVideoSynthesis
 

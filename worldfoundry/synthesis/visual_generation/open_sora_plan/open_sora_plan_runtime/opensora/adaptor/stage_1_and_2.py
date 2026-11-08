@@ -4,7 +4,6 @@
 # DeepSpeed Team
 
 import os
-import pdb
 from collections import OrderedDict
 
 import torch
@@ -31,7 +30,6 @@ from deepspeed.runtime.constants import PIPE_REPLICATED
 from deepspeed.runtime.fp16.loss_scaler import CreateLossScaler
 from deepspeed.runtime.utils import (
     align_dense_tensors,
-    all_gather_dp_groups,
     bwc_tensor_model_parallel_rank,
     empty_cache,
     get_global_norm,

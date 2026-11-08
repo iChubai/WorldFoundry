@@ -22,7 +22,7 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from src.models.utils.attention import PatchEmbed3D
 from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_decoder
-from src.models.utils.render import query_z_with_indices, subsample_pixels_spatio_temporal, subsample_x_and_rays
+from src.models.utils.render import subsample_x_and_rays
 from src.rendering.gs import GaussianRenderer
 from src.rendering.gs_deferred import GaussianRendererDeferred
 

@@ -1,25 +1,15 @@
-from typing import Any, Dict, Optional, Tuple
-
 import torch
-import torch.nn.functional as F
-from diffusers.models.attention_processor import Attention as Attention_
-from einops import rearrange, repeat
+from einops import rearrange
 from torch import nn
 
 try:
     import torch_npu
 
-    from opensora.acceleration.communications import all_to_all_SBH
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state
-    from opensora.acceleration.parallel_states import hccl_info as xccl_info
     from opensora.npu_config import npu_config, set_run_dtype
 except:
     torch_npu = None
     npu_config = None
     set_run_dtype = None
-    from opensora.utils.communications import all_to_all_SBH
-    from opensora.utils.parallel_states import get_sequence_parallel_state
-    from opensora.utils.parallel_states import nccl_info as xccl_info
 
 
 class PatchEmbed2D(nn.Module):

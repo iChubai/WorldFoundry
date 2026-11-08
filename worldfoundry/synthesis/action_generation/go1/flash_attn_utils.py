@@ -5,7 +5,7 @@ download code.  All model implementations retain their eager attention path.
 """
 
 import logging
-from functools import cache, lru_cache
+from functools import cache
 
 logger = logging.getLogger(__name__)
 

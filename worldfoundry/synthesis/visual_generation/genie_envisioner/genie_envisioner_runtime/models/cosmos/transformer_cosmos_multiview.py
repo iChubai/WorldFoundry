@@ -1,7 +1,6 @@
 """Native Cosmos component."""
 
 from collections.abc import Callable
-from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F

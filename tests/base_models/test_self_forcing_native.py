@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import torch
@@ -381,7 +381,7 @@ def test_native_self_forcing_pipeline_forwards_release_defaults() -> None:
             requests.append(request)
             return DiffusionOutput(sample=torch.zeros(1, 3, 81, 8, 8), latents=torch.zeros(1, 16, 21, 1, 1))
 
-    pipeline = NativeSelfForcingPipeline(native_pipeline=_NativePipeline(), device="cpu")
+    pipeline = NativeSelfForcingPipeline(native_pipeline=cast(Any, _NativePipeline()), device="cpu")
     result = pipeline(prompt="a red fox running through snow", seed=42, return_dict=True)
 
     request = requests[0]
@@ -396,3 +396,193 @@ def test_native_self_forcing_pipeline_forwards_release_defaults() -> None:
     assert NativeSelfForcingPipeline._checkpoint_overrides(None, {"checkpoint_path": "/ckpt/self_forcing_dmd.pt"}) == {
         "dit": "/ckpt/self_forcing_dmd.pt"
     }
+
+
+class _PromptConditioner:
+    """Text context that depends on the prompt, so a prompt change alters the rollout."""
+
+    def encode(self, request: DiffusionRequest, **_: object) -> Conditioning:
+        seed = sum(map(ord, str(request.prompt)))
+        context = torch.randn(1, 8, 16, generator=torch.Generator().manual_seed(seed))
+        return Conditioning(positive={"context": context})
+
+
+class _FailingStep(DiffusionExtension):
+    extension_id = "self-forcing-failing-step"
+
+    def __init__(self) -> None:
+        self.armed = False
+
+    def before_denoiser(self, context, model_input: DenoiserInput) -> DenoiserInput:
+        del context
+        if self.armed:
+            self.armed = False
+            raise RuntimeError("injected denoiser failure")
+        return model_input
+
+
+REALTIME_CALL: dict[str, Any] = {"height": 32, "width": 32, "num_frames": 33}
+
+
+def _realtime_pipeline() -> tuple[NativeSelfForcingPipeline, AutoregressiveWindowRunner, _FailingStep]:
+    """A tiny random-weight Self-Forcing stack: 9 latent frames in three blocks, real Wan codec."""
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.component import WanVideoDecoder
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import WanVideoVAE
+    from worldfoundry.base_models.diffusion_model.pipeline import NativeDiffusionPipeline
+
+    recipe = self_forcing_wan21_t2v_1p3b_recipe()
+    torch.manual_seed(11)
+    codec = WanVideoDecoder(WanVideoVAE(z_dim=16, base_dim=8), device=torch.device("cpu"))
+    by_role = {
+        "denoiser": SelfForcingWanDenoiser(_tiny_model(), block_size=3, cache_frames=9, compute_dtype=torch.float32),
+        "conditioner": _PromptConditioner(),
+        "latent_initializer": WanTextToVideoLatentInitializer(),
+        "scheduler": WanFlowMatchEulerScheduler(shift=5.0),
+        "decoder": codec,
+    }
+    failing = _FailingStep()
+    runner = build_autoregressive_window_strategy(
+        ExecutionBuildContext(
+            recipe=recipe,
+            components={recipe.execution.bindings[role]: value for role, value in by_role.items()},
+            policy=RuntimePolicy(device="cpu", dtype=torch.float32),
+            extensions=(failing,),
+        )
+    )
+    assert isinstance(runner, AutoregressiveWindowRunner)
+    pipeline = NativeSelfForcingPipeline(native_pipeline=NativeDiffusionPipeline(runner), device="cpu")
+    return pipeline, runner, failing
+
+
+def _offline_frames(pipeline: NativeSelfForcingPipeline, prompt: str, seed: int) -> tuple[Any, torch.Tensor]:
+    from worldfoundry.core.media.codecs.video import video_tensor_to_uint8_frames
+
+    result = pipeline(prompt=prompt, seed=seed, return_dict=True, **REALTIME_CALL)
+    return video_tensor_to_uint8_frames(result["video"], value_range="-1,1", layout="bcthw"), result["latents"]
+
+
+def _stream_all(pipeline: NativeSelfForcingPipeline, prompt: str = "") -> list[dict[str, Any]]:
+    chunks = []
+    while True:
+        chunks.append(pipeline.stream_realtime(prompt=prompt, interactions=[], seed=99))
+        metrics = chunks[-1]["realtime_metrics"]
+        if metrics["chunk_index"] == metrics["chunks_total"]:
+            return chunks
+
+
+def test_self_forcing_realtime_stream_matches_offline_call_bitwise(monkeypatch: pytest.MonkeyPatch) -> None:
+    import numpy as np
+
+    pipeline, runner, _ = _realtime_pipeline()
+    prompt = "a red fox running through snow"
+    expected_frames, expected_latents = _offline_frames(pipeline, prompt, seed=42)
+
+    prepared = pipeline.prepare_realtime()["realtime_spec"]
+    assert prepared == {
+        "fps": 16,
+        "first_chunk_frames": 9,
+        "steady_chunk_frames": 12,
+        "controls": ["prompt_update"],
+        "transport": "in-memory-rgb",
+        "stateful": True,
+        "keys": [],
+        "advance": "continuous",
+        "max_chunks": 7,
+    }
+    configured = pipeline.configure_realtime(images=None, prompt=prompt, seed=42, fps=12, **REALTIME_CALL)
+    assert configured["realtime_spec"] == {**prepared, "max_chunks": 3}
+
+    latents: list[torch.Tensor] = []
+    codec = cast(Any, runner.components.decoder)
+    decode_chunk = codec.decode_chunk
+
+    def record_decode_chunk(chunk: torch.Tensor, **kwargs: Any) -> torch.Tensor:
+        latents.append(chunk.clone())
+        return decode_chunk(chunk, **kwargs)
+
+    monkeypatch.setattr(codec, "decode_chunk", record_decode_chunk)
+    chunks = _stream_all(pipeline)
+
+    assert [chunk["video"].shape[0] for chunk in chunks] == [9, 12, 12]
+    assert [chunk["realtime_metrics"]["chunk_index"] for chunk in chunks] == [1, 2, 3]
+    assert {chunk["realtime_metrics"]["chunks_total"] for chunk in chunks} == {3}
+    assert all(chunk["video"].dtype == np.uint8 for chunk in chunks)
+    assert all(chunk["video_chunk"].layout == "thwc" for chunk in chunks)
+    torch.testing.assert_close(torch.cat(latents, dim=2), expected_latents, rtol=0, atol=0)
+    np.testing.assert_array_equal(np.concatenate([chunk["video"] for chunk in chunks]), expected_frames)
+    assert runner._active_stream is None
+
+
+def test_self_forcing_realtime_rejects_stream_before_configure_and_after_done() -> None:
+    pipeline, runner, _ = _realtime_pipeline()
+    with pytest.raises(RuntimeError, match="not configured"):
+        pipeline.stream_realtime(prompt="fox")
+
+    pipeline.configure_realtime(prompt="fox", seed=1, **REALTIME_CALL)
+    _stream_all(pipeline, prompt="fox")
+    with pytest.raises(RuntimeError, match="already produced all 3 chunks"):
+        pipeline.stream_realtime(prompt="fox")
+    with pytest.raises(RuntimeError, match="already produced all 3 chunks"):
+        pipeline.stream_realtime(prompt=" fox ")
+    assert runner._active_stream is None
+
+
+def test_self_forcing_realtime_prompt_change_reopens_rollout_with_configured_seed() -> None:
+    import numpy as np
+
+    pipeline, _, _ = _realtime_pipeline()
+    pipeline.configure_realtime(prompt="fox", seed=5, **REALTIME_CALL)
+    pipeline.stream_realtime(prompt="fox")
+    switched = pipeline.stream_realtime(prompt="owl")
+    assert switched["realtime_metrics"]["chunk_index"] == 1
+    assert switched["video"].shape[0] == 9
+    continued = pipeline.stream_realtime(prompt="")
+    assert continued["realtime_metrics"]["chunk_index"] == 2
+
+    pipeline.configure_realtime(prompt="owl", seed=5, **REALTIME_CALL)
+    fresh = pipeline.stream_realtime(prompt="owl")
+    np.testing.assert_array_equal(switched["video"], fresh["video"])
+    np.testing.assert_array_equal(continued["video"], pipeline.stream_realtime(prompt="owl")["video"])
+
+
+def test_self_forcing_realtime_reset_then_configure_is_deterministic_aba() -> None:
+    import numpy as np
+
+    pipeline, runner, _ = _realtime_pipeline()
+
+    def rollout(prompt: str) -> Any:
+        pipeline.reset_realtime()
+        pipeline.configure_realtime(prompt=prompt, seed=3, **REALTIME_CALL)
+        return np.concatenate([chunk["video"] for chunk in _stream_all(pipeline)])
+
+    first = rollout("fox")
+    other = rollout("owl")
+    again = rollout("fox")
+    np.testing.assert_array_equal(first, again)
+    assert not np.array_equal(first, other)
+
+    pipeline.configure_realtime(prompt="fox", seed=3, **REALTIME_CALL)
+    assert runner._active_stream is not None
+    pipeline.cleanup()
+    assert runner._active_stream is None
+
+
+def test_self_forcing_realtime_step_failure_releases_rollout_for_reuse() -> None:
+    import numpy as np
+
+    pipeline, runner, failing = _realtime_pipeline()
+    expected_frames, _ = _offline_frames(pipeline, "fox", seed=8)
+
+    pipeline.configure_realtime(prompt="fox", seed=8, **REALTIME_CALL)
+    pipeline.stream_realtime()
+    failing.armed = True
+    with pytest.raises(RuntimeError, match="injected denoiser failure"):
+        pipeline.stream_realtime()
+    assert runner._active_stream is None
+    with pytest.raises(RuntimeError, match="not configured"):
+        pipeline.stream_realtime()
+
+    pipeline.reset_realtime()
+    pipeline.configure_realtime(prompt="fox", seed=8, **REALTIME_CALL)
+    frames = np.concatenate([chunk["video"] for chunk in _stream_all(pipeline)])
+    np.testing.assert_array_equal(frames, expected_frames)

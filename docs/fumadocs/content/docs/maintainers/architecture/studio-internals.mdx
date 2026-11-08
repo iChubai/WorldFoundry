@@ -176,6 +176,19 @@ may evict stale frames after bounded backpressure to protect control latency.
 `ordered-quality` never drops and is mandatory for prompt-scheduled or queued
 segments whose `chunk_done` frame count is a playback contract.
 
+`RealtimeSpec.advance` selects who starts each chunk. The default `on_input`
+generates only for held keys, axis samples, STEP, or a prompt update.
+`continuous` sessions, such as native Self-Forcing, auto-advance: after each
+completed chunk the worker starts the next one until `max_chunks` chunks of the
+current rollout exist, using `ordered-quality` so generation stays at most one
+frame queue ahead of playback. `{"type": "pause"}` and `{"type": "resume"}`
+stop and restart auto-advance and are acknowledged as `pause_ack` /
+`resume_ack`. A new prompt reopens the model rollout and restarts the chunk
+count. On a finished rollout STEP returns `step_ack` with `ok: false`, and
+other work that would continue it is dropped. In continuous
+sessions `ready`, `chunk_done`, and both acknowledgements carry `advance`,
+`rollout_chunks`, `max_chunks`, and `paused`.
+
 Models also declare their input bindings in `RealtimeSpec`. `keys` maps each
 key to an action and a conflict `group`, where the most recently pressed key in
 a group wins; the default is W/A/S/D plus I/J/K/L with arrow aliases and stays

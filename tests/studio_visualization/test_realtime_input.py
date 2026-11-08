@@ -331,6 +331,44 @@ def test_realtime_spec_from_payload_falls_back_on_malformed_axes() -> None:
     assert RealtimeSpec.from_payload({"keys": ["w"]}, fallback=fallback) == fallback
 
 
+def test_realtime_spec_payload_round_trips_continuous_advance_and_max_chunks() -> None:
+    spec = RealtimeSpec(controls=("prompt_update",), keys=(), advance="continuous", max_chunks=7)
+    payload = json.loads(json.dumps(spec.to_payload()))
+    assert payload["advance"] == "continuous"
+    assert payload["max_chunks"] == 7
+    assert RealtimeSpec.from_payload(payload) == spec
+    assert RealtimeSpec.from_payload({"realtime_spec": payload}) == spec
+
+    unbounded = RealtimeSpec(advance="continuous")
+    assert "max_chunks" not in unbounded.to_payload()
+    assert RealtimeSpec.from_payload(unbounded.to_payload()) == unbounded
+    defaults = RealtimeSpec(max_chunks=None).to_payload()
+    assert "advance" not in defaults and "max_chunks" not in defaults
+    assert RealtimeSpec.from_payload(defaults).advance == "on_input"
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda: RealtimeSpec(advance="auto"),
+        lambda: RealtimeSpec(advance="continuous", max_chunks=0),
+        lambda: RealtimeSpec(max_chunks=-1),
+    ],
+)
+def test_realtime_spec_rejects_unknown_advance_and_non_positive_max_chunks(build: Any) -> None:
+    with pytest.raises(ValueError):
+        build()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [{"advance": "auto"}, {"advance": "continuous", "max_chunks": 0}, {"max_chunks": "seven"}],
+)
+def test_realtime_spec_from_payload_falls_back_on_malformed_advance(payload: dict[str, Any]) -> None:
+    fallback = RealtimeSpec(fps=24, advance="continuous", max_chunks=3)
+    assert RealtimeSpec.from_payload(payload, fallback=fallback) == fallback
+
+
 def test_realtime_input_declared_keys_drive_acceptance_groups_and_actions() -> None:
     realtime_keys = (
         RealtimeKey("w", "jump", "vertical"),

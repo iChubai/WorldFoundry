@@ -175,6 +175,16 @@ Preview 空白通常意味着 pipeline 把文件写到了预期 key 之外、返
 保护控制延迟；`ordered-quality` 从不丢帧，凡是 `chunk_done` 帧数属于播放契约的
 prompt-scheduled 或 queued segment 都必须使用它。
 
+`RealtimeSpec.advance` 决定由谁启动每个 chunk。默认的 `on_input` 只在按住按键、轴采样、
+STEP 或 prompt 更新时生成。`continuous` 会话（例如原生 Self-Forcing）自动前进：每完成一个
+chunk，worker 立即启动下一个，直到当前 rollout 达到 `max_chunks` 个 chunk；帧队列使用
+`ordered-quality`，生成最多领先播放一个帧队列。`{"type": "pause"}` 与 `{"type": "resume"}`
+停止和恢复自动前进，分别以 `pause_ack` / `resume_ack` 确认。新 prompt 会重开模型 rollout
+并把 chunk 计数归零。rollout 已完成时，STEP 返回 `ok: false` 的 `step_ack`，其他继续生成的
+请求会被丢弃。continuous 会话的
+`ready`、`chunk_done` 和上述两种确认都带有 `advance`、`rollout_chunks`、`max_chunks` 与
+`paused`。
+
 模型同样在 `RealtimeSpec` 中声明输入绑定。`keys` 把每个按键映射到一个 action 和一个
 冲突分组 `group`，同组内后按者优先；默认值为 W/A/S/D 加 I/J/K/L 及方向键别名，不写入
 payload。`axes` 声明来自 `mouse_x`/`mouse_y` 或手柄摇杆的连续输入，按帧累加（`delta`）

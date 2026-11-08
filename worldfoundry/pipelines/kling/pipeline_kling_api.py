@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class KlingApiPipeline(PipelineABC):
-    """
-    Kling API Pipeline。
-    """
+    """Kling API video pipeline: prepares inputs, submits the task, polls it and optionally downloads the video."""
 
     def __init__(
         self,

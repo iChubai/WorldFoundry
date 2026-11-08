@@ -144,7 +144,15 @@ class Pi3Operator(BaseOperator):
         return max(1, k) * patch_size, max(1, m) * patch_size
 
     def images_to_tensor(self, images: list[np.ndarray], device: str = "cuda") -> torch.Tensor:
-        """Images to tensor implementation."""
+        """Resize images with Lanczos to one patch-aligned size and stack them as a ``[1, N, 3, H, W]`` tensor.
+
+        The target size comes from the first image: multiples of ``PATCH_SIZE`` per side, close to its
+        aspect ratio, with at most ``PIXEL_LIMIT`` pixels. Non-uint8 images are taken as values in
+        [0, 1]; grayscale images are replicated to three channels. The result lies in [0, 1].
+
+        Raises:
+            ValueError: ``images`` is empty.
+        """
         if len(images) == 0:
             raise ValueError("No images provided")
 

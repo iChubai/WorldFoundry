@@ -13,7 +13,11 @@ from .base_operator import BaseOperator
 
 
 def load_pil_image(image_input) -> Image.Image:
-    """Load pil image implementation."""
+    """Return a PIL image or an image file path as an RGB PIL image.
+
+    Raises:
+        TypeError: The input is neither a PIL image nor a string path.
+    """
     if isinstance(image_input, Image.Image):
         return image_input.convert("RGB")
     if isinstance(image_input, str):

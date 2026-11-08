@@ -27,7 +27,7 @@ def gather_data(data, return_np=True):
 
 
 def autocast(f):
-    """Autocast."""
+    """Wrap ``f`` to run under CUDA autocast with the current autocast GPU dtype and cache setting."""
 
     def do_autocast(*args, **kwargs):
         with torch.amp.autocast(
@@ -42,7 +42,13 @@ def autocast(f):
 
 
 def extract_into_tensor(a, t, x_shape):
-    """Extract into tensor."""
+    """Gather ``a`` at timesteps ``t`` and reshape to ``(b, 1, ..., 1)`` to broadcast against ``x_shape``.
+
+    Args:
+        a: Per-timestep values, gathered along the last dimension.
+        t: Integer timesteps of shape ``[b]``.
+        x_shape: Shape of the tensor the result broadcasts against.
+    """
     b, *_ = t.shape
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
@@ -74,7 +80,7 @@ def extract_into_tensor_2d(a, t, x_shape):
 
 
 def noise_like(shape, device, repeat=False):
-    """Noise like."""
+    """Return standard normal noise of ``shape`` on ``device``; with ``repeat`` one sample is shared across the batch."""
 
     def repeat_noise():
         return torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
@@ -86,24 +92,24 @@ def noise_like(shape, device, repeat=False):
 
 
 def default(val, d):
-    """Default."""
+    """Return ``val`` unless it is None, otherwise ``d``, calling it first when it is a function."""
     if exists(val):
         return val
     return d() if isfunction(d) else d
 
 
 def exists(val):
-    """Exists."""
+    """Return whether ``val`` is not None."""
     return val is not None
 
 
 def identity(*args, **kwargs):
-    """Identity."""
+    """Return a new ``nn.Identity`` module, ignoring all arguments."""
     return nn.Identity()
 
 
 def uniq(arr):
-    """Uniq."""
+    """Return the distinct items of ``arr`` in first-seen order, as a dict keys view."""
     return dict.fromkeys(arr, True).keys()
 
 
@@ -115,32 +121,32 @@ def mean_flat(tensor):
 
 
 def ismap(x):
-    """Ismap."""
+    """Return whether ``x`` is a 4-D tensor with more than 3 channels in dimension 1."""
     if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] > 3)
 
 
 def isimage(x):
-    """Isimage."""
+    """Return whether ``x`` is a 4-D tensor with 1 or 3 channels in dimension 1."""
     if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
 
 
 def max_neg_value(t):
-    """Max neg value."""
+    """Return the most negative finite value of the floating dtype of ``t``."""
     return -torch.finfo(t.dtype).max
 
 
 def shape_to_str(x):
-    """Shape to str."""
+    """Format ``x.shape`` as a string such as ``"2x3x64x64"``."""
     shape_str = "x".join([str(x) for x in x.shape])
     return shape_str
 
 
 def init_(tensor):
-    """Init."""
+    """Fill ``tensor`` in place from ``U(-1/sqrt(d), 1/sqrt(d))`` with ``d = tensor.shape[-1]`` and return it."""
     dim = tensor.shape[-1]
     # Fan-in uniform, same as the improved-diffusion residual Linear init.
     std = 1 / math.sqrt(dim)

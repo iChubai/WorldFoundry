@@ -18,7 +18,14 @@ from worldfoundry.core.distributed.collectives.device_mesh import get_local_tens
 
 
 class LitEma(nn.Module):
-    """Lit ema implementation."""
+    """Exponential moving average of a model's trainable parameters, stored as module buffers.
+
+    With ``use_num_upates`` the effective decay warms up as ``min(decay, (1 + n) / (10 + n))`` over the
+    update count ``n``.
+
+    Raises:
+        ValueError: ``decay`` is outside [0, 1].
+    """
 
     decay: torch.Tensor
     num_updates: torch.Tensor
@@ -46,7 +53,7 @@ class LitEma(nn.Module):
         self.collected_params = []
 
     def forward(self, model):
-        """Forward."""
+        """Move the shadow weights one EMA step toward the trainable parameters of ``model``."""
         updates_enabled = self.num_updates.ge(0)
         self.num_updates.add_(updates_enabled.to(dtype=self.num_updates.dtype))
         scheduled_decay = (1 + self.num_updates) / (10 + self.num_updates)
@@ -87,7 +94,7 @@ class LitEma(nn.Module):
     # ──────────────────────────────────────────────────────────────────────
 
     def copy_to(self, model):
-        """Copy to."""
+        """Copy the shadow weights into the trainable parameters of ``model`` in place."""
         m_param = dict(model.named_parameters())
         shadow_params = dict(self.named_buffers())
         for key in m_param:

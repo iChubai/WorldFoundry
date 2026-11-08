@@ -53,7 +53,11 @@ def get_tl_dtype_from_torch_dtype(dtype: torch.dtype) -> tl.dtype:
 
 
 class CustomAutotuner(Autotuner):
-    """Custom autotuner implementation."""
+    """Triton autotuner that persists the best config per tuning key across processes.
+
+    Winners are pickled to ``~/.triton/best_config_cache/<device name>/<kernel name>.pkl``, and the
+    dtypes of tensor arguments are added to the tuning key.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,7 +78,7 @@ class CustomAutotuner(Autotuner):
                 self.cache = pickle.load(f)
 
     def run(self, *args, **kwargs):
-        """Run."""
+        """Launch the kernel with the best config for this call's key, benchmarking and caching the configs when the key is new."""
         self.nargs = dict(zip(self.arg_names, args, strict=False))
         used_cached_result = True
         if len(self.configs) > 1:
@@ -144,7 +148,7 @@ def custom_autotune(
     rep=100,
     use_cuda_graph=False,
 ):
-    """Custom autotune."""
+    """Decorator like ``triton.autotune`` that wraps the kernel in a :class:`CustomAutotuner`."""
 
     def decorator(fn):
         return CustomAutotuner(

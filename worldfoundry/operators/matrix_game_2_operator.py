@@ -87,7 +87,19 @@ def _official_keyboard_mouse_data(
 
 
 def official_bench_actions_universal(num_frames, num_samples_per_action=4, seed=None):
-    """Official bench actions universal implementation."""
+    """Sample a benchmark keyboard and mouse sequence for the universal model, as the official benchmark does.
+
+    Args:
+        num_frames: Number of frames; ``num_frames % 4`` must be 1.
+        num_samples_per_action: Frames per sampled action; must divide each segment length (12, or fewer for the last).
+        seed: Seed of a dedicated ``random.Random``; the global ``random`` state is used when None.
+
+    Returns:
+        Dict with ``keyboard_condition`` ``[num_frames, 4]`` and ``mouse_condition`` ``[num_frames, 2]``.
+
+    Raises:
+        AssertionError: A frame-count constraint is violated.
+    """
     actions_single_action = ["forward", "left", "right"]
     actions_double_action = ["forward_left", "forward_right"]
     actions_single_camera = ["camera_l", "camera_r"]
@@ -118,7 +130,19 @@ def official_bench_actions_universal(num_frames, num_samples_per_action=4, seed=
 
 
 def official_bench_actions_gta_drive(num_frames, num_samples_per_action=4, seed=None):
-    """Official bench actions gta drive implementation."""
+    """Sample a benchmark keyboard and mouse sequence for the GTA driving model, as the official benchmark does.
+
+    Args:
+        num_frames: Number of frames; ``num_frames % 4`` must be 1.
+        num_samples_per_action: Frames per sampled action; must divide each segment length (12, or fewer for the last).
+        seed: Seed of a dedicated ``random.Random``; the global ``random`` state is used when None.
+
+    Returns:
+        Dict with ``keyboard_condition`` ``[num_frames, 2]`` and ``mouse_condition`` ``[num_frames, 2]``.
+
+    Raises:
+        AssertionError: A frame-count constraint is violated.
+    """
     actions_single_action = ["forward", "back"]
     actions_single_camera = ["camera_l", "camera_r"]
     actions_to_test = actions_single_camera * 2 + actions_single_action * 2
@@ -139,7 +163,19 @@ def official_bench_actions_gta_drive(num_frames, num_samples_per_action=4, seed=
 
 
 def official_bench_actions_templerun(num_frames, num_samples_per_action=4, seed=None):
-    """Official bench actions templerun implementation."""
+    """Sample a benchmark keyboard sequence for the Temple Run model, as the official benchmark does.
+
+    Args:
+        num_frames: Number of frames; ``num_frames % 4`` must be 1.
+        num_samples_per_action: Frames per sampled action; must divide each segment length (12, or fewer for the last).
+        seed: Seed of a dedicated ``random.Random``; the global ``random`` state is used when None.
+
+    Returns:
+        Dict with ``keyboard_condition`` ``[num_frames, 7]``.
+
+    Raises:
+        AssertionError: A frame-count constraint is violated.
+    """
     actions_single_action = [
         "jump",
         "slide",
@@ -231,7 +267,7 @@ def encode_actions(action_list, mode):
 
 
 def resizecrop(image, th, tw):
-    """Resizecrop implementation."""
+    """Center-crop ``image`` to the aspect ratio ``tw / th`` without resizing it."""
     w, h = image.size
     if h / w > th / tw:
         new_w = int(w)
@@ -324,15 +360,15 @@ class MatrixGame2Operator(BaseOperator):
 
     # Multi-turn generation needs no extra handling: callers adjust num_frames and the interaction.
     def process_action_universal(self, num_frames):
-        """Process action universal implementation."""
+        """Build per-frame keyboard ``[num_frames, 4]`` and mouse ``[num_frames, 2]`` conditions from the latest action list."""
         return self._build_sequence(num_frames)
 
     def process_action_gta_drive(self, num_frames):
-        """Process action gta drive implementation."""
+        """Build per-frame keyboard ``[num_frames, 2]`` and mouse ``[num_frames, 2]`` conditions from the latest action list."""
         return self._build_sequence(num_frames)
 
     def process_action_templerun(self, num_frames):
-        """Process action templerun implementation."""
+        """Build per-frame keyboard conditions ``[num_frames, 7]`` from the latest action list."""
         return self._build_sequence(num_frames)
 
     def process_interaction(self, num_frames):
@@ -346,7 +382,7 @@ class MatrixGame2Operator(BaseOperator):
         raise ValueError(f"Unknown mode {self.mode}")
 
     def process_official_bench_actions(self, num_frames, seed=None):
-        """Process official bench actions implementation.
+        """Return the official benchmark action conditions for the operator's mode.
 
         Pass ``seed`` to draw the benchmark action sequence from a dedicated
         ``random.Random(seed)`` so repeated runs are reproducible.

@@ -26,13 +26,13 @@ _ordered_datatypes = [torch.int8, torch.float16, torch.bfloat16, torch.float32]
 
 @jit
 def gelu(x):
-    """Gelu."""
+    """Approximate GELU as ``x * sigmoid(1.702 * x)`` inside Triton kernels."""
     return x * tl.sigmoid(x * 1.702)
 
 
 @jit
 def int8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr):
-    """Int8 quantize kernel."""
+    """Quantize one row of ``X`` to symmetric INT8 and store its dequantization scale ``absmax / 127``."""
     row_idx = tl.program_id(0)
     x_ptr = X + row_idx * HDIM
     out_ptr = OUT + row_idx * HDIM
@@ -47,7 +47,12 @@ def int8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr):
 
 
 def int8_quantize_triton(x):
-    """Int8 quantize triton."""
+    """Quantize ``x`` row-wise over its last dimension to symmetric INT8 with a CUDA Triton kernel.
+
+    Returns:
+        ``(q, scales)``: an INT8 tensor shaped like ``x`` and float32 scales of shape ``x.shape[:-1]``
+        with ``x ~= q * scales[..., None]``.
+    """
     x_shape_orig = x.shape
     x = x.view(-1, x_shape_orig[-1])
     out = torch.empty(x_shape_orig, dtype=torch.int8, device=x.device)
@@ -60,7 +65,7 @@ def int8_quantize_triton(x):
 
 @jit
 def fp8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr, FP8_MAX_VAL: tl.constexpr):
-    """Fp8 quantize kernel."""
+    """Scale one row of ``X`` into ``[-FP8_MAX_VAL, FP8_MAX_VAL]`` and store the scale ``absmax / FP8_MAX_VAL``."""
     row_idx = tl.program_id(0)
     x_ptr = X + row_idx * HDIM
     out_ptr = OUT + row_idx * HDIM
@@ -78,7 +83,12 @@ def fp8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr, FP8_MAX_
 
 
 def fp8_quantize_triton(x):
-    """Fp8 quantize triton."""
+    """Quantize ``x`` row-wise over its last dimension to FP8 E4M3 with a CUDA Triton kernel.
+
+    Returns:
+        ``(q, scales)``: a ``float8_e4m3fn`` tensor shaped like ``x`` and bfloat16 scales of shape
+        ``x.shape[:-1]`` with ``x ~= q * scales[..., None]``.
+    """
     x_shape_orig = x.shape
     x = x.view(-1, x_shape_orig[-1])
     out_scaled = torch.empty(x_shape_orig, dtype=torch.float32, device=x.device)
@@ -97,14 +107,20 @@ def fp8_quantize_triton(x):
 
 
 def upcast_if_fp8(a):
-    """Upcast if fp8."""
+    """Map a dtype whose string form contains ``"fp8"`` (Triton FP8 types) to ``torch.float16``; return others unchanged."""
     if "fp8" in str(a):
         return torch.float16
     return a
 
 
 def get_higher_dtype(a, b):
-    """Get higher dtype."""
+    """Return the wider of two dtypes in the order int8 < float16 < bfloat16 < float32.
+
+    FP8 types count as float16 (see :func:`upcast_if_fp8`).
+
+    Raises:
+        AssertionError: The two dtypes differ and one of them is outside that order.
+    """
     a = upcast_if_fp8(a)
     b = upcast_if_fp8(b)
     if a is b:
@@ -161,7 +177,7 @@ def int8_gemm_bias_kernel(
     EVEN_K: tl.constexpr,
     AB_DTYPE: tl.constexpr,  #
 ):
-    """Int8 gemm bias kernel."""
+    """Compute one output tile of ``(A @ B) * a_scales[:, None] * b_scales[None, :] + bias``, optionally followed by GELU."""
     # matrix multiplication
     pid = tl.program_id(0)
     pid_z = tl.program_id(1)
@@ -230,7 +246,23 @@ def int8_gemm_bias_kernel(
 
 # @torch.compiler.disable()
 def int8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output_dtype=None):
-    """Int8 gemm bias triton."""
+    """Compute the dequantized INT8 linear layer ``(a @ b.T) * a_scales[:, None] * b_scales + bias`` on CUDA.
+
+    Args:
+        a: Quantized activations of shape ``[..., K]``.
+        b: Quantized weight of shape ``[N, K]``.
+        bias: Bias of shape ``[N]``.
+        a_scales: Per-row scales of ``a``, one per flattened row.
+        b_scales: Per-output-channel scales of ``b``, shape ``[N]``.
+        fuse_gelu: Apply :func:`gelu` to the result.
+        output_dtype: Output dtype; defaults to the common dtype of ``a`` and ``b``.
+
+    Returns:
+        Tensor of shape ``[..., N]``.
+
+    Raises:
+        AssertionError: The inner dimensions of ``a`` and ``b`` differ.
+    """
     device = a.device
     # handle non-contiguous inputs if necessary
     a_orig_shape = a.shape
@@ -348,7 +380,7 @@ def int8_gemm_kernel(
     EVEN_K: tl.constexpr,
     AB_DTYPE: tl.constexpr,  #
 ):
-    """Int8 gemm kernel."""
+    """Compute one output tile of ``(A @ B) * a_scales[:, None] * b_scales[None, :]``, optionally followed by GELU."""
     # matrix multiplication
     pid = tl.program_id(0)
     pid_z = tl.program_id(1)
@@ -414,7 +446,22 @@ def int8_gemm_kernel(
 
 # @torch.compiler.disable()
 def int8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=None):
-    """Int8 gemm triton."""
+    """Compute the dequantized INT8 linear layer ``(a @ b.T) * a_scales[:, None] * b_scales`` on CUDA.
+
+    Args:
+        a: Quantized activations of shape ``[..., K]``.
+        b: Quantized weight of shape ``[N, K]``.
+        a_scales: Per-row scales of ``a``, one per flattened row.
+        b_scales: Per-output-channel scales of ``b``, shape ``[N]``.
+        fuse_gelu: Apply :func:`gelu` to the result.
+        output_dtype: Output dtype; defaults to the common dtype of ``a`` and ``b``.
+
+    Returns:
+        Tensor of shape ``[..., N]``.
+
+    Raises:
+        AssertionError: The inner dimensions of ``a`` and ``b`` differ.
+    """
     device = a.device
     # handle non-contiguous inputs if necessary
     # USE ONLY IN linear layer. NOT GENERAL MATRIX MULTIPLY
@@ -531,7 +578,7 @@ def fp8_gemm_bias_kernel(
     SPLIT_K: tl.constexpr,
     EVEN_K: tl.constexpr,
 ):
-    """Fp8 gemm bias kernel."""
+    """Compute one FP8 output tile of ``(A @ B) * a_scales[:, None] * b_scales[None, :] + bias`` in float32, optionally followed by GELU."""
     pid = tl.program_id(0)
     pid_z = tl.program_id(1)
 
@@ -596,7 +643,23 @@ def fp8_gemm_bias_kernel(
 
 
 def fp8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output_dtype=None):
-    """Fp8 gemm bias triton."""
+    """Compute the dequantized FP8 E4M3 linear layer ``(a @ b.T) * a_scales[:, None] * b_scales + bias`` on CUDA.
+
+    Args:
+        a: FP8 E4M3 activations of shape ``[..., K]``.
+        b: FP8 E4M3 weight of shape ``[N, K]``.
+        bias: Bias of shape ``[N]``.
+        a_scales: Per-row scales of ``a``, one per flattened row.
+        b_scales: Per-output-channel scales of ``b``, shape ``[N]``.
+        fuse_gelu: Apply :func:`gelu` to the result.
+        output_dtype: Output dtype; defaults to ``torch.float16``.
+
+    Returns:
+        Tensor of shape ``[..., N]``.
+
+    Raises:
+        AssertionError: An input is not on CUDA or is not FP8 E4M3.
+    """
     assert a.is_cuda and b.is_cuda, "This kernel is for CUDA"
     assert a.dtype in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e4m3fnuz", None)), (
         f"a.dtype={a.dtype} is not FP8 E4M3"
@@ -687,7 +750,7 @@ def fp8_gemm_kernel(
     SPLIT_K: tl.constexpr,
     EVEN_K: tl.constexpr,
 ):
-    """Fp8 gemm kernel."""
+    """Compute one FP8 output tile of ``(A @ B) * a_scales[:, None] * b_scales[None, :]`` in float32, optionally followed by GELU."""
     pid = tl.program_id(0)
     pid_z = tl.program_id(1)
 
@@ -750,7 +813,22 @@ def fp8_gemm_kernel(
 
 
 def fp8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=None):
-    """Fp8 gemm triton."""
+    """Compute the dequantized FP8 E4M3 linear layer ``(a @ b.T) * a_scales[:, None] * b_scales`` on CUDA.
+
+    Args:
+        a: FP8 E4M3 activations of shape ``[..., K]``.
+        b: FP8 E4M3 weight of shape ``[N, K]``.
+        a_scales: Per-row scales of ``a``, one per flattened row.
+        b_scales: Per-output-channel scales of ``b``, shape ``[N]``.
+        fuse_gelu: Apply :func:`gelu` to the result.
+        output_dtype: Output dtype; defaults to ``torch.float16``.
+
+    Returns:
+        Tensor of shape ``[..., N]``.
+
+    Raises:
+        AssertionError: An input is not on CUDA or is not FP8 E4M3.
+    """
     assert a.is_cuda and b.is_cuda
     e4m3_ok = []
     if hasattr(torch, "float8_e4m3fn"):

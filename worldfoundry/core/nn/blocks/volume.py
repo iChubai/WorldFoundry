@@ -119,7 +119,13 @@ def pixel_unshuffle_3d(x, downsample_factor):
 
 
 def ceil_to_divisible(n: int, dividend: int) -> int:
-    """Ceil to divisible."""
+    """Return ``ceil(dividend / (dividend // n))``, the chunk size that splits ``dividend`` into ``dividend // n`` chunks.
+
+    The result is at least ``n``.
+
+    Raises:
+        ZeroDivisionError: ``n`` is 0 or larger than ``dividend``.
+    """
     return math.ceil(dividend / (dividend // n))
 
 

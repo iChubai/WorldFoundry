@@ -47,7 +47,16 @@ def prepare_lyra1_checkpoint_root(
     checkpoint_dir: str | None,
     repo_root: str | None = None,
 ) -> str:
-    """Prepare lyra1 checkpoint root helper function."""
+    """Return a checkpoint root that holds the GEN3C checkpoints and the Lyra-1 weights.
+
+    A candidate (``checkpoint_dir``, then ``<repo_root>/checkpoints``) that already has the full layout
+    is returned as is. Otherwise the GEN3C checkpoint root is returned when it has the layout, or it
+    is combined with the located ``lyra_static.pt`` and ``lyra_dynamic.pt`` weights in a scratch
+    directory of symlinks, or copies where symlinks fail.
+
+    Raises:
+        FileNotFoundError: The Lyra-1 weights cannot be found.
+    """
     from worldfoundry.synthesis.visual_generation.gen3c.runtime_env import (
         prepare_gen3c_checkpoint_root,
     )

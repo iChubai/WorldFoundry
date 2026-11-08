@@ -39,7 +39,18 @@ def _is_video_path(path: str | Path) -> bool:
 
 
 def parse_seq_path(input_source: str | Path | Sequence[str | Path]) -> tuple[list[str], str | None]:
-    """Parse seq path helper function."""
+    """Resolve a CUT3R input source to a list of image paths.
+
+    Accepts a sequence of paths or a directory of image files, both returned sorted; an image file; a
+    ``.txt`` file with one path per line; or a video file whose frames are extracted to a temporary
+    directory.
+
+    Returns:
+        ``(image_paths, temp_dir)``; ``temp_dir`` is the extracted-frame directory for videos, else None.
+
+    Raises:
+        ValueError: The source is unsupported or the video cannot be read.
+    """
     if not isinstance(input_source, (str, os.PathLike)):
         return sorted(str(Path(p)) for p in input_source), None
 
@@ -92,7 +103,17 @@ def prepare_input(
     revisit: int = 1,
     update: bool = True,
 ) -> list[dict[str, Any]]:
-    """Prepare input helper function."""
+    """Build CUT3R view dicts from images and optional ray maps.
+
+    Without ray maps every view is an image view with a NaN ray map. With ``raymaps`` and
+    ``raymap_mask``, ``img_mask`` and ``raymap_mask`` select, per combined view, which image or ray map
+    is consumed. With ``revisit > 1`` the views are repeated ``revisit`` times; when ``update`` is False
+    the repeats do not update the state.
+
+    Raises:
+        ValueError: Only one of ``raymaps`` and ``raymap_mask`` is given, or the masks do not match the
+            combined view count.
+    """
     images = load_images(list(img_paths), size=size)
     views: list[dict[str, Any]] = []
 
@@ -173,7 +194,16 @@ def prepare_output(
     revisit: int = 1,
     use_pose: bool = True,
 ) -> dict[str, Any]:
-    """Prepare output helper function."""
+    """Convert CUT3R predictions of the last revisit pass to points, colors and cameras and save per-frame files.
+
+    Writes ``depth/`` and ``conf/`` ``.npy`` files, ``color/`` PNGs and ``camera/`` ``.npz`` files (pose,
+    intrinsics) under ``outdir``. With ``use_pose`` the points are the self-view points transformed by
+    the predicted camera poses.
+
+    Returns:
+        Dict with ``points``, ``colors``, ``confidence``, ``camera`` (focal, principal point, R, t) and
+        ``num_frames``.
+    """
     outdir = Path(outdir)
     valid_length = len(outputs["pred"]) // revisit
     outputs["pred"] = outputs["pred"][-valid_length:]
@@ -339,7 +369,17 @@ def run_official_export(
     use_pose: bool = True,
     vis_threshold: float = 1.5,
 ) -> dict[str, str]:
-    """Run official export helper function."""
+    """Run CUT3R on an input source and export depth, confidence, color and camera files.
+
+    Also writes ``official_summary.npz`` and, when rerun is installed, a ``.rrd`` recording.
+
+    Returns:
+        Dict of output paths: ``output_dir``, ``summary_path``, ``depth_dir``, ``conf_dir``,
+        ``color_dir``, ``camera_dir`` and, when recorded, ``rrd_path``.
+
+    Raises:
+        ValueError: CUDA is requested but unavailable, or the source yields no images.
+    """
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     device_type = torch.device(device).type
     if device_type == "cuda" and not torch.cuda.is_available():
@@ -380,7 +420,7 @@ def run_official_export(
         rerun_path = build_rerun_recording(output_dir, vis_threshold=vis_threshold)
     finally:
         if temp_dir is not None:
-            # Safely clean up any pre-existing output directory structure
+            # Remove the frames extracted from a video input.
             shutil.rmtree(temp_dir, ignore_errors=True)
 
     if device_type == "cuda":

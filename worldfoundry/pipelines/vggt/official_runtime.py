@@ -131,7 +131,15 @@ def run_model(
     device: str | None = None,
     preprocess_mode: str = "crop",
 ) -> dict[str, Any]:
-    """Run model helper function."""
+    """Run VGGT on the images, sorted by path, and return NumPy predictions without the batch dimension.
+
+    The predictions include ``extrinsic`` and ``intrinsic`` from the pose encoding and
+    ``world_points_from_depth`` unprojected from the depth map. CUDA runs under bfloat16 autocast on
+    compute capability 8.0 and newer, float16 otherwise.
+
+    Raises:
+        ValueError: CUDA is requested but unavailable, or no image is given.
+    """
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     device_type = torch.device(device).type
     if device_type == "cuda" and not torch.cuda.is_available():
@@ -187,7 +195,16 @@ def predictions_to_glb(
     show_cam: bool = True,
     prediction_mode: str = "Predicted Pointmap",
 ) -> trimesh.Scene:
-    """Predictions to glb helper function."""
+    """Build a ``trimesh`` scene of the predicted point cloud and, optionally, camera frustums.
+
+    Points come from ``world_points`` in a pointmap ``prediction_mode`` when present, otherwise from
+    ``world_points_from_depth``. Points below the ``conf_thres`` confidence percentile, and optionally
+    near-black or near-white points, are dropped; ``filter_by_frames`` such as ``"3: name"`` keeps one
+    frame. The scene is aligned to the first camera.
+
+    Raises:
+        ValueError: ``predictions`` is not a dict.
+    """
     if not isinstance(predictions, dict):
         raise ValueError("predictions must be a dictionary")
     if conf_thres is None:
@@ -275,7 +292,7 @@ def integrate_camera_into_scene(
     face_colors: tuple[int, ...],
     scene_scale: float,
 ) -> None:
-    """Integrate camera into scene helper function."""
+    """Add a frustum mesh for the camera pose ``transform``, sized by ``scene_scale``, to ``scene``."""
     cam_width = scene_scale * 0.05
     cam_height = scene_scale * 0.1
 
@@ -303,7 +320,7 @@ def integrate_camera_into_scene(
 
 
 def apply_scene_alignment(scene_3d: trimesh.Scene, extrinsics_matrices: np.ndarray) -> trimesh.Scene:
-    """Apply scene alignment helper function."""
+    """Transform ``scene_3d`` into the OpenGL frame of the first camera, rotated 180 degrees about y."""
     align_rotation = np.eye(4)
     align_rotation[:3, :3] = Rotation.from_euler("y", 180, degrees=True).as_matrix()
     initial_transformation = np.linalg.inv(extrinsics_matrices[0]) @ get_opengl_conversion_matrix() @ align_rotation
@@ -312,7 +329,7 @@ def apply_scene_alignment(scene_3d: trimesh.Scene, extrinsics_matrices: np.ndarr
 
 
 def get_opengl_conversion_matrix() -> np.ndarray:
-    """Get opengl conversion matrix helper function."""
+    """Return the 4x4 matrix that flips the y and z axes between OpenCV and OpenGL camera frames."""
     matrix = np.identity(4)
     matrix[1, 1] = -1
     matrix[2, 2] = -1
@@ -320,7 +337,7 @@ def get_opengl_conversion_matrix() -> np.ndarray:
 
 
 def transform_points(transformation: np.ndarray, points: np.ndarray, dim: int | None = None) -> np.ndarray:
-    """Transform points helper function."""
+    """Apply a homogeneous ``transformation`` to ``points`` of shape ``[..., D]`` and keep the first ``dim`` coordinates."""
     points = np.asarray(points)
     initial_shape = points.shape[:-1]
     dim = dim or points.shape[-1]
@@ -330,7 +347,7 @@ def transform_points(transformation: np.ndarray, points: np.ndarray, dim: int | 
 
 
 def compute_camera_faces(cone_shape: trimesh.Trimesh) -> np.ndarray:
-    """Compute camera faces helper function."""
+    """Return the triangle faces of a camera frustum built from three stacked copies of ``cone_shape``'s vertices."""
     faces_list = []
     num_vertices_cone = len(cone_shape.vertices)
     for face in cone_shape.faces:
@@ -368,7 +385,11 @@ def run_official_scene_export(
     prediction_mode: str = "Pointmap Regression",
     output_name: str | None = None,
 ) -> dict[str, str]:
-    """Run official scene export helper function."""
+    """Run VGGT on an input source and export ``predictions.npz`` and a GLB scene to ``output_dir``.
+
+    Returns:
+        Dict with ``glb_path``, ``prediction_path`` and ``image_dir``.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     image_paths = prepare_target_images(input_source, output_dir)

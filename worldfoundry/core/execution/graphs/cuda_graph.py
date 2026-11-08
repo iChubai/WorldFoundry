@@ -547,7 +547,17 @@ def create_cuda_graph(
     tensor_kwargs: dict[str, Any],
     extra_key: str | None = None,
 ) -> str:
-    """Create cuda graph."""
+    """Capture forward CUDA graphs for ``blocks`` once per input contract and return the cache key.
+
+    Graphs are captured on dummy inputs with the shapes, strides and dtypes of ``tensor_args`` and
+    ``tensor_kwargs``; ``None`` keyword values are dropped. The captured callables, one per block, are
+    stored in ``cuda_graphs_storage`` under a key built from the block classes, the input layouts,
+    the grad, autocast, matmul-precision and distributed state, and ``extra_key``.
+
+    Raises:
+        TypeError: A positional argument is ``None``, an input leaf is not a tensor, or a tensor is
+            not strided or has named dimensions.
+    """
 
     def _make_dummy_tensor_like(t: torch.Tensor) -> torch.Tensor:
         if t.layout != torch.strided:

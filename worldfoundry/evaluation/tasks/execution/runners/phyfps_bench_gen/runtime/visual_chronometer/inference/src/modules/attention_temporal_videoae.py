@@ -285,7 +285,7 @@ class TemporalCrossAttention(nn.Module):
         if self.use_relative_position:
             v2 = self.relative_position_v(len_q, len_v)
             out2 = einsum("b t s, t s d -> b t d", attn, v2)  # TODO check
-            out += out2  # TODO check：先add还是先merge head？先计算rpr，on split head之后的数据，然后再merge。
+            out += out2  # TODO check: add before or after merging heads? The relative-position term is computed on the split heads, then merged.
         out = rearrange(out, "(b h) n d -> b n (h d)", h=nh)  # merge head
         return self.to_out(out)
 

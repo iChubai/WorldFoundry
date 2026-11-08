@@ -6,7 +6,7 @@ from typing import TypeAlias
 import torch
 
 # =========================================================================
-# 1. 手动定义类型别名，解决 NameError
+# Type aliases used by the ModelManager annotations
 # =========================================================================
 Preset_model_id: TypeAlias = str
 Preset_model_website: TypeAlias = str
@@ -20,7 +20,7 @@ from worldfoundry.core.vram import init_weights_on_device  # noqa: E402 - Follow
 from ..model_registry import model_loader_configs  # noqa: E402 - Follows module-level setup, as upstream.
 
 # =========================================================================
-# 3. 核心加载函数 (保持原样，删除了不必要的引用)
+# Single-file model loading
 # =========================================================================
 
 
@@ -29,7 +29,7 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
     for model_name, model_class in zip(model_names, model_classes, strict=False):
         print(f"    model_name: {model_name} model_class: {model_class.__name__}")
 
-        # 尝试使用 state_dict_converter，如果没有则直接加载
+        # Convert the state dict when the model class provides a converter.
         if hasattr(model_class, "state_dict_converter"):
             state_dict_converter = model_class.state_dict_converter()
             if model_resource == "civitai":
@@ -37,7 +37,7 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
             elif model_resource == "diffusers":
                 state_dict_results = state_dict_converter.from_diffusers(state_dict)
             else:
-                # 默认为 huggingface 或直接加载
+                # Other resources use the diffusers conversion.
                 state_dict_results = state_dict_converter.from_diffusers(state_dict)
         else:
             state_dict_results = state_dict, {}
@@ -49,14 +49,12 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
 
         torch_dtype = torch.float32 if extra_kwargs.get("upcast_to_float32", False) else torch_dtype
 
-        # 初始化模型
         with init_weights_on_device():
             model = model_class(**extra_kwargs)
 
         if hasattr(model, "eval"):
             model = model.eval()
 
-        # 加载权重
         model.load_state_dict(model_state_dict, assign=True)
         model = model.to(dtype=torch_dtype, device=device)
 
@@ -66,7 +64,7 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
 
 
 # =========================================================================
-# 4. 检测器类 (Detector)
+# Model detectors
 # =========================================================================
 
 
@@ -88,12 +86,11 @@ class ModelDetectorFromSingleFile:
         if len(state_dict) == 0:
             state_dict = load_state_dict(file_path)
 
-        # 先尝试带 Shape 的 Hash
+        # Match the key hash with shapes first, then the plain key hash.
         keys_hash_with_shape = hash_state_dict_keys(state_dict, with_shape=True)
         if keys_hash_with_shape in self.keys_hash_with_shape_dict:
             return True
 
-        # 再尝试普通 Hash
         keys_hash = hash_state_dict_keys(state_dict, with_shape=False)
         return keys_hash in self.keys_hash_dict
 
@@ -101,7 +98,6 @@ class ModelDetectorFromSingleFile:
         if len(state_dict) == 0:
             state_dict = load_state_dict(file_path)
 
-        # 匹配并加载
         keys_hash_with_shape = hash_state_dict_keys(state_dict, with_shape=True)
         if keys_hash_with_shape in self.keys_hash_with_shape_dict:
             model_names, model_classes, model_resource = self.keys_hash_with_shape_dict[keys_hash_with_shape]
@@ -120,7 +116,7 @@ class ModelDetectorFromSingleFile:
 
 
 # =========================================================================
-# 5. Model Manager 类 (精简版)
+# Model manager (local files only)
 # =========================================================================
 
 
@@ -129,7 +125,7 @@ class ModelManager:
         self,
         torch_dtype=torch.float16,
         device="cuda",
-        model_id_list: list[Preset_model_id] = [],  # noqa: B006 - Keeps the upstream default object and signature.  # 这里的 Preset_model_id 现在是 str，不会报错了
+        model_id_list: list[Preset_model_id] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         downloading_priority: list[Preset_model_website] = ["ModelScope", "HuggingFace"],  # noqa: B006 - Keeps the upstream default object and signature.
         file_path_list: list[str] = [],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
@@ -139,13 +135,13 @@ class ModelManager:
         self.model_path = []
         self.model_name = []
 
-        # 我们不使用 downloader，所以忽略 model_id_list 和 downloading_priority
+        # Models are loaded from local files only; model_id_list and downloading_priority are ignored.
         if len(model_id_list) > 0:
             print("Warning: Auto-downloading via model_id_list is disabled in this Astra version.")
 
         self.model_detector = [
             ModelDetectorFromSingleFile(model_loader_configs),
-            # ModelDetectorFromSplitedSingleFile, ModelDetectorFromHuggingfaceFolder 等暂不需要
+            # ModelDetectorFromSplitedSingleFile and ModelDetectorFromHuggingfaceFolder are not needed.
         ]
         self.load_models(file_path_list)
 

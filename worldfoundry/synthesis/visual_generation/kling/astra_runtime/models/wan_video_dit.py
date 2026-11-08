@@ -95,24 +95,24 @@ class DiTBlock(nn.Module):
         input_x = modulate(self.norm1(x), shift_msa, scale_msa)
 
         if cam_emb is not None:
-            # 🔧 修改：处理类别embedding
+            # Per-frame camera embedding
             cam_emb = cam_emb.to(self.cam_encoder.weight.dtype)
             cam_emb = self.cam_encoder(cam_emb)  # [batch, frames, dim]
             # if not self.training:
             # cam_emb = torch.cat([torch.zeros_like(cam_emb).repeat(1, 2, 1), cam_emb], dim=1)
 
-            # 选择关键帧
+            # Select key frames
             # if cam_emb.shape[1] >= 2:
             #     cam_emb_0 = cam_emb[:, 0, :]
             #     cam_emb_6 = cam_emb[:, min(6, cam_emb.shape[1]-1), :]
             #     cam_emb_6 = torch.where(cam_emb_6.abs().sum(dim=-1, keepdim=True) == 0, cam_emb_0, cam_emb_6)
             #     cam_emb = torch.stack([cam_emb_0, cam_emb_6], dim=1)
             # else:
-            #     # 如果只有一帧，复制使用
+            #     # With a single frame, duplicate it
             #     cam_emb_0 = cam_emb[:, 0, :]
             #     cam_emb = torch.stack([cam_emb_0, cam_emb_0], dim=1)
 
-            # 扩展到空间维度
+            # Broadcast over the spatial dimensions
             # cam_emb = cam_emb.repeat(1, 4, 1)
             # cam_emb = cam_emb.repeat(1, 2, 1)
             cam_emb = cam_emb.unsqueeze(2).unsqueeze(3).repeat(1, 1, 30, 52, 1)

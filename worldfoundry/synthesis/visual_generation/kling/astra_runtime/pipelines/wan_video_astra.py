@@ -220,10 +220,10 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
         tea_cache_model_id="",
         progress_bar_cmd=tqdm,
         progress_bar_st=None,
-        condition_frames=None,  # 🔧 新增参数
-        target_frames=53,  # 🔧 新增参数
+        condition_frames=None,
+        target_frames=53,
     ):
-        # 🔧 设置帧数配置
+        # Frame configuration
         if condition_frames is not None:
             self.condition_frames = condition_frames
         if target_frames is not None:
@@ -232,7 +232,7 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
         # Parameter check
         height, width = self.check_resize_height_width(height, width)
 
-        # 🔧 修改：根据target_frames调整num_frames
+        # num_frames defaults to target_frames.
         if num_frames is None:
             num_frames = self.target_frames
 
@@ -246,7 +246,7 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
         # Scheduler
         self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=sigma_shift)
 
-        # 🔧 修改：Initialize noise for target frames only
+        # Initialize noise for the target frames only.
         target_noise_shape = (1, 16, self.target_frames, height // 8, width // 8)
         noise = self.generate_noise(target_noise_shape, seed=seed, device=rand_device, dtype=torch.float32)
         noise = noise.to(dtype=self.torch_dtype, device=self.device)
@@ -258,21 +258,19 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
             latents = self.encode_video(input_video, **tiler_kwargs).to(dtype=self.torch_dtype, device=self.device)
             latents = self.scheduler.add_noise(latents, noise, timestep=self.scheduler.timesteps[0])
         else:
-            # 🔧 初始化target latents
             latents = noise
-        # 🔧 修改：Encode source video (condition frames)
+        # Encode the source video (condition frames).
         self.load_models_to_device(["vae"])
         source_video = source_video.to(dtype=self.torch_dtype, device=self.device)
 
-        # 🔧 确保source_video有足够的帧作为condition
         if source_video.shape[2] < self.condition_frames:
             raise ValueError(f"Source video has {source_video.shape[2]} frames, need at least {self.condition_frames}")
 
-        # 🔧 取前condition_frames作为条件
+        # The first condition_frames latents are the condition.
         source_latents = self.encode_video(source_video, **tiler_kwargs).to(dtype=self.torch_dtype, device=self.device)
         source_latents = source_latents[:, :, : self.condition_frames, :, :]
 
-        # 🔧 确保target_camera的长度匹配target_frames
+        # Truncate the target camera to target_frames.
         cam_emb = target_camera.to(dtype=self.torch_dtype, device=self.device)
         if cam_emb.shape[1] != self.target_frames:
             cam_emb = cam_emb[:, : self.target_frames, :]
@@ -285,7 +283,7 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
         # Encode image
         if input_image is not None and self.image_encoder is not None:
             self.load_models_to_device(["image_encoder", "vae"])
-            image_emb = self.encode_image(input_image, self.target_frames, height, width)  # 🔧 使用target_frames
+            image_emb = self.encode_image(input_image, self.target_frames, height, width)
         else:
             image_emb = {}
 
@@ -304,13 +302,13 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
             else None
         }
 
-        # 🔧 修改：Denoise loop
+        # Denoise loop
         self.load_models_to_device(["dit"])
 
         for progress_id, timestep in enumerate(progress_bar_cmd(self.scheduler.timesteps)):
             timestep = timestep.unsqueeze(0).to(dtype=self.torch_dtype, device=self.device)
 
-            # 🔧 修改：构造输入 - [target | condition]
+            # Model input: [condition | target]
             latents_input = torch.cat([source_latents, latents], dim=2)
 
             # Inference

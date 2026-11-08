@@ -6,9 +6,9 @@ from ..api_video_client import ApiVideoSynthesis
 
 
 class KlingApiSynthesis(ApiVideoSynthesis):
-    """Kling API 合成类。
+    """Kling API video synthesis.
 
-    默认对接 `https://api.klingapi.com` 这一套通用 Kling 网关接口。
+    Uses the general Kling gateway at `https://api.klingapi.com` by default.
     """
 
     DEFAULT_ENDPOINT = "https://api.klingapi.com"

@@ -5,9 +5,9 @@ import os.path as osp
 import re
 import shutil
 import warnings
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import imageio
 import numpy as np
@@ -204,12 +204,12 @@ def safe_chmod(path: str, mode: int) -> None:
     try:
         os.chmod(path, mode)
     except PermissionError:
-        warnings.warn(f"Could not chmod {path} to {oct(mode)}; skipped.", RuntimeWarning)
+        warnings.warn(f"Could not chmod {path} to {oct(mode)}; skipped.", RuntimeWarning, stacklevel=1)
 
 
 def get_igenex_save_dirs(base_dir, action_ids_list):
     save_dirs = []
-    for i, action_id in enumerate(action_ids_list):
+    for _i, action_id in enumerate(action_ids_list):
         action_seq_dir = f"PredA-{action_id}"
         save_path = osp.join(base_dir, action_seq_dir)
         # append a timestamp to avoid overwriting
@@ -234,10 +234,7 @@ def save_action_sequence(b_action, save_dirs):
     assert len(b_action) == len(save_dirs)
     for i, dir in enumerate(save_dirs):
         action_seq_path = osp.join(dir, "action_seq.json")
-        if hasattr(b_action, "tolist"):
-            action_seq = b_action[i].tolist()
-        else:
-            action_seq = b_action[i]
+        action_seq = b_action[i].tolist() if hasattr(b_action, "tolist") else b_action[i]
         with open(action_seq_path, "w") as f:
             json.dump(action_seq, f, indent=2, ensure_ascii=False)
 
@@ -402,7 +399,7 @@ def save_video(
     frames: list[Image.Image] | torch.Tensor | np.ndarray,
     save_path: str,
     fps: int = 3,
-    resize_to: tuple[int, int] = None,  # (width, height)
+    resize_to: tuple[int, int] | None = None,  # (width, height)
 ) -> None:
     """
     Write *frames* to *save_path* (mp4). Accepts:

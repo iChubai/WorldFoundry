@@ -5,7 +5,6 @@
 
 import random
 import traceback
-from typing import Optional
 
 from openeqa.utils.openai_utils import (
     call_openai_api,
@@ -75,11 +74,11 @@ def get_llm_match_score(
             )
             return parse_score(output)
         except ValueError as e:
-            openai_args = dict(
-                openai_max_tokens=openai_max_tokens,
-                openai_seed=openai_seed,
-                openai_temperature=openai_temperature,
-            )
+            openai_args = {
+                "openai_max_tokens": openai_max_tokens,
+                "openai_seed": openai_seed,
+                "openai_temperature": openai_temperature,
+            }
             print(f"[Retry {retry_count}] ValueError: {e}. Raw Response: {output}. {openai_args}")
         except Exception as e:
             traceback.print_exc()

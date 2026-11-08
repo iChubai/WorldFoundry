@@ -20,7 +20,7 @@ import glob
 import json
 import os
 import statistics
-from typing import Any, Dict, List
+from typing import Any
 
 from tabulate import tabulate  # pip install tabulate
 
@@ -72,24 +72,24 @@ def aggregate(summaries: list[dict]) -> dict[str, Any]:
     per_run_sr = [r["success_rate"] for r in summaries]
     per_run_eps = [r["avg_planner_steps"] for r in summaries]
 
-    summary = dict(
-        num_runs=len(summaries),
-        total_num_tasks=total_tasks,
-        num_success=total_success,
-        success_rate=overall_sr,
-        avg_planner_steps=overall_eps,
-        output_format_error=total_output_errors,
-        mean_success_rate_per_run=statistics.mean(per_run_sr),
-        median_success_rate_per_run=statistics.median(per_run_sr),
-        mean_avg_planner_steps_per_run=statistics.mean(per_run_eps),
-        missing_ep_count=len(merged_missing),
-    )
+    summary = {
+        "num_runs": len(summaries),
+        "total_num_tasks": total_tasks,
+        "num_success": total_success,
+        "success_rate": overall_sr,
+        "avg_planner_steps": overall_eps,
+        "output_format_error": total_output_errors,
+        "mean_success_rate_per_run": statistics.mean(per_run_sr),
+        "median_success_rate_per_run": statistics.median(per_run_sr),
+        "mean_avg_planner_steps_per_run": statistics.mean(per_run_eps),
+        "missing_ep_count": len(merged_missing),
+    }
 
-    return dict(
-        details=merged_details,
-        summary=summary,
-        missing_ep_paths=merged_missing,
-    )
+    return {
+        "details": merged_details,
+        "summary": summary,
+        "missing_ep_paths": merged_missing,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -112,7 +112,7 @@ def print_report(overall: dict[str, Any]) -> None:
     print()
 
     # ------------- per-run table -------------------------------------------
-    rows_run = [
+    rows_run = [  # noqa: F841 - Formats the per-run summary as upstream; can raise on missing keys.
         ["Mean success rate / run", f"{summary['mean_success_rate_per_run']:.3%}"],
         ["Median success rate / run", f"{summary['median_success_rate_per_run']:.3%}"],
         ["Mean avg steps   / run", f"{summary['mean_avg_planner_steps_per_run']:.3f}"],

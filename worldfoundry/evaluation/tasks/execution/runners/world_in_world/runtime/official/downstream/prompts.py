@@ -2,12 +2,11 @@ import os
 import os.path as osp
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, ClassVar
 
 from downstream.downstream_datasets import ARDataset
 from downstream.utils.query_utils import VIDEO_EXTS, encode_img_to_base64
 from downstream.vlm import (
-    CHOICE_FORMATS,
     CHOICES,
     COMMERCIAL_MODELS,
     LOCAL_MODELS,
@@ -16,8 +15,6 @@ from downstream.vlm import (
 )
 
 # from openeqa.utils.prompt_utils import load_prompt
-from PIL import Image
-from utils.util import is_empty
 
 UNIT_DISTANCE = 0.20
 # unit_distance = 2.6
@@ -64,10 +61,10 @@ AR_ACTION_SPACE_NO_STOP = construct_action_space_text(choice_format=None, includ
 AR_ANSWER_SPACE = ARDataset.OBJECT_SET
 
 
-CHOICE_EXAMPLES = dict(
-    digit="['001','002','003','001']",
-    letter="['A','B','C','A']",
-)
+CHOICE_EXAMPLES = {
+    "digit": "['001','002','003','001']",
+    "letter": "['A','B','C','A']",
+}
 
 
 def output_format_text(choice_format, output_type):
@@ -95,29 +92,29 @@ def load_prompt_from(relative_path):
 
 
 # fmt: off
-TASK_PROMPTS = dict(
-    ar_answerer=load_prompt_from("task/ar_answerer.txt"),
-    ar_planner=load_prompt_from("task/ar_planner.txt"),
-    ignav_answerer=load_prompt_from("task/ignav_answerer.txt"),
-    ignav_planner=load_prompt_from("task/ignav_planner.txt"),
-    ignav_evaluator=load_prompt_from("task/ignav_evaluator.txt"),
-    aeqa_planner=load_prompt_from("task/aeqa_planner.txt"),
-)
+TASK_PROMPTS = {
+    "ar_answerer": load_prompt_from("task/ar_answerer.txt"),
+    "ar_planner": load_prompt_from("task/ar_planner.txt"),
+    "ignav_answerer": load_prompt_from("task/ignav_answerer.txt"),
+    "ignav_planner": load_prompt_from("task/ignav_planner.txt"),
+    "ignav_evaluator": load_prompt_from("task/ignav_evaluator.txt"),
+    "aeqa_planner": load_prompt_from("task/aeqa_planner.txt"),
+}
 
-AUXILIARY_PROMPTS = dict(
-    ar_answerer=load_prompt_from("aux/ar_answerer.txt"),
-    ar_planner=load_prompt_from("aux/ar_planner.txt"),
-    ignav_evaluator_N_action=load_prompt_from("aux/ignav_evaluator_N_action.txt"),
-    aeqa_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-    vln_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-    objnav_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-)
+AUXILIARY_PROMPTS = {
+    "ar_answerer": load_prompt_from("aux/ar_answerer.txt"),
+    "ar_planner": load_prompt_from("aux/ar_planner.txt"),
+    "ignav_evaluator_N_action": load_prompt_from("aux/ignav_evaluator_N_action.txt"),
+    "aeqa_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+    "vln_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+    "objnav_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+}
 
-HIGH_LEVEL_PLANNER_PROMPT = dict(
-    aeqa_highlevel_planner=load_prompt_from("high_level/aeqa_highlevel_planner.txt"),
-    vln_highlevel_planner=load_prompt_from("high_level/vln_highlevel_planner.txt"),
-    objnav_highlevel_planner=load_prompt_from("high_level/objnav_highlevel_planner.txt"),
-)
+HIGH_LEVEL_PLANNER_PROMPT = {
+    "aeqa_highlevel_planner": load_prompt_from("high_level/aeqa_highlevel_planner.txt"),
+    "vln_highlevel_planner": load_prompt_from("high_level/vln_highlevel_planner.txt"),
+    "objnav_highlevel_planner": load_prompt_from("high_level/objnav_highlevel_planner.txt"),
+}
 # fmt: on
 
 
@@ -242,9 +239,9 @@ class PromptMixin:
         state_traj: list[list[str]],
         action_traj: list[str],
         enable_history: bool,
-        imagine_traj: list[str] = [],
-        imagine_action_traj: list[str] = [],
-        tobe_filled: dict = {},
+        imagine_traj: list[str] = [],  # noqa: B006 - Read-only default; retain the public signature.
+        imagine_action_traj: list[str] = [],  # noqa: B006 - Read-only default; retain the public signature.
+        tobe_filled: dict = {},  # noqa: B006 - Read-only default; retain the public signature.
         enable_system_prompt: bool = False,
     ):
         """Build the *complete* message list in a readable, linear flow."""
@@ -270,10 +267,7 @@ class PromptMixin:
                 messages.append(self._build_assistant_message(action))
 
         # ---------- 3. current observation ---------- #
-        if enable_system_prompt:
-            current_prompt = ""
-        else:
-            current_prompt = self._get_task_prompt(query_task, tobe_filled)
+        current_prompt = "" if enable_system_prompt else self._get_task_prompt(query_task, tobe_filled)
         messages.append(self._build_user_message(current_prompt, state_traj[-1]))
 
         # ---------- 4. imagined roll-outs (if any) ---------- #
@@ -293,7 +287,7 @@ class PromptMixin:
 
 class VLM(LMClassifier, PromptMixin):
     # ---- division of different tasks ---- #
-    _LOWLEVEL_PLANNER_TASKS: set[str] = {
+    _LOWLEVEL_PLANNER_TASKS: ClassVar[set[str]] = {
         "ar_planner_N_action",
         "aeqa_planner_N_action",
         "vln_planner_N_action",
@@ -301,23 +295,23 @@ class VLM(LMClassifier, PromptMixin):
         "ignav_planner_N_action",
         "ignav_evaluator_N_action",
     }
-    _LOWLEVEL_PLANNER_TASKS_WITH_STOP: set[str] = {
+    _LOWLEVEL_PLANNER_TASKS_WITH_STOP: ClassVar[set[str]] = {
         "aeqa_planner_N_action",
         "vln_planner_N_action",
         "objnav_planner_N_action",
     }
     _LOWLEVEL_PLANNER_TASKS_NO_STOP: set[str] = _LOWLEVEL_PLANNER_TASKS - _LOWLEVEL_PLANNER_TASKS_WITH_STOP
-    _HIGHLEVEL_PLANNER_TASKS: set[str] = {
+    _HIGHLEVEL_PLANNER_TASKS: ClassVar[set[str]] = {
         "aeqa_highlevel_planner",
         "vln_highlevel_planner",
         "objnav_highlevel_planner",
     }
-    _ANSWERER_TASKS: set[str] = {
+    _ANSWERER_TASKS: ClassVar[set[str]] = {
         "ar_answerer",
         "ar_planner",
         "ignav_answerer",
     }
-    _OBSERVATION_KEY_PROMPT = {
+    _OBSERVATION_KEY_PROMPT: ClassVar[dict[str, str]] = {
         # for AEQA:
         "['rgb_front']": "perspective view (Field of View (FOV) is 90 degrees)",
         # f"{surround_keys}": f"four perspective views (Field of View (FOV) is 90 degrees) in order of {VIEW_ORDER}",
@@ -340,7 +334,7 @@ class VLM(LMClassifier, PromptMixin):
         image_use_abs,
         classify_method,
         obs_key,
-        categories=[],
+        categories=[],  # noqa: B006 - Read-only default; retain the public signature.
         top_logprobs=1,
         look_ahead_action_num=1,
         base_url=None,
@@ -393,7 +387,7 @@ class VLM(LMClassifier, PromptMixin):
         return is_valid
 
     # ------------ Query Dispatch (Main method 1) ------------ #
-    def query_VLM(self, messages, tobe_filled={}, query_num=1):
+    def query_VLM(self, messages, tobe_filled={}, query_num=1):  # noqa: B006 - Read-only default; retain the public signature.
         if self.classify_method == "classify_plain":
             assert self.query_task in self._ANSWERER_TASKS
             response = self._classify_plain(messages, return_prob=True)

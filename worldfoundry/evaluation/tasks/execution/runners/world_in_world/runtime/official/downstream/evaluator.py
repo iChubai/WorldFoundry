@@ -6,7 +6,7 @@ from collections import defaultdict
 from functools import partial, wraps
 
 import numpy as np
-from downstream.downstream_datasets import AEQADataset, ARDataset, IGDataset
+from downstream.downstream_datasets import AEQADataset, ARDataset
 from downstream.process_IGnav_dataset.pickle_dataset import load_igdataset_from_zip
 from downstream.utils.saver import Saver
 from openeqa.evaluation.llm_match import get_llm_match_score
@@ -29,8 +29,8 @@ def compute_aeqa_eval_metrics(scores, traj_lens, demo_lens):
     mean_traj_len = np.mean([p for p in traj_lens if p is not None])
     mean_efficiency = np.mean(
         [
-            (sigma - 1) * 25 * l / max(p, l)
-            for sigma, p, l in zip(scores, traj_lens, demo_lens, strict=False)
+            (sigma - 1) * 25 * demo_len / max(p, demo_len)
+            for sigma, p, demo_len in zip(scores, traj_lens, demo_lens, strict=False)
             if p is not None
         ]
     )
@@ -38,7 +38,7 @@ def compute_aeqa_eval_metrics(scores, traj_lens, demo_lens):
     return mean_score, mean_traj_len, mean_efficiency
 
 
-def compute_vln_eval_metrics(s, p, l):
+def compute_vln_eval_metrics(s, p, l):  # noqa: E741 - Public parameter name; retain the signature.
     """
     s: is_success
     p: traj_dist
@@ -46,7 +46,7 @@ def compute_vln_eval_metrics(s, p, l):
     """
     s = np.array(s)
     p = np.array(p)
-    l = np.array(l)
+    l = np.array(l)  # noqa: E741 - Public parameter name; retain the signature.
     spl = s * l / np.maximum(p, l)
     return s.mean(), spl.mean()
 
@@ -120,7 +120,7 @@ class Evaluator:
 
         # if blind_result_path is not empty, we use blind LLMs to get score_with_blind
         if blind_result_path and saver_args["task"] == "AEQA":
-            self.blind_result = json.load(open(blind_result_path, encoding="utf-8"))
+            self.blind_result = json.load(open(blind_result_path, encoding="utf-8"))  # noqa: SIM115 - The handle is read once inline as upstream.
         else:
             self.blind_result = None
         self.eval_blind = eval_blind
@@ -143,10 +143,10 @@ class Evaluator:
                 json.dump(result_w_blind, f, indent=2, ensure_ascii=False)
 
             # print necessary info:
-            headers = ["result type"] + list(result["summary"].keys())
+            headers = ["result type", *list(result["summary"].keys())]
             # Prepend a label to each row for the result type
-            row = ["Result"] + list(result["summary"].values())
-            row_ = ["Result w/ blind"] + list(result_w_blind["summary"].values())
+            row = ["Result", *list(result["summary"].values())]
+            row_ = ["Result w/ blind", *list(result_w_blind["summary"].values())]
 
             print(tabulate([row, row_], headers=headers, tablefmt="github"))
 
@@ -298,14 +298,14 @@ class Evaluator:
             demo_lens=demo_dist,
         )
 
-        result_var["summary"] = dict(
-            total_size=len(scores),
-            valid_size=len(valid_scores),
-            valid_score=sum(valid_scores) / len(valid_scores),
-            mean_score=mean_score,
-            mean_traj_len=mean_traj_len,
-            mean_efficiency=mean_efficiency,
-        )
+        result_var["summary"] = {
+            "total_size": len(scores),
+            "valid_size": len(valid_scores),
+            "valid_score": sum(valid_scores) / len(valid_scores),
+            "mean_score": mean_score,
+            "mean_traj_len": mean_traj_len,
+            "mean_efficiency": mean_efficiency,
+        }
         return result_var
 
     def calculate_summary_ar(self, result_var):
@@ -332,12 +332,12 @@ class Evaluator:
 
         acc, mean_traj_len = compute_ar_eval_metrics(gts, preds, traj_lens)
 
-        result_var["summary"] = dict(
-            total_size=len(gts),
-            correct=sum(int(g == p) for g, p in zip(gts, preds, strict=False)),
-            accuracy=acc,
-            mean_traj_len=mean_traj_len,
-        )
+        result_var["summary"] = {
+            "total_size": len(gts),
+            "correct": sum(int(g == p) for g, p in zip(gts, preds, strict=False)),
+            "accuracy": acc,
+            "mean_traj_len": mean_traj_len,
+        }
         return result_var
 
     def calculate_summary_vln(self, result_var):
@@ -351,12 +351,12 @@ class Evaluator:
         sr, spl = compute_vln_eval_metrics(s_list, p_list, l_list)
         mean_traj_len = np.mean(traj_lens)
 
-        result_var["summary"] = dict(
-            total_size=len(s_list),
-            sr=sr,
-            spl=spl,
-            mean_traj_len=mean_traj_len,
-        )
+        result_var["summary"] = {
+            "total_size": len(s_list),
+            "sr": sr,
+            "spl": spl,
+            "mean_traj_len": mean_traj_len,
+        }
         return result_var
 
     def calculate_summary_ignav(self, result_var):
@@ -370,12 +370,12 @@ class Evaluator:
         sr, spl = compute_vln_eval_metrics(s_list, p_list, l_list)
         mean_traj_len = np.mean(traj_lens)
 
-        result_var["summary"] = dict(
-            total_size=len(s_list),
-            sr=sr,
-            spl=spl,
-            mean_traj_len=mean_traj_len,
-        )
+        result_var["summary"] = {
+            "total_size": len(s_list),
+            "sr": sr,
+            "spl": spl,
+            "mean_traj_len": mean_traj_len,
+        }
         return result_var
 
     def run(self):
@@ -405,25 +405,25 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    SERVICE_TO_BASE_URL = dict(
-        vllm=f"http://{args.scorer_host}/v1",
-        sglang=f"http://{args.scorer_host}/v1",
-        openai="https://api.openai.com/v1",
-    )
+    SERVICE_TO_BASE_URL = {
+        "vllm": f"http://{args.scorer_host}/v1",
+        "sglang": f"http://{args.scorer_host}/v1",
+        "openai": "https://api.openai.com/v1",
+    }
     BASE_URL_TO_SERVICE = {v: k for k, v in SERVICE_TO_BASE_URL.items()}
 
-    scorer_args = dict(
-        openai_key=args.openai_key,
-        openai_model=args.openai_model,
-        openai_base_url=SERVICE_TO_BASE_URL[args.openai_service],
-        diff_retry_setting=False,
-    )
-    saver_args = dict(
-        parallel_ith=args.parallel_ith,
-        parallel_total=args.parallel_total,
-        exp_id=args.exp_id,
-        task=args.task,
-    )
+    scorer_args = {
+        "openai_key": args.openai_key,
+        "openai_model": args.openai_model,
+        "openai_base_url": SERVICE_TO_BASE_URL[args.openai_service],
+        "diff_retry_setting": False,
+    }
+    saver_args = {
+        "parallel_ith": args.parallel_ith,
+        "parallel_total": args.parallel_total,
+        "exp_id": args.exp_id,
+        "task": args.task,
+    }
 
     if args.dataset_args is None:
         if args.task == "AR":

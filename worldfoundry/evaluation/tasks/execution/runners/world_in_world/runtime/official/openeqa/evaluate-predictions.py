@@ -102,7 +102,7 @@ def main(args: argparse.Namespace):
 
         item = question_id_to_item[question_id]
         result = question_id_to_result[question_id]
-        extra_answers = item["extra_answers"] if "extra_answers" in item else None
+        extra_answers = item.get("extra_answers", None)
 
         # pre-process answers
         if result["answer"]:

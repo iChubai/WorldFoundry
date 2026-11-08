@@ -5,11 +5,9 @@
 
 import base64
 import os
-from typing import List, Optional
 
 import cv2
 import openai
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 
 def set_openai_key(key: str | None = None):

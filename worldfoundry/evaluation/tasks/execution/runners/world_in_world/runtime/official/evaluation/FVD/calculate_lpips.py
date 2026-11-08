@@ -1,5 +1,3 @@
-import math
-
 # ignore torchvision UserWarning of 'weights'
 import warnings
 

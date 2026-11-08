@@ -2,15 +2,11 @@
 import gzip
 import io
 import json
-import os
 import os.path as osp
 import pickle
-import random
 import zipfile
-from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import numpy as np
 from downstream.downstream_datasets import IGDataset
 from PIL import Image
 
@@ -88,12 +84,12 @@ def save_igdataset(
 
     zf.close()
 
-    blob = dict(
-        version=PORTABLE_VERSION,
-        num_items=len(ds),
-        meta=dict(original_hm3d_root=hm3d_root, img_zip_filename=osp.basename(out_img_zip_path)),
-        data=portable_data,
-    )
+    blob = {
+        "version": PORTABLE_VERSION,
+        "num_items": len(ds),
+        "meta": {"original_hm3d_root": hm3d_root, "img_zip_filename": osp.basename(out_img_zip_path)},
+        "data": portable_data,
+    }
 
     opener = gzip.open if compress_pickle else open
     with opener(out_pkl_path, "wb") as f:
@@ -123,7 +119,7 @@ def load_igdataset(
     unzipped_img_root: str,
 ) -> IGDatasetPortable:
     # Determine if it's JSON or pickle based on file extension
-    is_json = pkl_path.endswith(".json") or pkl_path.endswith(".json.gz")
+    is_json = pkl_path.endswith((".json", ".json.gz"))
 
     if is_json:
         # JSON files: use text mode

@@ -3,15 +3,10 @@ import json
 import os
 import os.path as osp
 import pickle
-import random
-from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import numpy as np
-import pandas as pd
 from torch.utils.data import Dataset, Subset
-from torch.utils.data._utils.collate import default_collate
 
 BACKGROUND_CLASS = ["wall", "floor", "ceiling", "carpet", "door", "rug", "bath mat"]
 
@@ -86,7 +81,7 @@ class ARDataset(TaskDataset):
     ):
         self.data = []
         self.mp3d_dir = "data/scene_datasets/mp3d"
-        exclude_scenes, exclude_ep = set(), dict()
+        exclude_scenes, exclude_ep = set(), {}
         filtered_count = 0
 
         # Iterate over each scene folder in the data_dir
@@ -103,10 +98,9 @@ class ARDataset(TaskDataset):
                         if original_scene in exclude_scenes:
                             filtered_count += 1
                             continue
-                        if original_scene in exclude_ep:
-                            if episode["episode_id"] in exclude_ep[original_scene]:
-                                filtered_count += 1
-                                continue
+                        if original_scene in exclude_ep and episode["episode_id"] in exclude_ep[original_scene]:
+                            filtered_count += 1
+                            continue
                         # Update scene_id to include the full path to the .glb file
                         # episode["scene_id"] = osp.join(
                         #     self.mp3d_dir, original_scene, f"{original_scene}.glb"
@@ -130,7 +124,7 @@ class ARDataset(TaskDataset):
 
     def get_stats(self):
         return {
-            diff_name: len(self.filter_by_lambda(lambda x: x["difficulty"] == diff_value))
+            diff_name: len(self.filter_by_lambda(lambda x: x["difficulty"] == diff_value))  # noqa: B023 - filter_by_lambda evaluates the predicate eagerly within the iteration.
             for diff_value, diff_name in enumerate(self.DIFFICULTYS)
         }
 

@@ -47,20 +47,21 @@ def spl(path_length, gt_path_length):
 
 separate_spl = {}
 separate_scores = {}
-gt = json.load(open(gt_path))
-pred = json.load(open(pred_path))
-baseline = json.load(open(baseline_path))
+gt = json.load(open(gt_path))  # noqa: SIM115 - The handle is read once inline as upstream.
+pred = json.load(open(pred_path))  # noqa: SIM115 - The handle is read once inline as upstream.
+baseline = json.load(open(baseline_path))  # noqa: SIM115 - The handle is read once inline as upstream.
 for question_id, score in baseline.items():
-    question = [q for q in gt if q["question_id"] == question_id][0]
+    matching_questions = [q for q in gt if q["question_id"] == question_id]
+    question = matching_questions[0]
     if question["episode_history"].split("-")[-1] in skip_scene_ids:
         continue
     gt_path_length = gt_path_length_map[question_id]
-    if question_id not in pred.keys():
+    if question_id not in pred:
         path_length = baseline_path_length_map[question_id]
     else:
         try:
             path_length = path_length_map[question_id]
-        except:
+        except BaseException:
             print(question_id)
             path_length = baseline_path_length_map[question_id]
         score = pred[question_id]

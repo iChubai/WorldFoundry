@@ -33,12 +33,6 @@ class MVDiffusionPipeline(ThreeDFourDRuntimePipeline):
     MODEL_ID = "mvdiffusion"
 
 
-class StableVirtualCameraPipeline(ThreeDFourDRuntimePipeline):
-    """Pipeline implementation for StableVirtualCamera visual generation."""
-
-    MODEL_ID = "stable-virtual-camera"
-
-
 class WonderJourneyPipeline(ThreeDFourDRuntimePipeline):
     """Pipeline implementation for WonderJourney visual generation."""
 
@@ -54,7 +48,6 @@ class WorldGenPipeline(ThreeDFourDRuntimePipeline):
 __all__ = [
     "LagrNVSPipeline",
     "MVDiffusionPipeline",
-    "StableVirtualCameraPipeline",
     "ThreeDFourDRuntimePipeline",
     "WonderJourneyPipeline",
     "WorldGenPipeline",

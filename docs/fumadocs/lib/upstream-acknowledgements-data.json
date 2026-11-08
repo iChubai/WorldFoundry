@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 221,
+  "modelsTotal": 220,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -610,7 +610,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 31,
+      "count": 30,
       "entries": [
         {
           "name": "CUT3R",
@@ -699,10 +699,6 @@
         {
           "name": "Segment and Track Anything",
           "url": "https://github.com/z-x-yang/Segment-and-Track-Anything"
-        },
-        {
-          "name": "Stable Virtual Camera",
-          "url": "https://github.com/Stability-AI/stable-virtual-camera"
         },
         {
           "name": "UniDepth V2",

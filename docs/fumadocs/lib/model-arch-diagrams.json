@@ -1535,15 +1535,6 @@
       "caption": "Method overview: Stable Video Infinity . We (a) inject errors into clean latent to break the error-free hypothesis, (b) approximate predictions via one-step integration to calculate bidirectional errors, and (c) dynamically bank and.",
       "captionZh": "论文方法总览：Stable Video Infinity 2.0 的视频生成架构。"
     },
-    "stable-virtual-camera": {
-      "modelId": "stable-virtual-camera",
-      "paperSrc": "/models/stable-virtual-camera/paper.png",
-      "src": "/models/stable-virtual-camera/overview.png",
-      "alt": "Method overview: Method. Seva is trained with fixed sequence length as a “ M M -in N N -out” multi-view diffusion model with standard architecture. It conditions on CLIP embeddings, VAE latents of the input views, and their.",
-      "altZh": "论文方法总览：Stable Virtual Camera 的相机控制架构。",
-      "caption": "Method overview: Method. Seva is trained with fixed sequence length as a “ M M -in N N -out” multi-view diffusion model with standard architecture. It conditions on CLIP embeddings, VAE latents of the input views, and their.",
-      "captionZh": "论文方法总览：Stable Virtual Camera 的相机控制架构。"
-    },
     "t2v_turbo_t2v": {
       "modelId": "t2v_turbo_t2v",
       "paperSrc": "/models/t2v_turbo_t2v/paper.png",

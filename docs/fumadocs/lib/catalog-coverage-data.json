@@ -1,5 +1,5 @@
 {
-  "modelsListed": 264,
+  "modelsListed": 263,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -1418,7 +1418,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 31,
+      "count": 30,
       "entries": [
         {
           "id": "cut3r",
@@ -1599,14 +1599,6 @@
           "status": "integrated",
           "aliases": [
             "track-anything-prior"
-          ]
-        },
-        {
-          "id": "stable-virtual-camera",
-          "name": "Stable Virtual Camera",
-          "status": "integrated",
-          "aliases": [
-            "stable-virtual-camera"
           ]
         },
         {

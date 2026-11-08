@@ -232,32 +232,6 @@ def test_vmem_trajectory_export_does_not_require_evo():
     assert trajectory.num_poses == 1
 
 
-def test_stable_virtual_camera_clip_conditioner_uses_local_checkpoint(monkeypatch, tmp_path):
-    from worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.stable_virtual_camera_runtime.seva.modules import (  # ty: ignore[import-not-found]  # license-gated runtime, not committed
-        conditioner,
-    )
-
-    checkpoint = tmp_path / conditioner.DEFAULT_CLIP_WEIGHT
-    checkpoint.write_bytes(b"open-clip")
-    monkeypatch.setattr(
-        conditioner,
-        "resolve_local_hf_model_path",
-        lambda *args, **kwargs: tmp_path,
-    )
-    captured = {}
-
-    def _create_model(model_name, *, pretrained):
-        captured.update(model_name=model_name, pretrained=pretrained)
-        return torch.nn.Identity(), None, None
-
-    monkeypatch.setattr(conditioner.open_clip, "create_model_and_transforms", _create_model)
-
-    module = conditioner.CLIPConditioner()
-
-    assert isinstance(module.module, torch.nn.Identity)
-    assert captured == {"model_name": "ViT-H-14", "pretrained": str(checkpoint)}
-
-
 def test_step_video_loads_trusted_local_legacy_bert_checkpoint(monkeypatch, tmp_path):
     from transformers import BertConfig, BertModel
 

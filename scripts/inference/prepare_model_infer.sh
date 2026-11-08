@@ -172,9 +172,6 @@ case "$MODEL_ID" in
   matrixgame|matrixgame1|matrix-game1|matrix_game_1)
     MODEL_ID="matrix-game-1"
     ;;
-  svc|seva)
-    MODEL_ID="stable-virtual-camera"
-    ;;
   pusa|pusa-v1|pusa_v1|pusa-wan2.2-v1|pusa-wan22-v1)
     MODEL_ID="pusa-vidgen"
     ;;
@@ -963,20 +960,6 @@ Wan2.2 TI2V 5B checkpoint layout:
 
 EOF
       ;;
-    stable-virtual-camera)
-      if [[ "$DOWNLOAD" == "1" ]]; then
-        hf download stabilityai/stable-virtual-camera --cache-dir "$CACHE_DIR"
-      fi
-      cat <<EOF
-
-Stable Virtual Camera checkpoint layout:
-  Hugging Face repo stabilityai/stable-virtual-camera is gated. Users must accept
-  the model terms and provide HF authentication before --download can succeed.
-  The in-tree adapter expects or can be pointed at:
-    ${WORLDFOUNDRY_CKPT_DIR}/stable-virtual-camera/modelv1.1.safetensors
-
-EOF
-      ;;
     skyreels-v2)
       if [[ "$DOWNLOAD" == "1" ]]; then
         hf download Skywork/SkyReels-V2-DF-1.3B-540P --cache-dir "$CACHE_DIR"
@@ -1403,7 +1386,7 @@ case "$MODEL_ID" in
   cogvideox|cogvideox-2b-t2v|cogvideox-5b-t2v|cogvideox-5b-i2v)
     prepare_cogvideox_layout
     ;;
-  i2vgen-xl|dynamicrafter-512-i2v|dynamicrafter-1024-i2v|allegro-ti2v|wan2.2-ti2v-5b|wan2.2-ti2v-5b-1280x704-121f|stable-virtual-camera|skyreels-v2|zeroscope|modelscope-t2v|animatediff|krea-realtime-video|framepack|motionctrl|easyanimate-i2v|hunyuan-worldplay|longcat-video|helios|gamma-world|lingbot-video|self-forcing|causal-forcing|rolling-forcing|worldgen|pusa-vidgen|dualcamctrl)
+  i2vgen-xl|dynamicrafter-512-i2v|dynamicrafter-1024-i2v|allegro-ti2v|wan2.2-ti2v-5b|wan2.2-ti2v-5b-1280x704-121f|skyreels-v2|zeroscope|modelscope-t2v|animatediff|krea-realtime-video|framepack|motionctrl|easyanimate-i2v|hunyuan-worldplay|longcat-video|helios|gamma-world|lingbot-video|self-forcing|causal-forcing|rolling-forcing|worldgen|pusa-vidgen|dualcamctrl)
     prepare_recent_video_layout
     ;;
 esac

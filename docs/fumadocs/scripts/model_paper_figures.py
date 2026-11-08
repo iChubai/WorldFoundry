@@ -1176,12 +1176,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：Stable Video Infinity 2.0 的视频生成架构。",
         ),
     },
-    "stable-virtual-camera": {
-        "overview": (
-            "Method overview: Method. Seva is trained with fixed sequence length as a “ M M -in N N -out” multi-view diffusion model with standard architecture. It conditions on CLIP embeddings, VAE latents of the input views, and their.",
-            "论文方法总览：Stable Virtual Camera 的相机控制架构。",
-        ),
-    },
     "starvla": {
         "teaser": (
             "Official paper teaser: Conceptual view of the unified VLA formulation adopted in StarVLA. A policy π maps visual observations and a language instruction to a future action chunk. The training objective decomposes as ℒ = ℒ action + ℒ aux.",

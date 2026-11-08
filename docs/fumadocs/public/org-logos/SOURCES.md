@@ -109,7 +109,7 @@ No file in this directory is a personal GitHub avatar.
 | `snap.svg` | Snap Inc. | Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark); official brand hex #FFFC00 | CC0-1.0 | model:ac3d |
 | `sony.svg` | Sony AI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000 | CC0-1.0 | model:mmaudio |
 | `spirit-ai.svg` | Spirit AI | Original simple figure monogram for the identity mark | Public domain (simple geometry) | model:spirit-v1.5 |
-| `stability.png` | Stability AI | GitHub organization brand avatar (github.com/Stability-AI), pre-existing repo asset | Organization brand mark | model:stable-virtual-camera |
+| `stability.png` | Stability AI | GitHub organization brand avatar (github.com/Stability-AI), pre-existing repo asset | Organization brand mark | - |
 | `stanford.svg` | Stanford University | https://commons.wikimedia.org/wiki/File:Stanford_Cardinal_logo.svg | Public domain (simple geometry) | benchmark:behavior1k, benchmark:worldscore, model:act, model:diffusion-policy, model:framepack, model:openvla, model:openvla-oft, model:wonderjourney, model:wonderworld |
 | `starkware.svg` | StarkWare | Original simple A-frame monogram for the identity mark | Public domain (simple geometry) | model:mosaicmem |
 | `starvla.png` | StarVLA | GitHub organization brand avatar (github.com/starVLA) | Organization brand mark | model:starvla |

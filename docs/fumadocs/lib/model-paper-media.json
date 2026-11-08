@@ -514,23 +514,6 @@
       }
     ]
   },
-  "stable-virtual-camera": {
-    "paper": {
-      "title": "Stable Virtual Camera: Generative View Synthesis with Diffusion Models",
-      "year": 2025,
-      "venue": null,
-      "arxivId": "2503.14489",
-      "abstract": "We present Stable Virtual Camera (Seva), a generalist diffusion model that creates novel views of a scene, given any number of input views and target cameras. Existing works struggle to generate either large viewpoint changes or temporally smooth samples, while relying on specific task configurations. Our approach overcomes these limitations through simple model design, optimized training recipe, and flexible sampling strategy that generalize across view synthesis tasks at test time. As a result, our samples maintain high consistency without requiring additional 3D representation-based distillation, thus streamlining view synthesis in the wild. Furthermore, we show that our method can generate high-quality videos lasting up to half a minute with seamless loop closure. Extensive benchmarking demonstrates that Seva outperforms existing methods across different datasets and settings. Projec"
-    },
-    "figures": [
-      {
-        "kind": "image",
-        "src": "/models/stable-virtual-camera/paper.png",
-        "caption": "Stable Virtual Camera: Generative View Synthesis with Diffusion Models",
-        "captionZh": "Stable Virtual Camera: Generative View Synthesis with Diffusion Models"
-      }
-    ]
-  },
   "t2v_turbo_t2v": {
     "paper": {
       "title": "T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback",

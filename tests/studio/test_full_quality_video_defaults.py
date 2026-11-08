@@ -386,13 +386,6 @@ def test_failed_world_demo_defaults_use_matching_image_fixtures() -> None:
         "overlap_group_offloading": False,
     }
 
-    stable_virtual_camera = find_entry("stable-virtual-camera")
-    assert stable_virtual_camera.default_input_path.endswith("stable_virtual_camera/basic/blue-car.jpg")
-    assert stable_virtual_camera.default_call_kwargs["H"] == 576
-    assert stable_virtual_camera.default_call_kwargs["W"] == 576
-    assert stable_virtual_camera.default_call_kwargs["T"] == 21
-    assert stable_virtual_camera.default_call_kwargs["num_steps"] == 50
-
     oasis = find_entry("oasis-500m")
     assert oasis.default_input_path.endswith("oasis/sample_image_0.png")
     assert oasis.default_call_kwargs["num_frames"] == 32

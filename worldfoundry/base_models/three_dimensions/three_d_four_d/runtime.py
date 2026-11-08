@@ -68,18 +68,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         source_repo_url="https://github.com/Tangshitao/MVDiffusion",
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_views"]},
     ),
-    "stable-virtual-camera": ThreeDFourDRuntimeSpec(
-        model_id="stable-virtual-camera",
-        display_name="Stable Virtual Camera",
-        repo_names=("stable-virtual-camera",),
-        entrypoint="demo.py",
-        command_kind="stable_virtual_camera_demo",
-        artifact_kind="generated_video",
-        artifact_filename="stable_virtual_camera.mp4",
-        required_input="image",
-        source_repo_url="https://github.com/Stability-AI/stable-virtual-camera",
-        input_schema={"prompt": False, "image": True, "video": False, "actions": ["camera_trajectory"]},
-    ),
     "wonderjourney": ThreeDFourDRuntimeSpec(
         model_id="wonderjourney",
         display_name="WonderJourney",
@@ -111,13 +99,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
 IN_TREE_RUNTIME_DIRS: Mapping[str, tuple[str, ...]] = {
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
     "mvdiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
-    "stable-virtual-camera": (
-        "base_models",
-        "three_dimensions",
-        "general_3d",
-        "stable_virtual_camera",
-        "stable_virtual_camera_runtime",
-    ),
     "wonderjourney": ("synthesis", "visual_generation", "wonderjourney", "wonderjourney_runtime"),
     "worldgen": ("synthesis", "visual_generation", "worldgen", "worldgen_runtime"),
 }
@@ -446,9 +427,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         prompt = str(context.get("prompt") or "")
         output_path = str(context["output_path"])
         output_dir = str(context["output_dir"])
-        run_dir = str(context["run_dir"])
         images = [str(item) for item in context.get("images") or []]
-        seed = str(options.get("seed", self.options.get("seed", 1234)))
         config = str(options.get("config") or self.options.get("config") or self.spec.default_config or "")
 
         if self.spec.command_kind == "lagernvs_minimal":
@@ -469,47 +448,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 "--model_repo",
                 model_repo,
             ]
-        if self.spec.command_kind == "stable_virtual_camera_demo":
-            data_dir = _stable_virtual_camera_image_dir(images, Path(run_dir))
-            version = str(options.get("version", self.options.get("version", "1.1")))
-            task = str(options.get("task", self.options.get("task", "img2trajvid_s-prob")))
-            command = [
-                python,
-                entrypoint,
-                "--data_path",
-                data_dir,
-                "--version",
-                version,
-                "--task",
-                task,
-                "--save_subdir",
-                Path(output_dir).name,
-                "--seed",
-                seed,
-            ]
-            # T is the model context window; num_targets is the output length.
-            aliases = {
-                "pretrained_model_name_or_path": (),
-                "weight_name": (),
-                "H": ("height", "h"),
-                "W": ("width", "w"),
-                "T": ("t",),
-                "num_steps": ("num_inference_steps",),
-                "num_targets": ("num_frames",),
-                "traj_prior": (),
-                "video_save_fps": ("fps",),
-            }
-            for key, alternatives in aliases.items():
-                value = None
-                for source in (options, self.options):
-                    value = next((source[name] for name in (key, *alternatives) if source.get(name) is not None), None)
-                    if value is not None:
-                        break
-                if key == "video_save_fps" and context.get("fps") is not None:
-                    value = context["fps"]
-                if value is not None:
-                    command.extend([f"--{key}", str(value)])
-            return command
         if self.spec.command_kind == "worldgen_inference":
             command = [python, entrypoint, "--prompt", prompt or "a 3D scene", "--output_dir", output_dir]
             resolution = options.get("resolution", self.options.get("resolution"))
@@ -677,24 +615,6 @@ def _image_data_dir(images: Sequence[str], run_dir: Path) -> str:
     return str(Path(images[0]).parent)
 
 
-def _stable_virtual_camera_image_dir(images: Sequence[str], run_dir: Path) -> str:
-    image_paths = [
-        Path(item)
-        for item in _expand_image_inputs(images)
-        if Path(item).suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
-    ]
-    if not image_paths:
-        return _image_data_dir(images, run_dir)
-    target_dir = run_dir / "stable_virtual_camera_inputs"
-    if target_dir.exists():
-        shutil.rmtree(target_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    for index, source in enumerate(image_paths):
-        name = source.name if index == 0 else f"{index:03d}_{source.name}"
-        shutil.copy2(source, target_dir / name)
-    return str(target_dir)
-
-
 def _lagernvs_model_repo(value: str) -> str:
     text = str(value or "").strip()
     if not text or text == "facebook/lagernvs_general_512":
@@ -853,8 +773,6 @@ def _extra_artifact_dirs(spec: ThreeDFourDRuntimeSpec, source_root: Path | None)
         return ()
     if spec.command_kind == "mvdiffusion_demo":
         return (source_root / "outputs",)
-    if spec.command_kind == "stable_virtual_camera_demo":
-        return (source_root / "work_dirs" / "demo",)
     return ()
 
 

@@ -32,7 +32,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "mvdiffusion",
     "neoverse",
     "recammaster",
-    "stable-virtual-camera",
     "wonderjourney",
     "wonderworld",
     "worldgen",

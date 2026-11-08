@@ -154,12 +154,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/general_3d/mvdiffusion/mvdiffusion_runtime/demo.py",
     ),
     _cap(
-        "stable-virtual-camera",
-        "three_dimensions/general_3d/stable_virtual_camera",
-        ("media", "camera"),
-        "three_dimensions/general_3d/stable_virtual_camera/stable_virtual_camera_runtime/demo.py",
-    ),
-    _cap(
         "vipe",
         "three_dimensions/general_3d/vipe",
         ("point-cloud", "camera", "rerun"),

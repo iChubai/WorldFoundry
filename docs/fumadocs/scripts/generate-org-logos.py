@@ -1322,7 +1322,6 @@ MODEL_ORGS: dict[str, str] = {
     "spatial-reasoner": "jhu",
     "spirit-v1.5": "spirit-ai",
     "stable-video-infinity": "epfl",
-    "stable-virtual-camera": "stability",
     "starvla": "starvla",
     "starwm": "cas",
     "step-video-t2v": "stepfun",

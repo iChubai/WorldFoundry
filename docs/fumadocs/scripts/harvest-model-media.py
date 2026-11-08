@@ -526,9 +526,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2510.09212v1/Figure/intro.png",
         "overview": "https://arxiv.org/html/2510.09212v1/Figure/overall.png",
     },
-    "stable-virtual-camera": {
-        "overview": "https://arxiv.org/html/2503.14489v2/overview.png",
-    },
     "starvla": {
         "teaser": "https://arxiv.org/html/2604.05014v1/vla-form.png",
     },

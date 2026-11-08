@@ -176,7 +176,7 @@ runner_availability:
   full_suite_verified: false
   surface: in_tree_official_runtime_with_result_normalizer
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

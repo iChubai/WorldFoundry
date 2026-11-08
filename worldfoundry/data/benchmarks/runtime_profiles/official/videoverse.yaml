@@ -72,7 +72,7 @@ official_run_command:
 - "${WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR}"
 - --json
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

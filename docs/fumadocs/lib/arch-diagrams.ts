@@ -908,8 +908,8 @@ const STUDIO: ArchDiagramSpec = {
       role: { en: 'Launch', zh: '启动' },
       title: { en: 'CLI flags', zh: '启动参数' },
       detail: {
-        en: 'Parse worldfoundry-studio flags into a launch config',
-        zh: '把 worldfoundry-studio 的 flags 收成启动配置',
+        en: 'Parse wf-studio flags into a launch config',
+        zh: '把 wf-studio 的 flags 收成启动配置',
       },
       file: 'studio/ui/launch_config.py',
     },
@@ -1162,8 +1162,8 @@ const TASK_MATERIALIZE: ArchDiagramSpec = {
     zh: 'Task materialization',
   },
   caption: {
-    en: 'Prove this step with worldfoundry-eval task materialize before spending GPU time.',
-    zh: '耗 GPU 之前用 worldfoundry-eval task materialize 证明此步。',
+    en: 'Prove this step with wf task materialize before spending GPU time.',
+    zh: '耗 GPU 之前用 wf task materialize 证明此步。',
   },
   nodes: {
     task: {

@@ -533,7 +533,7 @@ def test_benchmark_zoo_loads_embodied_world_manifest() -> None:
     # The robotwin manifest routes runs through the embodied CLI entrypoint
     # (config-driven) instead of the old standalone runner script.
     robotwin_command = _command_text(by_id["robotwin"].run_command)
-    assert "worldfoundry-eval embodied run" in robotwin_command
+    assert "wf embodied run" in robotwin_command
     assert "--config" in robotwin_command
     assert "embodied/robotwin/eval.yaml" in robotwin_command
     assert by_id["robotwin"].runner.clone_dir == "thirdparty/RoboTwin"
@@ -807,7 +807,7 @@ def test_benchmark_user_commands_use_manifest_fields_only() -> None:
             "open_source_status": "stable",
             "maturity": "contract_ready",
             "contract_validation_command": (
-                "worldfoundry-eval zoo benchmark-run --benchmark-id stable-release-planned-runner "
+                "wf zoo benchmark-run --benchmark-id stable-release-planned-runner "
                 "--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/stable-release-planned-runner --json"
             ),
             "runner": {"runner_target": "worldfoundry.evaluation.tasks.contracts.external:VBenchContract"},

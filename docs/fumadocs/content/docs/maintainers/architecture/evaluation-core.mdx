@@ -59,7 +59,7 @@ Embodied closed-loop runs save all planned requests before generation and flush 
 
 Before generation starts, task-driven runs fix sample IDs, splits, and input keys through **`RunPlan`** in `plan.py`. The plan connects the task registry, optional dataset manifest, and evaluate facade: registry lookup → materialized requests → `EvaluateRunRequest`. Fingerprinting on the plan makes reruns and cache reuse deterministic across machines.
 
-Materialization in `materialize.py` turns dataset rows or task samples into `GenerationRequest` rows. Prove this step with `worldfoundry-eval task materialize` before spending GPU time—most "works locally, fails in CI" bugs trace to mismatched sample IDs here, not to model loading.
+Materialization in `materialize.py` turns dataset rows or task samples into `GenerationRequest` rows. Prove this step with `wf task materialize` before spending GPU time—most "works locally, fails in CI" bugs trace to mismatched sample IDs here, not to model loading.
 
 ## Model resolution
 

@@ -29,7 +29,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: iworld-bench
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id iworld-bench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/iworld-bench --json
+  contract_validation_command: wf zoo benchmark-run --benchmark-id iworld-bench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/iworld-bench --json
   release_status: experimental
   integration_status: integrated
   maturity: verified_runner

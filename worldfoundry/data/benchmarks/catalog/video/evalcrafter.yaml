@@ -265,7 +265,7 @@ runner:
     default_metrics: [clip_score, clip_temp_score, face_consistency_score]
   runner_target: worldfoundry.evaluation.tasks.contracts.external:EvalCrafterContract
   run_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -282,7 +282,7 @@ runner:
   - tmp/evalcrafter-smoke
   - --json
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -331,9 +331,9 @@ integration:
     leaderboard_capable: false
     full_suite_verified: false
     scorecard_gate: scorecard.official_benchmark_verified && scorecard.eligibility.leaderboard_valid
-    official_run_command: worldfoundry-eval zoo benchmark-run --benchmark-id evalcrafter --mode official-run
+    official_run_command: wf zoo benchmark-run --benchmark-id evalcrafter --mode official-run
       --generated-artifact-dir <dir-with-numbered-mp4-files> --metrics clip_score --limit 1 --output-dir <out> --json
-    official_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id evalcrafter --mode
+    official_validation_command: wf zoo benchmark-run --benchmark-id evalcrafter --mode
       official-validation --official-results-path <final_result.txt> --generated-artifact-dir
       <dir-with-0000-to-0699-mp4> --output-dir <out> --json
 release_status: experimental
@@ -370,7 +370,7 @@ runner_availability:
   surface: bounded_official_clip_metrics_and_final_result_importer
   normalizer_verified: true
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

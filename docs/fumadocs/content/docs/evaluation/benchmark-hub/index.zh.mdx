@@ -55,7 +55,7 @@ description: "按「实际测什么」选 benchmark，再打开由 manifest 生�
 配方写明 WorldFoundry **归一化**上游导出、不跑模拟器时用这条。
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --mode official-validation \
   --official-results-path <official-result-file-or-dir> \
@@ -69,7 +69,7 @@ worldfoundry-eval zoo benchmark-run \
 只有配方明确说仓内 runtime 能从 generated artifacts 重算分数，并且所需媒体或 checkpoint 已就位时，才用 `official-run`。常见例子是 Physics-IQ。
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --mode official-run \
   --generated-artifact-dir <generated-artifact-dir> \
@@ -80,7 +80,7 @@ worldfoundry-eval zoo benchmark-run \
 需要先用已注册模型生成 artifact 时：
 
 ```bash
-worldfoundry-eval run \
+wf run \
   --benchmark <benchmark-id> \
   --model <model-id> \
   --mode official-run \

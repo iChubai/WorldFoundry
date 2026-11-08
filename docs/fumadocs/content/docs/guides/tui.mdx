@@ -24,7 +24,7 @@ python -m pip install -e ".[tui]"
 Once your environment is active, launch the TUI:
 
 ```bash
-worldfoundry-eval tui
+wf tui
 ```
 
 The TUI reads the same model-zoo and benchmark-zoo manifests as the CLI discovery commands. It does not bypass manifest readiness, runtime profiles, or runner validation.
@@ -74,7 +74,7 @@ The TUI reads the same model-zoo and benchmark-zoo manifests as the CLI discover
 Example — generate a command for a specific model × benchmark pair and exit:
 
 ```bash
-worldfoundry-eval tui --model-id openvla --benchmark-id libero --print-command
+wf tui --model-id openvla --benchmark-id libero --print-command
 ```
 
 This is useful in scripts or CI pipelines where you need the canonical command without manual interaction.
@@ -87,7 +87,7 @@ Switch **Mode** in the top-left panel to move between Inference, Studio, and Eva
 
 ### Inference
 
-Use Inference to pick a model, fill model-specific inputs, and generate a runnable `worldfoundry-eval run` command. The toolbar provides **Run**, **Stop**, **Copy**, **Cmd**, **Check**, **Files**, **GPU**, and **Sync**. Everyday reproducible / model-page commands stay on `worldfoundry-eval run`; Workspace visual smoke uses `python -m worldfoundry.studio.workspace_job infer`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
+Use Inference to pick a model, fill model-specific inputs, and generate a runnable `wf run` command. The toolbar provides **Run**, **Stop**, **Copy**, **Cmd**, **Check**, **Files**, **GPU**, and **Sync**. Everyday reproducible / model-page commands stay on `wf run`; Workspace visual smoke uses `python -m worldfoundry.studio.workspace_job infer`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
 
 ![TUI Inference mode](/images/tui/tui-inference.png)
 
@@ -101,7 +101,7 @@ Use Studio to launch the local Studio web UI from the terminal. Press **Run** to
 
 ### Evaluation
 
-Use Evaluation to configure benchmark runs. Choose an evaluation intent, select metrics, and set the output directory. The TUI builds the corresponding `worldfoundry-eval` command for the selected model × benchmark pair.
+Use Evaluation to configure benchmark runs. Choose an evaluation intent, select metrics, and set the output directory. The TUI builds the corresponding `wf` command for the selected model × benchmark pair.
 
 ![TUI Evaluation mode](/images/tui/tui-evaluation.png)
 

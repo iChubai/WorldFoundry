@@ -64,13 +64,13 @@ description: 选择模型，检查运行时，并复制与你的机器匹配的�
 
 ```bash
 # 检查完整 catalog manifest。
-worldfoundry-eval zoo model-show \
+wf zoo model-show \
   --model-id <model-id> \
   --include-manifest \
   --json
 
 # 不下载，只解析 checkpoint、凭据与本地资产 blocker。
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id <model-id> \
   --check-local \
   --json
@@ -82,7 +82,7 @@ bash scripts/setup/model_env_install.sh --model <model-id>
 bash scripts/inference/prepare_model_infer.sh <model-id> --download
 
 # 运行一个已记录的 task profile（每个模型页面会生成精确的参数）。
-worldfoundry-eval run <model-id> --pipeline.task-profile <task> --json
+wf run <model-id> --pipeline.task-profile <task> --json
 ```
 
 ## 在文档中的位置

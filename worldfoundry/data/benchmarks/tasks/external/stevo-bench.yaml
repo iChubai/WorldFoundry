@@ -22,9 +22,9 @@ metadata:
   benchmark_id: stevo-bench
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:StevoBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench --mode contract
+  contract_validation_command: wf zoo benchmark-run --benchmark-id stevo-bench --mode contract
     --output-dir tmp/benchmark_zoo/benchmark_contract/stevo-bench --json
-  validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench --mode official-validation
+  validation_command: wf zoo benchmark-run --benchmark-id stevo-bench --mode official-validation
     --official-results-path <stevo_bench_run_dir_or_summary_json> --output-dir <out> --json
   checkpoint_refs: []
   runtime:

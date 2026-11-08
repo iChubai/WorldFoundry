@@ -17,7 +17,7 @@ WorldFoundry 记录的 variant **只有 `cosmos-transfer-2.5-2b`**。catalog 记
 
 ## 用来做什么
 
-把结构化控制译成照片级世界视频。启动 `worldfoundry-eval run cosmos-transfer-2.5-2b`，任务 profile 为 `controlled-video`。必填输入：`prompt`、`image`、`video`。`actions` 字段是 **`control_video`**。产物：`cosmos-transfer2.5-2b-controlled-video.mp4`。
+把结构化控制译成照片级世界视频。启动 `wf run cosmos-transfer-2.5-2b`，任务 profile 为 `controlled-video`。必填输入：`prompt`、`image`、`video`。`actions` 字段是 **`control_video`**。产物：`cosmos-transfer2.5-2b-controlled-video.mp4`。
 
 给原生路径一段**原始 RGB** 控制片段，它会自己抽 **Canny** 边缘。只有在片段已经是边缘图时才设 `control_is_preprocessed`。这不是文生世界（Predict 2.5），也不是 T5 条件的 video2world（Predict 2）。
 

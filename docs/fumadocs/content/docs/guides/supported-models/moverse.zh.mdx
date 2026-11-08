@@ -39,7 +39,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MoVersePipeline`。
 
 ## 在 WorldFoundry 中运行
 
-catalog 启动命令是 `worldfoundry-eval run moverse --pipeline.task-profile default`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+catalog 启动命令是 `wf run moverse --pipeline.task-profile default`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 记录的权重仓库包括 `Orange-3DV-Team/MoVerse`、`black-forest-labs/FLUX.1-Fill-dev`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh moverse`；下载缺失的公开权重时加 `--download`。
 

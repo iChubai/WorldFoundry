@@ -41,7 +41,7 @@ CLI task profile：`official-static-sdg`、`official-zoomgs`。绑定的 pipelin
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run lyra-1 --pipeline.task-profile official-static-sdg` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run lyra-1 --pipeline.task-profile official-static-sdg` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 记录的权重仓库包括 `depth-anything/DA3NESTED-GIANT-LARGE-1.1`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lyra-1`；下载缺失的公开权重时加 `--download`。
 

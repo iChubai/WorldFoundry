@@ -72,7 +72,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: videophy2
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id videophy2 --mode contract --output-dir
+  contract_validation_command: wf zoo benchmark-run --benchmark-id videophy2 --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/videophy2 --json
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoPhy2Contract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/videophy2/run_videophy2_official_runner.py
@@ -164,7 +164,7 @@ metadata:
     runtime_verified: false
     surface: videophy2_official_in_tree
     normalizer_verified: false
-  official_result_entrypoint: worldfoundry-eval zoo benchmark-run
+  official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
     target: worldfoundry.evaluation.tasks.execution.runners.videophy2.videophy2_contract_evaluator:write_videophy2_evaluation
     status: implemented
@@ -181,7 +181,7 @@ metadata:
       - yaml
       provenance: normalizes caller-provided official outputs without executing upstream repos
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -261,6 +261,6 @@ tasks:
       runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoPhy2Contract
       evaluator_target: worldfoundry.evaluation.tasks.execution.runners.videophy2.videophy2_contract_evaluator:write_videophy2_evaluation
       runner_script: worldfoundry/evaluation/tasks/execution/runners/videophy2/run_videophy2_official_runner.py
-      official_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id videophy2 --mode
+      official_validation_command: wf zoo benchmark-run --benchmark-id videophy2 --mode
         official-validation --official-results-path <official_results.json> --generated-artifact-dir <generated_videos>
         --output-dir <out> --json

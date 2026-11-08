@@ -285,7 +285,7 @@ def _default_ready_now_command(benchmark_id: str) -> str:
     Returns:
         The execution command string.
     """
-    return f"worldfoundry-eval run --benchmark {benchmark_id} --output-dir tmp/benchmark_eval/{benchmark_id} --json"
+    return f"wf run --benchmark {benchmark_id} --output-dir tmp/benchmark_eval/{benchmark_id} --json"
 
 
 def _normalize_source_status(value: Any) -> str:

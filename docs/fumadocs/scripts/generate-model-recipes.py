@@ -1658,7 +1658,7 @@ def command_placeholder(field: dict[str, Any]) -> str | None:
 
 def direct_run_command(runtime_model_id: str, task: dict[str, Any]) -> str:
     lines = [
-        "worldfoundry-eval run \\",
+        "wf run \\",
         f"  {shlex.quote(runtime_model_id)} \\",
         f"  --pipeline.task-profile {shlex.quote(str(task['id']))} \\",
     ]
@@ -1676,8 +1676,8 @@ def command_data(model_id: str, runtime_model_id: str, default_task: dict[str, A
     return {
         "prepare": f"bash scripts/inference/prepare_model_infer.sh {runtime_model_id}",
         "install": f"bash scripts/setup/model_env_install.sh --model {runtime_model_id}",
-        "inspect": f"worldfoundry-eval zoo model-show --model-id {model_id} --include-manifest --json",
-        "check": f"worldfoundry-eval zoo model-download --model-id {model_id} --check-local --json",
+        "inspect": f"wf zoo model-show --model-id {model_id} --include-manifest --json",
+        "check": f"wf zoo model-download --model-id {model_id} --check-local --json",
         "run": direct_run_command(runtime_model_id, default_task),
     }
 

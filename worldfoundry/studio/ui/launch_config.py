@@ -73,7 +73,7 @@ class StudioLaunchConfig:
     port: int | None = None
 
 
-def build_launch_argument_parser(prog: str = "worldfoundry-studio") -> argparse.ArgumentParser:
+def build_launch_argument_parser(prog: str = "wf-studio") -> argparse.ArgumentParser:
     from worldfoundry.cli.help import WorldFoundryArgumentParser
 
     parser = WorldFoundryArgumentParser(

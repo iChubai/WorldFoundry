@@ -17,7 +17,7 @@ Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归�
 
 从 `matrix-game-2-universal-action-validation` 起步，用官方 bench actions。不是 Matrix-Game 1 或 3。
 
-启动 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。
+启动 `wf run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。
 
 评测入口：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件游戏世界滚动生成质量）。
 
@@ -35,6 +35,6 @@ Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归�
 
 ## 在 WorldFoundry 中运行
 
-状态：**已验证 15 个 latent 帧的短流程一致性**；完整长度一致性及 benchmark 评分仍待完成。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。
+状态：**已验证 15 个 latent 帧的短流程一致性**；完整长度一致性及 benchmark 评分仍待完成。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `wf run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。
 
 <ModelRelatedRecipes modelId="matrix-game-2" locale="zh" />

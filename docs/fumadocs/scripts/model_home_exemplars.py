@@ -5,7 +5,7 @@ Facts only — every sentence is grounded in model-recipes-data.json
 Do not invent scores, leaderboards, or paper claims.
 
 WorldFoundry pages are inference contracts, not training write-ups.
-Prefer variant + ``worldfoundry-eval run``, then knobs, then env / prepare /
+Prefer variant + ``wf run``, then knobs, then env / prepare /
 license+VRAM. Omit pretraining hours, datasets, optimizer, and “how the
 authors trained it” unless one clause names a checkpoint.
 Do not add a "What this page does not claim" / "Limits" / "本页不声称" section.
@@ -27,10 +27,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `being-h05-2b-libero`. Launch `worldfoundry-eval run being-h05-2b`. Swap `being-h05-2b-robocasa` or the combined LIBERO+RoboCasa checkpoint only when comparing embodiments — the base `being-h05-2b` card is not the validated path.",
+                "Start on `being-h05-2b-libero`. Launch `wf run being-h05-2b`. Swap `being-h05-2b-robocasa` or the combined LIBERO+RoboCasa checkpoint only when comparing embodiments — the base `being-h05-2b` card is not the validated path.",
             ],
             "zh": [
-                "从 `being-h05-2b-libero` 开始。启动 `worldfoundry-eval run being-h05-2b`。比较跨本体时再换 `being-h05-2b-robocasa` 或 LIBERO+RoboCasa 组合权重；基座 `being-h05-2b` 不是已验证路径。",
+                "从 `being-h05-2b-libero` 开始。启动 `wf run being-h05-2b`。比较跨本体时再换 `being-h05-2b-robocasa` 或 LIBERO+RoboCasa 组合权重；基座 `being-h05-2b` 不是已验证路径。",
             ],
         },
         "contract_extra": {
@@ -57,10 +57,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `being-h07`. Launch `worldfoundry-eval run being-h07 --pipeline.task-profile vla`. Need a GPU-validated BeingBeyond route? Use [Being-H0.5](/docs/guides/supported-models/being-h05) instead.",
+                "Start on `being-h07`. Launch `wf run being-h07 --pipeline.task-profile vla`. Need a GPU-validated BeingBeyond route? Use [Being-H0.5](/docs/guides/supported-models/being-h05) instead.",
             ],
             "zh": [
-                "从 `being-h07` 开始。启动 `worldfoundry-eval run being-h07 --pipeline.task-profile vla`。需要 GPU 已验证的 BeingBeyond 路径时改走 [Being-H0.5](/zh/docs/guides/supported-models/being-h05)。",
+                "从 `being-h07` 开始。启动 `wf run being-h07 --pipeline.task-profile vla`。需要 GPU 已验证的 BeingBeyond 路径时改走 [Being-H0.5](/zh/docs/guides/supported-models/being-h05)。",
             ],
         },
         "contract_extra": {
@@ -87,10 +87,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on the V5.1 I2V line (`easyanimate_i2v` / `easyanimate-i2v`). Launch `worldfoundry-eval run easyanimate`. Pick `*-InP` weights for image-conditioned demos; EasyAnimateV5.1-7b-zh is the text-to-video weight — do not mix the two.",
+                "Start on the V5.1 I2V line (`easyanimate_i2v` / `easyanimate-i2v`). Launch `wf run easyanimate`. Pick `*-InP` weights for image-conditioned demos; EasyAnimateV5.1-7b-zh is the text-to-video weight — do not mix the two.",
             ],
             "zh": [
-                "从 V5.1 图生视频线（`easyanimate_i2v` / `easyanimate-i2v`）开始。启动 `worldfoundry-eval run easyanimate`。图像条件用 `*-InP` 权重；EasyAnimateV5.1-7b-zh 才是文生视频权重，不要混用。",
+                "从 V5.1 图生视频线（`easyanimate_i2v` / `easyanimate-i2v`）开始。启动 `wf run easyanimate`。图像条件用 `*-InP` 权重；EasyAnimateV5.1-7b-zh 才是文生视频权重，不要混用。",
             ],
         },
         "contract_extra": {
@@ -117,10 +117,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `pi0`. Launch `worldfoundry-eval run pi0`. This is the concrete π0 algorithm route, not a LeRobot zoo policy. LIBERO evidence sits on `pi05_libero` under openpi, not this card.",
+                "Start on `pi0`. Launch `wf run pi0`. This is the concrete π0 algorithm route, not a LeRobot zoo policy. LIBERO evidence sits on `pi05_libero` under openpi, not this card.",
             ],
             "zh": [
-                "从 `pi0` 开始。启动 `worldfoundry-eval run pi0`。这是具体的 π0 算法路由，不是 LeRobot policy-zoo。LIBERO 证据在 openpi 家族的 `pi05_libero`，不在本卡。",
+                "从 `pi0` 开始。启动 `wf run pi0`。这是具体的 π0 算法路由，不是 LeRobot policy-zoo。LIBERO 证据在 openpi 家族的 `pi05_libero`，不在本卡。",
             ],
         },
         "contract_extra": {
@@ -147,10 +147,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `pi0-fast` when you want discrete FAST tokens on the same PaliGemma backbone. Launch `worldfoundry-eval run pi0-fast`. Do not route this through LeRobot policy-zoo.",
+                "Start on `pi0-fast` when you want discrete FAST tokens on the same PaliGemma backbone. Launch `wf run pi0-fast`. Do not route this through LeRobot policy-zoo.",
             ],
             "zh": [
-                "需要同一 PaliGemma 骨干上的离散 FAST token 时选 `pi0-fast`。启动 `worldfoundry-eval run pi0-fast`。不要走 LeRobot policy-zoo。",
+                "需要同一 PaliGemma 骨干上的离散 FAST token 时选 `pi0-fast`。启动 `wf run pi0-fast`。不要走 LeRobot policy-zoo。",
             ],
         },
         "contract_extra": {
@@ -177,10 +177,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `pi05` for flow-matching decode on the open-world checkpoint. Launch `worldfoundry-eval run pi05`. The validated in-tree reference is `pi05_libero`.",
+                "Start on `pi05` for flow-matching decode on the open-world checkpoint. Launch `wf run pi05`. The validated in-tree reference is `pi05_libero`.",
             ],
             "zh": [
-                "从 `pi05` 开始，用开放世界 checkpoint 跑 flow-matching 解码。启动 `worldfoundry-eval run pi05`。树内已验证参考是 `pi05_libero`。",
+                "从 `pi05` 开始，用开放世界 checkpoint 跑 flow-matching 解码。启动 `wf run pi05`。树内已验证参考是 `pi05_libero`。",
             ],
         },
         "contract_extra": {
@@ -237,10 +237,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `openvla-7b`. Launch `worldfoundry-eval run openvla-7b`. Switch to `openvla-libero-10` and `unnorm_key=libero_10` only for LIBERO. Continuous / chunked OpenVLA is the [OpenVLA-OFT](/docs/guides/supported-models/openvla-oft) sibling.",
+                "Start on `openvla-7b`. Launch `wf run openvla-7b`. Switch to `openvla-libero-10` and `unnorm_key=libero_10` only for LIBERO. Continuous / chunked OpenVLA is the [OpenVLA-OFT](/docs/guides/supported-models/openvla-oft) sibling.",
             ],
             "zh": [
-                "从 `openvla-7b` 开始。启动 `worldfoundry-eval run openvla-7b`。只有打 LIBERO 时才换 `openvla-libero-10` 与 `unnorm_key=libero_10`。连续/分块线是姊妹卡 [OpenVLA-OFT](/zh/docs/guides/supported-models/openvla-oft)。",
+                "从 `openvla-7b` 开始。启动 `wf run openvla-7b`。只有打 LIBERO 时才换 `openvla-libero-10` 与 `unnorm_key=libero_10`。连续/分块线是姊妹卡 [OpenVLA-OFT](/zh/docs/guides/supported-models/openvla-oft)。",
             ],
         },
         "contract_extra": {
@@ -267,10 +267,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `cosmos-predict2-2b-video2world` unless you need the 14B variant. Launch `worldfoundry-eval run cosmos-predict-2`. Prefer [Cosmos Predict 2.5](/docs/guides/supported-models/cosmos-predict-2.5) unless you specifically need this v2 conditioner.",
+                "Start on `cosmos-predict2-2b-video2world` unless you need the 14B variant. Launch `wf run cosmos-predict-2`. Prefer [Cosmos Predict 2.5](/docs/guides/supported-models/cosmos-predict-2.5) unless you specifically need this v2 conditioner.",
             ],
             "zh": [
-                "从 `cosmos-predict2-2b-video2world` 开始，除非需要 14B。启动 `worldfoundry-eval run cosmos-predict-2`。除非明确需要 v2 conditioner，否则优先 [Cosmos Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5)。",
+                "从 `cosmos-predict2-2b-video2world` 开始，除非需要 14B。启动 `wf run cosmos-predict-2`。除非明确需要 v2 conditioner，否则优先 [Cosmos Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5)。",
             ],
         },
         "contract_extra": {
@@ -297,10 +297,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `cosmos-predict-2.5-2b`. Launch `worldfoundry-eval run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`. Use `cosmos-predict-2.5-14b` only when you accept that line still needs GPU output validation.",
+                "Start on `cosmos-predict-2.5-2b`. Launch `wf run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`. Use `cosmos-predict-2.5-14b` only when you accept that line still needs GPU output validation.",
             ],
             "zh": [
-                "从 `cosmos-predict-2.5-2b` 开始。启动 `worldfoundry-eval run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`。只有接受 14B 仍需 GPU 输出验证时才换 `cosmos-predict-2.5-14b`。",
+                "从 `cosmos-predict-2.5-2b` 开始。启动 `wf run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`。只有接受 14B 仍需 GPU 输出验证时才换 `cosmos-predict-2.5-14b`。",
             ],
         },
         "contract_extra": {
@@ -327,10 +327,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `cosmos3-nano`. Launch `worldfoundry-eval run cosmos3-nano`. Switch to `cosmos3-super` only when you need that scale. This infer-only recipe excludes reasoner, training, and vLLM serving.",
+                "Start on `cosmos3-nano`. Launch `wf run cosmos3-nano`. Switch to `cosmos3-super` only when you need that scale. This infer-only recipe excludes reasoner, training, and vLLM serving.",
             ],
             "zh": [
-                "从 `cosmos3-nano` 开始。启动 `worldfoundry-eval run cosmos3-nano`。需要更大规格再换 `cosmos3-super`。本条目是仅推理配方，不含 reasoner、训练与 vLLM serving。",
+                "从 `cosmos3-nano` 开始。启动 `wf run cosmos3-nano`。需要更大规格再换 `cosmos3-super`。本条目是仅推理配方，不含 reasoner、训练与 vLLM serving。",
             ],
         },
         "contract_extra": {
@@ -357,10 +357,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on the 2B edge-controlled variant. Launch `worldfoundry-eval run cosmos-transfer-2.5-2b` with a raw RGB control video.",
+                "Start on the 2B edge-controlled variant. Launch `wf run cosmos-transfer-2.5-2b` with a raw RGB control video.",
             ],
             "zh": [
-                "从 2B 边缘控制 variant 开始。启动 `worldfoundry-eval run cosmos-transfer-2.5-2b`，并提供原始 RGB 控制视频。",
+                "从 2B 边缘控制 variant 开始。启动 `wf run cosmos-transfer-2.5-2b`，并提供原始 RGB 控制视频。",
             ],
         },
         "contract_extra": {
@@ -387,10 +387,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `helios-distilled` for iteration. Launch `worldfoundry-eval run helios-distilled`. Switch to `helios-base` for quality (much longer runtime) or `helios-mid` in between. Helios does not expose keyboard or camera controls.",
+                "Start on `helios-distilled` for iteration. Launch `wf run helios-distilled`. Switch to `helios-base` for quality (much longer runtime) or `helios-mid` in between. Helios does not expose keyboard or camera controls.",
             ],
             "zh": [
-                "迭代从 `helios-distilled` 开始。启动 `worldfoundry-eval run helios-distilled`。要质量再换 `helios-base`（更慢），中间档是 `helios-mid`。Helios 不提供键盘或相机控制。",
+                "迭代从 `helios-distilled` 开始。启动 `wf run helios-distilled`。要质量再换 `helios-base`（更慢），中间档是 `helios-mid`。Helios 不提供键盘或相机控制。",
             ],
         },
         "contract_extra": {
@@ -417,10 +417,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `cogvideox-2b-t2v` for a fast prompt. Launch `worldfoundry-eval run cogvideox-2b-t2v`. Move to `cogvideox-5b-t2v` for quality or `cogvideox-5b-i2v` to animate a still.",
+                "Start on `cogvideox-2b-t2v` for a fast prompt. Launch `wf run cogvideox-2b-t2v`. Move to `cogvideox-5b-t2v` for quality or `cogvideox-5b-i2v` to animate a still.",
             ],
             "zh": [
-                "快速试 prompt 从 `cogvideox-2b-t2v` 开始。启动 `worldfoundry-eval run cogvideox-2b-t2v`。要质量换 `cogvideox-5b-t2v`，给静帧加运动用 `cogvideox-5b-i2v`。",
+                "快速试 prompt 从 `cogvideox-2b-t2v` 开始。启动 `wf run cogvideox-2b-t2v`。要质量换 `cogvideox-5b-t2v`，给静帧加运动用 `cogvideox-5b-i2v`。",
             ],
         },
         "contract_extra": {
@@ -447,10 +447,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `ltx-video-i2v`. Launch `worldfoundry-eval run ltx-video-i2v`. Family-level T2V labels are upstream metadata, not a current local path.",
+                "Start on `ltx-video-i2v`. Launch `wf run ltx-video-i2v`. Family-level T2V labels are upstream metadata, not a current local path.",
             ],
             "zh": [
-                "从 `ltx-video-i2v` 开始。启动 `worldfoundry-eval run ltx-video-i2v`。系列级文生视频标签是上游能力元数据，不是当前本地路径。",
+                "从 `ltx-video-i2v` 开始。启动 `wf run ltx-video-i2v`。系列级文生视频标签是上游能力元数据，不是当前本地路径。",
             ],
         },
         "contract_extra": {
@@ -477,10 +477,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `wan2.1-t2v-1.3b`. Launch `worldfoundry-eval run wan2.1-t2v-1.3b`. Use `wan2.1-t2v-14b` or I2V 480p/720p only when you accept Runner parity pending on those lines.",
+                "Start on `wan2.1-t2v-1.3b`. Launch `wf run wan2.1-t2v-1.3b`. Use `wan2.1-t2v-14b` or I2V 480p/720p only when you accept Runner parity pending on those lines.",
             ],
             "zh": [
-                "从 `wan2.1-t2v-1.3b` 开始。启动 `worldfoundry-eval run wan2.1-t2v-1.3b`。只有接受那几条仍为 Runner 一致性待确认时，才换 `wan2.1-t2v-14b` 或 I2V 480p/720p。",
+                "从 `wan2.1-t2v-1.3b` 开始。启动 `wf run wan2.1-t2v-1.3b`。只有接受那几条仍为 Runner 一致性待确认时，才换 `wan2.1-t2v-14b` 或 I2V 480p/720p。",
             ],
         },
         "contract_extra": {
@@ -507,10 +507,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `wan2.1-vace`. Launch `worldfoundry-eval run wan2.1-vace`. Use this card for reference-image create/edit, not the plain Wan2.1 T2V backbone.",
+                "Start on `wan2.1-vace`. Launch `wf run wan2.1-vace`. Use this card for reference-image create/edit, not the plain Wan2.1 T2V backbone.",
             ],
             "zh": [
-                "从 `wan2.1-vace` 开始。启动 `worldfoundry-eval run wan2.1-vace`。参考图创建/编辑走本卡，不要当成普通 Wan2.1 文生视频骨干。",
+                "从 `wan2.1-vace` 开始。启动 `wf run wan2.1-vace`。参考图创建/编辑走本卡，不要当成普通 Wan2.1 文生视频骨干。",
             ],
         },
         "contract_extra": {
@@ -537,10 +537,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `wan2.2-ti2v-5b`. Launch `worldfoundry-eval run wan2.2-ti2v-5b` — that variant uses the recorded 5B contract. Use `wan2.2-t2v-a14b` / `wan2.2-i2v-a14b` only when you accept Runner parity pending. No V2V on this card.",
+                "Start on `wan2.2-ti2v-5b`. Launch `wf run wan2.2-ti2v-5b` — that variant uses the recorded 5B contract. Use `wan2.2-t2v-a14b` / `wan2.2-i2v-a14b` only when you accept Runner parity pending. No V2V on this card.",
             ],
             "zh": [
-                "从 `wan2.2-ti2v-5b` 开始。启动 `worldfoundry-eval run wan2.2-ti2v-5b`——该 variant 使用已记录的 5B 契约。只有接受 Runner 一致性待确认时才换 `wan2.2-t2v-a14b` / `wan2.2-i2v-a14b`。本卡没有 V2V。",
+                "从 `wan2.2-ti2v-5b` 开始。启动 `wf run wan2.2-ti2v-5b`——该 variant 使用已记录的 5B 契约。只有接受 Runner 一致性待确认时才换 `wan2.2-t2v-a14b` / `wan2.2-i2v-a14b`。本卡没有 V2V。",
             ],
         },
         "contract_extra": {
@@ -567,10 +567,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `wan-2p7` when local Wan weights are not an option. Launch `worldfoundry-eval run wan-2p7`. For a local verified clip use [Wan2.2](/docs/guides/supported-models/wan2.2) TI2V 5B.",
+                "Start on `wan-2p7` when local Wan weights are not an option. Launch `wf run wan-2p7`. For a local verified clip use [Wan2.2](/docs/guides/supported-models/wan2.2) TI2V 5B.",
             ],
             "zh": [
-                "本地 Wan 权重不可用时从 `wan-2p7` 开始。启动 `worldfoundry-eval run wan-2p7`。本地已验证片段请用 [Wan2.2](/zh/docs/guides/supported-models/wan2.2) 的 TI2V 5B。",
+                "本地 Wan 权重不可用时从 `wan-2p7` 开始。启动 `wf run wan-2p7`。本地已验证片段请用 [Wan2.2](/zh/docs/guides/supported-models/wan2.2) 的 TI2V 5B。",
             ],
         },
         "contract_extra": {
@@ -597,10 +597,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `hunyuanvideo-t2v`. Launch `worldfoundry-eval run hunyuanvideo-t2v`. Use `hunyuanvideo-i2v` when a still is the conditioner. The 1.5 revision is a sibling card.",
+                "Start on `hunyuanvideo-t2v`. Launch `wf run hunyuanvideo-t2v`. Use `hunyuanvideo-i2v` when a still is the conditioner. The 1.5 revision is a sibling card.",
             ],
             "zh": [
-                "从 `hunyuanvideo-t2v` 开始。启动 `worldfoundry-eval run hunyuanvideo-t2v`。有静帧条件时用 `hunyuanvideo-i2v`。1.5 修订版是姊妹卡。",
+                "从 `hunyuanvideo-t2v` 开始。启动 `wf run hunyuanvideo-t2v`。有静帧条件时用 `hunyuanvideo-i2v`。1.5 修订版是姊妹卡。",
             ],
         },
         "contract_extra": {
@@ -627,10 +627,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `hunyuanvideo-1.5-t2v`. Launch `worldfoundry-eval run hunyuanvideo-1.5-t2v`. Use `hunyuanvideo-1.5-i2v` only after accepting the gated FLUX.1-Redux-dev terms.",
+                "Start on `hunyuanvideo-1.5-t2v`. Launch `wf run hunyuanvideo-1.5-t2v`. Use `hunyuanvideo-1.5-i2v` only after accepting the gated FLUX.1-Redux-dev terms.",
             ],
             "zh": [
-                "从 `hunyuanvideo-1.5-t2v` 开始。启动 `worldfoundry-eval run hunyuanvideo-1.5-t2v`。只有接受 gated FLUX.1-Redux-dev 条款后才跑 `hunyuanvideo-1.5-i2v`。",
+                "从 `hunyuanvideo-1.5-t2v` 开始。启动 `wf run hunyuanvideo-1.5-t2v`。只有接受 gated FLUX.1-Redux-dev 条款后才跑 `hunyuanvideo-1.5-i2v`。",
             ],
         },
         "contract_extra": {
@@ -657,10 +657,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `gr00t-n1.7-libero` when you want the recorded CUDA predict. Launch `worldfoundry-eval run gr00t`. Do not start from N1-2B for that evidence.",
+                "Start on `gr00t-n1.7-libero` when you want the recorded CUDA predict. Launch `wf run gr00t`. Do not start from N1-2B for that evidence.",
             ],
             "zh": [
-                "要跑已记录的 CUDA predict 时从 `gr00t-n1.7-libero` 开始。启动 `worldfoundry-eval run gr00t`。不要从 N1-2B 起步去对那条证据。",
+                "要跑已记录的 CUDA predict 时从 `gr00t-n1.7-libero` 开始。启动 `wf run gr00t`。不要从 N1-2B 起步去对那条证据。",
             ],
         },
         "contract_extra": {
@@ -687,10 +687,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `diffusion-policy` for the low-dimensional PushT baseline. Launch `worldfoundry-eval run diffusion-policy`. Image-based Diffusion Policy variants are not in-tree.",
+                "Start on `diffusion-policy` for the low-dimensional PushT baseline. Launch `wf run diffusion-policy`. Image-based Diffusion Policy variants are not in-tree.",
             ],
             "zh": [
-                "低维 PushT 基线从 `diffusion-policy` 开始。启动 `worldfoundry-eval run diffusion-policy`。图像版 Diffusion Policy variant 不在树内。",
+                "低维 PushT 基线从 `diffusion-policy` 开始。启动 `wf run diffusion-policy`。图像版 Diffusion Policy variant 不在树内。",
             ],
         },
         "contract_extra": {
@@ -717,10 +717,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on the chunk-wise student for text-to-video. Launch `worldfoundry-eval run causal-forcing`. Image-to-video is frame-wise only — switch `config_path` / `checkpoint_path` before passing a still. This is not Self-Forcing or Rolling-Forcing.",
+                "Start on the chunk-wise student for text-to-video. Launch `wf run causal-forcing`. Image-to-video is frame-wise only — switch `config_path` / `checkpoint_path` before passing a still. This is not Self-Forcing or Rolling-Forcing.",
             ],
             "zh": [
-                "文生视频从 chunk-wise 学生开始。启动 `worldfoundry-eval run causal-forcing`。图生视频只支持 frame-wise——传静帧前先改 `config_path` / `checkpoint_path`。这不是 Self-Forcing 或 Rolling-Forcing。",
+                "文生视频从 chunk-wise 学生开始。启动 `wf run causal-forcing`。图生视频只支持 frame-wise——传静帧前先改 `config_path` / `checkpoint_path`。这不是 Self-Forcing 或 Rolling-Forcing。",
             ],
         },
         "contract_extra": {
@@ -747,10 +747,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `dust3r` for uncalibrated two-view or multi-view reconstruction. Launch `worldfoundry-eval run dust3r`. Streaming metric state is [CUT3R](/docs/guides/supported-models/cut3r), not this pairwise card.",
+                "Start on `dust3r` for uncalibrated two-view or multi-view reconstruction. Launch `wf run dust3r`. Streaming metric state is [CUT3R](/docs/guides/supported-models/cut3r), not this pairwise card.",
             ],
             "zh": [
-                "无标定两视图/多视图重建从 `dust3r` 开始。启动 `worldfoundry-eval run dust3r`。流式米制状态是 [CUT3R](/zh/docs/guides/supported-models/cut3r)，不是这张成对卡片。",
+                "无标定两视图/多视图重建从 `dust3r` 开始。启动 `wf run dust3r`。流式米制状态是 [CUT3R](/zh/docs/guides/supported-models/cut3r)，不是这张成对卡片。",
             ],
         },
         "contract_extra": {
@@ -777,10 +777,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `go1`. Launch `worldfoundry-eval run go1`. This is not [Genie Envisioner](/docs/guides/supported-models/genie-envisioner) and not [Galaxea G0Plus](/docs/guides/supported-models/galaxea-vla).",
+                "Start on `go1`. Launch `wf run go1`. This is not [Genie Envisioner](/docs/guides/supported-models/genie-envisioner) and not [Galaxea G0Plus](/docs/guides/supported-models/galaxea-vla).",
             ],
             "zh": [
-                "从 `go1` 开始。启动 `worldfoundry-eval run go1`。这不是 [Genie Envisioner](/zh/docs/guides/supported-models/genie-envisioner)，也不是 [Galaxea G0Plus](/zh/docs/guides/supported-models/galaxea-vla)。",
+                "从 `go1` 开始。启动 `wf run go1`。这不是 [Genie Envisioner](/zh/docs/guides/supported-models/genie-envisioner)，也不是 [Galaxea G0Plus](/zh/docs/guides/supported-models/galaxea-vla)。",
             ],
         },
         "contract_extra": {
@@ -807,10 +807,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `xvla`. Launch `worldfoundry-eval run xvla`. Always pass the `domain_id` that matches the embodiment/checkpoint.",
+                "Start on `xvla`. Launch `wf run xvla`. Always pass the `domain_id` that matches the embodiment/checkpoint.",
             ],
             "zh": [
-                "从 `xvla` 开始。启动 `worldfoundry-eval run xvla`。必须传入与本体/checkpoint 匹配的 `domain_id`。",
+                "从 `xvla` 开始。启动 `wf run xvla`。必须传入与本体/checkpoint 匹配的 `domain_id`。",
             ],
         },
         "contract_extra": {
@@ -837,10 +837,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `open-sora` for text-to-video only. Launch `worldfoundry-eval run open-sora`. There is no local I2V or V2V on this card. Not [Open-Sora-Plan](/docs/guides/supported-models/open-sora-plan).",
+                "Start on `open-sora` for text-to-video only. Launch `wf run open-sora`. There is no local I2V or V2V on this card. Not [Open-Sora-Plan](/docs/guides/supported-models/open-sora-plan).",
             ],
             "zh": [
-                "只作文生视频时从 `open-sora` 开始。启动 `worldfoundry-eval run open-sora`。本卡没有本地 I2V 或 V2V。不是 [Open-Sora-Plan](/zh/docs/guides/supported-models/open-sora-plan)。",
+                "只作文生视频时从 `open-sora` 开始。启动 `wf run open-sora`。本卡没有本地 I2V 或 V2V。不是 [Open-Sora-Plan](/zh/docs/guides/supported-models/open-sora-plan)。",
             ],
         },
         "contract_extra": {
@@ -867,10 +867,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `matrix-game-1` only when you need the first-generation card. Launch `worldfoundry-eval run matrix-game-1`. Prefer [Matrix-Game 2](/docs/guides/supported-models/matrix-game-2) or [Matrix-Game 3](/docs/guides/supported-models/matrix-game-3) for verified runners.",
+                "Start on `matrix-game-1` only when you need the first-generation card. Launch `wf run matrix-game-1`. Prefer [Matrix-Game 2](/docs/guides/supported-models/matrix-game-2) or [Matrix-Game 3](/docs/guides/supported-models/matrix-game-3) for verified runners.",
             ],
             "zh": [
-                "只有需要第一代卡片时从 `matrix-game-1` 开始。启动 `worldfoundry-eval run matrix-game-1`。要已验证 runner 请优先 [Matrix-Game 2](/zh/docs/guides/supported-models/matrix-game-2) 或 [Matrix-Game 3](/zh/docs/guides/supported-models/matrix-game-3)。",
+                "只有需要第一代卡片时从 `matrix-game-1` 开始。启动 `wf run matrix-game-1`。要已验证 runner 请优先 [Matrix-Game 2](/zh/docs/guides/supported-models/matrix-game-2) 或 [Matrix-Game 3](/zh/docs/guides/supported-models/matrix-game-3)。",
             ],
         },
         "contract_extra": {
@@ -897,10 +897,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `matrix-game-2-universal-action-validation`. Launch `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`. Sibling cards: Matrix-Game 1 and 3.",
+                "Start on `matrix-game-2-universal-action-validation`. Launch `wf run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`. Sibling cards: Matrix-Game 1 and 3.",
             ],
             "zh": [
-                "从 `matrix-game-2-universal-action-validation` 开始。启动 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。姊妹卡：Matrix-Game 1 与 3。",
+                "从 `matrix-game-2-universal-action-validation` 开始。启动 `wf run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。姊妹卡：Matrix-Game 1 与 3。",
             ],
         },
         "contract_extra": {
@@ -927,10 +927,10 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
         },
         "use_cases": {
             "en": [
-                "Start on `matrix-game-3`. Launch `worldfoundry-eval run matrix-game-3 --pipeline.task-profile official-cityscape-image`.",
+                "Start on `matrix-game-3`. Launch `wf run matrix-game-3 --pipeline.task-profile official-cityscape-image`.",
             ],
             "zh": [
-                "从 `matrix-game-3` 开始。启动 `worldfoundry-eval run matrix-game-3 --pipeline.task-profile official-cityscape-image`。",
+                "从 `matrix-game-3` 开始。启动 `wf run matrix-game-3 --pipeline.task-profile official-cityscape-image`。",
             ],
         },
         "contract_extra": {

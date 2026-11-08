@@ -23,7 +23,7 @@ WorldFoundry **聚合已准备的 `score_dir` 文件**或导入官方 JSON。VLM
 导入官方 JSON（严格覆盖）：
 
 ```bash
-WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
+WORLDFOUNDRY_CAMERABENCH_STRICT=1 wf zoo benchmark-run \
   --benchmark-id camerabench \
   --mode official-validation \
   --official-results-path <official_results.json> \
@@ -35,7 +35,7 @@ WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
 聚合已准备的分数目录：
 
 ```bash
-WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
+WORLDFOUNDRY_CAMERABENCH_STRICT=1 wf zoo benchmark-run \
   --benchmark-id camerabench \
   --mode official-validation \
   --score-dir <score_dir> \

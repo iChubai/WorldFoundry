@@ -135,7 +135,7 @@ runner:
     dimension_arg: --dimension
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldArenaContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

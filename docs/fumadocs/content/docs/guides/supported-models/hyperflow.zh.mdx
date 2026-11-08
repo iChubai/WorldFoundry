@@ -35,7 +35,7 @@ CLI task profile：`t2va`、`fl2va`、`ref2va`。绑定的 pipeline 类是 `Hype
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run hyperflow --pipeline.task-profile t2va` 采样视频。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run hyperflow --pipeline.task-profile t2va` 采样视频。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 记录的权重仓库包括 `videorebirth/hyperflow`、`MiniMaxAI/MiniMax-H3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hyperflow`；下载缺失的公开权重时加 `--download`。
 

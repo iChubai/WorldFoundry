@@ -137,7 +137,7 @@ function shellWord(value: string) {
 
 function runCommand(modelId: string, task: ModelRecipeTask) {
   const lines = [
-    'worldfoundry-eval run \\',
+    'wf run \\',
     `  ${shellWord(modelId)} \\`,
     `  --pipeline.task-profile ${shellWord(task.id)} \\`,
   ];

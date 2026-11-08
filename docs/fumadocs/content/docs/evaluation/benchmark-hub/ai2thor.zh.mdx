@@ -7,7 +7,7 @@ AI2-THOR（艾伦人工智能研究所，Ai2）是面向具身 AI 的 **Unity** 
 
 论文：[AI2-THOR: An Interactive 3D Environment for Visual AI](https://arxiv.org/abs/1712.05474)。项目：[ai2thor.allenai.org](https://ai2thor.allenai.org/)。代码：[allenai/ai2thor](https://github.com/allenai/ai2thor)（Apache-2.0）。
 
-WorldFoundry **评测**原生闭环：`worldfoundry-eval embodied run` 启动 Unity 构建，逐步执行已经输出模拟器 token 的策略。仓内配置（`FloorPlan1`–`FloorPlan3`）只做**接线检查**，不是 ALFRED/TEACh。也可以通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` **导入**已有 rollout 导出。本页**不跑** VLA 推理——策略或策略服务由你提供。
+WorldFoundry **评测**原生闭环：`wf embodied run` 启动 Unity 构建，逐步执行已经输出模拟器 token 的策略。仓内配置（`FloorPlan1`–`FloorPlan3`）只做**接线检查**，不是 ALFRED/TEACh。也可以通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` **导入**已有 rollout 导出。本页**不跑** VLA 推理——策略或策略服务由你提供。
 
 <BenchmarkPageSections id="ai2thor" locale="zh" />
 
@@ -16,14 +16,14 @@ WorldFoundry **评测**原生闭环：`worldfoundry-eval embodied run` 启动 Un
 闭环接线（需要 Unity 包、模拟器缓存，以及 CloudRendering 或 X11 显示）：
 
 ```bash
-worldfoundry-eval embodied run \
+wf embodied run \
   --config worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
 ```
 
 导入已有导出：
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id ai2thor \
   --mode official-validation \
   --official-results-path <official_results.json> \

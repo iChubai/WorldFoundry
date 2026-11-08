@@ -41,7 +41,7 @@ CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPip
 
 ## 在 WorldFoundry 中运行
 
-catalog 启动命令是 `worldfoundry-eval run local-checkpoint --pipeline.task-profile rocket-science-rollout`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+catalog 启动命令是 `wf run local-checkpoint --pipeline.task-profile rocket-science-rollout`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 运行环境是独立 profile `mira`（Python 3.12，CUDA 12.8，torch==2.8.0+cu128）。
 

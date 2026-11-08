@@ -20,7 +20,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: worldmodelbench
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id worldmodelbench --mode contract
+  contract_validation_command: wf zoo benchmark-run --benchmark-id worldmodelbench --mode contract
     --output-dir tmp/benchmark_zoo/benchmark_contract/worldmodelbench --json
   open_source_status: in_tree_runtime
   official_benchmark_verified: false
@@ -86,7 +86,7 @@ metadata:
     runtime_verified: false
     surface: worldmodelbench_official_in_tree
     normalizer_verified: true
-  official_result_entrypoint: worldfoundry-eval zoo benchmark-run
+  official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
     target: worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
     status: implemented
@@ -103,13 +103,13 @@ metadata:
       full_test_harness_ready: true
     official_runtime_execution:
       status: implemented
-      command: worldfoundry-eval zoo benchmark-run --benchmark-id worldmodelbench --mode official-run
+      command: wf zoo benchmark-run --benchmark-id worldmodelbench --mode official-run
         --benchmark-data-root <worldmodelbench_data_root> --generated-artifact-dir <generated_videos> --env
         WORLDFOUNDRY_WORLDMODELBENCH_JUDGE=<VILA_checkpoint_or_HF_model_id> --output-dir <out> --json
       checkpoint_env: WORLDFOUNDRY_WORLDMODELBENCH_JUDGE
       pythonpath_note: Uses WorldFoundry's in-tree VILA runtime; no external VILA checkout is required.
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

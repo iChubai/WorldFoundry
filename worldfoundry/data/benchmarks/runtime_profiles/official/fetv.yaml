@@ -84,7 +84,7 @@ optional_imports:
 - fairscale
 - ruamel.yaml
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

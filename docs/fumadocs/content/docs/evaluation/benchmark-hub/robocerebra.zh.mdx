@@ -7,14 +7,14 @@ RoboCerebra（北京航空航天大学 CoLa 实验室，NeurIPS 2025）考察长
 
 论文：[RoboCerebra](https://arxiv.org/abs/2506.06677)。项目：[robocerebra.github.io](https://robocerebra.github.io/)。代码：[buaa-colalab/RoboCerebra](https://github.com/buaa-colalab/RoboCerebra)。
 
-WorldFoundry **导入**官方结果导出（`worldfoundry-eval zoo benchmark-run --mode official-validation`）。它**不跑**捆绑的 LIBERO 模拟器、不采集 rollout，也不托管分层 VLM 规划器 + VLA 控制器。若要数字可比较，请在导出上写明六条件划分。
+WorldFoundry **导入**官方结果导出（`wf zoo benchmark-run --mode official-validation`）。它**不跑**捆绑的 LIBERO 模拟器、不采集 rollout，也不托管分层 VLM 规划器 + VLA 控制器。若要数字可比较，请在导出上写明六条件划分。
 
 <BenchmarkPageSections id="robocerebra" locale="zh" />
 
 ## 如何运行
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id robocerebra \
   --mode official-validation \
   --official-results-path <official_results.json> \

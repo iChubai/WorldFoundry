@@ -215,7 +215,7 @@ runner:
     input_kind: worldolympiad_case_root_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldOlympiadContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

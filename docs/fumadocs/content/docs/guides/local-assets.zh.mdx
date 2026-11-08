@@ -7,7 +7,7 @@ description: 从哪里查来源、下载到哪里、用什么命令准备 checkp
 
 当命令提示缺 checkpoint、dataset、metric 权重、生成输出或官方结果文件时，优先看这一页。WorldFoundry 把这些大型或带 license 的文件放在 git 外；仓库内保存代码和 manifest，本机或共享存储保存 manifest 引用的资产。
 
-典型路径：用 `worldfoundry-eval zoo ... --json` 查看模型或 benchmark ID；评测时再生成单个 benchmark 的 asset plan；只补齐本次运行需要的路径。使用框架不需要提前准备所有 benchmark 资产。统一 conda 环境见 [环境配置](/zh/docs/reference/environments)。
+典型路径：用 `wf zoo ... --json` 查看模型或 benchmark ID；评测时再生成单个 benchmark 的 asset plan；只补齐本次运行需要的路径。使用框架不需要提前准备所有 benchmark 资产。统一 conda 环境见 [环境配置](/zh/docs/reference/environments)。
 
 安装 Hugging Face Hub 包。`hf` / `huggingface-cli` 是可选入口；下载脚本会优先用 CLI，缺少时回退到 `huggingface_hub.snapshot_download`：
 
@@ -131,7 +131,7 @@ official_sources:
 `checkpoints` / `checkpoint.repos[].id` 是要下载的仓库；`sha` 钉 revision；`runtime_profile` 指向期望本地路径与 env。同一信息也在 CLI JSON 里：
 
 ```bash
-worldfoundry-eval zoo model-show --model-id matrix-game-2 --json
+wf zoo model-show --model-id matrix-game-2 --json
 ```
 
 落盘后大致是：
@@ -175,7 +175,7 @@ runner:
 `dataset_refs[].repo_id` 是 HF 下载源；`path` 是数据根下的期望相对路径；`required_assets` / `*_env` 列出其余要准备的东西。把 catalog + task + profile 合成清单：
 
 ```bash
-worldfoundry-eval zoo benchmark-show --benchmark-id libero --json
+wf zoo benchmark-show --benchmark-id libero --json
 
 python scripts/setup/prepare_benchmark_assets.py \
   --benchmark-id libero \
@@ -281,7 +281,7 @@ UniDepth V2 与 UniK3D 权重采用 CC-BY-NC-4.0；下载或再分发前需要�
 先查看准确 URL、解析后路径、大小校验和 export 命令，不执行下载：
 
 ```bash
-worldfoundry-eval models assets \
+wf models assets \
   --capability sam2 \
   --capability mobile_sam \
   --capability repvit_sam \
@@ -295,7 +295,7 @@ worldfoundry-eval models assets \
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
-worldfoundry-eval models assets \
+wf models assets \
   --capability sam2 \
   --capability mobile_sam \
   --capability repvit_sam \
@@ -308,13 +308,13 @@ worldfoundry-eval models assets \
 先 plan，确认存储与 license 后再 execute：
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-2 \
   --cache-dir "${WORLDFOUNDRY_HFD_ROOT}" \
   --check-local \
   --json
 
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-2 \
   --cache-dir "${WORLDFOUNDRY_HFD_ROOT}" \
   --execute \
@@ -365,7 +365,7 @@ bash scripts/setup/link_hf_checkpoints.sh \
 的 cache 不会把 K=20 或 SSM 模型误报为 ready：
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id echo-memory-context-k1 \
   --check-local \
   --json
@@ -409,12 +409,12 @@ hf download depth-anything/DA3NESTED-GIANT-LARGE-1.1 \
 不加载模型张量即可检查两个 recipe 的本地资产：
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-3.5-first-person \
   --check-local \
   --json
 
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-3.5-third-person \
   --check-local \
   --json

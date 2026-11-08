@@ -279,7 +279,7 @@ runner:
     accepts_generated_artifacts: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

@@ -46,14 +46,14 @@ class Capture:
 CAPTURES = (
     Capture(
         filename="worldfoundry-eval-help.png",
-        display_lines=("$ worldfoundry-eval --help",),
+        display_lines=("$ wf --help",),
         arguments=("--help",),
         columns=120,
     ),
     Capture(
         filename="model-readiness.png",
         display_lines=(
-            "$ worldfoundry-eval zoo model-show \\",
+            "$ wf zoo model-show \\",
             "    --manifest-dir worldfoundry/data/models/catalog \\",
             "    --model-id self-forcing",
         ),

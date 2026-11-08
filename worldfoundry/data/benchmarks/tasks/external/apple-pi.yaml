@@ -21,7 +21,7 @@ metadata:
   benchmark_id: apple-pi
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:ApplePIContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/apple_pi/run_apple_pi_official_runner.py
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id apple-pi --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/apple-pi --json
+  contract_validation_command: wf zoo benchmark-run --benchmark-id apple-pi --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/apple-pi --json
   runtime:
     kind: in_tree_model_backed
     evaluator: worldfoundry.evaluation.tasks.execution.runners.apple_pi.apple_pi_runtime:evaluate_native_apple_pi

@@ -226,7 +226,7 @@ result["cuda_device_count"] = torch.cuda.device_count()
 print(json.dumps(result, sort_keys=True))
 PY
   fi
-  conda run -p "$ENV_PREFIX" worldfoundry-eval zoo models --json >/dev/null
+  conda run -p "$ENV_PREFIX" wf zoo models --json >/dev/null
 fi
 
 for model_id in ${MODELS[@]+"${MODELS[@]}"}; do

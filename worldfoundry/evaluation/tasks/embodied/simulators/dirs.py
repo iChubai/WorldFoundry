@@ -39,8 +39,8 @@ def ensure_license(license_id: str, *, url: str, description: str) -> None:
     if not sys.stdin.isatty():
         sys.stderr.write(
             "Non-interactive context (no TTY).  To proceed, re-run with one of:\n"
-            f"  worldfoundry-eval embodied run ... --accept-license {license_id}\n"
-            f"  {ACCEPTED_LICENSES_ENV}={license_id} worldfoundry-eval embodied run ...\n"
+            f"  wf embodied run ... --accept-license {license_id}\n"
+            f"  {ACCEPTED_LICENSES_ENV}={license_id} wf embodied run ...\n"
         )
         raise SystemExit(1)
 

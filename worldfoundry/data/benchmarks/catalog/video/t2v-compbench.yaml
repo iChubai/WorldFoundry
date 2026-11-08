@@ -151,7 +151,7 @@ runner:
     input_kind: generated_video_root_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:T2VCompBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -239,7 +239,7 @@ base_model_dependency_preflight:
   - Full suite requires 1,400 generated videos and the LLaVA, depth/SAM, and DOT evaluator assets.
   missing: []
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

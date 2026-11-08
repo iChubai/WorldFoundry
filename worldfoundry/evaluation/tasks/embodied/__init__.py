@@ -1,6 +1,6 @@
 """Embodied-action evaluation (VLA / VA / VAM / WAM).
 
-Closed-loop embodied benchmarks use in-tree simulators and ``worldfoundry-eval embodied run``.
+Closed-loop embodied benchmarks use in-tree simulators and ``wf embodied run``.
 Upstream harness code will be vendored under ``thirdparty/vla-evaluation-harness/``.
 """
 

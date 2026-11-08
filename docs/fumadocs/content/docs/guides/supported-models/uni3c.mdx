@@ -39,7 +39,7 @@ Choose the camera-only or unified camera-plus-human route and provide the matchi
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run uni3c --pipeline.task-profile image-camera-control-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run uni3c --pipeline.task-profile image-camera-control-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `ewrfcas/Uni3C`, `Wan-AI/Wan2.1-I2V-14B-720P-Diffusers`, and `theFoxofSky/RealisDance-DiT`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh uni3c`. Add `--download` to fetch missing public checkpoints.
 

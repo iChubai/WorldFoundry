@@ -17,7 +17,7 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 ## 用来做什么
 
-把 SCOPE 当动作条件世界路径来跑。启动 `worldfoundry-eval run scope`，任务 profile 为 `interactive-world-model`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
+把 SCOPE 当动作条件世界路径来跑。启动 `wf run scope`，任务 profile 为 `interactive-world-model`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
 
 评测看 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)。
 
@@ -27,6 +27,6 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 ## 在 WorldFoundry 中运行
 
-跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。 把 `zizhaotong/SCOPE` 就位到本地——运行时不代下权重。 启动 `worldfoundry-eval run scope`，任务 profile 为 `interactive-world-model`。
+跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。 把 `zizhaotong/SCOPE` 就位到本地——运行时不代下权重。 启动 `wf run scope`，任务 profile 为 `interactive-world-model`。
 
 <ModelRelatedRecipes modelId="scope" locale="zh" />

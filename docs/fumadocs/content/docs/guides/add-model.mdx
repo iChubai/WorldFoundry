@@ -33,7 +33,7 @@ Finally, catalog metadata is the public record. The YAML under `worldfoundry/dat
 
 ## The runnable route contract
 
-WorldFoundry resolves every runnable method through the same public contract. A method is runnable only when a concrete pipeline class can be imported. You name that class with `pipeline_target` (`module:Class`) or with a `pipeline_binding` id that bindings.py already knows. If neither is present, `worldfoundry-eval run <model-id>` will fail before any GPU work starts, and that is intentional.
+WorldFoundry resolves every runnable method through the same public contract. A method is runnable only when a concrete pipeline class can be imported. You name that class with `pipeline_target` (`module:Class`) or with a `pipeline_binding` id that bindings.py already knows. If neither is present, `wf run <model-id>` will fail before any GPU work starts, and that is intentional.
 
 A runtime profile is not a substitute for that route. Profiles describe conda or Docker environment, checkpoint roles, launch commands, and execution metadata. They help a machine *prepare* to run. They do not, by themselves, count as “this model is integrated.” A catalog row that only lists a profile and no pipeline will stay planned or blocked.
 
@@ -47,7 +47,7 @@ Add the operator in the same change set. Even a first-pass operator that only ch
 
 Place the inference implementation according to its owner. Native diffusion components, recipes and sampling strategies go under their canonical roles in `base_models/diffusion_model/`; product orchestration goes under `synthesis/visual_generation/`. Perception and 3D helpers go under their corresponding `base_models/` families. Do not commit a second copy of the architecture under `cache/` and then import it from there. If the runner needs Python modules, those modules live under `worldfoundry/` and get reviewed with the rest of the PR.
 
-Register the route. The simplest form is a `pipeline_target` on the catalog YAML. If several aliases or a runtime profile should share one class, add or update a binding under `worldfoundry/data/models/bindings/pipelines/` and let `bindings.py` resolve it. The generic benchmark runner adapts pipeline calls in `worldfoundry/evaluation/models/pipelines/invocation.py`. Update that adapter only when the new pipeline needs an invocation form it does not already support. A working `worldfoundry-eval run <model-id>` path is the milestone.
+Register the route. The simplest form is a `pipeline_target` on the catalog YAML. If several aliases or a runtime profile should share one class, add or update a binding under `worldfoundry/data/models/bindings/pipelines/` and let `bindings.py` resolve it. The generic benchmark runner adapts pipeline calls in `worldfoundry/evaluation/models/pipelines/invocation.py`. Update that adapter only when the new pipeline needs an invocation form it does not already support. A working `wf run <model-id>` path is the milestone.
 
 Write or update the catalog entry last, after the class names exist, so the YAML cannot claim a target that does not import. Record source URLs, license, Hugging Face `repo_id`s, local `checkpoint` roles, tasks, `runtime_profile`, and an honest `integration.status`. Use `planned` until a check report exists. Use `blocked` when a missing license, checkpoint, API key, or GPU class prevents a run. Use `integrated` only after the required checks pass and the report hashes still match the current manifest.
 
@@ -64,9 +64,9 @@ If the official demo has a published command line you can compare against, add a
 After the YAML is in the catalog tree, confirm the zoo can see it. From the unified environment:
 
 ```bash
-worldfoundry-eval zoo models --json
-worldfoundry-eval zoo model-show --model-id <model-id-or-alias> --include-manifest --json
-worldfoundry-eval zoo model-specs --model-id <model-id> --json
+wf zoo models --json
+wf zoo model-show --model-id <model-id-or-alias> --include-manifest --json
+wf zoo model-specs --model-id <model-id> --json
 ```
 
 `model-show` is the fastest way to see whether aliases, `pipeline_target`, checkpoint roles, and the runtime profile parsed the way you intended. `model-specs` is the compact view of what a runner will actually consume.
@@ -74,7 +74,7 @@ worldfoundry-eval zoo model-specs --model-id <model-id> --json
 Staging checkpoints is separate from claiming them. `--check-local` only reports whether the configured cache already has the files:
 
 ```bash
-worldfoundry-eval zoo model-download --check-local --model-id <model-id> --json
+wf zoo model-download --check-local --model-id <model-id> --json
 ```
 
 On a machine that is allowed to fetch weights, add `--execute` and, if you need to pin the destination, `--repo-id` and `--cache-dir`. Write a download report with `--report-path tmp/model_zoo/download/<model-id>.json` so a reviewer can see what landed without copying blobs into git. Flags such as `--disable-xet`, `--disable-hf-transfer`, `--timeout`, and `--retries` belong only on that fetch machine.
@@ -82,7 +82,7 @@ On a machine that is allowed to fetch weights, add `--execute` and, if you need 
 A first end-to-end inference check uses the model runner, not a benchmark:
 
 ```bash
-worldfoundry-eval evaluate \
+wf evaluate \
   --mode model \
   --model-id <model-id> \
   --model-manifest-dir worldfoundry/data/models/catalog \

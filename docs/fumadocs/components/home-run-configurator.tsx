@@ -31,10 +31,10 @@ function commandFor(mode: CommandMode, modelId: string, task: string) {
     return `bash scripts/inference/prepare_model_infer.sh ${modelId}`;
   }
   if (mode === 'inspect') {
-    return `worldfoundry-eval zoo model-show --model-id ${modelId} --include-manifest --json`;
+    return `wf zoo model-show --model-id ${modelId} --include-manifest --json`;
   }
   return [
-    `worldfoundry-eval run ${modelId} \\`,
+    `wf run ${modelId} \\`,
     `  --pipeline.task-profile ${taskProfile(task)}`,
   ].join('\n');
 }

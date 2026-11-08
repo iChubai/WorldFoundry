@@ -33,7 +33,7 @@ Default text-to-video generation passed on one H100 80GB with SDPA and component
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run kandinsky6-pro-distill --pipeline.task-profile default` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run kandinsky6-pro-distill --pipeline.task-profile default` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).
 

@@ -40,13 +40,13 @@ def test_no_args_prints_first_run_banner(capsys: pytest.CaptureFixture[str]) -> 
     output = capsys.readouterr().out
 
     assert "WorldFoundry evaluation CLI" in output
-    assert "worldfoundry-eval zoo benchmarks" in output
-    assert "worldfoundry-eval zoo models" in output
-    assert "worldfoundry-eval tasks list" in output
-    legacy_command = " ".join(("worldfoundry-eval", "validation"))
+    assert "wf zoo benchmarks" in output
+    assert "wf zoo models" in output
+    assert "wf tasks list" in output
+    legacy_command = " ".join(("wf", "validation"))
     assert legacy_command not in output
-    assert "worldfoundry-eval contract run" not in output
-    assert "worldfoundry-eval <command> --help" in output
+    assert "wf contract run" not in output
+    assert "wf <command> --help" in output
 
 
 def test_help_prints_command_areas_without_heavy_runtime_imports() -> None:
@@ -91,7 +91,7 @@ def test_package_module_entrypoint_matches_public_cli() -> None:
 
     assert result.returncode == 0
     assert "WorldFoundry benchmark evaluation subsystem" in result.stdout
-    assert "worldfoundry-eval" in result.stdout
+    assert "wf" in result.stdout
 
 
 def test_package_module_no_args_prints_first_run_banner() -> None:
@@ -106,7 +106,7 @@ def test_package_module_no_args_prints_first_run_banner() -> None:
 
     assert result.returncode == 0
     assert "WorldFoundry evaluation CLI" in result.stdout
-    legacy_command = " ".join(("worldfoundry-eval", "validation"))
+    legacy_command = " ".join(("wf", "validation"))
     assert legacy_command not in result.stdout
 
 
@@ -274,14 +274,14 @@ def test_zoo_benchmark_show_json_exposes_complete_runnable_commands() -> None:
     ]:
         assert payload[key] is discovery[key]
     assert discovery["commands"]["contract_run"] == (
-        "worldfoundry-eval zoo benchmark-run --benchmark-id video-bench "
+        "wf zoo benchmark-run --benchmark-id video-bench "
         "--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/video-bench --json"
     )
     assert discovery["contract_validation_command"] == discovery["commands"]["contract_run"]
     assert discovery["ready_now_command"] is None
     assert discovery["one_click_command"] is None
     assert discovery["commands"]["normalizer_run"] == (
-        "worldfoundry-eval zoo benchmark-run --benchmark-id video-bench "
+        "wf zoo benchmark-run --benchmark-id video-bench "
         "--mode official-validation --official-results-path '<official_results.json>' "
         "--generated-artifact-dir '<generated_videos>' --output-dir '<out>' --json"
     )
@@ -364,7 +364,7 @@ def test_zoo_benchmarks_json_exposes_complete_runnable_commands_for_every_invent
     for benchmark_id, entry in by_id.items():
         commands = entry["commands"]
         expected_contract = (
-            f"worldfoundry-eval zoo benchmark-run --benchmark-id {benchmark_id} "
+            f"wf zoo benchmark-run --benchmark-id {benchmark_id} "
             f"--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/{benchmark_id} --json"
         )
         assert entry["contract_command_ready"] is True, benchmark_id

@@ -45,7 +45,7 @@ The runtime reuses WorldFoundry's existing LTX-2.3 Transformer, VAE, Gemma conne
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run alayaworld --pipeline.task-profile default` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run alayaworld --pipeline.task-profile default` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8，torch>=2.6）。
 

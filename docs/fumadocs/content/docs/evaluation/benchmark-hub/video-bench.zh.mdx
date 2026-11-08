@@ -22,7 +22,7 @@ WorldFoundry **仓内内置 runtime** 并封装 `evaluate.py`。它从环境变�
 hf download Video-Bench/Video-Bench_human_annotation --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/Video-Bench/Video-Bench_human_annotation
 
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id video-bench \
   --mode official-validation \
   --official-results-path <official_results.json> \

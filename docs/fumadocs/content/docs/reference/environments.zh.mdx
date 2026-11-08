@@ -320,12 +320,12 @@ runtime 需要固定目录布局的情况，或用软链保持官方路径而不
 
 ### Benchmark 数据集布局
 
-`worldfoundry-eval dataset locate <org/name>` 会在不联网的情况下定位已有数据集：
+`wf dataset locate <org/name>` 会在不联网的情况下定位已有数据集：
 依次检查数据集专属环境变量、local asset/data manifest、direct data root，最后检查
 Hugging Face cache snapshot。Direct root 支持 `org/name`、`org--name` 和嵌套
 `hfd_datasets` 布局；hub cache 使用标准的
 `datasets--org--name/snapshots/<revision>` 布局。可用
-`worldfoundry-eval dataset plan <org/name> [...]` 输出去重后的下载命令，但不会执行。
+`wf dataset plan <org/name> [...]` 输出去重后的下载命令，但不会执行。
 
 ## 编译器缓存
 
@@ -476,7 +476,7 @@ Host 侧只需要 Docker 和统一 WorldFoundry 环境：
 bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 docker pull ghcr.io/allenai/vla-evaluation-harness/robotwin:latest
-worldfoundry-eval embodied run \
+wf embodied run \
   --config worldfoundry/data/benchmarks/eval_configs/embodied/robotwin/eval.yaml \
   --pull-docker
 ```

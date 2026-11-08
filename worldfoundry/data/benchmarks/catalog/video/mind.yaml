@@ -235,7 +235,7 @@ runner:
     input_kind: mind_results_or_generated_videos
   runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

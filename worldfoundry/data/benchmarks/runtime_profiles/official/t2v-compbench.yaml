@@ -98,7 +98,7 @@ official_validation:
   leaderboard_valid: false
   scorecard: tmp/eval_chain_smoke/t2v_compbench_numeracy_official/scorecard.json
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

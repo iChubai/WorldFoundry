@@ -95,12 +95,12 @@ def _iso_to_epoch(value: str | None) -> float | None:
 
 
 def python_module_command(command: Sequence[str], *, python_executable: str | None = None) -> tuple[str, ...]:
-    """Run a ``worldfoundry-eval`` command through the current Python interpreter."""
+    """Run a ``wf`` command through the current Python interpreter."""
 
     items = tuple(str(item) for item in command)
     if not items:
         raise ValueError("command cannot be empty")
-    if items[0] in {"worldfoundry", "worldfoundry-eval"}:
+    if items[0] == "wf":
         return (python_executable or sys.executable, "-m", "worldfoundry.evaluation", *items[1:])
     return items
 

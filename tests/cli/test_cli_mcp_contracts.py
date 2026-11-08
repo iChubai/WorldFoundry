@@ -368,7 +368,7 @@ def test_mcp_context_restores_persisted_runs_for_payloads(tmp_path: Path) -> Non
                         "completed_at": "2026-08-25T00:00:09+00:00",
                         "returncode": 0,
                         "output_dir": str(tmp_path / "persisted-run"),
-                        "command": ["worldfoundry-eval", "run", "--json"],
+                        "command": ["wf", "run", "--json"],
                         "metadata": {"surface": "mcp"},
                     }
                 ],

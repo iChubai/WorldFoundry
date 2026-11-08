@@ -59,7 +59,7 @@ Embodied 闭环评测在生成前保存全部计划请求，每条 rollout 完�
 
 Generation 开始前，task-driven run 通过 `plan.py` 中的 **`RunPlan`** 固定 sample ID、split 与 input keys。Plan 连接 task registry、可选 dataset manifest 与 evaluate facade：registry lookup → 物化 requests → `EvaluateRunRequest`。Plan 上的 fingerprint 使 rerun 与 cache 复用跨机器可预期。
 
-`materialize.py` 中的 materialization 把 dataset 行或 task sample 转为 `GenerationRequest` 行。耗 GPU 前用 `worldfoundry-eval task materialize` 证明此步——多数“本地可用、CI 失败”来自 sample ID 不一致，而非 model loading。
+`materialize.py` 中的 materialization 把 dataset 行或 task sample 转为 `GenerationRequest` 行。耗 GPU 前用 `wf task materialize` 证明此步——多数“本地可用、CI 失败”来自 sample ID 不一致，而非 model loading。
 
 ## 模型解析
 

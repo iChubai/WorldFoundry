@@ -1,6 +1,6 @@
 """CLI sub-commands for dataset manifest creation, inspection, validation, and materialization.
 
-Provides the ``dataset`` sub-command under ``worldfoundry-eval`` with
+Provides the ``dataset`` sub-command under ``wf`` with
 ``create``, ``show``, ``validate``, and ``materialize`` operations plus
 DatasetManager-backed ``locate`` and ``plan`` helpers.
 """

@@ -39,8 +39,8 @@ class MCPClient:
         timeout: Maximum wait time for server responses.
     """
 
-    command: str = "worldfoundry-mcp"
-    args: tuple[str, ...] = ()
+    command: str = "wf"
+    args: tuple[str, ...] = ("mcp",)
     env: Mapping[str, str] | None = None
     cwd: str | None = None
     timeout: timedelta = timedelta(seconds=600)

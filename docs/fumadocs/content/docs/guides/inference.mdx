@@ -12,7 +12,7 @@ bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 
-worldfoundry-eval run <model-id> \
+wf run <model-id> \
   --pipeline.task-profile <task-profile> \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
@@ -101,15 +101,15 @@ should be Hugging Face repo IDs, native HF cache locations, or documented
 
 ## CLI inference
 
-The canonical command for everyday reproducible and documented runs is `worldfoundry-eval run`. This is the same shape as the commands on model pages:
+The canonical command for everyday reproducible and documented runs is `wf run`. This is the same shape as the commands on model pages:
 
 ```bash
-worldfoundry-eval run <model-id> \
+wf run <model-id> \
   --pipeline.task-profile <task-profile> \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-**Which command.** Everyday reproducible / model-page commands use `worldfoundry-eval run`. Use `python -m worldfoundry.studio.workspace_job infer` only for Workspace visual smoke. See [CLI entrypoints](/docs/reference/cli#entrypoints).
+**Which command.** Everyday reproducible / model-page commands use `wf run`. Use `python -m worldfoundry.studio.workspace_job infer` only for Workspace visual smoke. See [CLI entrypoints](/docs/reference/cli#entrypoints).
 
 Workspace visual smoke (the same job path the Studio UI submits):
 
@@ -328,7 +328,7 @@ a backend. To run generated artifacts through an integrated benchmark, use the
 public CLI with the model catalog ID and a benchmark ID:
 
 ```bash
-worldfoundry run --benchmark vbench \
+wf run --benchmark vbench \
   --model hunyuanvideo-1.5-t2v \
   --generated-artifact-dir /path/to/generated-videos \
   --mode official-run \

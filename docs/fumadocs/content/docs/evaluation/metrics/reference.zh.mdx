@@ -10,13 +10,13 @@ description: MetricRegistry 发现、已注册指标表、CLI、checkpoint 与�
 ### 发现与查询
 
 ```bash
-worldfoundry-eval metric list
-worldfoundry-eval metric list --json
+wf metric list
+wf metric list --json
 
-worldfoundry-eval metric show fid
-worldfoundry-eval metric show clip-score --json
+wf metric show fid
+wf metric show clip-score --json
 
-worldfoundry-eval metric validate fid clip_score has_artifact:generated_artifact
+wf metric validate fid clip_score has_artifact:generated_artifact
 ```
 
 Registry key 大小写不敏感，下划线会归一化为连字符（`clip_score`、`clip-score`、`clipscore` 等价）。参数化 id 使用前缀：
@@ -225,11 +225,11 @@ LPIPS 接受 uint8 像素或 `[0, 1]` 归一化浮点数，使用 TorchMetrics �
 
 ## CLI 接口
 
-- `worldfoundry-eval metric list` — 列出或 JSON 导出全部 registry 条目。
-- `worldfoundry-eval metric show <id>` — 查看单条 entry、别名、参数化前缀。
-- `worldfoundry-eval metric validate <id>...` — 批量解析 id；未知 id 时 exit 1。
-- `worldfoundry-eval evaluate --metric ...` — **仅内置 existing-results 指标**（`artifact_count`、`required_artifacts_present`、`has_artifact:<name>`、`numeric`、`numeric:<name>`）。
-- `worldfoundry-eval plan create --metric ...` — 构造 run plan JSON 时使用相同内置 metric ID。
+- `wf metric list` — 列出或 JSON 导出全部 registry 条目。
+- `wf metric show <id>` — 查看单条 entry、别名、参数化前缀。
+- `wf metric validate <id>...` — 批量解析 id；未知 id 时 exit 1。
+- `wf evaluate --metric ...` — **仅内置 existing-results 指标**（`artifact_count`、`required_artifacts_present`、`has_artifact:<name>`、`numeric`、`numeric:<name>`）。
+- `wf plan create --metric ...` — 构造 run plan JSON 时使用相同内置 metric ID。
 
 分布与感知类指标目前通过 Python 调用。Benchmark runner 在计算官方 metric stack 时可能复用相同底层实现（EvalCrafter IS/FID、MiraBench FVD 等）。多模态 scorer（CLIPScore、VQAScore、ITMScore）通过 `worldfoundry.evaluation.tasks.metrics.get_score_model(...)` 暴露，实现位于 `execution/runners/_scorers/`。
 

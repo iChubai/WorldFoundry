@@ -21,7 +21,7 @@ WorldFoundry 保留 **仓内 CLIP 子集**（`clip_score`、`clip_temp_score`、
 导入官方聚合（冒烟用内置样本）：
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-validation \
   --official-results-path worldfoundry/data/benchmarks/assets/evalcrafter/sample_results.txt \
@@ -33,7 +33,7 @@ worldfoundry-eval zoo benchmark-run \
 
 ```bash
 export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-run \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \

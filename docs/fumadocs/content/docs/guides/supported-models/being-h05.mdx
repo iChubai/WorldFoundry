@@ -25,7 +25,7 @@ The base `being-h05-2b` card is the unspecialized preview, not a suite specialis
 
 ## Runtime contract
 
-Required WorldFoundry inputs: `image`, `instruction`, `prompt`, and `state`. Optional: `video`. The `actions` field is recorded as `robot_action`, `action_unified`, `proprio`, `action_space`. Pipeline class: `BeingH05Pipeline`. Launch `worldfoundry-eval run being-h05-2b` — pick the LIBERO variant unless you are comparing checkpoints.
+Required WorldFoundry inputs: `image`, `instruction`, `prompt`, and `state`. Optional: `video`. The `actions` field is recorded as `robot_action`, `action_unified`, `proprio`, `action_space`. Pipeline class: `BeingH05Pipeline`. Launch `wf run being-h05-2b` — pick the LIBERO variant unless you are comparing checkpoints.
 
 Two inference-time pieces travel with the released checkpoint. **Manifold-Preserving Gating** drops unreliable context under sensory shift so flow updates stay on a stable action manifold. **Universal Async Chunking** keeps action chunks consistent across different control rates and delays.
 
@@ -39,6 +39,6 @@ The GitHub tree is Apache-2.0. Every recorded Hugging Face repo is tagged `manua
 
 ## Minimal eval
 
-`being-h05-2b-libero` is the GPU-validated `get_action` line. An action trace is not a suite score. Import official LIBERO `eval_result` trees with `worldfoundry-eval zoo benchmark-run --benchmark-id libero --mode official-validation` and read `success_rate`. Closed-loop is wired; this repo has not recorded a Being-H0.5 leaderboard.
+`being-h05-2b-libero` is the GPU-validated `get_action` line. An action trace is not a suite score. Import official LIBERO `eval_result` trees with `wf zoo benchmark-run --benchmark-id libero --mode official-validation` and read `success_rate`. Closed-loop is wired; this repo has not recorded a Being-H0.5 leaderboard.
 
 <ModelRelatedRecipes modelId="being-h05" locale="en" />

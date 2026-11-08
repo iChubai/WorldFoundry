@@ -35,7 +35,7 @@ Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedi
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run hyperflow --pipeline.task-profile t2va` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run hyperflow --pipeline.task-profile t2va` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `videorebirth/hyperflow` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hyperflow`. Add `--download` to fetch missing public checkpoints.
 

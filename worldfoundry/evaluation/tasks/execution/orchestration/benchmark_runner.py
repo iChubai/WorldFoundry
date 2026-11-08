@@ -716,7 +716,7 @@ def _run_embodied_result_normalizer(
     return {
         "ok": normalization_ok,
         "command": [
-            "worldfoundry-eval",
+            "wf",
             "normalize",
             "embodied",
             "--benchmark-id",

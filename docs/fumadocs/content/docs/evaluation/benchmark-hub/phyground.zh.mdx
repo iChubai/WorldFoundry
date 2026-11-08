@@ -20,7 +20,7 @@ WorldFoundry **导入** PhyJudge/vLLM 或云端 judge 的 `scores.json`。它**�
 ```bash
 hf download NU-World-Model-Embodied-AI/phyground --repo-type dataset --local-dir <phyground_data_root>
 
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id phyground \
   --mode official-validation \
   --benchmark-data-root <phyground_data_root> \

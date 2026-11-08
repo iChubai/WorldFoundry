@@ -184,7 +184,7 @@ runner:
     default_metrics: [perceptual_clip_iqa_metrics]
   runner_target: worldfoundry.evaluation.tasks.contracts.external:FourDWorldBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

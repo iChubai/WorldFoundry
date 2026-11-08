@@ -28,7 +28,7 @@ official_sources:
 runner:
   runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
   run_command:
-  - worldfoundry-eval
+  - wf
   - embodied
   - run
   - --config
@@ -52,7 +52,7 @@ runner:
     output_artifact: rollout_metrics
   verification_status: integration_ready
   notes:
-  - Native closed-loop execution is wired through worldfoundry-eval embodied run.
+  - Native closed-loop execution is wired through wf embodied run.
   - Policies should emit discrete simulator tokens such as forward/left/pickup.
 metrics:
 - id: success_rate
@@ -109,7 +109,7 @@ runner_availability:
   normalizer_verified: true
   surface: native_closed_loop_simulator
 validation_command:
-- worldfoundry-eval
+- wf
 - embodied
 - run
 - --config

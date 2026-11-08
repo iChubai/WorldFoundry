@@ -268,7 +268,7 @@ def _model_next_action(entry) -> str:
     if entry.integration_status == "blocked":
         return "review blocker notes before integration"
     if entry.runner_entry_kind == "runnable_runner":
-        return f"run with worldfoundry-eval run --model {entry.model_id}"
+        return f"run with wf run --model {entry.model_id}"
     if entry.runner_entry_kind == "runner_candidate":
         return "add runtime profile and runner evidence"
     return "add runner manifest, runtime profile, and tests"
@@ -283,21 +283,21 @@ def _model_user_commands(entry) -> dict[str, str]:
     """Build the suggested CLI commands dictionary for a model entry."""
     model_id = entry.model_id
     commands = {
-        "show": f"worldfoundry-eval zoo model-show --model-id {model_id} --json",
-        "manifest": f"worldfoundry-eval zoo model-specs --model-id {model_id} --json",
+        "show": f"wf zoo model-show --model-id {model_id} --json",
+        "manifest": f"wf zoo model-specs --model-id {model_id} --json",
     }
     if entry.hf_repo_ids:
         commands["checkpoint_check"] = (
-            f"worldfoundry-eval zoo model-download --model-id {model_id} --check-local --json"
+            f"wf zoo model-download --model-id {model_id} --check-local --json"
         )
     if entry.is_runnable_runner_entry:
         commands["run"] = (
-            f"worldfoundry-eval run --model {model_id} --benchmark <benchmark-id> "
+            f"wf run --model {model_id} --benchmark <benchmark-id> "
             f"--mode official-run --output-dir tmp/model_benchmark/{model_id}/<benchmark-id> --json"
         )
     elif _model_has_runner_target(entry):
         commands["plan"] = (
-            f"worldfoundry-eval run --model {model_id} --benchmark <benchmark-id> "
+            f"wf run --model {model_id} --benchmark <benchmark-id> "
             f"--mode official-run --plan-only --output-dir tmp/model_benchmark/{model_id}/<benchmark-id> --json"
         )
     return commands
@@ -360,7 +360,7 @@ def _model_discovery(entry) -> dict[str, Any]:
         if _model_has_runner_target(entry):
             model_id = entry.model_id
             commands["plan"] = (
-                f"worldfoundry-eval run --model {model_id} --benchmark <benchmark-id> "
+                f"wf run --model {model_id} --benchmark <benchmark-id> "
                 f"--mode official-run --plan-only --output-dir tmp/model_benchmark/{model_id}/<benchmark-id> --json"
             )
         missing = plan.get("missing_assets") or []
@@ -393,7 +393,7 @@ def _benchmark_next_action(entry) -> str:
             return f"resolve blocker: {entry.blockers[0]}"
         return "resolve blocker before integration"
     if _benchmark_official_runner_ready(entry):
-        return f"run with worldfoundry-eval run --benchmark {entry.benchmark_id}"
+        return f"run with wf run --benchmark {entry.benchmark_id}"
     if _benchmark_bounded_official_component_ready(entry):
         return f"run bounded official component with {commands['official_run']}"
     if _benchmark_official_runtime_declared(entry) or _benchmark_bounded_official_validation_ready(entry):
@@ -402,7 +402,7 @@ def _benchmark_next_action(entry) -> str:
         validation_command = commands.get("official_validation") or commands.get("validate")
         if validation_command:
             return f"run official validation with {validation_command}"
-        return "run official validation with worldfoundry-eval zoo benchmark-run --mode official-validation"
+        return "run official validation with wf zoo benchmark-run --mode official-validation"
     if entry.runner_target:
         return "connect the runner to official-validation or official-run evidence"
     return "add catalog entry, task YAML, runnable evaluator, and validation evidence"
@@ -532,7 +532,7 @@ def _benchmark_user_commands(entry) -> dict[str, str]:
         commands["official_run"] = _shell_command_text(entry.run_command)
     if entry.benchmark_id == "videoscore" and "normalizer_run" not in commands:
         commands["normalizer_run"] = (
-            "worldfoundry-eval zoo benchmark-run --benchmark-id videoscore "
+            "wf zoo benchmark-run --benchmark-id videoscore "
             "--mode official-validation --official-results-path '<eval_*_videoscore.json>' "
             "--output-dir '<out>' --json"
         )

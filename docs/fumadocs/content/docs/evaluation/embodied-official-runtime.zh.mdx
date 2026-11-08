@@ -19,7 +19,7 @@ WorldFoundry 在仓库内提供具身 benchmark 的 **结果归一化、CLI 和 
 克隆仓库后，先确认测评框架本身可用：
 
 ```bash
-worldfoundry-eval zoo benchmarks --json
+wf zoo benchmarks --json
 ```
 
 这会确认 `libero` / `robomme` / `robotwin` 等条目可被 CLI 发现。不需要 GPU，也不需要 checkpoint。
@@ -90,9 +90,9 @@ export WORLDFOUNDRY_LOCAL_ASSET_MANIFEST=/path/to/your/local_assets_manifest.yam
 
 ## 第三步：按目标选择验证深度
 
-- **验证框架接线** — `worldfoundry-eval zoo benchmarks --json`。需要 GPU / 资产：否
-- **Official result import** — `worldfoundry-eval zoo benchmark-run --benchmark-id robotwin --mode official-validation --official-results-path <official_results.json> --output-dir tmp/benchmark_zoo/official_validation/robotwin --json`。需要 GPU / 资产：否
-- **检查还缺哪些 env / 路径** — `worldfoundry-eval zoo benchmark-show --benchmark-id robotwin --json`。需要 GPU / 资产：否（会列出缺失项）
+- **验证框架接线** — `wf zoo benchmarks --json`。需要 GPU / 资产：否
+- **Official result import** — `wf zoo benchmark-run --benchmark-id robotwin --mode official-validation --official-results-path <official_results.json> --output-dir tmp/benchmark_zoo/official_validation/robotwin --json`。需要 GPU / 资产：否
+- **检查还缺哪些 env / 路径** — `wf zoo benchmark-show --benchmark-id robotwin --json`。需要 GPU / 资产：否（会列出缺失项）
 - **导入已有 official 结果** — 见下文“导入官方结果”。需要 GPU / 资产：只需结果文件
 - **完整 simulator rollout** — 在上游 repo 内按官方文档跑。需要 GPU / 资产：是
 
@@ -148,7 +148,7 @@ source tmp/worldfoundry_unified_env.sh
 **导入官方结果（已有 rollout 输出时）：**
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id libero \
   --mode official-validation \
   --official-results-path "$WORLDFOUNDRY_LIBERO_RESULTS_PATH" \

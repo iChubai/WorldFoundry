@@ -26,7 +26,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: physical-ai-bench
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id physical-ai-bench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physical-ai-bench --json
+  contract_validation_command: wf zoo benchmark-run --benchmark-id physical-ai-bench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physical-ai-bench --json
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicalAIBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
   release_status: experimental

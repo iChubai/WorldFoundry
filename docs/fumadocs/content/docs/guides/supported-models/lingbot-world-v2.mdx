@@ -39,7 +39,7 @@ Execution is offline-first with no runtime downloads. Eight GPUs are the officia
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run lingbot-world-v2 --pipeline.task-profile image-camera-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run lingbot-world-v2 --pipeline.task-profile image-camera-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `robbyant/lingbot-world-v2-14b-causal-fast`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-v2`. Add `--download` to fetch missing public checkpoints.
 

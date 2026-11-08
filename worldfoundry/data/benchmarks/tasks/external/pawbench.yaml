@@ -17,9 +17,9 @@ metadata:
   benchmark_id: pawbench
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:PAWBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/pawbench/run_pawbench_official_runner.py
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id pawbench --mode contract
+  contract_validation_command: wf zoo benchmark-run --benchmark-id pawbench --mode contract
     --output-dir tmp/benchmark_zoo/benchmark_contract/pawbench --json
-  validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id pawbench --mode official-validation
+  validation_command: wf zoo benchmark-run --benchmark-id pawbench --mode official-validation
     --official-results-path <pawbench_metrics.json_or_run_dir> --output-dir <out> --json
   checkpoint_refs: []
   base_model_dependencies: []

@@ -19,7 +19,7 @@ Runner 一致性**已验证**：官方 **garden_1** Sekai demo 走树内 Studio/
 
 按记录跑 Astra 世界 / 视频路径。
 
-启动 `worldfoundry-eval run astra --pipeline.task-profile official-sekai-image`。
+启动 `wf run astra --pipeline.task-profile official-sekai-image`。
 
 评测入口：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（交互滚动生成的相机跟随精度）。
 
@@ -36,6 +36,6 @@ Runner 一致性**已验证**：官方 **garden_1** Sekai demo 走树内 Studio/
 
 ## 在 WorldFoundry 中运行
 
-状态：**已验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `EvanEternal/Astra`、`Wan-AI/Wan2.1-T2V-1.3B`、`EvanEternal/Astra` 等就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run astra --pipeline.task-profile official-sekai-image`。catalog 未记录 VRAM。
+状态：**已验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `EvanEternal/Astra`、`Wan-AI/Wan2.1-T2V-1.3B`、`EvanEternal/Astra` 等就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `wf run astra --pipeline.task-profile official-sekai-image`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="astra" locale="zh" />

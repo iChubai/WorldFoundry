@@ -10,7 +10,7 @@ Section 1 is 2–4 short paragraphs: the job in WorldFoundry, method/context
 from the catalog ``docs:`` block / paper, recorded tasks, and real benchmark
 ids only. Runtime contract covers inputs, task profiles, variants with
 reader status labels, and usage notes / blockers from the manifest. Running
-leads with ``worldfoundry-eval run``.
+leads with ``wf run``.
 
 Never emit a "What this page does not claim" / "Limits" / "本页不声称" heading.
 License, VRAM, and status belong in one short in-body clause under
@@ -18,7 +18,7 @@ Running in WorldFoundry.
 
 Bias every section toward the *inference contract*: which variant to launch,
 required/optional inputs, artifacts, resolution / frames / steps / guidance,
-env / prepare / one ``worldfoundry-eval run``, and gated license.
+env / prepare / one ``wf run``, and gated license.
 
 Training facts from the catalog (pretraining hours, datasets used to train the
 weights, optimizer, LR, “how the authors trained it”) are omitted. Keep at
@@ -608,7 +608,7 @@ def pipeline_class(recipe: dict[str, Any]) -> str:
 def run_identity(recipe: dict[str, Any]) -> tuple[str, str]:
     run = str((recipe.get("commands") or {}).get("run") or "")
     joined = " ".join(line.strip().rstrip("\\").strip() for line in run.splitlines())
-    match_id = re.search(r"worldfoundry-eval run\s+(\S+)", joined)
+    match_id = re.search(r"wf run\s+(\S+)", joined)
     match_task = re.search(
         r"--pipeline\.task-profile\s+(?:'([^']+)'|\"([^\"]+)\"|(\S+))",
         joined,
@@ -1077,10 +1077,10 @@ def prepare_sentence(recipe: dict[str, Any], locale: str) -> str:
 
 def builder_sentence(locale: str) -> str:
     if locale == "zh":
-        return "上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。"
+        return "上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。"
     return (
         "The command builder above switches `--pipeline.task-profile` among recorded tasks "
-        "and still emits `worldfoundry-eval run`."
+        "and still emits `wf run`."
     )
 
 
@@ -1348,7 +1348,7 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
 
     launch = run_command_sentence(recipe, locale)
     builder = builder_sentence(locale)
-    if launch and not mentions(blob, "worldfoundry-eval run"):
+    if launch and not mentions(blob, "wf run"):
         add(join_prose([launch, builder], locale))
     elif not mentions(blob, "command builder", "命令构建器"):
         add(builder)
@@ -1459,7 +1459,7 @@ def launch_command(recipe: dict[str, Any]) -> str:
     launch = run_id or preferred_variant(recipe) or str(recipe.get("id") or "")
     if not launch:
         return ""
-    cmd = f"worldfoundry-eval run {launch}"
+    cmd = f"wf run {launch}"
     if task:
         if re.search(r"\s", task):
             cmd += f" --pipeline.task-profile '{task}'"
@@ -1752,7 +1752,7 @@ def family_opening(recipe: dict[str, Any], locale: str) -> str:
     if not variant:
         return ""
     if not cmd:
-        cmd = f"worldfoundry-eval run {variant}"
+        cmd = f"wf run {variant}"
     table = _OPENINGS_ZH if locale == "zh" else _OPENINGS_EN
     selected = next(
         (item for item in recipe.get("variants") or [] if item.get("id") == variant),
@@ -1935,9 +1935,9 @@ def render_page(
             what_blob += " " + item
     else:
         fallback = family_opening(recipe, locale) or (
-            f"The recorded path is `{name}`. Use the catalog `worldfoundry-eval run` command."
+            f"The recorded path is `{name}`. Use the catalog `wf run` command."
             if locale == "en"
-            else f"记录路径是 `{name}`。用 catalog 的 `worldfoundry-eval run`。"
+            else f"记录路径是 `{name}`。用 catalog 的 `wf run`。"
         )
         chunks.append(emit_prose(fallback, locale))
         chunks.append("")
@@ -2029,12 +2029,12 @@ UNIQUE_KEEP_RE = re.compile(
 GENERIC_STUB_RE = re.compile(
     r"("
     r"Run the recorded .+ inference route"
-    r"|Launch `worldfoundry-eval run"
+    r"|Launch `wf run"
     r"|Run in the unified environment"
     r"|the runtime does not download weights"
     r"|missing files fail at load, nothing is downloaded"
     r"|跑在统一环境"
-    r"|启动 `worldfoundry-eval run"
+    r"|启动 `wf run"
     r"|运行时不代下权重"
     r"|缺文件加载失败"
     r"|把 `.+` 就位到本地"
@@ -2218,8 +2218,8 @@ def generated_page_violations(content: str, locale: str, label: str) -> list[str
     hits.extend(f"{label}: {hit}" for hit in boilerplate_hits(content))
     if re.search(r"<(Video|video)\b", content):
         hits.append(f"{label}: demo Video/video must not appear on model homes")
-    if re.search(r"worldfoundry-eval\s+evaluate", content):
-        hits.append(f"{label}: use worldfoundry-eval run, not evaluate")
+    if re.search(r"wf\s+evaluate", content):
+        hits.append(f"{label}: use wf run, not evaluate")
     if re.search(
         r"(?i)(?:Runner status is|Integration is|runner 状态为|集成为)\s+\*{0,2}['\"]?[a-z0-9]*_[a-z0-9_]+",
         content,

@@ -88,7 +88,7 @@ http://127.0.0.1:7870/
 workspace 是发布验证时推荐使用的 UI。
 它适合提交 inference job、检查不同模型的输入表单、查看生成产物，
 以及在同一个界面里对比多次 run。
-这些 Workspace job 是视觉冒烟（`python -m worldfoundry.studio.workspace_job infer`）。日常可复现 / 模型页命令用 `worldfoundry-eval run <id> --pipeline.task-profile …`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
+这些 Workspace job 是视觉冒烟（`python -m worldfoundry.studio.workspace_job infer`）。日常可复现 / 模型页命令用 `wf run <id> --pipeline.task-profile …`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
 
 Workspace 也支持 evaluation job。以 VBench 为例：选择 **Evaluation**，
 benchmark 选 `vbench`，把生成视频目录填到 **Dataset Root**（或把官方
@@ -615,21 +615,21 @@ WorldFoundry 为仓内 3D 和 perception model 维护一份统一的可视化能
 编写 model-specific viewer 前先查询注册表：
 
 ```bash
-worldfoundry-eval models visualizations
-worldfoundry-eval models visualizations --family perception_core
-worldfoundry-eval models visualizations --model raft --json
+wf models visualizations
+wf models visualizations --family perception_core
+wf models visualizations --model raft --json
 ```
 
 结构化 2D 结果复用同一个转换命令。当前支持 `detection`、`mask`、`flow`、
 `tracks`、`feature-pca`、`depth`、`normal`、`keypoints` 和 `text`：
 
 ```bash
-worldfoundry-eval models visualize \
+wf models visualize \
   --kind flow \
   --artifact outputs/flow.npz \
   --output outputs/flow.png
 
-worldfoundry-eval models visualize \
+wf models visualize \
   --kind detection \
   --artifact outputs/detections.json \
   --media inputs/frame.png \
@@ -734,7 +734,7 @@ Gallery 提供最近 inference outputs 和 preview artifacts 的紧凑视觉检�
 - **LingBot camera** — `python -m worldfoundry.studio.cli lingbot-world --variant base-camera --device cuda:1`. 更慢，偏 camera-centric profile。
 - **MatrixGame** — `python -m worldfoundry.studio.cli matrix-game-2 --device cuda:1`. 交互式 world navigation。
 - **WorldCam** — `python -m worldfoundry.studio.cli worldcam --device cuda:1`. Camera-path generation 和 view control。
-- **Hosted APIs** — 在 Workspace 推理任务或 `worldfoundry run <model>` 中配置 provider 凭据与 endpoint，再用 `media` 前端查看导出的产物。
+- **Hosted APIs** — 在 Workspace 推理任务或 `wf run <model>` 中配置 provider 凭据与 endpoint，再用 `media` 前端查看导出的产物。
 - **Viser 点云** — `python -m worldfoundry.studio.cli pi3 --frontend points --asset /path/to/scene.ply --port 18590`. 原生 Viser UI。
 - **Spark 3DGS** — `python -m worldfoundry.studio.cli vggt --frontend spark --asset /path/to/scene.splat --port 8765`. 独立 Spark canvas，不进入游戏机 shell。
 - **Embodied simulator** — `python -m worldfoundry.studio.cli openvla --frontend embodied --simulator-url http://127.0.0.1:9000`. **计划中。** 仅登记外部 simulator URL，不会启动仓内 viewer。

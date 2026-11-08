@@ -16,7 +16,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: chronomagic-bench
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id chronomagic-bench --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id chronomagic-bench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/chronomagic-bench --json
   open_source_status: experimental
   official_benchmark_verified: false

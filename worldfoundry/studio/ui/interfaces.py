@@ -367,7 +367,7 @@ def _gui_refs(entry: CatalogEntry, template_id: str, local_repo: LocalRepoEviden
     if entry.model_id == "gen3c" and local_repo.path and (Path(local_repo.path) / "gui").exists():
         refs.append(f"GEN3C authoring GUI: {local_repo.path}/gui")
     if template_id == "scene-3d":
-        refs.append(f"In-tree Spark 3DGS viewer: `worldfoundry-studio {entry.model_id} --frontend spark`")
+        refs.append(f"In-tree Spark 3DGS viewer: `wf-studio {entry.model_id} --frontend spark`")
     return tuple(dict.fromkeys(refs))
 
 
@@ -377,10 +377,10 @@ def _launch_hints(entry: CatalogEntry, template_id: str, local_repo: LocalRepoEv
         hints.append("GEN3C server: CUDA_HOME=$CONDA_PREFIX fastapi dev --no-reload ./gui/api/server.py --host 0.0.0.0")
         hints.append("GEN3C client: python gui/api/client.py")
     if template_id == "scene-3d":
-        hints.append("Spark native frontend: worldfoundry-studio <model> --frontend spark --asset /path/to/scene.splat")
+        hints.append("Spark native frontend: wf-studio <model> --frontend spark --asset /path/to/scene.splat")
         hints.append(f"Install pinned browser modules: {VENDOR_ASSET_INSTALL_COMMAND}")
     if template_id == "depth-geometry" or entry.runtime_kind in {"pointcloud_nav", "worldfm"}:
-        hints.append("Viser native frontend: worldfoundry-studio <model> --frontend points --asset /path/to/scene.ply")
+        hints.append("Viser native frontend: wf-studio <model> --frontend points --asset /path/to/scene.ply")
     if template_id == "embodied-policy" or entry.category == "Embodied Action":
         hints.append(
             "Embodied native frontend: start the simulator, then pass --frontend embodied --simulator-url http://127.0.0.1:<port>"

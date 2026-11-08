@@ -128,7 +128,8 @@ def test_public_benchmark_commands_use_installed_console_entrypoint() -> None:
     forbidden = (
         "python -m worldfoundry.cli",
         "python -m worldfoundry.evaluation.cli",
-        "PYTHONPATH=. worldfoundry-eval",
+        "PYTHONPATH=. wf",
+        "PYTHONPATH=. wf ",
         "worldfoundry-eval.local_open_eval",
         "- python\n- -m\n- worldfoundry.cli",
         "- python\n- -m\n- worldfoundry.evaluation.cli",

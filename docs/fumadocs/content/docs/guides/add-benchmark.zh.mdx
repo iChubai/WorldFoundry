@@ -40,10 +40,10 @@ Catalog YAML 按职责起草，不要堆成一张无序大表。Identity、sourc
 然后问 zoo 解析出来的是不是你想要的。在 unified 环境里：
 
 ```bash
-worldfoundry-eval zoo benchmarks --json
-worldfoundry-eval zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
-worldfoundry-eval zoo benchmark-specs --benchmark-id <benchmark-id> --json
-worldfoundry-eval tasks show --task-type <benchmark-id> --json
+wf zoo benchmarks --json
+wf zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
+wf zoo benchmark-specs --benchmark-id <benchmark-id> --json
+wf tasks show --task-type <benchmark-id> --json
 ```
 
 `benchmark-show` 最快能看到 alias、必需环境变量、blockers 和解析后的 spec。`benchmark-specs` 是 runner 会消费的压缩视图。`tasks show` 确认 external task 契约挂在同一个 id 下。这三处对不上，先改 YAML，再动 GPU。
@@ -53,7 +53,7 @@ worldfoundry-eval tasks show --task-type <benchmark-id> --json
 第一个可执行里程碑是 official validation，不是完整 leaderboard 扫表。导入官方形态的结果——或协议接受的一小份生成资产目录——写出可审查的 scorecard：
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --output-dir tmp/benchmark_zoo/official_validation/<benchmark-id> \
   --mode official-validation \
@@ -67,7 +67,7 @@ Import 通过，只是开发证据。它说明 normalizer、artifact 种类和 s
 Metadata 看起来对了之后，跑声明的 runtime profile，让缺数据集、license、conda prefix 死在 report 里，而不是死在口头同步里：
 
 ```bash
-worldfoundry-eval preflight runtime \
+wf preflight runtime \
   --profile <benchmark-id> \
   --manifest worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark-id>.yaml \
   --output-dir tmp/preflight/runtime/<benchmark-id> \

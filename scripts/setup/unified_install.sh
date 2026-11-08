@@ -274,11 +274,8 @@ EOF
   chmod +x "$wrapper"
 }
 
-install_worldfoundry_wrapper worldfoundry worldfoundry.cli
-install_worldfoundry_wrapper worldfoundry-eval worldfoundry.cli
-install_worldfoundry_wrapper worldfoundry-mcp worldfoundry.mcp
-install_worldfoundry_wrapper worldfoundry-studio worldfoundry.studio.cli
-install_worldfoundry_wrapper worldfoundry-tui worldfoundry.cli.tui
+install_worldfoundry_wrapper wf worldfoundry.cli
+install_worldfoundry_wrapper wf-studio worldfoundry.studio.cli
 
 echo
 echo "WorldFoundry unified environment is ready."

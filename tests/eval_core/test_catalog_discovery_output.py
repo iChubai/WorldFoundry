@@ -70,7 +70,7 @@ def test_zoo_models_json_promotes_readiness_fields() -> None:
     assert "needs" in zeroscope
     assert "next_action" in zeroscope
     assert zeroscope["commands"]["run"] == (
-        "worldfoundry-eval run --model zeroscope --benchmark <benchmark-id> "
+        "wf run --model zeroscope --benchmark <benchmark-id> "
         "--mode contract --output-dir tmp/model_benchmark/zeroscope/<benchmark-id> --json"
     )
 
@@ -84,10 +84,10 @@ def test_zoo_model_show_json_exposes_discovery_commands() -> None:
     assert discovery["manifest_path"]
     assert discovery["next_action"]
     assert discovery["commands"]["checkpoint_check"] == (
-        "worldfoundry-eval zoo model-download --model-id pixelsplat --check-local --json"
+        "wf zoo model-download --model-id pixelsplat --check-local --json"
     )
     assert discovery["commands"]["plan"] == (
-        "worldfoundry-eval run --model pixelsplat --benchmark <benchmark-id> "
+        "wf run --model pixelsplat --benchmark <benchmark-id> "
         "--mode contract --plan-only --output-dir tmp/model_benchmark/pixelsplat/<benchmark-id> --json"
     )
     assert discovery["runner_target_declared"] is True
@@ -134,7 +134,7 @@ def test_zoo_benchmarks_json_promotes_readiness_fields() -> None:
     for row in payload:
         benchmark_id = row["benchmark_id"]
         contract_command = (
-            f"worldfoundry-eval zoo benchmark-run --benchmark-id {benchmark_id} "
+            f"wf zoo benchmark-run --benchmark-id {benchmark_id} "
             f"--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/{benchmark_id} --json"
         )
 

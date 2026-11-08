@@ -35,7 +35,7 @@ Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weigh
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run alayaworld-v1.1 --pipeline.task-profile image-to-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `AlayaLab/AlayaWorld-v1.1-stage2b`, `AlayaLab/AlayaWorld-v1.1-stage3`, and `Lightricks/LTX-2.3` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1`. Add `--download` to fetch missing public checkpoints.
 

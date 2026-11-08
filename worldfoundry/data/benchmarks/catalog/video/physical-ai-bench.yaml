@@ -60,7 +60,7 @@ runner:
   runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicalAIBenchContract
   runner_script: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
   run_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

@@ -113,7 +113,7 @@ runner:
     default_metrics: [foreground_miou, background_rmse]
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldBenchContract
   run_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

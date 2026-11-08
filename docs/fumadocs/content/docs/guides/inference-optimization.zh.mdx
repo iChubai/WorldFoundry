@@ -27,7 +27,7 @@ WorldFoundry 只把「有公开开关、且主链会消费」的技术算作可�
 
 ## 可以做
 
-这些控制已经接入。用 `from_pretrained(...)`、Workspace 的 **load JSON**，或该模型 load schema 上的 `worldfoundry-eval run --pipeline.load.<kebab-name>`。
+这些控制已经接入。用 `from_pretrained(...)`、Workspace 的 **load JSON**，或该模型 load schema 上的 `wf run --pipeline.load.<kebab-name>`。
 
 ### 精度与放置
 
@@ -383,7 +383,7 @@ pipe = Wan2p2Pipeline.from_pretrained(
 该模型 load schema 上的 CLI：
 
 ```bash
-worldfoundry-eval run wan2.2-ti2v-5b \
+wf run wan2.2-ti2v-5b \
   --pipeline.task-profile <task-profile> \
   --pipeline.load.offload-mode resident \
   --pipeline.load.attention-backend flash3 \

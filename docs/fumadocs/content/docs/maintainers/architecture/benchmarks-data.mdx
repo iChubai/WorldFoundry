@@ -47,7 +47,7 @@ Task YAML is finer-grained than benchmark-zoo catalog entries: it defines sample
 
 <ArchDiagram id="task-materialize" />
 
-Prove this step with `worldfoundry-eval task materialize` before spending GPU time on generation. Skipping materialization is the most common source of "benchmark works in docs but fails in CI"—the runner never saw the same sample IDs the task YAML promised.
+Prove this step with `wf task materialize` before spending GPU time on generation. Skipping materialization is the most common source of "benchmark works in docs but fails in CI"—the runner never saw the same sample IDs the task YAML promised.
 
 ## External benchmark execution
 
@@ -74,7 +74,7 @@ Follow the steps in order: catalog visibility first, parsing second, runnable ru
     If it has an official runnable path, implement or point to a `ManifestBenchmarkRunner`.
   </Step>
   <Step>
-    Run `worldfoundry-eval task materialize` to prove request materialization before model generation.
+    Run `wf task materialize` to prove request materialization before model generation.
   </Step>
   <Step>
     Validate outputs with `metrics/summary.json`, `scorecard.json`, and benchmark-specific validation scripts.

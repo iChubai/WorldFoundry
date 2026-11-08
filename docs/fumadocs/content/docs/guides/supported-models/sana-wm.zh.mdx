@@ -43,7 +43,7 @@ WorldFoundry registers an in-tree resident pipeline with configurable multi-GPU 
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run sana-wm-streaming --pipeline.task-profile interactive-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run sana-wm-streaming --pipeline.task-profile interactive-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 记录的权重仓库包括 `Efficient-Large-Model/SANA-WM_streaming`、`Efficient-Large-Model/SANA-WM_bidirectional`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh sana-wm-streaming`；下载缺失的公开权重时加 `--download`。
 

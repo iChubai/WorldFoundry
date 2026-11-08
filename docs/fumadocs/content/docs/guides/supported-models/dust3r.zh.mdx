@@ -17,7 +17,7 @@ Runner **已验证**：checkpoint 驱动的 Studio 推理从捆绑多视图用�
 
 ## 用来做什么
 
-启动 `worldfoundry-eval run dust3r`，走前馈多视图重建 profile。必填：`image`。可选：`prompt`、`video`。`actions`：`multi_view_reconstruction`。产物：`dust3r_point_cloud.ply`。大场景仍要全局对齐，视角一多就贵。流式米制状态是 [CUT3R](/zh/docs/guides/supported-models/cut3r)，不是这张成对卡。
+启动 `wf run dust3r`，走前馈多视图重建 profile。必填：`image`。可选：`prompt`、`video`。`actions`：`multi_view_reconstruction`。产物：`dust3r_point_cloud.ply`。大场景仍要全局对齐，视角一多就贵。流式米制状态是 [CUT3R](/zh/docs/guides/supported-models/cut3r)，不是这张成对卡。
 
 ## 运行时契约
 `DUSt3RPipeline`，走共享几何先验契约（`dust3r-base-model`）。必填：`image`（未标定的一对或多视图）。catalog 可选：`prompt`、`video`。`actions`：`multi_view_reconstruction`。产物：`dust3r_point_cloud.ply`。

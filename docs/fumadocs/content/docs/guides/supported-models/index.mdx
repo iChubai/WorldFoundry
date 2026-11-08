@@ -64,13 +64,13 @@ Unknown values remain **Not recorded**. Catalog manifests can carry a curated bi
 
 ```bash
 # Inspect the complete catalog manifest.
-worldfoundry-eval zoo model-show \
+wf zoo model-show \
   --model-id <model-id> \
   --include-manifest \
   --json
 
 # Resolve checkpoints, credentials, and local asset blockers without downloading.
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id <model-id> \
   --check-local \
   --json
@@ -82,7 +82,7 @@ bash scripts/setup/model_env_install.sh --model <model-id>
 bash scripts/inference/prepare_model_infer.sh <model-id> --download
 
 # Run a recorded task profile (each model page generates the exact flags).
-worldfoundry-eval run <model-id> --pipeline.task-profile <task> --json
+wf run <model-id> --pipeline.task-profile <task> --json
 ```
 
 ## Where this fits in the docs

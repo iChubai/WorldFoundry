@@ -42,7 +42,7 @@ notes:
 - Dynamic Memory uses the official VLM configuration and API-key environment variable; credentials are not runner arguments.
 - Official dataset/checkpoint replay and leaderboard parity remain pending.
 validation_command: &worldmembench_validation_command
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

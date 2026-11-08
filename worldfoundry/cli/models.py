@@ -41,7 +41,7 @@ def _handle_models_list(args: argparse.Namespace) -> int:
 
 
 def _handle_models_runtime_runners(args: argparse.Namespace) -> int:
-    """Emit registered ``module:Class`` runner targets usable with ``worldfoundry-eval evaluate --mode model``.
+    """Emit registered ``module:Class`` runner targets usable with ``wf evaluate --mode model``.
 
     Parameters:
         args: CLI namespace; ``json`` selects JSON lines instead of plain text rows.

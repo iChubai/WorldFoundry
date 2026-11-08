@@ -39,7 +39,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 导入 `summary.json`、运行目录、`runs/` 父目录或裸 `per_task/` 树时不需要 API key：
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id stevo-bench \
   --mode official-validation \
   --official-results-path /path/to/runs/<output_map_stem> \
@@ -97,6 +97,6 @@ runs/<output_map_stem>/
 - Gemini+GPT 一致通过：`gemini_gpt_evaluator.py`（依赖 `worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt`）。
 - 这些脚本默认过滤：level-4、id 不以 `_00` 结尾，且首帧图 + 视频 + YAML 都在。
 
-只用于分析。可报告的 WorldFoundry 分数来自 `run_stevo_bench_official_runner.py` / `worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench`。
+只用于分析。可报告的 WorldFoundry 分数来自 `run_stevo_bench_official_runner.py` / `wf zoo benchmark-run --benchmark-id stevo-bench`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

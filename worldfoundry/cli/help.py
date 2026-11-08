@@ -76,7 +76,7 @@ class WorldFoundryArgumentParser(argparse.ArgumentParser):
             usage = _paint("usage:", _HEADING) + usage[len("usage:") :]
 
         breadcrumb = self.prog.split(maxsplit=1)
-        title = "WorldFoundry" if breadcrumb[0].startswith("worldfoundry") else breadcrumb[0]
+        title = "WorldFoundry" if breadcrumb[0] in {"wf", "wf-studio"} else breadcrumb[0]
         if len(breadcrumb) > 1:
             title += " / " + breadcrumb[1]
         blocks = [_paint(_wrap_usage(title, width), _HEADING), usage]

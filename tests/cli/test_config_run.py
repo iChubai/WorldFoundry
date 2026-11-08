@@ -15,7 +15,7 @@ def test_config_run_env_overrides_expand_as_literal_text(tmp_path: Path, capsys:
     template = tmp_path / "workflow.yaml"
     template.write_text(
         f"schema_version: {CONFIG_SCHEMA_VERSION}\n"
-        "command: [worldfoundry-eval, run, --seed, '${SEED}', --cache, '$CACHE', --scale, '${SCALE:-1.0}']\n",
+        "command: [wf, run, --seed, '${SEED}', --cache, '$CACHE', --scale, '${SCALE:-1.0}']\n",
         encoding="utf-8",
     )
 

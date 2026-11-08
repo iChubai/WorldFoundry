@@ -43,7 +43,7 @@ Checkpoint license is non-commercial per HF cardData; do not treat as unrestrict
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run modelscope-t2v --pipeline.task-profile interactive-video` 采样视频。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run modelscope-t2v --pipeline.task-profile interactive-video` 采样视频。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
@@ -51,6 +51,6 @@ Checkpoint license is non-commercial per HF cardData; do not treat as unrestrict
 
 记录 license 为 cc-by-nc-4.0；状态：**Runner 一致性待确认**。
 
-路径已集成在 `worldfoundry-unified-cu128`。启动 `worldfoundry-eval run modelscope-t2v`。缺失权重会在运行时报告。**没有 runner-parity 证据**。启动前就位 `ali-vilab/modelscope-damo-text-to-video-synthesis`——不要用名字相近的 `model-scope/text-to-video-synthesis`，那不是本条目选定的 checkpoint。
+路径已集成在 `worldfoundry-unified-cu128`。启动 `wf run modelscope-t2v`。缺失权重会在运行时报告。**没有 runner-parity 证据**。启动前就位 `ali-vilab/modelscope-damo-text-to-video-synthesis`——不要用名字相近的 `model-scope/text-to-video-synthesis`，那不是本条目选定的 checkpoint。
 
 <ModelRelatedRecipes modelId="modelscope-t2v" locale="zh" />

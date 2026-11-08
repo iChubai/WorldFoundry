@@ -12,7 +12,7 @@ bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 
-worldfoundry-eval run <model-id> \
+wf run <model-id> \
   --pipeline.task-profile <task-profile> \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
@@ -97,15 +97,15 @@ repo ID、原生 HF cache 位置，或文档明确声明的 `WORLDFOUNDRY_CKPT_D
 
 ## CLI 推理
 
-日常可复现、写进文档的标准命令是 `worldfoundry-eval run`，与模型页上的命令同一形状：
+日常可复现、写进文档的标准命令是 `wf run`，与模型页上的命令同一形状：
 
 ```bash
-worldfoundry-eval run <model-id> \
+wf run <model-id> \
   --pipeline.task-profile <task-profile> \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-**选哪条命令。** 日常可复现 / 模型页命令用 `worldfoundry-eval run`。只有 Workspace 视觉冒烟才用 `python -m worldfoundry.studio.workspace_job infer`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
+**选哪条命令。** 日常可复现 / 模型页命令用 `wf run`。只有 Workspace 视觉冒烟才用 `python -m worldfoundry.studio.workspace_job infer`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
 
 Workspace 视觉冒烟（与 Studio UI 提交的是同一条 job 路径）：
 
@@ -310,7 +310,7 @@ denoising runner 与 media writer；旧上游 CLI runtime 不再是 backend。�
 通过公开 CLI、catalog model ID 和 benchmark ID 运行生成的视频：
 
 ```bash
-worldfoundry run --benchmark vbench \
+wf run --benchmark vbench \
   --model hunyuanvideo-1.5-t2v \
   --generated-artifact-dir /path/to/generated-videos \
   --mode official-run \

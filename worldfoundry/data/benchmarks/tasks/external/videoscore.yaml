@@ -24,7 +24,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: videoscore
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id videoscore --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id videoscore --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/videoscore --json
   base_model_dependencies:
   - videoscore_reward_metric_stack

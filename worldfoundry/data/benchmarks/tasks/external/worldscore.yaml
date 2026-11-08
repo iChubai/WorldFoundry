@@ -19,7 +19,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: worldscore
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id worldscore --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id worldscore --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/worldscore --json
   open_source_status: experimental
   official_benchmark_verified: false
@@ -116,7 +116,7 @@ metadata:
     normalizer_verified: false
     surface: bounded_official_gpu_validation
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

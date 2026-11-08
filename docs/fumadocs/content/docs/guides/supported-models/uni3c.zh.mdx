@@ -39,7 +39,7 @@ CLI task profile：`image-camera-control-video`。绑定的 pipeline 类是 `Uni
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run uni3c --pipeline.task-profile image-camera-control-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+启动 `wf run uni3c --pipeline.task-profile image-camera-control-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 记录的权重仓库包括 `ewrfcas/Uni3C`、`Wan-AI/Wan2.1-I2V-14B-720P-Diffusers`、`theFoxofSky/RealisDance-DiT`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh uni3c`；下载缺失的公开权重时加 `--download`。
 

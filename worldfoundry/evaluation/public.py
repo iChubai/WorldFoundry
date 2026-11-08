@@ -69,7 +69,7 @@ def run_benchmark(
 ) -> Any:
     """Run a benchmark through the unified official runner stack.
 
-    Modes mirror ``worldfoundry-eval zoo benchmark-run``:
+    Modes mirror ``wf zoo benchmark-run``:
 
     - ``normalizer``: normalize caller-provided official results
     - ``official-validation``: run the benchmark's bounded validation command

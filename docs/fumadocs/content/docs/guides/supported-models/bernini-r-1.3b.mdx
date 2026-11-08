@@ -43,7 +43,7 @@ Official renderer inference is vendored in-tree; no external Bernini checkout is
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run bernini-r-1.3b --pipeline.task-profile t2v`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run bernini-r-1.3b --pipeline.task-profile t2v`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 It runs in the dedicated environment `worldfoundry-bernini-cu124` (Python 3.11, CUDA 12.4, torch==2.5.1+cu124).
 

@@ -114,7 +114,7 @@ runner_availability:
   surface: physics_iq_verified_official_in_tree
 dataset:
   hf_dataset_id: Anates-Labs-Research/Physics-IQ-Verified
-validation_command: [worldfoundry-eval, zoo, benchmark-run, --benchmark-id, physics-iq-verified, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
+validation_command: [wf, zoo, benchmark-run, --benchmark-id, physics-iq-verified, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
 checkpoint_refs: []
 artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR

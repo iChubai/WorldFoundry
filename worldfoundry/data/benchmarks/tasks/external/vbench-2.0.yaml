@@ -24,7 +24,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: vbench-2.0
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id vbench-2.0 --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id vbench-2.0 --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/vbench-2.0 --json
   open_source_status: experimental
   official_benchmark_verified: false

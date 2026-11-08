@@ -24,6 +24,6 @@ WorldFoundry 内置推理实现，并暴露三个 checkpoint。**`helios-distill
 
 ## 在 WorldFoundry 中运行
 
-使用独立环境 `worldfoundry-helios-cu128`（Python 3.11.2，CUDA 12.8，`torch==2.10.0`）。启动 `worldfoundry-eval run helios-distilled`（或 `helios-mid` / `helios-base`），任务 profile 为 `text-to-video`。runner 状态是 **pending visual QA**：轻量导入预检已有单测，但完整 **240 请求帧**视觉一致性仍要该环境加 GPU。记录的 Base A100 smoke 用的是 3 步 `[1,1,1]` 金字塔——只证明链路可跑、产物非空，**不是**官方 `[20,20,20]` 质量配方。权重：`BestWishYsh/Helios-Distilled`、`Helios-Mid`、`Helios-Base`。
+使用独立环境 `worldfoundry-helios-cu128`（Python 3.11.2，CUDA 12.8，`torch==2.10.0`）。启动 `wf run helios-distilled`（或 `helios-mid` / `helios-base`），任务 profile 为 `text-to-video`。runner 状态是 **pending visual QA**：轻量导入预检已有单测，但完整 **240 请求帧**视觉一致性仍要该环境加 GPU。记录的 Base A100 smoke 用的是 3 步 `[1,1,1]` 金字塔——只证明链路可跑、产物非空，**不是**官方 `[20,20,20]` 质量配方。权重：`BestWishYsh/Helios-Distilled`、`Helios-Mid`、`Helios-Base`。
 
 <ModelRelatedRecipes modelId="helios" locale="zh" />

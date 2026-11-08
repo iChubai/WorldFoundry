@@ -75,7 +75,7 @@ runner:
     --run-official --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" --output-dir 
     "${WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR}" --json
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -120,10 +120,10 @@ integration:
   judge_model_id: xiangbog/Visual_Chronometer
   evidence:
     normalizer_surface: visual_chronometer_official_in_tree
-    framework_validation: worldfoundry-eval zoo benchmark-run --benchmark-id visual-chronometer --mode 
+    framework_validation: wf zoo benchmark-run --benchmark-id visual-chronometer --mode 
       official-validation --official-results-path <results.csv> --generated-artifact-dir <generated_videos> --output-dir
       <out> --json
-    official_runtime: worldfoundry-eval zoo benchmark-run --benchmark-id visual-chronometer --mode official-run 
+    official_runtime: wf zoo benchmark-run --benchmark-id visual-chronometer --mode official-run 
       --generated-artifact-dir <generated_videos> --output-dir <out> --json
 release_status: experimental
 maturity: contract_ready
@@ -152,7 +152,7 @@ data_refs:
   in_tree_runtime_paths:
   - worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

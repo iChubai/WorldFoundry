@@ -146,7 +146,7 @@ runner:
     limit_arg: --limit
   runner_target: worldfoundry.evaluation.tasks.contracts.external:AIGCBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -221,7 +221,7 @@ base_model_dependency_preflight:
   status: ready
   missing: []
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

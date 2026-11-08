@@ -85,7 +85,7 @@ required_paths:
 requires_cuda_visibility: false
 status: in_tree_score_normalizer_ready_raw_video_evaluator_pending
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

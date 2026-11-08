@@ -381,10 +381,10 @@ make cli-check cli-entrypoint-check packaging-check
 For model/profile audits:
 
 ```bash
-worldfoundry-eval run --all-benchmarks --plan-only \
+wf run --all-benchmarks --plan-only \
   --output-dir tmp/worldfoundry_plan_matrix \
   --json
-worldfoundry-eval validate-artifact tmp/worldfoundry_plan_matrix/suite_manifest.json \
+wf validate-artifact tmp/worldfoundry_plan_matrix/suite_manifest.json \
   --kind suite-manifest \
   --strict \
   --json
@@ -393,10 +393,10 @@ worldfoundry-eval validate-artifact tmp/worldfoundry_plan_matrix/suite_manifest.
 For staged zoo validation:
 
 ```bash
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo models --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmarks --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval run --all-benchmarks --plan-only --output-dir tmp/worldfoundry_plan_matrix --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval validate-artifact tmp/worldfoundry_plan_matrix/suite_manifest.json --kind suite-manifest --strict --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo models --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmarks --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf run --all-benchmarks --plan-only --output-dir tmp/worldfoundry_plan_matrix --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf validate-artifact tmp/worldfoundry_plan_matrix/suite_manifest.json --kind suite-manifest --strict --json
 ```
 
 ## PR evidence

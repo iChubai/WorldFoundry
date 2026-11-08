@@ -25,6 +25,6 @@ Required: `prompt`. Optional: `negative_prompt`, `num_frames`, `height`, `width`
 
 ## Running in WorldFoundry
 
-Use the dedicated environment `worldfoundry-helios-cu128` (Python 3.11.2, CUDA 12.8, `torch==2.10.0`). Launch `worldfoundry-eval run helios-distilled` (or `helios-mid` / `helios-base`) with `--pipeline.task-profile text-to-video`. Runner status is **Runner parity pending** (visual QA): import-light preflight is unit-tested, but full **240-request-frame** visual parity still needs that environment plus a GPU run. The recorded Base A100 smoke used a 3-step `[1,1,1]` pyramid — it proves wiring and a non-blank artifact, **not** the official `[20,20,20]` quality recipe. Weights: `BestWishYsh/Helios-Distilled`, `Helios-Mid`, `Helios-Base`.
+Use the dedicated environment `worldfoundry-helios-cu128` (Python 3.11.2, CUDA 12.8, `torch==2.10.0`). Launch `wf run helios-distilled` (or `helios-mid` / `helios-base`) with `--pipeline.task-profile text-to-video`. Runner status is **Runner parity pending** (visual QA): import-light preflight is unit-tested, but full **240-request-frame** visual parity still needs that environment plus a GPU run. The recorded Base A100 smoke used a 3-step `[1,1,1]` pyramid — it proves wiring and a non-blank artifact, **not** the official `[20,20,20]` quality recipe. Weights: `BestWishYsh/Helios-Distilled`, `Helios-Mid`, `Helios-Base`.
 
 <ModelRelatedRecipes modelId="helios" locale="en" />

@@ -22,7 +22,7 @@ WorldFoundry **vendors the official PAWEval judge**. Fresh judging defaults to G
 hf download Andrew613/PAWBench --repo-type dataset --local-dir /data/pawbench
 export OPENROUTER_API_KEY=<your-key>
 
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id pawbench \
   --mode official-run \
   --benchmark-data-root /data/pawbench \
@@ -34,7 +34,7 @@ worldfoundry-eval zoo benchmark-run \
 Import a prepared run:
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id pawbench \
   --mode official-validation \
   --official-results-path /path/to/pawbench/run \

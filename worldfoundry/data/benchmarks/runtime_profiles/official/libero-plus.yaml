@@ -36,7 +36,7 @@ required_paths:
 requires_cuda_visibility: false
 status: official_result_normalizer_ready_full_runtime_pending
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

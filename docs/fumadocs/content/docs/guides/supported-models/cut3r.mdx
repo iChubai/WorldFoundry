@@ -13,7 +13,7 @@ The recorded paper is [arXiv 2501.12387](https://arxiv.org/abs/2501.12387).
 
 Project page: [cut3r.github.io](https://cut3r.github.io/). Code: [CUT3R/CUT3R](https://github.com/CUT3R/CUT3R).
 
-Runner parity is **pending**. Routes are registered; checkpoint-backed inference waits on staged local or Hugging Face weights. Catalog environment / VRAM / input-contract rows are unset on this card — use `worldfoundry-eval zoo model-show --model-id cut3r` after staging.
+Runner parity is **pending**. Routes are registered; checkpoint-backed inference waits on staged local or Hugging Face weights. Catalog environment / VRAM / input-contract rows are unset on this card — use `wf zoo model-show --model-id cut3r` after staging.
 
 <ModelCommandBuilder modelId="cut3r" locale="en" />
 
@@ -39,7 +39,7 @@ Runner parity is pending: checkpoint-backed inference depends on staged local or
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run cut3r --pipeline.task-profile official-export`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run cut3r --pipeline.task-profile official-export`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 The environment profile is not recorded.
 

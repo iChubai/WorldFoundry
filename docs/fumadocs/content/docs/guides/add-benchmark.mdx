@@ -40,10 +40,10 @@ Draft the catalog YAML by responsibility, not as one unsorted table. Identity, s
 Then ask the zoo whether it parsed what you meant. From the unified environment:
 
 ```bash
-worldfoundry-eval zoo benchmarks --json
-worldfoundry-eval zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
-worldfoundry-eval zoo benchmark-specs --benchmark-id <benchmark-id> --json
-worldfoundry-eval tasks show --task-type <benchmark-id> --json
+wf zoo benchmarks --json
+wf zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
+wf zoo benchmark-specs --benchmark-id <benchmark-id> --json
+wf tasks show --task-type <benchmark-id> --json
 ```
 
 `benchmark-show` is the fastest way to see aliases, required env vars, blockers, and the resolved spec. `benchmark-specs` is the compact view a runner will consume. `tasks show` confirms the external task contract registered under the same id. If these three disagree, fix the YAML before you touch a GPU.
@@ -53,7 +53,7 @@ worldfoundry-eval tasks show --task-type <benchmark-id> --json
 The first executable milestone is official validation, not a full leaderboard sweep. Import official-shaped results — or a small generated-artifact directory the protocol accepts — and write a reviewable scorecard:
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --output-dir tmp/benchmark_zoo/official_validation/<benchmark-id> \
   --mode official-validation \
@@ -67,7 +67,7 @@ A passing import is development evidence. It shows the normalizer, artifact kind
 When metadata looks right, run the declared runtime profile so missing datasets, licenses, and conda prefixes fail in a report instead of in a hallway conversation:
 
 ```bash
-worldfoundry-eval preflight runtime \
+wf preflight runtime \
   --profile <benchmark-id> \
   --manifest worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark-id>.yaml \
   --output-dir tmp/preflight/runtime/<benchmark-id> \

@@ -17,7 +17,7 @@ WorldFoundry ships **result normalizers, CLI entry points, and simulator interfa
 After cloning, verify the catalog and runnable evaluation surfaces:
 
 ```bash
-worldfoundry-eval zoo benchmarks --json
+wf zoo benchmarks --json
 ```
 
 This confirms the bundled `libero`, `robomme`, and `robotwin` entries are discoverable. Actual scoring uses official rollout outputs or simulator execution.
@@ -86,9 +86,9 @@ export WORLDFOUNDRY_LOCAL_ASSET_MANIFEST=/path/to/your/local_assets_manifest.yam
 
 ## Step 3: Choose how far to validate
 
-- **Framework wiring** — `worldfoundry-eval zoo benchmarks --json`. Needs GPU / assets: No
-- **Official result import** — `worldfoundry-eval zoo benchmark-run --benchmark-id robotwin --mode official-validation --official-results-path <official_results.json> --output-dir tmp/benchmark_zoo/official_validation/robotwin --json`. Needs GPU / assets: No
-- **List missing env / paths** — `worldfoundry-eval zoo benchmark-show --benchmark-id robotwin --json`. Needs GPU / assets: No (reports gaps)
+- **Framework wiring** — `wf zoo benchmarks --json`. Needs GPU / assets: No
+- **Official result import** — `wf zoo benchmark-run --benchmark-id robotwin --mode official-validation --official-results-path <official_results.json> --output-dir tmp/benchmark_zoo/official_validation/robotwin --json`. Needs GPU / assets: No
+- **List missing env / paths** — `wf zoo benchmark-show --benchmark-id robotwin --json`. Needs GPU / assets: No (reports gaps)
 - **Import existing official results** — See **Import official results** below. Needs GPU / assets: Result files only
 - **Full simulator rollout** — Run upstream evaluator in cloned repo. Needs GPU / assets: Yes
 
@@ -144,7 +144,7 @@ Upstream code roots use `WORLDFOUNDRY_<BENCHMARK>_ROOT`. The full list is in the
 **Import official results (when you already have rollout outputs):**
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id libero \
   --mode official-validation \
   --official-results-path "$WORLDFOUNDRY_LIBERO_RESULTS_PATH" \

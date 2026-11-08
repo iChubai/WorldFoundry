@@ -7,14 +7,14 @@ RoboCerebra (Beihang CoLa Lab, NeurIPS 2025) tests **System-2** planning on long
 
 Paper: [RoboCerebra](https://arxiv.org/abs/2506.06677). Project: [robocerebra.github.io](https://robocerebra.github.io/). Code: [buaa-colalab/RoboCerebra](https://github.com/buaa-colalab/RoboCerebra).
 
-WorldFoundry **imports** official result exports (`worldfoundry-eval zoo benchmark-run --mode official-validation`). It does **not** run the bundled LIBERO simulator, collect rollouts, or host the hierarchical VLM planner + VLA controller. Declare the six-way condition split on the export if you want comparable numbers.
+WorldFoundry **imports** official result exports (`wf zoo benchmark-run --mode official-validation`). It does **not** run the bundled LIBERO simulator, collect rollouts, or host the hierarchical VLM planner + VLA controller. Declare the six-way condition split on the export if you want comparable numbers.
 
 <BenchmarkPageSections id="robocerebra" locale="en" />
 
 ## How to run
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id robocerebra \
   --mode official-validation \
   --official-results-path <official_results.json> \

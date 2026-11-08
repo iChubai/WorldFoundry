@@ -150,7 +150,7 @@ runner:
     default_metrics: [clip_score]
   runner_target: worldfoundry.evaluation.tasks.contracts.external:FETVContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -225,7 +225,7 @@ runner_availability:
   normalizer_verified: true
   surface: fetv_official_in_tree_bounded_clipscore
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

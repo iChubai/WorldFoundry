@@ -39,7 +39,7 @@ Set WORLDFOUNDRY_KAIROS_MODELS_ROOT (or models_root) to a directory matching the
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run kairos-sensenova --pipeline.task-profile default` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run kairos-sensenova --pipeline.task-profile default` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `kairos-agi/kairos-sensenova-robot-4B-480P-distilled`, `kairos-agi/kairos-sensenova-4B-480P-pretrained`, and `kairos-agi/kairos-sensenova-4B-720P`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh kairos-sensenova`. Add `--download` to fetch missing public checkpoints.
 

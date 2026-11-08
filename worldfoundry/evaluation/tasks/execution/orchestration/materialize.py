@@ -198,9 +198,9 @@ def materialize_requests_from_benchmark(
     if getattr(benchmark, "source_kind", None) == "benchmark_zoo":
         raise ValueError(
             "Benchmark Zoo entries do not materialize samples through "
-            "materialize_requests_from_benchmark. Use `worldfoundry-eval run "
+            "materialize_requests_from_benchmark. Use `wf run "
             "--benchmark <id> --model <id>` for benchmark-zoo runs, or "
-            "`worldfoundry-eval task materialize` with an explicit filesystem "
+            "`wf task materialize` with an explicit filesystem "
             "task YAML and dataset manifest."
         )
     if not callable(getattr(benchmark, "load_samples", None)):

@@ -39,8 +39,8 @@ metadata:
   benchmark_id: worldmembench
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldMemBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
-  official_runner_command: worldfoundry-eval zoo benchmark-run
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id worldmembench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldmembench --json
+  official_runner_command: wf zoo benchmark-run
+  contract_validation_command: wf zoo benchmark-run --benchmark-id worldmembench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldmembench --json
   task_type: video_world_model_memory_evaluation
   status: integrated
   maturity: contract_ready
@@ -52,7 +52,7 @@ metadata:
   blockers:
   - Complete-dataset and checkpoint replay remain pending.
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

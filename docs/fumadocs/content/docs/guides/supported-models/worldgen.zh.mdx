@@ -15,7 +15,7 @@ catalog 的论文链接和标题旁封面是 Meta Reality Labs 的 [WorldGen: Fr
 
 ## 用来做什么
 
-做可走的 3D 资产，不是短片。启动 `worldfoundry-eval run worldgen`，任务 profile 为 `3d-world-generation`。记录输入：`prompt` 与 `image`。可选 `actions.camera_path`。视频**不是**必填。树内流程是文生场景（`t2s`）或图生场景（`i2s`）：FLUX 先画全景，适配器再重建 splat 或 mesh。也可以直接给现成全景，跳过 FLUX 生成。
+做可走的 3D 资产，不是短片。启动 `wf run worldgen`，任务 profile 为 `3d-world-generation`。记录输入：`prompt` 与 `image`。可选 `actions.camera_path`。视频**不是**必填。树内流程是文生场景（`t2s`）或图生场景（`i2s`）：FLUX 先画全景，适配器再重建 splat 或 mesh。也可以直接给现成全景，跳过 FLUX 生成。
 
 内置脚本默认推理分辨率是 **1600**。显存低于 24 GB 会自动开低显存模式。背景 inpaint 不能与 `return_mesh` 同时用。
 

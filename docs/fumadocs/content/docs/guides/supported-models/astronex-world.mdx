@@ -35,7 +35,7 @@ Select mode=causal or bidirectional; supply source_root and checkpoint_dir. exec
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run astronex-world --pipeline.task-profile interactive-world-model`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run astronex-world --pipeline.task-profile interactive-world-model`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `Astronex-Lab/Astronex-World`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh astronex-world`. Add `--download` to fetch missing public checkpoints.
 

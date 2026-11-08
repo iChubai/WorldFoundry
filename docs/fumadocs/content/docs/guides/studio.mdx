@@ -92,7 +92,7 @@ http://127.0.0.1:7870/
 The workspace is the preferred UI for release validation.
 Use it to submit inference jobs, inspect model-specific forms, review artifacts,
 and compare runs without switching between multiple one-off scripts.
-Those Workspace jobs are visual smoke (`python -m worldfoundry.studio.workspace_job infer`). Everyday reproducible / model-page commands use `worldfoundry-eval run <id> --pipeline.task-profile …`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
+Those Workspace jobs are visual smoke (`python -m worldfoundry.studio.workspace_job infer`). Everyday reproducible / model-page commands use `wf run <id> --pipeline.task-profile …`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
 
 Workspace also supports evaluation jobs. For VBench, select **Evaluation**,
 choose benchmark `vbench`, put generated videos in **Dataset Root** (or an
@@ -661,9 +661,9 @@ WorldFoundry keeps one visualization capability registry for in-tree 3D and
 perception models. Query it before writing model-specific viewer code:
 
 ```bash
-worldfoundry-eval models visualizations
-worldfoundry-eval models visualizations --family perception_core
-worldfoundry-eval models visualizations --model raft --json
+wf models visualizations
+wf models visualizations --family perception_core
+wf models visualizations --model raft --json
 ```
 
 Structured 2D results share one conversion command. Supported kinds are
@@ -671,12 +671,12 @@ Structured 2D results share one conversion command. Supported kinds are
 `keypoints`, and `text`:
 
 ```bash
-worldfoundry-eval models visualize \
+wf models visualize \
   --kind flow \
   --artifact outputs/flow.npz \
   --output outputs/flow.png
 
-worldfoundry-eval models visualize \
+wf models visualize \
   --kind detection \
   --artifact outputs/detections.json \
   --media inputs/frame.png \
@@ -804,7 +804,7 @@ artifacts.
 - **LingBot camera** — `python -m worldfoundry.studio.cli lingbot-world --variant base-camera --device cuda:1`. Slower, camera-centric profile.
 - **MatrixGame** — `python -m worldfoundry.studio.cli matrix-game-2 --device cuda:1`. Interactive world navigation.
 - **WorldCam** — `python -m worldfoundry.studio.cli worldcam --device cuda:1`. Camera-path generation and view control.
-- **Hosted APIs** — Configure provider credentials and endpoint settings in Workspace inference jobs or `worldfoundry run <model>`, then preview exported artifacts with the `media` frontend.
+- **Hosted APIs** — Configure provider credentials and endpoint settings in Workspace inference jobs or `wf run <model>`, then preview exported artifacts with the `media` frontend.
 - **Viser point cloud** — `python -m worldfoundry.studio.cli pi3 --frontend points --asset /path/to/scene.ply --port 18590`. Native Viser UI.
 - **Spark 3DGS** — `python -m worldfoundry.studio.cli vggt --frontend spark --asset /path/to/scene.splat --port 8765`. Standalone Spark canvas.
 - **Embodied simulator** — `python -m worldfoundry.studio.cli openvla --frontend embodied --simulator-url http://127.0.0.1:9000`. **Planned.** Registers an external simulator URL only; does not launch an in-tree viewer.
@@ -1301,7 +1301,7 @@ modules at the Studio root.
 | `ui/workspace.html`, `ui/workspace.py` | Packaged Workspace page and its asset loader. |
 | `ui/` | Browser launch options, model interfaces, shared browser assets, and the Workspace page. |
 | `visualization/` | Artifact discovery, viewer routing, geometry presentation, and browser backends. |
-| `cli.py` | Installed `worldfoundry-studio` command. |
+| `cli.py` | Installed `wf-studio` command. |
 | `runtime_job.py` | Subprocess and resident inference worker entrypoint. |
 | `workspace_job.py` | CLI adapter for Workspace inference requests. |
 
@@ -1311,7 +1311,7 @@ install `visualization.studio.prepare_run_record` as the `record_processor`
 when they need viewer manifests or preview conversion.
 
 `studio/native` and its CUDA/C++/ImGui frontend have been removed. The standalone
-browser backends remain available through `worldfoundry-studio`.
+browser backends remain available through `wf-studio`.
 
 ### Retained rendering helpers
 

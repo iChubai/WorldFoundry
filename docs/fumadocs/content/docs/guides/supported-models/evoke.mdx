@@ -19,7 +19,7 @@ Paper: [arXiv 2608.13546](https://arxiv.org/abs/2608.13546). Project: [evoke-wor
 
 Run the wired three-step post-distillation path. This is not AlayaWorld.
 
-Launch `worldfoundry-eval run evoke`.
+Launch `wf run evoke`.
 
 ## Runtime contract
 
@@ -39,11 +39,11 @@ Required: `prompt`, `image`, and `video`; `actions`: trajectory_npz, pose_path, 
 
 ## Run in WorldFoundry
 
-Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `AlayaLab/Evoke` and `pkqbajng/ViGeo1.1` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run evoke`. License: CC-BY-NC-4.0. Catalog VRAM is unset.
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `AlayaLab/Evoke` and `pkqbajng/ViGeo1.1` locally — missing files fail at load, nothing is downloaded. Run `wf run evoke`. License: CC-BY-NC-4.0. Catalog VRAM is unset.
 
 ## Bundled runtime notes
 
-WorldFoundry's public entry is `EvokePipeline` / `worldfoundry-eval run evoke`. The bundled inference scripts live under `worldfoundry/synthesis/visual_generation/evoke/evoke_runtime/scripts/inference/`: `infer_single.py` executes inference and `postprocess_viz.py` prepares visual outputs. The shell launchers discussed by upstream belong to the official repository.
+WorldFoundry's public entry is `EvokePipeline` / `wf run evoke`. The bundled inference scripts live under `worldfoundry/synthesis/visual_generation/evoke/evoke_runtime/scripts/inference/`: `infer_single.py` executes inference and `postprocess_viz.py` prepares visual outputs. The shell launchers discussed by upstream belong to the official repository.
 
 The student is autoregressive over latent chunks (`latent_window_size = 9`). Each chunk is laid out on the RoPE frame index as `prefix | long(16) | mid(2) | warp(W) | prev_short(1) | noise(W)`:
 

@@ -55,7 +55,7 @@ Open the recipe first. Prompt files, generated-artifact layouts, checkpoint name
 Use this when the recipe says WorldFoundry **normalizes** an upstream export and does not run the simulator.
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --mode official-validation \
   --official-results-path <official-result-file-or-dir> \
@@ -69,7 +69,7 @@ worldfoundry-eval zoo benchmark-run \
 Use `official-run` only when the recipe says the in-tree runtime can recompute scores from generated artifacts and the required media or checkpoints are staged. Physics-IQ is the usual example.
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --mode official-run \
   --generated-artifact-dir <generated-artifact-dir> \
@@ -80,7 +80,7 @@ worldfoundry-eval zoo benchmark-run \
 To generate artifacts with a registered model before scoring:
 
 ```bash
-worldfoundry-eval run \
+wf run \
   --benchmark <benchmark-id> \
   --model <model-id> \
   --mode official-run \

@@ -112,7 +112,7 @@ runner:
     input_kind: score_dir_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:CameraBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -176,10 +176,10 @@ integration:
   tier: model_backed
   hf_dataset_id: linzhiqiu/camerabench
   evidence:
-    strict_official_runtime: worldfoundry-eval zoo benchmark-run --benchmark-id camerabench --mode 
+    strict_official_runtime: wf zoo benchmark-run --benchmark-id camerabench --mode 
       official-validation --official-results-path <official_results.json> --benchmark-data-root <camerabench_data_root> 
       --output-dir <out> --json
-    in_tree_score_dir_metric_aggregator: worldfoundry-eval zoo benchmark-run --benchmark-id camerabench --mode 
+    in_tree_score_dir_metric_aggregator: wf zoo benchmark-run --benchmark-id camerabench --mode 
       official-validation --score-dir <score_dir> --benchmark-data-root <camerabench_data_root> --output-dir <out> 
       --json
     official_benchmark_verified: false
@@ -241,7 +241,7 @@ runner_availability:
   surface: camerabench_official_in_tree
   normalizer_verified: true
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

@@ -6,7 +6,6 @@ import argparse
 import json
 import os
 import re
-import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -27,17 +26,9 @@ class CliUsageError(ValueError):
 
 
 def cli_prog_name() -> str:
-    """Match usage/help branding to the console script that was invoked.
+    """Return the program name used in usage, help, and hint text."""
 
-    ``worldfoundry`` and ``worldfoundry-eval`` share this parser; anything
-    else (``python -m worldfoundry.cli``, tests, ...) keeps the historical
-    ``worldfoundry-eval`` branding so existing help-contract tests stay stable.
-    """
-
-    name = Path(sys.argv[0]).name
-    if name in {"worldfoundry", "worldfoundry-eval"}:
-        return name
-    return "worldfoundry-eval"
+    return "wf"
 
 
 def json_dump(payload: object) -> None:

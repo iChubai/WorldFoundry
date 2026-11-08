@@ -23,7 +23,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: physics-iq
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id physics-iq --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physics-iq --json
+  contract_validation_command: wf zoo benchmark-run --benchmark-id physics-iq --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physics-iq --json
   official_runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   release_status: experimental
@@ -41,7 +41,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/physics-iq.yaml
     bundled_assets: worldfoundry/data/benchmarks/assets/physics-iq
   checkpoint_refs: []
-  validation_command: [worldfoundry-eval, zoo, benchmark-run, --benchmark-id, physics-iq, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
+  validation_command: [wf, zoo, benchmark-run, --benchmark-id, physics-iq, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
   runner_availability:
     available: true
     runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQContract

@@ -13,11 +13,11 @@ WorldFoundry 是面向世界智能的开源基础设施。世界智能不能被�
 
 ```bash
 bash scripts/inference/prepare_model_infer.sh matrix-game-2 --download
-worldfoundry-eval run matrix-game-2-universal-action-validation \
+wf run matrix-game-2-universal-action-validation \
   --pipeline.task-profile official-universal-image
 ```
 
-这次运行只支撑一个结论：这套配置产出了可检查的 artifact，并不等于某个 benchmark 已经跑完。日常命令用 `worldfoundry-eval run`。各层与清单见[设计](/zh/docs/overview/design)。
+这次运行只支撑一个结论：这套配置产出了可检查的 artifact，并不等于某个 benchmark 已经跑完。日常命令用 `wf run`。各层与清单见[设计](/zh/docs/overview/design)。
 
 <h2 id="operational-definition">操作定义</h2>
 

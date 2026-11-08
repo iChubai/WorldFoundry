@@ -19,7 +19,7 @@ Paper: [arXiv 2503.03751](https://arxiv.org/abs/2503.03751). Project: [research.
 
 NVIDIA GEN3C camera-conditioned world video. Weights are gated.
 
-Launch `worldfoundry-eval run gen3c` with `--pipeline.task-profile official-single-image`.
+Launch `wf run gen3c` with `--pipeline.task-profile official-single-image`.
 
 Score on [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — camera-trajectory adherence of controlled generation.
 
@@ -39,6 +39,6 @@ Required: `prompt` and `image`; optional: `video`; `actions`: camera_trajectory;
 
 ## Run in WorldFoundry
 
-Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `nvidia/GEN3C-Cosmos-7B` and `Ruicheng/moge-vitl` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run gen3c` with `--pipeline.task-profile official-single-image`. Catalog VRAM is unset.
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `nvidia/GEN3C-Cosmos-7B` and `Ruicheng/moge-vitl` locally — missing files fail at load, nothing is downloaded. Run `wf run gen3c` with `--pipeline.task-profile official-single-image`. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="gen3c" locale="en" />

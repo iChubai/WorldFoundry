@@ -117,7 +117,7 @@ runner:
     default_metrics: [vmbench_average]
   runner_target: worldfoundry.evaluation.tasks.contracts.external:VMBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -187,7 +187,7 @@ runner_availability:
   surface: vmbench_official_in_tree
   normalizer_verified: true
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

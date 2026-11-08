@@ -489,8 +489,8 @@ make lint
 make compile-eval
 make cli-entrypoint-check
 make cli-check
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval evaluate --results-path tmp/results.jsonl --output-dir tmp/worldfoundry_evaluate --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmarks --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf evaluate --results-path tmp/results.jsonl --output-dir tmp/worldfoundry_evaluate --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmarks --json
 ```
 
   </Tab>
@@ -509,18 +509,18 @@ curl -I http://localhost:8013/zh/docs
   <Tab>
 
 ```bash
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo model-show --model-id <model-id> --include-manifest --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo model-download --model-id <model-id> --check-local --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo model-show --model-id <model-id> --include-manifest --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo model-download --model-id <model-id> --check-local --json
 ```
 
   </Tab>
   <Tab>
 
 ```bash
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmarks --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval preflight runtime --profile <benchmark-id> --manifest worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark-id>.yaml --output-dir tmp/preflight/runtime/<benchmark-id> --json
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmark-run --benchmark-id <benchmark-id> --mode official-validation --official-results-path <official_results.json> --generated-artifact-dir <generated_artifacts> --output-dir tmp/benchmark_zoo/official_validation/<benchmark-id> --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmark-show --benchmark-id <benchmark-id> --include-spec --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmarks --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf preflight runtime --profile <benchmark-id> --manifest worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark-id>.yaml --output-dir tmp/preflight/runtime/<benchmark-id> --json
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmark-run --benchmark-id <benchmark-id> --mode official-validation --official-results-path <official_results.json> --generated-artifact-dir <generated_artifacts> --output-dir tmp/benchmark_zoo/official_validation/<benchmark-id> --json
 ```
 
   </Tab>
@@ -576,13 +576,13 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 Matrix 是 model-zoo 和 benchmark-zoo readiness 的 release gate。它会合并 manifest entries 和 staged validation reports，并重新计算 integration status。
 
 ```bash
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval run \
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf run \
   --all-benchmarks \
     --plan-only \
   --output-dir tmp/worldfoundry_plan_matrix \
   --json
 
-conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval validate-artifact \
+conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf validate-artifact \
   tmp/worldfoundry_plan_matrix/suite_manifest.json \
   --kind suite-manifest \
   --strict \

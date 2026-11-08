@@ -23,7 +23,7 @@ WorldFoundry **aggregates prepared `score_dir` files** or imports official JSON.
 Import official JSON (strict coverage):
 
 ```bash
-WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
+WORLDFOUNDRY_CAMERABENCH_STRICT=1 wf zoo benchmark-run \
   --benchmark-id camerabench \
   --mode official-validation \
   --official-results-path <official_results.json> \
@@ -35,7 +35,7 @@ WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
 Aggregate a prepared score directory:
 
 ```bash
-WORLDFOUNDRY_CAMERABENCH_STRICT=1 worldfoundry-eval zoo benchmark-run \
+WORLDFOUNDRY_CAMERABENCH_STRICT=1 wf zoo benchmark-run \
   --benchmark-id camerabench \
   --mode official-validation \
   --score-dir <score_dir> \

@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     """
     from worldfoundry.cli.help import WorldFoundryArgumentParser
 
-    parser = WorldFoundryArgumentParser(prog="worldfoundry-mcp", description="Start the WorldFoundry MCP server.")
+    parser = WorldFoundryArgumentParser(prog="wf mcp", description="Start the WorldFoundry MCP server.")
     parser.add_argument(
         "--transport",
         choices=("stdio", "sse"),

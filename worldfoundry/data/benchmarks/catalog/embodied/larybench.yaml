@@ -82,7 +82,7 @@ runner:
     input_kind: dataset_root_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:LARYBenchContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -161,7 +161,7 @@ runner_availability:
   surface: larybench_official_in_tree
 checkpoint_refs: []
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

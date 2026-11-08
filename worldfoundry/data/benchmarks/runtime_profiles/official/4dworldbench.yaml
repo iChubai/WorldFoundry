@@ -89,7 +89,7 @@ validation_command:
 - <out>
 - --json
 normalization_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

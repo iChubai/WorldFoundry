@@ -62,7 +62,7 @@ preflight_command: >-
   worldfoundry/data/benchmarks/runtime_profiles/official/evalcrafter.yaml --output-dir
   tmp/worldfoundry_preflight/evalcrafter --json
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

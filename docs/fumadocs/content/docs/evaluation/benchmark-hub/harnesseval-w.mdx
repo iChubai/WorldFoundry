@@ -30,7 +30,7 @@ Import an official `harnesseval.report` JSON, a case-score JSON/list, or an eval
 directory containing `rollout_scores/<model>/<family>/*.scores.json`:
 
 ```bash
-worldfoundry-eval zoo benchmark-run --benchmark-id harnesseval-w \
+wf zoo benchmark-run --benchmark-id harnesseval-w \
   --mode official-validation --official-results-path /path/to/evaluation \
   --result-model-id my-model --output-dir tmp/harnesseval-import --json
 ```

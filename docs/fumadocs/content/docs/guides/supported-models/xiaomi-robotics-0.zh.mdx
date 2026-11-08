@@ -17,7 +17,7 @@ Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非�
 
 ## 用来做什么
 
-把 Xiaomi-Robotics-0 当视觉-语言-动作策略滚动起来。先跑 `xiaomi-robotics-0-libero`；还有 `xiaomi-robotics-0-calvin-abcd`、`xiaomi-robotics-0-calvin-abc`、`xiaomi-robotics-0-simplerenv-google` 等。启动 `worldfoundry-eval run xiaomi-robotics-0-libero`，任务 profile 为 `vla.policy_rollout`——必填 `instruction`、`prompt`、`image`、`state`；产物 `action_trace`、`xiaomi_robotics_0_action_trace.json`。
+把 Xiaomi-Robotics-0 当视觉-语言-动作策略滚动起来。先跑 `xiaomi-robotics-0-libero`；还有 `xiaomi-robotics-0-calvin-abcd`、`xiaomi-robotics-0-calvin-abc`、`xiaomi-robotics-0-simplerenv-google` 等。启动 `wf run xiaomi-robotics-0-libero`，任务 profile 为 `vla.policy_rollout`——必填 `instruction`、`prompt`、`image`、`state`；产物 `action_trace`、`xiaomi_robotics_0_action_trace.json`。
 
 不是 [Xiaomi Robotics 1](/zh/docs/guides/supported-models/xiaomi-robotics-1)。 评测看 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero)、[CALVIN](/zh/docs/evaluation/benchmark-hub/calvin)。
 
@@ -27,6 +27,6 @@ Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非�
 
 ## 在 WorldFoundry 中运行
 
-跑在独立环境 `worldfoundry-xiaomi-robotics-0-cu128`（Python 3.12，CUDA 12.8）。 把 `XiaomiRobotics/Xiaomi-Robotics-0-LIBERO`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABCD_D`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABC_D` 等 就位到本地——运行时不代下权重。 启动 `worldfoundry-eval run xiaomi-robotics-0-libero`，任务 profile 为 `vla.policy_rollout`。 许可：Apache-2.0。
+跑在独立环境 `worldfoundry-xiaomi-robotics-0-cu128`（Python 3.12，CUDA 12.8）。 把 `XiaomiRobotics/Xiaomi-Robotics-0-LIBERO`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABCD_D`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABC_D` 等 就位到本地——运行时不代下权重。 启动 `wf run xiaomi-robotics-0-libero`，任务 profile 为 `vla.policy_rollout`。 许可：Apache-2.0。
 
 <ModelRelatedRecipes modelId="xiaomi-robotics-0" locale="zh" />

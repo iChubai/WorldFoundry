@@ -32,12 +32,12 @@ metadata:
     root_env: WORLDFOUNDRY_BEHAVIOR1K_ROOT
     results_path_env: WORLDFOUNDRY_BEHAVIOR1K_RESULTS_PATH
     preflight_profile: behavior1k
-  official_result_entrypoint: worldfoundry-eval zoo benchmark-run
+  official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
     target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id behavior1k --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id behavior1k --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/behavior1k --json
   release_status: normalizer_only
   maturity: contract_ready
@@ -68,7 +68,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/behavior1k.yaml
   checkpoint_refs: []
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

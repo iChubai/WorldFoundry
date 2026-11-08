@@ -39,7 +39,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 Import `summary.json`, a run directory, a `runs/` parent, or a bare `per_task/` tree without an API key:
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id stevo-bench \
   --mode official-validation \
   --official-results-path /path/to/runs/<output_map_stem> \
@@ -97,6 +97,6 @@ The vendored tree also has a **generation** helper (`generation.run_world_models
 - Cross-model Gemini+GPT unanimous voting: `gemini_gpt_evaluator.py` (install `worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt`).
 - Default filter in those scripts: level-4 tasks whose id does not end in `_00`, with initial image + video + YAML present.
 
-Use them only for analysis. Reportable WorldFoundry scores come from `run_stevo_bench_official_runner.py` / `worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench`.
+Use them only for analysis. Reportable WorldFoundry scores come from `run_stevo_bench_official_runner.py` / `wf zoo benchmark-run --benchmark-id stevo-bench`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -33,7 +33,7 @@ metadata:
     target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id maniskill2 --mode contract 
+  contract_validation_command: wf zoo benchmark-run --benchmark-id maniskill2 --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/maniskill2 --json
   release_status: normalizer_only
   maturity: contract_ready
@@ -64,7 +64,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/maniskill2.yaml
   checkpoint_refs: []
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

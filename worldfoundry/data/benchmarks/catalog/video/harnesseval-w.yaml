@@ -181,7 +181,7 @@ runner:
   - official_report.json
   - benchmark_contract.json
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

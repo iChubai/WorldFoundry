@@ -91,7 +91,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: fetv
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id fetv --mode contract --output-dir
+  contract_validation_command: wf zoo benchmark-run --benchmark-id fetv --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/fetv --json
   base_model_dependencies:
   - video_quality_motion_stack
@@ -185,10 +185,10 @@ metadata:
       provenance: normalizes caller-provided official outputs or FETV-EVAL result directories without executing upstream
         repos
   open_source_status: bounded_official_clipscore_and_result_normalizer
-  official_result_entrypoint: worldfoundry-eval zoo benchmark-run
+  official_result_entrypoint: wf zoo benchmark-run
   runner:
     validation_command:
-    - worldfoundry-eval
+    - wf
     - zoo
     - benchmark-run
     - --benchmark-id
@@ -204,11 +204,11 @@ metadata:
     - --json
     runtime:
       results_path_env: WORLDFOUNDRY_FETV_RESULTS_PATH
-    official_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id fetv --mode official-validation
+    official_validation_command: wf zoo benchmark-run --benchmark-id fetv --mode official-validation
       --official-results-path <official_results.csv-or-FETV-EVAL-dir> --generated-artifact-dir <generated_videos>
       --output-dir <out> --json
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -292,7 +292,7 @@ tasks:
       - fetv_average
       runner_target: worldfoundry.evaluation.tasks.contracts.external:FETVContract
       runner_script: worldfoundry/evaluation/tasks/execution/runners/fetv/run_fetv_official_runner.py
-      official_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id fetv --mode official-validation
+      official_validation_command: wf zoo benchmark-run --benchmark-id fetv --mode official-validation
         --official-results-path <official_results.csv-or-FETV-EVAL-dir> --generated-artifact-dir <generated_videos>
         --output-dir <out> --json
-      official_result_entrypoint: worldfoundry-eval zoo benchmark-run
+      official_result_entrypoint: wf zoo benchmark-run

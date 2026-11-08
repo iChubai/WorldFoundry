@@ -41,7 +41,7 @@ The wrapper resolves only local HFD or explicit checkpoint directories — no ru
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run lingbot-world --pipeline.task-profile image-navigation-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run lingbot-world --pipeline.task-profile image-navigation-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `robbyant/lingbot-world-base-cam`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world`. Add `--download` to fetch missing public checkpoints.
 

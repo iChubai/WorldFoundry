@@ -35,7 +35,7 @@ Use ZingPipeline.from_pretrained(checkpoint_dir). num_frames includes the option
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run zing --pipeline.task-profile interactive-world-model` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run zing --pipeline.task-profile interactive-world-model` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `seedleap/zing-0.5`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh zing`. Add `--download` to fetch missing public checkpoints.
 

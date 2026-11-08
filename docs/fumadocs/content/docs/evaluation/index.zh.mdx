@@ -9,18 +9,18 @@ description: 用 benchmark、metric 与可复现 scorecard 对生成产物打分
 
 ## 该跑什么
 
-- **用完整 benchmark protocol 给一个目录打分** — `worldfoundry-eval score --benchmark <id> --artifacts <dir> ...`
-- **从 dataset manifest 生成，再按 metric ID 打分** — `worldfoundry-eval generate-score --model <id> --dataset-manifest <file> ...`
-- **复现已知的 model × benchmark 配置** — `worldfoundry-eval reproduce --recipe <recipe.yaml> ...`
-- **用新模型或自定义模型跑已有 benchmark** — `worldfoundry-eval run --model <id> --model-manifest-dir <dir> --benchmark <id> ...`
-- **对已有 JSON/JSONL 结果打分** — `worldfoundry-eval evaluate --mode existing-results ...`
-- **从 task 物化 request ledger** — `worldfoundry-eval task materialize ...`
-- **跑单个 benchmark × model** — `worldfoundry-eval run --benchmark <id> --model <id> ...`
-- **导入官方形态结果** — `worldfoundry-eval zoo benchmark-run --mode official-validation ...`
-- **尝试新的 benchmark manifest** — `worldfoundry-eval run --benchmark-manifest-dir <dir> --benchmark <id> ...`
-- **列出 metric ID** — `worldfoundry-eval metric list`
+- **用完整 benchmark protocol 给一个目录打分** — `wf score --benchmark <id> --artifacts <dir> ...`
+- **从 dataset manifest 生成，再按 metric ID 打分** — `wf generate-score --model <id> --dataset-manifest <file> ...`
+- **复现已知的 model × benchmark 配置** — `wf reproduce --recipe <recipe.yaml> ...`
+- **用新模型或自定义模型跑已有 benchmark** — `wf run --model <id> --model-manifest-dir <dir> --benchmark <id> ...`
+- **对已有 JSON/JSONL 结果打分** — `wf evaluate --mode existing-results ...`
+- **从 task 物化 request ledger** — `wf task materialize ...`
+- **跑单个 benchmark × model** — `wf run --benchmark <id> --model <id> ...`
+- **导入官方形态结果** — `wf zoo benchmark-run --mode official-validation ...`
+- **尝试新的 benchmark manifest** — `wf run --benchmark-manifest-dir <dir> --benchmark <id> ...`
+- **列出 metric ID** — `wf metric list`
 
-默认用户入口是 `worldfoundry-eval run`。已有物化 request 或 result 时用 `evaluate`。已集成的外部 benchmark（自备 data root、生成产物或官方结果文件）用 `zoo benchmark-run`。
+默认用户入口是 `wf run`。已有物化 request 或 result 时用 `evaluate`。已集成的外部 benchmark（自备 data root、生成产物或官方结果文件）用 `zoo benchmark-run`。
 
 ## 按意图选择
 
@@ -48,7 +48,7 @@ CLI、TUI 与 Workspace 把下面这些用户意图编译到同样的两种执�
 
 ```bash
 # 物化小型 request ledger
-worldfoundry-eval task materialize <task-name> \
+wf task materialize <task-name> \
   --benchmark <benchmark-id> \
   --dataset-manifest /path/to/dataset_manifest.json \
   --num-samples 8 \
@@ -56,7 +56,7 @@ worldfoundry-eval task materialize <task-name> \
   --json
 
 # 对已有结果打分
-worldfoundry-eval evaluate \
+wf evaluate \
   --mode existing-results \
   --results-path tmp/results.jsonl \
   --output-dir tmp/evaluate_existing \
@@ -66,7 +66,7 @@ worldfoundry-eval evaluate \
   --json
 
 # 用 VBench 的完整 protocol 给别处生成的视频打分
-worldfoundry-eval score \
+wf score \
   --benchmark vbench \
   --artifacts /path/to/videos \
   --output-dir tmp/vbench_custom \
@@ -74,7 +74,7 @@ worldfoundry-eval score \
   --json
 
 # 让仓内模型跑一份带校验和的 dataset manifest
-worldfoundry-eval generate-score \
+wf generate-score \
   --model <model-id> \
   --dataset-manifest /path/to/dataset_manifest.json \
   --metric artifact_count \
@@ -83,7 +83,7 @@ worldfoundry-eval generate-score \
   --json
 
 # 跑单个 benchmark cell
-worldfoundry-eval run \
+wf run \
   --benchmark <benchmark-id> \
   --model <model-id> \
   --output-dir tmp/benchmark_run \
@@ -91,7 +91,7 @@ worldfoundry-eval run \
   --json
 
 # 导入官方形态结果（framework 证据，不是 leaderboard 声明）
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id <benchmark-id> \
   --mode official-validation \
   --official-results-path <official_results.json> \
@@ -131,7 +131,7 @@ reference:
   reported_score: <value>
 ```
 
-先跑 `worldfoundry-eval reproduce --recipe recipe.yaml --output-dir tmp/reproduce --plan-only --json`。prepared 记录包含 recipe 与 requests 的 SHA-256、来源字段、模型/benchmark revision、范围与 leaderboard 候选状态；实际执行时仍会校验 benchmark runner 与本地资产。
+先跑 `wf reproduce --recipe recipe.yaml --output-dir tmp/reproduce --plan-only --json`。prepared 记录包含 recipe 与 requests 的 SHA-256、来源字段、模型/benchmark revision、范围与 leaderboard 候选状态；实际执行时仍会校验 benchmark runner 与本地资产。
 
 各 benchmark 专用的布局与 flag 见对应的 Benchmark Hub 页。
 

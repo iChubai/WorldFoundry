@@ -7,7 +7,7 @@ description: Where to look up sources, where to download, and which commands to 
 
 Use this page when a command says that a checkpoint, dataset, metric weight, generated output, or official result file is missing. WorldFoundry keeps these large or licensed files outside git; the repository holds code and manifests, while your machine or shared storage holds the assets those manifests reference.
 
-Typical path: inspect the model or benchmark ID with `worldfoundry-eval zoo ... --json`, generate a per-benchmark asset plan when evaluating, then stage only what the next run needs. You do not need every benchmark asset before using the framework. For the unified conda env, see [Environments](/docs/reference/environments).
+Typical path: inspect the model or benchmark ID with `wf zoo ... --json`, generate a per-benchmark asset plan when evaluating, then stage only what the next run needs. You do not need every benchmark asset before using the framework. For the unified conda env, see [Environments](/docs/reference/environments).
 
 Install the Hugging Face Hub package. The optional CLI (`hf` / `huggingface-cli`) is used when available; download scripts fall back to `huggingface_hub.snapshot_download` otherwise:
 
@@ -131,7 +131,7 @@ official_sources:
 `checkpoints` / `checkpoint.repos[].id` is what you download; `sha` pins the revision; `runtime_profile` points at expected local paths and env. Same facts via CLI:
 
 ```bash
-worldfoundry-eval zoo model-show --model-id matrix-game-2 --json
+wf zoo model-show --model-id matrix-game-2 --json
 ```
 
 Local layout after staging:
@@ -175,7 +175,7 @@ runner:
 `dataset_refs[].repo_id` is the HF download; `path` is the expected relative layout under your data root; `required_assets` / `*_env` name the rest. Merge catalog + task + profile into one checklist:
 
 ```bash
-worldfoundry-eval zoo benchmark-show --benchmark-id libero --json
+wf zoo benchmark-show --benchmark-id libero --json
 
 python scripts/setup/prepare_benchmark_assets.py \
   --benchmark-id libero \
@@ -281,7 +281,7 @@ UniDepth V2 and UniK3D are released under CC-BY-NC-4.0. Review the upstream non-
 Inspect the exact URLs, resolved paths, size checks, and export commands without downloading:
 
 ```bash
-worldfoundry-eval models assets \
+wf models assets \
   --capability sam2 \
   --capability mobile_sam \
   --capability repvit_sam \
@@ -295,7 +295,7 @@ To materialize missing files, add `--execute-downloads`. `HF_ENDPOINT` is honore
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
-worldfoundry-eval models assets \
+wf models assets \
   --capability sam2 \
   --capability mobile_sam \
   --capability repvit_sam \
@@ -308,13 +308,13 @@ worldfoundry-eval models assets \
 Plan only, then execute after you accept storage and license:
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-2 \
   --cache-dir "${WORLDFOUNDRY_HFD_ROOT}" \
   --check-local \
   --json
 
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-2 \
   --cache-dir "${WORLDFOUNDRY_HFD_ROOT}" \
   --execute \
@@ -367,7 +367,7 @@ repository, so a cache containing only K=1 cannot make a K=20 or SSM model look
 ready:
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id echo-memory-context-k1 \
   --check-local \
   --json
@@ -412,12 +412,12 @@ hf download depth-anything/DA3NESTED-GIANT-LARGE-1.1 \
 Verify both recipes without loading model tensors:
 
 ```bash
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-3.5-first-person \
   --check-local \
   --json
 
-worldfoundry-eval zoo model-download \
+wf zoo model-download \
   --model-id matrix-game-3.5-third-person \
   --check-local \
   --json

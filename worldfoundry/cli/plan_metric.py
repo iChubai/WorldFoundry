@@ -1,7 +1,7 @@
 """CLI sub-commands for creating, inspecting, and validating run plans and metric IDs.
 
 This module wires up the ``plan`` and ``metric`` sub-commands under the
-``worldfoundry-eval`` CLI.  The ``plan`` sub-command supports ``create``,
+``wf`` CLI.  The ``plan`` sub-command supports ``create``,
 ``show``, and ``validate`` operations on stable executable run plans.  The
 ``metric`` sub-command supports ``list``, ``show``, and ``validate``
 operations on the metric registry.
@@ -325,7 +325,7 @@ def register_plan_metric_subparsers(subparsers: argparse._SubParsersAction) -> N
 
     Args:
         subparsers: The subparser collection from the root
-            ``worldfoundry-eval`` command.
+            ``wf`` command.
     """
     plan_parser = subparsers.add_parser(
         "plan",

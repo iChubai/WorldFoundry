@@ -50,7 +50,7 @@ notes:
 - Contract, Natural-25 request materialization, published-result normalization, and WRBench source are available in-tree.
 - Full D1-D6 execution requires external checkpoint paths in WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG.
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

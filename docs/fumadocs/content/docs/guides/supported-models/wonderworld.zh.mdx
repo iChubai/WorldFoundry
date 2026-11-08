@@ -75,7 +75,7 @@ print(result["artifact_path"], result["preview_path"])
 目录加载器和 Studio 使用同一专用管线与权重字段。CLI 配置查看不需要加载权重：
 
 ```bash
-worldfoundry-eval run wonderworld --print-config --json \
+wf run wonderworld --print-config --json \
   --pipeline.depth-steps 30 \
   --pipeline.load.checkpoint-root /weights
 ```

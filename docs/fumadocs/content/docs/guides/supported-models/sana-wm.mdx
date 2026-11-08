@@ -45,7 +45,7 @@ WorldFoundry registers an in-tree resident pipeline with configurable multi-GPU 
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run sana-wm-streaming --pipeline.task-profile interactive-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run sana-wm-streaming --pipeline.task-profile interactive-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `Efficient-Large-Model/SANA-WM_streaming` and `Efficient-Large-Model/SANA-WM_bidirectional`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh sana-wm-streaming`. Add `--download` to fetch missing public checkpoints.
 

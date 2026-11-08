@@ -325,13 +325,13 @@ links that preserve official paths without duplicating large files.
 
 ### Benchmark dataset layouts
 
-`worldfoundry-eval dataset locate <org/name>` resolves an existing dataset
+`wf dataset locate <org/name>` resolves an existing dataset
 without network access. It checks the per-dataset environment override first,
 then local asset/data manifests, a direct data root, and finally Hugging Face
 cache snapshots. Direct roots accept `org/name`, `org--name`, and nested
 `hfd_datasets` layouts; hub caches use the standard
 `datasets--org--name/snapshots/<revision>` layout. Use
-`worldfoundry-eval dataset plan <org/name> [...]` to print deduplicated download
+`wf dataset plan <org/name> [...]` to print deduplicated download
 commands without executing them.
 
 ## Compiler caches
@@ -504,7 +504,7 @@ The host setup is Docker plus the unified WorldFoundry environment:
 bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 docker pull ghcr.io/allenai/vla-evaluation-harness/robotwin:latest
-worldfoundry-eval embodied run \
+wf embodied run \
   --config worldfoundry/data/benchmarks/eval_configs/embodied/robotwin/eval.yaml \
   --pull-docker
 ```

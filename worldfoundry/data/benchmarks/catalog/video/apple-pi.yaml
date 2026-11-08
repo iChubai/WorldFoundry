@@ -110,7 +110,7 @@ runner:
     input_kind: apple_pi_prediction_dir_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:ApplePIContract
   validation_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id
@@ -123,7 +123,7 @@ runner:
   - <out>
   - --json
   run_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

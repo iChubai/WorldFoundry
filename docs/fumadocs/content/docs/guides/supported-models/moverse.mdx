@@ -41,7 +41,7 @@ Execution is offline and requires four pre-staged Hugging Face snapshots plus ff
 
 ## Running in WorldFoundry
 
-The catalog launch is `worldfoundry-eval run moverse --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+The catalog launch is `wf run moverse --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `Orange-3DV-Team/MoVerse`, `black-forest-labs/FLUX.1-Fill-dev`, and `depth-anything/DA3NESTED-GIANT-LARGE-1.1` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh moverse`. Add `--download` to fetch missing public checkpoints.
 

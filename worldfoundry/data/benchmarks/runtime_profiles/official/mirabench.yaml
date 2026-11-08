@@ -55,7 +55,7 @@ optional_imports:
 - cv2
 - pandas
 validation_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

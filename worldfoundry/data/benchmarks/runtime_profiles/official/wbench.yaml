@@ -74,7 +74,7 @@ full_runtime_requires:
 - WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
 - wbench_metric_stack base-model assets
 normalization_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

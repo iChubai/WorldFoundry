@@ -39,7 +39,7 @@ Pick the variant by input: lyra-1 when you start from an image or video, lyra-2 
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run lyra-1 --pipeline.task-profile official-static-sdg` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `wf run lyra-1 --pipeline.task-profile official-static-sdg` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
 
 Recorded weight repositories include `depth-anything/DA3NESTED-GIANT-LARGE-1.1`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lyra-1`. Add `--download` to fetch missing public checkpoints.
 

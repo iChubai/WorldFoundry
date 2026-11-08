@@ -88,7 +88,7 @@ plan_command:
 - --output-dir
 - <out>
 normalization_command:
-- worldfoundry-eval
+- wf
 - zoo
 - benchmark-run
 - --benchmark-id

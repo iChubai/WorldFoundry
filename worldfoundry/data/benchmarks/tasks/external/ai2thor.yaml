@@ -56,7 +56,7 @@ metadata:
     root_env: WORLDFOUNDRY_AI2THOR_ROOT
     results_path_env: WORLDFOUNDRY_AI2THOR_RESULTS_PATH
     eval_config: worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
-  contract_validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id ai2thor --mode contract --output-dir
+  contract_validation_command: wf zoo benchmark-run --benchmark-id ai2thor --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/ai2thor --json
   artifact_layout:
     generated_artifact_dir_env: WORLDFOUNDRY_AI2THOR_RESULTS_PATH
@@ -68,7 +68,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml
   checkpoint_refs: []
   validation_command:
-  - worldfoundry-eval
+  - wf
   - embodied
   - run
   - --config

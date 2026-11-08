@@ -59,7 +59,7 @@ runner:
   runner_target: worldfoundry.evaluation.tasks.contracts.external:SanaWMBenchContract
   runner_script: worldfoundry/evaluation/tasks/execution/runners/sana_wm_bench/run_sana_wm_bench_official_runner.py
   run_command:
-  - worldfoundry-eval
+  - wf
   - zoo
   - benchmark-run
   - --benchmark-id

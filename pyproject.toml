@@ -36,11 +36,8 @@ dependencies = [
 ]
 
 [project.scripts]
-worldfoundry = "worldfoundry.cli:main"
-worldfoundry-eval = "worldfoundry.cli:main"
-worldfoundry-mcp = "worldfoundry.mcp:main"
-worldfoundry-studio = "worldfoundry.studio.cli:main"
-worldfoundry-tui = "worldfoundry.cli.tui:main"
+wf = "worldfoundry.cli:main"
+wf-studio = "worldfoundry.studio.cli:main"
 
 [project.optional-dependencies]
 api = [

@@ -39,7 +39,7 @@ CLI task profile：`indexed-inference`。绑定的 pipeline 类是 `SolarWMPipel
 
 ## 在 WorldFoundry 中运行
 
-catalog 启动命令是 `worldfoundry-eval run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+catalog 启动命令是 `wf run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 运行环境是独立 profile `worldfoundry-solarwm-wan22-cu124`（Python 3.10，CUDA 12.4，torch==2.5.1+cu124）。
 

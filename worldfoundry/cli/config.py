@@ -137,7 +137,7 @@ def _config_list_items(config_dir: Path) -> list[dict[str, Any]]:
                 "requirements": dict(payload.get("requirements", {})),
                 "command": command,
                 "shell": shlex.join(command),
-                "run_command": f"worldfoundry-eval config run {shlex.quote(_display_path(path))}",
+                "run_command": f"wf config run {shlex.quote(_display_path(path))}",
             }
         )
     return items

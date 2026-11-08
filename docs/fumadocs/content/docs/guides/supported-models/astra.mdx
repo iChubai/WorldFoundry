@@ -19,7 +19,7 @@ Runner parity is **verified**: the official **garden_1** Sekai demo ran through 
 
 Astra world / video route as recorded.
 
-Launch `worldfoundry-eval run astra` with `--pipeline.task-profile official-sekai-image`.
+Launch `wf run astra` with `--pipeline.task-profile official-sekai-image`.
 
 Score on [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — camera-following accuracy of interactive rollouts.
 
@@ -36,6 +36,6 @@ Required: `prompt` and `image`; optional: `video`; `actions`: camera_direction; 
 
 ## Run in WorldFoundry
 
-Status: **Verified**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `EvanEternal/Astra`, `Wan-AI/Wan2.1-T2V-1.3B`, and `EvanEternal/Astra` among others locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run astra` with `--pipeline.task-profile official-sekai-image`. Catalog VRAM is unset.
+Status: **Verified**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `EvanEternal/Astra`, `Wan-AI/Wan2.1-T2V-1.3B`, and `EvanEternal/Astra` among others locally — missing files fail at load, nothing is downloaded. Run `wf run astra` with `--pipeline.task-profile official-sekai-image`. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="astra" locale="en" />

@@ -47,7 +47,7 @@ Task YAML 比 benchmark-zoo catalog entry 更细：定义 sample 列、expected 
 
 <ArchDiagram id="task-materialize" locale="zh" />
 
-在 generation 耗 GPU 前用 `worldfoundry-eval task materialize` 证明此步。跳过 materialization 是“文档里 benchmark 可用、CI 却失败”最常见原因——runner 从未见到 task YAML 承诺的 sample ID。
+在 generation 耗 GPU 前用 `wf task materialize` 证明此步。跳过 materialization 是“文档里 benchmark 可用、CI 却失败”最常见原因——runner 从未见到 task YAML 承诺的 sample ID。
 
 ## External Benchmark 执行
 
@@ -74,7 +74,7 @@ Dataset manifest 指向 sample 文件或 object-storage key。Materialization �
     如果有 official runnable path，实现或指向一个 `ManifestBenchmarkRunner`。
   </Step>
   <Step>
-    运行 `worldfoundry-eval task materialize`，在 model generation 前证明 request materialization。
+    运行 `wf task materialize`，在 model generation 前证明 request materialization。
   </Step>
   <Step>
     用 `metrics/summary.json`、`scorecard.json` 和 benchmark-specific validation scripts 验证输出。

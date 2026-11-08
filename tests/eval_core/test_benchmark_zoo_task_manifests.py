@@ -220,7 +220,7 @@ def test_benchmark_zoo_external_manifest_metadata_contracts() -> None:
         assert manifest["benchmark"] == benchmark_id
         assert metadata["source_kind"] == "benchmark_zoo"
         assert metadata["contract_validation_command"] == (
-            f"worldfoundry-eval zoo benchmark-run --benchmark-id {benchmark_id} "
+            f"wf zoo benchmark-run --benchmark-id {benchmark_id} "
             f"--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/{benchmark_id} --json"
         )
         assert metadata.get("one_click_command") is None
@@ -691,8 +691,8 @@ def test_docs_benchmark_coverage_flags_unknown_and_excluded_refs(tmp_path: Path)
 | `vbench` / VBench | ok |
 | `missing-bench` / Missing Bench | not ok |
 
-worldfoundry-eval zoo benchmark-run --benchmark-id met3r --mode contract
-worldfoundry-eval zoo benchmark-run --benchmark-id <benchmark-id> --mode contract
+wf zoo benchmark-run --benchmark-id met3r --mode contract
+wf zoo benchmark-run --benchmark-id <benchmark-id> --mode contract
 """,
         encoding="utf-8",
     )
@@ -820,7 +820,7 @@ def test_task_manifests_distinguish_runner_scripts_from_commands() -> None:
             ), manifest_path
             assert (REPO_ROOT / script).is_file(), manifest_path
         if command is not None:
-            assert str(command).startswith("worldfoundry-eval "), manifest_path
+            assert str(command).startswith("wf "), manifest_path
         assert availability.get("runner_script_available") is bool(script)
 
 
@@ -830,7 +830,7 @@ def test_task_manifests_expose_user_facing_contract_validation_commands() -> Non
         benchmark_id = manifest["metadata"]["benchmark_id"]
         command = str(manifest["metadata"].get("contract_validation_command") or "")
 
-        assert command.startswith("worldfoundry-eval zoo benchmark-run "), manifest_path
+        assert command.startswith("wf zoo benchmark-run "), manifest_path
         assert f"--benchmark-id {benchmark_id}" in command, manifest_path
         assert "--mode contract" in command, manifest_path
         assert "--output-dir tmp/benchmark_zoo/benchmark_contract/" in command, manifest_path

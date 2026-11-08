@@ -22,7 +22,7 @@ WorldFoundry **vendors the runtime** and wraps `evaluate.py`. It writes a tempor
 hf download Video-Bench/Video-Bench_human_annotation --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/Video-Bench/Video-Bench_human_annotation
 
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id video-bench \
   --mode official-validation \
   --official-results-path <official_results.json> \

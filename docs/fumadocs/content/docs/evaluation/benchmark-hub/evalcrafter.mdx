@@ -21,7 +21,7 @@ WorldFoundry keeps an **in-tree CLIP subset** (`clip_score`, `clip_temp_score`, 
 Import official aggregates (smoke uses the bundled sample):
 
 ```bash
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-validation \
   --official-results-path worldfoundry/data/benchmarks/assets/evalcrafter/sample_results.txt \
@@ -33,7 +33,7 @@ Recompute the in-tree CLIP subset from numbered MP4s:
 
 ```bash
 export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
-worldfoundry-eval zoo benchmark-run \
+wf zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-run \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \

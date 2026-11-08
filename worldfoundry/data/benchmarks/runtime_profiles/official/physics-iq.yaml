@@ -25,4 +25,4 @@ required_paths:
 - {id: bundled_descriptions, path: worldfoundry/data/benchmarks/assets/physics-iq/descriptions/descriptions_original.csv}
 requires_cuda_visibility: false
 status: in_tree_official_runtime_ready
-validation_command: [worldfoundry-eval, zoo, benchmark-run, --benchmark-id, physics-iq, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
+validation_command: [wf, zoo, benchmark-run, --benchmark-id, physics-iq, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]

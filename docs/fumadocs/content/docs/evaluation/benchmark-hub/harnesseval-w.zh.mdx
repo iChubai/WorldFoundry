@@ -24,7 +24,7 @@ python -m worldfoundry.evaluation.tasks.execution.runners.harnesseval_w.run_harn
 支持官方 `harnesseval.report` JSON、单个/列表形式的 case score，以及含 `rollout_scores/<model>/<family>/*.scores.json` 的评测目录：
 
 ```bash
-worldfoundry-eval zoo benchmark-run --benchmark-id harnesseval-w \
+wf zoo benchmark-run --benchmark-id harnesseval-w \
   --mode official-validation --official-results-path /path/to/evaluation \
   --result-model-id my-model --output-dir tmp/harnesseval-import --json
 ```

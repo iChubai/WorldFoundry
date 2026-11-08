@@ -61,5 +61,5 @@ optional_imports:
 - yaml
 - google.genai
 - openai
-validation_command: worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench --mode official-validation
+validation_command: wf zoo benchmark-run --benchmark-id stevo-bench --mode official-validation
   --official-results-path <stevo_bench_run_dir_or_summary_json> --output-dir <out> --json

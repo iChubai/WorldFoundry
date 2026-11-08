@@ -27,7 +27,7 @@ Missing kernels, calibration, process groups, or checkpoint weights fail at buil
 
 ## What you can do
 
-These controls are wired. Enable them from `from_pretrained(...)`, Workspace **load JSON**, or `worldfoundry-eval run --pipeline.load.<kebab-name>` when that key is on the model’s load schema.
+These controls are wired. Enable them from `from_pretrained(...)`, Workspace **load JSON**, or `wf run --pipeline.load.<kebab-name>` when that key is on the model’s load schema.
 
 ### Precision and placement
 
@@ -419,7 +419,7 @@ pipe = Wan2p2Pipeline.from_pretrained(
 Keys on that model’s load schema:
 
 ```bash
-worldfoundry-eval run wan2.2-ti2v-5b \
+wf run wan2.2-ti2v-5b \
   --pipeline.task-profile <task-profile> \
   --pipeline.load.offload-mode resident \
   --pipeline.load.attention-backend flash3 \

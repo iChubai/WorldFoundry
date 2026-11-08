@@ -75,7 +75,7 @@ Each component location can be overridden through `inpainting_path`, `depth_path
 The catalog loader and Studio expose the same dedicated pipeline and checkpoint fields. CLI schema inspection is weight-free:
 
 ```bash
-worldfoundry-eval run wonderworld --print-config --json \
+wf run wonderworld --print-config --json \
   --pipeline.depth-steps 30 \
   --pipeline.load.checkpoint-root /weights
 ```

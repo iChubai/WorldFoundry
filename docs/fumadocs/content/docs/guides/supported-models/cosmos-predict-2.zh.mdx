@@ -21,7 +21,7 @@ WorldFoundry **原生组装**：框架自有去噪器、**T5-11B** 条件器、R
 
 只有需要 **T5 条件的 v2** 配方时才停在本页。新的世界视频工作应从 [Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5) 开始：Reason1 条件器、flow-UniPC，以及已验证的 **2B 文生世界** 路径（同样是 1280×704 / 93 帧 / 35 步）。
 
-启动 `worldfoundry-eval run cosmos-predict2-2b-video2world`，任务 profile 为 `image/video-to-world`。必填输入：`prompt`、`image`、`video`。产物：`cosmos-predict2-2b-video2world.mp4`（14B 写 `cosmos-predict2-14b-video2world.mp4`）。这里**没有** control-video / VACE 分支——那是 Transfer 2.5。也**没有**联合声音或 policy 头——那是 Cosmos 3。
+启动 `wf run cosmos-predict2-2b-video2world`，任务 profile 为 `image/video-to-world`。必填输入：`prompt`、`image`、`video`。产物：`cosmos-predict2-2b-video2world.mp4`（14B 写 `cosmos-predict2-14b-video2world.mp4`）。这里**没有** control-video / VACE 分支——那是 Transfer 2.5。也**没有**联合声音或 policy 头——那是 Cosmos 3。
 
 预测世界视频的评测入口是 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 与 [Physics-IQ](/zh/docs/evaluation/benchmark-hub/physics-iq)。那是 catalog 入口，不是已摄入的 WorldFoundry 分数。
 

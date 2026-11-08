@@ -13,7 +13,7 @@ CUT3R 是带持久状态的连续 3D 感知模型：接收图像流并持续更�
 
 项目页：[cut3r.github.io](https://cut3r.github.io/)。代码：[CUT3R/CUT3R](https://github.com/CUT3R/CUT3R)。
 
-Runner 一致性**待验证**。路径已注册；checkpoint 驱动的推理等本地或 Hugging Face 权重就位。本卡片没有记录环境 / VRAM / 输入契约行——就位后用 `worldfoundry-eval zoo model-show --model-id cut3r`。
+Runner 一致性**待验证**。路径已注册；checkpoint 驱动的推理等本地或 Hugging Face 权重就位。本卡片没有记录环境 / VRAM / 输入契约行——就位后用 `wf zoo model-show --model-id cut3r`。
 
 <ModelCommandBuilder modelId="cut3r" locale="zh" />
 
@@ -39,7 +39,7 @@ CLI task profile：`official-export`、`two-stage-3dgs`。绑定的 pipeline 类
 
 ## 在 WorldFoundry 中运行
 
-catalog 启动命令是 `worldfoundry-eval run cut3r --pipeline.task-profile official-export`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+catalog 启动命令是 `wf run cut3r --pipeline.task-profile official-export`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
 
 运行环境未记录。
 

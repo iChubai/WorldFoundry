@@ -197,6 +197,48 @@ def fix_extrinsic_translation_axis_and_scale(T, trans_axis_order="xyz", flip_up_
     return Tout
 
 
+def _w2c_camera_center(w2c: np.ndarray) -> np.ndarray:
+    """Camera center ``-R^T @ t`` in world coordinates of a (4, 4) w2c matrix."""
+    R = w2c[:3, :3]
+    t = w2c[:3, 3]
+    return -R.T @ t
+
+
+def _select_by_optical_axis_angle(
+    w2c_candidates: np.ndarray, w2c_query: np.ndarray, angle_topk: int, angle_threshold: float | None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Select candidates whose optical axes are closest in angle to the query's.
+
+    Without ``angle_threshold`` this keeps the ``angle_topk`` smallest angles; with it, all candidates
+    within the threshold, or the ``angle_topk`` smallest when fewer qualify.
+
+    Args:
+        w2c_candidates: Non-empty candidate w2c extrinsics (N, 4, 4).
+        w2c_query: Query w2c extrinsic (4, 4).
+        angle_topk: Number of smallest-angle candidates to keep.
+        angle_threshold: Optional angle threshold in degrees.
+
+    Returns:
+        ``(selected_indices, angles_deg)``: the selected candidate indices and the angles of all N candidates.
+    """
+    N = w2c_candidates.shape[0]
+    # Optical axis (camera z axis in world coordinates): with R = w2c[:3, :3], c2w[:3, :3] = R^T, so the
+    # axis is c2w[:3, 2] = R^T[:, 2] = R[2, :3], the third row of the w2c rotation.
+    dirs_cand = w2c_candidates[:, 2, :3]  # (N, 3)
+    dir_query = w2c_query[2, :3]  # (3,)
+    dirs_cand = dirs_cand / (np.linalg.norm(dirs_cand, axis=1, keepdims=True) + 1e-12)
+    dir_query = dir_query / (np.linalg.norm(dir_query) + 1e-12)
+
+    cos_angles = np.clip(dirs_cand @ dir_query, -1.0, 1.0)  # (N,)
+    angles_deg = np.degrees(np.arccos(cos_angles))  # (N,)
+
+    if angle_threshold is not None:
+        mask = angles_deg <= float(angle_threshold)
+        if mask.sum() >= min(angle_topk, N):
+            return np.where(mask)[0], angles_deg
+    return np.argsort(angles_deg)[: min(angle_topk, N)], angles_deg
+
+
 # Candidate scoring weights
 DIVERSITY_WEIGHT = 0
 STABILITY__WEIGHT = 0
@@ -3862,12 +3904,6 @@ class FrustumHandler:
         T = w2c.shape[0]
         scores = np.zeros(T, dtype=np.float64)
 
-        def _cam_center(m: np.ndarray) -> np.ndarray:
-            """Camera center in world coordinates from a w2c matrix."""
-            R = m[:3, :3]
-            t = m[:3, 3]
-            return -R.T @ t
-
         def _rotation_angle_deg(R1: np.ndarray, R2: np.ndarray) -> float:
             """Geodesic distance between two rotation matrices in degrees."""
             R_rel = R1 @ R2.T
@@ -3887,8 +3923,8 @@ class FrustumHandler:
             R_end = w2c[end_idx, :3, :3]
             rot_change = _rotation_angle_deg(R_start, R_end)
 
-            c_start = _cam_center(w2c[start_idx])
-            c_end = _cam_center(w2c[end_idx])
+            c_start = _w2c_camera_center(w2c[start_idx])
+            c_end = _w2c_camera_center(w2c[end_idx])
             trans_change = float(np.linalg.norm(c_end - c_start))
 
             motion = rot_change + trans_change
@@ -4203,39 +4239,10 @@ class FrustumHandler:
         if N == 0:
             raise ValueError("w2c_candidates must not be empty")
 
-        # ---- Optical axes: the camera z axis in world coordinates ----
-        # With R = w2c[:3, :3], c2w[:3, :3] = R^T, so the axis is c2w[:3, 2] = R^T[:, 2] = R[2, :3],
-        # the third row of the w2c rotation.
-        dirs_cand = w2c_candidates[:, 2, :3]  # (N, 3)
-        dir_query = w2c_query[2, :3]  # (3,)
+        topk_indices, angles_deg = _select_by_optical_axis_angle(w2c_candidates, w2c_query, angle_topk, angle_threshold)
 
-        dirs_cand = dirs_cand / (np.linalg.norm(dirs_cand, axis=1, keepdims=True) + 1e-12)
-        dir_query = dir_query / (np.linalg.norm(dir_query) + 1e-12)
-
-        cos_angles = np.clip(dirs_cand @ dir_query, -1.0, 1.0)  # (N,)
-        angles_rad = np.arccos(cos_angles)
-        angles_deg = np.degrees(angles_rad)  # (N,)
-
-        # ---- Step 1: filter candidates by angle ----
-        if angle_threshold is not None:
-            # Keep all candidates within the threshold, or the angle_topk closest when fewer qualify.
-            mask = angles_deg <= float(angle_threshold)
-            if mask.sum() < min(angle_topk, N):
-                topk_indices = np.argsort(angles_deg)[: min(angle_topk, N)]
-            else:
-                topk_indices = np.where(mask)[0]
-        else:
-            k = min(angle_topk, N)
-            topk_indices = np.argsort(angles_deg)[:k]
-
-        # ---- Step 2: nearest camera center, where center = -R^T @ t ----
-        def _cam_center(w2c_mat: np.ndarray) -> np.ndarray:
-            R = w2c_mat[:3, :3]
-            t = w2c_mat[:3, 3]
-            return -R.T @ t
-
-        center_query = _cam_center(w2c_query)  # (3,)
-        centers_cand = np.stack([_cam_center(w2c_candidates[i]) for i in topk_indices], axis=0)  # (K, 3)
+        center_query = _w2c_camera_center(w2c_query)  # (3,)
+        centers_cand = np.stack([_w2c_camera_center(w2c_candidates[i]) for i in topk_indices], axis=0)  # (K, 3)
 
         dists = np.linalg.norm(centers_cand - center_query[None, :], axis=1)  # (K,)
         best_local = int(np.argmin(dists))
@@ -4273,32 +4280,10 @@ class FrustumHandler:
         if N == 0:
             return []
 
-        # Optical axes
-        dirs_cand = w2c_candidates[:, 2, :3]  # (N, 3)
-        dir_query = w2c_query[2, :3]  # (3,)
-        dirs_cand = dirs_cand / (np.linalg.norm(dirs_cand, axis=1, keepdims=True) + 1e-12)
-        dir_query = dir_query / (np.linalg.norm(dir_query) + 1e-12)
+        topk_indices, angles_deg = _select_by_optical_axis_angle(w2c_candidates, w2c_query, angle_topk, angle_threshold)
 
-        cos_angles = np.clip(dirs_cand @ dir_query, -1.0, 1.0)
-        angles_deg = np.degrees(np.arccos(cos_angles))
-
-        if angle_threshold is not None:
-            mask = angles_deg <= float(angle_threshold)
-            if mask.sum() < min(angle_topk, N):
-                topk_indices = np.argsort(angles_deg)[: min(angle_topk, N)]
-            else:
-                topk_indices = np.where(mask)[0]
-        else:
-            k = min(angle_topk, N)
-            topk_indices = np.argsort(angles_deg)[:k]
-
-        def _cam_center(w2c_mat: np.ndarray) -> np.ndarray:
-            R = w2c_mat[:3, :3]
-            t = w2c_mat[:3, 3]
-            return -R.T @ t
-
-        center_query = _cam_center(w2c_query)
-        centers_cand = np.stack([_cam_center(w2c_candidates[i]) for i in topk_indices], axis=0)
+        center_query = _w2c_camera_center(w2c_query)
+        centers_cand = np.stack([_w2c_camera_center(w2c_candidates[i]) for i in topk_indices], axis=0)
         # Distances are in the units of the extrinsics' translation vectors (typically meters).
         dists = np.linalg.norm(centers_cand - center_query[None, :], axis=1)
 

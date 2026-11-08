@@ -72,6 +72,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_causal_attention_padding.py \
 	tests/base_models/diffusion_model/test_causal_cache_positions.py \
 	tests/base_models/diffusion_model/optimizations/test_causal_qkv_fusion.py \
+	tests/base_models/diffusion_model/test_autoregressive_window_runner.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_vae_acceleration_policy.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_streaming_chunk.py \
 	tests/core/acceleration/test_fused_fp8_ffn.py \

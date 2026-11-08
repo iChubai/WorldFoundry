@@ -77,7 +77,7 @@ class TransNetV2(nn.Module):
         self.memory_efficient = True  # Always enable memory optimizations
 
         if use_resnet_features or use_resnet_like_top or use_convex_comb_reg or frame_similarity_on_last_layer:
-            raise NotImplemented("Some options not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Some options not implemented in Pytorch version of Transnet!")
 
         self.SDDCNN = nn.ModuleList(
             [StackedDDCNNV2(in_filters=3, n_blocks=S, filters=F, stochastic_depth_drop_prob=0.0)]
@@ -591,7 +591,7 @@ class StackedDDCNNV2(nn.Module):
         super().__init__()
 
         if use_octave_conv:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Octave convolution not implemented in Pytorch version of Transnet!")
 
         assert pool_type == "max" or pool_type == "avg"
         if use_octave_conv and pool_type == "max":
@@ -641,7 +641,7 @@ class DilatedDCNNV2(nn.Module):
         super().__init__()
 
         if octave_conv:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Octave convolution not implemented in Pytorch version of Transnet!")
 
         assert not (octave_conv and batch_norm)
 
@@ -684,9 +684,9 @@ class Conv3DConfigurable(nn.Module):
         super().__init__()
 
         if octave:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Octave convolution not implemented in Pytorch version of Transnet!")
         if kernel_initializer is not None:
-            raise NotImplemented("Kernel initializers are not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Kernel initializers are not implemented in Pytorch version of Transnet!")
 
         assert not (separable and octave)
 
@@ -735,7 +735,7 @@ class FrameSimilarity(nn.Module):
         super().__init__()
 
         if stop_gradient:
-            raise NotImplemented("Stop gradient not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
+            raise NotImplementedError("Stop gradient not implemented in Pytorch version of Transnet!")
 
         self.projection = nn.Linear(in_filters, similarity_dim, bias=use_bias)
         self.fc = nn.Linear(lookup_window, output_dim)

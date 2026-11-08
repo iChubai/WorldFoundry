@@ -57,6 +57,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_canonical_catalog_lookup.py \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
+	tests/base_models/test_transnetv2_unsupported_options.py \
 	tests/studio/test_pipeline_owned_stream_state.py \
 	tests/studio/test_dispatch_lifecycle.py \
 	tests/studio/test_stream_init.py \

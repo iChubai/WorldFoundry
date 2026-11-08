@@ -308,23 +308,24 @@ STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已
 
 ### 仅 preview 解码
 
-`vae_preview_decoder_path` 会用小型 decoder 替换官方 Wan VAE：Wan2.2 的 48 通道 codec 换成 TAEW2.2（`taew2_2.pth`），Wan2.1 的 16 通道 codec 换成 TAEW2.1（`taew2_1.pth`）。这是快速、近似、只解码的 preview。TAEW2.1 保持 Wan 的帧数与对齐（`4 * T - 3` 帧；按三个 latent 一块流式解码时依次输出 9、12 帧）。官方 VAE 的 tiling、时间 chunk、VAE-parallel 不会生效，因为官方 decoder 根本没建。发布和官方 benchmark 不要用 TAEW。
+`vae_preview_decoder_path` 会用小型 decoder 替换官方 Wan VAE：Wan2.2 的 48 通道 codec 换成 TAEW2.2（`taew2_2.pth`），Wan2.1 的 16 通道 codec 换成 TAEW2.1（`taew2_1.pth`）。这是快速、近似、只解码的 preview。TAEW2.1 保持 Wan 的帧数与对齐（`4 * T - 3` 帧；按三个 latent 一块流式解码时依次输出 9、12 帧）。TAEW2.1 没有编码器，因此只适用于文生视频的 Wan2.1 recipe；图像条件的 recipe 需要 Wan VAE 编码器。官方 VAE 的 tiling、时间 chunk、VAE-parallel 不会生效，因为官方 decoder 根本没建。发布和官方 benchmark 不要用 TAEW。
 
 ### Self-Forcing
 
-原生 Self-Forcing 管线（`self-forcing`）默认与官方 runtime 逐位一致：eager PyTorch SDPA 加 BF16 Wan2.1 VAE。下面的选项都要显式打开，且都是近似路径。数据在一张共享 H100（torch 2.5.1）上测得，请求为默认的 81 帧 480×832；时间取 6–13 次 rollout 的热态中位数。
+原生 Self-Forcing 管线（`self-forcing`）默认与官方 runtime 逐位一致：eager PyTorch SDPA 加 BF16 Wan2.1 VAE。下面的选项都要显式打开，且都是近似路径。数据用 torch 2.5.1、默认的 81 帧 480×832 请求测得。所有时间都来自一张被另一个进程占用部分算力的 H100；GPU 空闲时，精确路径的 rollout 为 3.97 s。时间取最后一列所示次数的热态中位数。FA3 和 regional compile 两行来自同一条件下更早的一组测量，那组测量中默认 rollout 为 4.89 s。
 
-| 选项 | 加载参数 | Rollout（7 块） | 第 6 块 | 解码 81 帧 |
-| --- | --- | --- | --- | --- |
-| 默认（精确） | — | 4.89 s | 935 ms | 2.33 s |
-| FA3 self-attention | `attention_backend="flash3"` | 3.72 s | 636 ms | — |
-| Regional compile | `compile=True, compile_scope="regional"` | 4.18 s | 852 ms | — |
-| FA3 + regional compile | 同时打开上面两项 | 3.12 s | 560 ms | — |
-| TAEW2.1 解码 | `vae_preview_decoder_path="…/taew2_1.pth"` | — | — | 0.12 s |
+| 选项 | 加载参数 | Rollout（7 块） | 第 6 块 | 解码 81 帧 | 热态次数 |
+| --- | --- | --- | --- | --- | --- |
+| 默认（精确） | — | 4.79 s | 924 ms | 2.32 s | 6 次 rollout，6 次解码 |
+| FA3 self-attention | `attention_backend="flash3"` | 3.72 s | 636 ms | — | 6 次 rollout |
+| Regional compile | `compile=True, compile_scope="regional"` | 4.18 s | 852 ms | — | 6 次 rollout |
+| FA3 + regional compile | 同时打开上面两项 | 3.12 s | 554 ms | — | 15 次 rollout |
+| TAEW2.1 解码 | `vae_preview_decoder_path="…/taew2_1.pth"` | — | — | 0.12 s | 15 次解码 |
 
 - `attention_backend` 作用于带缓存的因果 self-attention；cross-attention 仍走 PyTorch SDPA。FA3 和 compile 都会改变 BF16 舍入（teacher-forced 下每次调用的 flow 误差约为一个 BF16 ulp），因此自由 rollout 会漂移成同一 prompt 的另一个样本。
-- Compile 让首个请求多花 45–90 s：每个块因 KV 长度不同各重编译一次，之后的请求复用这些图。
-- 在相同 latent 上，TAEW2.1 相对 Wan VAE 的 PSNR 为 27.3 dB，SSIM 为 0.87。
+- Inductor 缓存已就绪时，compile 让首个请求多花约 45 s；缓存为空时约 90 s。每个块因 KV 长度不同各重编译一次，之后的请求复用这些图。
+- 打开 FA3 + regional compile 的 11 个进程中，有 1 个在第二次 rollout 时以 `CUDA error: unspecified launch failure` 中止，原因未查明。
+- TAEW2.1 只做解码，因此只适用于文生视频的 Wan2.1 recipe；图像条件的 recipe 需要 Wan VAE 编码器。在相同 latent 上，它相对 Wan VAE 的 PSNR 为 27.3 dB，SSIM 为 0.87。整段解码会把进程峰值显存从 22.8 GiB 提高到 30.6 GiB。
 - CUDA Graph 不适用：带缓存的 attention 在 host 端读取缓存游标，并原地写入每个请求自己的缓存。
 
 ```python

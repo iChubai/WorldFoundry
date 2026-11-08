@@ -344,23 +344,24 @@ quantization settings without modifying the caller's configuration.
 
 ### Preview decode only
 
-`vae_preview_decoder_path` swaps the official Wan VAE for a tiny decoder: TAEW2.2 (`taew2_2.pth`) for the Wan2.2 48-channel codec, TAEW2.1 (`taew2_1.pth`) for the Wan2.1 16-channel codec. That is a fast, approximate, decode-only preview. TAEW2.1 keeps the Wan frame count and alignment (`4 * T - 3` frames; streamed chunks of three latents give 9, then 12 frames). Official VAE tiling, temporal chunking, and VAE-parallel do not apply because the official decoder is not built. Do not use TAEW for final-quality or official-benchmark videos.
+`vae_preview_decoder_path` swaps the official Wan VAE for a tiny decoder: TAEW2.2 (`taew2_2.pth`) for the Wan2.2 48-channel codec, TAEW2.1 (`taew2_1.pth`) for the Wan2.1 16-channel codec. That is a fast, approximate, decode-only preview. TAEW2.1 keeps the Wan frame count and alignment (`4 * T - 3` frames; streamed chunks of three latents give 9, then 12 frames). Because it has no encoder, TAEW2.1 applies to text-to-video Wan2.1 recipes; image-conditioned recipes need the Wan VAE encoder. Official VAE tiling, temporal chunking, and VAE-parallel do not apply because the official decoder is not built. Do not use TAEW for final-quality or official-benchmark videos.
 
 ### Self-Forcing
 
-The native Self-Forcing pipeline (`self-forcing`) reproduces the official runtime bitwise by default: eager PyTorch SDPA and the BF16 Wan2.1 VAE. The options below are opt-in and approximate. They were measured on one shared H100 (torch 2.5.1) for the default 81-frame 480×832 request; times are warm medians of 6–13 rollouts.
+The native Self-Forcing pipeline (`self-forcing`) reproduces the official runtime bitwise by default: eager PyTorch SDPA and the BF16 Wan2.1 VAE. The options below are opt-in and approximate. They were measured with torch 2.5.1 for the default 81-frame 480×832 request. All times come from one H100 that another process kept partly busy; on the idle GPU, the exact path's rollout took 3.97 s. Times are warm medians over the count in the last column. The FA3 and regional compile rows come from an earlier set of runs under the same condition, in which the default rollout measured 4.89 s.
 
-| Option | Load arguments | Rollout (7 blocks) | Block 6 | Decode 81 frames |
-| --- | --- | --- | --- | --- |
-| Default (exact) | — | 4.89 s | 935 ms | 2.33 s |
-| FA3 self-attention | `attention_backend="flash3"` | 3.72 s | 636 ms | — |
-| Regional compile | `compile=True, compile_scope="regional"` | 4.18 s | 852 ms | — |
-| FA3 + regional compile | both of the above | 3.12 s | 560 ms | — |
-| TAEW2.1 decode | `vae_preview_decoder_path="…/taew2_1.pth"` | — | — | 0.12 s |
+| Option | Load arguments | Rollout (7 blocks) | Block 6 | Decode 81 frames | Warm runs |
+| --- | --- | --- | --- | --- | --- |
+| Default (exact) | — | 4.79 s | 924 ms | 2.32 s | 6 rollouts, 6 decodes |
+| FA3 self-attention | `attention_backend="flash3"` | 3.72 s | 636 ms | — | 6 rollouts |
+| Regional compile | `compile=True, compile_scope="regional"` | 4.18 s | 852 ms | — | 6 rollouts |
+| FA3 + regional compile | both of the above | 3.12 s | 554 ms | — | 15 rollouts |
+| TAEW2.1 decode | `vae_preview_decoder_path="…/taew2_1.pth"` | — | — | 0.12 s | 15 decodes |
 
 - `attention_backend` binds the cached causal self-attention; cross-attention stays on PyTorch SDPA. FA3 and compile each change BF16 rounding (teacher-forced flow error about one BF16 ulp per call), so a free-running rollout drifts to a different sample of the same prompt.
-- Compile adds 45–90 s to the first request: every block recompiles once for its KV length, then later requests reuse the graphs.
-- TAEW2.1 decodes the same latents at 27.3 dB PSNR and 0.87 SSIM against the Wan VAE.
+- Compile adds about 45 s to the first request when the Inductor cache is already populated, and about 90 s when it is empty: every block recompiles once for its KV length, then later requests reuse the graphs.
+- One of 11 processes with FA3 + regional compile aborted with `CUDA error: unspecified launch failure` in its second rollout; the cause was not identified.
+- TAEW2.1 is decode-only, so it applies to text-to-video Wan2.1 recipes; image-conditioned recipes need the Wan VAE encoder. It decodes the same latents at 27.3 dB PSNR and 0.87 SSIM against the Wan VAE. A whole-clip decode raises the process peak memory from 22.8 GiB to 30.6 GiB.
 - CUDA Graph does not apply: the cached attention reads cache cursors on the host and writes the per-request cache in place.
 
 ```python

@@ -21,7 +21,7 @@ class PhysicsQuestion:
     success_condition: str
 
 
-# 4-a: Mechanics (力学行为正确性)
+# 4-a: Mechanics (correct mechanical behavior)
 MECHANICS_QUESTIONS: list[PhysicsQuestion] = [
     PhysicsQuestion(
         qid="gravity",
@@ -50,7 +50,7 @@ MECHANICS_QUESTIONS: list[PhysicsQuestion] = [
 ]
 
 
-# 4-b: Thermotics (热学行为正确性 - 六种相变)
+# 4-b: Thermotics (correct thermal behavior - the six phase transitions)
 THERMOTICS_QUESTIONS: list[PhysicsQuestion] = [
     PhysicsQuestion(
         qid="melting",
@@ -91,7 +91,7 @@ THERMOTICS_QUESTIONS: list[PhysicsQuestion] = [
 ]
 
 
-# 4-c: Material (材料属性遵从性)
+# 4-c: Material (adherence to material properties)
 MATERIAL_QUESTIONS: list[PhysicsQuestion] = [
     PhysicsQuestion(
         qid="color_mixing",

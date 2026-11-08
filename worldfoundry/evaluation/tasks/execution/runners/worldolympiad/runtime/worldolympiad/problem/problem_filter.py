@@ -1,8 +1,4 @@
-"""
-Docstring for problem.problem_filter
-
-这个文件提供一个接口，让VLM来判断这个视频和哪些物理现象有关
-"""
+"""Ask a VLM which physical phenomena a video involves."""
 
 import base64
 import json

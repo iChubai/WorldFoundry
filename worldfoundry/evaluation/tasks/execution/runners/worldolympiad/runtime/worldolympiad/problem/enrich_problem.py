@@ -1,8 +1,4 @@
-"""
-Docstring for problem.problem_filter
-
-这个文件提供一个接口，让VLM来提出具体的物理现象相关的问题，具体到物体和内容
-"""
+"""Ask a VLM for physics questions specific to the objects and content of a video."""
 
 import base64
 

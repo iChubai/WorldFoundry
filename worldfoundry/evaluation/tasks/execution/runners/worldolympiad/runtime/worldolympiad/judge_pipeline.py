@@ -1,14 +1,14 @@
 """
 Video Physics LLM Judge Pipeline
 
-基于 PhyGenBench 的提示词工程实践，实现单次调用的视频物理评估系统。
+Single-call video physics evaluation following the prompt engineering practice of PhyGenBench.
 
-核心设计原则：
-1. 明确的角色定义和任务描述
-2. 结构化 JSON 输出
-3. Chain-of-Thought 推理
-4. 置信度量化
-5. 多维度物理评估
+Design principles:
+1. Explicit role definition and task description
+2. Structured JSON output
+3. Chain-of-thought reasoning
+4. Quantified confidence
+5. Multi-dimensional physics evaluation
 
 python ./judge_pipeline.py path/to/video.mp4
 
@@ -34,7 +34,7 @@ load_dotenv()
 
 
 # ============================================================================
-# 核心提示词设计：参考 PhyGenBench 的层次化评估方法
+# Core prompts, following the hierarchical evaluation of PhyGenBench
 # ============================================================================
 
 SYSTEM_PROMPT = """You are PhysicsJudge, a precise video physics evaluator with deep expertise in physical laws and visual analysis.

@@ -466,7 +466,7 @@ def segment_with_sam3(
 
     start = time.perf_counter()
 
-    print("开始计算时间")
+    print("Timing started")
     mask_writer, bbox_writer, binary_mask_writer, masked_writer = _init_writers(
         video_path,
         output_video_path=output_video_path,
@@ -596,7 +596,7 @@ def segment_with_sam3(
     masked_writer.release()
 
     end = time.perf_counter()
-    print("计算时间结束")
+    print("Timing finished")
 
     print(f"SAM3 segmentation completed in {end - start:.6f} seconds.")
 

@@ -22,7 +22,7 @@ description: 从 CLI 输入到 artifacts、metrics、scorecard 和 report 的端
 
 主流程如下：一个 `EvaluateRunRequest` 进入 facade，选定 mode，从 task registry 加载或物化输入，再由 delegate runner 写出标准 artifact bundle。若输出目录缺文件，沿此流程查应由哪个 runner 阶段产出。
 
-<CallChainDiagram locale="zh" />
+<ArchDiagram id="workflow" locale="zh" />
 
 ```python
 # worldfoundry/cli/main.py → evaluation/tasks/execution/orchestration/evaluate.py

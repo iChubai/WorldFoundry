@@ -193,8 +193,8 @@ when dependencies are already installed. The build checks types and generated
 data before exporting `docs/fumadocs/out/`.
 
 Inside `docs/fumadocs/`, `app/` owns routes, `components/` shared UI,
-`content/docs/` paired pages, `content/blog/` articles, `mdx/partials/` shared
-prose, `lib/` helpers and catalog data, `public/` assets, and `scripts/` tooling.
+`content/docs/` paired pages, `mdx/partials/` shared prose, `lib/` helpers and
+catalog data, `public/` assets, and `scripts/` tooling.
 `source.config.ts` configures collections; `next.config.mjs` configures static
 export and caching. `.source/`, `generated/`, `tmp/`, `.next/`, and `out/` are
 generated. Run `api:generate`, `models:generate`, `benchmarks:generate`, or
@@ -209,13 +209,10 @@ and checks TypeScript.
 | --- | --- |
 | `NEXT_PUBLIC_BASE_PATH` | `/WorldFoundry`; empty for local development. |
 | `NEXT_PUBLIC_SITE_URL` | `https://openenvision.github.io`. |
-| `NEXT_PUBLIC_DEMO_ASSET_BASE_URL` | GitHub media CDN for `docs/fumadocs/public`. |
-
-Demo videos remain on the CDN rather than in the Pages artifact.
 
 ## Fast site iteration
 
-Model demo videos are served from GitHub CDN; docs development does not need `git lfs pull`.
+Docs development does not need `git lfs pull`.
 
 ```bash
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git

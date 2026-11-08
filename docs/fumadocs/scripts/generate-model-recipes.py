@@ -215,6 +215,10 @@ def as_list(value: Any) -> list[Any]:
     return [value]
 
 
+def as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 def text(value: Any) -> str | None:
     if value is None:
         return None
@@ -352,7 +356,7 @@ def status_data(item: dict[str, Any], profile: dict[str, Any] | None) -> dict[st
         get_status(item.get("integration")) or text(item.get("integration_status")) or text(item.get("status"))
     )
     if not integration and profile:
-        execution = profile.get("execution") if isinstance(profile.get("execution"), dict) else {}
+        execution = as_dict(profile.get("execution"))
         integration = (
             get_status(profile.get("integration"))
             or text(profile.get("integration_status"))
@@ -456,7 +460,7 @@ def source_links(item: dict[str, Any], profile: dict[str, Any] | None) -> list[d
             entry["revision"] = normalized_revision
         links.append(entry)
 
-    official = item.get("official_sources") if isinstance(item.get("official_sources"), dict) else {}
+    official = as_dict(item.get("official_sources"))
     for key, label, kind in [
         ("project_page", "Project", "project"),
         ("paper", "Paper", "paper"),
@@ -475,7 +479,7 @@ def source_links(item: dict[str, Any], profile: dict[str, Any] | None) -> list[d
         else:
             add("source", "GitHub", record)
 
-    source = item.get("source") if isinstance(item.get("source"), dict) else {}
+    source = as_dict(item.get("source"))
     for key in ("official_repo_url", "repo_url", "github", "url"):
         value = source.get(key)
         if isinstance(value, dict):
@@ -488,8 +492,8 @@ def source_links(item: dict[str, Any], profile: dict[str, Any] | None) -> list[d
         f"https://huggingface.co/{source['hf_repo_id']}" if source.get("hf_repo_id") else None,
     )
 
-    source_status = item.get("source_status") if isinstance(item.get("source_status"), dict) else {}
-    github_status = source_status.get("github") if isinstance(source_status.get("github"), dict) else {}
+    source_status = as_dict(item.get("source_status"))
+    github_status = as_dict(source_status.get("github"))
     add("source", "GitHub", github_status.get("url"), github_status.get("head_sha"))
 
     for record in as_list(official.get("huggingface")):
@@ -559,7 +563,7 @@ def checkpoint_data(item: dict[str, Any], profile: dict[str, Any] | None) -> lis
 
     for record in as_list(item.get("checkpoints")) + as_list(item.get("checkpoint_refs")):
         add(record)
-    checkpoint = item.get("checkpoint") if isinstance(item.get("checkpoint"), dict) else {}
+    checkpoint = as_dict(item.get("checkpoint"))
     for record in as_list(checkpoint.get("repos")):
         add(record)
     for variant in as_list(item.get("variants")):
@@ -569,7 +573,7 @@ def checkpoint_data(item: dict[str, Any], profile: dict[str, Any] | None) -> lis
     if profile:
         for record in as_list(profile.get("checkpoints")):
             add(record)
-    source = item.get("source") if isinstance(item.get("source"), dict) else {}
+    source = as_dict(item.get("source"))
     if source.get("hf_repo_id"):
         add({"repo_id": source.get("hf_repo_id"), "license": source.get("license")})
     return output
@@ -642,7 +646,7 @@ def variant_data(
             )
         )
         profile_id, profile = select_manifest(profiles, profile_candidates)
-        profile_execution = profile.get("execution") if profile and isinstance(profile.get("execution"), dict) else {}
+        profile_execution = as_dict(profile.get("execution")) if profile else {}
         profile_integration = get_status(profile.get("integration")) if profile else None
         integration = get_status(variant.get("integration")) or profile_integration
         integration = integration or text(profile_execution.get("integration_status")) or default_status["integration"]
@@ -679,9 +683,9 @@ def variant_data(
             binding,
             unified_environment,
         )
-        pipeline = binding.get("pipeline") if binding and isinstance(binding.get("pipeline"), dict) else {}
-        loading = pipeline.get("loading") if isinstance(pipeline.get("loading"), dict) else {}
-        invocation = pipeline.get("invocation") if isinstance(pipeline.get("invocation"), dict) else {}
+        pipeline = as_dict(binding.get("pipeline")) if binding else {}
+        loading = as_dict(pipeline.get("loading"))
+        invocation = as_dict(pipeline.get("invocation"))
         variant_item = {**item, **variant}
         entry = {
             "id": variant_id,
@@ -759,10 +763,10 @@ def runtime_data(
     binding: dict[str, Any] | None,
     unified_environment: dict[str, Any],
 ) -> dict[str, Any]:
-    execution = profile.get("execution") if profile and isinstance(profile.get("execution"), dict) else {}
-    pipeline = binding.get("pipeline") if binding and isinstance(binding.get("pipeline"), dict) else {}
-    loading = pipeline.get("loading") if isinstance(pipeline.get("loading"), dict) else {}
-    invocation = pipeline.get("invocation") if isinstance(pipeline.get("invocation"), dict) else {}
+    execution = as_dict(profile.get("execution")) if profile else {}
+    pipeline = as_dict(binding.get("pipeline")) if binding else {}
+    loading = as_dict(pipeline.get("loading"))
+    invocation = as_dict(pipeline.get("invocation"))
     pip_packages = unique_strings(as_list(environment.get("pip_packages")) if environment else [])
     conda_packages = unique_strings(as_list(environment.get("conda_packages")) if environment else [])
     env_name = text(environment.get("env_name")) if environment else None
@@ -809,7 +813,9 @@ def runtime_data(
 
 
 def input_contract(profile: dict[str, Any] | None) -> list[dict[str, str]]:
-    schema = profile.get("input_schema") if profile else None
+    if not profile:
+        return []
+    schema = profile.get("input_schema")
     if not isinstance(schema, dict):
         return []
     output: list[dict[str, str]] = []
@@ -906,10 +912,10 @@ def inference_task_data(
 
 
 def recipe_notes(item: dict[str, Any], profile: dict[str, Any] | None) -> list[str]:
-    integration = item.get("integration") if isinstance(item.get("integration"), dict) else {}
-    runner = item.get("runner_parity") if isinstance(item.get("runner_parity"), dict) else {}
-    demo = item.get("demo_parity") if isinstance(item.get("demo_parity"), dict) else {}
-    checkpoint = item.get("checkpoint") if isinstance(item.get("checkpoint"), dict) else {}
+    integration = as_dict(item.get("integration"))
+    runner = as_dict(item.get("runner_parity"))
+    demo = as_dict(item.get("demo_parity"))
+    checkpoint = as_dict(item.get("checkpoint"))
     return unique_strings(
         [
             *as_list(item.get("notes")),
@@ -1020,22 +1026,6 @@ MODALITY_TOKEN_MAP = {
     "point-cloud": "point cloud",
 }
 
-MODALITY_LABELS_ZH = {
-    "text": "文本",
-    "image": "图像",
-    "video": "视频",
-    "audio": "音频",
-    "action": "动作",
-    "depth": "深度",
-    "trajectory": "轨迹",
-    "camera pose": "相机位姿",
-    "3D scene": "3D 场景",
-    "4D scene": "4D 场景",
-    "world state": "世界状态",
-    "mesh": "网格",
-    "point cloud": "点云",
-}
-
 
 def load_benchmark_status() -> dict[str, dict[str, Any]]:
     if not BENCH_STATUS_PATH.exists():
@@ -1058,12 +1048,14 @@ PAPER_MEDIA = load_paper_media()
 
 
 def paper_media_for(model_id: str, docs: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-    extra = PAPER_MEDIA.get(model_id) if isinstance(PAPER_MEDIA.get(model_id), dict) else {}
-    paper = extra.get("paper") if isinstance(extra.get("paper"), dict) else None
+    extra = as_dict(PAPER_MEDIA.get(model_id))
+    harvested_paper = extra.get("paper")
+    paper = harvested_paper if isinstance(harvested_paper, dict) else None
     curated_paper = docs.get("paper") if isinstance(docs.get("paper"), dict) else None
     if curated_paper:
         paper = {**(paper or {}), **curated_paper}
-    figures = extra.get("figures") if isinstance(extra.get("figures"), list) else []
+    harvested_figures = extra.get("figures")
+    figures = harvested_figures if isinstance(harvested_figures, list) else []
     curated_figures = docs.get("figures") if isinstance(docs.get("figures"), list) else []
     if curated_figures:
         figures = curated_figures
@@ -1224,7 +1216,7 @@ def find_min_vram(value: Any) -> int | None:
 
 
 def hardware_data(item: dict[str, Any], docs: dict[str, Any]) -> dict[str, Any]:
-    block = docs.get("hardware") if isinstance(docs.get("hardware"), dict) else {}
+    block = as_dict(docs.get("hardware"))
     min_vram = None
     if block.get("min_vram_gb") is not None:
         try:
@@ -1241,7 +1233,7 @@ def hardware_data(item: dict[str, Any], docs: dict[str, Any]) -> dict[str, Any]:
 
 
 def modality_data(tasks: list[str], docs: dict[str, Any]) -> dict[str, list[str]]:
-    block = docs.get("modalities") if isinstance(docs.get("modalities"), dict) else {}
+    block = as_dict(docs.get("modalities"))
     curated_inputs = unique_strings(as_list(block.get("inputs")))
     curated_outputs = unique_strings(as_list(block.get("outputs")))
     if curated_inputs or curated_outputs:
@@ -1605,7 +1597,7 @@ def docs_data(
         else None
     )
 
-    paper, figures = paper_media_for(model_id or text(item.get("id")), docs)
+    paper, figures = paper_media_for(model_id or text(item.get("id")) or "", docs)
 
     return {
         "curated": curated,

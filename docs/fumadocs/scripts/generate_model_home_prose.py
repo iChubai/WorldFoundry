@@ -38,6 +38,7 @@ import json
 import re
 import sys
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,8 @@ from model_home_status import (
     reader_label,
     sanitize_manifest_dialect,
     status_label,
+)
+from model_home_status import (
     status_sentence as mapped_status_sentence,
 )
 from model_paper_figures import has_paper_figures
@@ -168,7 +171,6 @@ HEADINGS = {
     },
 }
 
-ARCH_DIAGRAM_MARKERS = ("ModelArchDiagram",)
 PAPER_FIGURES_MARKERS = ("ModelPaperFigures",)
 PAPER_COVER_SUFFIX = "/paper.png"
 ARCH_FILE_NAMES = (
@@ -179,8 +181,6 @@ ARCH_FILE_NAMES = (
     "architecture.png",
     "arch.png",
 )
-ARCH_ASSET_SUFFIXES = tuple(f"/{name}" for name in ARCH_FILE_NAMES)
-
 MODALITY_ZH = {
     "text": "文本",
     "image": "图像",
@@ -393,7 +393,7 @@ def join_zh(items: Any) -> str:
     return "、".join(cleaned)
 
 
-def unique_keep(items: list[str]) -> list[str]:
+def unique_keep(items: Iterable[str]) -> list[str]:
     seen: set[str] = set()
     output: list[str] = []
     for item in items:
@@ -568,8 +568,11 @@ def _contract_rows(recipe: dict[str, Any]) -> list[dict[str, Any]]:
     if tasks:
         run_id, task_id = run_identity(recipe)
         task = next(
-            (item for item in tasks if item.get("id") == task_id
-             and (not item.get("variantIds") or run_id in item["variantIds"])),
+            (
+                item
+                for item in tasks
+                if item.get("id") == task_id and (not item.get("variantIds") or run_id in item["variantIds"])
+            ),
             tasks[0],
         )
         return [
@@ -579,7 +582,8 @@ def _contract_rows(recipe: dict[str, Any]) -> list[dict[str, Any]]:
                 "required": bool(item.get("required")) and item.get("default") in (None, ""),
                 "detail": "Required" if item.get("required") and item.get("default") in (None, "") else "Optional",
             }
-            for item in task.get("inputs") or [] if isinstance(item, dict)
+            for item in task.get("inputs") or []
+            if isinstance(item, dict)
         ]
     return [item for item in recipe.get("inputContract") or [] if isinstance(item, dict)]
 
@@ -622,27 +626,6 @@ def run_identity(recipe: dict[str, Any]) -> tuple[str, str]:
     return run_id, task
 
 
-def _contract_fields(recipe: dict[str, Any]) -> tuple[list[str], list[str]]:
-    required: list[str] = []
-    optional: list[str] = []
-    rows = _contract_rows(recipe)
-    for item in rows:
-        field = str(item.get("field") or "").strip()
-        if not field:
-            continue
-        detail = str(item.get("detail") or "").strip().lower()
-        if item.get("required") is True or detail == "required":
-            required.append(field)
-        else:
-            optional.append(field)
-    return unique_keep(required), unique_keep(optional)
-
-
-def required_fields(recipe: dict[str, Any]) -> list[str]:
-    required, _ = _contract_fields(recipe)
-    return required
-
-
 def preferred_variant(recipe: dict[str, Any]) -> str:
     variants = [item for item in (recipe.get("variants") or []) if isinstance(item, dict) and item.get("id")]
     run_id, _ = run_identity(recipe)
@@ -650,18 +633,19 @@ def preferred_variant(recipe: dict[str, Any]) -> str:
         return run_id or str(recipe.get("id") or "")
 
     def score(item: dict[str, Any]) -> int:
-        blob = " ".join(
-            str(item.get(key) or "") for key in ("status", "runtimeStatus", "runner")
-        ).lower()
-        if any(
-            token in blob
-            for token in (
-                "parity_recorded",
-                "demo_and_runner",
-                "gpu_validated",
-                "runner_verified",
+        blob = " ".join(str(item.get(key) or "") for key in ("status", "runtimeStatus", "runner")).lower()
+        if (
+            any(
+                token in blob
+                for token in (
+                    "parity_recorded",
+                    "demo_and_runner",
+                    "gpu_validated",
+                    "runner_verified",
+                )
             )
-        ) or blob == "verified":
+            or blob == "verified"
+        ):
             return 3
         if "verified" in blob and "pending" not in blob:
             return 2
@@ -688,8 +672,11 @@ def artifact_names(recipe: dict[str, Any]) -> list[str]:
     names: list[str] = []
     run_id, task_id = run_identity(recipe)
     task = next(
-        (item for item in recipe.get("inferenceTasks") or []
-         if item.get("id") == task_id and (not item.get("variantIds") or run_id in item["variantIds"])),
+        (
+            item
+            for item in recipe.get("inferenceTasks") or []
+            if item.get("id") == task_id and (not item.get("variantIds") or run_id in item["variantIds"])
+        ),
         None,
     )
     artifacts = task.get("artifacts", []) if task is not None else recipe.get("artifacts") or []
@@ -706,11 +693,7 @@ def artifact_names(recipe: dict[str, Any]) -> list[str]:
 
 
 def variant_ids(recipe: dict[str, Any]) -> list[str]:
-    return [
-        str(item.get("id"))
-        for item in (recipe.get("variants") or [])
-        if isinstance(item, dict) and item.get("id")
-    ]
+    return [str(item.get("id")) for item in (recipe.get("variants") or []) if isinstance(item, dict) and item.get("id")]
 
 
 _HF_WEIGHTS_RE = re.compile(
@@ -720,9 +703,7 @@ _HF_WEIGHTS_RE = re.compile(
 
 def checkpoint_ids(recipe: dict[str, Any]) -> list[str]:
     ids = [
-        str(item.get("id"))
-        for item in (recipe.get("checkpoints") or [])
-        if isinstance(item, dict) and item.get("id")
+        str(item.get("id")) for item in (recipe.get("checkpoints") or []) if isinstance(item, dict) and item.get("id")
     ]
     if ids:
         return unique_keep(ids)
@@ -851,8 +832,7 @@ def sources_sentence(recipe: dict[str, Any], locale: str) -> str:
     github_urls = [
         str(item.get("url") or "").strip()
         for item in items
-        if str(item.get("kind") or "").strip().lower() in {"source", "code"}
-        and str(item.get("url") or "").strip()
+        if str(item.get("kind") or "").strip().lower() in {"source", "code"} and str(item.get("url") or "").strip()
     ]
     bits: list[str] = []
     seen: set[str] = set()
@@ -918,29 +898,6 @@ def environment_sentence(recipe: dict[str, Any], locale: str) -> str:
     return f"It runs in the {kind_en} environment `{env}`{detail}."
 
 
-def hardware_paragraphs(docs: dict[str, Any], locale: str) -> list[str]:
-    hardware = docs.get("hardware") or {}
-    min_vram = hardware.get("minVramGb")
-    recommended = hardware.get("recommended")
-    notes = [str(item).strip() for item in hardware.get("notes") or [] if str(item).strip()]
-    parts: list[str] = []
-    if min_vram is not None:
-        parts.append(
-            f"Minimum VRAM is recorded at {min_vram} GB."
-            if locale == "en"
-            else f"记录的最低显存为 {min_vram} GB。"
-        )
-    if recommended:
-        parts.append(
-            f"Recommended hardware: {recommended}."
-            if locale == "en"
-            else f"推荐配置：{recommended}。"
-        )
-    parts.extend(notes)
-    text = join_prose(parts)
-    return [text] if text else []
-
-
 def benchmarks_paragraph(docs: dict[str, Any], locale: str) -> str:
     known = benchmark_hub_ids()
     benchmarks = [item for item in (docs.get("benchmarks") or []) if isinstance(item, dict)]
@@ -968,11 +925,7 @@ def benchmarks_paragraph(docs: dict[str, Any], locale: str) -> str:
 
 
 def variants_paragraph(recipe: dict[str, Any], locale: str) -> str:
-    variants = [
-        item
-        for item in (recipe.get("variants") or [])
-        if isinstance(item, dict) and item.get("id")
-    ]
+    variants = [item for item in (recipe.get("variants") or []) if isinstance(item, dict) and item.get("id")]
     if len(variants) <= 1:
         return ""
     preferred = preferred_variant(recipe)
@@ -1008,19 +961,14 @@ def variants_paragraph(recipe: dict[str, Any], locale: str) -> str:
     joined = join_zh(bits) if locale == "zh" else "; ".join(bits)
     if locale == "zh":
         start = f"起步 variant 是 `{preferred}`。" if preferred else ""
-        return (
-            f"{start}catalog 登记了 {len(variants)} 个 variant（上方卡片）：{joined}{extra}。"
-        )
+        return f"{start}catalog 登记了 {len(variants)} 个 variant（上方卡片）：{joined}{extra}。"
     start = f"Start on `{preferred}`. " if preferred else ""
-    return (
-        f"{start}The family registers {len(variants)} catalog variants (cards above): {joined}{extra}."
-    )
+    return f"{start}The family registers {len(variants)} catalog variants (cards above): {joined}{extra}."
 
 
 def task_profile_sentence(recipe: dict[str, Any], locale: str) -> str:
     ids = unique_keep(
-        str(item["id"]) for item in recipe.get("inferenceTasks") or []
-        if isinstance(item, dict) and item.get("id")
+        str(item["id"]) for item in recipe.get("inferenceTasks") or [] if isinstance(item, dict) and item.get("id")
     )
     if not ids:
         return "No task profiles are recorded on this card." if locale == "en" else "本卡片未记录任务 profile。"
@@ -1165,9 +1113,7 @@ def inference_defaults_paragraph(recipe: dict[str, Any], locale: str) -> str:
         if locale == "zh":
             bits.append(f"`{task_id}` 记录默认值：{joined}" if task_id else f"记录默认值：{joined}")
         else:
-            bits.append(
-                f"Recorded `{task_id}` defaults: {joined}" if task_id else f"Recorded defaults: {joined}"
-            )
+            bits.append(f"Recorded `{task_id}` defaults: {joined}" if task_id else f"Recorded defaults: {joined}")
     if not bits:
         return ""
     return "；".join(bits) + "。" if locale == "zh" else " ".join(bits) + ("." if not bits[-1].endswith(".") else "")
@@ -1219,22 +1165,6 @@ def contract_paragraph(recipe: dict[str, Any], locale: str) -> str:
         return "Inputs, knobs, and artifacts are not recorded on this card."
     text = "; ".join(bits)
     return text[0].upper() + text[1:] + "."
-
-
-def license_sentence(recipe: dict[str, Any], locale: str) -> str:
-    licenses = checkpoint_licenses(recipe)
-    if not licenses:
-        return ""
-    gated = gated_checkpoints(recipe)
-    if locale == "zh":
-        text = f"记录的权重 license 包括 {join_zh(licenses)}。"
-        if gated:
-            text += f" gated 仓库：{join_zh(f'`{item}`' for item in gated[:3])}，下载前需在上游接受条款。"
-        return text
-    text = f"Recorded checkpoint licenses include {join_en(licenses)}."
-    if gated:
-        text += f" Gated repositories: {join_en(f'`{item}`' for item in gated[:3])}; accept upstream terms before download."
-    return text
 
 
 def checkpoint_sentence(recipe: dict[str, Any], locale: str) -> str:
@@ -1346,11 +1276,7 @@ def contract_paragraphs(recipe: dict[str, Any], locale: str) -> list[str]:
     docs = recipe.get("docs") or {}
     exemplar = drop_training_prose(exemplar_block(model_id, "contract_extra", locale))
     if exemplar:
-        return [
-            item
-            for item in exemplar[:4]
-            if not any(marker in item for marker in SUITE_SCORECARD_MARKERS)
-        ]
+        return [item for item in exemplar[:4] if not any(marker in item for marker in SUITE_SCORECARD_MARKERS)]
 
     parts: list[str] = []
     contract = contract_paragraph(recipe, locale)
@@ -1838,203 +1764,6 @@ def family_opening(recipe: dict[str, Any], locale: str) -> str:
     return _fill_template(voices[voice_index(model_id, len(voices))], variant, cmd)
 
 
-def infer_use_cases(recipe: dict[str, Any], docs: dict[str, Any], locale: str) -> list[str]:
-    explicit = locale_paragraphs(docs, "useCases", locale)
-    if explicit:
-        return explicit[:3]
-    exemplar = exemplar_block(str(recipe.get("id") or ""), "use_cases", locale)
-    if exemplar:
-        return exemplar[:3]
-
-    name = str(recipe.get("name") or recipe.get("id") or "")
-    tasks = [str(item) for item in recipe.get("tasks") or [] if item]
-    flags = classify_tasks(tasks)
-    fields = required_fields(recipe)
-    artifacts = artifact_names(recipe)
-    pipe = pipeline_class(recipe)
-    run_id, run_task = run_identity(recipe)
-    action = action_detail(recipe)
-    ids = variant_ids(recipe)
-    artifacts_s = join_en(f"`{item}`" for item in artifacts[:2]) if locale == "en" else join_zh(f"`{item}`" for item in artifacts[:2])
-    fields_s = join_en(f"`{item}`" for item in fields[:4]) if locale == "en" else join_zh(f"`{item}`" for item in fields[:4])
-    cases: list[str] = []
-
-    if locale == "zh":
-        if flags["eval"] and not flags["vla"]:
-            cases.append(
-                f"把 {name} 当作评测/数据集条目使用"
-                + (f"，经 `{pipe}`" if pipe else "")
-                + (f" 写出 {artifacts_s}" if artifacts_s else "")
-                + "；它本身不是新的策略架构。"
-            )
-        elif flags["vla"] or flags["visuomotor"]:
-            cases.append(
-                f"滚动 {name} 的{task_phrase(tasks[0], 'zh') if tasks else '策略'}："
-                + (f"必填 {fields_s}" if fields_s else "按记录的观测/指令输入")
-                + (f"，产物为 {artifacts_s}" if artifacts_s else "")
-                + (f"。启动 `worldfoundry-eval run {run_id}`" if run_id else "")
-                + "。"
-            )
-        elif flags["camera"]:
-            cases.append(
-                f"用 {name} 做相机可控生成"
-                + (f"，`actions` 记录为 {action}" if action else "")
-                + (f"，产物 {artifacts_s}" if artifacts_s else "")
-                + (f"。任务 profile 为 `{run_task}`" if run_task else "")
-                + "。"
-            )
-        elif flags["world"] or flags["action_video"]:
-            cases.append(
-                f"驱动 {name} 的交互/动作条件世界路径"
-                + (f"：{action}" if action else "")
-                + (f"，写出 {artifacts_s}" if artifacts_s else "")
-                + (f"。记录命令为 `worldfoundry-eval run {run_id}`" if run_id else "")
-                + "。"
-            )
-        elif flags["geom"] or flags["depth"]:
-            cases.append(
-                f"用 {name} 跑{task_phrase(tasks[0], 'zh') if tasks else '几何/深度'}："
-                + (f"输入 {fields_s}" if fields_s else "按记录输入")
-                + (f"，产物 {artifacts_s}" if artifacts_s else "")
-                + "。"
-            )
-        elif flags["hosted"]:
-            cases.append(
-                f"在本地权重不可用时通过托管路径调用 {name}"
-                + (f"（`worldfoundry-eval run {run_id}`）" if run_id else "")
-                + (f"。记录任务：{join_zh(task_phrase(item, 'zh') for item in tasks[:3])}" if tasks else "")
-                + "。"
-            )
-        elif flags["i2v"] or flags["t2v"] or flags["v2v"]:
-            mode = "、".join(
-                label
-                for flag, label in (
-                    (flags["t2v"], "文生视频"),
-                    (flags["i2v"], "图生视频"),
-                    (flags["v2v"], "视频到视频/编辑"),
-                )
-                if flag
-            )
-            cases.append(
-                f"用 {name} 做{mode or '视频生成'}"
-                + (f"：必填 {fields_s}" if fields_s else "")
-                + (f"，经 `{pipe}`" if pipe else "")
-                + (f" 写出 {artifacts_s}" if artifacts_s else "")
-                + "。"
-            )
-        elif tasks:
-            cases.append(
-                f"覆盖 {name} 已记录的{join_zh(task_phrase(item, 'zh') for item in tasks[:3])}任务"
-                + (f"，启动 `worldfoundry-eval run {run_id}`" if run_id else "")
-                + (f"，产物 {artifacts_s}" if artifacts_s else "")
-                + "。"
-            )
-    else:
-        if flags["eval"] and not flags["vla"]:
-            cases.append(
-                f"Treat {name} as an evaluation/dataset entry"
-                + (f" through `{pipe}`" if pipe else "")
-                + (f" that writes {artifacts_s}" if artifacts_s else "")
-                + " — it is not a new policy architecture."
-            )
-        elif flags["vla"] or flags["visuomotor"]:
-            cases.append(
-                f"Roll out {name} for {task_phrase(tasks[0], 'en') if tasks else 'policy inference'}:"
-                + (f" required {fields_s}" if fields_s else " use the recorded observation/instruction fields")
-                + (f", writing {artifacts_s}" if artifacts_s else "")
-                + (f". Launch `worldfoundry-eval run {run_id}`" if run_id else "")
-                + "."
-            )
-        elif flags["camera"]:
-            cases.append(
-                f"Steer camera motion with {name}"
-                + (f"; `actions` is recorded as {action}" if action else "")
-                + (f", writing {artifacts_s}" if artifacts_s else "")
-                + (f". Task profile `{run_task}`" if run_task else "")
-                + "."
-            )
-        elif flags["world"] or flags["action_video"]:
-            cases.append(
-                f"Drive {name} as an action-conditioned world route"
-                + (f" ({action})" if action else "")
-                + (f" that emits {artifacts_s}" if artifacts_s else "")
-                + (f". Recorded launch: `worldfoundry-eval run {run_id}`" if run_id else "")
-                + "."
-            )
-        elif flags["geom"] or flags["depth"]:
-            cases.append(
-                f"Run {name} for {task_phrase(tasks[0], 'en') if tasks else 'geometry or depth'}:"
-                + (f" inputs {fields_s}" if fields_s else " recorded inputs")
-                + (f", producing {artifacts_s}" if artifacts_s else "")
-                + "."
-            )
-        elif flags["hosted"]:
-            cases.append(
-                f"Call {name} through the hosted provider route"
-                + (f" (`worldfoundry-eval run {run_id}`)" if run_id else "")
-                + (f". Recorded tasks: {join_en(task_phrase(item, 'en') for item in tasks[:3])}" if tasks else "")
-                + "."
-            )
-        elif flags["i2v"] or flags["t2v"] or flags["v2v"]:
-            mode = join_en(
-                [
-                    label
-                    for flag, label in (
-                        (flags["t2v"], "text-to-video"),
-                        (flags["i2v"], "image-to-video"),
-                        (flags["v2v"], "video-to-video or editing"),
-                    )
-                    if flag
-                ]
-            )
-            cases.append(
-                f"Use {name} for {mode or 'video generation'}"
-                + (f": required {fields_s}" if fields_s else "")
-                + (f" through `{pipe}`" if pipe else "")
-                + (f", writing {artifacts_s}" if artifacts_s else "")
-                + "."
-            )
-        elif tasks:
-            cases.append(
-                f"Cover {name}'s recorded {join_en(task_phrase(item, 'en') for item in tasks[:3])} tasks"
-                + (f" via `worldfoundry-eval run {run_id}`" if run_id else "")
-                + (f", writing {artifacts_s}" if artifacts_s else "")
-                + "."
-            )
-
-    if len(ids) > 1:
-        shown = ids[:4]
-        more = len(ids) - 4
-        joined = join_zh(f"`{item}`" for item in shown) if locale == "zh" else ", ".join(f"`{item}`" for item in shown)
-        if locale == "zh":
-            cases.append(f"按 variant 选择路线：{joined}" + (f" 等共 {len(ids)} 个" if more > 0 else "") + "。")
-        else:
-            cases.append(
-                f"Choose a recorded variant — {joined}"
-                + (f" ({len(ids)} total)" if more > 0 else "")
-                + "."
-            )
-    else:
-        ckpts = checkpoint_ids(recipe)[:2]
-        if ckpts:
-            joined = join_zh(f"`{item}`" for item in ckpts) if locale == "zh" else join_en(f"`{item}`" for item in ckpts)
-            if locale == "zh":
-                cases.append(f"先就位记录的权重 {joined}，再跑上述命令。")
-            else:
-                cases.append(f"Stage the recorded weights {joined} before launching the command above.")
-
-    bench = benchmarks_paragraph(docs, locale)
-    if bench:
-        cases.append(bench)
-
-    cleaned = []
-    for item in cases:
-        text = re.sub(r"\s+", " ", item).replace("。.", "。").replace("..", ".").strip()
-        if text and text not in cleaned:
-            cleaned.append(text)
-    return cleaned[:3]
-
-
 def description_text(recipe: dict[str, Any], locale: str) -> str:
     model_id = str(recipe.get("id") or "")
     exemplar = exemplar_block(model_id, "description", locale)
@@ -2104,77 +1833,8 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
     return clip_sentence(desc, 200)
 
 
-def intro_body(recipe: dict[str, Any], docs: dict[str, Any], locale: str, lead: str) -> list[str]:
-    overview = locale_paragraphs(docs, "overview", locale)
-    body = [item for item in overview[1:] if item and item != lead]
-    extras = list(exemplar_block(str(recipe.get("id") or ""), "intro_extra", locale))
-    paper = paper_sentence(docs, locale, recipe)
-    if paper and not mentions(lead, "arxiv", "paper", "论文"):
-        extras.append(paper)
-    aliases = [str(item) for item in recipe.get("aliases") or [] if item]
-    if aliases and not any(mentions(lead, alias) for alias in aliases[:3]):
-        extras.append(alias_sentence(recipe, locale))
-    if not body:
-        pipe = pipeline_class(recipe)
-        run_id, task = run_identity(recipe)
-        env = str((recipe.get("runtime") or {}).get("environmentName") or "").strip()
-        bits: list[str] = []
-        if locale == "zh":
-            if pipe:
-                bits.append(f"WorldFoundry 默认走 `{pipe}`")
-            if run_id:
-                bits.append(f"启动 `worldfoundry-eval run {run_id}`" + (f"（`{task}`）" if task else ""))
-            if env:
-                bits.append(f"环境 `{env}`")
-            if bits:
-                extras.insert(0, "；".join(bits) + "。")
-        else:
-            if pipe:
-                bits.append(f"WorldFoundry's default pipeline class is `{pipe}`")
-            if run_id:
-                bits.append(f"the recorded launch is `worldfoundry-eval run {run_id}`" + (f" (`{task}`)" if task else ""))
-            if env:
-                bits.append(f"the environment profile is `{env}`")
-            if bits:
-                text = "; ".join(bits)
-                extras.insert(0, text[0].upper() + text[1:] + ".")
-    publisher = publisher_name(docs, locale)
-    if (
-        publisher
-        and not mentions(lead, publisher, str(recipe.get("provider") or ""))
-        and not mentions(publisher, "发布", "institution not recorded", "not recorded")
-    ):
-        extras.append(f"该模型由{publisher}发布。" if locale == "zh" else f"It is published by {publisher}.")
-    modality = modality_sentence(docs, locale)
-    if modality and not mentions(lead, "modality", "模态", "takes ", "接受", "text", "image", "video"):
-        extras.append(modality)
-    status = status_sentence(recipe, locale)
-    if status and not mentions(
-        lead,
-        "verified",
-        "pending",
-        "blocked",
-        "validated",
-        "已验证",
-        "集成",
-        "parity",
-        "GPU-validated",
-        "runner",
-    ):
-        extras.append(status)
-    for item in extras:
-        if item and item not in body and not mentions(lead, item[:28]):
-            body.append(item)
-    return body
-
-
 def is_paper_cover_src(src: str) -> bool:
     return str(src or "").strip().lower().endswith(PAPER_COVER_SUFFIX)
-
-
-def is_arch_asset_src(src: str) -> bool:
-    normalized = str(src or "").strip().lower()
-    return any(normalized.endswith(suffix) for suffix in ARCH_ASSET_SUFFIXES)
 
 
 def body_arch_src(model_id: str, figures: list[dict[str, Any]]) -> str | None:
@@ -2191,61 +1851,12 @@ def body_arch_src(model_id: str, figures: list[dict[str, Any]]) -> str | None:
     return None
 
 
-def is_title_or_body_media_src(src: str, arch_src: str | None) -> bool:
-    if is_paper_cover_src(src) or is_arch_asset_src(src):
-        return True
-    return bool(arch_src) and src == arch_src
-
-
-def is_demo_video_figure(figure: dict[str, Any]) -> bool:
-    """Catalog / Studio demo clips — never emit these on model homes."""
-    kind = figure.get("kind") or "image"
-    src = str(figure.get("src") or "").strip().lower()
-    if kind == "video":
-        return True
-    return src.endswith((".mp4", ".webm", ".mov", ".m4v")) or "/demos/" in src
-
-
-def hero_figures(
-    figures: list[dict[str, Any]], arch_src: str | None = None
-) -> list[dict[str, Any]]:
-    """Never emit demo clips. Paper teasers come from ModelPaperFigures."""
-    return []
-
-
-def supplemental_figures(
-    figures: list[dict[str, Any]], arch_src: str | None = None
-) -> list[dict[str, Any]]:
-    """Never emit demo clips on model homes."""
-    return []
-
-
 def arch_diagram_block(model_id: str, locale: str) -> str:
     return f'<ModelArchDiagram modelId="{model_id}" locale="{locale}" />'
 
 
 def paper_figures_block(model_id: str, locale: str) -> str:
     return f'<ModelPaperFigures modelId="{model_id}" locale="{locale}" />'
-
-
-def figure_block(figure: dict[str, Any], locale: str) -> str | None:
-    src = str(figure.get("src") or "").strip()
-    if not src:
-        return None
-    caption = str(figure.get("captionZh") if locale == "zh" else figure.get("caption") or "").strip()
-    if not caption:
-        caption = str(figure.get("caption") or "").strip()
-    alt = mdx_escape(caption)
-    kind = figure.get("kind") or "image"
-    if is_demo_video_figure(figure) or kind == "video":
-        return None
-    image = f'<img src="{src}" alt="{alt}" />'
-    if caption:
-        return (
-            f'<figure className="wf-recipe-media is-diagram">\n  {image}\n  '
-            f"<figcaption>{alt}</figcaption>\n</figure>"
-        )
-    return f'<figure className="wf-recipe-media is-diagram">\n  {image}\n</figure>'
 
 
 def render_page(
@@ -2312,13 +1923,6 @@ def render_page(
             chunks.append("")
             already += " " + item
 
-    teaser_figures = hero_figures(figures, arch_src)
-    if teaser_figures:
-        teaser = figure_block(teaser_figures[0], locale)
-        if teaser:
-            chunks.append(teaser)
-            chunks.append("")
-
     chunks.append(f'<ModelCommandBuilder modelId="{model_id}" locale="{locale}" />')
     chunks.append("")
 
@@ -2369,12 +1973,6 @@ def render_page(
     if arch_src and not has_paper_figures(model_id):
         chunks.append(arch_diagram_block(model_id, locale))
         chunks.append("")
-
-    for figure in supplemental_figures(figures, arch_src):
-        block = figure_block(figure, locale)
-        if block:
-            chunks.append(block)
-            chunks.append("")
 
     chunks.extend([f"## {headings['run']}", ""])
     run_blob = ""
@@ -2729,10 +2327,7 @@ def main() -> int:
         return 1
 
     if args.check:
-        print(
-            f"generated model-home prose is clean "
-            f"({len(recipes)} models, {len(EXEMPLAR_PROSE)} exemplars)"
-        )
+        print(f"generated model-home prose is clean ({len(recipes)} models, {len(EXEMPLAR_PROSE)} exemplars)")
         return 0
 
     reason_bit = ""

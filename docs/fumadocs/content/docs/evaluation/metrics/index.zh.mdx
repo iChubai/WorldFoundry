@@ -13,6 +13,33 @@ WorldFoundry 提供树内 metric 层——由 registry 管理的 scorer 与分�
 
 <MetricsSetup />
 
+## 内置 existing-results 指标
+
+这些指标用 `worldfoundry-eval evaluate` 对已有的 `GenerationResult` JSON/JSONL 打分，不加载任何模型 checkpoint。
+
+| 指标 | 每条 result 的取值 |
+| --- | --- |
+| `artifact_count` | 输出 artifact 数量。 |
+| `required_artifacts_present` | 所有 `--required-artifact` 都存在时为 `1`，否则为 `0`。 |
+| `has_artifact:<name>` | 指定 artifact 存在时为 `1`，否则为 `0`。 |
+| `numeric` | result 上记录的全部数值型 metrics、scores 与 timings。 |
+| `numeric:<name>` | result 上记录的单个命名数值，如 `numeric:reward`。 |
+
+```bash
+worldfoundry-eval evaluate \
+  --mode existing-results \
+  --results-path runs/results.jsonl \
+  --output-dir runs/eval/builtin \
+  --required-artifact video \
+  --metric artifact_count \
+  --metric required_artifacts_present \
+  --metric has_artifact:video \
+  --metric numeric:reward \
+  --json
+```
+
+scorecard JSON 写入 `--output-dir`。
+
 ## 子页面
 
 - [多模态 scorer 与质量](/zh/docs/evaluation/metrics/scorers) — CLIPScore、VQAScore、ITMScore、FaceScore、ArtScore、OpenS2V reward 指标。

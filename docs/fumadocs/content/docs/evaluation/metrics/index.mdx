@@ -13,6 +13,33 @@ The in-tree catalog spans four families: **scorers & quality** (CLIP, VQA, ITM, 
 
 <MetricsSetup />
 
+## Built-in existing-results metrics
+
+These metrics score an existing `GenerationResult` JSON/JSONL file with `worldfoundry-eval evaluate` and load no model checkpoint.
+
+| Metric | Value per result |
+| --- | --- |
+| `artifact_count` | Number of output artifacts. |
+| `required_artifacts_present` | `1` when every `--required-artifact` name is present, otherwise `0`. |
+| `has_artifact:<name>` | `1` when the named artifact is present, otherwise `0`. |
+| `numeric` | All numeric metrics, scores, and timings recorded on the result. |
+| `numeric:<name>` | One named numeric value recorded on the result, such as `numeric:reward`. |
+
+```bash
+worldfoundry-eval evaluate \
+  --mode existing-results \
+  --results-path runs/results.jsonl \
+  --output-dir runs/eval/builtin \
+  --required-artifact video \
+  --metric artifact_count \
+  --metric required_artifacts_present \
+  --metric has_artifact:video \
+  --metric numeric:reward \
+  --json
+```
+
+The scorecard JSON is written under `--output-dir`.
+
 ## Pages
 
 - [Scorers & quality](/docs/evaluation/metrics/scorers) — CLIPScore, VQAScore, ITMScore, FaceScore, ArtScore, OpenS2V reward metrics.

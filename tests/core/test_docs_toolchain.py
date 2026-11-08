@@ -21,7 +21,6 @@ LAUNCHER = FUMADOCS / "scripts" / "run-python.sh"
 def test_python_backed_npm_scripts_use_portable_launcher() -> None:
     scripts = json.loads((FUMADOCS / "package.json").read_text(encoding="utf-8"))["scripts"]
     for name in (
-        "api:check",
         "api:generate",
         "cli:screenshots",
         "coverage:check",
@@ -92,7 +91,7 @@ def test_build_checks_all_generated_docs_data_before_next_build() -> None:
     source = (REPO_ROOT / "scripts" / "docs" / "build.sh").read_text(encoding="utf-8")
     types_check = source.index("npm run types:check")
     build = source.index("npm run build")
-    for command in ("api:check", "models:check", "coverage:check"):
+    for command in ("models:check", "coverage:check"):
         assert types_check < source.index(f"npm run {command}") < build
 
 
@@ -121,7 +120,6 @@ def test_public_surface_builds_docs_with_installation_and_generated_data_checks(
     assert npm_log.read_text().splitlines() == [
         "ci",
         "run types:check",
-        "run api:check",
         "run models:check",
         "run models:homes:check",
         "run benchmarks:check",

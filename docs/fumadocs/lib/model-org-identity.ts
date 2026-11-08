@@ -1,5 +1,4 @@
 import logoMap from '@/lib/model-logo-map.json';
-import { modelOrgSrc } from '@/lib/model-org-src';
 
 export type OrgIdentity = {
   key: string;
@@ -62,21 +61,7 @@ function lookupModelOrgKey(id: string, provider?: string) {
 }
 
 function orgFromKey(key: string | undefined): OrgIdentity | undefined {
-  if (!key) return undefined;
-
-  const org = orgs[key];
-  const src = org?.src ?? modelOrgSrc[key];
-  if (!org) {
-    if (!src) return undefined;
-    return {
-      key,
-      name: key,
-      abbr: key.slice(0, 2).toUpperCase(),
-      src,
-    };
-  }
-
-  return src && !org.src ? { ...org, src } : org;
+  return key ? orgs[key] : undefined;
 }
 
 export function resolveModelOrg(id: string, provider?: string): OrgIdentity | undefined {

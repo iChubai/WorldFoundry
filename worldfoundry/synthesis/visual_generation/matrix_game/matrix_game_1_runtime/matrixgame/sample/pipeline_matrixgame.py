@@ -884,7 +884,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
 
                             latent_model_input = torch.cat([latent_model_input, concat_latents], dim=1)
                         else:
-                            num_pre = latent_image_input.shape[2]  # 如果多帧past frame需要修改
+                            num_pre = latent_image_input.shape[2]  # Needs changes for multiple past frames
                             latent_model_input = torch.cat(
                                 [latent_image_input, latent_model_input[:, :, num_pre:, ...]], dim=2
                             )
@@ -916,7 +916,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                     # torch.full_like(keyboard_condition, -1.0)
                     # torch.zeros_like(keyboard_condition)
                     # mouse_condition = torch.full_like(mouse_condition, 999.0)
-                    # keyboard 是 6维，改成 -1
+                    # The keyboard condition is 6-dimensional; set it to -1
                     # keyboard_condition = torch.full_like(keyboard_condition, -1.0)
                 else:
                     mouse_condition_input = None

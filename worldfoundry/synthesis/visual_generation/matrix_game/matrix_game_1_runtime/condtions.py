@@ -63,18 +63,18 @@ def Bench_actions_76(action_names=None, num_frames=65):
     data = []
 
     for action_name in actions_to_test:
-        # 前，后，左，右，跳跃，攻击
+        # Keyboard columns: forward, back, left, right, jump, attack
         keyboard_condition = [[0, 0, 0, 0, 0, 0] for _ in range(num_samples_per_action)]
         mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
 
         for sub_act in base_action:
-            if sub_act not in action_name:  # 只处理action_name包含的动作
+            if sub_act not in action_name:  # Only sub-actions contained in action_name
                 continue
             if sub_act in CAMERA_VALUE_MAP:  # camera_dr
                 mouse_condition = [CAMERA_VALUE_MAP[sub_act] for _ in range(num_samples_per_action)]
 
             elif sub_act == "attack":
-                # to do 只有帧数 (idx % 16 >= 8) & (idx % 16 < 16)才为1
+                # TODO: press attack only on frames with 8 <= idx % 16 < 16; it is currently pressed every 8th frame.
                 for idx in range(num_samples_per_action):
                     if idx % 8 == 0:
                         keyboard_condition[idx][KEYBOARD_IDX["attack"]] = 1

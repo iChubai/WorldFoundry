@@ -46,10 +46,8 @@ class WanxVAEWrapper(VAEWrapper):
         return videos  # self.vae.decode(videos, dim=0) # already scaled
 
     def to(self, device, dtype):
-        # 移动 vae 到指定设备
         self.vae = self.vae.to(device, dtype)
 
-        # 如果 clip 存在，也移动到指定设备
         if self.clip is not None:
             self.clip = self.clip.to(device, dtype)
 

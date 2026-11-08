@@ -163,7 +163,7 @@ class VAEEncoderWrapper(nn.Module):
         # cache
         t = z.shape[2]
         iter_ = 1 + (t - 1) // 4
-        # 对encode输入的x，按时间拆分为1、4、4、4....
+        # Process the input in temporal chunks of 1, 4, 4, 4, ... frames.
         # range_iter = range(iter_) if
         offset = 1
         for i in range(iter_):

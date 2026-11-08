@@ -210,7 +210,7 @@ def zoomed_in(frame, zoom_factor=0.2, num_frames=49):
 
 
 def normalize_to_neg_one_to_one(x):
-    """将输入从[0,1]范围归一化到[-1,1]范围，替代lambda函数"""
+    """Map values from [0, 1] to [-1, 1]."""
     return 2.0 * x - 1.0
 
 
@@ -432,13 +432,14 @@ def cal_intersection_ratio(K, E1, E2, height, width, near=0.0, far=50):
 
 def cal_intersection_ratio_gpu(K, E1, E2, height, width, near=0.0, far=50):
     """
-    简化的 GPU 视锥体相交计算。
-    由于 trimesh 不支持 GPU 且计算复杂，我们改用采样点检测法：
-    在 E1 的视锥体内采样点，检查有多少点落在 E2 的视锥体内。
+    Approximate frustum overlap on the GPU by sampling.
+
+    trimesh has no GPU support, so this samples points inside the frustum of E1 and returns the
+    fraction of them that falls inside the frustum of E2.
     """
     device = E1.device
 
-    z_samples = torch.linspace(near + 0.1, far, 10, device=device)  # 深度采样
+    z_samples = torch.linspace(near + 0.1, far, 10, device=device)  # Depth samples
     x_samples = torch.linspace(-1, 1, 10, device=device)
     y_samples = torch.linspace(-1, 1, 10, device=device)
 

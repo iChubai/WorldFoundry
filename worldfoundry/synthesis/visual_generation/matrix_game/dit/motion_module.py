@@ -131,8 +131,7 @@ class Condition_in(nn.Module):
 class ActionModule(nn.Module):
     """
     action module from https://arxiv.org/pdf/2501.08325
-    鼠标控制信号的输入是一个 L*D 的向量
-    键盘同样
+    The mouse and keyboard control inputs are each an L*D tensor.
     """
 
     def __init__(

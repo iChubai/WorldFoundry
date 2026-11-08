@@ -90,7 +90,7 @@ def Bench_actions_universal(num_frames, num_samples_per_action=4):
         mouse_condition = [[0, 0] for _ in range(num_samples_per_action)]
 
         for sub_act in base_action:
-            if sub_act not in action_name:  # 只处理action_name包含的动作
+            if sub_act not in action_name:  # Only sub-actions contained in action_name
                 continue
             # print(f"action name: {action_name} sub_act: {sub_act}")
             if sub_act in CAMERA_VALUE_MAP:

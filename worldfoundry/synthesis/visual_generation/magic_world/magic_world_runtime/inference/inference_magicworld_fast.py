@@ -133,7 +133,7 @@ def _normalize_feats(feats: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
 
 def _pool_latent_frames(latent: torch.Tensor, mode: str = "mean") -> torch.Tensor:
     """
-    支持:
+    Pool latent frames over H and W:
       - [B, C, H, W] -> [B, C]
       - [B, F, C, H, W] -> [B*F, C]
     """
@@ -217,13 +217,13 @@ def _trim_cache_list_to_max_frames(cache_list: list[torch.Tensor], max_frames: i
 
 
 def _select_topk_from_cache_list(
-    query_first_latent: torch.Tensor,  # [B,Fq,C,H,W]，只用首帧
+    query_first_latent: torch.Tensor,  # [B,Fq,C,H,W]; only the first frame is used
     cache_list: list[torch.Tensor],  # List[[B,F_i,C,H,W]]
     topk: int,
     cache_pool: str = "mean",
 ) -> torch.Tensor:
     """
-    返回 [B, C, K, H, W]
+    Return the top-k cached frames most similar to the query's first frame as [B, C, K, H, W].
     """
     assert query_first_latent.dim() == 5
     B, _, C, H, W = query_first_latent.shape
@@ -238,7 +238,7 @@ def _select_topk_from_cache_list(
     if cache_frames is None or cache_frames.size(1) == 0:
         return _empty_like()
 
-    # query 取首帧
+    # Query features from the first frame
     q = query_first_latent[:, 0, ...]  # [B,C,H,W]
     q_feats = _normalize_feats(_pool_latent_frames(q, mode=cache_pool))  # [B,C]
 
@@ -319,7 +319,7 @@ def build_i2v_conditions_from_pil(
         pipeline.vae.encode_to_latent(render_input).to(device=device, dtype=dtype).permute(0, 2, 1, 3, 4)
     )
 
-    # 如果启用 render，则把 render_latent 在通道维拼到 y_input 上
+    # With rendering enabled, concatenate render_latent to y_input along the channel dimension.
     if use_render:
         y_input = torch.cat([y_input, render_latent_bcfhw], dim=1)
 
@@ -374,8 +374,8 @@ def build_camera_latents_for_segment(
 
 def normalize_pred_latents_to_bfchw(pred_latents: torch.Tensor, num_output_frames: int) -> torch.Tensor:
     """
-    统一把 pipeline 返回的 latent 转成 [B,F,C,H,W]
-    支持:
+    Convert pipeline output latents to [B,F,C,H,W].
+    Supported layouts:
       - [B,F,C,H,W]
       - [B,C,F,H,W]
     """
@@ -543,7 +543,7 @@ def main():
 
         prompts = [prompt] * args.num_samples
 
-        # 自回归交互：start 图像会被更新为上一段 last frame (RGB)
+        # Autoregressive interaction: the start image becomes the last RGB frame of the previous segment.
         current_start_pil = Image.open(img_path).convert("RGB")
 
         all_video = []

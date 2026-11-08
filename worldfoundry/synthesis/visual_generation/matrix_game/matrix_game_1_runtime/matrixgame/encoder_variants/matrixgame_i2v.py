@@ -679,7 +679,7 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         prompt_embeds_1, attention_mask_1 = self.encode_prompt(
             caption,
             device,
-            data_type="video",  # TODO: 注意图像和视频需要使用不同的，因为llm里使用不同的template
+            data_type="video",  # TODO: images and videos need different data types because the LLM uses different templates
             text_encoder=self.text_encoder_1,
             semantic_images=semantic_images,
         )

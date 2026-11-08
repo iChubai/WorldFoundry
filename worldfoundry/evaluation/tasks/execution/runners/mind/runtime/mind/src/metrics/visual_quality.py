@@ -36,7 +36,10 @@ def visual_quality_metric(images, imaging_model, aesthetic_model, clip_model, ba
 
 
 def merge_visual_results(result_dict, new_result):
-    """合并两个visual quality结果字典"""
+    """Append the imaging and aesthetic scores of ``new_result`` to ``result_dict`` and update the means.
+
+    Either argument may be None.
+    """
     if result_dict is None:
         return new_result
     if new_result is None:

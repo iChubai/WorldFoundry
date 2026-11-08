@@ -240,7 +240,7 @@ def extract_traj(
         pipeline: ViPE pipeline to use
         gt_cache_path: Optional path to cache/load images.txt for GT videos (e.g., video directory)
         expected_frames: Expected number of frames, used to validate cache
-        verbose_prefix: 日志前缀
+        verbose_prefix: Prefix of log messages
         gpu_id: GPU ID to use (default: 0)
 
     Returns:

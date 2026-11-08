@@ -22,14 +22,13 @@ def lcm_metric(pred, gt, lpips_metric, ssim_metric, psnr_metric, batch_size=100,
         ssim_list = []
 
         for i in range(0, f, batch_size):
-            # batch移到GPU
             pred_batch = pred[i : i + batch_size].to(device)
             gt_batch = gt[i : i + batch_size].to(device)
 
             diff = (pred_batch - gt_batch) ** 2
             mse_list.extend(diff.reshape(len(pred_batch), -1).mean(dim=1).cpu().tolist())
 
-            # LPIPS 输入需要 [-1, 1] 范围
+            # LPIPS expects inputs in [-1, 1].
             lpips_batch = lpips_metric((pred_batch * 2 - 1), (gt_batch * 2 - 1)).cpu().tolist()
             lpips_batch = [item[0][0][0] for item in lpips_batch]
             lpips_list.extend(lpips_batch)
@@ -56,7 +55,10 @@ def lcm_metric(pred, gt, lpips_metric, ssim_metric, psnr_metric, batch_size=100,
 
 
 def merge_lcm_results(result_dict, new_result):
-    """合并两个lcm结果字典"""
+    """Append the per-frame MSE, PSNR, SSIM and LPIPS of ``new_result`` to ``result_dict`` and update the means.
+
+    Either argument may be None.
+    """
     if result_dict is None:
         return new_result
     if new_result is None:

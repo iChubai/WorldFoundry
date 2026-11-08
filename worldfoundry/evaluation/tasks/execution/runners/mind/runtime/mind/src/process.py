@@ -47,6 +47,7 @@ def compute_metrics_single_gpu(
     gpu_id,
     stop_event,
 ):
+    """Process tasks from ``task_queue`` on one GPU, appending results to ``result_list``, until ``stop_event`` is set."""
     import warnings
 
     warnings.filterwarnings("ignore", message=".*pretrained.*")
@@ -54,10 +55,6 @@ def compute_metrics_single_gpu(
     warnings.filterwarnings("ignore", message=".*video.*deprecated.*")
     warnings.filterwarnings("ignore", message=".*timm\\.models\\.layers.*")
     warnings.filterwarnings("ignore", message=".*TRANSFORMERS_CACHE.*")
-    """
-    在单个GPU上从任务队列获取并处理任务
-    """
-    # 初始化模型
     if "lcm" in requested_metrics or "gsc" in requested_metrics:
         tqdm.write(f"GPU[{gpu_id}]: loading lcm model")
         lpips_metric = lpips.LPIPS(net="alex", spatial=False).to(device)
@@ -73,7 +70,6 @@ def compute_metrics_single_gpu(
         imaging_model.to(device)
         imaging_model.training = False
 
-    # 加载DINOv3模型
     if "dino" in requested_metrics:
         tqdm.write(f"GPU[{gpu_id}]: loading dinov3 model")
         dino_model, dino_processor = load_dinov3_model(dino_path, device)
@@ -82,7 +78,6 @@ def compute_metrics_single_gpu(
     processed_count = 0
     try:
         while True:
-            # 检查是否需要停止
             if stop_event.is_set():
                 tqdm.write(f"GPU{gpu_id}: Stop event received, exiting...")
                 break
@@ -207,7 +202,6 @@ def compute_metrics_single_gpu(
 
                     if "action" in requested_metrics:
                         tqdm.write(f"{prefix}: [4/5] Computing action accuracy (ViPE)...")
-                        # 计算action accuracy
                         actions = extract_actions_from_json(
                             os.path.join(gt_dir, data_path, "action.json"), mark_time, 97
                         )
@@ -315,7 +309,7 @@ def compute_metrics(
     for task in all_data:
         task_queue.put(Task(task, 0))
 
-    # 进度监控线程
+    # Update the progress bar and checkpoint the results file whenever new results arrive.
     def monitor_progress():
         pbar = tqdm(total=total_tasks, desc="Progress", unit="video")
         last_count = 0
@@ -333,7 +327,7 @@ def compute_metrics(
                 time.sleep(0.5)
             stop_event.set()
         except (ConnectionResetError, OSError):
-            pass  # Ctrl-C时manager连接关闭，忽略
+            pass  # Ctrl-C closes the manager connection
         finally:
             pbar.close()
 
@@ -405,7 +399,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # 检查GPU数量
     available_gpus = torch.cuda.device_count()
     if args.num_gpus > available_gpus:
         tqdm.write(
@@ -413,7 +406,6 @@ if __name__ == "__main__":
         )
         args.num_gpus = available_gpus
 
-    # 准备输出路径
     if args.output:
         output_path = args.output
     else:
@@ -443,7 +435,7 @@ if __name__ == "__main__":
             tqdm.write("No results to save (computation was interrupted too early)")
 
     finally:
-        # 保存结果(即使被中断)
+        # Report the saved results, also after an interruption.
         if video_results is not None:
             tqdm.write(f"{len(video_results['data'])} videos are processed")
             tqdm.write(f"checking output path {output_path}:")

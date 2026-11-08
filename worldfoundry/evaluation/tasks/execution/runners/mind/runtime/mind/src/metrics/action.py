@@ -38,7 +38,7 @@ def action_accuracy_metric(
         per_action: Whether to include per-action breakdown
         max_frames: Maximum number of frames to use from videos (None = use all frames)
         gt_data_dir: GT data directory (for caching images.txt)
-        verbose_prefix: 前缀标识，用于日志输出
+        verbose_prefix: Prefix of log messages
         gpu_id: GPU ID for ViPE inference (default: 0)
 
     Returns:

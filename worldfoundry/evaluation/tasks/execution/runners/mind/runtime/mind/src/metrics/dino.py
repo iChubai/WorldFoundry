@@ -2,28 +2,25 @@ from utils.dino_utils import extract_dinov3_features
 
 
 def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None, device="cuda:0", batch_size=8):
-    """
-    计算DINOv3特征的MSE指标
+    """Compute the per-frame MSE between the DINOv3 patch features of predicted and ground-truth frames.
 
     Args:
-        pred_frames: 预测视频帧，形状 [f, c, h, w]，范围 [0, 1]
-        gt_frames: ground truth视频帧，形状 [f, c, h, w]，范围 [0, 1]
-        dino_model: DINOv3模型（如果为None，会自动加载）
-        dino_processor: DINOv3 processor（如果为None，会自动加载）
-        device: 计算设备
-        batch_size: 批处理大小
+        pred_frames: Predicted frames, shape [f, c, h, w], range [0, 1].
+        gt_frames: Ground-truth frames, shape [f, c, h, w], range [0, 1].
+        dino_model: DINOv3 model from ``load_dinov3_model``.
+        dino_processor: DINOv3 image processor from ``load_dinov3_model``.
+        device: Device the features are computed on.
+        batch_size: Frames per forward pass.
 
     Returns:
-        result_dict: 包含dino_mse相关指标的字典
+        Dict with the per-frame ``dino_mse`` list and its mean ``avg_dino_mse``.
     """
     result_dict = {}
 
-    # 提取GT帧的DINOv3特征
     gt_features = extract_dinov3_features(
         gt_frames, model=dino_model, processor=dino_processor, device=device, batch_size=batch_size
     )  # [f, 196, 768]
 
-    # 提取预测帧的DINOv3特征
     pred_features = extract_dinov3_features(
         pred_frames, model=dino_model, processor=dino_processor, device=device, batch_size=batch_size
     )  # [f, 196, 768]
@@ -37,7 +34,7 @@ def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None
 
 
 def merge_dino_results(result_dict, new_result):
-    """合并两个dino结果字典"""
+    """Append the per-frame DINO scores of ``new_result`` to ``result_dict`` and update the mean; either may be None."""
     if result_dict is None:
         return new_result
     if new_result is None:

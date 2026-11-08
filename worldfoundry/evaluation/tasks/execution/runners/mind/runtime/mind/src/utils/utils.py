@@ -92,7 +92,7 @@ def get_vitl_path():
 
 
 def ensure_all_models_downloaded():
-    """在并行前预先下载所有模型文件，避免多进程冲突"""
+    """Download all model files before the parallel workers start, so that workers do not download concurrently."""
     from tqdm import tqdm
 
     tqdm.write("Pre-downloading model files...")
@@ -114,8 +114,7 @@ def ensure_all_models_downloaded():
 
 
 def transform_image(images):
-    # 输入: images (Tensor) - 形状为 [B, C, H, W], 范围[0,255]
-    # 输出: 归一化后, 范围[0,1]的 [B, C, 1280, 720] Tensor
+    """Resize and center-crop [B, C, H, W] images in [0, 255] to [B, C, 720, 1280] in [0, 1]."""
     b, c, h, w = images.size()
     if h * 1280 == w * 720:
         images = transforms.Resize(size=(720, 1280), antialias=False)(images)
@@ -181,13 +180,13 @@ def load_gt_video(video_path, mark_time, total_time, max_time=None) -> torch.Ten
 
 
 def get_video_length(video_path) -> int:
-    """获取视频帧数"""
+    """Return the frame count stored in the first video stream header of ``video_path``."""
     with av.open(video_path) as container:
         return container.streams.video[0].frames
 
 
 class VideoStreamReader:
-    """使用av进行流式视频读取，内存安全"""
+    """Decode a video with PyAV in batches, so that only one batch of frames is held in memory."""
 
     def __init__(self, video_path, start_frame=0, total_frames=None):
         self.video_path = video_path
@@ -210,7 +209,7 @@ class VideoStreamReader:
                     break
 
     def read_batch(self, batch_size):
-        """读取一批帧，返回(is_ended, frames_tensor)"""
+        """Read up to ``batch_size`` frames and return ``(is_ended, frames_tensor)``."""
         if self.current_pos >= self.total_frames:
             return True, None
 
@@ -354,7 +353,7 @@ def crop_video_frames(video_path, max_frames, cache_dir, start_frame=0):
             "-i",
             str(video_path),
             "-vf",
-            f"select=gte(n\,{start_frame})",  # 从指定帧开始
+            f"select=gte(n\,{start_frame})",  # start at ``start_frame``
             "-vframes",
             str(max_frames),
             "-c:v",

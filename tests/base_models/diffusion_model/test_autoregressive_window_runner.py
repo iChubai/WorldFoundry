@@ -827,20 +827,29 @@ def test_first_block_timesteps_require_distilled_x0() -> None:
 
 @pytest.mark.parametrize(("batch", "frames"), [(1, 1), (1, 3), (2, 1)])
 def test_bf16_renoise_follows_official_add_noise_promotion(batch: int, frames: int) -> None:
-    from worldfoundry.base_models.diffusion_model.schedulers.wan import shift_flow_sigmas
+    from worldfoundry.core.nn import FlowMatchScheduler
 
+    scheduler = FlowMatchScheduler(shift=5.0, sigma_min=0.0, extra_one_step=True)
+    scheduler.set_timesteps(1000, training=True)
+    timestep, sigma = scheduler.timesteps[250], scheduler.sigmas[250]
     generator = torch.Generator().manual_seed(4)
     clean = torch.randn(batch, 16, frames, 8, 8, generator=generator).to(torch.bfloat16)
     noise = torch.randn(batch, 16, frames, 8, 8, generator=generator).to(torch.bfloat16)
-    sigma = shift_flow_sigmas(torch.tensor(0.5), 5.0)
 
     renoised = AutoregressiveWindowRunner._renoise_in_dtype(clean, noise, sigma)
 
+    # The official runtime re-noises [B*F, C, H, W] frames with one timestep per frame.
+    official = (
+        scheduler.add_noise(
+            clean.transpose(1, 2).flatten(0, 1),
+            noise.transpose(1, 2).flatten(0, 1),
+            timestep * torch.ones(batch * frames),
+        )
+        .unflatten(0, (batch, frames))
+        .transpose(1, 2)
+    )
     in_float32 = ((1 - sigma) * clean.float() + sigma * noise.float()).to(torch.bfloat16)
-    # FlowMatchScheduler.add_noise with one timestep element: a 0-dim float32 sigma keeps bf16 arithmetic.
-    zero_dim = sigma.reshape(())
-    in_bf16 = (1 - zero_dim) * clean + zero_dim * noise
-    assert in_bf16.dtype == torch.bfloat16
     assert renoised.dtype == torch.bfloat16
-    assert not torch.equal(in_bf16, in_float32)
-    assert torch.equal(renoised, in_bf16 if batch * frames == 1 else in_float32)
+    assert torch.equal(renoised, official)
+    # One frame per block keeps the official arithmetic in bf16, which differs from float32.
+    assert torch.equal(official, in_float32) is (batch * frames > 1)

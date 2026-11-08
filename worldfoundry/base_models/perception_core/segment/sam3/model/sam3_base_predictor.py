@@ -12,7 +12,6 @@ Subclasses only need to override methods where their behavior differs.
 import gc
 import time
 import uuid
-from typing import Dict, List, Optional
 
 import torch
 
@@ -219,8 +218,6 @@ class Sam3BasePredictor:
         result = self.model.remove_object(inference_state, obj_id, frame_idx=frame_idx, is_user_action=is_user_action)
         # Handle both return conventions
         if result is None or (isinstance(result, tuple) and result[1] is None):
-            import numpy as np
-
             out_obj_ids = torch.zeros(0, dtype=torch.int64)
             out_binary_masks = torch.zeros(
                 0,

@@ -12,8 +12,6 @@ This is LTX audio graph math, not a tiling helper (video
 tiling lives in :mod:`~..video.tiling`).
 """
 
-from typing import Set, Tuple
-
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType, make_attn

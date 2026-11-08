@@ -1,7 +1,6 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import json
 import random
-from typing import Tuple
 
 import numpy as np
 from mmyolo.registry import TRANSFORMS

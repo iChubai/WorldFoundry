@@ -4,7 +4,11 @@
 """Use the existing base-model inference kernels."""
 
 from worldfoundry.base_models.diffusion_model.models.networks.helios.kernels import (
-    replace_all_norms_with_flash_norms,
-    replace_rmsnorm_with_fp32,
-    replace_rope_with_flash_rope,
+    replace_all_norms_with_flash_norms as replace_all_norms_with_flash_norms,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.helios.kernels import (
+    replace_rmsnorm_with_fp32 as replace_rmsnorm_with_fp32,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.helios.kernels import (
+    replace_rope_with_flash_rope as replace_rope_with_flash_rope,
 )

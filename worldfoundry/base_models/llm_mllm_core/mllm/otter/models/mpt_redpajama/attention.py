@@ -5,12 +5,10 @@
 
 import math
 import warnings
-from typing import Optional
 
 import torch
 import torch.nn as nn
 from einops import rearrange
-from torch import nn
 
 from .low_precision_layernorm import LPLayerNorm
 

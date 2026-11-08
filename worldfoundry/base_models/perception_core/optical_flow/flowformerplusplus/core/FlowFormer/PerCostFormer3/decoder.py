@@ -1,16 +1,9 @@
-import math
-from typing import Optional, Tuple
-
-import loguru
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
-from einops.layers.torch import Rearrange
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from torch import einsum
+from timm.models.layers import DropPath
 
-from ...utils.utils import bilinear_sampler, coords_grid, upflow8
+from ...utils.utils import bilinear_sampler, coords_grid
 from .attention import ExpPositionEmbeddingSine, LinearPositionEmbeddingSine, MultiHeadAttention
 from .gma import Attention
 from .gru import BasicUpdateBlock, GMAUpdateBlock

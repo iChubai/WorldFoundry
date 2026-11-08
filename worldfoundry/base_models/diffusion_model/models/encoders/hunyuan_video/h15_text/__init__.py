@@ -30,7 +30,6 @@ License header above is Tencent Hunyuan; keep it intact.
 import os
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn

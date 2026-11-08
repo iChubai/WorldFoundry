@@ -1,7 +1,7 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import logging
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 

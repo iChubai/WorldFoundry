@@ -4,7 +4,6 @@ UniCeption Global-Attention Transformer for Information Sharing
 
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch

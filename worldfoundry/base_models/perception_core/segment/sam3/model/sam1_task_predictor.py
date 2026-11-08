@@ -9,7 +9,6 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> sam1_task_predictor.py functionality."""
 
 import logging
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch

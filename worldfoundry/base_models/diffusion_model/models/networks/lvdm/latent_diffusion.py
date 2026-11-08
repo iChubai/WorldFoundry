@@ -14,7 +14,6 @@ https://github.com/CompVis/taming-transformers
 
 import logging
 import random
-from contextlib import contextmanager
 from functools import partial
 
 import numpy as np

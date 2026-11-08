@@ -1,11 +1,7 @@
-import copy
-import math
 from collections import OrderedDict
-from typing import Tuple, Union
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from einops import rearrange
 from timm.models.layers import trunc_normal_
 from torch import nn
@@ -515,11 +511,6 @@ class VideoSpecificPrompt(nn.Module):
         visual = self.norm(visual)
         for layer in self.decoder:
             text = layer(text, visual)
-
-
-from collections import OrderedDict
-
-from timm.models.layers import trunc_normal_
 
 
 class ResidualAttentionBlock(nn.Module):

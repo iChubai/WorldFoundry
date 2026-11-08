@@ -1,10 +1,9 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> utils.py functionality."""
 
-from typing import List, Optional, Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _pair, _quadruple
 

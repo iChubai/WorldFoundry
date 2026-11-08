@@ -1,7 +1,6 @@
 """Auto-level camera estimation built on the in-tree GeoCalib backbone."""
 
 import math
-from typing import Dict, Tuple
 
 import torch
 import torch.nn as nn

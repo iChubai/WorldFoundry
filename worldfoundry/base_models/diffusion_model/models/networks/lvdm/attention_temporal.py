@@ -6,7 +6,6 @@ document the ``B S C`` vs video-layout conversions.
 """
 
 import math
-from inspect import isfunction
 
 import torch
 import torch as th
@@ -23,7 +22,7 @@ except:
     XFORMERS_IS_AVAILBLE = False
 
 from worldfoundry.core.nn.diffusion.convolution import conv_nd, normalization, zero_module
-from worldfoundry.core.nn.diffusion.utils import checkpoint, default, exists, init_, max_neg_value, uniq
+from worldfoundry.core.nn.diffusion.utils import checkpoint, default, exists
 
 
 class GEGLU(nn.Module):

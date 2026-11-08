@@ -10,7 +10,6 @@ locally with world_size=1, rank=0, which is what SGLang used by default.
 import logging
 import math
 import os
-from typing import List, Union
 
 import numpy as np
 import torch

@@ -33,7 +33,6 @@ from .config import (
 )
 from .ops import (
     apply_qk_norm,
-    apply_rope_qk,
     indexed_gate,
     indexed_scale_shift,
     make_rms_norm,

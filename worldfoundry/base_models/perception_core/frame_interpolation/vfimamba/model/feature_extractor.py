@@ -1,14 +1,12 @@
 import math
 from collections.abc import Callable
-from functools import partial
-from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange, repeat
-from mamba_ssm.ops.selective_scan_interface import selective_scan_fn, selective_scan_ref
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from einops import repeat
+from mamba_ssm.ops.selective_scan_interface import selective_scan_fn
+from timm.models.layers import to_2tuple, trunc_normal_
 
 
 class ChannelAttention(nn.Module):

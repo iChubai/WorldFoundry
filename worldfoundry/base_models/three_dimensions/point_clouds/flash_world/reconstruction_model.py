@@ -2,14 +2,12 @@
 
 import math
 
-import einops
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from .render import gaussian_render
-from .utils import EMANorm, create_rays, quaternion_to_matrix, zero_init
+from .utils import create_rays, quaternion_to_matrix
 
 
 def inverse_sigmoid(x):
@@ -38,13 +36,8 @@ def inverse_softplus(x, beta=1):
 
 
 import copy
-import math
 
-import numpy as np
-import torch
-import torch.nn as nn
-
-from .autoencoder_kl_wan import WanCausalConv3d, WanRMS_norm, unpatchify
+from .autoencoder_kl_wan import WanCausalConv3d, WanRMS_norm
 
 
 class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):

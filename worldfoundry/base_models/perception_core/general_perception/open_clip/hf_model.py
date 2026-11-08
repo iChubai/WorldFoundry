@@ -11,7 +11,12 @@ from torch import TensorType
 
 try:
     import transformers
-    from transformers import AutoConfig, AutoModel, AutoTokenizer, PretrainedConfig
+    from transformers import (  # noqa: F401 - Import checks optional dependency availability.
+        AutoConfig,
+        AutoModel,
+        AutoTokenizer,
+        PretrainedConfig,
+    )
     from transformers.modeling_outputs import (
         BaseModelOutput,
         BaseModelOutputWithPooling,

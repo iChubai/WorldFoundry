@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 from ...constants import CONTEXT_LEN, DEFAULT_IMAGE_TOKEN, HF_CACHE_DIR, IGNORE_INDEX, SYSTEM_MSG

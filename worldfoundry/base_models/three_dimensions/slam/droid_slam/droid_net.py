@@ -1,12 +1,8 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_net.py functionality."""
 
-from collections import OrderedDict
-
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lietorch import SE3
 from torch_scatter import scatter_mean
 
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops

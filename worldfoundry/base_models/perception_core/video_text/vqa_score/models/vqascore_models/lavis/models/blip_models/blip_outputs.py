@@ -6,7 +6,6 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 from transformers.modeling_outputs import (

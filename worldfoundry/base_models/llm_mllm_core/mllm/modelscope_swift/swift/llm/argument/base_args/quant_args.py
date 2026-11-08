@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
 
 import torch
 

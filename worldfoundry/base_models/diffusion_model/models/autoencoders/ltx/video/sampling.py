@@ -13,7 +13,6 @@ This is LTX video graph math, not spatial tiling
 """
 
 import math
-from typing import Tuple, Union
 
 import torch
 from einops import rearrange

@@ -6,13 +6,10 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> heads -> camera_head.py functionality."""
 
-import math
 from functools import partial
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head_act import activate_pose

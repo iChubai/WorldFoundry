@@ -1,9 +1,5 @@
-from collections import OrderedDict
-
-import cv2
-
 # isort: split
-from droid_net import DroidNet
+from droid_net import DroidNet  # noqa: F401 - Keeps the module's import-time setup.
 
 # isort: split
 import geom.projective_ops as pops

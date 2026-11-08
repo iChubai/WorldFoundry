@@ -9,8 +9,6 @@ Must not: mutate a process-wide DiffSynth registry; discover checkpoints without
 an explicit ``model_pool_factory``.
 """
 
-from typing import Union
-
 import numpy as np
 import torch
 from einops import rearrange, reduce, repeat

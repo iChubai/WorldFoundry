@@ -4,7 +4,6 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 logging.basicConfig(level=logging.INFO)
 

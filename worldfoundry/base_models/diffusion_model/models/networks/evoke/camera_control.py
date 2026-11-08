@@ -8,7 +8,6 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Iterable
-from typing import Optional
 
 import torch
 import torch.nn as nn

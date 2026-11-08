@@ -28,7 +28,6 @@ Sana DC-AE family only — not Wan residual 3-D blocks.
 """
 
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn

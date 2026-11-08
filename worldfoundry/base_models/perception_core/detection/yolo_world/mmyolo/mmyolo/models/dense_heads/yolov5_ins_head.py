@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 from collections.abc import Sequence
-from typing import List, Optional, Tuple, Union
 
 import mmcv
 import torch

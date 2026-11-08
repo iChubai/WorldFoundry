@@ -3,7 +3,6 @@ Base Prediction Head Class for UniCeption
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn

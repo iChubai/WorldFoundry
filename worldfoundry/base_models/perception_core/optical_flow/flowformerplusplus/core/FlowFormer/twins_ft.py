@@ -13,10 +13,7 @@ Code/weights from https://github.com/Meituan-AutoML/Twins, original copyright/li
 # Written by Xinjie Li, Xiangxiang Chu
 # --------------------------------------------------------
 import math
-from copy import deepcopy
 from functools import partial
-from multiprocessing.sharedctypes import Value
-from typing import Optional, Tuple
 
 import numpy as np
 import torch

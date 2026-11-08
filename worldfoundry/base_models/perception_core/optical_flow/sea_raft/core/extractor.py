@@ -2,9 +2,8 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.layer import BasicBlock, conv1x1, conv3x3
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.layer import BasicBlock, conv1x1
 
 
 class ResNetFPN(nn.Module):

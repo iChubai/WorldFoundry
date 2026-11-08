@@ -14,21 +14,10 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> geometry.py functionality."""
 
 from types import SimpleNamespace
-from typing import Optional
 
 import numpy as np
 import torch
 from einops import einsum
-
-from worldfoundry.core.geometry.transforms import (
-    quaternion_xyzw_to_rotation_matrix as quat_to_mat,
-)
-from worldfoundry.core.geometry.transforms import (
-    rotation_matrix_to_quaternion_xyzw as mat_to_quat,
-)
-from worldfoundry.core.geometry.transforms import (
-    standardize_quaternion_xyzw as standardize_quaternion,
-)
 
 
 def as_homogeneous(ext):

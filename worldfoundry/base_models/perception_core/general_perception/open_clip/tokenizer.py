@@ -11,7 +11,6 @@ import string
 import warnings
 from collections.abc import Callable
 from functools import lru_cache, partial
-from typing import Dict, List, Optional, Union
 
 import ftfy
 import numpy as np

@@ -13,7 +13,6 @@ else:
 import warnings
 from collections.abc import Callable, Iterable
 from itertools import product
-from typing import List, Optional, Union
 
 import torch.testing
 from torch.overrides import is_tensor_like

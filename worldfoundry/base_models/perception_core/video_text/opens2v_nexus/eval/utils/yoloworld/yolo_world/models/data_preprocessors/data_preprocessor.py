@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Optional, Union
+from typing import Union
 
 import torch
 from mmdet.models.data_preprocessors import DetDataPreprocessor

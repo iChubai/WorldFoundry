@@ -12,7 +12,7 @@
 import logging
 import os
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 from torch import Tensor, nn
@@ -20,7 +20,6 @@ from torch import Tensor, nn
 from worldfoundry.core.nn.blocks.layers import LayerScale, Mlp
 from worldfoundry.core.nn.blocks.stochastic_depth import (
     add_residual,
-    drop_add_residual_stochastic_depth,
     get_branges_scales,
 )
 from worldfoundry.core.nn.transformer.vit import PreNormTransformerBlock

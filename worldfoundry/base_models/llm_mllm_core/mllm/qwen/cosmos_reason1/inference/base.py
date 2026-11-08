@@ -1,7 +1,7 @@
 """Inference-only base for the bundled Reason1/Qwen text encoder."""
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 from torch._utils import _get_available_device_type, _get_device_module

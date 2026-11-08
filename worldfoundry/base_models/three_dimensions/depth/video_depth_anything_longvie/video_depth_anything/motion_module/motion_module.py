@@ -16,7 +16,7 @@ from .attention import CrossAttention, FeedForward, apply_rotary_emb, precompute
 
 try:
     import xformers
-    import xformers.ops
+    import xformers.ops  # noqa: F401 - Import checks optional dependency availability.
 
     XFORMERS_AVAILABLE = True
 except ImportError:

@@ -5,7 +5,6 @@ This module requires ``transformers`` and is imported lazily by model
 """
 
 from collections.abc import Callable
-from typing import Optional
 
 import torch
 import torch.nn as nn

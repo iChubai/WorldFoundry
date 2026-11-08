@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from types import MethodType
-from typing import Any, Dict
+from typing import Any
 
 import torch
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
@@ -13,7 +13,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
 
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
-from ..patcher import patch_output_clone, patch_output_normalizer
+from ..patcher import patch_output_clone
 from ..register import (
     Model,
     ModelGroup,

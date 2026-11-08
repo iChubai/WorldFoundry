@@ -7,13 +7,11 @@
 
 import logging
 import os
-import random
 import subprocess
 from urllib.parse import urlparse
 
 import numpy as np
 import torch
-from torch import nn
 
 logger = logging.getLogger("dinov2")
 

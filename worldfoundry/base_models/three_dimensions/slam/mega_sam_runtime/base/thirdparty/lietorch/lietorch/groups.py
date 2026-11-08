@@ -4,7 +4,7 @@ import torch
 from .broadcasting import broadcast_inputs
 
 # group operations implemented in cuda
-from .group_ops import Act3, Act4, Adj, AdjT, Exp, FromVec, Inv, Jinv, Log, Mul, ToMatrix, ToVec
+from .group_ops import Act3, Act4, Adj, AdjT, Exp, FromVec, Inv, Jinv, Log, Mul, ToVec
 
 
 class LieGroupParameter(torch.Tensor):

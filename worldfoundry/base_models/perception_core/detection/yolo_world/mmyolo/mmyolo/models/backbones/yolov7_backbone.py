@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Optional, Tuple, Union
 
 import torch.nn as nn
 from mmcv.cnn import ConvModule

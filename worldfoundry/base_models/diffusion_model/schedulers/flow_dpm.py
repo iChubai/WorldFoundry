@@ -12,7 +12,6 @@ rather than constructing this class in a runner directly.
 
 import inspect
 import math
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch

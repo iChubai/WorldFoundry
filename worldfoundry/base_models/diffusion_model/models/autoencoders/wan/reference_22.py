@@ -15,7 +15,6 @@ Header-level docs only; residual stacks are graph math.
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 import torch.nn as nn

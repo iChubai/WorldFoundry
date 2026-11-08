@@ -5,8 +5,6 @@
 Utilities for bounding box manipulation and GIoU.
 """
 
-from typing import Tuple
-
 import torch
 
 

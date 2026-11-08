@@ -14,7 +14,6 @@ on :class:`~..minimax_h3_audio.minimax_h3.MiniMaxH3AudioVAE`.
 
 import logging
 import math
-from typing import Tuple
 
 import numpy as np
 import torch

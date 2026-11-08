@@ -12,7 +12,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> attention.py functionality."""
 
 import math
-from typing import List, Tuple
 
 import torch
 import torch.nn.functional as F

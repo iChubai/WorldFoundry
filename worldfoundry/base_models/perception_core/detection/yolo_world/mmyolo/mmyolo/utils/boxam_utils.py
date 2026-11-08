@@ -4,7 +4,6 @@ import copy
 import warnings
 from collections.abc import Callable
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import cv2
 import numpy as np

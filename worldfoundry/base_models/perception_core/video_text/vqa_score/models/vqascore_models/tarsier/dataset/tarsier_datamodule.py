@@ -2,7 +2,6 @@
 
 import json
 import traceback
-from typing import Dict, List, Union
 
 import torch
 from PIL import Image

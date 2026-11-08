@@ -10,7 +10,6 @@ Adds linear attention and TeaCache hooks.  No VACE or causal cache.
 """
 
 import math
-from typing import Optional
 
 import torch
 import torch.cuda.amp as amp
@@ -19,7 +18,7 @@ import torch.nn.functional as F
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linear_attention import flash_attention
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from worldfoundry.core.nn.blocks.convolutional_mlp import GLUMBConvTemp, Mlp
+from worldfoundry.core.nn.blocks.convolutional_mlp import GLUMBConvTemp
 
 __all__ = ["WanModel"]
 

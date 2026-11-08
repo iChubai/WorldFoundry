@@ -6,7 +6,7 @@ import os
 import re
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     _candidate_lyra1_weights_subdir,

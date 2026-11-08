@@ -1,6 +1,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> __init__.py functionality."""
 
-from .encoder import Encoder
+from .encoder import Encoder as Encoder
 from .encoder_epipolar import EncoderEpipolar, EncoderEpipolarCfg
 
 ENCODERS = {

@@ -2,7 +2,6 @@ import base64
 import io
 import warnings
 
-import numpy as np
 import torch
 from PIL import Image
 from transformers import AutoTokenizer, FuyuForCausalLM, FuyuImageProcessor, FuyuProcessor

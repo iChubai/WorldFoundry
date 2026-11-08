@@ -14,7 +14,6 @@ H3 video decoder utilities only; Wan CLIP RoPE is unrelated.
 import logging
 import os
 from collections.abc import Sequence
-from typing import Tuple
 
 import torch
 

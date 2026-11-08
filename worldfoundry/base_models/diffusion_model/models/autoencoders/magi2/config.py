@@ -10,7 +10,6 @@ of truth; the model modules import them from this file.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Tuple
 
 # ---------------------------------------------------------------------------
 #  Wan2.2 (z_dim=48) video latent normalization statistics

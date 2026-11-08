@@ -5,8 +5,6 @@ Recipes that still need DDIM construct :class:`DDIMSampler` instead of going
 through Diffusers.  Numerical helpers live in :mod:`.schedule_math`.
 """
 
-import copy
-
 import numpy as np
 import torch
 from tqdm import tqdm

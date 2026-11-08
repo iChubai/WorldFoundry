@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v1 -> adapter.py functionality."""
 
-from typing import Dict
-
 import torch
 import torch.nn.functional as F
 from torchvision.transforms import Compose

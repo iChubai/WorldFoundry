@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections.abc import Sequence
-from typing import List, Tuple
 
 import torch
 import torch.nn as nn

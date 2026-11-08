@@ -23,7 +23,6 @@ context before the associative ``VK`` accumulation.  The Triton module
 """
 
 import os
-from typing import Optional, Tuple
 
 import torch
 from torch import nn

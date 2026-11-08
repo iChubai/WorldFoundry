@@ -4,8 +4,7 @@ import importlib
 import time
 import warnings
 from contextlib import contextmanager
-from functools import partial, wraps
-from itertools import chain
+from functools import wraps
 from pathlib import Path
 from typing import *
 

@@ -1,7 +1,5 @@
 """Module for base_models -> perception_core -> segment -> efficient_sam -> mlp.py functionality."""
 
-from typing import Type
-
 from torch import nn
 
 

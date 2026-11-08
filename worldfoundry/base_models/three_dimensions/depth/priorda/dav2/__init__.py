@@ -4,8 +4,6 @@
 
 """Module for base_models -> three_dimensions -> depth -> priorda -> dav2 -> __init__.py functionality."""
 
-import os
-
 import torch
 
 from .dpt import DepthAnythingV2

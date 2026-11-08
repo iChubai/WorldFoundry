@@ -1,21 +1,17 @@
-import copy
-import math
-import random
 from collections import OrderedDict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import asdict
 from functools import partial
 from logging import getLogger
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import torch
 import torch.nn as nn
 from einops import rearrange
 from timm.layers import DropPath
-from torch import nn
 from torch.nn import functional as F
-from torch.nn.init import constant_, xavier_normal_, xavier_uniform_
+from torch.nn.init import constant_, xavier_uniform_
 from torch.nn.parameter import Parameter
 from torch.utils.checkpoint import checkpoint
 

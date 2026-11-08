@@ -1,7 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from copy import deepcopy
 from dataclasses import dataclass, field, fields
-from typing import Optional
 
 import torch
 from torch import nn

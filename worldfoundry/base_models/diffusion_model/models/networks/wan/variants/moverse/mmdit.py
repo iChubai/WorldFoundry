@@ -5,7 +5,6 @@ No VACE or linear-attention processors.
 """
 
 import math
-from typing import List, Optional, Set, Tuple
 
 import torch
 import torch.nn as nn

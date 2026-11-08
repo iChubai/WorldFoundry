@@ -24,8 +24,6 @@ frames for video.  :class:`MBConvPreGLU` is the pre-GLU mobile bottleneck
 that the Triton fused path in ``fastlinear/`` mirrors.
 """
 
-from typing import List
-
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
 import torch
 import torch.nn as nn

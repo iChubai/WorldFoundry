@@ -5,7 +5,7 @@ import tempfile
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import huggingface_hub
 from huggingface_hub import RepoUrl

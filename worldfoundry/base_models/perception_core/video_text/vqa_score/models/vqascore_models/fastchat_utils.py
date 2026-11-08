@@ -9,7 +9,6 @@ Modified from https://github.com/lm-sys/FastChat/blob/main/fastchat/conversation
 
 import dataclasses
 from enum import IntEnum, auto
-from typing import Dict, List, Tuple, Union
 
 
 class SeparatorStyle(IntEnum):

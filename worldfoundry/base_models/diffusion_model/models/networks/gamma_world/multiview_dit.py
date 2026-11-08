@@ -21,7 +21,6 @@ so several camera streams share one token lattice.  Latents remain
 """
 
 import math
-from typing import List, Optional, Tuple
 
 import torch
 import torch.amp as amp

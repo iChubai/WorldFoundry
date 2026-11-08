@@ -10,8 +10,7 @@
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> vipe_dav3 -> vision_transformer.py functionality."""
 
 import math
-from collections.abc import Callable, Sequence
-from typing import List, Tuple, Union
+from collections.abc import Sequence
 
 import numpy as np
 import torch
@@ -21,7 +20,6 @@ from einops import rearrange
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
 from worldfoundry.core.nn.blocks.layers import Mlp, PatchEmbed, SwiGLUFFNFused
-from worldfoundry.core.nn.blocks.module_utils import named_apply
 
 from .layers import Block, PositionGetter, RotaryPositionEmbedding2D
 

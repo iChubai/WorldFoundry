@@ -1,8 +1,6 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> ba.py functionality."""
 
-import lietorch
 import torch
-import torch.nn.functional as F
 from torch_scatter import scatter_sum
 
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops

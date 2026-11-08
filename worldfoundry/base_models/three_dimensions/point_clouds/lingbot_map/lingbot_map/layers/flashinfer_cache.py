@@ -40,12 +40,9 @@ Public API is drop-in compatible with the previous FlashInferKVCacheManager:
 
 import collections
 import math
-from typing import List
 
 import torch
 from torch import Tensor
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
     import flashinfer

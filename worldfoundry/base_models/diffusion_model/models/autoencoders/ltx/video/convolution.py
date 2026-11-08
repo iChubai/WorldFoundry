@@ -12,8 +12,6 @@ Tensors are BCTHW video maps.  Audio uses
 This is LTX video graph math consumed by :mod:`.resnet`.
 """
 
-from typing import Tuple, Union
-
 import torch
 from einops import rearrange
 from torch import nn

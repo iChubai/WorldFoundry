@@ -1,7 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
 import os
-from typing import List, Optional, Tuple
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import Messages
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.template.utils import ContextType

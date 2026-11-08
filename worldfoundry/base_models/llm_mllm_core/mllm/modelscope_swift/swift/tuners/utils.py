@@ -9,7 +9,6 @@ import tempfile
 import threading
 from dataclasses import asdict, dataclass, field
 from types import FunctionType
-from typing import Dict, Optional, Union
 
 import numpy as np
 import torch

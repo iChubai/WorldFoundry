@@ -1,5 +1,5 @@
 import torch
-from detectron2.structures import Boxes, RotatedBoxes, pairwise_iou, pairwise_iou_rotated
+from detectron2.structures import Boxes, pairwise_iou
 
 
 def soft_nms(boxes, scores, method, gaussian_sigma, linear_threshold, prune_threshold):

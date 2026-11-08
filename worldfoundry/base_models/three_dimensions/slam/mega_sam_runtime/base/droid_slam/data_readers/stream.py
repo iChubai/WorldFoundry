@@ -1,10 +1,5 @@
-import csv
-import json
-import math
 import os
 import os.path as osp
-import pickle
-import random
 
 import cv2
 import numpy as np

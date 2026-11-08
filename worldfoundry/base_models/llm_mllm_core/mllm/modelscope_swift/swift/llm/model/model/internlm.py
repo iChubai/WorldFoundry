@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 

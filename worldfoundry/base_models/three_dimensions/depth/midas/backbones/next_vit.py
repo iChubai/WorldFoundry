@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> next_vit.py functionality."""
 
-from pathlib import Path
-
 import timm
 import torch.nn as nn
 

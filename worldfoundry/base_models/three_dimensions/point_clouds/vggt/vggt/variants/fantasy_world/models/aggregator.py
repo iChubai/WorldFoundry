@@ -7,7 +7,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> models -> aggregator.py functionality."""
 
 import logging
-from typing import List, Tuple
 
 import torch
 import torch.nn as nn

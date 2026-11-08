@@ -1,10 +1,8 @@
 import os
 import tempfile
-from typing import List, Union
 
 import numpy as np
 import torch
-from PIL import Image
 from transformers import AutoModel, AutoTokenizer
 
 from .vqa_model import VQAScoreModel

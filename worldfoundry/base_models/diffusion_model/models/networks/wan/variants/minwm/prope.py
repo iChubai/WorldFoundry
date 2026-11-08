@@ -61,12 +61,8 @@ can condition attention.  Used by MinWM causal / action graphs.
 
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
-import torch.nn.functional as F
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
 def prope_qkv(

@@ -1,6 +1,5 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> geometry_numpy.py functionality."""
 
-import math
 from functools import partial
 from typing import *
 
@@ -9,7 +8,6 @@ import numpy as np
 from scipy.signal import fftconvolve
 
 from ....general_3d.eastern_journalist.utils3d.numpy import masked_nearest_resize, sliding_window
-from .tools import timeit
 
 
 def weighted_mean_numpy(

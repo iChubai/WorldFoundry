@@ -1,7 +1,6 @@
 import functools
 import math
 from collections.abc import Callable
-from typing import List, Optional
 
 import torch
 import torch.nn as nn

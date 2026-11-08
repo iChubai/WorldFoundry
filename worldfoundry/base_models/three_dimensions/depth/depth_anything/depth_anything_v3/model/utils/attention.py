@@ -17,10 +17,8 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> attention.py functionality."""
 
 from collections.abc import Callable
-from typing import Optional, Union
 
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention

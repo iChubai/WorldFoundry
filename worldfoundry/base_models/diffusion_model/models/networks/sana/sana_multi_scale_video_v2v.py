@@ -24,7 +24,6 @@ rest stay on bidirectional GDN.  See :mod:`sana_v2v_attn_blocks`.
 """
 
 import os
-from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -54,7 +53,7 @@ from worldfoundry.core.distributed.collectives.generic import get_rank
 
 _xformers_available = False if os.environ.get("DISABLE_XFORMERS", "0") == "1" else is_xformers_available()
 if _xformers_available:
-    import xformers.ops
+    pass
 
 
 def get_softmax_layer_indices(depth: int, softmax_ratio: float = 0.25) -> list[int]:

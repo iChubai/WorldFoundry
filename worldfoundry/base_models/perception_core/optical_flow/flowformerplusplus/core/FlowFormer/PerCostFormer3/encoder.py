@@ -1,25 +1,18 @@
-import math
-from typing import Optional, Tuple
-
-import loguru
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from einops.layers.torch import Rearrange
 from timm.models.layers import DropPath
 from torch import einsum
 
-from ...utils.utils import bilinear_sampler, coords_grid, upflow8
+from ...utils.utils import coords_grid
 from ..encoders import convnext_large, twins_svt_large
 from .attention import (
-    BroadMultiHeadAttention,
     ExpPositionEmbeddingSine,
     LinearPositionEmbeddingSine,
     MultiHeadAttention,
 )
-from .cnn import BasicEncoder, TwinsCrossAttentionLayer, TwinsSelfAttentionLayer
-from .twins import PosConv, Size_
+from .cnn import BasicEncoder
 
 
 class PatchEmbed(nn.Module):
@@ -104,7 +97,7 @@ class PatchEmbed(nn.Module):
         return x, out_size
 
 
-from .twins import Block, CrossBlock
+from .twins import Block
 
 
 class VerticalSelfAttentionLayer(nn.Module):

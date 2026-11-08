@@ -11,8 +11,6 @@ from torch import nn
 
 from .flash_attention_class import FlashAttention
 from .pos_embed import (
-    get_1d_sincos_pos_embed,
-    get_2d_sincos_pos_embed,
     get_3d_sincos_pos_embed,
     interpolate_pos_embed_internvideo2,
 )
@@ -887,10 +885,7 @@ def pretrain_internvideo2_6b_patch14_224(config):
 
 
 if __name__ == "__main__":
-    import time
-
     import numpy as np
-    from fvcore.nn import FlopCountAnalysis, flop_count_table
 
     seed = 4217
     np.random.seed(seed)

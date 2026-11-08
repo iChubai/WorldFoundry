@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
 import os
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoConfig, AutoProcessor
 from transformers.dynamic_module_utils import get_class_from_dynamic_module

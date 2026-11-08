@@ -6,7 +6,6 @@ hooks.  No VACE or linear attn.
 
 import copy
 import math
-import random
 
 import torch
 import torch.distributed as dist
@@ -29,7 +28,6 @@ from .model import (
     MLPProj,
     WanLayerNorm,
     WanRMSNorm,
-    rope_apply,
     rope_params,
     sinusoidal_embedding_1d,
 )

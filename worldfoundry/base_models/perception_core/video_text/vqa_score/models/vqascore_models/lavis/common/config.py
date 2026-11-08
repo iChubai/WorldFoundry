@@ -7,7 +7,6 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import json
 import logging
-from typing import Dict
 
 from omegaconf import OmegaConf
 

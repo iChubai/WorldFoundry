@@ -42,14 +42,9 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.networks.sana.chunking import (
-    chunk_index_from_chunk_size,
-    is_chunk_causal_request,
-    is_uniform_chunking,
     normalize_chunk_index,
-    size1_chunk_position_indices,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.sana.liger_normalization import get_rmsnorm_class
 from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution

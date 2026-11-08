@@ -4,23 +4,16 @@ Camera-conditioned streaming variant of :mod:`.camera_21`.  Causal
 self-attention plus camera tokens; no VACE or linear attn.
 """
 
-import copy
-import functools
 import math
-import time
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
-from einops import rearrange
-from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+from torch.nn.attention.flex_attention import flex_attention
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (
     WAN_CROSSATTENTION_CLASSES,
-    MLPProj,
     WanLayerNorm,
     WanRMSNorm,
-    rope_apply,
     rope_apply_given_freqs,
     rope_params,
     sinusoidal_embedding_1d,

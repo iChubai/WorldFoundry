@@ -1,9 +1,7 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> model -> v1.py functionality."""
 
 import importlib
-import json
 import warnings
-from functools import partial
 from numbers import Number
 from pathlib import Path
 from typing import *
@@ -21,11 +19,8 @@ from ....general_3d.eastern_journalist.utils3d.torch import depth_map_to_point_m
 # isort: split
 from huggingface_hub import hf_hub_download
 
-from ..utils.geometry_torch import dilate_with_mask, gaussian_blur_2d, normalized_view_plane_uv, recover_focal_shift
-from ..utils.tools import timeit
+from ..utils.geometry_torch import normalized_view_plane_uv, recover_focal_shift
 from .utils import (
-    unwrap_module_with_gradient_checkpointing,
-    wrap_dinov2_attention_with_sdpa,
     wrap_module_with_gradient_checkpointing,
 )
 

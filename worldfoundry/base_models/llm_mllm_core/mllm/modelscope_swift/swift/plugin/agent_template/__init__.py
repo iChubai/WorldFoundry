@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from .base import BaseAgentTemplate
+from .base import BaseAgentTemplate as BaseAgentTemplate
 from .extra import ReactGRPOAgentTemplate
 from .glm4 import GLM4_0414AgentTemplate, GLM4AgentTemplate
 from .hermes import HermesAgentTemplate

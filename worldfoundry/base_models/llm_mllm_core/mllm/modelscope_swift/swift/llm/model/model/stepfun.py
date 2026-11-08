@@ -1,6 +1,4 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-import os
-import shutil
 import sys
 
 from transformers import AutoModel

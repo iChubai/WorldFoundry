@@ -1,7 +1,6 @@
 import json
 import os
 import re
-from typing import Dict, List, Union
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferRequest
 

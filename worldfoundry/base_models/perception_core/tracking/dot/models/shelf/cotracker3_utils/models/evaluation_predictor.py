@@ -4,7 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Tuple
 
 import torch
 import torch.nn.functional as F
@@ -13,14 +12,9 @@ import torch.nn.functional as F
 from .core.cotracker.cotracker3_offline import CoTrackerThreeOffline
 
 # isort: split
-import sys
 
-import numpy as np
-from torchvision.transforms import Compose
-from tqdm import tqdm
 
 from .core.model_utils import (
-    bilinear_sampler,
     get_points_on_a_grid,
     get_sift_sampled_pts,
     get_uniformly_sampled_pts,

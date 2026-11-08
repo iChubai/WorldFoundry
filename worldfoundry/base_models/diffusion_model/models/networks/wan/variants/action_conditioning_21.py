@@ -9,7 +9,6 @@ Action encoder only.  The host transformer is :mod:`.action_21`.
 
 import math
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

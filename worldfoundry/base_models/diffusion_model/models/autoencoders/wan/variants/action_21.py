@@ -12,8 +12,6 @@ Prefer :class:`~..component.WanVideoDecoder` unless this
 checkpoint layout is required.  Sibling of :mod:`.camera_21`.
 """
 
-import logging
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,7 +22,6 @@ __all__ = [
 ]
 
 from einops import rearrange, repeat
-from tqdm import tqdm
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict

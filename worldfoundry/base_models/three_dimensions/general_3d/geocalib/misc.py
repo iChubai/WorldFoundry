@@ -8,7 +8,6 @@ import functools
 import inspect
 import logging
 from collections.abc import Callable
-from typing import List
 
 import numpy as np
 import torch

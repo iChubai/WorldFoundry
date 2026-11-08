@@ -1,8 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-import os
 import sys
 from functools import partial, wraps
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoConfig
 
@@ -18,7 +17,7 @@ from ..register import (
     get_model_tokenizer_with_flash_attn,
     register_model,
 )
-from ..utils import ModelInfo, git_clone_github, safe_snapshot_download
+from ..utils import ModelInfo, safe_snapshot_download
 
 
 def get_model_tokenizer_llava_llama(

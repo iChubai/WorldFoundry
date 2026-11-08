@@ -4,7 +4,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, List, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

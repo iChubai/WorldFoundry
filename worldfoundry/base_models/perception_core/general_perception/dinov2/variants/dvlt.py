@@ -16,10 +16,9 @@
 import logging
 import math
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
-from typing import Tuple, Union
 
 import torch
 from torch import nn

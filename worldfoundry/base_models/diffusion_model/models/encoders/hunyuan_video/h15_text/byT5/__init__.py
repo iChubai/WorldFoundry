@@ -30,7 +30,6 @@ License header above is Tencent Hunyuan; keep it intact.
 import json
 
 import torch
-import torch.nn as nn
 from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 from worldfoundry.core.model_loading.checkpoints import load_weights_only, tensor_state_dict

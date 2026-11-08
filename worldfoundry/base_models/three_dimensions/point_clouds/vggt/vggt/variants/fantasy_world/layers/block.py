@@ -2,17 +2,13 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> layers -> block.py functionality."""
 
-import logging
-import os
-import warnings
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 from torch import Tensor, nn
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.attention import Attention
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
 
 XFORMERS_AVAILABLE = False

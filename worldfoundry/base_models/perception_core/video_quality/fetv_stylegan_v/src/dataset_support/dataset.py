@@ -6,12 +6,10 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import copy
 import json
 import os
 import random
 import zipfile
-from typing import Dict, List, Tuple
 
 import numpy as np
 import PIL.Image

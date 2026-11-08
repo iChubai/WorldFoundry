@@ -6,13 +6,9 @@
 # https://github.com/facebookresearch/dino
 # --------------------------------------------------------'
 # not tested yet
-import math
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils.checkpoint as checkpoint
-from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 from transformers import CLIPImageProcessor
 
 # isort: split

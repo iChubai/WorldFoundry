@@ -1,14 +1,9 @@
-import argparse
-import time
-
 # Upstream imports torch first: droid_backends is a compiled PyTorch extension.
 import torch
 
 # isort: split
 import cv2
 import droid_backends
-import geom.projective_ops as pops
-import lietorch
 import numpy as np
 import open3d as o3d
 from lietorch import SE3

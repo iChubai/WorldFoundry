@@ -8,7 +8,6 @@ RoPE and first-frame injection.  Implements :class:`~.protocols.Patchifier`.
 """
 
 import math
-from typing import Optional, Tuple
 
 import einops
 import torch

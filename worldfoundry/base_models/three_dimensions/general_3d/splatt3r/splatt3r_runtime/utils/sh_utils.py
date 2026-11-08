@@ -1,8 +1,6 @@
 # Adapted from the official Splatt3R utility module.
 """Module for base_models -> three_dimensions -> general_3d -> splatt3r -> splatt3r_runtime -> utils -> sh_utils.py functionality."""
 
-import torch
-
 C0 = 0.28209479177387814
 C1 = 0.4886025119029199
 C2 = [

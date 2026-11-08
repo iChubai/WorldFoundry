@@ -5,7 +5,9 @@ import math
 import re
 import warnings
 from itertools import chain
-from typing import Dict, List, Optional
+from typing import Dict as Dict
+from typing import List as List
+from typing import Optional as Optional
 
 import torch
 import torch.nn as nn

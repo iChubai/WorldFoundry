@@ -13,7 +13,7 @@ from collections.abc import Sequence
 import torch
 
 from ....components import ComponentBuildContext
-from ....contracts import Conditioning, DiffusionRequest
+from ....contracts import Conditioning
 from ....loaders import NativeCheckpointResolver
 from ....optimizations import OffloadMode
 from .clip import HunyuanClip

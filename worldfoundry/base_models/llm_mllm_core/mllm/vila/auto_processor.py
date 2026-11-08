@@ -4,7 +4,6 @@ import os
 import os.path as osp
 from collections import defaultdict
 from io import BytesIO
-from typing import List, Optional, Union
 
 import PIL.Image
 import requests
@@ -12,7 +11,6 @@ import torch
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.processing_utils import ProcessingKwargs, ProcessorMixin, Unpack
 from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
-from transformers.utils import logging
 
 try:
     from transformers.image_utils import ImageInput, VideoInput
@@ -22,7 +20,7 @@ except ImportError:
 
 from .configuration_vila import VILAConfig
 from .constants import DEFAULT_IMAGE_TOKEN, MEDIA_TOKENS
-from .media import Image, Video, _load_video, extract_media
+from .media import Image, _load_video, extract_media
 from .mm_utils import process_image, process_images
 from .tokenizer_utils import tokenize_conversation
 

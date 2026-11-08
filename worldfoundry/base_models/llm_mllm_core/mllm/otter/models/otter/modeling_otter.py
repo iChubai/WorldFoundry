@@ -1,6 +1,5 @@
 import random
 import sys
-from typing import List, Optional
 
 import torch
 import torch.distributed as dist
@@ -22,8 +21,6 @@ if sys.version_info < (3, 8):
     import importlib_metadata
 else:
     import importlib.metadata as importlib_metadata
-
-import torch.distributed as dist
 
 
 def master_print(*args, **kwargs):
@@ -51,7 +48,11 @@ try:
             master_print(f"Successfully imported xformers version {_xformers_version}")
 except ImportError as e:
     if not XFORMERS_MSG_PRINTED:  # Check if the message has been master_printed before
-        from transformers import CLIPVisionModel, LlamaForCausalLM, LlamaTokenizer
+        from transformers import (  # noqa: F401 - Fallback branch mirrors the guarded import, as upstream.
+            CLIPVisionModel,
+            LlamaForCausalLM,
+            LlamaTokenizer,
+        )
 
         if dist.is_initialized() and dist.get_rank() == 0:  # Check if the current process rank is 0
             master_print(f"Failed to import xformers: {e}")

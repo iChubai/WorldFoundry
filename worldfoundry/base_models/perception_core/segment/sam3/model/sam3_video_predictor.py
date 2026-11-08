@@ -5,16 +5,13 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_video_predictor.py functionality."""
 
 import datetime
-import gc
 import multiprocessing as mp
 import os
 import queue
 import socket
 import sys
-import time
 import uuid
 from contextlib import closing
-from typing import List, Optional
 
 import psutil
 import torch

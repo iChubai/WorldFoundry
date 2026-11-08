@@ -3,7 +3,7 @@ import math
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from copy import deepcopy
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import torch
 from mmdet.structures.bbox.transforms import get_box_tensor

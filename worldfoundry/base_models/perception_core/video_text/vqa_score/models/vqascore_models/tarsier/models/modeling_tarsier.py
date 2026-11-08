@@ -1,20 +1,17 @@
 import math
 import os
-import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
-import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
-from transformers import AutoConfig, AutoModel, LlamaForCausalLM, PreTrainedModel, Qwen2ForCausalLM
+from transformers import AutoModel, LlamaForCausalLM, PreTrainedModel, Qwen2ForCausalLM
 from transformers.activations import ACT2FN
-from transformers.cache_utils import Cache
 from transformers.configuration_utils import PretrainedConfig
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import ModelOutput
-from transformers.models.auto import CONFIG_MAPPING, AutoModel, AutoModelForCausalLM
+from transformers.models.auto import CONFIG_MAPPING, AutoModel
 from transformers.utils import logging
 
 # from models.modeling_qwen2 import Qwen2ForCausalLM

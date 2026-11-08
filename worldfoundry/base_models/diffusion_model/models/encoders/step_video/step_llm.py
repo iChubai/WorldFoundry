@@ -22,15 +22,12 @@ states), not UMT5.  Optional FlashAttention: :mod:`.flash_attention`.
 Paired with Hunyuan CLIP in :class:`~.component.StepVideoPromptConditioner`.
 """
 
-import json
 import os
-from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from safetensors.torch import load_file
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 

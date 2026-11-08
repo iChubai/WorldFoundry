@@ -1,8 +1,5 @@
-from typing import List, Union
-
 import numpy as np
 import torch
-from decord import VideoReader, cpu
 from PIL import Image
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration, Qwen2VLForConditionalGeneration
 

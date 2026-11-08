@@ -4,7 +4,6 @@ Adaptors for the UniCeption Prediction Heads.
 
 from functools import lru_cache
 from math import isfinite
-from typing import List, Tuple, Union
 
 import numpy as np
 import torch

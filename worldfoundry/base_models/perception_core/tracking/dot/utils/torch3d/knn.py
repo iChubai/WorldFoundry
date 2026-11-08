@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import namedtuple
-from typing import Union
 
 import torch
 from _torch3d import _C

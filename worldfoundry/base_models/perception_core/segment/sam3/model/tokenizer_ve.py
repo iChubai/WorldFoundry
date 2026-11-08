@@ -15,7 +15,6 @@ import io
 import os
 import string
 from functools import lru_cache
-from typing import List, Optional, Union
 
 import ftfy
 import regex as re

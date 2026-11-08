@@ -3,24 +3,20 @@
 import functools
 import importlib
 import itertools
-import sys
-from numbers import Number
 from typing import *
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
 
 from .....perception_core.general_perception.dinov2.models.vision_transformer import DinoVisionTransformer
 from .utils import (
-    unwrap_module_with_gradient_checkpointing,
     wrap_dinov2_attention_with_sdpa,
     wrap_module_with_gradient_checkpointing,
 )
 
 # isort: split
-from ..utils.geometry_torch import normalized_view_plane_uv
+from ..utils.geometry_torch import normalized_view_plane_uv  # noqa: F401 - Keeps the module's import-time setup.
 
 
 class ResidualConvBlock(nn.Module):

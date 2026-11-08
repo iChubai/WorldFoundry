@@ -3,8 +3,6 @@ Author: Luigi Piccinelli
 Licensed under the CC-BY NC 4.0 license (http://creativecommons.org/licenses/by-nc/4.0/)
 """
 
-from typing import Tuple
-
 import torch
 from torch.nn import functional as F
 

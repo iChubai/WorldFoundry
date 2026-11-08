@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> rasterization.py functionality."""
 
-from typing import Dict, Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -17,8 +15,6 @@ except ImportError:
     class DefaultStrategy:  # type: ignore[no-redef]
         """Default strategy implementation."""
 
-
-from typing import List
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils import act_gs, sh_utils
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.frustum import (

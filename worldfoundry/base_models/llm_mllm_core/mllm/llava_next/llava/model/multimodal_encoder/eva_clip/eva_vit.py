@@ -826,7 +826,6 @@ def load_clip_visual_state_dict(
 
 
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
 
 try:
     from apex.normalization import FusedLayerNorm

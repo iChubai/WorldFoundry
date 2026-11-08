@@ -1,6 +1,5 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import os.path as osp
-from typing import List, Union
 
 from mmdet.datasets.coco import CocoDataset
 from mmengine.fileio import get_local_path, join_path

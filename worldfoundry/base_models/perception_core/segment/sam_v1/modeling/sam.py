@@ -6,7 +6,7 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> sam.py functionality."""
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 from torch import nn

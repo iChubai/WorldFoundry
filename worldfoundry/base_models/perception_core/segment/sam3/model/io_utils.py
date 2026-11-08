@@ -11,7 +11,7 @@ import re
 import time
 import types
 from threading import Condition, Lock, Thread, get_ident
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch

@@ -6,11 +6,11 @@ import time
 from collections.abc import AsyncIterator, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import lmdeploy
 import torch
-from lmdeploy import PytorchEngineConfig, TurbomindEngineConfig, VisionConfig, pipeline
+from lmdeploy import TurbomindEngineConfig, VisionConfig, pipeline
 from lmdeploy.api import autoget_backend_config
 from lmdeploy.serve import async_engine
 from packaging import version

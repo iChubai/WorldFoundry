@@ -1,9 +1,7 @@
-import time
-from functools import partial, reduce
+from functools import reduce
 
 import torch
 import torch.nn as nn
-from torch.nn.functional import adaptive_avg_pool3d
 
 from .conv_backbone import convnext_3d_small, convnext_3d_tiny, convnextv2_3d_femto, convnextv2_3d_pico
 from .head import IQAHead, VARHead, VQAHead

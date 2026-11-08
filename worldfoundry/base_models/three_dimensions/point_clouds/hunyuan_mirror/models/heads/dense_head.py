@@ -1,8 +1,6 @@
 # inspired by https://github.com/DepthAnything/Depth-Anything-V2
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> heads -> dense_head.py functionality."""
 
-from typing import List, Tuple, Union
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

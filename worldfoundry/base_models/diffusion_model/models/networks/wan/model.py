@@ -30,7 +30,7 @@ they live in :mod:`.vace` and :mod:`.variants`.
 from __future__ import annotations
 
 import math
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import torch
 import torch.nn as nn

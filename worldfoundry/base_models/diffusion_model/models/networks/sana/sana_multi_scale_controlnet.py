@@ -50,11 +50,6 @@ from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 _triton_modules_available = False
 if is_triton_module_available():
-    from worldfoundry.base_models.diffusion_model.models.networks.sana.fastlinear.modules import (
-        TritonLiteMLA,
-        TritonMBConvPreGLU,
-    )
-
     _triton_modules_available = True
 
 _xformers_available = False

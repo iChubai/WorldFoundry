@@ -28,7 +28,6 @@ License header above is Tencent Hunyuan; keep it intact.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import numpy as np
 import torch

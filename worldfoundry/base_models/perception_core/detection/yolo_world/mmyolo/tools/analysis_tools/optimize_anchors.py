@@ -32,7 +32,6 @@ Example:
 import argparse
 import os.path as osp
 import random
-from typing import Tuple
 
 import numpy as np
 import torch

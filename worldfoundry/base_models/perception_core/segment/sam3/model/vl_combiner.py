@@ -5,7 +5,6 @@
 """Provides utility to combine a vision backbone with a language backbone."""
 
 from copy import copy
-from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -13,7 +12,7 @@ import torch.nn as nn
 from worldfoundry.core.attention import attention_backend_context
 
 from .act_ckpt_utils import activation_ckpt_wrapper
-from .data_misc import NestedTensor
+from .data_misc import NestedTensor  # noqa: F401 - Keeps the module's import-time setup.
 from .necks import Sam3DualViTDetNeck, Sam3TriViTDetNeck
 
 

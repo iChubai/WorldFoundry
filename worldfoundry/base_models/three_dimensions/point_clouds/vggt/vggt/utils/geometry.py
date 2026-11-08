@@ -6,8 +6,6 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> utils -> geometry.py functionality."""
 
-import os
-
 import numpy as np
 import torch
 

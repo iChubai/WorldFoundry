@@ -22,8 +22,6 @@ tokenization is separate in :mod:`.clip`.
 StepVideo-specific; do not reuse for Wan UMT5.
 """
 
-from typing import List
-
 import torch
 import torch.nn as nn
 

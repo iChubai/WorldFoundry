@@ -2,14 +2,12 @@
 
 from copy import deepcopy
 from functools import partial
-from typing import List, Optional, Union
 
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import (
-    dinov2_vitl14,
     dinov2_vitl14_reg,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.conv_head import ConvHead

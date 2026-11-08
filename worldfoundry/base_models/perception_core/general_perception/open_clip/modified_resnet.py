@@ -1,11 +1,9 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> modified_resnet.py functionality."""
 
 from collections import OrderedDict
-from typing import Dict, List, Optional, Union
 
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 

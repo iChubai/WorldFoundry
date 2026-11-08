@@ -42,8 +42,11 @@ else:
 
 
 if TYPE_CHECKING:
-    from .configuration_mplug_owl import MPLUG_OWL_PRETRAINED_CONFIG_ARCHIVE_MAP, MplugOwlConfig
-    from .tokenization_mplug_owl import MplugOwlTokenizer
+    from .configuration_mplug_owl import (
+        MPLUG_OWL_PRETRAINED_CONFIG_ARCHIVE_MAP as MPLUG_OWL_PRETRAINED_CONFIG_ARCHIVE_MAP,
+    )
+    from .configuration_mplug_owl import MplugOwlConfig as MplugOwlConfig
+    from .tokenization_mplug_owl import MplugOwlTokenizer as MplugOwlTokenizer
 
     try:
         if not is_tokenizers_available():
@@ -58,10 +61,16 @@ if TYPE_CHECKING:
         pass
     else:
         from .modeling_mplug_owl import (
-            MPLUG_OWL_PRETRAINED_MODEL_ARCHIVE_LIST,
-            MplugOwlForConditionalGeneration,
-            MplugOwlModel,
-            MplugOwlPreTrainedModel,
+            MPLUG_OWL_PRETRAINED_MODEL_ARCHIVE_LIST as MPLUG_OWL_PRETRAINED_MODEL_ARCHIVE_LIST,
+        )
+        from .modeling_mplug_owl import (
+            MplugOwlForConditionalGeneration as MplugOwlForConditionalGeneration,
+        )
+        from .modeling_mplug_owl import (
+            MplugOwlModel as MplugOwlModel,
+        )
+        from .modeling_mplug_owl import (
+            MplugOwlPreTrainedModel as MplugOwlPreTrainedModel,
         )
 
 

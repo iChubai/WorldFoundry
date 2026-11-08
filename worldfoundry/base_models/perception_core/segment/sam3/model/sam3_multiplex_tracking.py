@@ -1,8 +1,6 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_tracking.py functionality."""
 
 from collections import defaultdict
-from functools import reduce
-from typing import Dict
 
 import numpy as np
 
@@ -11,7 +9,7 @@ import worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiple
 
 # isort: split
 # isort: split
-import worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base
+import worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base  # noqa: F401 - Keeps the module's import-time setup.
 
 # isort: split
 import torch
@@ -47,23 +45,17 @@ from worldfoundry.base_models.perception_core.segment.sam3.perflib.compile impor
 )
 
 # isort: split
-from torch import Tensor
 from torchvision.ops import masks_to_boxes
 from tqdm.auto import tqdm
 
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
-    mask_iou,
-)
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
     masks_to_boxes as perf_masks_to_boxes,
 )
 
 logger = get_logger(__name__)
 
-import gc
 from collections.abc import Mapping, Sequence
 from dataclasses import fields, is_dataclass
-from typing import List
 
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
     BatchedPointer,

@@ -3,7 +3,7 @@ import json
 import warnings
 from collections import OrderedDict
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import torch

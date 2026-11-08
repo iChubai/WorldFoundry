@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> projective_ops.py functionality."""
 
 import torch
-import torch.nn.functional as F
 from lietorch import SE3, Sim3
 
 MIN_DEPTH = 0.2

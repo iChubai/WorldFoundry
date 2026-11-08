@@ -10,7 +10,6 @@ References: DUSt3R, MoGe
 """
 
 from numbers import Number
-from typing import Tuple, Union
 
 import einops as ein
 import numpy as np

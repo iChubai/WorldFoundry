@@ -4,7 +4,6 @@
 import inspect
 from functools import wraps
 from numbers import Number
-from types import EllipsisType
 from typing import *
 
 import numpy as np

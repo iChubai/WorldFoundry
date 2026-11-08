@@ -1,6 +1,5 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> logger.py functionality."""
 
-import torch
 from torch.utils.tensorboard import SummaryWriter
 
 SUM_FREQ = 100

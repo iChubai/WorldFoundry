@@ -1,7 +1,5 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_text_encoder.py functionality."""
 
-from typing import Optional, Union
-
 import torch
 from transformers import Qwen2_5_VLModel
 

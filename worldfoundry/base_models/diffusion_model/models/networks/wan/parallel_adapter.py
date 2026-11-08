@@ -10,14 +10,11 @@ Public surface: :func:`usp_attn_forward`, :func:`usp_attn_s2v_forward`,
 
 import torch
 import torch.cuda.amp as amp
-from einops import rearrange
 
 from worldfoundry.core.distributed.sequence_parallel.runtime import (
     get_sequence_parallel_rank,
     get_sequence_parallel_world_size,
     get_sp_group,
-    init_distributed_environment,
-    initialize_model_parallel,
     xFuserLongContextAttention,
 )
 

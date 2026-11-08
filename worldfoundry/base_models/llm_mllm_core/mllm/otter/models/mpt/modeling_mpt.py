@@ -5,7 +5,7 @@ Inspired by https://github.com/karpathy/minGPT/blob/master/mingpt/model.py
 
 import math
 import warnings
-from typing import List, Optional, Tuple, Union
+from typing import Union
 
 import torch
 import torch.distributed as dist
@@ -22,10 +22,10 @@ from .blocks import MPTBlock
 from .configuration_mpt import MPTConfig
 from .custom_embedding import SharedEmbedding
 from .norm import NORM_CLASS_REGISTRY
-from .param_init_fns import MODEL_INIT_REGISTRY, generic_param_init_fn_
+from .param_init_fns import MODEL_INIT_REGISTRY
 
 try:
-    from .flash_attn_triton import flash_attn_func
+    from .flash_attn_triton import flash_attn_func  # noqa: F401 - Import checks optional dependency availability.
 except:
     pass
 Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]

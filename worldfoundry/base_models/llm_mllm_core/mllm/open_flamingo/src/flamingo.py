@@ -10,7 +10,6 @@ from torch.distributed.fsdp.wrap import (
     enable_wrap,
     wrap,
 )
-from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from .helpers import PerceiverResampler
 from .utils import apply_with_stopping_condition

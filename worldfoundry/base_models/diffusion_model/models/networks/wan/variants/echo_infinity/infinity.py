@@ -9,7 +9,6 @@ Adds causal attention and memory hooks.
 import math
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
 
@@ -667,7 +666,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             _compile=False,
             device=device,
         )
-        import torch.distributed as dist
 
         return block_mask
 

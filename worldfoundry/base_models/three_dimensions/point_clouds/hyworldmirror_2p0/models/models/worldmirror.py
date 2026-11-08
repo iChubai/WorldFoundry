@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> worldmirror.py functionality."""
 
-from typing import Dict, List
-
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -20,7 +18,6 @@ from worldfoundry.core.model_loading import hash_state_dict_keys
 
 from ..heads.camera_head import CameraHead
 from ..heads.dense_head import DPTHead
-from ..heads.gs_head import GSFeatHead
 from ..layers.block import Block, DistBlock
 from .rasterization import GaussianSplatRenderer
 from .visual_transformer import VisualGeometryTransformer

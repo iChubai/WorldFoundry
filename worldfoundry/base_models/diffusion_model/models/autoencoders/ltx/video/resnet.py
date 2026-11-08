@@ -10,8 +10,6 @@ every inner conv.
 Sibling of the audio :mod:`~..audio.resnet`.
 """
 
-from typing import Optional, Tuple, Union
-
 import torch
 from torch import nn
 

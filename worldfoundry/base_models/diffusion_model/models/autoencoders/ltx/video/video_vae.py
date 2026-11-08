@@ -15,7 +15,7 @@ codecs; sibling of :mod:`~..audio.audio_vae`.
 
 import logging
 from collections.abc import Callable, Iterator
-from typing import Any, List, Tuple
+from typing import Any
 
 import torch
 from einops import rearrange

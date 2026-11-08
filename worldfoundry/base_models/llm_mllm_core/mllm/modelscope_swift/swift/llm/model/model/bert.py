@@ -1,5 +1,4 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from types import MethodType
 
 import torch.nn.functional as F
 from transformers import AutoConfig, AutoModel

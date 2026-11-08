@@ -9,28 +9,20 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> attention.py functionality."""
 
-import logging
-import math
-import os
-import warnings
-
 import torch
-import torch.nn.functional as F
-from einops import rearrange
 from torch import Tensor, nn
 
 from .rope import apply_rotary_emb
 
 # FlashInfer imports (optional - for paged attention)
 try:
-    import flashinfer
+    import flashinfer  # noqa: F401 - Import checks optional dependency availability.
 
     FLASHINFER_AVAILABLE = True
 except ImportError:
     FLASHINFER_AVAILABLE = False
     print("flashinfer not available")
 
-from typing import List, Optional, Tuple
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 

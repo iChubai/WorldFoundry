@@ -8,10 +8,14 @@
 
 import logging
 import warnings
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict as Dict
+from typing import List as List
+from typing import Optional as Optional
+from typing import Tuple as Tuple
+from typing import Union as Union
 
-import numpy as np
-import pycolmap
+import numpy as np  # noqa: F401 - Re-exported under this name.
+import pycolmap as pycolmap
 import torch
 import torch.nn.functional as F
 from lightglue import ALIKED, SIFT, SuperPoint

@@ -3,8 +3,6 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> heads -> dpt_head.py functionality."""
 
-from typing import List, Tuple, Union
-
 import torch
 import torch.nn as nn
 from einops import rearrange

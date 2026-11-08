@@ -2,7 +2,7 @@ import colorsys
 import itertools
 import os
 from copy import deepcopy
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 import requests
 from modelscope.hub.utils.utils import get_cache_dir

@@ -1,10 +1,9 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
-import os
 from collections.abc import AsyncIterator, Iterator
 from copy import deepcopy
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import aiohttp
 from dacite import from_dict

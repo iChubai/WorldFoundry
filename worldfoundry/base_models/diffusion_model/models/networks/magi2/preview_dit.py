@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -38,7 +37,6 @@ from .ops import (
     compute_topk_probs_and_indices,
     flash_mh_moe_fwd,
     flash_mh_moe_global_sort,
-    swiglu7_split,
 )
 from .preview_layers import (
     ElementWiseFourierEmbed,
@@ -853,7 +851,6 @@ __all__ = [
 
 def _smoke() -> None:
     """Tiny-config CPU forward smoke: assert output shape + finiteness."""
-    from dataclasses import replace
 
     from .config import (
         MAGI2_MODALITY_AUDIO,

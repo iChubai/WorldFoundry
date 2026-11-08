@@ -12,7 +12,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> ffn_layers.py functionality."""
 
 from collections.abc import Callable
-from typing import List, Optional
 
 import torch.nn.functional as F
 from torch import Tensor, nn

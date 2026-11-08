@@ -25,7 +25,7 @@ else:
     ]
 
 if TYPE_CHECKING:
-    from .configuration_otter import OtterConfig
+    from .configuration_otter import OtterConfig as OtterConfig
 
     # from .processing_otter import OtterProcessor
 
@@ -36,9 +36,13 @@ if TYPE_CHECKING:
         pass
     else:
         from .modeling_otter import (
-            OtterForConditionalGeneration,
-            OtterModel,
-            OtterPreTrainedModel,
+            OtterForConditionalGeneration as OtterForConditionalGeneration,
+        )
+        from .modeling_otter import (
+            OtterModel as OtterModel,
+        )
+        from .modeling_otter import (
+            OtterPreTrainedModel as OtterPreTrainedModel,
         )
 
 else:

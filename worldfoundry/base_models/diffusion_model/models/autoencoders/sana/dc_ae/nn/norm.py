@@ -26,8 +26,6 @@ kernel lives in :mod:`.triton_rms_norm`.
 This is DC-AE graph math, distinct from LTX PixelNorm.
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm

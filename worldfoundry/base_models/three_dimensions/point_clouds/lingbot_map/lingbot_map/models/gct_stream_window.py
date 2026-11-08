@@ -9,7 +9,7 @@ Provides streaming inference functionality:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

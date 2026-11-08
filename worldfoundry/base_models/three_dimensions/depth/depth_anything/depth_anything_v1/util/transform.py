@@ -1,14 +1,11 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v1 -> util -> transform.py functionality."""
 
 import math
-import random
 
 import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image, ImageFilter, ImageOps
-from torchvision import transforms
 
 
 def apply_min_size(sample, size, image_interpolation_method=cv2.INTER_AREA):

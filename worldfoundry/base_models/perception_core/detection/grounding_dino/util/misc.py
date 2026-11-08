@@ -14,7 +14,6 @@ import pickle
 import subprocess
 import time
 from collections import OrderedDict, defaultdict, deque
-from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -845,7 +844,9 @@ def get_phrases_from_posmap(
     we import lazily so that backbone code (which also imports from this module)
     does not require ``transformers`` at module load time.
     """
-    from transformers import AutoTokenizer as _AutoTokenizer  # lazy import
+    from transformers import (
+        AutoTokenizer as _AutoTokenizer,  # lazy import  # noqa: F401 - Lazy transformers import described in the docstring.
+    )
 
     assert isinstance(posmap, torch.Tensor), "posmap must be torch.Tensor"
     if posmap.dim() == 1:

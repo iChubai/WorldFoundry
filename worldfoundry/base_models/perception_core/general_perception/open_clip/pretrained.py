@@ -7,12 +7,11 @@ import urllib
 import warnings
 from collections.abc import Iterable
 from functools import partial
-from typing import Dict, Optional, Union
 
 from tqdm import tqdm
 
 try:
-    import safetensors.torch
+    import safetensors.torch  # noqa: F401 - Import checks optional dependency availability.
 
     _has_safetensors = True
 except ImportError:

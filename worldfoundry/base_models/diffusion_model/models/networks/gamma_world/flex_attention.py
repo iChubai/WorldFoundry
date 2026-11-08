@@ -10,7 +10,6 @@ own the DiT residual path.
 
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Optional
 
 import torch
 from torch import Tensor

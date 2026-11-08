@@ -1,17 +1,19 @@
-import copy
-import glob
+import copy as copy
+import glob as glob
 import os
 import os.path as osp
 import random
 from functools import lru_cache
 
-import cv2
+import cv2 as cv2
 import decord
 import numpy as np
 import torch
 import torchvision
-from decord import VideoReader, cpu, gpu
-from tqdm import tqdm
+from decord import VideoReader
+from decord import cpu as cpu
+from decord import gpu as gpu
+from tqdm import tqdm as tqdm
 
 random.seed(42)
 
@@ -258,8 +260,6 @@ def spatial_temporal_view_decomposition(
 
 
 import random
-
-import numpy as np
 
 
 class UnifiedFrameSampler:

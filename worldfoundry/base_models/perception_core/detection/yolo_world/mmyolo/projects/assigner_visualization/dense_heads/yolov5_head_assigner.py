@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections.abc import Sequence
-from typing import Union
 
 import torch
 from mmdet.models.utils import unpack_gt_instances

@@ -14,7 +14,6 @@ import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as torch_F
-from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_attention_22 import flash_attention
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_conditioning_22 import ActionModule

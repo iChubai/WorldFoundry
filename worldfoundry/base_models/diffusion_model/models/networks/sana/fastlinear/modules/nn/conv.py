@@ -28,10 +28,10 @@ follow :mod:`.norm` (``bn2d``, ``ln2d``, …); act names follow
 import torch
 from torch import nn
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.activation import build_act, get_act_name
+from worldfoundry.base_models.diffusion_model.models.networks.sana.activation import build_act
 from worldfoundry.core.nn import get_same_padding
 
-from .norm import build_norm, get_norm_name
+from .norm import build_norm
 
 
 class ConvLayer(nn.Module):

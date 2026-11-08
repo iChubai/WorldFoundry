@@ -6,7 +6,6 @@
 
 import re
 import warnings
-from typing import Dict
 
 import cv2
 import numpy as np

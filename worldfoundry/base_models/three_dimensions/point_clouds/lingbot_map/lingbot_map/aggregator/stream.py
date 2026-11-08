@@ -9,12 +9,11 @@ Provides:
 """
 
 import logging
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
 
-from ..layers.block import Block, FlashInferBlock, SDPABlock
+from ..layers.block import FlashInferBlock, SDPABlock
 from ..layers.rope import WanRotaryPosEmbed
 from .base import AggregatorBase, slice_expand_and_flatten
 

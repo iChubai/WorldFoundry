@@ -2,7 +2,6 @@
 # Part of the implementation is borrowed from dvlab-research/LongLoRA.
 import re
 from dataclasses import dataclass, field
-from typing import List, Tuple, Union
 
 import torch.nn as nn
 

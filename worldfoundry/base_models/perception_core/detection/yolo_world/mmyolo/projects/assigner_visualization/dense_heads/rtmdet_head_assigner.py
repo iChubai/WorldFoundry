@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Union
 
 import torch
 from mmdet.structures.bbox import distance2bbox

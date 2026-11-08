@@ -5,7 +5,6 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> maskformer_segmentation.py functionality."""
 
 import math
-from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn

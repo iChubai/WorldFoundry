@@ -5,7 +5,6 @@ Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (
 
 import os
 import warnings
-from typing import List, Optional, Union
 
 import torch
 

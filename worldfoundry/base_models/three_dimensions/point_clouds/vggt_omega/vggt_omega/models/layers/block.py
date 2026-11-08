@@ -12,7 +12,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> block.py functionality."""
 
 from collections.abc import Callable
-from typing import List, Optional
 
 import torch
 from torch import Tensor, nn

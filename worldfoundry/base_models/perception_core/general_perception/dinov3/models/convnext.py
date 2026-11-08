@@ -8,7 +8,6 @@
 import logging
 from collections.abc import Sequence
 from functools import partial
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -17,7 +16,7 @@ import torch.nn.init
 from torch import Tensor, nn
 
 # DropPath — imported from shared canonical definition
-from worldfoundry.core.nn.blocks.layers import DropPath, drop_path
+from worldfoundry.core.nn.blocks.layers import DropPath
 
 logger = logging.getLogger("dinov3")
 

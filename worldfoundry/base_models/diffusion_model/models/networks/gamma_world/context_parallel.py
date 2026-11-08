@@ -24,7 +24,7 @@ layout, runs local attention, then reverses.  Tensors are ``B S H D``.
 
 import os
 from collections.abc import Callable
-from typing import Any, List, Union
+from typing import Any
 
 import torch
 import torch.distributed as dist

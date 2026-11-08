@@ -16,7 +16,7 @@
 """Pytorch model utilities."""
 
 from collections.abc import Sequence
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import torch

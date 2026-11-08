@@ -27,7 +27,6 @@ This is DC-AE graph math, not a runner Protocol adapter.
 """
 
 from functools import partial
-from typing import Optional
 
 import torch.nn as nn
 

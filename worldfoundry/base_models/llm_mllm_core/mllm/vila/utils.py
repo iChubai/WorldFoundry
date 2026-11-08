@@ -18,7 +18,7 @@ import os
 import os.path as osp
 
 from huggingface_hub import repo_exists, snapshot_download
-from huggingface_hub.utils import HFValidationError, validate_repo_id
+from huggingface_hub.utils import HFValidationError
 from transformers import AutoTokenizer, PretrainedConfig
 
 from .configuration_vila import VILAConfig

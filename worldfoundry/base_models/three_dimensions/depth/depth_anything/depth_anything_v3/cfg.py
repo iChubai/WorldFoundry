@@ -18,8 +18,7 @@ Configuration utility functions
 
 import importlib
 from collections.abc import Callable
-from pathlib import Path
-from typing import Any, List, Union
+from typing import Any
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 

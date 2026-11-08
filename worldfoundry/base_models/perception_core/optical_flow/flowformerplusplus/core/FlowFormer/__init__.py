@@ -1,6 +1,3 @@
-import torch
-
-
 def build_flowformer(cfg):
     name = cfg.transformer
     if name == "percostformer3":

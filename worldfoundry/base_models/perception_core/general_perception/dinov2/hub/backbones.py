@@ -6,7 +6,6 @@
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> hub -> backbones.py functionality."""
 
 from enum import Enum
-from typing import Union
 
 import torch
 

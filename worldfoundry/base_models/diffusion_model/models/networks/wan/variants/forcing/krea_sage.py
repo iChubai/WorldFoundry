@@ -8,7 +8,6 @@ This is a kernel adapter only: no action, camera, VACE, or TeaCache.
 """
 
 import os
-from typing import Optional
 
 import torch
 

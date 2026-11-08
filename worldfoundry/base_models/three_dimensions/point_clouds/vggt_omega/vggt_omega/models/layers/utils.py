@@ -16,13 +16,12 @@ import os
 import random
 import subprocess
 from collections.abc import Callable
-from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
 from torch import Tensor, nn
 
-from worldfoundry.core.nn.blocks.module_utils import named_apply
+from worldfoundry.core.nn.blocks.module_utils import named_apply as named_apply
 
 logger = logging.getLogger("dinov3")
 

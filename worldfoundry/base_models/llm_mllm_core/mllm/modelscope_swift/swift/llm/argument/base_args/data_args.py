@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import (
     DATASET_MAPPING,

@@ -13,8 +13,6 @@ implementation detail; do not comment every conv.
 
 from __future__ import annotations
 
-from typing import Set, Tuple
-
 import torch
 import torch.nn.functional as F
 

@@ -6,8 +6,6 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> cut3r -> heads -> dpt_head.py functionality."""
 
-from typing import List
-
 import torch
 import torch.nn as nn
 from einops import rearrange

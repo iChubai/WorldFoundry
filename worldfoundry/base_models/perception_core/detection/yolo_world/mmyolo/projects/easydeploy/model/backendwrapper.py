@@ -2,7 +2,6 @@ import warnings
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
-from typing import List, Optional, Union
 
 import numpy as np
 import onnxruntime

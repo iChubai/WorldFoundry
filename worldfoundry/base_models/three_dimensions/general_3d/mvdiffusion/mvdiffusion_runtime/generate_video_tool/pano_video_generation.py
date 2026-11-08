@@ -11,7 +11,6 @@ import uuid
 
 import lib.Equirec2Perspec as E2P
 import lib.multi_Perspec2Equirec as m_P2E
-from PIL import Image
 from tqdm import tqdm
 
 

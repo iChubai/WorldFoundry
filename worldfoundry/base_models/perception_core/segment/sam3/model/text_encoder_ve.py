@@ -6,7 +6,6 @@
 
 from collections import OrderedDict
 from collections.abc import Callable
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

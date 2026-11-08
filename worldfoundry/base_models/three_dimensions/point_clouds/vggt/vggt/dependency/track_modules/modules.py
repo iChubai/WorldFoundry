@@ -12,10 +12,7 @@ from collections.abc import Callable
 from functools import partial
 from itertools import repeat
 
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch import Tensor
 
 
 # From PyTorch internals

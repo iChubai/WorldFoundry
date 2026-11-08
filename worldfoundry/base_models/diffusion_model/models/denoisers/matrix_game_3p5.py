@@ -9,7 +9,6 @@ and offload remain framework-owned.
 from __future__ import annotations
 
 import contextlib
-from typing import Optional
 
 import numpy as np
 import torch

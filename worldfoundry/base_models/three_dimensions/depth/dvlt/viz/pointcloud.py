@@ -30,7 +30,6 @@ extra metadata) tracks ``pts``/``colors`` row-for-row.
 """
 
 import logging
-from typing import Optional
 
 import numpy as np
 from dvlt.common.constants import DataField, PredictionField

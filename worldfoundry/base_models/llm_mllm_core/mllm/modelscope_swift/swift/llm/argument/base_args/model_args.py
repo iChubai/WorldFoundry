@@ -4,7 +4,7 @@ import json
 import math
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Literal
 
 import torch
 from transformers.utils import is_torch_mps_available

@@ -10,7 +10,6 @@ from dataclasses import asdict
 from itertools import chain
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import List, Optional, Union
 
 import torch
 import uvicorn

@@ -22,7 +22,6 @@ unavailable.  Layout inside the op is ``B S H D``.
 
 from collections import namedtuple
 from collections.abc import Mapping, Sequence
-from typing import Optional
 
 import torch
 from torch import nn

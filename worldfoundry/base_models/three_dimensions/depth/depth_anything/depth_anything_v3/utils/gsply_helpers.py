@@ -14,7 +14,6 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> gsply_helpers.py functionality."""
 
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import torch

@@ -7,10 +7,8 @@ import glob
 import re
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
-import torch.distributed as dist
 from safetensors import safe_open
 from torch import nn
 from torch.nn.attention.flex_attention import flex_attention

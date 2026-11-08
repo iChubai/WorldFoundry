@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.nn import RMSNorm

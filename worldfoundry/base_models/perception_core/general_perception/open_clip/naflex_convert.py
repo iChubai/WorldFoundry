@@ -1,7 +1,7 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> naflex_convert.py functionality."""
 
 from copy import deepcopy
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import torch
 from torch import nn

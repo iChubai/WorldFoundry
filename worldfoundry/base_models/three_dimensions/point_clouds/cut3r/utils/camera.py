@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> cut3r -> utils -> camera.py functionality."""
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

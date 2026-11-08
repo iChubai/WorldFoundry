@@ -4,11 +4,9 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> layers -> vision_transformer.py functionality."""
 
-import logging
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from functools import partial
-from typing import Tuple, Union
 
 import torch
 import torch.nn as nn

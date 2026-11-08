@@ -6,7 +6,6 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> attention.py functionality."""
 
 import math
-from typing import List, Tuple
 
 import torch
 import torch.nn.functional as F

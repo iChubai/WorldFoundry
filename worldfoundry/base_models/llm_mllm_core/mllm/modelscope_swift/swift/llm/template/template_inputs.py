@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 Tool = dict[str, str | dict]
 History = list[tuple[str, str] | list[str]]

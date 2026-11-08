@@ -9,8 +9,6 @@ Adapted from:
 3. https://github.com/lucidrains/rotary-embedding-torch
 """
 
-from typing import Optional
-
 import torch
 from einops import rearrange, repeat
 from torch import broadcast_tensors, nn

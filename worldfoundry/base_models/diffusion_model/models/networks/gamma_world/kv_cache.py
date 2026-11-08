@@ -23,7 +23,7 @@ wrapper concatenates cached K/V in front of the current chunk.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

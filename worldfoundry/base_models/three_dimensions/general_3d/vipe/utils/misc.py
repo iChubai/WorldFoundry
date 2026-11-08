@@ -15,7 +15,7 @@
 
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> utils -> misc.py functionality."""
 
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 

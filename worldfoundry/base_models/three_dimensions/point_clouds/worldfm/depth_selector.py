@@ -8,14 +8,12 @@ import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.point_clouds.worldfm.transforms_io import (
-    CameraFrame,
     load_camera_frames,
     load_camera_frames_from_dict,
     scale_K_for_resize,

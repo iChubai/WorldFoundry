@@ -14,14 +14,13 @@ Still the Wan video-VAE family, not Sana DC-AE.
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from omegaconf import MISSING, OmegaConf
+from omegaconf import OmegaConf
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.io import hf_download_or_fpath

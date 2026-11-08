@@ -4,18 +4,28 @@ from typing import TYPE_CHECKING
 from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
-    from .agent_template import agent_templates
-    from .callback import extra_callbacks
-    from .loss import LOSS_MAPPING, get_loss_func
-    from .loss_scale import loss_scale_map
-    from .metric import InferStats, MeanMetric, Metric, compute_acc, compute_rouge_bleu, get_metric
-    from .multi_turn import multi_turns
-    from .orm import ORM, orms
-    from .prm import PRM, prms
-    from .tuner import PeftTuner, Tuner, extra_tuners
+    from .agent_template import agent_templates as agent_templates
+    from .callback import extra_callbacks as extra_callbacks
+    from .loss import LOSS_MAPPING as LOSS_MAPPING
+    from .loss import get_loss_func as get_loss_func
+    from .loss_scale import loss_scale_map as loss_scale_map
+    from .metric import InferStats as InferStats
+    from .metric import MeanMetric as MeanMetric
+    from .metric import Metric as Metric
+    from .metric import compute_acc as compute_acc
+    from .metric import compute_rouge_bleu as compute_rouge_bleu
+    from .metric import get_metric as get_metric
+    from .multi_turn import multi_turns as multi_turns
+    from .orm import ORM as ORM
+    from .orm import orms as orms
+    from .prm import PRM as PRM
+    from .prm import prms as prms
+    from .tuner import PeftTuner as PeftTuner
+    from .tuner import Tuner as Tuner
+    from .tuner import extra_tuners as extra_tuners
 
     # isort: split
-    from .rm_plugin import rm_plugins
+    from .rm_plugin import rm_plugins as rm_plugins
 
 else:
     _import_structure = {

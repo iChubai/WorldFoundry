@@ -2,7 +2,6 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Optional
 
 import torch
 

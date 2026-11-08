@@ -2,7 +2,7 @@
 import json
 from dataclasses import dataclass
 from types import MethodType
-from typing import List, Literal, Optional
+from typing import Literal
 
 import torch
 from torch import nn

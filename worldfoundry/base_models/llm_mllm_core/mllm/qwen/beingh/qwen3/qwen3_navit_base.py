@@ -1,8 +1,5 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen3 -> qwen3_navit_base.py functionality."""
 
-import logging
-from typing import Optional, Tuple
-
 import torch
 import torch.nn as nn
 from transformers.cache_utils import Cache

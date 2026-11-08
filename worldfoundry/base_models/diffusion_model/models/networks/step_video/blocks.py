@@ -18,8 +18,6 @@ projected caption tokens.  AdaLN scale/shift/gate come from the shared
 timestep table.
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from einops import rearrange

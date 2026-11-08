@@ -1,13 +1,6 @@
-import pdb
-from dataclasses import dataclass, field
-from typing import List, Optional, Union
-
 import numpy as np
-import pandas as pd
 import torch
-import torchvision.transforms.functional as F
 from hpsv3.dataset.utils import process_vision_info
-from torch.utils.data import Dataset
 
 INSTRUCTION = """
 You are tasked with evaluating a generated image based on Visual Quality and Text Alignment and give a overall score to estimate the human preference. Please provide a rating from 0 to 10, with 0 being the worst and 10 being the best. 

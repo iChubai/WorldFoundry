@@ -17,7 +17,7 @@
 
 import functools
 from collections.abc import Mapping, Sequence
-from typing import Any, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 import torch
 import torch.nn.functional as F

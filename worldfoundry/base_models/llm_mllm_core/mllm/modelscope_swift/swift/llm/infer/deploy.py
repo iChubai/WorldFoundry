@@ -8,7 +8,6 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from http import HTTPStatus
 from threading import Thread
-from typing import List, Optional, Union
 
 import uvicorn
 from aiohttp import ClientConnectorError

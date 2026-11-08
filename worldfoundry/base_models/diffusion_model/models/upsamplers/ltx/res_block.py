@@ -4,8 +4,6 @@ Norms are invoked as modules (not fused functionals) so VRAM offload
 wrappers can onload parameters before the activation runs.
 """
 
-from typing import Optional
-
 import torch
 
 

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from gsplat.rendering import rasterization, rasterization_2dgs
 from torch import Tensor
 
-from flow3d.params import CameraPoses, CameraScales, GaussianParams, MotionBases
+from flow3d.params import CameraPoses, GaussianParams, MotionBases
 
 
 class SceneModel(nn.Module):

@@ -5,7 +5,6 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> position_encoding.py functionality."""
 
 import math
-from typing import Optional
 
 import torch
 from torch import nn

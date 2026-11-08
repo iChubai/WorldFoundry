@@ -2,7 +2,6 @@
 import copy
 import math
 from collections.abc import Sequence
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

@@ -3,8 +3,6 @@
 
 """A HuggingFace-style model configuration."""
 
-from typing import Optional, Tuple, Union
-
 from transformers import PretrainedConfig
 
 

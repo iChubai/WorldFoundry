@@ -6,8 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam -> mask_decoder.py functionality."""
 
-from typing import List, Optional, Tuple, Type
-
 import torch
 from torch import nn
 

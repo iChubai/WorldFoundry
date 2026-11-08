@@ -10,9 +10,9 @@
 
 import logging
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 import torch

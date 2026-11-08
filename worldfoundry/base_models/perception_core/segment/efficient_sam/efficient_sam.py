@@ -6,16 +6,13 @@
 
 """Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam.py functionality."""
 
-import math
-from typing import Any, List, Tuple, Type
-
 import torch
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn
 
 from .efficient_sam_decoder import MaskDecoder, PromptEncoder
 from .efficient_sam_encoder import ImageEncoderViT
-from .two_way_transformer import TwoWayAttentionBlock, TwoWayTransformer
+from .two_way_transformer import TwoWayTransformer
 
 
 class EfficientSam(nn.Module):

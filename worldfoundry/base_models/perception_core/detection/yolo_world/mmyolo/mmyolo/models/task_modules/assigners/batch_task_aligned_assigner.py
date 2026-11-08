@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn

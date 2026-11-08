@@ -23,7 +23,7 @@ Double-stream blocks jointly attend video+text QKV; single-stream blocks
 run on the concatenated sequence.  Sequence-parallel helpers live in core.
 """
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn

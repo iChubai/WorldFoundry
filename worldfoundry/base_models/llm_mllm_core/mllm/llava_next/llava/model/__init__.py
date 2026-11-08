@@ -1,4 +1,4 @@
-import os
+import os as os
 
 AVAILABLE_MODELS = {
     "llava_llama": "LlavaLlamaForCausalLM, LlavaConfig",

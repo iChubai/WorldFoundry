@@ -2,7 +2,7 @@
 import re
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import List, Literal, Optional
+from typing import Literal
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import extra_tuners
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners import Swift

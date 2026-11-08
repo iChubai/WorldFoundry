@@ -7,7 +7,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> utils.py functionality."""
 
 import torch
-import torch.nn as nn
 
 
 def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100) -> torch.Tensor:

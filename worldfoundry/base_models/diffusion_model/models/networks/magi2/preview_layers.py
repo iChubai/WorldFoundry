@@ -23,7 +23,7 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import List, Optional, Tuple, TypeAlias, Union
+from typing import TypeAlias
 
 import torch
 import torch.nn as nn

@@ -1,7 +1,6 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen2 -> qwen2_navit_base.py functionality."""
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn

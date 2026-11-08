@@ -7,12 +7,9 @@ References: https://github.com/naver/dust3r
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
 
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.utils
 from torch import Tensor
 from torch.utils.checkpoint import checkpoint
 

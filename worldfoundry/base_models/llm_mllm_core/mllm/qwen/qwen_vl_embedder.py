@@ -1,7 +1,5 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_vl_embedder.py functionality."""
 
-from typing import List, Optional, Tuple, Union
-
 import torch
 from PIL import Image
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration

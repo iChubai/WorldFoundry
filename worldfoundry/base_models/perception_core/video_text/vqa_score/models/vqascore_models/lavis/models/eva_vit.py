@@ -13,7 +13,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.layers import drop_path, to_2tuple, trunc_normal_
-from timm.models import register_model
 
 from ..common.dist_utils import download_cached_file
 

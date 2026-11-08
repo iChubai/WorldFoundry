@@ -10,7 +10,6 @@ from bisect import bisect_right
 from collections.abc import Callable
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch

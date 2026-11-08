@@ -4,16 +4,13 @@ Still ``B C T H W``.  Adds next-generation temporal conv / attention
 hooks used by later LVDM checkpoints while keeping the UNet skip graph.
 """
 
-import math
-import random
 from abc import abstractmethod
 from functools import partial
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange, repeat
+from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import (
     SpatialTransformer,

@@ -2,7 +2,7 @@
 from abc import ABCMeta
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Optional, Tuple, Type, TypeVar, Union
+from typing import TypeVar, Union
 
 import numpy as np
 import torch

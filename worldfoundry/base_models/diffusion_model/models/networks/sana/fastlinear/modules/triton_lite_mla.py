@@ -24,14 +24,14 @@ The custom Function chains the kernels in ``triton_lite_mla_kernels/``:
 4. output projection; backward uses ``vk_*_bwd`` + ``proj_divide_bwd``
 """
 
-from typing import Optional
+from typing import Optional as Optional
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 
 from .triton_lite_mla_kernels.linear_relu_fwd import linear_relu_fwd
-from .triton_lite_mla_kernels.mm import matmul  # for autocast
+from .triton_lite_mla_kernels.mm import matmul as matmul  # for autocast
 from .triton_lite_mla_kernels.pad_vk_mm_fwd import pad_vk_mm_fwd
 from .triton_lite_mla_kernels.proj_divide_bwd import proj_divide_bwd
 from .triton_lite_mla_kernels.vk_mm_relu_bwd import vk_mm_relu_bwd

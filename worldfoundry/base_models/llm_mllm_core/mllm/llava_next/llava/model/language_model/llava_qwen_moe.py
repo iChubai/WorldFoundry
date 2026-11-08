@@ -13,12 +13,8 @@
 #    limitations under the License.
 
 
-from typing import Dict, List, Optional, Tuple, Union
-
 import torch
 import torch.nn as nn
-import transformers
-from torch.nn import CrossEntropyLoss
 from transformers import AutoConfig, AutoModelForCausalLM, Qwen2MoeConfig, Qwen2MoeForCausalLM, Qwen2MoeModel
 from transformers.generation.utils import GenerateOutput
 from transformers.modeling_outputs import CausalLMOutputWithPast

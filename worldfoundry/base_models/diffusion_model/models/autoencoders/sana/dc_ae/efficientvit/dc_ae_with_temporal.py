@@ -28,7 +28,8 @@ This is still the Sana DC-AE family, not a Wan causal VAE.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
+from typing import Optional as Optional
 
 import torch
 import torch.nn as nn

@@ -1,6 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
-from typing import List, Union
 
 
 def to_abspath(path: str | list[str] | None, check_path_exist: bool = False) -> str | list[str] | None:

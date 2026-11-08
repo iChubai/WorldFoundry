@@ -25,8 +25,6 @@ DiffusionScheduler path.  Cosmos3 uses UniPC in ``schedulers/cosmos3``
 instead.
 """
 
-from typing import Tuple
-
 import torch
 
 

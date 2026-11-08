@@ -1,7 +1,3 @@
-import json
-import math
-
-import numpy as np
 import torch
 from detectron2.modeling import build_backbone, build_proposal_generator, detector_postprocess
 from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY

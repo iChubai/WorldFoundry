@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Union
 
 import torch.nn as nn
 from mmdet.utils import ConfigType, OptMultiConfig

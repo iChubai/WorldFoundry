@@ -8,19 +8,14 @@
 
 import logging
 from collections.abc import Callable
-from typing import Optional
 
 from torch import nn
 
-from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.depth_anything_v3.layers.attention import (
-    Attention,
-)
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.depth_anything_v3.layers.block import (
     Block,
 )
 from worldfoundry.core.attention.rotary.rope_2d import PositionGetter, RotaryPositionEmbedding2D
 from worldfoundry.core.nn import SwiGLUFFN
-from worldfoundry.core.nn.blocks.stochastic_depth import drop_add_residual_stochastic_depth, get_branges_scales
 
 logger = logging.getLogger("dinov2")
 XFORMERS_AVAILABLE = False

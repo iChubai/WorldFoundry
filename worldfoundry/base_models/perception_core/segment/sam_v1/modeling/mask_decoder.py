@@ -6,11 +6,8 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> mask_decoder.py functionality."""
 
-from typing import List, Tuple, Type
-
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 

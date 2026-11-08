@@ -22,7 +22,6 @@ per-frame tokens and unpatchifies to ``B F C H W``.
 """
 
 from types import SimpleNamespace
-from typing import Dict, Optional
 
 import torch
 from einops import rearrange, repeat

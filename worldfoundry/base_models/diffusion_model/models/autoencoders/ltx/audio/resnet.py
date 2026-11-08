@@ -10,8 +10,6 @@ only — do not comment every inner conv.
 Consumed by :mod:`.audio_vae` and :mod:`.vocoder`.
 """
 
-from typing import Tuple
-
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causal_conv_2d import make_conv2d

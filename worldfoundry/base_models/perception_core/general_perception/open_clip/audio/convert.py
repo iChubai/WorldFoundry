@@ -4,7 +4,6 @@ import re
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
 from pathlib import Path
-from typing import Dict, Union
 
 import torch
 

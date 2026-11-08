@@ -8,7 +8,6 @@
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam2_utils.py functionality."""
 
 import copy
-from typing import Tuple
 
 import numpy as np
 import torch

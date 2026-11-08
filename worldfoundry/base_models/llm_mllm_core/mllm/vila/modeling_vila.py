@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 from collections import defaultdict, deque
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -17,7 +17,6 @@ from transformers import (
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from .auto_processor import VILAProcessor
 from .base_projector import MultimodalProjector, MultimodalProjectorConfig
 from .builder import build_llm_and_tokenizer
 from .configuration_vila import VILAConfig

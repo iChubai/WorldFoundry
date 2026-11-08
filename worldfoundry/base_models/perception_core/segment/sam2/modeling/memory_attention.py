@@ -6,8 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> memory_attention.py functionality."""
 
-from typing import Optional
-
 import torch
 from torch import Tensor, nn
 

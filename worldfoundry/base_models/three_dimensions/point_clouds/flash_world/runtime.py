@@ -1,13 +1,12 @@
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import einops
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from diffusers import FlowMatchEulerDiscreteScheduler
 from huggingface_hub import snapshot_download
 from PIL import Image

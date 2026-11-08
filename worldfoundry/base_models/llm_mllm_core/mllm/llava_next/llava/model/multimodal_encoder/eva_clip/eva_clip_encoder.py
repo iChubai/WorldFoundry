@@ -1,11 +1,10 @@
-import torch
 import torch.nn as nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 
 from .eva_clip_processors import EvaClipImageTrainProcessor
 from .eva_vit import EVAEncoderWrapper
-from .factory import add_model_config, get_model_config, list_models
+from .factory import get_model_config
 
 
 class EvaClipVisionTower(nn.Module):

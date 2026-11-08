@@ -11,7 +11,6 @@ Used only by Sana temporal DC-AE, not MiniMax / Wan CNNs.
 """
 
 from collections.abc import Sequence
-from typing import Optional
 
 import torch
 import torch.nn as nn

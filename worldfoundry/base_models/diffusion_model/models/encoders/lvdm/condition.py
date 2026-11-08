@@ -19,7 +19,6 @@ import open_clip
 import open_clip.transformer
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 from torch.utils.checkpoint import checkpoint
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5Tokenizer
 

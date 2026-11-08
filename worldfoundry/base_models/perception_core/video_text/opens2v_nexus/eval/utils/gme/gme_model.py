@@ -5,7 +5,6 @@ import logging
 import math
 import os
 from io import BytesIO
-from typing import Dict, List, Optional
 
 import requests
 import torch

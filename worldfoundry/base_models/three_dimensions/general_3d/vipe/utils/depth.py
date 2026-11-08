@@ -15,7 +15,7 @@
 
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> utils -> depth.py functionality."""
 
-from typing import Literal, Optional
+from typing import Literal
 
 import torch
 import torch.nn.functional as F

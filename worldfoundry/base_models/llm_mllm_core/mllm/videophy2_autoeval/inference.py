@@ -1,11 +1,7 @@
 import argparse
-import csv
-import json
-import os
 import re
 from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 import torch
 from mplug_owl_video.modeling_mplug_owl import MplugOwlForConditionalGeneration

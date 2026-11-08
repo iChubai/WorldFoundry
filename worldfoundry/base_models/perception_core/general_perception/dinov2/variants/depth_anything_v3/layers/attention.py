@@ -12,8 +12,6 @@
 
 import logging
 
-from torch import nn
-
 from worldfoundry.core.attention import QKNormRopeSelfAttention
 
 logger = logging.getLogger("dinov2")

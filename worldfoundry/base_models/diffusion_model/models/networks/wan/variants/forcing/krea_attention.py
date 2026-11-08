@@ -8,7 +8,7 @@ import torch
 
 try:
     import flash_attn_interface
-    from flash_attn import flash_attn_func
+    from flash_attn import flash_attn_func  # noqa: F401 - Import checks optional dependency availability.
 
     def is_hopper_gpu():
         """Is hopper gpu."""

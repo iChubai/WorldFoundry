@@ -6,7 +6,6 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import logging
-from typing import List
 
 from torch import nn
 

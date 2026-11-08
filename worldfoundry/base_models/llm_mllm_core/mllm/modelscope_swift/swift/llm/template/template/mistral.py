@@ -1,7 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Dict, List, Literal, Optional
-
-import torch
+from typing import Any, Literal
 
 from ..base import Template
 from ..constant import MLLMTemplateType

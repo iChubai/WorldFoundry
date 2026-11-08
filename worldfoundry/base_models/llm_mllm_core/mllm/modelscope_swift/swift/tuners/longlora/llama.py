@@ -3,7 +3,6 @@
 
 import math
 from types import MethodType
-from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F

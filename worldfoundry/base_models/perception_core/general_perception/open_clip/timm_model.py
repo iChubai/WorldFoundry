@@ -7,7 +7,6 @@ import logging
 from collections import OrderedDict
 
 _logger = logging.getLogger(__name__)
-from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

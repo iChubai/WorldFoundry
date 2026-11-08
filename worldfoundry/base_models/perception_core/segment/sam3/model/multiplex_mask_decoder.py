@@ -7,11 +7,8 @@
 
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> multiplex_mask_decoder.py functionality."""
 
-from typing import List, Optional, Type
-
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 

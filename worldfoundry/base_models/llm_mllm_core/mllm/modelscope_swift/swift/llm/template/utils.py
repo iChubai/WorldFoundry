@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Union
 
 import torch
 from transformers import PreTrainedTokenizerBase, StoppingCriteria

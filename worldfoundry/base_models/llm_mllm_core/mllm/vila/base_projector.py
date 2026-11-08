@@ -18,7 +18,7 @@ import re
 
 import torch
 import torch.nn as nn
-from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+from transformers import PretrainedConfig, PreTrainedModel
 
 
 class IdentityMap(nn.Module):

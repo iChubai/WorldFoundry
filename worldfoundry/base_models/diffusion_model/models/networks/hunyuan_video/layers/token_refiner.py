@@ -5,8 +5,6 @@ blocks on ``B L C`` text tokens.  The pooled context+timestep vector
 gates each residual.  Video tokens are not refined here.
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from einops import rearrange

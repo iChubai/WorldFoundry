@@ -2,12 +2,9 @@
 
 from functools import partial
 
-import lietorch
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from cuda_timer import CudaTimer
-from lietorch import SE3
 
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import AltCorrBlock, CorrBlock

@@ -1,6 +1,4 @@
-import os
 import os.path as osp
-import pickle
 
 from .stream import ImageStream, RGBDStream, StereoStream
 

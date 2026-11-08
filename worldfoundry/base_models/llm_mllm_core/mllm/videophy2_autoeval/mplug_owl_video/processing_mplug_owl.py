@@ -1,4 +1,4 @@
-import random
+import random as random
 import re
 
 import numpy as np
@@ -8,9 +8,9 @@ from decord import VideoReader
 from PIL import Image
 from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 from transformers.processing_utils import ProcessorMixin
-from transformers.tokenization_utils_base import BatchEncoding
+from transformers.tokenization_utils_base import BatchEncoding as BatchEncoding
 
-from .tokenization_mplug_owl import MplugOwlTokenizer
+from .tokenization_mplug_owl import MplugOwlTokenizer as MplugOwlTokenizer
 
 
 def get_index(num_frames, num_segments):

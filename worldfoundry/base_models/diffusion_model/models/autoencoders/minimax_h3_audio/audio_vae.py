@@ -14,7 +14,6 @@ in :mod:`~..minimax_h3_common`.
 
 # DAC-lineage audio VAE: waveform encoder + BigVGAN decoder (inference-only bundle).
 import math
-from typing import List
 
 import numpy as np
 import torch

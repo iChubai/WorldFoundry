@@ -10,12 +10,8 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> dpt_head.py functionality."""
 
-import os
-from typing import Dict, List, Tuple, Union
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .head_act import activate_head
 from .utils import create_uv_grid, position_grid_to_embed

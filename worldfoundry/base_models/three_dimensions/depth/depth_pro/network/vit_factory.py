@@ -4,10 +4,9 @@
 
 from __future__ import annotations
 
-import logging
 import types
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 
 import timm
 import torch

@@ -12,7 +12,6 @@ from collections.abc import Sequence
 from functools import partial, reduce
 from math import ceil
 from multiprocessing import Manager, Pool
-from typing import List
 
 import cv2
 import numpy as np

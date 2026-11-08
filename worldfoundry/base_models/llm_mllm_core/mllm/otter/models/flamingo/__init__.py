@@ -25,7 +25,7 @@ else:
     ]
 
 if TYPE_CHECKING:
-    from .configuration_flamingo import FlamingoConfig
+    from .configuration_flamingo import FlamingoConfig as FlamingoConfig
 
     # from .processing_flamingo import FlamingoProcessor
 
@@ -36,9 +36,13 @@ if TYPE_CHECKING:
         pass
     else:
         from .modeling_flamingo import (
-            FlamingoForConditionalGeneration,
-            FlamingoModel,
-            FlamingoPreTrainedModel,
+            FlamingoForConditionalGeneration as FlamingoForConditionalGeneration,
+        )
+        from .modeling_flamingo import (
+            FlamingoModel as FlamingoModel,
+        )
+        from .modeling_flamingo import (
+            FlamingoPreTrainedModel as FlamingoPreTrainedModel,
         )
 
 else:

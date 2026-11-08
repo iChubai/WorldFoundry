@@ -14,7 +14,6 @@ This is H3 video decoder graph math, not a
 """
 
 import logging
-from typing import Optional
 
 import torch
 import torch.nn as nn

@@ -3,8 +3,6 @@
 
 """Tokenization classes for Qwen2."""
 
-from typing import Optional, Tuple
-
 from transformers.tokenization_utils import AddedToken
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 from transformers.utils import logging

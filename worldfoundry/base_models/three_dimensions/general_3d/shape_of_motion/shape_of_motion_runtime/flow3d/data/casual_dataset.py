@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> casual_dataset.py functionality."""
 
 import os
-import os.path as osp
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -15,13 +14,10 @@ import torch.nn.functional as F
 import tyro
 from loguru import logger as guru
 from roma import roma
-from scipy.spatial.transform import Rotation
 from tqdm import tqdm
 
 from flow3d.data.base_dataset import BaseDataset
-from flow3d.data.colmap import get_colmap_camera_params_txt
 from flow3d.data.utils import (
-    UINT16_MAX,
     SceneNormDict,
     get_tracks_3d_for_query_frame,
     median_filter_2d,

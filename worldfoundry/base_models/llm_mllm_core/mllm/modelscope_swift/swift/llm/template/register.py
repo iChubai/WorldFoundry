@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 
 import importlib
-from typing import Dict, Literal, Optional
+from typing import Literal
 
 from ..utils import Processor
 from .base import Template

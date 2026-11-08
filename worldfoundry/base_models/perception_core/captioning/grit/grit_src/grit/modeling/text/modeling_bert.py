@@ -21,8 +21,6 @@ import json
 import logging
 import math
 import os
-import sys
-from io import open
 
 import torch
 import torch.utils.checkpoint as checkpoint

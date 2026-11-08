@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Type, TypeVar
+from typing import TypeVar
 
 try:
     from dacite import Config, from_dict

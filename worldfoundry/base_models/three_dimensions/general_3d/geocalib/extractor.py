@@ -5,7 +5,6 @@
 """Simple interface for GeoCalib model."""
 
 from pathlib import Path
-from typing import Dict, Optional
 
 import torch
 import torch.nn as nn

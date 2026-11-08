@@ -8,7 +8,7 @@
 import logging
 from collections.abc import Sequence
 from functools import partial
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Literal
 
 import torch
 import torch.nn.init

@@ -18,8 +18,6 @@ Conversion from the TrigFlow (sCM paper) parameterization trigflow_t to
 the four c_xxx scaling coefficients as in EDM fomulation.
 """
 
-from typing import Tuple
-
 import torch
 
 

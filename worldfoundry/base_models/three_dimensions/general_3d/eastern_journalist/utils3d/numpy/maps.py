@@ -7,10 +7,10 @@ import numpy as np
 from numpy import ndarray
 from typing_extensions import Unpack
 
-from ..helpers import no_warnings, timeit
+from ..helpers import no_warnings
 from .mesh import remove_unused_vertices, triangulate_mesh
 from .transforms import angle_between, unproject_cv
-from .utils import lite_dot, lite_norm, lite_prod, lite_sum, max_pool_2d, pooling, sliding_window
+from .utils import lite_dot, lite_norm, lite_prod, max_pool_2d, pooling, sliding_window
 
 __all__ = [
     "build_mesh_from_depth_map",

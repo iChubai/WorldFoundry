@@ -1,9 +1,6 @@
 import base64
-import os
-from typing import List, Union
 
 import cv2
-import numpy as np
 import tiktoken
 import torch
 from openai import OpenAI

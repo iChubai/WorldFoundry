@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> encoder_epipolar.py functionality."""
 
 from dataclasses import dataclass
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import torch
 from einops import rearrange

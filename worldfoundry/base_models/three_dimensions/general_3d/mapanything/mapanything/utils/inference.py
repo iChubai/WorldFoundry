@@ -7,7 +7,7 @@
 Inference utilities.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import torch

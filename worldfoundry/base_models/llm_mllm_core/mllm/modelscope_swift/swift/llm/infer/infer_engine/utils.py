@@ -9,21 +9,15 @@ from dataclasses import dataclass
 from functools import partial
 from itertools import repeat
 from queue import Queue
-from typing import List, Optional, Union
 
 import torch
-import torch.distributed as dist
 from packaging import version
 from transformers import GenerationConfig, LogitsProcessor
 from transformers.generation.streamers import BaseStreamer
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.model.register import fix_do_sample_warning
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
-    get_current_device,
     get_device,
-    get_device_count,
-    get_node_setting,
-    set_device,
 )
 
 from ..protocol import RequestConfig
@@ -406,7 +400,6 @@ def patch_vllm_memory_leak():
 
     def patch_vllm_abort_seq_group():
         from collections.abc import Iterable
-        from typing import Dict
 
         from vllm.core.scheduler import Scheduler
         from vllm.sequence import SequenceGroup, SequenceGroupBase, SequenceStatus

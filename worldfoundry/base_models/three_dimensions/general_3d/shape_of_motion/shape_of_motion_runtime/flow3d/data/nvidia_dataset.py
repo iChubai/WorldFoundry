@@ -4,9 +4,6 @@ import json
 import os
 import os.path as osp
 from dataclasses import dataclass
-from glob import glob
-from itertools import product
-from pathlib import Path
 from typing import Literal
 
 import imageio.v3 as iio
@@ -16,12 +13,10 @@ import torch
 import torch.nn.functional as F
 import tyro
 from loguru import logger as guru
-from scipy.spatial.transform import Rotation
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from flow3d.data.base_dataset import BaseDataset
-from flow3d.data.colmap import get_colmap_camera_params
 from flow3d.data.utils import (
     SceneNormDict,
     masked_median_blur,

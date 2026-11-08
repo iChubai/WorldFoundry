@@ -1,17 +1,12 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> geometry_torch.py functionality."""
 
-import math
-from collections import namedtuple
 from typing import *
 
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.types
 
 from ....general_3d.eastern_journalist.utils3d.torch import sliding_window, uv_map
-from .tools import timeit
 
 # isort: split
 from .geometry_numpy import solve_optimal_focal_shift, solve_optimal_shift

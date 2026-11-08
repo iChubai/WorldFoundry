@@ -1,8 +1,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> utils -> geometry.py functionality."""
 
-import numpy as np
 import torch
-import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
     depth_edge as depth_edge,

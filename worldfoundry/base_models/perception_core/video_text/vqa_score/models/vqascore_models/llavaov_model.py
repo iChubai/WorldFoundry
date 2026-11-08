@@ -1,7 +1,5 @@
 import copy
-from typing import List, Union
 
-import cv2
 import numpy as np
 import torch
 from decord import VideoReader, cpu
@@ -9,7 +7,6 @@ from PIL import Image
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
     DEFAULT_IMAGE_TOKEN,
-    IGNORE_INDEX,
     IMAGE_TOKEN_INDEX,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates

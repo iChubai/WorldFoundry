@@ -2,7 +2,6 @@
 import argparse
 import os.path as osp
 import sys
-from typing import Tuple
 
 import cv2
 import mmcv

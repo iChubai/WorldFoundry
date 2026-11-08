@@ -16,7 +16,7 @@
 
 import math
 from math import isqrt
-from typing import Literal, Optional
+from typing import Literal
 
 import torch
 from einops import rearrange, repeat

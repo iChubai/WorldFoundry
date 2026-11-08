@@ -1,11 +1,9 @@
 import json
 import logging
 import os
-import pathlib
 import re
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 
@@ -17,7 +15,7 @@ except ImportError:
     deepspeed = None
 
 from .constants import OPENAI_DATASET_MEAN, OPENAI_DATASET_STD
-from .model import CLIP, CustomCLIP, convert_to_custom_text_state_dict, convert_weights_to_lp, get_cast_dtype
+from .model import CLIP, CustomCLIP, convert_to_custom_text_state_dict, get_cast_dtype
 from .openai import load_openai_model
 from .pretrained import download_pretrained, get_pretrained_cfg, is_pretrained_cfg, list_pretrained_tags_by_model
 from .tokenizer import HFTokenizer, tokenize

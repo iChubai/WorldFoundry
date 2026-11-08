@@ -1,13 +1,12 @@
 import json
 import os
-from typing import Dict, Union
 
 import cv2
 import imageio
 import numpy as np
 import pyexr
 import torch
-from huggingface_hub import hf_hub_download, snapshot_download
+from huggingface_hub import snapshot_download
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.adapter import (
     DepthAnythingAdapter,

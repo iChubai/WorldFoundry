@@ -35,7 +35,6 @@ conditioning.  Register this graph with ``profile="wm"``.
 """
 
 import os
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -96,7 +95,7 @@ from .sana_gdn_camctrl_blocks import (
 # ``MultiHeadCrossAttention`` expects xFormers sequence-length lists.
 _xformers_available = os.environ.get("DISABLE_XFORMERS", "0") != "1" and is_xformers_available()
 if _xformers_available:
-    import xformers.ops
+    pass
 
 
 class DeltaActionEmbedder(nn.Module):

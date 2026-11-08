@@ -7,7 +7,7 @@
 # Adapted from https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/automatic_mask_generator.py
 """Module for base_models -> perception_core -> segment -> sam2 -> automatic_mask_generator.py functionality."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 import torch

@@ -15,8 +15,6 @@
 
 """Reason1 hidden-state extraction for Gamma-World inference."""
 
-from typing import List, Optional
-
 import torch
 from torch.distributed._tensor import DTensor
 

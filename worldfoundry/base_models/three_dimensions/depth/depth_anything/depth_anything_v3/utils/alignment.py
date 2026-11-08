@@ -16,8 +16,6 @@
 Alignment utilities for depth estimation and metric scaling.
 """
 
-from typing import Tuple
-
 import torch
 
 

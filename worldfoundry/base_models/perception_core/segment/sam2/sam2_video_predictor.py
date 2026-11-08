@@ -6,7 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam2 -> sam2_video_predictor.py functionality."""
 
-import warnings
 from collections import OrderedDict
 
 import torch

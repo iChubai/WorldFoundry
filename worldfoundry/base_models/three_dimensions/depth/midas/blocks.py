@@ -8,11 +8,15 @@ from .backbones.beit import (
     _make_pretrained_beitb16_384,
     _make_pretrained_beitl16_384,
     _make_pretrained_beitl16_512,
-    forward_beit,
+)
+from .backbones.beit import (
+    forward_beit as forward_beit,
 )
 from .backbones.levit import (
     _make_pretrained_levit_384,
-    forward_levit,
+)
+from .backbones.levit import (
+    forward_levit as forward_levit,
 )
 from .backbones.swin import (
     _make_pretrained_swinl12_384,
@@ -23,13 +27,15 @@ from .backbones.swin2 import (
     _make_pretrained_swin2t16_256,
 )
 from .backbones.swin_common import (
-    forward_swin,
+    forward_swin as forward_swin,
 )
 from .backbones.vit import (
     _make_pretrained_vitb16_384,
     _make_pretrained_vitb_rn50_384,
     _make_pretrained_vitl16_384,
-    forward_vit,
+)
+from .backbones.vit import (
+    forward_vit as forward_vit,
 )
 
 

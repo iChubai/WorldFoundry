@@ -1,12 +1,10 @@
 import logging
-from typing import List
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from scipy import interpolate
-from torch import nn
 
 logger = logging.getLogger(__name__)
 

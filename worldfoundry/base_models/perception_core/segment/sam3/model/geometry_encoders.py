@@ -4,8 +4,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> geometry_encoders.py functionality."""
 
-from typing import Tuple
-
 import torch
 import torch.nn as nn
 import torchvision

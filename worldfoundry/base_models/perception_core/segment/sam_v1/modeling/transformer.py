@@ -7,7 +7,6 @@
 """Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> transformer.py functionality."""
 
 import math
-from typing import Tuple, Type
 
 import torch
 from torch import Tensor, nn

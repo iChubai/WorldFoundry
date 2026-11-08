@@ -3,7 +3,6 @@
 from collections.abc import Callable, Sequence
 from functools import partial
 from itertools import islice
-from typing import List, Optional, Union
 
 import torch
 

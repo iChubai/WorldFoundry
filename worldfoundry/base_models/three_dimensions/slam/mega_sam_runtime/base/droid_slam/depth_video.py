@@ -1,6 +1,3 @@
-from collections import OrderedDict
-
-import cv2
 import droid_backends
 
 # isort: split
@@ -12,11 +9,9 @@ import geom.ba as ba_pt
 
 # isort: split
 import geom.projective_ops as pops
-import imageio
 import lietorch
-import numpy as np
 import torch
-from torch.multiprocessing import Lock, Process, Queue, Value
+from torch.multiprocessing import Value
 
 
 class DepthVideo:

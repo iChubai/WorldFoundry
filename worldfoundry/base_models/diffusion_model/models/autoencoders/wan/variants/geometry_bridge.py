@@ -12,8 +12,6 @@ same T/H/W.  Latent width stays checkpoint-compatible.
 Wan-family variant, not a separate geometry autoencoder.
 """
 
-import logging
-
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn

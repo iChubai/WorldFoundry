@@ -10,8 +10,6 @@
 
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> depth_anything_v3 -> dinov2.py functionality."""
 
-from typing import List
-
 import torch.nn as nn
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.depth_anything_v3.vision_transformer import (

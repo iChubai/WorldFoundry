@@ -18,8 +18,6 @@
 
 """Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> transformer.py functionality."""
 
-from typing import Optional
-
 import torch
 import torch.utils.checkpoint as checkpoint
 from torch import Tensor, nn

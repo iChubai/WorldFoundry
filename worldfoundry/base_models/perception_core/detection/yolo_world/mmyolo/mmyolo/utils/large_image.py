@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections.abc import Sequence
-from typing import Tuple
 
 import torch
 from mmcv.ops import batched_nms

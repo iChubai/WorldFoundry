@@ -1,7 +1,5 @@
 """CLAP model."""
 
-from typing import Optional
-
 import numpy as np
 import torch
 import torch.nn.functional as F

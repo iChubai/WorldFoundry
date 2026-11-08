@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> beit.py functionality."""
 
 import types
-from typing import Optional
 
 import numpy as np
 import timm

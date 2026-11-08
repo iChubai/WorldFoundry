@@ -6,8 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> backbones -> image_encoder.py functionality."""
 
-from typing import List, Optional
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

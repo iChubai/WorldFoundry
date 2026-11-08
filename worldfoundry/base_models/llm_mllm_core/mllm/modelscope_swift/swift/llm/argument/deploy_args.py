@@ -1,6 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass
-from typing import Optional
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import safe_snapshot_download
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import find_free_port, get_logger

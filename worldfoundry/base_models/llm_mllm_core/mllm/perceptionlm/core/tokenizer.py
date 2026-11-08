@@ -6,7 +6,6 @@ import os
 from copy import copy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import tiktoken
 from sentencepiece import SentencePieceProcessor

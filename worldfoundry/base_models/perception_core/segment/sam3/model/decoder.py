@@ -8,11 +8,10 @@ Inspired from Pytorch's version, adds the pre-norm variant
 
 import math
 from functools import partial
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch
-import torch.nn.functional as torchF
 from torch import Tensor, nn
 from torchvision.ops.roi_align import RoIAlign
 

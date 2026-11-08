@@ -11,9 +11,7 @@ consumed by the original Hunyuan denoiser.  I2V extras are
 Template / precision constants: :mod:`.constants`.
 """
 
-from copy import deepcopy
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn

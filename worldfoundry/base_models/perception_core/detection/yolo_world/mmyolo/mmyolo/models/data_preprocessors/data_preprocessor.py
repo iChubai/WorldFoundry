@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import random
-from typing import List, Optional, Tuple, Union
+from typing import Union
 
 import torch
 import torch.nn.functional as F

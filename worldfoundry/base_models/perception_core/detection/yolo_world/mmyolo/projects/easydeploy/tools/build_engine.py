@@ -1,6 +1,5 @@
 import argparse
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 try:
     import tensorrt as trt

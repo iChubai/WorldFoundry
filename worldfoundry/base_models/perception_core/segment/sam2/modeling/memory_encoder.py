@@ -7,7 +7,6 @@
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> memory_encoder.py functionality."""
 
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn

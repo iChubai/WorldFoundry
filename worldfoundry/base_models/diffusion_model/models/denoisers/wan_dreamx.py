@@ -11,8 +11,6 @@ Wan 2.1 / 2.2 helpers with DreamX's 48-channel Wan2.2 VAE statistics.
 The causal DiT is :class:`~..networks.wan.variants.dreamx_world.causal.CausalWanModel`.
 """
 
-from typing import List, Optional
-
 import torch
 
 from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_config

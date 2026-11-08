@@ -5,7 +5,7 @@ import os
 import re
 from collections.abc import Callable
 from io import BytesIO
-from typing import Any, List, TypeVar, Union
+from typing import Any, TypeVar
 
 import numpy as np
 import requests

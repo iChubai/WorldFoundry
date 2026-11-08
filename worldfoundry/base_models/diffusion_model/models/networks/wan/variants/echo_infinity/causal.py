@@ -7,7 +7,6 @@ Adds causal attention.  No VACE or linear attn.
 """
 
 import math
-import os
 
 import torch
 import torch.distributed as dist
@@ -1120,7 +1119,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             _compile=False,
             device=device,
         )
-        import torch.distributed as dist
 
         return block_mask
 

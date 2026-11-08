@@ -6,8 +6,6 @@ remain ``B T D``; the linear maps sinusoidal timestep features to those
 coefficients.
 """
 
-from typing import Optional, Tuple
-
 import torch
 
 from worldfoundry.core.nn.diffusion.timestep import (

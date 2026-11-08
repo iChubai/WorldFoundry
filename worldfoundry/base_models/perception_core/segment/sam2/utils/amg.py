@@ -7,10 +7,10 @@
 """Module for base_models -> perception_core -> segment -> sam2 -> utils -> amg.py functionality."""
 
 import math
-from collections.abc import Generator, ItemsView
+from collections.abc import Generator
 from copy import deepcopy
 from itertools import product
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import torch

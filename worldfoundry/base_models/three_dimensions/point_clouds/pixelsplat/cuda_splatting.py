@@ -19,7 +19,6 @@ from diff_gaussian_rasterization import (
     GaussianRasterizer,
 )
 from einops import einsum, rearrange, repeat
-from torch import Tensor
 
 from .projection import get_fov, homogenize_points
 

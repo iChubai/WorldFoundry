@@ -7,11 +7,9 @@
 """Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> models -> aggregator.py functionality."""
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.rope import (
     PositionGetter,

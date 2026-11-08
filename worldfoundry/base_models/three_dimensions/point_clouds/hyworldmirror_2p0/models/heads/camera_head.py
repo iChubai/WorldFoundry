@@ -5,9 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from worldfoundry.core.nn.blocks.layers import Mlp
-
-from ..layers.block import Block, DistBlock
+from ..layers.block import Block
 from ..layers.mlp import MlpFP32
 
 

@@ -9,7 +9,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> heads -> dense_head.py functionality."""
 
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn

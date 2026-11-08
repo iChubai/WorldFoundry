@@ -2,7 +2,6 @@
 import os
 from collections.abc import Callable
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 import torch
@@ -169,9 +168,6 @@ def calculate_paired_metrics(embeddings, labels):
 
 
 def calculate_infonce_metrics(embeddings, labels):
-    from scipy.stats import pearsonr, spearmanr
-    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
-
     hard_negatives = os.environ.get("INFONCE_HARD_NEGATIVES", None)
     use_batch = strtobool(os.environ.get("INFONCE_USE_BATCH", "True"))
     split_tensors = _parse_multi_negative_sentences(torch.tensor(embeddings), torch.tensor(labels), hard_negatives)

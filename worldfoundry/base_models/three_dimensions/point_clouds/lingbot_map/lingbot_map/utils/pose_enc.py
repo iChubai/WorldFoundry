@@ -6,19 +6,12 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> pose_enc.py functionality."""
 
-import gzip
-import json
-import logging
-import os
-import random
-import warnings
-
 import numpy as np
 import torch
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import mat_to_quat, quat_to_mat
 
-from .geometry import closed_form_inverse_se3, closed_form_inverse_se3_general
+from .geometry import closed_form_inverse_se3
 
 
 def extri_intri_to_pose_encoding(

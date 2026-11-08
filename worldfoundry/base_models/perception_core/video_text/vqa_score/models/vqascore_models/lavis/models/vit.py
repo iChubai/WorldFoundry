@@ -16,8 +16,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from fairscale.nn.checkpoint.checkpoint_activations import checkpoint_wrapper
 from timm.layers import DropPath, trunc_normal_
-from timm.models import adapt_input_conv, named_apply, register_model
-from timm.models.vision_transformer import PatchEmbed, _cfg
+from timm.models import adapt_input_conv
+from timm.models.vision_transformer import PatchEmbed
 
 from ..models.base_model import BaseEncoder
 

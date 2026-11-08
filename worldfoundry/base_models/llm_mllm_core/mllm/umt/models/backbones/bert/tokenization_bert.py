@@ -16,7 +16,6 @@
 import collections
 import os
 import unicodedata
-from typing import List, Optional, Tuple
 
 from transformers.tokenization_utils import PreTrainedTokenizer, _is_control, _is_punctuation, _is_whitespace
 from transformers.utils import logging

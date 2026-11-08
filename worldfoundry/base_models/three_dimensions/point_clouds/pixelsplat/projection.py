@@ -4,7 +4,6 @@ from math import prod
 
 import torch
 from einops import einsum, rearrange, reduce, repeat
-from torch import Tensor
 
 
 def homogenize_points(

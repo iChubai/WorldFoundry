@@ -10,7 +10,7 @@ from copy import copy
 from functools import partial
 from inspect import Parameter, Signature, signature
 from types import MethodType
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal, Union
 
 import torch
 from modelscope import snapshot_download

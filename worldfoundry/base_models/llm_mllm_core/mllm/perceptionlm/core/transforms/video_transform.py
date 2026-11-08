@@ -3,7 +3,6 @@
 import os
 from collections.abc import Callable
 from logging import getLogger
-from typing import List, Tuple
 
 import torch
 from PIL import Image

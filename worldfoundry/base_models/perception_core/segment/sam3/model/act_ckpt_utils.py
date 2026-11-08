@@ -7,7 +7,7 @@
 import inspect
 from collections.abc import Callable
 from functools import wraps
-from typing import TypeVar, Union
+from typing import TypeVar
 
 import torch
 import torch.nn as nn

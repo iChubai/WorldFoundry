@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import torch
 import torch.nn as nn
 from transformers import Qwen2VLForConditionalGeneration

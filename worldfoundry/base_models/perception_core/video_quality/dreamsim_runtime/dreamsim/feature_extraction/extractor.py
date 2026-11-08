@@ -1,7 +1,6 @@
 import math
 import os
 import types
-from typing import List, Tuple
 
 import torch
 import torch.nn.modules.utils as nn_utils

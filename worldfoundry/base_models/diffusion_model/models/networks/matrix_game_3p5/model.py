@@ -11,8 +11,6 @@ Subject-ref memory adds learned embeddings concatenated into the stream.
 Reuses Wan ``MLP`` / ``CrossAttention`` / ``Head`` from ``../wan.model``.
 """
 
-from typing import Optional, Tuple
-
 import torch
 import torch.nn as nn
 from einops import rearrange

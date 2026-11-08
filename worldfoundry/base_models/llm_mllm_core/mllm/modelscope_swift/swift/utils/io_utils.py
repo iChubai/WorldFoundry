@@ -3,7 +3,7 @@ import json
 import os
 from queue import Queue
 from threading import Thread
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Literal
 
 import requests
 import torch.distributed as dist

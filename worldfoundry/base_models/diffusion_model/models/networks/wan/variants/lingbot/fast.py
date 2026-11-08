@@ -11,8 +11,6 @@ import math
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as torch_F
-from einops import rearrange
 
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 

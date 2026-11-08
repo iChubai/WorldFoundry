@@ -1,9 +1,6 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> chol.py functionality."""
 
 import torch
-import torch.nn.functional as F
-
-import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
 
 
 class CholeskySolver(torch.autograd.Function):

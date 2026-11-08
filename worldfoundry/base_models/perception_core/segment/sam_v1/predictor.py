@@ -6,8 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> predictor.py functionality."""
 
-from typing import Optional, Tuple
-
 import numpy as np
 import torch
 

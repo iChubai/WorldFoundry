@@ -10,13 +10,12 @@ import math
 _logger = logging.getLogger(__name__)
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.utils.checkpoint import checkpoint
 
 from .hf_model import HFTextEncoder
 from .modified_resnet import ModifiedResNet

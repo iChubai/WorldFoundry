@@ -1,12 +1,9 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> utils.py functionality."""
 
-import functools
-import warnings
 from numbers import Integral, Number
 from typing import *
 
 import numpy as np
-import scipy.sparse as sp
 from numpy import ndarray
 from scipy.sparse import csr_array
 

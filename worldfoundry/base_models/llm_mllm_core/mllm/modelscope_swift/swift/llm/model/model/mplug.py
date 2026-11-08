@@ -2,7 +2,7 @@
 import os
 import sys
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoConfig
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
@@ -30,7 +30,9 @@ def get_model_tokenizer_mplug_owl2(
 
     # register
     # https://github.com/X-PLUG/mPLUG-Owl/blob/main/mPLUG-Owl2/mplug_owl2/model/modeling_mplug_owl2.py#L447
-    from mplug_owl2 import MPLUGOwl2LlamaForCausalLM
+    from mplug_owl2 import (
+        MPLUGOwl2LlamaForCausalLM,  # noqa: F401 - Registers the mPLUG-Owl2 classes with Transformers before loading.
+    )
     from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 
     model_config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)

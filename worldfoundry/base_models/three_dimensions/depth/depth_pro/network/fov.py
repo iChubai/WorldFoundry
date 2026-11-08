@@ -1,7 +1,6 @@
 # Copyright (C) 2024 Apple Inc. All Rights Reserved.
 # Field of View network architecture.
 
-from typing import Optional
 
 import torch
 from torch import nn

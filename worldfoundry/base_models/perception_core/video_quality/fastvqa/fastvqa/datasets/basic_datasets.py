@@ -6,7 +6,7 @@ import decord
 import numpy as np
 import torch
 import torchvision
-from decord import VideoReader, cpu, gpu
+from decord import VideoReader
 from tqdm import tqdm
 
 random.seed(42)

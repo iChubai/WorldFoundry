@@ -1,6 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
-from typing import List, Union
 
 from .base import BaseAgentTemplate
 

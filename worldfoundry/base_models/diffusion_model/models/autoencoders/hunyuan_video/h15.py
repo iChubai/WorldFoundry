@@ -20,8 +20,6 @@ Checkpoint-compatible causal 3-D VAE with tiling. Public ``encode`` / ``decode``
 
 import math
 from contextlib import contextmanager
-from dataclasses import dataclass
-from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch

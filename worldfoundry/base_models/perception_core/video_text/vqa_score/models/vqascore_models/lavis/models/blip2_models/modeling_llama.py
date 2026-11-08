@@ -19,7 +19,6 @@
 """PyTorch LLaMA model."""
 
 import math
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.utils.checkpoint

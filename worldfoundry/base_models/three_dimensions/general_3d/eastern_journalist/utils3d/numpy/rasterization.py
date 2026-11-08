@@ -1,9 +1,6 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> rasterization.py functionality."""
 
-import os
 import threading
-import time
-import weakref
 from contextlib import contextmanager
 from typing import *
 

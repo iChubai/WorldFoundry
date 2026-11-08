@@ -16,7 +16,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-import torch.nn as nn
 
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.vqascore_models._shared.multimodal_projector import (
     build_vision_projector,

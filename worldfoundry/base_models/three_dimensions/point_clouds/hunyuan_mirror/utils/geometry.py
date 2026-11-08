@@ -5,7 +5,6 @@ References: DUSt3R, MoGe
 """
 
 from numbers import Number
-from typing import Tuple, Union
 
 import numpy as np
 

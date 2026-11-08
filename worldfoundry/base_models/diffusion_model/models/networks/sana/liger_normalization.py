@@ -23,7 +23,6 @@ Enabled when liger-kernel is installed; disable with ``SANA_USE_LIGER=0``.
 
 import logging
 import os
-from typing import Type
 
 import torch.nn as nn
 

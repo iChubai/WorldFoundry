@@ -13,8 +13,6 @@
 #    limitations under the License.
 
 
-from typing import Optional, Tuple
-
 import torch
 from transformers import AutoConfig, AutoModelForCausalLM, GenerationConfig, MptConfig, MptForCausalLM, MptModel
 

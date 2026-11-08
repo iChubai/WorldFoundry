@@ -6,7 +6,6 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> ffn_layers.py functionality."""
 
 from collections.abc import Callable
-from typing import List, Optional
 
 import torch.nn.functional as F
 from torch import Tensor, nn

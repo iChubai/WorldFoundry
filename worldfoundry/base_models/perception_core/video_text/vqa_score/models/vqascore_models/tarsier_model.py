@@ -1,7 +1,6 @@
 import os
 import tempfile
 import warnings
-from typing import List
 
 import requests
 import torch

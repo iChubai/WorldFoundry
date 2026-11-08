@@ -1,7 +1,5 @@
 """Module for base_models -> llm_mllm_core -> mllm -> open_flamingo -> src -> factory.py functionality."""
 
-from typing import Optional
-
 import open_clip
 from transformers import AutoModelForCausalLM, AutoTokenizer
 

@@ -12,7 +12,6 @@ ModelMixin/ConfigMixin are kept.
 """
 
 import json
-from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

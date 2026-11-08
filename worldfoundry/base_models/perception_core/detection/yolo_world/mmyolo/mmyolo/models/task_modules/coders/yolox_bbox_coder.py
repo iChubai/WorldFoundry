@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Union
 
 import torch
 from mmdet.models.task_modules.coders.base_bbox_coder import BaseBBoxCoder

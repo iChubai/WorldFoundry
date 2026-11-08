@@ -11,20 +11,17 @@ Code/weights from https://github.com/Meituan-AutoML/Twins, original copyright/li
 # Written by Xinjie Li, Xiangxiang Chu
 # --------------------------------------------------------
 import math
-from copy import deepcopy
 from functools import partial
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.models.layers import DropPath, Mlp, to_2tuple, trunc_normal_
-from timm.models.registry import register_model
 from timm.models.vision_transformer import Attention
 
-from ...utils.utils import bilinear_sampler, coords_grid, upflow8
-from .attention import LinearPositionEmbeddingSine, MultiHeadAttention
+from ...utils.utils import coords_grid
+from .attention import LinearPositionEmbeddingSine
 
 
 def _cfg(url="", **kwargs):

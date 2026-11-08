@@ -11,7 +11,6 @@ import logging
 import math
 from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Tuple, Union
 
 import torch
 import torch.nn as nn

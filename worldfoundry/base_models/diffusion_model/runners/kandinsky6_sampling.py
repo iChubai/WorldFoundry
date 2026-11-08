@@ -12,14 +12,12 @@ from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.cache imp
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.offload import (
     NoOpOffload,
     OffloadHandle,
-    OffloadStrategy,
 )
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.profile import NoOpProfile
 from worldfoundry.base_models.diffusion_model.recipes.kandinsky6_config import (
     CacheConfig,
     MagCacheConfig,
     NaviCacheConfig,
-    PipelineConfig,
 )
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.denoise_loop import denoise_loop
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.mux import mux_video_audio

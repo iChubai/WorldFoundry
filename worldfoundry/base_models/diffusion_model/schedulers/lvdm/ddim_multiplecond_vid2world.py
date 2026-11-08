@@ -9,8 +9,6 @@ Import this module only from Vid2World recipes.  Shared timestep
 math stays in :mod:`.schedule_math`.
 """
 
-import copy
-
 import numpy as np
 import torch
 from tqdm import tqdm

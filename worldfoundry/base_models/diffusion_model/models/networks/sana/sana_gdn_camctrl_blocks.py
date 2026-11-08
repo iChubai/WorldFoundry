@@ -49,7 +49,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.base_models.diffusion_model.models.networks.sana.chunking import (
-    is_chunk_causal_request,
     normalize_chunk_index,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution

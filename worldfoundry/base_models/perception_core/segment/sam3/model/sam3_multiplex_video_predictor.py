@@ -10,8 +10,6 @@ Handles warm-up compilation, bf16 autocast, and session management
 via the shared Sam3BasePredictor handle_request/handle_stream_request API.
 """
 
-from typing import Dict, Optional
-
 import torch
 
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger

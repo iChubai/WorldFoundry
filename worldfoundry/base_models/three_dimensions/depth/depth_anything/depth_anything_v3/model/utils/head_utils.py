@@ -14,8 +14,6 @@
 
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> head_utils.py functionality."""
 
-from typing import Tuple, Union
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

@@ -1,8 +1,5 @@
 import importlib
 from abc import ABC, abstractmethod
-from typing import Dict
-
-from PIL import Image
 
 AVAILABLE_MODELS: dict[str, str] = {
     "video_chat": "VideoChat",

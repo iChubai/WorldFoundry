@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import bisect
 import os
-from typing import List, Tuple
 
 import cv2
 import numpy as np

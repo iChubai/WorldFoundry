@@ -1,8 +1,3 @@
-import mimetypes
-import os
-from io import BytesIO
-from typing import Union
-
 import cv2
 import requests
 import torch

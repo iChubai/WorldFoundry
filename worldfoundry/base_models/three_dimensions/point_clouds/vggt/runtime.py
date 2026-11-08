@@ -1,11 +1,10 @@
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from huggingface_hub import snapshot_download
 from PIL import Image
 
 from worldfoundry.base_models.three_dimensions.point_clouds.flash_world.render import (

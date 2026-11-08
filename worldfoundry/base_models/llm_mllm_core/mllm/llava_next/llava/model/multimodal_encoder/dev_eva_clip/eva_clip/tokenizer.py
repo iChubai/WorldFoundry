@@ -9,7 +9,6 @@ import html
 # https://stackoverflow.com/q/62691279
 import os
 from functools import lru_cache
-from typing import List, Union
 
 import ftfy
 import regex as re

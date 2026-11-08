@@ -1,7 +1,6 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_dit.py functionality."""
 
 import math
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn

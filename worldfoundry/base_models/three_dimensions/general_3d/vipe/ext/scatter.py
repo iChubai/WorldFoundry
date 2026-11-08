@@ -4,8 +4,6 @@
 
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> scatter.py functionality."""
 
-from typing import Optional, Tuple
-
 import torch
 
 from . import scatter_ext

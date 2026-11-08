@@ -6,12 +6,9 @@
 
 """Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam_decoder.py functionality."""
 
-from typing import List, Tuple, Type
-
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .mlp import MLPBlock
 

@@ -5,13 +5,9 @@
 Kernel adapter for DreamZero blocks.  No action math here.
 """
 
-import contextlib
 import os
-import time
-from typing import Optional
 
 import torch
-from torch.profiler import ProfilerActivity, profile
 
 try:
     import flash_attn_interface
@@ -35,7 +31,7 @@ except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
 try:
-    import transformer_engine
+    import transformer_engine  # noqa: F401 - Import checks optional dependency availability.
 
     from .cudnn_attention import DotProductAttention
 

@@ -4,10 +4,7 @@
 Include all available vision encoder configurations.
 """
 
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-from functools import partial
-from typing import List, Optional, Tuple
 
 from huggingface_hub import hf_hub_download
 

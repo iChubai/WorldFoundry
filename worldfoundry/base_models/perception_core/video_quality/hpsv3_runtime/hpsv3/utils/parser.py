@@ -1,9 +1,6 @@
-import sys
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, List, Literal, Optional, Tuple, Union
+from typing import Any, Literal
 
-import yaml
 from omegaconf import OmegaConf
 from transformers import HfArgumentParser, TrainingArguments
 

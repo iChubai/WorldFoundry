@@ -3,10 +3,8 @@
 Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (c) 2021 OpenAI.
 """
 
-import os
 from dataclasses import dataclass
 from functools import partial
-from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch

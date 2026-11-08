@@ -3,8 +3,6 @@
 # pyre-unsafe
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_image_processor.py functionality."""
 
-from typing import Dict, List
-
 import numpy as np
 import PIL
 import torch

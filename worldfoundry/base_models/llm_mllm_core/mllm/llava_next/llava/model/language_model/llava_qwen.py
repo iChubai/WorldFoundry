@@ -13,18 +13,11 @@
 #    limitations under the License.
 
 
-from typing import Dict, List, Optional, Tuple, Union
-
 import torch
 import torch.nn as nn
-import transformers
-from torch.nn import CrossEntropyLoss
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
-    LlamaConfig,
-    LlamaForCausalLM,
-    LlamaModel,
     Qwen2Config,
     Qwen2ForCausalLM,
     Qwen2Model,

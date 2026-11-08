@@ -10,7 +10,6 @@ import collections.abc
 import math
 from collections.abc import Callable
 from itertools import repeat
-from typing import Optional
 
 import torch
 import torch.nn as nn

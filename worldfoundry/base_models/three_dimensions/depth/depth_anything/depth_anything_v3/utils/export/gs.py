@@ -15,7 +15,7 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> export -> gs.py functionality."""
 
 import os
-from typing import Literal, Optional
+from typing import Literal
 
 import moviepy.editor as mpy
 import torch

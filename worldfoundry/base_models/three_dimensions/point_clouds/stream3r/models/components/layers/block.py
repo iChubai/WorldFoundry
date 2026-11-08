@@ -7,11 +7,8 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-import logging
-import os
-import warnings
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 from torch import Tensor, nn

@@ -13,7 +13,6 @@ import sys
 import tempfile
 from functools import wraps
 from hashlib import sha256
-from io import open
 
 import boto3
 import requests

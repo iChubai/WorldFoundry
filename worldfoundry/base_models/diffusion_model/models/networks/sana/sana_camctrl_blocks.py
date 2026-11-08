@@ -41,7 +41,6 @@ Public surface
 import os
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F

@@ -4,9 +4,7 @@
 
 """Module for base_models -> perception_core -> segment -> sam3 -> model_builder.py functionality."""
 
-import os
 from importlib.resources import files
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -60,7 +58,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_pred
 from worldfoundry.base_models.perception_core.segment.sam3.model.text_encoder_ve import VETextEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.model.tokenizer_ve import SimpleTokenizer
 from worldfoundry.base_models.perception_core.segment.sam3.model.video_tracking_multiplex import (
-    VideoTrackingDynamicMultiplex,
+    VideoTrackingDynamicMultiplex,  # noqa: F401 - Keeps the module's import-time setup.
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.vitdet import ViT
 from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import (

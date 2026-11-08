@@ -10,7 +10,6 @@ import random
 import string
 from collections.abc import Callable
 from functools import lru_cache, partial
-from typing import List, Optional, Union
 
 import ftfy
 import regex as re

@@ -16,7 +16,6 @@
 """Module for base_models -> three_dimensions -> depth -> priorda -> __init__.py functionality."""
 
 import torch
-from einops import rearrange
 
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.misc import unpack_optional
 

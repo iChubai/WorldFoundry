@@ -6,8 +6,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam -> prompt_encoder.py functionality."""
 
-from typing import Optional, Tuple, Type
-
 import torch
 from torch import nn
 

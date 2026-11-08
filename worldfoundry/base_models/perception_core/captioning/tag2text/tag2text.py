@@ -14,7 +14,6 @@ warnings.filterwarnings("ignore")
 import os
 
 import torch
-import torch.nn.functional as F
 from torch import nn
 from transformers import BertTokenizer
 
@@ -266,9 +265,6 @@ def tag2text_caption(pretrained="", **kwargs):
         # print('vit:',kwargs['vit'])
         # print('msg_v2',msg)
     return model
-
-
-from typing import List
 
 
 def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_model_prefix: str, skip_key: str):

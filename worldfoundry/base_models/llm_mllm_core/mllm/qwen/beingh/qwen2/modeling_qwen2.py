@@ -4,7 +4,6 @@
 """PyTorch Qwen2 model."""
 
 import math
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.utils.checkpoint
@@ -31,7 +30,7 @@ from transformers.utils import (
 from .configuration_qwen2 import Qwen2Config
 
 if is_flash_attn_2_available():
-    from transformers.modeling_flash_attention_utils import _flash_attention_forward
+    pass
 
 
 logger = logging.get_logger(__name__)

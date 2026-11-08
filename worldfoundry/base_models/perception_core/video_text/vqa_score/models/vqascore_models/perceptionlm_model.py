@@ -1,4 +1,3 @@
-import copy
 import os
 
 # current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -6,7 +5,6 @@ import os
 # print(f'current_dir {current_dir}')
 import tempfile
 import time
-from typing import List, Union
 
 import numpy as np
 import requests

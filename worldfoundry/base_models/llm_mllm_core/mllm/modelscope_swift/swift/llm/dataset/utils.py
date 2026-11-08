@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable
 from copy import copy
 from queue import Queue
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 from datasets import Dataset as HfDataset
@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
     get_logger,
-    is_master,
     safe_ddp_context,
 )
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+from typing import Union
 
 PatchSize = Union[int, tuple[int, int]]
 

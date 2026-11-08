@@ -1,38 +1,27 @@
 # Copyright (C) 2026 Tencent. Adapted for WorldFoundry inference.
 # Source revision: 7e57e4d0448e8661eb6ae078f53e19638bd07102
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
-import html
 from collections.abc import Callable
 from itertools import accumulate
 from typing import Any
 
 import numpy as np
-import regex as re
 import torch
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
-from diffusers.loaders import HeliosLoraLoaderMixin as _BaseLoraLoaderMixin
-from diffusers.models import AutoencoderKLWan
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.utils import (
-    is_ftfy_available,
-    is_torch_xla_available,
     logging,
     replace_example_docstring,
 )
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers.video_processor import VideoProcessor
-from transformers import AutoTokenizer, UMT5EncoderModel
 
-from ..models.networks.worldcrafter.transformer import WorldCrafterTransformer3DModel
 from ..models.networks.worldcrafter.ucpe.bridge import build_ucpe_attention_kwargs_for_chunk
-from ..schedulers.worldcrafter import WorldCrafterScheduler
-from .helios import EXAMPLE_DOC_STRING, XLA_AVAILABLE, HeliosPipeline, calculate_shift, optimized_scale
+from .helios import EXAMPLE_DOC_STRING, XLA_AVAILABLE, HeliosPipeline, calculate_shift
 from .helios_output import HeliosPipelineOutput as WorldCrafterPipelineOutput
 
 logger = logging.get_logger(__name__)
 if XLA_AVAILABLE:
-    from .helios import xm
+    pass
 
 
 def _render_repencoder_memory_latents(

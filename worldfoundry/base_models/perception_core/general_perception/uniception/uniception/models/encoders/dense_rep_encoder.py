@@ -5,12 +5,10 @@ Encoder class for Dense Representation Encoder
 import math
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.init import trunc_normal_
 
 from uniception.models.encoders.base import (
     UniCeptionViTEncoderBase,

@@ -1,14 +1,8 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> normal_utils.py functionality."""
 
 import math
-import os
 
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor
 
 
@@ -55,7 +49,6 @@ def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, f
     H, W = depthmap.shape[:2]
     intrins = torch.tensor([[fx, 0.0, W / 2.0], [0.0, fy, H / 2.0], [0.0, 0.0, 1.0]]).float().cuda()
 
-    import pdb
     # pdb.set_trace()
 
     grid_x, grid_y = torch.meshgrid(
@@ -105,7 +98,6 @@ def depth_to_normal(depths, camtoworlds, Ks, near_plane, far_plane):
         near_plane: The near plane.
         far_plane: The far plane.
     """
-    import pdb
 
     # pdb.set_trace()
     height, width = depths.shape[1:3]

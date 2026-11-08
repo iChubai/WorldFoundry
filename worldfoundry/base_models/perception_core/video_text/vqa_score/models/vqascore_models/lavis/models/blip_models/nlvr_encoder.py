@@ -6,7 +6,6 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import math
-from typing import Tuple
 
 import torch
 import torch.utils.checkpoint

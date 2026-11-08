@@ -12,8 +12,6 @@ causal attention, or linear-attention processors.
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import torch
 from einops import rearrange
 from torch import nn

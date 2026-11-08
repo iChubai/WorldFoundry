@@ -2,7 +2,6 @@ import os
 import urllib
 import warnings
 from functools import lru_cache
-from typing import List, Union
 
 import torch
 from packaging import version

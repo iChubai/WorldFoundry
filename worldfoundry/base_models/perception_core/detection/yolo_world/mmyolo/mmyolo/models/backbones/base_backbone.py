@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import List, Union
 
 import torch
 import torch.nn as nn

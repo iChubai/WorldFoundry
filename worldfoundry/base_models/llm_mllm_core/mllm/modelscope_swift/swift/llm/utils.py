@@ -5,7 +5,7 @@ import shutil
 import tempfile
 from collections.abc import Mapping
 from types import MethodType
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 import torch
 import torch.nn as nn

@@ -1,11 +1,8 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> depth_video.py functionality."""
 
-from collections import OrderedDict
-
 import lietorch
-import numpy as np
 import torch
-from torch.multiprocessing import Lock, Process, Queue, Value
+from torch.multiprocessing import Value
 
 # isort: split
 # droid_backends is a compiled PyTorch extension; it loads after torch.

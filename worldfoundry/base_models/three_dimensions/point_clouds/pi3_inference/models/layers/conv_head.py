@@ -2,7 +2,7 @@
 Conv head is from MoGe (https://github.com/microsoft/moge)
 """
 
-from typing import List, Literal
+from typing import Literal
 
 import torch
 import torch.nn as nn

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 try:
     from qwen_vl_utils import extract_vision_info, process_vision_info

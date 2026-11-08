@@ -1,6 +1,5 @@
 import lietorch_backends
 import torch
-import torch.nn.functional as F
 
 
 class GroupOp(torch.autograd.Function):

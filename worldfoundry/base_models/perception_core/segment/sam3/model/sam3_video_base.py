@@ -12,7 +12,7 @@ from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -20,7 +20,6 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 
-from worldfoundry.base_models.perception_core.segment.sam3 import perflib
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import fast_diag_box_iou
 

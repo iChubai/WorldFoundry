@@ -1,11 +1,11 @@
-from math import log, pi
-from typing import Literal, Optional, Union
+from math import pi
+from typing import Literal
 
 import torch
 from einops import rearrange, repeat
 from torch import Tensor, broadcast_tensors, einsum, nn
 from torch.amp import autocast
-from torch.nn import Module, ModuleList
+from torch.nn import Module
 
 # helper functions
 

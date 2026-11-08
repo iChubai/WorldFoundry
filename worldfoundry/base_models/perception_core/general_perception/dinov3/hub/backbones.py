@@ -8,7 +8,6 @@
 import os
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
 from urllib.parse import urlparse
 
 from .utils import _DINOV3_BASE_URL, _safe_load_state_dict_from_url

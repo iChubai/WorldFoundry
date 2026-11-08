@@ -1,6 +1,5 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import copy
-from typing import List, Union
 
 import torch
 import torch.nn as nn

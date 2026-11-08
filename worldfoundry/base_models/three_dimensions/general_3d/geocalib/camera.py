@@ -5,7 +5,6 @@
 """Implementation of the pinhole, simple radial, and simple divisional camera models."""
 
 from abc import abstractmethod
-from typing import Dict, Optional, Tuple, Union
 
 import torch
 from torch.func import jacfwd, vmap

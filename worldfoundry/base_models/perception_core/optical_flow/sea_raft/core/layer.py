@@ -1,11 +1,8 @@
 """Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> layer.py functionality."""
 
-import math
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import Dropout, Module
 
 ### Gradient Clipping and Zeroing Operations ###
 

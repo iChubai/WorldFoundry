@@ -7,9 +7,7 @@
 """Module for base_models -> perception_core -> segment -> sam2 -> modeling -> position_encoding.py functionality."""
 
 import math
-from typing import Any, Optional, Tuple
 
-import numpy as np
 import torch
 from torch import nn
 

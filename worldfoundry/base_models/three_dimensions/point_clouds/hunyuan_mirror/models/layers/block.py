@@ -5,12 +5,11 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> layers -> block.py functionality."""
 
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 from torch import Tensor, nn
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.nn import DropPath, LayerScale, Mlp
 
 from .attention import Attention

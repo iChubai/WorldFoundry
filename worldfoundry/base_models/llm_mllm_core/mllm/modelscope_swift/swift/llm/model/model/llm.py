@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from types import MethodType
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoConfig, AutoTokenizer
 

@@ -1,6 +1,5 @@
 """Module for base_models -> perception_core -> optical_flow -> raft -> raft.py functionality."""
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,7 +8,6 @@ from worldfoundry.base_models.perception_core.optical_flow.raft.corr import Alte
 from worldfoundry.base_models.perception_core.optical_flow.raft.extractor import BasicEncoder, SmallEncoder
 from worldfoundry.base_models.perception_core.optical_flow.raft.update import BasicUpdateBlock, SmallUpdateBlock
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import (
-    bilinear_sampler,
     coords_grid,
     upflow8,
 )

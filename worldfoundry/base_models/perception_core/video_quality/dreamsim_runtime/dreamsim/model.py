@@ -5,7 +5,6 @@ import zipfile
 import peft
 import torch
 import torch.nn.functional as F
-import yaml
 from packaging import version
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch import nn

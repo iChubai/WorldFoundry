@@ -1,7 +1,5 @@
 """Conversion functions for 3rd part state-dicts and non-torch native checkpoint formats."""
 
-from typing import Union
-
 import numpy as np
 import torch
 

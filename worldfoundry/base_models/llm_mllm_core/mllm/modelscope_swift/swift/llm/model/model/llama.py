@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoConfig
 

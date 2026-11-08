@@ -11,8 +11,6 @@ This is LTX audio graph math, not video depth-to-space
 (:mod:`~..video.sampling`).
 """
 
-from typing import Set, Tuple
-
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType, make_attn

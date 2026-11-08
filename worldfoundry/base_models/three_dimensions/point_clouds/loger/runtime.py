@@ -1,11 +1,10 @@
 import inspect
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import torch
 import yaml
-from huggingface_hub import snapshot_download
 
 from worldfoundry.base_models.three_dimensions.point_clouds.loger.pi3 import Pi3
 from worldfoundry.base_models.three_dimensions.point_clouds.loger.utils.geometry import (

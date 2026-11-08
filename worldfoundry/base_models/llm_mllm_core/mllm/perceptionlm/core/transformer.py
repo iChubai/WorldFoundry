@@ -3,7 +3,6 @@
 import math
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Tuple, Union
 
 import torch
 from torch import nn

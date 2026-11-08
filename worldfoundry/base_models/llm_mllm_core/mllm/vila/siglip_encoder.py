@@ -16,10 +16,8 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from accelerate.hooks import add_hook_to_module
-from einops import rearrange
-from transformers import AutoConfig, PretrainedConfig, PreTrainedModel, SiglipImageProcessor
+from transformers import PretrainedConfig, PreTrainedModel, SiglipImageProcessor
 from transformers.image_processing_utils import BaseImageProcessor
 from transformers.integrations.deepspeed import is_deepspeed_zero3_enabled
 from transformers.models.siglip import SiglipVisionModel

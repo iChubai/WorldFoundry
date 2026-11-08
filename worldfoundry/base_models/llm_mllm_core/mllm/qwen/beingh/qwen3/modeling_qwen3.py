@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -27,8 +26,6 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 from transformers.utils.deprecation import deprecate_kwarg
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 from .configuration_qwen3 import Qwen3Config
 

@@ -3,8 +3,6 @@
 # pyre-unsafe
 """Module for base_models -> perception_core -> segment -> sam3 -> perflib -> triton -> connected_components.py functionality."""
 
-import math
-
 import torch
 import triton
 import triton.language as tl

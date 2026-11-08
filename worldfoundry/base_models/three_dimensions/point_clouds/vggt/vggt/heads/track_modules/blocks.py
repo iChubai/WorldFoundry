@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .modules import AttnBlock, CrossAttnBlock, Mlp, ResidualBlock
+from .modules import AttnBlock, CrossAttnBlock
 from .utils import bilinear_sampler
 
 

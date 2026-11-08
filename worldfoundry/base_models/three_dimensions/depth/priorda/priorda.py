@@ -8,7 +8,6 @@ import os
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 import torch

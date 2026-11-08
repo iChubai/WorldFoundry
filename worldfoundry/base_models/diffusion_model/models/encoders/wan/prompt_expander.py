@@ -22,7 +22,6 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Optional, Union
 
 import dashscope
 import torch

@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Any, Optional
+from typing import Any
 
 from mmdet.datasets import BaseDetDataset, CocoDataset
 

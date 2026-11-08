@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import random
-from typing import Optional, Tuple
 
 import numpy as np
 import torch

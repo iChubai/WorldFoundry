@@ -5,7 +5,6 @@ UniCeption Cross-Attention Transformer for Information Sharing
 from collections.abc import Callable
 from copy import deepcopy
 from functools import partial
-from typing import List, Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn

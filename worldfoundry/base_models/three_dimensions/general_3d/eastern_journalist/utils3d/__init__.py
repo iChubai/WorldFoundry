@@ -4,10 +4,10 @@ A collection of useful functions for 3D computer vision and graphics researchers
 - Use `utils3d.{np/pt}.{function}` to specifically call the Numpy or Pytorch version.
 """
 
-import importlib
 from typing import TYPE_CHECKING
 
-from .helpers import lazy_import, lazy_import_from
+from .helpers import lazy_import
+from .helpers import lazy_import_from as lazy_import_from
 
 try:
     from .interface import *
@@ -40,4 +40,4 @@ if TYPE_CHECKING:
 
     # isort: split
     # isort: split
-    from . import io
+    from . import io as io

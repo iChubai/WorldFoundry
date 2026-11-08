@@ -5,7 +5,6 @@
 """GeoCalib model definition."""
 
 import logging
-from typing import Dict
 
 import torch
 from torch import nn

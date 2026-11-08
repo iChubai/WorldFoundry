@@ -3,5 +3,4 @@
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
 """WorldCrafter uses the shared Helios Euler/UniPC/DMD scheduler unchanged."""
 
-from .helios import HeliosScheduler as WorldCrafterScheduler
-from .helios import HeliosSchedulerOutput as WorldCrafterSchedulerOutput
+from .helios import HeliosScheduler as WorldCrafterScheduler  # noqa: F401 - Re-exported under this name.

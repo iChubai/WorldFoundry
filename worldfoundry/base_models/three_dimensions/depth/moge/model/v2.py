@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> model -> v2.py functionality."""
 
 import warnings
-from functools import partial
 from numbers import Number
 from pathlib import Path
 from typing import *
@@ -16,14 +15,9 @@ import torch.version
 from huggingface_hub import hf_hub_download
 
 # isort: split
-from ..utils.geometry_torch import angle_diff_vec3, normalized_view_plane_uv, recover_focal_shift
+from ..utils.geometry_torch import normalized_view_plane_uv, recover_focal_shift
 
 # isort: split
-from .utils import (
-    unwrap_module_with_gradient_checkpointing,
-    wrap_dinov2_attention_with_sdpa,
-    wrap_module_with_gradient_checkpointing,
-)
 
 # isort: split
 from ....general_3d.eastern_journalist.utils3d.torch import depth_map_to_point_map, intrinsics_from_focal_center

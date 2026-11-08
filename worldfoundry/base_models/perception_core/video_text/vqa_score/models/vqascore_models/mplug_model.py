@@ -1,10 +1,8 @@
-from typing import List, Union
-
 import numpy as np
 import torch
 from decord import VideoReader, cpu
 from PIL import Image
-from transformers import AutoModelForCausalLM, AutoProcessor, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from .vqa_model import VQAScoreModel
 

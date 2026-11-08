@@ -11,9 +11,7 @@
 import sys
 
 sys.path.extend([".", "src"])
-import json
 import os
-import random
 import tempfile
 
 import click

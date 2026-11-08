@@ -10,7 +10,6 @@ try:
     from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import SAM3VLBackboneTri
 except ImportError:
     SAM3VLBackboneTri = None
-from typing import Dict, List, Optional
 
 import numpy as np
 

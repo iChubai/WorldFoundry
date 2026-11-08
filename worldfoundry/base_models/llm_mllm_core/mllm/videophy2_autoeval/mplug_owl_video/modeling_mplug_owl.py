@@ -15,7 +15,7 @@
 
 import logging
 import math
-from typing import Any, Optional, Tuple, Union
+from typing import Any
 
 try:
     from flash_attn.flash_attn_interface import flash_attn_unpadded_func
@@ -24,9 +24,7 @@ try:
 except:
     flash_attn_func = None
     print("install flash-attn first.")
-import math
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple, Union
 
 import einops
 import torch

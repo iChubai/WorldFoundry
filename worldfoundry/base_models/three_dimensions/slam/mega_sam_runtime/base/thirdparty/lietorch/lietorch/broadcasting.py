@@ -1,7 +1,3 @@
-import numpy as np
-import torch
-
-
 def check_broadcastable(x, y):
     assert len(x.shape) == len(y.shape)
     for n, m in zip(x.shape[:-1], y.shape[:-1], strict=False):

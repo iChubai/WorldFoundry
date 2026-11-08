@@ -56,7 +56,6 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F

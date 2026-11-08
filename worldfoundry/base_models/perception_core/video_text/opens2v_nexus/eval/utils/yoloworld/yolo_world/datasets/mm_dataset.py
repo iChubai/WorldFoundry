@@ -3,7 +3,6 @@ import copy
 import json
 import logging
 from collections.abc import Callable
-from typing import List, Union
 
 from mmengine.dataset.base_dataset import BaseDataset, Compose, force_full_init
 from mmengine.logging import print_log

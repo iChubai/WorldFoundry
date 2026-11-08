@@ -7,7 +7,6 @@
 """Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam_encoder.py functionality."""
 
 import math
-from typing import List, Optional, Tuple, Type
 
 import torch
 import torch.nn as nn

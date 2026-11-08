@@ -10,7 +10,6 @@ LingBot-World-V2 deep-copies this object and tightens the sampler
 (see :mod:`..lingbot_world_v2`).
 """
 
-import torch
 from easydict import EasyDict
 
 from .shared import wan_shared_cfg

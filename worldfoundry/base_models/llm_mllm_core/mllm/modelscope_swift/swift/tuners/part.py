@@ -3,7 +3,6 @@ import re
 from copy import deepcopy
 from dataclasses import dataclass
 from types import MethodType
-from typing import Dict, Optional
 
 import torch
 from torch import nn

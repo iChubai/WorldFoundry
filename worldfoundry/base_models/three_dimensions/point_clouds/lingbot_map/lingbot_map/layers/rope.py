@@ -16,8 +16,6 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> rope.py functionality."""
 
-from typing import Dict, List, Optional, Tuple, Union
-
 import numpy as np
 import torch
 import torch.nn as nn

@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Optional
 
 import numpy as np
 import torch

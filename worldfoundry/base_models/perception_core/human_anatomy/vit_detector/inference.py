@@ -3,7 +3,6 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import math
 from collections import defaultdict
-from typing import Dict, List
 
 import cv2
 import mmcv

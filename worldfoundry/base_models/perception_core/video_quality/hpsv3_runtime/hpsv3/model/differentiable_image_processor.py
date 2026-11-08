@@ -36,7 +36,6 @@ The differentiable path supports:
 """
 
 import math
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch

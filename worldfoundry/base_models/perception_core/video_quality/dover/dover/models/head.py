@@ -1,10 +1,4 @@
-import math
-
-import numpy as np
-import torch
 import torch.nn as nn
-from torch.nn import functional as F
-from torchvision.ops import roi_align, roi_pool
 
 
 class VQAHead(nn.Module):

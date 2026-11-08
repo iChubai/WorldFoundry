@@ -1,17 +1,15 @@
 import random
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Optional
 
 import torch
 import torch.distributed as dist
 import torch.nn as nn
 from accelerate.hooks import AlignDevicesHook, add_hook_to_module
 from einops import rearrange, repeat
-from transformers import CLIPVisionModel, LlamaForCausalLM, LlamaTokenizer
+from transformers import CLIPVisionModel, LlamaForCausalLM
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.modeling_utils import PreTrainedModel
-from transformers.models.auto import AutoModel, AutoModelForCausalLM, AutoTokenizer
+from transformers.models.auto import AutoTokenizer
 
 from ..falcon.modelling_RW import RWForCausalLM
 from ..mpt.modeling_mpt import MPTForCausalLM

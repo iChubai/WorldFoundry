@@ -3,7 +3,6 @@ import os
 from contextlib import contextmanager
 from functools import wraps
 from types import MethodType
-from typing import Dict, List, Optional, Union
 
 import accelerate
 import torch
@@ -34,7 +33,6 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.to
     get_device_count,
 )
 
-from .model_arch import get_model_arch
 from .utils import HfConfigFactory, get_llm_model
 
 logger = get_logger()

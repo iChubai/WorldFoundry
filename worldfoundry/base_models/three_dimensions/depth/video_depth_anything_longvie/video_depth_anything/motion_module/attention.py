@@ -13,8 +13,6 @@
 # limitations under the License.
 """Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> motion_module -> attention.py functionality."""
 
-from typing import Optional, Tuple
-
 import torch
 import torch.nn.functional as F
 from torch import nn

@@ -6,7 +6,6 @@ reference/previous-block context and four-step causal sampling equations.
 """
 
 from contextlib import nullcontext
-from typing import List, Optional
 
 import torch
 

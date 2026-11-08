@@ -18,7 +18,6 @@ https://github.com/huggingface/transformers/blob/794fde7b1c3d041519fc28ea3e1461b
 """
 
 import math
-from typing import List, Optional, Tuple, Union
 
 import omegaconf
 import torch

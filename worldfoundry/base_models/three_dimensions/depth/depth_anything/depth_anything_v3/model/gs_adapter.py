@@ -14,8 +14,6 @@
 
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> gs_adapter.py functionality."""
 
-from typing import Optional
-
 import torch
 from einops import einsum, rearrange, repeat
 from torch import nn

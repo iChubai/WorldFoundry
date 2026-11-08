@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoTokenizer
 

@@ -3,9 +3,7 @@
 Standard SD VAE graph. :class:`~.component.LVDMVideoDecoder` calls ``decode`` per frame."""
 
 import os
-from contextlib import contextmanager
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

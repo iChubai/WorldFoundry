@@ -9,7 +9,6 @@ from __future__ import annotations
 import os
 import re
 import tempfile
-from collections.abc import Iterable
 from dataclasses import dataclass
 
 import cv2

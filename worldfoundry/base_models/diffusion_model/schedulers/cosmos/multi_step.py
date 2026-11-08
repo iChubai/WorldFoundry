@@ -26,7 +26,6 @@ registry only.
 """
 
 from collections.abc import Callable
-from typing import List, Tuple
 
 import torch
 

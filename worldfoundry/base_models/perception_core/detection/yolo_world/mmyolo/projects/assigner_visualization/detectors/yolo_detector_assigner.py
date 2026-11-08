@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Union
 
 from mmyolo.models import YOLODetector
 from mmyolo.registry import MODELS

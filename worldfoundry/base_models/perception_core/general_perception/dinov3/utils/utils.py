@@ -6,15 +6,12 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> utils -> utils.py functionality."""
 
 import logging
-import random
 from collections.abc import Callable
-from typing import List, Tuple
 
-import numpy as np
 import torch
 from torch import Tensor, nn
 
-from worldfoundry.core.nn.blocks.module_utils import named_apply
+from worldfoundry.core.nn.blocks.module_utils import named_apply as named_apply
 
 logger = logging.getLogger("dinov3")
 

@@ -1,8 +1,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> visual_transformer.py functionality."""
 
 import logging
-import random
-from typing import List, Tuple
 
 import torch
 import torch.distributed as dist
@@ -11,9 +9,9 @@ from torch.utils.checkpoint import checkpoint
 
 from worldfoundry.core.nn.blocks.layers import PatchEmbed, PatchEmbed_Mlp
 
-from ...comm.communication import _All2All, _Allgather
+from ...comm.communication import _Allgather
 from ...comm.padding import depad_by_length, minimal_pad_to_divisible, pad_by_length
-from ..layers.block import Block, DistBlock
+from ..layers.block import Block
 from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)

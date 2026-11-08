@@ -12,7 +12,7 @@ try:
     import re
 
     import torch
-    from torch import nn
+    from torch import nn  # noqa: F401 - Import checks optional dependency availability.
 
     from ..layers.attention import LinearKMaskedBias
     from ..utils import named_replace

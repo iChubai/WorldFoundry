@@ -4,9 +4,7 @@ Encoder class for Global Representation Encoder
 
 from collections.abc import Callable
 from functools import partial
-from typing import List, Optional, Type, Union
 
-import torch
 import torch.nn as nn
 
 from uniception.models.encoders.base import EncoderGlobalRepInput, EncoderGlobalRepOutput

@@ -5,8 +5,6 @@
 
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> encoder.py functionality."""
 
-from typing import Any, Dict, List, Optional, Tuple
-
 import torch
 from torch import Tensor, nn
 

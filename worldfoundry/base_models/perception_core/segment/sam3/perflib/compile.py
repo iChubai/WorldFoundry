@@ -9,7 +9,7 @@ from functools import wraps
 import torch
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, NestedTensor
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
 
 # isort: split
 from torch.utils._pytree import tree_map_only

@@ -1,6 +1,5 @@
 from functools import partial
 
-import torch
 import torch.nn as nn
 from einops import rearrange
 from torch.utils.checkpoint import checkpoint

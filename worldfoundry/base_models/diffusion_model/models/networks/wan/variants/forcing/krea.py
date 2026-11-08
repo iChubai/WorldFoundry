@@ -4,13 +4,10 @@ Realtime streaming DiT.  Attention may dispatch to :mod:`.krea_sage`.
 Adds causal attention and optional linear/Sage kernels.
 """
 
-import copy
 import functools
 import math
-import time
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
 

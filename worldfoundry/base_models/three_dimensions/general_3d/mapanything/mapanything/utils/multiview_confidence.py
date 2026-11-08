@@ -10,8 +10,6 @@ This module provides utilities for computing per-pixel confidence scores based o
 multi-view depth projection consistency, as an alternative to learning-based confidence.
 """
 
-from typing import List, Optional
-
 import torch
 import torch.nn.functional as F
 from einops import einsum

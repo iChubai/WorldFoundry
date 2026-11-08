@@ -3,7 +3,6 @@ import copy
 import re
 import types
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
 
 import torch
 import torch.nn as nn

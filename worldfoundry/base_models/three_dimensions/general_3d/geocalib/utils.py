@@ -7,7 +7,6 @@
 import collections.abc as collections
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Dict, Optional, Tuple
 
 import cv2
 import kornia

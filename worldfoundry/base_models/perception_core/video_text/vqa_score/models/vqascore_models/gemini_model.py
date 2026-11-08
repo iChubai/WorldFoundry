@@ -1,17 +1,10 @@
-import base64
-import os
-from typing import List, Union
-
 import cv2
 import numpy as np
 import torch
 from google import genai
 from google.genai.types import (
     GenerateContentConfig,
-    HarmBlockThreshold,
-    HarmCategory,
     Part,
-    SafetySetting,
 )
 
 from .vqa_model import VQAScoreModel

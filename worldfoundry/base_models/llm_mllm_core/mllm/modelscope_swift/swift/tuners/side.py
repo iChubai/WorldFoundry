@@ -6,7 +6,6 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from functools import partial
 from itertools import repeat
-from typing import Union
 
 import torch
 from torch import nn

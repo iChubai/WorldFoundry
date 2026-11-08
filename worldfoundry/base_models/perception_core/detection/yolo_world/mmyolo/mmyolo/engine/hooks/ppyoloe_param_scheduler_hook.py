@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Optional
 
 from mmengine.hooks import ParamSchedulerHook
 from mmengine.runner import Runner

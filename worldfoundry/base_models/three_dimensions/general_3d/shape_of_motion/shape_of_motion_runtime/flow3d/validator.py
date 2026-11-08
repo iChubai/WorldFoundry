@@ -1,10 +1,7 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> validator.py functionality."""
 
-import functools
 import os
 import os.path as osp
-import time
-from dataclasses import asdict
 from typing import cast
 
 import imageio as iio
@@ -12,11 +9,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from loguru import logger as guru
-from torch.utils.data import DataLoader, Dataset
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from flow3d.configs import LossesConfig, OptimizerConfig, SceneLRConfig
 from flow3d.data.utils import normalize_coords, to_device
 from flow3d.metrics import PCK, mLPIPS, mPSNR, mSSIM
 from flow3d.scene_model import SceneModel

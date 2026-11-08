@@ -1,16 +1,14 @@
 """Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> corr.py functionality."""
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.utils import (
     bilinear_sampler,
-    coords_grid,
 )
 
 try:
-    import alt_cuda_corr
+    import alt_cuda_corr  # noqa: F401 - Import checks optional dependency availability.
 except:
     # alt_cuda_corr is not compiled
     pass

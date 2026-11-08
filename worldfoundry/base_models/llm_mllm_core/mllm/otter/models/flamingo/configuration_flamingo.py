@@ -1,5 +1,4 @@
 import copy
-import sys
 
 from transformers.configuration_utils import PretrainedConfig
 from transformers.models.auto import CONFIG_MAPPING

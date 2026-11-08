@@ -1,10 +1,7 @@
 """Construct Kandinsky-6 components through the native checkpoint resolver."""
 
-from pathlib import Path
-
 import torch
 
-from ..optimizations.kandinsky6.kernels import bind_attention
 from ..recipes.kandinsky6_config import _CONFIGS, PipelineConfig, load_config
 from ..schedulers.kandinsky6.sampler_config import dit_class
 from . import NativeCheckpointResolver

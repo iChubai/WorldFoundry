@@ -7,8 +7,6 @@
 Adapted from https://github.com/jinlinyi/PerspectiveFields/blob/main/perspective2d/utils/panocam.py
 """
 
-from typing import Tuple
-
 import torch
 from torch.nn import functional as F
 

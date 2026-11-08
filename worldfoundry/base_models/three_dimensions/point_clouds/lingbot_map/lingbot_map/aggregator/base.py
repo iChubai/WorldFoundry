@@ -12,7 +12,6 @@ Subclasses implement mode-specific attention logic.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn

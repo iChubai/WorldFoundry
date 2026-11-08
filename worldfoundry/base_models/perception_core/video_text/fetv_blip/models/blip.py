@@ -14,7 +14,6 @@ import os
 from urllib.parse import urlparse
 
 import torch
-import torch.nn.functional as F
 from timm.models.hub import download_cached_file
 from torch import nn
 from transformers import BertTokenizer

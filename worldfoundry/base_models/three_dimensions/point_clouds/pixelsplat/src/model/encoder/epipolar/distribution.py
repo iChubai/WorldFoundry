@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> distribution.py functionality."""
 
-from typing import Optional
-
 import torch
 from einops import einsum
 from jaxtyping import Bool, Float

@@ -2,13 +2,15 @@
 from .basic_datasets import (
     CroppedImageDataset,
     CroppedVideoDataset,
-    FastVQAPlusPlusDataset,
     FragmentImageDataset,
     FragmentSampleFrames,
     FragmentVideoDataset,
     ResizedImageDataset,
     ResizedVideoDataset,
     SampleFrames,
+)
+from .basic_datasets import (
+    FastVQAPlusPlusDataset as FastVQAPlusPlusDataset,
 )
 
 ## Version 1.0 Dataset API, includes DiViDe VQA and its variants

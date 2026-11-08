@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn

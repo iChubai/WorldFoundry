@@ -3,7 +3,6 @@ import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from .config import *
-from .model.warplayer import warp
 from .paths import checkpoint_path
 
 

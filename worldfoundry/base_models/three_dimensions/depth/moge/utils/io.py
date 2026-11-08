@@ -5,8 +5,6 @@ import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import io
 import json
-import re
-import zipfile
 from pathlib import Path
 from typing import *
 from typing import IO
@@ -14,8 +12,6 @@ from typing import IO
 import cv2
 import numpy as np
 from PIL import Image, PngImagePlugin
-
-from .tools import timeit
 
 
 def save_glb(
@@ -72,7 +68,6 @@ def save_ply(
     """
     import trimesh
     import trimesh.visual
-    from PIL import Image
 
     trimesh.Trimesh(
         vertices=vertices, faces=faces, vertex_colors=vertex_colors, vertex_normals=vertex_normals, process=False

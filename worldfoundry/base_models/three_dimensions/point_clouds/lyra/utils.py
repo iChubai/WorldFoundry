@@ -6,7 +6,6 @@ import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Optional
 
 import torch
 

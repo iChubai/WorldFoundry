@@ -3,7 +3,7 @@ import ast
 import json
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer import Function

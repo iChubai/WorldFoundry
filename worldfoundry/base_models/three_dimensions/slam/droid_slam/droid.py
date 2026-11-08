@@ -2,8 +2,6 @@
 
 from collections import OrderedDict
 
-import lietorch
-import numpy as np
 import torch
 
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.depth_video import DepthVideo

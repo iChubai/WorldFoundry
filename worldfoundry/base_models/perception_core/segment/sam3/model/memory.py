@@ -5,7 +5,6 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> memory.py functionality."""
 
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn

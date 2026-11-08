@@ -3,7 +3,6 @@ import collections
 import copy
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
-from typing import Optional, Tuple, Union
 
 import mmcv
 import numpy as np

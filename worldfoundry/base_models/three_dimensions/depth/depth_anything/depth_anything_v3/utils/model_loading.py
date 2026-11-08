@@ -16,8 +16,6 @@
 Model loading and state dict conversion utilities.
 """
 
-from typing import Dict, Tuple
-
 import torch
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger

@@ -4,7 +4,6 @@
 
 import math
 import warnings
-from typing import Optional, Tuple, Union
 
 import torch
 import torch.utils.checkpoint
@@ -35,9 +34,6 @@ class Linear(nn.Linear):
             return ret
         else:
             return ret + self.bias
-
-
-from einops import rearrange
 
 
 # rotary pos emb helpers (torch.jit.script does not seem to support staticmethod...)

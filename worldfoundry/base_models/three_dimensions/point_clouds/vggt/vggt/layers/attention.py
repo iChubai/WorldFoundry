@@ -9,11 +9,6 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> layers -> attention.py functionality."""
 
-import logging
-import os
-import warnings
-
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention

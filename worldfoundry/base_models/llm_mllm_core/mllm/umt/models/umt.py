@@ -1,7 +1,6 @@
 import logging
 
 import torch
-from einops import rearrange
 from torch import nn
 
 from .backbones.vit import build_vit

@@ -10,7 +10,7 @@ and treat the input prompt as the prefix in `generate`.
 import math
 import warnings
 from types import MethodType
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
 import torch
 from transformers.models.bloom.modeling_bloom import (

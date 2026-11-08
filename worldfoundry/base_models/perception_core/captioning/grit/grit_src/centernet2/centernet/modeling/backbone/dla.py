@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from detectron2.layers import (
     Conv2d,
     DeformConv,
-    FrozenBatchNorm2d,
     ModulatedDeformConv,
     ShapeSpec,
     get_norm,

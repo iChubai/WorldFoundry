@@ -1,12 +1,8 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> mesh_extractor.py functionality."""
 
-import math
-
 import numpy as np
 import open3d as o3d
 import torch
-import torch.nn.functional as F
-import trimesh
 from torch import Tensor
 from tqdm import tqdm
 

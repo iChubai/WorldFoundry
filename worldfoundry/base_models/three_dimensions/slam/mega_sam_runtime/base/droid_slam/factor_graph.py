@@ -1,9 +1,7 @@
 import geom.projective_ops as pops
-import lietorch
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from lietorch import SE3
 from modules.corr import AltCorrBlock, CorrBlock
 
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_mean

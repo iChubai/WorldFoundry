@@ -6,11 +6,6 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> models -> __init__.py functionality."""
 
 import logging
-from pathlib import Path
-from typing import Union
-
-import torch
-import torch.nn as nn
 
 from . import convnext
 from . import vision_transformer as vits

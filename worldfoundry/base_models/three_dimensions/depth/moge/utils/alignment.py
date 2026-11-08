@@ -1,13 +1,9 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> alignment.py functionality."""
 
 import math
-from collections import namedtuple
 from typing import *
 
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.types
 
 

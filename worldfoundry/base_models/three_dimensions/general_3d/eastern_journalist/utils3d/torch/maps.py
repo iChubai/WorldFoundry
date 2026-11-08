@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> maps.py functionality."""
 
 import math
-from numbers import Number
 from typing import *
 
 import torch

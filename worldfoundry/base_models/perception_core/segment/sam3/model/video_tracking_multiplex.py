@@ -18,7 +18,7 @@ try:
     from typing import Literal, NotRequired, Optional, Required, TypedDict
 except ImportError:
     from collections.abc import Iterable
-    from typing import Literal, Optional
+    from typing import Literal
 
     from typing_extensions import (
         NotRequired,  # not available in Python 3.10

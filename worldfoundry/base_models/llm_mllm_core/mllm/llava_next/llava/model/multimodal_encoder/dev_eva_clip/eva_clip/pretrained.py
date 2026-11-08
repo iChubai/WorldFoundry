@@ -2,7 +2,6 @@ import hashlib
 import os
 import urllib
 import warnings
-from typing import Dict, Union
 
 from tqdm import tqdm
 

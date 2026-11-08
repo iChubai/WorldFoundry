@@ -6,10 +6,8 @@
 
 import math
 from functools import partial
-from typing import Tuple, Type
 
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (

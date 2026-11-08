@@ -39,8 +39,8 @@ else:
 
 
 if TYPE_CHECKING:
-    from .configuration_qwen2 import Qwen2Config
-    from .tokenization_qwen2 import Qwen2Tokenizer
+    from .configuration_qwen2 import Qwen2Config as Qwen2Config
+    from .tokenization_qwen2 import Qwen2Tokenizer as Qwen2Tokenizer
 
     try:
         if not is_tokenizers_available():
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     except OptionalDependencyNotAvailable:
         pass
     else:
-        from .tokenization_qwen2_fast import Qwen2TokenizerFast
+        from .tokenization_qwen2_fast import Qwen2TokenizerFast as Qwen2TokenizerFast
 
     try:
         if not is_torch_available():
@@ -57,9 +57,13 @@ if TYPE_CHECKING:
         pass
     else:
         from .modeling_qwen2 import (
-            Qwen2ForCausalLM,
-            Qwen2Model,
-            Qwen2PreTrainedModel,
+            Qwen2ForCausalLM as Qwen2ForCausalLM,
+        )
+        from .modeling_qwen2 import (
+            Qwen2Model as Qwen2Model,
+        )
+        from .modeling_qwen2 import (
+            Qwen2PreTrainedModel as Qwen2PreTrainedModel,
         )
 
 

@@ -1,6 +1,4 @@
-import copy
 import os
-from typing import List
 
 import torch
 from torchvision import transforms
@@ -28,7 +26,6 @@ class InstructBLIPModel(VQAScoreModel):
     def __init__(self, model_name="instructblip-flant5-xxl", device="cuda", cache_dir=HF_CACHE_DIR):
         assert model_name in InstructBLIP_MODELS, f"Model name {model_name} not found in InstructBLIP_MODELS"
         os.environ["TORCH_HOME"] = cache_dir
-        import timm.models as timm_hub
 
         video_mode = "concat"
         allows_image = True

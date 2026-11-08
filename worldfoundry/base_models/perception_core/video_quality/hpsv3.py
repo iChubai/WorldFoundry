@@ -61,8 +61,6 @@ def resolved_config_path() -> Path:
 def load_inferencer(*, device: str = "cuda"):
     add_runtime_to_path()
 
-    from typing import List
-
     import numpy as np
     import transformers.image_utils as image_utils
 

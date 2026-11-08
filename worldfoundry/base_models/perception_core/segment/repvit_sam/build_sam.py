@@ -163,8 +163,6 @@ def build_sam_vit_t(checkpoint=None):
     return mobile_sam
 
 
-from functools import partial
-
 sam_model_registry = {
     "default": build_sam_vit_h,
     "vit_h": build_sam_vit_h,

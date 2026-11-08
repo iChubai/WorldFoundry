@@ -11,7 +11,6 @@ import warnings
 from functools import lru_cache
 from io import BytesIO
 
-import numpy as np
 import requests
 import torch
 import torchvision

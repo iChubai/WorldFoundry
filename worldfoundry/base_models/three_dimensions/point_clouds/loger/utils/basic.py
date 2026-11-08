@@ -5,10 +5,8 @@ import os
 import os.path as osp
 
 import cv2
-import numpy as np
 import torch
 from PIL import Image
-from plyfile import PlyData, PlyElement
 from torchvision import transforms
 
 

@@ -1,10 +1,7 @@
 from factor_graph import FactorGraph
 
 # isort: split
-import lietorch
-import numpy as np
 import torch
-from lietorch import SE3
 
 
 class DroidBackend:

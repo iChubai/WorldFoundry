@@ -15,7 +15,7 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> pipeline_qwen_pano.py functionality."""
 
 from collections.abc import Callable
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch
@@ -32,7 +32,9 @@ from diffusers.utils import is_torch_xla_available, logging
 try:
     from diffusers.models.autoencoders.vae import DecoderOutput
 except ImportError:
-    from diffusers.models.vae import DecoderOutput
+    from diffusers.models.vae import (  # noqa: F401 - Version fallback of the import above, kept as upstream.
+        DecoderOutput,
+    )
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm

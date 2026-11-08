@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from lietorch import SE3, Sim3
 
 MIN_DEPTH = 0.2

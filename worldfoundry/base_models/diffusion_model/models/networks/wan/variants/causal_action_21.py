@@ -643,8 +643,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             device=device,
         )
 
-        import torch.distributed as dist
-
         if not dist.is_initialized() or dist.get_rank() == 0:
             print(f" cache a block wise causal mask with block size of {num_frame_per_block} frames")
 
@@ -704,8 +702,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             device=device,
         )
 
-        import torch.distributed as dist
-
         if not dist.is_initialized() or dist.get_rank() == 0:
             print(f" cache a block wise causal mask with block size of {num_frame_per_block} frames")
 
@@ -764,8 +760,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             _compile=False,
             device=device,
         )
-
-        import torch.distributed as dist
 
         if not dist.is_initialized() or dist.get_rank() == 0:
             print(f" cache a block wise causal mask with block size of {num_frame_per_block} frames")

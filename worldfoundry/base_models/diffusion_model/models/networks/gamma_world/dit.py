@@ -31,7 +31,7 @@ distributed attention interchangeable without changing residual math.
 import math
 from collections import namedtuple
 from collections.abc import Sequence
-from typing import List, Optional, Tuple, Union
+from typing import Optional
 
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.kv_cache import (
     AttentionOpWithKVCache,

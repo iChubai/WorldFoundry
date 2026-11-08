@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> heads -> gs_head.py functionality."""
 
-from typing import List
-
 import torch
 import torch.nn as nn
 

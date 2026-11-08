@@ -9,23 +9,24 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> layers -> block.py functionality."""
 
-import logging
 import os
-import warnings
 from collections.abc import Callable
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
-import torch
 from torch import Tensor, nn
 
 from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
 
-from .attention import Attention, CrossAttentionRope, FlashAttentionRope, MemEffAttention, MemEffCrossAttentionRope
+from .attention import Attention
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
     if XFORMERS_ENABLED:
-        from xformers.ops import fmha, index_select_cat, scaled_index_add
+        from xformers.ops import (  # noqa: F401 - Import checks optional dependency availability.
+            fmha,
+            index_select_cat,
+            scaled_index_add,
+        )
 
         XFORMERS_AVAILABLE = True
         # warnings.warn("xFormers is available (Block)")

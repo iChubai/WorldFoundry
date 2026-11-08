@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> layers -> norm_rope.py functionality."""
 
 import math
-from typing import Dict, Literal, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import torch

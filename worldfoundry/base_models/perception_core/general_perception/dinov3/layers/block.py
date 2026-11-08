@@ -6,7 +6,6 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> block.py functionality."""
 
 from collections.abc import Callable
-from typing import List, Optional
 
 import torch
 from torch import Tensor, nn

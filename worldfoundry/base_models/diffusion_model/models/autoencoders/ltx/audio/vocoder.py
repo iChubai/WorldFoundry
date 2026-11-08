@@ -13,7 +13,6 @@ parallel BigVGAN port under :mod:`~...minimax_h3_audio`.
 """
 
 import math
-from typing import List
 
 import einops
 import torch

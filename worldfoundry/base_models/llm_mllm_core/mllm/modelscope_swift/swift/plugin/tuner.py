@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Optional
+from typing import Any
 
 import torch
 from peft import IA3Config, PeftModel, get_peft_model

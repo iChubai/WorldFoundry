@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Optional
 
 import numpy as np
 from mmengine.hooks import ParamSchedulerHook

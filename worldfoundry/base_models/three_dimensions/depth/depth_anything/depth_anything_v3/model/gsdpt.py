@@ -15,8 +15,6 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> gsdpt.py functionality."""
 
 from collections.abc import Sequence
-from typing import Dict as TyDict
-from typing import List
 
 import torch
 import torch.nn as nn

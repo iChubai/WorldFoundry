@@ -8,8 +8,7 @@ raw waveforms and outputs projected sequence embeddings.
 import logging
 import os
 from collections.abc import Iterable
-from functools import cache, lru_cache
-from typing import List, Optional, Tuple, Union
+from functools import cache
 
 import numpy as np
 import torch

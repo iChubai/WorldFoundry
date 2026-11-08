@@ -12,7 +12,7 @@
 import logging
 import os
 
-from torch import Tensor, nn
+from torch import Tensor
 
 from worldfoundry.core.attention import QKVSelfAttention
 

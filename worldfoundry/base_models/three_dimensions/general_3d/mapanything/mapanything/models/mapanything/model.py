@@ -9,7 +9,7 @@ MapAnything model class defined using UniCeption modules.
 
 from collections.abc import Callable, Mapping
 from functools import partial
-from typing import Any, Dict, List, Tuple, Type, Union
+from typing import Any
 
 import torch
 import torch.nn as nn

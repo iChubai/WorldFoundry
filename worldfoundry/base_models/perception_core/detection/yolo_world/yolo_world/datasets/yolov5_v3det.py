@@ -1,8 +1,6 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import copy
-import json
 import os.path as osp
-from typing import List
 
 from mmdet.datasets import CocoDataset
 from mmdet.datasets.api_wrappers import COCO

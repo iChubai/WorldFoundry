@@ -10,7 +10,7 @@ import warnings
 from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import torch
 
@@ -35,7 +35,6 @@ from .pretrained import (
     download_pretrained,
     download_pretrained_from_hf,
     get_pretrained_cfg,
-    is_pretrained_cfg,
     list_pretrained_tags_by_model,
 )
 from .transform import (

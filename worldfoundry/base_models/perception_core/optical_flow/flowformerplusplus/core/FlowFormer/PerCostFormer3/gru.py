@@ -369,9 +369,6 @@ class ConvAttWoGRUMOnlyGMAUpdateBlock(nn.Module):
         return net, mask, delta_flow
 
 
-from .gma import Aggregate
-
-
 class ConvAttWoGRUGMAUpdateBlock(nn.Module):
     def __init__(self, args, hidden_dim=128):
         super().__init__()

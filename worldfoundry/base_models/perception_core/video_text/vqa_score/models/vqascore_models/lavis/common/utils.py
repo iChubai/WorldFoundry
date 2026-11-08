@@ -15,7 +15,6 @@ import shutil
 import urllib
 import urllib.error
 import urllib.request
-from typing import Optional
 from urllib.parse import urlparse
 
 import numpy as np

@@ -4,7 +4,6 @@ from copy import deepcopy
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.camera_head import ResConvBlock
 

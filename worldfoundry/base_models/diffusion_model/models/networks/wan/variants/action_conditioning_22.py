@@ -4,8 +4,6 @@ Same role as :mod:`.action_conditioning_21` but sized for Wan 2.2 hidden
 widths and per-token timestep layouts.  Host graph is :mod:`.action_22`.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -21,7 +19,6 @@ elif FLASH_ATTN_2_AVAILABLE:
     import flash_attn as flash_attn_ops
 else:
     flash_attn_ops = None
-from torch.nn.attention.flex_attention import flex_attention
 
 from worldfoundry.core.attention import (
     apply_nd_rotary_embedding as apply_rotary_emb,

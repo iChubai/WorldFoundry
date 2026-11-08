@@ -3,7 +3,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.models.layers import DropPath, Mlp, to_2tuple, trunc_normal_
+from timm.models.layers import trunc_normal_
 
 
 class ResidualBlock(nn.Module):

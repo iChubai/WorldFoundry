@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.layers import DropPath, trunc_normal_
-from timm.models.registry import register_model
 
 
 class Block(nn.Module):
@@ -262,7 +261,6 @@ class ConvNeXt3D(nn.Module):
 
     def inflate_weights(self, s_state_dict):
         t_state_dict = self.state_dict()
-        from collections import OrderedDict
 
         for key in t_state_dict.keys():
             if key not in s_state_dict:

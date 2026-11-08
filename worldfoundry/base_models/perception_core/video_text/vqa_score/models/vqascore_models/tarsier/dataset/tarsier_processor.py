@@ -1,13 +1,9 @@
-from typing import List, Union
-
 import torch
 from PIL import Image
 from transformers import Qwen2VLImageProcessor
-from transformers.feature_extraction_utils import BatchFeature
-from transformers.image_utils import ImageInput, get_image_size, to_numpy_array
+from transformers.image_utils import get_image_size, to_numpy_array
 from transformers.models.qwen2_vl.image_processing_qwen2_vl import smart_resize
-from transformers.processing_utils import ProcessingKwargs, ProcessorMixin, Unpack, _validate_images_text_input_order
-from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
+from transformers.processing_utils import ProcessingKwargs, ProcessorMixin
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)

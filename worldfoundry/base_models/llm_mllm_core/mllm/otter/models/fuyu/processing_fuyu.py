@@ -16,7 +16,7 @@ Image/Text processor class for GIT
 """
 
 import re
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Union
 
 import numpy as np
 from transformers.processing_utils import ProcessorMixin

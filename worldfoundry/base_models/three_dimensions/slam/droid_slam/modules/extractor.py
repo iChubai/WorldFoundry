@@ -1,8 +1,6 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> modules -> extractor.py functionality."""
 
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class ResidualBlock(nn.Module):

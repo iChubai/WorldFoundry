@@ -1,5 +1,4 @@
 import random
-from typing import Dict, List
 
 from PIL import Image
 

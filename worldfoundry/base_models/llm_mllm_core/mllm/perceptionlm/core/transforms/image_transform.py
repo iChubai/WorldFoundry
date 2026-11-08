@@ -4,7 +4,7 @@ import math
 from collections.abc import Callable
 from functools import reduce
 from logging import getLogger
-from typing import Any, Tuple
+from typing import Any
 
 import numpy as np
 import torch

@@ -16,8 +16,6 @@
 Backbone modules.
 """
 
-from typing import Dict, List
-
 import torch
 import torch.nn.functional as F
 import torchvision
@@ -26,7 +24,6 @@ from torchvision.models._utils import IntermediateLayerGetter
 
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
     NestedTensor,
-    clean_state_dict,
     is_main_process,
 )
 

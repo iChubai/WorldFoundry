@@ -4,36 +4,53 @@ from typing import TYPE_CHECKING
 from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
-    from .infer import SwiftInfer, infer_main
+    from .infer import SwiftInfer as SwiftInfer
+    from .infer import infer_main as infer_main
 
     # isort: split
     # isort: split
-    from .rollout import rollout_main
+    from .rollout import rollout_main as rollout_main
 
     # isort: split
     # isort: split
-    from .deploy import SwiftDeploy, deploy_main, run_deploy
+    from .deploy import SwiftDeploy as SwiftDeploy
+    from .deploy import deploy_main as deploy_main
+    from .deploy import run_deploy as run_deploy
 
     # isort: split
-    from .request_config import RequestConfig
+    from .request_config import RequestConfig as RequestConfig
 
     # isort: split
-    from .protocol import Function
+    from .protocol import Function as Function
 
     # isort: split
     # isort: split
-    from .utils import prepare_model_template
+    from .utils import prepare_model_template as prepare_model_template
 
     # isort: split
     from .infer_engine import (
-        AdapterRequest,
-        BaseInferEngine,
-        InferClient,
-        InferEngine,
-        LmdeployEngine,
-        PtEngine,
-        VllmEngine,
-        prepare_generation_config,
+        AdapterRequest as AdapterRequest,
+    )
+    from .infer_engine import (
+        BaseInferEngine as BaseInferEngine,
+    )
+    from .infer_engine import (
+        InferClient as InferClient,
+    )
+    from .infer_engine import (
+        InferEngine as InferEngine,
+    )
+    from .infer_engine import (
+        LmdeployEngine as LmdeployEngine,
+    )
+    from .infer_engine import (
+        PtEngine as PtEngine,
+    )
+    from .infer_engine import (
+        VllmEngine as VllmEngine,
+    )
+    from .infer_engine import (
+        prepare_generation_config as prepare_generation_config,
     )
 else:
     _import_structure = {

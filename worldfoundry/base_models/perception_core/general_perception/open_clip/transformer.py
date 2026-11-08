@@ -3,7 +3,6 @@
 import math
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
-from typing import Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from torch import nn

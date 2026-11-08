@@ -1,7 +1,6 @@
 """Module for base_models -> perception_core -> segment -> efficient_sam -> two_way_transformer.py functionality."""
 
 import math
-from typing import Tuple, Type
 
 import torch
 from torch import Tensor, nn

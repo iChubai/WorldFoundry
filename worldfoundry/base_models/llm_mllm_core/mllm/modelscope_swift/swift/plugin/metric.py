@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, List, Literal
+from typing import Literal
 
 import numpy as np
 import torch

@@ -1,14 +1,12 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_base.py functionality."""
 
-import datetime
 import logging
 import math
 import os
 import sys
 import tempfile
-from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 import numpy as np
 import torch
@@ -44,7 +42,6 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base
 # isort: split
 from torch import Tensor, nn
 
-from worldfoundry.base_models.perception_core.segment.sam3.masks_ops import rle_encode
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 
 # a short 3-min timeout to quickly detect any synchronization failures

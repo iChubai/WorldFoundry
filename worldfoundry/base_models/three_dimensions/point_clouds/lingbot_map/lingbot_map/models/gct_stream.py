@@ -10,7 +10,7 @@ Provides streaming inference functionality:
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn

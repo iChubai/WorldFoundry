@@ -4,9 +4,7 @@
 # found in the LICENSE file in the root directory of this source tree.
 
 import os
-import warnings
 from collections.abc import Callable
-from typing import Optional
 
 import torch.nn.functional as F
 from torch import Tensor, nn

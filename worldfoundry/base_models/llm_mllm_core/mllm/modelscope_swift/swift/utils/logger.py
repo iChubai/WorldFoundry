@@ -4,7 +4,6 @@ import logging
 import os
 from contextlib import contextmanager
 from types import MethodType
-from typing import Optional
 
 from modelscope.utils.logger import get_logger as get_ms_logger
 

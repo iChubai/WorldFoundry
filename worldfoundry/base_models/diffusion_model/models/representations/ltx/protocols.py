@@ -8,7 +8,7 @@ guiders.  The production runner still uses :class:`~...contracts.Denoiser`
 and :class:`~...contracts.LatentProcessor`.
 """
 
-from typing import Protocol, Tuple
+from typing import Protocol
 
 import torch
 

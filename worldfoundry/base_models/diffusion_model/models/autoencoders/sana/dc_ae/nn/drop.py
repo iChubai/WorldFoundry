@@ -26,7 +26,7 @@ Applied to residual feature maps (BCHW or BCTHW) inside
 Sana DC-AE training utility; not used by Wan / LTX VAEs.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import torch

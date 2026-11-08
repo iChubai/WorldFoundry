@@ -16,10 +16,8 @@
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> xformers.py functionality."""
 
 from collections.abc import Sequence
-from typing import Optional
 
 import torch
-import torch.nn.functional as F
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 

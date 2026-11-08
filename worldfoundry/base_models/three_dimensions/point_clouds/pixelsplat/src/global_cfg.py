@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> global_cfg.py functionality."""
 
-from typing import Optional
-
 from omegaconf import DictConfig
 
 cfg: DictConfig | None = None

@@ -9,7 +9,6 @@ The runner sees only ``SchedulerStep``; solver history lives on this object.
 """
 
 import math
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch

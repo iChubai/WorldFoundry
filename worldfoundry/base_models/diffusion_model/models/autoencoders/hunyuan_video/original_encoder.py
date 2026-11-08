@@ -16,7 +16,6 @@ on :class:`HunyuanVideoVAEEncoderStateDictConverter`.
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from einops import rearrange, repeat
 
 from .original_decoder import CausalConv3d, ResnetBlockCausal3D, UNetMidBlockCausal3D

@@ -7,7 +7,6 @@
 """Module for base_models -> perception_core -> segment -> sam_v1 -> utils -> transforms.py functionality."""
 
 from copy import deepcopy
-from typing import Tuple
 
 import numpy as np
 import torch

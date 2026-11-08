@@ -5,7 +5,7 @@ import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import nullcontext
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import torch
 from packaging import version
@@ -23,7 +23,6 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin i
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
     get_dist_setting,
     get_logger,
-    get_seed,
     is_dist,
 )
 

@@ -6,7 +6,7 @@ blocks keep video and text separate until joint attention; single-stream
 blocks concatenate them.  Token-replace AdaLN can modulate an i2v prefix.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn

@@ -1,7 +1,6 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import itertools
 from collections.abc import Sequence
-from typing import List, Tuple
 
 import torch
 from mmdet.utils import ConfigType, OptMultiConfig

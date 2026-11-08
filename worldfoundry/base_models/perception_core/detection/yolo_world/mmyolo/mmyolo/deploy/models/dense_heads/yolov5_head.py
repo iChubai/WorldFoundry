@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
 from mmdeploy.codebase.mmdet import get_post_processing_params

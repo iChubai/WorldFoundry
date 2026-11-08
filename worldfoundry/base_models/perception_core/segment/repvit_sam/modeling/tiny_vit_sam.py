@@ -10,7 +10,6 @@
 """Module for base_models -> perception_core -> segment -> repvit_sam -> modeling -> tiny_vit_sam.py functionality."""
 
 import itertools
-from typing import Tuple
 
 import torch
 import torch.nn as nn

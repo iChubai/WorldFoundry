@@ -7,8 +7,6 @@ so their K and V in temporal self-attention remain constant across all diffusion
 Cache structure: cache[layer_name][frame_idx] = {'k': tensor, 'v': tensor}
 """
 
-from typing import Dict, Optional, Tuple
-
 import torch
 
 

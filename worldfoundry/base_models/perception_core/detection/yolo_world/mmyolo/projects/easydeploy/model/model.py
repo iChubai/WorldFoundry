@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from copy import deepcopy
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn

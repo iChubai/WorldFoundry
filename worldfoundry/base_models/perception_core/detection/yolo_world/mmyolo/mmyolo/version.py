@@ -2,7 +2,6 @@
 
 __version__ = "0.6.0"
 
-from typing import Tuple
 
 short_version = __version__
 

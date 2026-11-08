@@ -22,7 +22,11 @@ from .mlp import Mlp
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
     if XFORMERS_ENABLED:
-        from xformers.ops import fmha, index_select_cat, scaled_index_add
+        from xformers.ops import (  # noqa: F401 - Import checks optional dependency availability.
+            fmha,
+            index_select_cat,
+            scaled_index_add,
+        )
 
         XFORMERS_AVAILABLE = True
         # warnings.warn("xFormers is available (Block)")

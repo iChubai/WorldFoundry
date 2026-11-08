@@ -7,7 +7,6 @@ import random
 import re
 import tempfile
 import uuid
-from typing import Dict, List, Union
 
 # fmt: on
 import decord

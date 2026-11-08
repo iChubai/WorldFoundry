@@ -1,7 +1,5 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> webzipfile.py functionality."""
 
-import io
-import os
 import struct
 from typing import *
 from zipfile import (

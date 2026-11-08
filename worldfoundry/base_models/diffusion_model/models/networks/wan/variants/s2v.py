@@ -5,8 +5,6 @@ per-block audio injection.  Adds audio / motion conditioning.  No VACE
 or linear attn.
 """
 
-from typing import Tuple
-
 import numpy as np
 import torch
 import torch.nn as nn

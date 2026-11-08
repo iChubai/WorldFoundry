@@ -10,8 +10,6 @@ Schedule buffers and ``rescale_noise_cfg`` come from
 :mod:`.ddim_multiplecond_vid2world`.
 """
 
-import copy
-
 import numpy as np
 import torch
 from tqdm import tqdm

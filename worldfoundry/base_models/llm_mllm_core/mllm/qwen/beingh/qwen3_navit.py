@@ -6,7 +6,6 @@
 import glob
 import re
 from functools import partial
-from typing import List, Optional, Tuple
 
 import torch
 from safetensors import safe_open

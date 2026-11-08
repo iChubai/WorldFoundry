@@ -16,7 +16,6 @@
 """Pytorch neural network definitions."""
 
 from collections.abc import Sequence
-from typing import Union
 
 import torch
 import torch.nn.functional as F

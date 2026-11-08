@@ -10,12 +10,8 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> utils.py functionality."""
 
-from typing import Optional, Tuple, Union
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange, repeat
 
 
 def get_2d_sincos_pos_embed(embed_dim: int, grid_size: int | tuple[int, int], return_grid=False) -> torch.Tensor:

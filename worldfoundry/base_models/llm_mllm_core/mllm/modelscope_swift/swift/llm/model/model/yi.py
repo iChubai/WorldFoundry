@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from transformers import AutoTokenizer
 
@@ -11,7 +11,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
-from ..utils import ModelInfo, git_clone_github
+from ..utils import ModelInfo
 
 logger = get_logger()
 

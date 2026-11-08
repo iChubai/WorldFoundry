@@ -33,7 +33,6 @@ Geometry sizing:
 
 import json
 import struct
-from typing import Optional
 
 import numpy as np
 import trimesh

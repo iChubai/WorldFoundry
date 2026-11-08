@@ -1,6 +1,5 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import random
-from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn

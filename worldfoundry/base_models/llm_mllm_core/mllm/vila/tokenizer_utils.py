@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 import transformers

@@ -9,13 +9,11 @@ Adds control channels and TeaCache hooks.  Not a causal or linear-attn fork.
 
 import math
 import types
-from typing import Optional, Union
 
 import numpy as np
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
-from torch import nn
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
     SimpleAdapter,

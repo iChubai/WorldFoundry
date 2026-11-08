@@ -7,7 +7,6 @@ Ported from kandinsky-5-inference ``models/vae_orig.py`` (not the Diffusers
 from __future__ import annotations
 
 from math import ceil, sqrt
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch

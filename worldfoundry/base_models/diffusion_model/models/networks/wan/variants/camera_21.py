@@ -12,7 +12,6 @@ import math
 
 import torch
 import torch.nn as nn
-from einops import rearrange, repeat
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import (
     FLASH_ATTN_2_AVAILABLE,

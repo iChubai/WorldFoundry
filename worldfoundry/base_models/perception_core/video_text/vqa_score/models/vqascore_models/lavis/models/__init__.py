@@ -64,15 +64,15 @@ from .blip2_models.blip2_t5_instruct import Blip2T5Instruct
 # isort: split
 from .blip2_models.blip2_image_text_matching import Blip2ITM
 from .blip2_models.blip2_qformer import Blip2Qformer
-from .blip2_models.blip2_vicuna import Blip2Vicuna
-from .blip2_models.blip2_vicuna_instruct import Blip2VicunaInstruct
+from .blip2_models.blip2_vicuna import Blip2Vicuna as Blip2Vicuna
+from .blip2_models.blip2_vicuna_instruct import Blip2VicunaInstruct as Blip2VicunaInstruct
 
 # isort: split
-from .med import XBertLMHeadDecoder
+from .med import XBertLMHeadDecoder as XBertLMHeadDecoder
 
 # isort: split
 # isort: split
-from .vit import VisionTransformerEncoder
+from .vit import VisionTransformerEncoder as VisionTransformerEncoder
 
 # isort: split
 

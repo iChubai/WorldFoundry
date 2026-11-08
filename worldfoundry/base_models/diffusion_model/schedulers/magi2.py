@@ -10,7 +10,7 @@ refiner renoise sigma (``magi2_refiner_noise_value``).
 """
 
 import math
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import torch

@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Dict, Type
+from typing import Any
 
 import torch
 import transformers

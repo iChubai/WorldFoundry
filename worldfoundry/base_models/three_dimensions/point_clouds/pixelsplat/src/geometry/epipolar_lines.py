@@ -2,7 +2,7 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Literal, Optional, TypedDict
+from typing import Literal, TypedDict
 
 import torch
 from einops import einsum, repeat

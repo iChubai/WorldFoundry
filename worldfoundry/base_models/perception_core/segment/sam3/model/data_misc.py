@@ -5,12 +5,8 @@
 Misc functions, including distributed helpers.
 """
 
-import collections
-import re
-from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
-from dataclasses import field as field_ptr_behaviour
-from typing import Any, List, Optional, Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 import torch
 

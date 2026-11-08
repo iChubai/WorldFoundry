@@ -4,13 +4,11 @@ import os.path as osp
 import random
 from functools import lru_cache
 
-import cv2
 import decord
 import numpy as np
 import torch
 import torchvision
-from decord import VideoReader, cpu, gpu
-from tqdm import tqdm
+from decord import VideoReader
 
 random.seed(42)
 
@@ -370,8 +368,6 @@ class SampleFrames:
 
 
 import random
-
-import numpy as np
 
 
 class FragmentSampleFrames:

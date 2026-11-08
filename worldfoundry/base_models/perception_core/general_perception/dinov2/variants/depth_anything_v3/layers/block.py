@@ -16,7 +16,6 @@ from collections.abc import Callable
 from torch import nn
 
 from worldfoundry.core.nn.blocks.layers import Mlp
-from worldfoundry.core.nn.blocks.stochastic_depth import drop_add_residual_stochastic_depth, get_branges_scales
 from worldfoundry.core.nn.transformer.vit import RopePreNormTransformerBlock
 
 from .attention import Attention

@@ -2,7 +2,6 @@
 import math
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Tuple, Union
 
 import cv2
 import mmcv

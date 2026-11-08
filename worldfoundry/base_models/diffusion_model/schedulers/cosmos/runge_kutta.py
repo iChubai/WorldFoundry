@@ -26,7 +26,6 @@ AB2 lives in :mod:`.multi_step`.
 """
 
 from collections.abc import Callable
-from typing import Tuple
 
 import torch
 

@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator, Iterator
 from copy import deepcopy
 from queue import Queue
 from threading import Thread
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 import torch
 from tqdm import tqdm

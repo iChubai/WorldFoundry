@@ -26,8 +26,6 @@ This is HY 1.5-specific (not the original HunyuanVideo refiner).
 Masks keep the first token visible so attention weights stay finite.
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 from einops import rearrange

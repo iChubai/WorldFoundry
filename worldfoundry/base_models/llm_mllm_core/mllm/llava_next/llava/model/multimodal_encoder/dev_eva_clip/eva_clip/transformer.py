@@ -3,9 +3,7 @@ import math
 import os
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
-from typing import Optional
 
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -13,9 +11,8 @@ from torch.nn import functional as F
 try:
     from timm.models.layers import trunc_normal_
 except:
-    from timm.layers import trunc_normal_
+    from timm.layers import trunc_normal_  # noqa: F401 - Version fallback of the import above, kept as upstream.
 
-from .rope import VisionRotaryEmbedding, VisionRotaryEmbeddingFast
 from .utils import to_2tuple
 
 if os.getenv("ENV_TYPE") == "deepspeed":

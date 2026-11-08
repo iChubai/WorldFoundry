@@ -1,8 +1,6 @@
 import cv2
-import lietorch
 import matplotlib.pyplot as plt
 import torch
-import torch.nn.functional as F
 
 import geom.projective_ops as pops
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_sum
@@ -65,8 +63,6 @@ def focal_retr(intrinsics, df):
 #     sA = Y*torch.sqrt(normA).view(batchSize, 1, 1).expand_as(A)
 #     error = compute_error(A, sA)
 #     return sA, error
-
-import numpy as np
 
 
 @torch.no_grad()

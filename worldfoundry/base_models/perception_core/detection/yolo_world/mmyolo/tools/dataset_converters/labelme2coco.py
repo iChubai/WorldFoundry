@@ -40,7 +40,6 @@ Note:
 import argparse
 import json
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from mmengine import track_iter_progress

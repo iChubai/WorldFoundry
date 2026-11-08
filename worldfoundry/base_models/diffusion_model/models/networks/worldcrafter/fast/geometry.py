@@ -3,8 +3,6 @@
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
 from __future__ import annotations
 
-from typing import Tuple
-
 import torch
 import torch.nn.functional as F
 from einops import einsum, rearrange, repeat

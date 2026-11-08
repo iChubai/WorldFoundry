@@ -6,7 +6,6 @@ Adapted from UniDepth 8d8cfe4c7ee15297099983607febf0d4f32eb3d6.
 
 from functools import partial
 from math import pi
-from typing import Optional
 
 import torch
 import torch.nn as nn

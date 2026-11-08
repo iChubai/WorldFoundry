@@ -16,7 +16,6 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import numpy as np
 import torch
 import torch.distributed as dist
 from omegaconf import OmegaConf

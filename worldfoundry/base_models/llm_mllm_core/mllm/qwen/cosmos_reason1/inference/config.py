@@ -1,7 +1,5 @@
 """Inference and distributed-layout configuration for the bundled Reason1 encoder."""
 
-from typing import Optional, Union
-
 import attrs
 
 

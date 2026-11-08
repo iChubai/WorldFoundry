@@ -8,8 +8,6 @@ import os
 import time
 import warnings
 from functools import wraps
-from numbers import Number
-from pathlib import Path
 from typing import *
 
 
@@ -170,7 +168,6 @@ def read_jsonl(file):
     Args:
         file: The file.
     """
-    import json
 
     with open(file) as f:
         data = f.readlines()
@@ -184,7 +181,6 @@ def write_jsonl(data: List[dict], file):
         data: The data.
         file: The file.
     """
-    import json
 
     with open(file, "w") as f:
         for item in data:
@@ -358,7 +354,6 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
         pbar: The pbar.
     """
     from concurrent.futures import ThreadPoolExecutor
-    from contextlib import nullcontext
 
     from tqdm import tqdm
 

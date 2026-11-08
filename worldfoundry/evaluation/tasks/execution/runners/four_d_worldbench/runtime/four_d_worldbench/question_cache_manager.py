@@ -6,9 +6,8 @@ Implement question caching and reuse based on content hashing, ensuring same que
 
 import hashlib
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 class QuestionCacheManager:
@@ -169,7 +168,7 @@ class QuestionCacheManager:
 
         return stats
 
-    def clear_cache(self, dimension: str = None) -> None:
+    def clear_cache(self, dimension: str | None = None) -> None:
         """
         Clear cache
 
@@ -209,11 +208,10 @@ class QuestionCacheManager:
                     content = self._extract_content_from_item(item)
                     questions = item.get("auxiliary_info", [])
 
-                    if content and questions:
-                        # Check if already cached
-                        if not self.get_questions(content, dimension):
-                            self.cache_questions(content, dimension, questions)
-                            migrated_count += 1
+                    # Check if already cached
+                    if content and questions and not self.get_questions(content, dimension):
+                        self.cache_questions(content, dimension, questions)
+                        migrated_count += 1
 
             print(f"Migration complete: Migrated {migrated_count} questions to cache for dimension '{dimension}'")
 

@@ -1,16 +1,10 @@
-import argparse
 import json
 import os
-import sys
 import warnings
 
-import numpy as np
-import torch
-from decord import VideoReader, cpu
 from keye_vl_utils import process_vision_info
-from PIL import Image
 from tqdm import tqdm
-from transformers import AutoModel, AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
+from transformers import AutoModel, AutoProcessor
 
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
@@ -20,7 +14,7 @@ from .utils import load_dimension_info
 
 # 导入兼容性工具
 try:
-    from metric_compatibility import ensure_auxiliary_info_compatibility
+    from metric_compatibility import ensure_auxiliary_info_compatibility  # noqa: F401 - Availability probe.
 
     COMPATIBILITY_AVAILABLE = True
 except ImportError:
@@ -30,7 +24,6 @@ warnings.filterwarnings("ignore")
 
 def Keye2_5VL_Video(prompt_dict_ls, model, processor, fps, device):
     final_score = 0
-    valid_num = 0
     video_num = 0
     processed_json = []
     max_new_tokens = resolve_generation_max_new_tokens(512, scope="4d_worldbench")

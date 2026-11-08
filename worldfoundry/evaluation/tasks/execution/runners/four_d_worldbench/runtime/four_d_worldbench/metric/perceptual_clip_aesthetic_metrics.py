@@ -1,11 +1,10 @@
 import json
 import os
-from typing import List, Union
 
 import cv2
 from PIL import Image
 
-from .base_metrics import BaseMetric, IQAPytorchMetric
+from .base_metrics import IQAPytorchMetric
 from .utils import load_dimension_info
 
 

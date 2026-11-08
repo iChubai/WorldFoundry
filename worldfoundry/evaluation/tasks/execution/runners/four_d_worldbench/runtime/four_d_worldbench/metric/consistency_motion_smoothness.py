@@ -1,6 +1,6 @@
+import itertools
 import json
 import os
-from typing import List
 
 import cv2
 import numpy as np
@@ -50,9 +50,7 @@ class MotionSmoothnessMetric(BaseMetric):
         odd_images = rendered_images[1::2]  # 1,3,5,7........
 
         print("=========================Start Interpolating=========================")
-        for i, (image1, image2) in enumerate(
-            zip(even_images[:-1], even_images[1:], strict=False)
-        ):  # (0,2),(2,4),(4,6).....
+        for i, (image1, image2) in enumerate(itertools.pairwise(even_images)):  # (0,2),(2,4),(4,6).....
             odd_image = odd_images[i]  # 1,3,5,7.........
             mid_pred = cv2.imread(odd_image)  # 1,3,5,7.........
             I0 = cv2.imread(image1)  # 0,2,4,6.........   (H, W, C)
@@ -85,7 +83,6 @@ class MotionSmoothnessMetric(BaseMetric):
 
         score_ssim = sum(scores_ssim) / len(scores_ssim)
         score_lpips = sum(scores_lpips) / len(scores_lpips)
-        score_mse = sum(scores_mse) / len(scores_mse)
         # return (score_mse, score_ssim, score_lpips)   # Lower MSE is better, higher SSIM is better, lower LPIPS is better
         return (score_ssim, score_lpips)  # Higher SSIM is better, lower LPIPS is better
 

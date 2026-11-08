@@ -1,6 +1,5 @@
 import json
 import os
-from typing import List
 
 import cv2
 import torch
@@ -52,7 +51,7 @@ def gram_matrix(input):
 
 class StyleLoss(nn.Module):
     def __init__(self, target_feature):
-        super(StyleLoss, self).__init__()
+        super().__init__()
         self.target = gram_matrix(target_feature).detach()
 
     def forward(self, input):
@@ -65,7 +64,7 @@ class StyleLoss(nn.Module):
 # ``nn.Sequential``
 class Normalization(nn.Module):
     def __init__(self, mean, std):
-        super(Normalization, self).__init__()
+        super().__init__()
         # .view the mean and std to make them [C x 1 x 1] so that they can
         # directly work with image Tensor of shape [B x C x H x W].
         # B is batch size. C is number of channels. H is height and W is width.

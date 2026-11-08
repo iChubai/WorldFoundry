@@ -7,11 +7,9 @@ Keeping the original question generation and answering logic unchanged
 
 import json
 import os
-import sys
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed  # Added: concurrent execution
-from time import sleep
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from caption_method.VideoImg_caption import Keye_describe_video
 from openai import OpenAI
@@ -23,7 +21,7 @@ except ImportError:
     from .utils import load_dimension_info
 
 try:
-    from metric_compatibility import ensure_auxiliary_info_compatibility
+    from metric_compatibility import ensure_auxiliary_info_compatibility  # noqa: F401 - Availability probe.
 
     COMPATIBILITY_AVAILABLE = True
 except ImportError:
@@ -38,7 +36,7 @@ class PhysicsReasoningEvaluator:
     def __init__(self, device: str = "cpu"):
         """Initialize evaluator"""
         self.device = device
-        print("Using device: %s" % self.device)
+        print(f"Using device: {self.device}")
 
         # Initialize OpenAI client (reads OPENAI_API_KEY and OPENAI_BASE_URL from env)
         self.client = OpenAI(
@@ -153,7 +151,7 @@ class PhysicsReasoningEvaluator:
             )
 
             input_string = response.choices[0].message.content
-            input_string = input_string.strip().lstrip("```json").rstrip("```").strip()
+            input_string = input_string.strip().lstrip("```json").rstrip("```").strip()  # noqa: B005 - Character-set strip of the Markdown fence; retain upstream parsing.
 
             try:
                 result = json.loads(input_string)
@@ -199,7 +197,7 @@ class PhysicsReasoningEvaluator:
             )
 
             input_string = response.choices[0].message.content
-            input_string = input_string.strip().lstrip("```json").rstrip("```").strip()
+            input_string = input_string.strip().lstrip("```json").rstrip("```").strip()  # noqa: B005 - Character-set strip of the Markdown fence; retain upstream parsing.
 
             try:
                 parsed_data = json.loads(input_string)

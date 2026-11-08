@@ -1,26 +1,17 @@
-import io
 import json
-import os
 import random
 import re
-from bisect import bisect_left
-from collections import defaultdict
 from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision.transforms as transforms
-import yaml
-from decord import VideoReader, cpu
+from decord import VideoReader
 from PIL import Image, ImageSequence
-from scenedetect import SceneManager, open_video, split_video_ffmpeg
+from scenedetect import SceneManager, open_video
 from scenedetect.detectors import ContentDetector
 from torchvision import transforms
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
-from tqdm import tqdm
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -31,15 +22,9 @@ except ImportError:
     BICUBIC = Image.BICUBIC
     BILINEAR = Image.BILINEAR
 
-from worldfoundry.core.distributed.collectives.evaluation import (
-    barrier,
-    get_rank,
-)
-
 
 def split_video_into_scenes(video_path, threshold=27.0):
     # Open our video, create a scene manager, and add a detector.
-    video_name = os.path.splitext(os.path.basename(video_path))[0]
     video = open_video(video_path)
     scene_manager = SceneManager()
     scene_manager.add_detector(ContentDetector(threshold=threshold))
@@ -59,7 +44,7 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
         if sample == "rand":
             try:
                 frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]
-            except:
+            except BaseException:
                 frame_indices = np.random.permutation(vlen)[:acc_samples]
                 frame_indices.sort()
                 frame_indices = list(frame_indices)
@@ -166,7 +151,6 @@ def clip_transform(n_px):
 def get_frames(video_path):
     frame_list = []
     video = cv2.VideoCapture(video_path)
-    fps = video.get(cv2.CAP_PROP_FPS)  # get fps
     interval = 1
     preprocess = transforms.Compose(
         [

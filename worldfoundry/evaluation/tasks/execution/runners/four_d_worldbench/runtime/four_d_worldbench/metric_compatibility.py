@@ -4,9 +4,7 @@ Metric脚本兼容性工具
 确保所有metric脚本都能正确获取和使用自动生成的问题
 """
 
-import json
-import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 def ensure_auxiliary_info_compatibility(prompt_dict_ls: list[dict[str, Any]], dimension: str) -> list[dict[str, Any]]:

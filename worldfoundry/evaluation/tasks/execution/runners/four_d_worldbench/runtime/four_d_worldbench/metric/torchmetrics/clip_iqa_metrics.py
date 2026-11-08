@@ -1,5 +1,3 @@
-from typing import List, Union
-
 import torch
 from PIL import Image
 from worldscore.benchmark.metrics.base_metrics import BaseMetric

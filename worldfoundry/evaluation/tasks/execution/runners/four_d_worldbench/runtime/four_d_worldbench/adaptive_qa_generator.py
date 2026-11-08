@@ -7,7 +7,7 @@ Automatically generate evaluation questions based on different dimensions and in
 import argparse
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from openai import OpenAI
 
@@ -22,7 +22,7 @@ except ImportError:
 
 
 class AdaptiveQAGenerator:
-    def __init__(self, api_base_url: str = None, api_key: str = None):
+    def __init__(self, api_base_url: str | None = None, api_key: str | None = None):
         """Initialize question generator"""
         # Use default configuration or passed-in configuration
         self.client = OpenAI(
@@ -213,7 +213,7 @@ Requirements:
             )
 
             content_response = response.choices[0].message.content
-            content_response = content_response.strip().lstrip("```json").rstrip("```").strip()
+            content_response = content_response.strip().lstrip("```json").rstrip("```").strip()  # noqa: B005 - Character-set strip of the Markdown fence; retain upstream parsing.
 
             # Try to parse JSON
             try:

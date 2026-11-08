@@ -7,7 +7,7 @@ import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 AdaptiveQAGenerator = None
 
@@ -30,10 +30,7 @@ def _bootstrap_paths_and_aliases():
     if str(runtime_root) not in sys.path:
         sys.path.insert(0, str(runtime_root))
     try:
-        if __package__:
-            _metric = importlib.import_module(f"{__package__}.metric")
-        else:
-            _metric = importlib.import_module("metric")
+        _metric = importlib.import_module(f"{__package__}.metric") if __package__ else importlib.import_module("metric")
         sys.modules["metric"] = _metric
         sys.modules["vbench2"] = _metric
         if hasattr(_metric, "utils"):
@@ -385,10 +382,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
 
     # Merge and write back to original file
     try:
-        if is_dict_mode:
-            merged = {k: items[i] for i, k in enumerate(key_list)}
-        else:
-            merged = items
+        merged = {k: items[i] for i, k in enumerate(key_list)} if is_dict_mode else items
         with open(json_file_path, "w", encoding="utf-8") as f:
             json.dump(merged, f, ensure_ascii=False, indent=2)
         print(f"Parallel question generation complete, file updated: {json_file_path}")
@@ -401,10 +395,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
 def dynamic_import_dimension(dimension_name: str):
     canonical_dimension = canonical_dimension_name(dimension_name)
     module_stem = DIMENSION_MODULES.get(canonical_dimension, canonical_dimension)
-    if __package__:
-        module_name = f"{__package__}.metric.{module_stem}"
-    else:
-        module_name = f"metric.{module_stem}"
+    module_name = f"{__package__}.metric.{module_stem}" if __package__ else f"metric.{module_stem}"
     return importlib.import_module(module_name)
 
 
@@ -421,7 +412,8 @@ def run_dimension(
     func_name = f"compute_{_normalize_dim_name(dimension)}"
     if not hasattr(mod, func_name):
         # fallback to generic name
-        func_name = [n for n in dir(mod) if n.startswith("compute_")][0]
+        compute_names = [n for n in dir(mod) if n.startswith("compute_")]
+        func_name = compute_names[0]
     compute_fn = getattr(mod, func_name)
     submodules_dict = {}
     score, details = compute_fn(json_dir, device, submodules_dict, model=model, dataset_json=dataset_json)

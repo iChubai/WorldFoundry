@@ -1,7 +1,6 @@
 import argparse
 import json
 import os
-from typing import List
 
 import cv2
 import cvxpy as cp
@@ -59,7 +58,6 @@ def get_cameras_accuracy(pred_Rs, gt_Rs, pred_ts, gt_ts):
     """Align predicted pose to gt pose and print cameras accuracy"""
 
     # find rotation
-    d = pred_Rs.shape[-1]
     n = pred_Rs.shape[0]
 
     R_opt = torch.diag(torch.tensor([1.0, 1, 1.0], device=gt_Rs.device)).double()
@@ -78,10 +76,7 @@ def get_cameras_accuracy(pred_Rs, gt_Rs, pred_ts, gt_ts):
         gt_distances = np.linalg.norm(gt_ts.numpy(), axis=1).mean()
         pred_distances = np.linalg.norm(pred_ts.numpy(), axis=1).mean()
         scale = gt_distances / (pred_distances + 1e-8)
-        if scale != 0:
-            t_fixed = scale * pred_ts.numpy()
-        else:
-            t_fixed = pred_ts.numpy()
+        t_fixed = scale * pred_ts.numpy() if scale != 0 else pred_ts.numpy()
 
     # Calculate transaltion error
     t_error = np.linalg.norm(t_fixed - gt_ts.numpy(), axis=-1)

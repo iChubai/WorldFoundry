@@ -4,9 +4,7 @@ import os
 
 import keye_vl_utils
 import qwen_vl_utils
-import torch
-import tqdm
-from transformers import AutoModel, AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
+from transformers import AutoModel, AutoProcessor
 
 try:
     from ..paths import keye_model_path

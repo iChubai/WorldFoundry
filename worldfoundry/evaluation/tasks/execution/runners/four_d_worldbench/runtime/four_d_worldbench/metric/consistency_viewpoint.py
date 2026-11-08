@@ -1,9 +1,7 @@
 import argparse
 import os
-from typing import List
 
 import cv2
-import cvxpy as cp
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -17,6 +15,7 @@ try:
     from metric.utils import load_dimension_info
 except ImportError:
     from .utils import load_dimension_info
+import contextlib
 import json
 
 
@@ -138,10 +137,8 @@ def compute_clip_reprojection_error(clip_frames: list[str], args) -> float:
     finally:
         # Clean up resources
         if droid is not None:
-            try:
+            with contextlib.suppress(BaseException):
                 del droid
-            except:
-                pass
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -191,7 +188,6 @@ class ReprojectionErrorMetric(BaseMetric):
             return float("inf")
 
         total_frames = len(rendered_images)
-        expected_clips = total_frames // self.frames_per_clip
         remaining_frames = total_frames % self.frames_per_clip
 
         if remaining_frames > 0:

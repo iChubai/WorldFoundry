@@ -26,7 +26,6 @@ RANGE: [0, 1] higher the better
 
 import json
 import os
-from typing import List, Union
 
 import cv2
 from PIL import Image

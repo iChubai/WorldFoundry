@@ -1,6 +1,5 @@
 #  hack_registry.py
 import logging
-from typing import List, Optional, Type, Union
 
 from mmengine.logging import print_log
 from mmengine.registry import Registry

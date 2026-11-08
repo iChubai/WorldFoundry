@@ -16,6 +16,8 @@ Roles
   for Wan2.1 I2V (``in_dim=36``).
 - :class:`WanTextImageToVideoLatentInitializer`: Wan2.2 TI2V first-frame
   condition without CLIP.
+- :class:`WanCausalForcingLatentInitializer`: T2V noise plus Causal-Forcing's
+  optional clean first-frame latent.
 - :class:`WanVaceLatentInitializer`: VACE control video / mask packing.
 
 ``LatentInitialization.conditioning`` keys become
@@ -333,6 +335,70 @@ class WanCausalFirstFrameLatentInitializer(WanTextToVideoLatentInitializer):
         if first.shape != noise[:, :, :1].shape:
             raise ValueError(
                 "causal Wan first-frame latent geometry must match generated noise: "
+                f"{tuple(first.shape)} vs {tuple(noise[:, :, :1].shape)}"
+            )
+        return LatentInitialization(noise, {"first_frame_latent": first})
+
+
+class WanCausalForcingLatentInitializer(WanTextToVideoLatentInitializer):
+    """Causal-Forcing noise, with the official first-frame image latent when an image is given.
+
+    Without an image this is the Wan T2V noise tensor. With one, the image is
+    prepared exactly as the official ``inference.py --i2v`` path prepares it
+    (torchvision ``Resize((height, width))`` on the RGB PIL image, ``ToTensor``,
+    ``Normalize([0.5], [0.5])``), encoded in the codec dtype, and returned as
+    ``first_frame_latent``: the window runner commits it to the KV cache at
+    timestep 0 and rolls out the remaining latent frames.
+    """
+
+    def initialize(
+        self,
+        request: DiffusionRequest,
+        *,
+        generator: torch.Generator,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> torch.Tensor:
+        """Return ``[B, C, T_lat, H/s, W/s]`` Gaussian noise; an image needs the codec binding."""
+        if WanTextImageToVideoLatentInitializer._optional_image(request) is not None:
+            raise RuntimeError("Causal-Forcing image-to-video requires its latent_encoder binding")
+        return self._noise(request, generator=generator, device=device, dtype=dtype)
+
+    @torch.no_grad()
+    def initialize_with_encoder(
+        self,
+        request: DiffusionRequest,
+        *,
+        latent_encoder: LatentEncoder,
+        generator: torch.Generator,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> torch.Tensor | LatentInitialization:
+        """Return the noise, plus the encoded ``first_frame_latent`` when the request carries an image."""
+        noise = self._noise(request, generator=generator, device=device, dtype=dtype)
+        image = WanTextImageToVideoLatentInitializer._optional_image(request)
+        if image is None:
+            return noise
+
+        from torchvision import transforms
+
+        from worldfoundry.core import load_pil_image
+
+        transform = transforms.Compose(
+            [
+                transforms.Resize((request.height, request.width)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.5], [0.5]),
+            ]
+        )
+        pixels = transform(load_pil_image(image, first_sequence_item=False))
+        pixels = pixels.unsqueeze(0).unsqueeze(2).repeat(request.batch_size, 1, 1, 1, 1)
+        first = latent_encoder.encode(
+            pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))
+        ).to(device=device, dtype=noise.dtype)
+        if first.shape != noise[:, :, :1].shape:
+            raise ValueError(
+                "Causal-Forcing first-frame latent geometry must match generated noise: "
                 f"{tuple(first.shape)} vs {tuple(noise[:, :, :1].shape)}"
             )
         return LatentInitialization(noise, {"first_frame_latent": first})
@@ -734,6 +800,18 @@ def build_wan_causal_i2v_latent_initializer(
     )
 
 
+def build_wan_causal_forcing_latent_initializer(
+    context: ComponentBuildContext,
+) -> WanCausalForcingLatentInitializer:
+    """Build Causal-Forcing's T2V noise with the optional official first-frame image latent."""
+
+    return WanCausalForcingLatentInitializer(
+        channels=int(context.component_options.get("channels", 16)),
+        spatial_compression=int(context.component_options.get("spatial_compression", 8)),
+        temporal_compression=int(context.component_options.get("temporal_compression", 4)),
+    )
+
+
 def build_wan_ti2v_latent_initializer(
     context: ComponentBuildContext,
 ) -> WanTextImageToVideoLatentInitializer:
@@ -760,12 +838,14 @@ def build_wan_vace_latent_initializer(
 
 __all__ = [
     "WanCausalFirstFrameLatentInitializer",
+    "WanCausalForcingLatentInitializer",
     "WanImageToVideoLatentInitializer",
     "WanReferenceLatentInitializer",
     "WanTextToVideoLatentInitializer",
     "WanTextImageToVideoLatentInitializer",
     "WanVaceLatentInitializer",
     "build_wan_causal_i2v_latent_initializer",
+    "build_wan_causal_forcing_latent_initializer",
     "build_wan_i2v_latent_initializer",
     "build_wan_reference_latent_initializer",
     "build_wan_t2v_latent_initializer",

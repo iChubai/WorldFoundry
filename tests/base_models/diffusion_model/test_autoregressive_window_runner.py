@@ -739,3 +739,108 @@ def test_first_frame_only_request_completes_at_open(monkeypatch: pytest.MonkeyPa
     assert torch.equal(output.latents, stream.first_frame_latent)
     assert events[-3:] == ["on_diffusion_complete", "after_decode", "on_run_end"]
     assert len(final_latents) == 2
+
+
+def _first_block_runner(
+    *,
+    fixed_timesteps: tuple[int, ...],
+    first_block_timesteps: tuple[int, ...],
+    denoiser: _WindowDenoiser,
+) -> AutoregressiveWindowRunner:
+    return AutoregressiveWindowRunner(
+        model_id="ar-window-first-block",
+        components=RunnerComponents(
+            denoiser=denoiser,
+            conditioner=_Conditioner(),
+            latent_initializer=_Initializer(),
+            scheduler=FastVideoCausalWanSelfForcingScheduler(raw_timesteps=(1000, 600, 300)),
+            decoder=_Codec(),
+        ),
+        prediction_mode="distilled-x0",
+        fixed_timesteps=fixed_timesteps,
+        first_block_timesteps=first_block_timesteps,
+    )
+
+
+@pytest.mark.parametrize("first_frame", [False, True])
+def test_first_block_timesteps_schedule_only_the_first_noisy_block(
+    first_frame: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    spec = _Case(mode="distilled-x0", frames=5 if first_frame else 4, guidance=1.0, first_frame=first_frame)
+    monkeypatch.setitem(_CASES, "first-block", spec)
+    denoiser = _WindowDenoiser()
+    runner = _first_block_runner(
+        fixed_timesteps=(1000, 500),
+        first_block_timesteps=(1000, 750, 500, 250),
+        denoiser=denoiser,
+    )
+    request = _request("first-block")
+    request = DiffusionRequest(
+        prompt=request.prompt,
+        negative_prompt=request.negative_prompt,
+        sampling=SamplingConfig(num_inference_steps=2, guidance_scale=1.0, seed=11),
+        inputs=request.inputs,
+    )
+    runner.run(request)
+
+    # Commits report the request's last step index (num_inference_steps - 1).
+    first, second = (1, 3) if first_frame else (0, 2)
+    expected = [f"positive:{index}:{first}-{first + 2}:{first}" for index in range(4)]
+    expected.append(f"positive-cache-commit:1:{first}-{first + 2}:{first}")
+    expected.extend(f"positive:{index}:{second}-{second + 2}:{second}" for index in range(2))
+    expected.append(f"positive-cache-commit:1:{second}-{second + 2}:{second}")
+    if first_frame:
+        expected.insert(0, "positive-cache-commit:1:0-1:0")
+    assert denoiser.trace == expected
+
+    with pytest.raises(ValueError, match="requires 2 inference steps"):
+        runner.run(_request("first-block"))
+
+
+def test_first_block_timesteps_equal_to_fixed_steps_keep_the_rollout_bitwise() -> None:
+    plain, _ = _runner("distilled-x0-kv-prefix")
+    explicit = _first_block_runner(
+        fixed_timesteps=(1000, 750, 500, 250),
+        first_block_timesteps=(1000, 750, 500, 250),
+        denoiser=_WindowDenoiser(),
+    )
+    assert plain.first_block_timesteps == ()
+    request = _request("distilled-x0-kv-prefix")
+    assert torch.equal(explicit.run(request).latents, plain.run(request).latents)
+
+
+def test_first_block_timesteps_require_distilled_x0() -> None:
+    with pytest.raises(ValueError, match="first_block_timesteps requires distilled-x0"):
+        AutoregressiveWindowRunner(
+            model_id="ar-window-flow",
+            components=RunnerComponents(
+                denoiser=_WindowDenoiser(),
+                conditioner=_Conditioner(),
+                latent_initializer=_Initializer(),
+                scheduler=FastVideoCausalWanSelfForcingScheduler(raw_timesteps=(1000, 600, 300)),
+                decoder=_Codec(),
+            ),
+            prediction_mode="flow",
+            first_block_timesteps=(1000, 750),
+        )
+
+
+@pytest.mark.parametrize(("batch", "frames"), [(1, 1), (1, 3), (2, 1)])
+def test_bf16_renoise_follows_official_add_noise_promotion(batch: int, frames: int) -> None:
+    from worldfoundry.base_models.diffusion_model.schedulers.wan import shift_flow_sigmas
+
+    generator = torch.Generator().manual_seed(4)
+    clean = torch.randn(batch, 16, frames, 8, 8, generator=generator).to(torch.bfloat16)
+    noise = torch.randn(batch, 16, frames, 8, 8, generator=generator).to(torch.bfloat16)
+    sigma = shift_flow_sigmas(torch.tensor(0.5), 5.0)
+
+    renoised = AutoregressiveWindowRunner._renoise_in_dtype(clean, noise, sigma)
+
+    in_float32 = ((1 - sigma) * clean.float() + sigma * noise.float()).to(torch.bfloat16)
+    # FlowMatchScheduler.add_noise with one timestep element: a 0-dim float32 sigma keeps bf16 arithmetic.
+    zero_dim = sigma.reshape(())
+    in_bf16 = (1 - zero_dim) * clean + zero_dim * noise
+    assert in_bf16.dtype == torch.bfloat16
+    assert renoised.dtype == torch.bfloat16
+    assert not torch.equal(in_bf16, in_float32)
+    assert torch.equal(renoised, in_bf16 if batch * frames == 1 else in_float32)

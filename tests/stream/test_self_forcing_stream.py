@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 WorldFoundry contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Drive the native Self-Forcing realtime session and compare it with the offline call.
+"""Drive the native Self-Forcing or Causal-Forcing realtime session and compare it with the offline call.
 
-One offline ``NativeSelfForcingPipeline(...)(prompt, seed, return_dict=True)`` run
+``--model-id`` selects ``self-forcing`` (default) or a ``causal-forcing-*`` recipe.
+One offline ``pipeline(prompt, seed, return_dict=True)`` run
 produces the reference uint8 video. Each realtime run then calls
 ``prepare_realtime``, ``configure_realtime`` and ``stream_realtime`` once per
 latent block, and the concatenated uint8 chunks must equal the reference bitwise.
@@ -36,7 +37,10 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from worldfoundry.core.media.codecs.video import video_tensor_to_uint8_frames  # noqa: E402
-from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline  # noqa: E402
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import (  # noqa: E402
+    NativeCausalForcingPipeline,
+    NativeSelfForcingPipeline,
+)
 
 
 def realtime_run(pipeline: NativeSelfForcingPipeline, prompt: str, seed: int) -> tuple[np.ndarray, dict[str, Any]]:
@@ -78,7 +82,8 @@ def main() -> None:
     """Load the native pipeline once, run the offline reference, then the realtime runs."""
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--checkpoint", type=Path, required=True, help="self_forcing_dmd.pt")
+    parser.add_argument("--checkpoint", type=Path, required=True, help="Generator checkpoint, e.g. self_forcing_dmd.pt")
+    parser.add_argument("--model-id", default="self-forcing", help="self-forcing or a causal-forcing-* recipe")
     parser.add_argument("--wan-root", type=Path, required=True, help="Wan2.1-T2V-1.3B official layout directory")
     parser.add_argument("--prompt-file", type=Path, required=True, help="The first line is the prompt")
     parser.add_argument("--seed", type=int, default=42)
@@ -88,13 +93,15 @@ def main() -> None:
     args = parser.parse_args()
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
-        raise RuntimeError("The Self-Forcing realtime check runs the real checkpoint on a CUDA device")
+        raise RuntimeError("The forcing realtime check runs the real checkpoint on a CUDA device")
     prompt = args.prompt_file.read_text(encoding="utf-8").splitlines()[0].strip()
 
     load_started = time.perf_counter()
+    pipeline_class = NativeSelfForcingPipeline if args.model_id == "self-forcing" else NativeCausalForcingPipeline
     pipeline = cast(
         NativeSelfForcingPipeline,
-        NativeSelfForcingPipeline.from_pretrained(
+        pipeline_class.from_pretrained(
+            model_id=args.model_id,
             device=str(device),
             torch_dtype="bf16",
             offload_mode="none",
@@ -130,6 +137,7 @@ def main() -> None:
 
     report = {
         "evidence_level": "real checkpoint, realtime session versus offline call (one request)",
+        "model_id": pipeline.model_id,
         "prompt": prompt,
         "seed": args.seed,
         "gpu": torch.cuda.get_device_name(device),

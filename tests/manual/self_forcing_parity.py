@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 WorldFoundry contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Compare native Self-Forcing with a recorded official reference run.
+"""Compare native Self-Forcing or Causal-Forcing with a recorded official reference run.
 
 The reference directory is produced by the vendored official runtime
-(``self_forcing_runtime/inference.py``) for one T2V request and contains
-``prompt.txt``, ``initial_noise.pt``, ``renoise_draws.pt``,
-``prompt_embeds.pt``, ``step_trace.pt`` (every generator call), ``latents.pt``
-and ``video.pt``; see ``meta.json`` in that directory.
+(``self_forcing_runtime/inference.py`` or ``causal_forcing_runtime/inference.py``)
+for one request and contains ``prompt.txt``, ``initial_noise.pt``,
+``renoise_draws.pt``, ``prompt_embeds.pt``, ``step_trace.pt`` (every generator
+call), ``latents.pt`` and ``video.pt``; an image-to-video record adds
+``i2v_image_input.pt`` and ``initial_latent.pt``. See ``meta.json`` in that
+directory.
 
-The native recipe is loaded through ``NativeSelfForcingPipeline`` and compared
-stage by stage: checkpoint conversion, prompt embeddings, the denoiser on the
-recorded inputs of all generator calls, the ``autoregressive-window`` rollout
-with the recorded initial noise and re-noise draws, and the codec decode of the
-reference latents. Noise injection replaces the rollout's noise source on the
-runner instance only. Each comparison reports bitwise equality, the maximum and
-mean absolute difference, and the maximum absolute difference relative to the
+``--model-id`` selects the native recipe (``self-forcing`` or one of the
+``causal-forcing-*`` recipes), loaded through ``NativeSelfForcingPipeline`` or
+``NativeCausalForcingPipeline`` and compared stage by stage: checkpoint
+conversion, prompt embeddings, for image-to-video the codec input and image
+latent, the denoiser on the recorded inputs of all generator calls, the
+``autoregressive-window`` rollout with the recorded initial noise and re-noise
+draws, and the codec decode of the reference latents as one clip and as streamed
+chunks. Noise injection replaces the rollout's noise source on the runner
+instance only. Each comparison reports bitwise equality, the maximum and mean
+absolute difference, and the maximum absolute difference relative to the
 largest reference magnitude. Run in the unified GPU environment on the GPU that
 recorded the reference; this is accepted-reference component and rollout
 evidence for one request, not a regression-matrix replay.
@@ -42,6 +47,8 @@ from worldfoundry.base_models.diffusion_model.contracts import (  # noqa: E402
     DenoiserInput,
     DenoiserOutput,
     DiffusionRequest,
+    EncodedLatentInitializer,
+    LatentInitialization,
 )
 from worldfoundry.base_models.diffusion_model.extensions import DiffusionExtension  # noqa: E402
 from worldfoundry.base_models.diffusion_model.models.denoisers.wan import (  # noqa: E402
@@ -51,9 +58,12 @@ from worldfoundry.base_models.diffusion_model.models.denoisers.wan import (  # n
 from worldfoundry.base_models.diffusion_model.runners.autoregressive import (  # noqa: E402
     AutoregressiveWindowRunner,
 )
-from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline  # noqa: E402
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import (  # noqa: E402
+    NativeCausalForcingPipeline,
+    NativeSelfForcingPipeline,
+)
 
-BLOCK_SIZE = 3
+COMMIT_KINDS = ("cache_commit", "initial_latent_commit")
 
 
 def compare(actual: torch.Tensor, expected: torch.Tensor) -> dict[str, Any]:
@@ -176,13 +186,24 @@ def instrumented_runner(
     renoise_draws: list[torch.Tensor],
     recorder: CallRecorder,
 ) -> Generator[list[torch.Tensor], None, None]:
-    """Inject reference noise and a recorder into one runner instance, restoring it afterwards."""
+    """Inject reference noise and a recorder into one runner instance, restoring it afterwards.
+
+    An initializer bound to the codec still encodes the request image; only its
+    noise is replaced, so the first-frame latent stays the native encoding.
+    """
 
     initializer = runner.components.latent_initializer
     pending = list(renoise_draws)
+    encoded = runner.components.latent_encoder is not None
+    initialize_name = "initialize_with_encoder" if encoded else "initialize"
+    native_initialize = getattr(initializer, initialize_name)
 
-    def initialize(request: DiffusionRequest, **_: Any) -> torch.Tensor:
-        del request
+    def initialize(request: DiffusionRequest, **kwargs: Any) -> torch.Tensor | LatentInitialization:
+        if not encoded:
+            return initial_noise.clone()
+        native = native_initialize(request, **kwargs)
+        if isinstance(native, LatentInitialization):
+            return LatentInitialization(initial_noise.clone(), native.conditioning, native.artifacts)
         return initial_noise.clone()
 
     def noise_like(value: torch.Tensor, generator: torch.Generator) -> torch.Tensor:
@@ -193,7 +214,7 @@ def instrumented_runner(
         return draw.to(device=value.device, dtype=value.dtype)
 
     extensions = runner.extensions
-    setattr(initializer, "initialize", initialize)
+    setattr(initializer, initialize_name, initialize)
     setattr(runner, "_noise_like", noise_like)
     runner.extensions = (*extensions, recorder)
     try:
@@ -201,7 +222,7 @@ def instrumented_runner(
     finally:
         runner.extensions = extensions
         delattr(runner, "_noise_like")
-        delattr(initializer, "initialize")
+        delattr(initializer, initialize_name)
 
 
 def compare_checkpoint(path: Path, denoiser: SelfForcingWanDenoiser) -> dict[str, Any]:
@@ -243,7 +264,10 @@ def compare_trace(
     per_call = []
     first_divergence = None
     for call, flow, expected in zip(calls, flows, trace, strict=True):
-        kind = "cache_commit" if call["branch"] == "positive-cache-commit" else "denoise"
+        commit = call["branch"] == "positive-cache-commit"
+        kind = (
+            expected["kind"] if commit and expected["kind"] in COMMIT_KINDS else "cache_commit" if commit else "denoise"
+        )
         timestep = float(expected["timestep"].flatten()[0])
         if (
             kind != expected["kind"]
@@ -290,11 +314,10 @@ def run_teacher_forced(
     """Feed every recorded official generator input, in order, through the native denoiser and one cache."""
 
     frame_tokens = int(trace[0]["noisy_input"].shape[-2] * trace[0]["noisy_input"].shape[-1] // 4)
-    total_frames = (max(entry["block_index"] for entry in trace) + 1) * BLOCK_SIZE
     cache = denoiser.create_kv_cache(
         batch_size=1,
         n_views=1,
-        latent_frames_per_view=total_frames,
+        latent_frames_per_view=denoiser.cache_frames,
         frame_sequence_length=frame_tokens,
         device=device,
         dtype=denoiser.compute_dtype,
@@ -304,21 +327,22 @@ def run_teacher_forced(
     with torch.no_grad(), capture.active():
         for entry in trace:
             noisy = to_bcthw(entry["noisy_input"]).to(device)
-            timestep = entry["timestep"].flatten()[0].to(device)
+            timestep = entry["timestep"].flatten()[0].to(device=device, dtype=torch.float32)
+            branch = "positive-cache-commit" if entry["kind"] in COMMIT_KINDS else "positive"
             output = denoiser(
                 DenoiserInput(
                     latents=noisy,
                     timestep=timestep,
                     next_timestep=torch.zeros((), device=device),
                     conditioning={"context": context, "kv_cache": cache, "current_start": entry["current_start"]},
-                    step_index=entry["step_index"],
+                    step_index=entry["step_index"] or 0,
                     total_steps=4,
-                    branch="positive-cache-commit" if entry["kind"] == "cache_commit" else "positive",
+                    branch=branch,
                 )
             )
             calls.append(
                 {
-                    "branch": "positive-cache-commit" if entry["kind"] == "cache_commit" else "positive",
+                    "branch": branch,
                     "timestep": float(timestep),
                     "current_start": entry["current_start"],
                     "noisy_input": noisy,
@@ -360,23 +384,35 @@ def run_rollout(
     return output.latents
 
 
-def block_timings(recorder: CallRecorder) -> list[dict[str, Any]]:
-    """Group timed calls into blocks of four denoising steps and one cache commit."""
+def block_timings(recorder: CallRecorder, trace: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Group timed calls by the reference blocks: its denoising steps, then one cache commit."""
 
-    blocks = []
-    calls = recorder.calls
-    for index in range(0, len(calls), 5):
-        block = calls[index : index + 5]
-        blocks.append(
-            {
-                "block_index": index // 5,
-                "denoise_step_ms": [call["ms"] for call in block[:4]],
-                "denoise_total_ms": sum(call["ms"] for call in block[:4]),
-                "cache_commit_ms": block[4]["ms"],
-                "block_wall_ms": (block[4]["end"] - block[0]["start"]) * 1000.0,
-            }
-        )
-    return blocks
+    blocks: dict[int, list[dict[str, Any]]] = {}
+    for call, expected in zip(recorder.calls, trace, strict=True):
+        if expected["kind"] != "initial_latent_commit":
+            blocks.setdefault(int(expected["block_index"]), []).append(call)
+    return [
+        {
+            "block_index": index,
+            "denoise_step_ms": [call["ms"] for call in block[:-1]],
+            "denoise_total_ms": sum(call["ms"] for call in block[:-1]),
+            "cache_commit_ms": block[-1]["ms"],
+            "block_wall_ms": (block[-1]["end"] - block[0]["start"]) * 1000.0,
+        }
+        for index, block in sorted(blocks.items())
+    ]
+
+
+def reference_blocks(trace: list[dict[str, Any]]) -> list[tuple[int, int]]:
+    """Latent frame range ``[start, end)`` of every denoised reference block, in order."""
+
+    frame_tokens = int(trace[0]["noisy_input"].shape[-2] * trace[0]["noisy_input"].shape[-1] // 4)
+    ranges: dict[int, tuple[int, int]] = {}
+    for entry in trace:
+        if entry["kind"] == "cache_commit":
+            start = int(entry["current_start"]) // frame_tokens
+            ranges[int(entry["block_index"])] = (start, start + int(entry["noisy_input"].shape[1]))
+    return [ranges[index] for index in sorted(ranges)]
 
 
 def to_reference_video(pixels: torch.Tensor) -> torch.Tensor:
@@ -393,8 +429,9 @@ def compare_decode(
     latents: torch.Tensor,
     expected_video: torch.Tensor,
     request: DiffusionRequest,
+    chunk_ends: list[int],
 ) -> dict[str, Any]:
-    """Decode the reference latents as one clip and as streamed three-frame blocks."""
+    """Decode the reference latents as one clip and as the realtime session's streamed chunks."""
 
     timings = []
     with torch.no_grad():
@@ -415,8 +452,8 @@ def compare_decode(
         torch.cuda.synchronize()
         start = time.perf_counter()
         chunks = [
-            codec.decode_chunk(latents[:, :, index : index + BLOCK_SIZE], state=state, is_first_chunk=index == 0)
-            for index in range(0, latents.shape[2], BLOCK_SIZE)
+            codec.decode_chunk(latents[:, :, start:end], state=state, is_first_chunk=start == 0)
+            for start, end in zip([0, *chunk_ends[:-1]], chunk_ends, strict=True)
         ]
         torch.cuda.synchronize()
         streamed = {
@@ -427,19 +464,69 @@ def compare_decode(
     return {"whole_clip": whole, "block_chunks": streamed}
 
 
+def compare_image_latent(
+    runner: AutoregressiveWindowRunner,
+    request: DiffusionRequest,
+    reference: Path,
+    device: torch.device,
+) -> dict[str, Any]:
+    """Compare the codec input and first-frame latent the native initializer builds from the image."""
+
+    encoder = runner.components.latent_encoder
+    initializer = runner.components.latent_initializer
+    if encoder is None or not isinstance(initializer, EncodedLatentInitializer):
+        raise TypeError("an image-to-video comparison needs a recipe that binds the latent encoder")
+    pixels: list[torch.Tensor] = []
+    encode = encoder.encode
+
+    def record(images: torch.Tensor) -> torch.Tensor:
+        pixels.append(images.detach().clone())
+        return encode(images)
+
+    setattr(encoder, "encode", record)
+    try:
+        initialized = initializer.initialize_with_encoder(
+            request,
+            latent_encoder=encoder,
+            generator=torch.Generator(device=device).manual_seed(0),
+            device=device,
+            dtype=runner.dtype,
+        )
+    finally:
+        delattr(encoder, "encode")
+    if not isinstance(initialized, LatentInitialization):
+        raise TypeError("the image request did not produce a first-frame latent")
+    first = cast(torch.Tensor, initialized.conditioning["first_frame_latent"])
+
+    def load(name: str) -> torch.Tensor:
+        return torch.load(reference / name, map_location="cpu", weights_only=True).to(device)
+
+    return {
+        "codec_input": compare(pixels[0], load("i2v_image_input.pt")),
+        "latent": compare(first, to_bcthw(load("initial_latent.pt"))),
+    }
+
+
 def main() -> None:
     """Load the native pipeline once and compare every stage with the reference record."""
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--reference-dir", type=Path, required=True, help="Recorded official run directory")
-    parser.add_argument("--checkpoint", type=Path, required=True, help="self_forcing_dmd.pt")
+    parser.add_argument("--checkpoint", type=Path, required=True, help="Generator checkpoint, e.g. self_forcing_dmd.pt")
     parser.add_argument("--wan-root", type=Path, required=True, help="Wan2.1-T2V-1.3B official layout directory")
+    parser.add_argument(
+        "--model-id",
+        default="self-forcing",
+        help="self-forcing, causal-forcing-chunkwise, causal-forcing-framewise, causal-forcing-framewise-1step "
+        "or causal-forcing-framewise-2step",
+    )
+    parser.add_argument("--image", type=Path, help="Source image of an image-to-video record")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", type=Path, default=ROOT / "tmp/self-forcing-parity.json")
     args = parser.parse_args()
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
-        raise RuntimeError("Self-Forcing reference parity requires the CUDA device that recorded the reference")
+        raise RuntimeError("Forcing reference parity requires the CUDA device that recorded the reference")
     reference = args.reference_dir
     meta = json.loads((reference / "meta.json").read_text(encoding="utf-8"))
 
@@ -447,7 +534,9 @@ def main() -> None:
         return torch.load(reference / name, map_location="cpu", weights_only=True)
 
     load_start = time.perf_counter()
-    pipeline = NativeSelfForcingPipeline.from_pretrained(
+    pipeline_class = NativeSelfForcingPipeline if args.model_id == "self-forcing" else NativeCausalForcingPipeline
+    pipeline = pipeline_class.from_pretrained(
+        model_id=args.model_id,
         device=str(device),
         torch_dtype="bf16",
         offload_mode="none",
@@ -467,10 +556,13 @@ def main() -> None:
         raise TypeError(f"expected SelfForcingWanDenoiser, got {type(denoiser).__name__}")
 
     prompt = (reference / "prompt.txt").read_text(encoding="utf-8")
-    request, _ = pipeline._prepare_call(prompt=prompt, seed=int(meta["request"].get("seed", 42)))
+    image = None if args.image is None else str(args.image)
+    request, _ = pipeline._prepare_call(prompt=prompt, images=image, seed=int(meta["request"].get("seed", 42)))
     report: dict[str, Any] = {
         "evidence_level": "accepted-reference components and rollout (one request)",
+        "model_id": pipeline.model_id,
         "reference_dir": str(reference),
+        "reference_variant": meta.get("variant"),
         "reference_commit": meta.get("commit"),
         "torch": torch.__version__,
         "cuda": torch.version.cuda,
@@ -501,11 +593,17 @@ def main() -> None:
     context = conditioning.positive["context"]
     report["text"] = compare(context, load("prompt_embeds.pt").to(device))
 
+    if image is not None:
+        report["image"] = compare_image_latent(runner, request, reference, device)
+
     trace = load("step_trace.pt")
     report["denoiser_teacher_forced"] = run_teacher_forced(denoiser, context, trace, device)
 
     # The native initializer draws float32 noise; the bf16 reference noise is exact in float32.
     initial_noise = to_bcthw(load("initial_noise.pt")).to(device=device, dtype=torch.float32).contiguous()
+    if image is not None:
+        # The official I2V noise covers frames 1..; frame 0 is the image latent, so its noise is never read.
+        initial_noise = torch.cat((torch.zeros_like(initial_noise[:, :, :1]), initial_noise), dim=2)
     # Device-resident draws keep host-to-device copies out of the block timings.
     renoise_draws = [draw["tensor"].to(device) for draw in load("renoise_draws.pt")]
     expected_latents = to_bcthw(load("latents.pt")).to(device)
@@ -519,15 +617,14 @@ def main() -> None:
         recorder=recorder,
         capture=capture,
     )
+    block_ranges = reference_blocks(trace)
     blocks = [
         {
             "block_index": index,
-            **compare(
-                latents[:, :, index * BLOCK_SIZE : (index + 1) * BLOCK_SIZE],
-                expected_latents[:, :, index * BLOCK_SIZE : (index + 1) * BLOCK_SIZE],
-            ),
+            "frames": [start, end],
+            **compare(latents[:, :, start:end], expected_latents[:, :, start:end]),
         }
-        for index in range(latents.shape[2] // BLOCK_SIZE)
+        for index, (start, end) in enumerate(block_ranges)
     ]
     report["rollout"] = {
         "final_latents": compare(latents, expected_latents),
@@ -559,7 +656,7 @@ def main() -> None:
     )
     torch.cuda.synchronize()
     rollout_ms = (time.perf_counter() - start) * 1000.0
-    native_blocks = block_timings(timed)
+    native_blocks = block_timings(timed, trace)
     reference_timings: Mapping[str, Any] = meta["timings"]
     report["timing"] = {
         "method": "Third native rollout in the process, eager; torch.cuda.synchronize() before and after "
@@ -580,11 +677,13 @@ def main() -> None:
         },
     }
 
+    # Realtime chunks: one per block; an image-seeded first chunk also carries frame 0.
     report["decode"] = compare_decode(
         runner.components.decoder,
         to_bcthw(load("latents.pt")).to(device=device, dtype=latents.dtype),
         load("video.pt"),
         request,
+        [end for _, end in block_ranges],
     )
     report["timing"]["native"]["decode_ms"] = report["decode"]["whole_clip"]["warm_ms"]
 
@@ -594,6 +693,7 @@ def main() -> None:
             for name in ("missing_keys", "unexpected_keys", "shape_mismatches", "value_mismatches_after_cast")
         ),
         "text_bitwise_equal": report["text"]["bitwise_equal"],
+        "image_latent_bitwise_equal": report["image"]["latent"]["bitwise_equal"] if image is not None else None,
         "denoiser_teacher_forced_bitwise_equal": report["denoiser_teacher_forced"]["bitwise_equal"],
         "rollout_final_latents_bitwise_equal": report["rollout"]["final_latents"]["bitwise_equal"],
         "rollout_first_divergence": report["rollout"]["calls"]["first_divergence"],

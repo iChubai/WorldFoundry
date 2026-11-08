@@ -5915,5 +5915,375 @@
       }
     ],
     "scope": "Native Self-Forcing DMD route (the catalog self-forcing binding still runs the official runtime): two causal blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py; not a quality benchmark."
+  },
+  "causal-forcing-chunkwise-t2v-short": {
+    "id": "causal-forcing-chunkwise-t2v-short",
+    "model_id": "causal-forcing-chunkwise-native",
+    "seed": 42,
+    "deterministic": true,
+    "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeCausalForcingPipeline",
+    "load": {
+      "model_id": "causal-forcing-chunkwise",
+      "checkpoint_overrides": {
+        "dit": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/chunkwise/causal_forcing.pt",
+        "text-encoder": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+        "tokenizer": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+        "vae": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B"
+      },
+      "device": "cuda",
+      "torch_dtype": "bfloat16",
+      "offload_mode": "none"
+    },
+    "sequence": [
+      {
+        "name": "a",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 21,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true,
+          "output_path": "${OUTPUT_DIR}/export/a.mp4"
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      },
+      {
+        "name": "b",
+        "call": {
+          "prompt": "A blue bird flies over a snow-covered mountain. The camera pans slowly to the left.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 21,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      },
+      {
+        "name": "invalid",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 93,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "expect_error": {
+          "type": "builtins.ValueError",
+          "match": "at most 21 latent frames"
+        }
+      },
+      {
+        "name": "repeat",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 21,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      }
+    ],
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/chunkwise/causal_forcing.pt",
+      "wan": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B"
+    },
+    "required_outputs": [
+      "a.sample",
+      "a.latents",
+      "b.sample",
+      "b.latents",
+      "repeat.sample",
+      "repeat.latents"
+    ],
+    "array_contracts": {
+      "a.sample": {
+        "shape": [
+          1,
+          3,
+          21,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "b.sample": {
+        "shape": [
+          1,
+          3,
+          21,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "repeat.sample": {
+        "shape": [
+          1,
+          3,
+          21,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "export.export/a.mp4.frames": {
+        "shape": [
+          21,
+          128,
+          224,
+          3
+        ],
+        "dtype": "uint8"
+      },
+      "export.export/a.mp4.fps": {
+        "shape": [
+          2
+        ],
+        "dtype": "int64",
+        "values": [
+          16,
+          1
+        ]
+      }
+    },
+    "export_artifacts": [
+      "export/*.mp4"
+    ],
+    "comparisons": [
+      {
+        "left": "a.sample",
+        "right": "repeat.sample",
+        "relation": "equal"
+      },
+      {
+        "left": "a.latents",
+        "right": "repeat.latents",
+        "relation": "equal"
+      },
+      {
+        "left": "a.sample",
+        "right": "b.sample",
+        "relation": "different"
+      }
+    ],
+    "scope": "Native Causal-Forcing chunk-wise route (the catalog causal-forcing binding still runs the official runtime): two three-latent-frame blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-chunkwise; not a quality benchmark."
+  },
+  "causal-forcing-framewise-short": {
+    "id": "causal-forcing-framewise-short",
+    "model_id": "causal-forcing-framewise-native",
+    "seed": 42,
+    "deterministic": true,
+    "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeCausalForcingPipeline",
+    "load": {
+      "model_id": "causal-forcing-framewise",
+      "checkpoint_overrides": {
+        "dit": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/framewise/causal_forcing.pt",
+        "text-encoder": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+        "tokenizer": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+        "vae": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B"
+      },
+      "device": "cuda",
+      "torch_dtype": "bfloat16",
+      "offload_mode": "none"
+    },
+    "sequence": [
+      {
+        "name": "a",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 5,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true,
+          "output_path": "${OUTPUT_DIR}/export/a.mp4"
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      },
+      {
+        "name": "b",
+        "call": {
+          "prompt": "A blue bird flies over a snow-covered mountain. The camera pans slowly to the left.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 5,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      },
+      {
+        "name": "i2v",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 9,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true,
+          "images": "${WORLDFOUNDRY_REGRESSION_INPUT_IMAGE}"
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      },
+      {
+        "name": "invalid",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 93,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "expect_error": {
+          "type": "builtins.ValueError",
+          "match": "at most 21 latent frames"
+        }
+      },
+      {
+        "name": "repeat",
+        "call": {
+          "prompt": "A red fox walks slowly through a sunlit forest clearing. Stable cinematic camera movement.",
+          "height": 128,
+          "width": 224,
+          "num_frames": 5,
+          "seed": 42,
+          "fps": 16,
+          "return_dict": true
+        },
+        "outputs": [
+          "sample",
+          "latents"
+        ]
+      }
+    ],
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/framewise/causal_forcing.pt",
+      "wan": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_IMAGE}"
+    },
+    "required_outputs": [
+      "a.sample",
+      "a.latents",
+      "b.sample",
+      "b.latents",
+      "i2v.sample",
+      "i2v.latents",
+      "repeat.sample",
+      "repeat.latents"
+    ],
+    "array_contracts": {
+      "a.sample": {
+        "shape": [
+          1,
+          3,
+          5,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "b.sample": {
+        "shape": [
+          1,
+          3,
+          5,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "i2v.sample": {
+        "shape": [
+          1,
+          3,
+          9,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "repeat.sample": {
+        "shape": [
+          1,
+          3,
+          5,
+          128,
+          224
+        ],
+        "dtype": "float32"
+      },
+      "export.export/a.mp4.frames": {
+        "shape": [
+          5,
+          128,
+          224,
+          3
+        ],
+        "dtype": "uint8"
+      },
+      "export.export/a.mp4.fps": {
+        "shape": [
+          2
+        ],
+        "dtype": "int64",
+        "values": [
+          16,
+          1
+        ]
+      }
+    },
+    "export_artifacts": [
+      "export/*.mp4"
+    ],
+    "comparisons": [
+      {
+        "left": "a.sample",
+        "right": "repeat.sample",
+        "relation": "equal"
+      },
+      {
+        "left": "a.latents",
+        "right": "repeat.latents",
+        "relation": "equal"
+      },
+      {
+        "left": "a.sample",
+        "right": "b.sample",
+        "relation": "different"
+      }
+    ],
+    "scope": "Native Causal-Forcing frame-wise route (the catalog causal-forcing binding still runs the official runtime): two one-latent-frame blocks at 128x224 for T2V, and an image-seeded first frame plus two blocks for I2V; fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-framewise; not a quality benchmark."
   }
 }

@@ -5749,7 +5749,7 @@
   },
   "self-forcing-t2v-short": {
     "id": "self-forcing-t2v-short",
-    "model_id": "self-forcing",
+    "model_id": "self-forcing-native",
     "seed": 42,
     "deterministic": true,
     "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeSelfForcingPipeline",
@@ -5914,6 +5914,6 @@
         "relation": "different"
       }
     ],
-    "scope": "Native Self-Forcing DMD route: two causal blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py; not a quality benchmark."
+    "scope": "Native Self-Forcing DMD route (the catalog self-forcing binding still runs the official runtime): two causal blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py; not a quality benchmark."
   }
 }

@@ -10,10 +10,7 @@ __all__ = ["RUNTIME_STATUS", "Wan2p6Synthesis"]
 
 
 class Wan2p6Synthesis(DashScopeVideoSynthesis):
-    """Wan2.6 API 合成类。
-
-    支持文本生成视频、图像生成视频和参考素材生成视频。
-    """
+    """Wan2.6 video generation through the DashScope API: text-, image- and reference-driven."""
 
     def generate_t2av(
         self,

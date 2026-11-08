@@ -162,9 +162,11 @@ class ReCamMasterOperator(BaseOperator):
         self,
     ):
         """
-        处理当前交互指令，生成平滑的相机轨迹。
-        输入: cur_interaction["camera_viewpoint"] = [dx, dy, dz, theta_x, theta_z]
-        输出: 相机姿态嵌入张量，形状为 (num_frames, 12)
+        Turn the latest interaction into a smooth camera trajectory.
+
+        Input: ``cur_interaction["camera_viewpoint"] = [dx, dy, dz, theta_x, theta_z]`` with angles in degrees.
+        Output: camera pose embedding of shape (1, len(range(0, num_frames, 4)), 12), for example
+        (1, 21, 12) for 81 frames.
         """
         cur_interaction = self.current_interaction[-1]
         camera_change = cur_interaction["camera_viewpoint"]  # [dx, dy, dz, theta_x, theta_z]

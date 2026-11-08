@@ -51,9 +51,7 @@ class AstraOperator(BaseOperator):
         )
 
     def check_interaction(self, interaction):
-        """
-        检验输入是否符合astra输入格式
-        """
+        """Check that the interaction is one of the Astra interaction template entries."""
         if interaction not in self.interaction_template:
             raise ValueError(f"Invalid interaction: {interaction}. Allowed: {self.interaction_template}")
         return True
@@ -114,9 +112,7 @@ class AstraOperator(BaseOperator):
         return camera_embedding_full.to(self.device, dtype=model_dtype)
 
     def process_perception(self, condition_video=None, condition_image=None):
-        """
-        加载图像或视频文件，预处理为 Tensor Frames，供 Synthesis 编码使用。
-        """
+        """Load an image or video file and preprocess it into tensor frames for the synthesis encoder."""
         frames = None
 
         if condition_video:

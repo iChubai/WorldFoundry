@@ -13,11 +13,7 @@ def _image_to_data_url(image_input: Image.Image | str) -> str:
 
 
 class KlingApiOperator(BaseOperator):
-    """
-    Kling API 数据处理 Operator。
-
-    当前主要覆盖 text-to-video 和 image-to-video。
-    """
+    """Prepare prompts and image payloads for Kling API text-to-video and image-to-video requests."""
 
     def __init__(
         self,

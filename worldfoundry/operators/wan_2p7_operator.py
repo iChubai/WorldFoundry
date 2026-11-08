@@ -11,10 +11,9 @@ def _validate_public_url(url: str, field_name: str) -> str:
 
 
 class Wan2p7Operator(BaseOperator):
-    """
-    Wan2.7 数据处理 Operator
+    """Prepare prompts and media inputs for Wan2.7 requests.
 
-    Wan2.7 仅支持公网可访问的媒体 URL。
+    Wan2.7 accepts only publicly reachable media URLs.
     """
 
     def __init__(

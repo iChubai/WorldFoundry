@@ -16,11 +16,7 @@ def _image_to_data_base64(image_input: Image.Image) -> str:
 
 
 class WorldLabsOperator(BaseOperator):
-    """
-    World Labs / Marble 数据处理 Operator。
-
-    支持 text / image / multi-image / video 四类 world prompt。
-    """
+    """Build World Labs (Marble) world prompts from text, image, multi-image or video inputs."""
 
     def __init__(
         self,

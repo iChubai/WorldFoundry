@@ -177,9 +177,7 @@ def official_bench_actions_templerun(num_frames, num_samples_per_action=4, seed=
 
 
 def encode_actions(action_list, mode):
-    """
-    将一个动作 list 编码成 keyboard_condition / mouse_condition (一次性的)
-    """
+    """Encode a list of actions into one keyboard_condition / mouse_condition pair."""
     COMBINATION_MAP = {}
     if mode == "universal":
         KEYBOARD_IDX = {"forward": 0, "back": 1, "left": 2, "right": 3}
@@ -272,7 +270,7 @@ class MatrixGame2Operator(BaseOperator):
         self.interaction_template = interaction_template
         self.interaction_template_init()
 
-        self.current_interaction = []  # 保存用户按顺序输入的动作组
+        self.current_interaction = []  # action lists in the order the user issued them
 
         self.frame_process = None
 
@@ -283,8 +281,7 @@ class MatrixGame2Operator(BaseOperator):
         return True
 
     def get_interaction(self, interaction_list):
-        # 用户传进来是 list
-        """Process and append the interaction to the current sequence."""
+        """Validate each action of an action list and append the list to the current sequence."""
         for act in interaction_list:
             self.check_interaction(act)
         self.current_interaction.append(interaction_list)
@@ -328,7 +325,7 @@ class MatrixGame2Operator(BaseOperator):
 
         return {"keyboard_condition": keyboard_tensor}
 
-    # multi_turn 不用额外修改，外部调整num_frames以及输入interaction即可
+    # Multi-turn generation needs no extra handling: callers adjust num_frames and the interaction.
     def process_action_universal(self, num_frames):
         """Process action universal implementation."""
         return self._build_sequence(num_frames)

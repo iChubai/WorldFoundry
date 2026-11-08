@@ -11,10 +11,9 @@ def _validate_public_url(url: str, field_name: str) -> str:
 
 
 class LumaRay2Operator(BaseOperator):
-    """
-    Luma Ray2 数据处理 Operator
+    """Prepare prompts and keyframes for Luma Ray2 requests.
 
-    Luma keyframe 输入需要公网 URL 或 generation id。
+    Each Luma keyframe is either a public image URL or a generation ID.
     """
 
     def __init__(

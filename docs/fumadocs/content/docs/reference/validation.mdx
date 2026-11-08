@@ -569,7 +569,12 @@ The planner combines the explicit component declarations in
 Python imports, literal lazy imports, package initializers, and optional recorded
 imports. Git rename and deletion handling includes the old paths. Shared
 inference infrastructure or matrix changes select all cases; new cases require dependency
-declarations. Unknown paths or an unresolved import graph select the full matrix
+declarations. The realtime layers `worldfoundry/core/execution/realtime/`,
+`worldfoundry/studio/serving/realtime/` and `worldfoundry/core/media/processing/`
+are not shared paths: a change there selects the cases whose import closure,
+declared components or recorded imports include the file. `core/media/processing`
+still reaches every case through the lazy facade table in `worldfoundry.core`.
+Unknown paths or an unresolved import graph select the full matrix
 and exit with `uncovered`, requiring the coverage gap to be resolved. A docs-only
 change can report `no_inference_changes`; it still requires the CPU gates.
 

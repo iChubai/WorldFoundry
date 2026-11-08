@@ -422,6 +422,101 @@ def test_public_matrix_still_rejects_an_unintegrated_world_model():
     assert plan["uncovered_paths"] == [path]
 
 
+REALTIME_CONTRACTS = "worldfoundry/core/execution/realtime/contracts.py"
+REALTIME_FLOW_SAMPLING = "worldfoundry/core/execution/realtime/flow_sampling.py"
+STUDIO_REALTIME_WEBRTC = "worldfoundry/studio/serving/realtime/webrtc.py"
+MEDIA_PROCESSING_RTX = "worldfoundry/core/media/processing/rtx.py"
+CORE_ATTENTION = "worldfoundry/core/attention/__init__.py"
+NEW_REALTIME_MODULE = "worldfoundry/core/execution/realtime/unimported_session.py"
+NEW_CORE_SUBPACKAGE = "worldfoundry/core/unlisted_subsystem/module.py"
+
+
+@pytest.fixture(scope="module")
+def realtime_layer_plan() -> dict:
+    """Plan every realtime-layer probe path together; reasons stay attributed per path."""
+    return impact.select_cases(
+        TOOLS / "geometry_regression_cases.json",
+        TOOLS / "geometry_regression_dependencies.json",
+        TOOLS.parents[1],
+        [
+            REALTIME_CONTRACTS,
+            REALTIME_FLOW_SAMPLING,
+            STUDIO_REALTIME_WEBRTC,
+            MEDIA_PROCESSING_RTX,
+            CORE_ATTENTION,
+            NEW_REALTIME_MODULE,
+            NEW_CORE_SUBPACKAGE,
+        ],
+    )
+
+
+def cases_selected_by(plan: dict, path: str) -> dict[str, list[dict]]:
+    """Return the selection reasons recorded for one changed path, keyed by case."""
+    selected = {}
+    for case, reasons in plan["reasons"].items():
+        matched = [reason for reason in reasons if reason.get("path") == path]
+        if matched:
+            selected[case] = matched
+    return selected
+
+
+@pytest.mark.parametrize("path", [REALTIME_CONTRACTS, STUDIO_REALTIME_WEBRTC, MEDIA_PROCESSING_RTX])
+def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_layer_plan, path):
+    root = TOOLS.parents[1]
+    assert (root / path).is_file()
+    assert not realtime_layer_plan["graph_errors"]
+    selected = cases_selected_by(realtime_layer_plan, path)
+    assert selected
+    for reasons in selected.values():
+        for reason in reasons:
+            assert reason["kind"] != "shared_component_or_case_matrix"
+            assert set(reason["kind"].split("+")) <= {"declared_component", "static_import", "recorded_import"}
+
+
+def test_realtime_contracts_select_their_offline_importers_only(realtime_layer_plan):
+    selected = cases_selected_by(realtime_layer_plan, REALTIME_CONTRACTS)
+    for case in ("self-forcing-t2v-short", "matrix-game2-controls-short"):
+        assert any("static_import" in reason["kind"] for reason in selected[case])
+    assert set(selected) < set(realtime_layer_plan["reasons"])
+
+
+def test_realtime_flow_sampling_selects_only_lingbot_cases(realtime_layer_plan):
+    _, policy = impact.load_definitions(
+        TOOLS / "geometry_regression_cases.json",
+        TOOLS / "geometry_regression_dependencies.json",
+    )
+    lingbot_cases = {
+        case
+        for case, components in policy["cases"].items()
+        if {"lingbot-world", "lingbot-world-v2"}.intersection(components)
+    }
+    selected = cases_selected_by(realtime_layer_plan, REALTIME_FLOW_SAMPLING)
+    assert selected
+    assert set(selected) <= lingbot_cases
+
+
+def test_other_core_subtrees_remain_shared_by_every_case(realtime_layer_plan):
+    selected = cases_selected_by(realtime_layer_plan, CORE_ATTENTION)
+    assert set(selected) == set(realtime_layer_plan["reasons"])
+    assert len(selected) == len(json.loads((TOOLS / "geometry_regression_cases.json").read_text()))
+    for reasons in selected.values():
+        assert [reason["kind"] for reason in reasons] == ["shared_component_or_case_matrix"]
+
+
+def test_unimported_realtime_or_unlisted_core_files_keep_conservative_fallback(realtime_layer_plan):
+    assert realtime_layer_plan["status"] == "uncovered"
+    assert realtime_layer_plan["uncovered_paths"] == sorted([NEW_REALTIME_MODULE, NEW_CORE_SUBPACKAGE])
+    for reasons in realtime_layer_plan["reasons"].values():
+        fallback = [reason for reason in reasons if reason["kind"] == "conservative_fallback"]
+        assert fallback == [
+            {
+                "kind": "conservative_fallback",
+                "paths": sorted([NEW_REALTIME_MODULE, NEW_CORE_SUBPACKAGE]),
+                "graph_errors": [],
+            }
+        ]
+
+
 VERIFICATION_SUITE = "tests/manual/geometry_regression_suite.py"
 VERIFICATION_IMPACT = "tests/manual/geometry_regression_impact.py"
 MG2_CASE = "matrix-game2-controls-short"

@@ -389,15 +389,6 @@ def _pixelsplat_default_ref() -> str:
     )
 
 
-def _splatt3r_default_ref() -> str:
-    return resolve._prefer_existing_model_ref(
-        str(checkpoint_root_path("splatt3r_v1.0", "epoch=19-step=1200.ckpt")),
-        str(checkpoint_root_path("hfd", "3DGeneration--splatt3r_v1.0", "epoch=19-step=1200.ckpt")),
-        *resolve._cache_candidates("brandonsmart--splatt3r_v1.0", "3DGeneration--splatt3r_v1.0", "splatt3r_v1.0"),
-        "brandonsmart/splatt3r_v1.0",
-    )
-
-
 def _lingbot_map_default_ref() -> str:
     return resolve._prefer_existing_model_ref(
         str(checkpoint_root_path("lingbot-map", "lingbot-map-long.pt")),
@@ -1243,33 +1234,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "output_name",
         ),
         "tags": ("3dgs", "reconstruction", "camera-control"),
-    },
-    "splatt3r": {
-        "display_name": "Splatt3R",
-        "category": "3D Scene",
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_model_ref": _splatt3r_default_ref,
-        "default_task_type": "3d-reconstruction",
-        "default_input_path": str(resolve._data_path("test_cases", "vggt", "examples", "kitchen", "images")),
-        "call_params": (
-            "images",
-            "image_path",
-            "input_path",
-            "interactions",
-            "output_path",
-            "return_dict",
-        ),
-        "load_params": (
-            "checkpoint_path",
-            "model_path",
-            "device",
-            "image_size",
-            *DISPATCH_LOAD_PARAMS,
-        ),
-        "tags": ("3dgs", "gaussian-splatting", "reconstruction"),
-        "notes": "Inference-only Splatt3R wrapper reconstructs a Gaussian PLY from one or two images.",
     },
     "fantasyworld": {
         "display_name": "FantasyWorld",

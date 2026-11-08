@@ -180,7 +180,6 @@ def _category_from_family(family: str, class_name: str, call_params: Sequence[st
         "infinite_vggt",
         "lagernvs",
         "pixelsplat",
-        "splatt3r",
         "dvlt",
         "lingbot_map",
     }:

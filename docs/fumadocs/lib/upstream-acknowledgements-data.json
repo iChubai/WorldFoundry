@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 223,
+  "modelsTotal": 222,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -610,7 +610,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 33,
+      "count": 32,
       "entries": [
         {
           "name": "CUT3R",
@@ -703,10 +703,6 @@
         {
           "name": "Segment and Track Anything",
           "url": "https://github.com/z-x-yang/Segment-and-Track-Anything"
-        },
-        {
-          "name": "Splatt3R",
-          "url": "https://github.com/btsmart/splatt3r"
         },
         {
           "name": "Stable Virtual Camera",

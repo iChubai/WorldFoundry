@@ -87,7 +87,7 @@ No file in this directory is a personal GitHub avatar.
 | `openai.svg` | OpenAI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #412991 | CC0-1.0 | model:sora2 |
 | `openhelix.png` | OpenHelix | GitHub organization brand avatar (github.com/OpenHelix-Team) | Organization brand mark | model:spatial-forcing |
 | `oppo.svg` | OPPO Research Institute | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #2D683D | CC0-1.0 | benchmark:videoverse |
-| `oxford.svg` | University of Oxford | https://commons.wikimedia.org/wiki/File:Oxford-University-Circlet.svg | Public domain | benchmark:kinetix, benchmark:likephys, model:splatt3r, model:vmem |
+| `oxford.svg` | University of Oxford | https://commons.wikimedia.org/wiki/File:Oxford-University-Circlet.svg | Public domain | benchmark:kinetix, benchmark:likephys, model:vmem |
 | `physical-intelligence.png` | Physical Intelligence | GitHub organization brand avatar (github.com/Physical-Intelligence), pre-existing repo asset | Organization brand mark | model:openpi, model:pi0, model:pi0-fast, model:pi0-worldfoundry, model:pi05, model:real-time-chunking |
 | `pku.svg` | Peking University | https://commons.wikimedia.org/wiki/File:Peking_University_seal.svg | Public domain | benchmark:chronomagic-bench, benchmark:fetv, benchmark:rbench, model:helios, model:open-sora-plan |
 | `reactor.jpg` | Reactor | GitHub organization brand avatar (github.com/reactor-team) | Organization brand mark | model:open-dreamer |

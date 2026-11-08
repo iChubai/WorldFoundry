@@ -468,15 +468,6 @@
       "caption": "Method overview: shared self-attention over multi-player video tokens, then per-player action and first-frame conditioning.",
       "captionZh": "论文方法总览：多玩家视频 token 先做共享自注意力，再按玩家注入动作与首帧条件。"
     },
-    "splatt3r": {
-      "modelId": "splatt3r",
-      "paperSrc": "/models/splatt3r/paper.png",
-      "src": "/models/splatt3r/overview.png",
-      "alt": "Method overview: Method overview. We encode the two uncalibrated images using MASt3R’s pretrained ViT encoder and cross-attention transformers, which we freeze during training. In addition to MASt3R’s prediction head for point.",
-      "altZh": "论文方法总览：Splatt3R 的视频生成架构。",
-      "caption": "Method overview: Method overview. We encode the two uncalibrated images using MASt3R’s pretrained ViT encoder and cross-attention transformers, which we freeze during training. In addition to MASt3R’s prediction head for point.",
-      "captionZh": "论文方法总览：Splatt3R 的视频生成架构。"
-    },
     "starvla": {
       "modelId": "starvla",
       "paperSrc": "/models/starvla/paper.png",

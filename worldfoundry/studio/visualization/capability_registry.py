@@ -160,12 +160,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/general_3d/mvdiffusion/mvdiffusion_runtime/demo.py",
     ),
     _cap(
-        "splatt3r",
-        "three_dimensions/general_3d/splatt3r",
-        ("gaussian-splat",),
-        "three_dimensions/general_3d/splatt3r/splatt3r_runtime/utils/export.py",
-    ),
-    _cap(
         "stable-virtual-camera",
         "three_dimensions/general_3d/stable_virtual_camera",
         ("media", "camera"),

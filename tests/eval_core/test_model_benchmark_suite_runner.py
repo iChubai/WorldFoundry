@@ -63,7 +63,7 @@ def test_model_benchmark_suite_skips_incompatible_cells(tmp_path: Path) -> None:
             output_dir=tmp_path / "suite",
             benchmark_manifest_dir=BENCHMARK_MANIFEST_DIR,
             model_manifest_dir=MODEL_MANIFEST_DIR,
-            model_ids=("splatt3r",),
+            model_ids=("lingbot-map",),
             benchmark_ids=("vbench",),
             mode="contract",
         )

@@ -95,8 +95,6 @@ def test_empty_synthesis_compat_packages_are_not_reintroduced():
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/lora",
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/extensions/ESRGAN",
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/extensions/RIFE",
-        "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime/src/mast3r_src",
-        "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime/src/pixelsplat_src",
         "worldfoundry/base_models/three_dimensions/general_3d/lagernvs/runtime/vendor",
         "worldfoundry/synthesis/action_generation/roboflamingo/roboflamingo_runtime/vendor/open_flamingo_src",
         "worldfoundry/synthesis/action_generation/roboflamingo/roboflamingo_runtime/vendor",
@@ -273,60 +271,6 @@ def test_wan_vram_helpers_are_core_owned():
     assert hasattr(core_vram, "DynamicSwapInstaller")
     assert hasattr(core_vram, "get_cuda_free_memory_gb")
     assert not [path for path in removed_shims if path.exists()]
-
-
-def test_splatt3r_dust3r_only_modules_use_canonical_dust3r_import_paths():
-    splatt3r_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d/splatt3r"
-    profile = REPO_ROOT / "worldfoundry/data/models/runtime/profiles/splatt3r.yaml"
-    removed_dust3r_shims = [
-        splatt3r_root / "splatt3r_runtime/utils/export.py",
-    ]
-
-    assert not [path for path in removed_dust3r_shims if path.exists()]
-
-    profile_text = profile.read_text(encoding="utf-8")
-    assert "canonical sibling base_models paths" in profile_text
-    assert "vendors the Splatt3R MASt3R, DUSt3R" not in profile_text
-
-
-def test_splatt3r_runtime_is_inference_only_after_pruning():
-    runtime_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime"
-    removed_paths = [
-        runtime_root / "data",
-        runtime_root / "workspace.py",
-        runtime_root / "demo.py",
-        runtime_root / "main.py",
-        runtime_root / "utils/compute_ssim.py",
-        runtime_root / "utils/export.py",
-        runtime_root / "utils/loss_mask.py",
-        runtime_root / "utils/sh_utils.py",
-    ]
-
-    for path in removed_paths:
-        assert not path.exists(), path
-
-    model_text = (runtime_root / "model.py").read_text(encoding="utf-8")
-    init_text = (runtime_root / "__init__.py").read_text(encoding="utf-8")
-
-    assert "class MAST3RGaussians" in model_text
-    assert "def forward" in model_text
-    for token in (
-        "training_step",
-        "validation_step",
-        "test_step",
-        "configure_optimizers",
-        "run_experiment",
-        "DataLoader",
-        "Trainer(",
-        "wandb",
-        "lpips",
-        "scannetpp",
-    ):
-        assert token not in model_text
-
-    assert not (runtime_root / "main.py").exists()
-    assert "from . import data" not in init_text
-    assert "from . import workspace" not in init_text
 
 
 def test_lyra1_pipeline_can_plan_without_external_representation_assets(monkeypatch: pytest.MonkeyPatch):

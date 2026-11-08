@@ -73,7 +73,6 @@ _OPERATOR_MODULES = {
     "RuntimeVideoOperator": "runtime_video_operator",
     "ShowOOperator": "show_o_operator",
     "Sora2Operator": "sora2_operator",
-    "Splatt3ROperator": "splatt3r_operator",
     "StarVLAOperator": "starvla_operator",
     "StepVideoT2VOperator": "step_video_t2v_operator",
     "ThreeDFourDRuntimeOperator": "three_d_four_d_runtime_operator",

@@ -525,9 +525,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "spatia": {
         "overview": "https://arxiv.org/html/2512.15716v1/overview.png",
     },
-    "splatt3r": {
-        "overview": "https://arxiv.org/html/2408.13912v2/methodology.png",
-    },
     "stable-video-infinity": {
         "teaser": "https://arxiv.org/html/2510.09212v1/Figure/intro.png",
         "overview": "https://arxiv.org/html/2510.09212v1/Figure/overall.png",

@@ -156,7 +156,6 @@ add_default_world_repos() {
     "robbyant/lingbot-va-base=lingbot-va-base"
     "robbyant/lingbot-va-posttrain-robotwin=lingbot-va-posttrain-robotwin"
     "robbyant/lingbot-va-posttrain-libero-long=lingbot-va-posttrain-libero-long"
-    "brandonsmart/splatt3r_v1.0=splatt3r_v1.0"
     "dylanebert/pixelSplat=pixelSplat"
   )
 }

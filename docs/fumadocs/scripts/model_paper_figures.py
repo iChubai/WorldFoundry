@@ -1172,12 +1172,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：Spatia 的视频生成架构。",
         ),
     },
-    "splatt3r": {
-        "overview": (
-            "Method overview: Method overview. We encode the two uncalibrated images using MASt3R’s pretrained ViT encoder and cross-attention transformers, which we freeze during training. In addition to MASt3R’s prediction head for point.",
-            "论文方法总览：Splatt3R 的视频生成架构。",
-        ),
-    },
     "stable-video-infinity": {
         "teaser": (
             "Official paper teaser: Comparison among (a) video generative DiT, (b) restoration DiT, and (c) our Stable Video Infinity regarding the scheme ( row 1 ), training-test hypothesis gap ( row 2 ), and outcome ( row 3 ).",

@@ -1,5 +1,5 @@
 {
-  "modelsListed": 266,
+  "modelsListed": 265,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -1418,7 +1418,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 33,
+      "count": 32,
       "entries": [
         {
           "id": "cut3r",
@@ -1607,14 +1607,6 @@
           "status": "integrated",
           "aliases": [
             "track-anything-prior"
-          ]
-        },
-        {
-          "id": "splatt3r",
-          "name": "Splatt 3R",
-          "status": "verified",
-          "aliases": [
-            "splatt3r"
           ]
         },
         {

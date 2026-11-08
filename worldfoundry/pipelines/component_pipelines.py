@@ -457,15 +457,6 @@ ShowOPipeline = _component_pipeline_class(
     memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
     synthesis_target="worldfoundry.synthesis.visual_generation.show_o:ShowOSynthesis",
 )
-Splatt3RPipeline = _component_pipeline_class(
-    "Splatt3RPipeline",
-    doc="WorldFoundry 3D Gaussian splatting pipeline for Splatt3R.",
-    model_id="splatt3r",
-    operator_target="worldfoundry.operators.splatt3r_operator:Splatt3ROperator",
-    memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
-    synthesis_target="worldfoundry.base_models.three_dimensions.general_3d.splatt3r:Splatt3RSynthesis",
-)
-Splatt3RPipeline.MODEL_PATH_OPTION = "checkpoint_path"
 ZeroScopePipeline = _component_pipeline_class(
     "ZeroScopePipeline",
     doc="WorldFoundry video-generation pipeline for ZeroScope.",
@@ -512,7 +503,6 @@ __all__ = [
     "ShowOPipeline",
     "SmolVLAPipeline",
     "SpiritV15Pipeline",
-    "Splatt3RPipeline",
     "StarVLAPipeline",
     "VLANeXtPipeline",
     "XVLAPipeline",

@@ -353,7 +353,7 @@ def process_video_with_tracking(
             img = cv2.resize(img, (640, 480), interpolation=cv2.INTER_LINEAR)
             images.append(img)
         else:
-            images.append(None)  # 用None占位
+            images.append(None)  # keep frame indices aligned
 
     # ===== Detection loop =====
     print("Start detecting...")

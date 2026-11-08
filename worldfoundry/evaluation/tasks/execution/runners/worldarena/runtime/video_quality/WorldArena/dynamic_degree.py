@@ -59,16 +59,11 @@ class DynamicDegree:
             "count_num": round(4 * (count / 16.0)),
         }
 
-    # ===== 新增：连续映射函数 =====
     def _soft_motion_score(self, score, thres, alpha=5.0):
-        """
-        将 motion 强度映射到 [0,1]
-        score == thres -> 0.5
-        """
+        """Map a motion magnitude to [0, 1] with a sigmoid of ``score / thres - 1``; ``score == thres`` maps to 0.5."""
         x = score / thres - 1.0
         return 1.0 / (1.0 + np.exp(-alpha * x))
 
-    # ===== 改动点：infer 现在返回连续 score =====
     def infer(self, video_path):
         with torch.no_grad():
             if video_path.endswith(".mp4"):
@@ -88,7 +83,7 @@ class DynamicDegree:
                 max_rad = self.get_score(image1, flow_up)
                 motion_scores.append(max_rad)
 
-            # 计算连续 dynamic degree
+            # Continuous dynamic degree: the mean soft score over consecutive frame pairs.
             thres = self.params["thres"]
             soft_scores = [self._soft_motion_score(s, thres) for s in motion_scores]
 

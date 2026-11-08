@@ -117,31 +117,25 @@ def farthest_distance(points):
     if len(points) < 2:
         return 0.0
 
-    # --- 新增保护代码 ---
-    # 检查唯一检索点的数量
+    # Degenerate point sets are handled before ConvexHull, which needs a non-flat 2D point set.
     unique_points = np.unique(points, axis=0)
 
-    # 如果所有点都重合，最远距离显然是 0
     if len(unique_points) < 2:
         return 0.0
 
-    # 如果只有两个点，最远距离就是这两点间的欧式距离
     if len(unique_points) == 2:
         return np.linalg.norm(unique_points[0] - unique_points[1])
 
-    # 检查是否所有点共线 (针对初始单纯形扁平的问题)
-    # 计算点集的协方差矩阵或检查极差
+    # A point set with a negligible extent counts as a single point.
     diff = points.max(axis=0) - points.min(axis=0)
-    if np.all(diff < 1e-6):  # 范围极小，视为一点
+    if np.all(diff < 1e-6):
         return 0.0
 
     try:
-        # 只有当点集至少是二维且不共线时，ConvexHull 才能工作
         hull = ConvexHull(points)
         hull_points = points[hull.vertices]
     except Exception as e:
-        # 如果 ConvexHull 还是报错（比如共线），退化为暴力计算
-        # 对于轨迹点来说，点数通常不多，暴力计算最远点对是安全的
+        # Collinear points make ConvexHull fail; trajectories are short, so a brute-force pair search is cheap.
         print(f"Warning: ConvexHull failed, falling back to brute force. Error: {e}")
         max_d = 0.0
         for i in range(len(unique_points)):
@@ -150,10 +144,8 @@ def farthest_distance(points):
                 if dist > max_d:
                     max_d = dist
         return max_d
-    # --- 保护结束 ---
 
     def rotating_calipers(vertices):
-        # ... (保持你原来的 rotating_calipers 代码不变) ...
         n = len(vertices)
         max_dist = 0.0
         k = 1
@@ -233,11 +225,11 @@ def eval_traj(traj_pred_file, traj_gt_file):
 
     # print(traj_gt_file, invaild_pred_trajs, invalid_gt_trajs)
 
-    # 使用最远距离轨迹索引，作为 NDTW 的评估目标
+    # NDTW is evaluated on the ground-truth trajectory with the largest spatial extent.
     max_distance_index = select_farthest_traj_index(traj_gt, invalid_gt_trajs)
     ndtw = NDTW(traj_pred, traj_gt, invaild_pred_trajs, invalid_gt_trajs, max_distance_index)
 
-    # hsd_max = 16.052#用的最好数据集（ctrlworld的95%分数）
+    # hsd_max = 16.052  # best dataset (95th percentile of ctrlworld scores)
     # dyn_max = 1.419
     # ndtw_max = 48.2
     # min = 0.0

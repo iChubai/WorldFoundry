@@ -73,7 +73,7 @@ def subject_consistency(model, video_list, device, read_frame, raft_model_path):
         transition_count = len(image_features) - 1
         dynamic_score = dynamic.infer(video_path)
 
-        # ===== 唯一耦合点：阈值判断 =====
+        # Nearly static videos have their consistency scaled down by the dynamic degree.
         if dynamic_score <= 0.1213:
             sim_per_images = sim_per_images * dynamic_score
 

@@ -5,13 +5,12 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
 from worldfoundry.evaluation.utils import write_json
 
-from .presentation import print_details, print_notice, print_table, terminal_enabled
+from .presentation import print_details, print_table, terminal_enabled
 from .utils import json_dump
 
 # ── Models list and runtime runners ─────────────────────────────
@@ -46,10 +45,9 @@ def _handle_models_runtime_runners(args: argparse.Namespace) -> int:
     Parameters:
         args: CLI namespace; ``json`` selects JSON lines instead of plain text rows.
     """
-    from worldfoundry.evaluation.models.runners.registry import model_runner_registry_report
+    from worldfoundry.evaluation.models.runners.registry import model_runner_registry_snapshot
 
-    report = model_runner_registry_report()
-    payload = [entry.to_dict() for entry in report.entries]
+    payload = [entry.to_dict() for entry in model_runner_registry_snapshot().list()]
     if args.json:
         json_dump(payload)
         return 0
@@ -59,15 +57,11 @@ def _handle_models_runtime_runners(args: argparse.Namespace) -> int:
             ("Runner", "Target", "Source", "Aliases"),
             [(item["name"], item["runner_target"], item["source"], item["aliases"]) for item in payload],
         )
-        for issue in report.issues:
-            print_notice(f"{issue.code}: {issue.name or '-'}: {issue.message}", level="warning", stream=sys.stderr)
         return 0
 
     for entry in payload:
         aliases = ", ".join(entry["aliases"]) if entry["aliases"] else "-"
         print(f"{entry['name']}: {entry['runner_target']} source={entry['source']} aliases={aliases}")
-    for issue in report.issues:
-        print(f"warning:{issue.code} {issue.name or '-'}: {issue.message}", file=sys.stderr)
     return 0
 
 

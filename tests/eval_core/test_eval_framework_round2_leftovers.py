@@ -7,6 +7,7 @@ are frozen), and EF-21 (intentional catalog status literals are registered).
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -43,15 +44,13 @@ from worldfoundry.evaluation.models.pipelines.aliases import (
 )
 from worldfoundry.evaluation.models.pipelines.bindings import (
     PipelineBinding,
-    PipelineBindingRegistry,
     clear_pipeline_binding_registry_cache,
     load_pipeline_binding_registry,
-    merge_pipeline_binding_plugins,
 )
 
 
 @pytest.fixture(autouse=True)
-def _reset_status_warning_dedupe() -> None:
+def _reset_status_warning_dedupe() -> Iterator[None]:
     catalog_schema._WARNED_UNKNOWN_STATUSES.clear()
     yield
     catalog_schema._WARNED_UNKNOWN_STATUSES.clear()
@@ -73,9 +72,7 @@ def test_typed_registry_is_backed_by_alias_store() -> None:
 
 def test_typed_registry_wrapper_keeps_self_and_cross_collision_errors() -> None:
     with pytest.raises(DuplicateRegistryKeyError, match="own canonical key"):
-        ModelManifestRegistry().register(
-            WorldModelManifest(model_id="alpha", name="alpha", aliases=("ALPHA",))
-        )
+        ModelManifestRegistry().register(WorldModelManifest(model_id="alpha", name="alpha", aliases=("ALPHA",)))
 
     registry = ModelManifestRegistry()
     registry.register(WorldModelManifest(model_id="model-a", aliases=("shared",)))
@@ -148,10 +145,6 @@ def test_cached_pipeline_binding_registry_is_frozen(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="cached PipelineBindingRegistry"):
         cached.register(extra)
 
-    merged = merge_pipeline_binding_plugins(cached, {"extra": extra})
-    assert merged.get("extra").binding_id == "extra"
-    with pytest.raises(KeyError):
-        cached.get("extra")
     clear_pipeline_binding_registry_cache()
 
 

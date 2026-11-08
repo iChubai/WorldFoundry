@@ -7,7 +7,6 @@ from .utils import Video_Dataset
 
 
 def eval(config, prompt, dimension, cur_full_info_path, models):
-    # 设置日志
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(config[f"log_path_{dimension}"])
@@ -19,7 +18,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
     MODEL = "gpt-4o-2024-08-06"
 
-    # 使用新的 Video_Dataset
     dataset = Video_Dataset(cur_full_info_path)
     results = {}
     model_scores = {}
@@ -32,7 +30,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
         results[i] = {}
         results[i]["prompt_en"] = data["prompt"]
 
-        # 获取当前数据中的所有模型
         available_models = list(data["frames"].keys())
         models_to_process = models if models else available_models
 
@@ -41,7 +38,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_scores[modelname] = {"total_score": 0, "count": 0}
 
             try:
-                # 获取其他模型作为示例
+                # Frames of the other models serve as references.
                 examplemodels = [x for x in available_models if x != modelname]
 
                 messages = [
@@ -86,7 +83,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 video_score = int(match.group(1)) if match else "Error"
                 results[i][modelname] = video_score
 
-                # 将最终评分累加到模型总分中
                 model_scores[modelname]["total_score"] += video_score
                 model_scores[modelname]["count"] += 1
 
@@ -102,5 +98,5 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
     return {
         "score": results,
-        "average_scores": average_scores,  # 每个模型的平均分
+        "average_scores": average_scores,  # mean score per model
     }

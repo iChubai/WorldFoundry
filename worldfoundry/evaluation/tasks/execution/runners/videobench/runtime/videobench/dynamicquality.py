@@ -9,7 +9,7 @@ from .utils import Video_Dataset
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def call_api(client, messages, model):
-    """调用 OpenAI API 的函数，包含重试机制"""
+    """Return the chat completion text for ``messages``; retried up to six times with random exponential backoff."""
     response = client.chat.completions.create(model=model, messages=messages, temperature=0)
     return response.choices[0].message.content
 
@@ -19,15 +19,15 @@ def extract_scores_from_result(response):
     scores = []
 
     for match in because_matches:
-        start_idx = match.start()  # 获取 'because' 起始位置
+        start_idx = match.start()
 
-        # 在 'because' 前面查找最近的数字
+        # The score is the last number before "because"; search the reversed prefix for it.
         preceding_content = response[:start_idx]
-        preceding_number_match = re.search(r"\d+", preceding_content[::-1])  # 反转字符串查找第一个数字
+        preceding_number_match = re.search(r"\d+", preceding_content[::-1])
 
         if preceding_number_match:
-            number = preceding_number_match.group()[::-1]  # 提取并翻转数字
-            scores.append(int(number))  # 转为整数
+            number = preceding_number_match.group()[::-1]
+            scores.append(int(number))
 
     return scores
 
@@ -42,7 +42,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     Returns:
         dict: containing evaluation scores
     """
-    # 设置日志
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(config[f"log_path_{dimension}"])
@@ -69,7 +68,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
             results[i]["prompt_en"] = data["prompt"]
 
             model_names = list(frames.keys())
-            # 构建包含所有模型帧的消息
+            # One message with the frames of every model.
             model_frames_content = []
             for model_name, model_frames in frames.items():
                 model_frames_content.extend(
@@ -101,12 +100,11 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
             scores = extract_scores_from_result(response)
 
-            # Step 4: 将数字与 model_name 对应
+            # Scores appear in the same order as the models in the message.
             model_scores_dict = dict(zip(model_names, scores, strict=False))
             filtered_scores = {name: model_scores_dict[name] for name in models if name in model_scores_dict}
             results[i].update(filtered_scores)
 
-            # 更新模型的总分和计数
             for model_name, score in filtered_scores.items():
                 model_scores[model_name]["total_score"] += score
                 model_scores[model_name]["count"] += 1
@@ -123,5 +121,5 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
     return {
         "score": results,
-        "average_scores": average_scores,  # 每个模型的平均分
+        "average_scores": average_scores,  # mean score per model
     }

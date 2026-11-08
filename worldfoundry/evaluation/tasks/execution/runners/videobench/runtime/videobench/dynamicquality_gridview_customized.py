@@ -9,7 +9,7 @@ from .utils import Video_Dataset
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def call_api(client, messages, model):
-    """调用 OpenAI API 的函数，包含重试机制"""
+    """Return the chat completion text for ``messages``; retried up to six times with random exponential backoff."""
     response = client.chat.completions.create(model=model, messages=messages, temperature=0)
     return response.choices[0].message.content
 
@@ -24,7 +24,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     Returns:
         dict: containing evaluation scores
     """
-    # 设置日志
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(config[f"log_path_{dimension}"])
@@ -53,7 +52,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
         available_models = list(data["frames"].keys())
         models_to_process = models if models else available_models
 
-        # 构建包含所有模型帧的消息
+        # One request per model with its grid-view frames.
         for modelname in models_to_process:
             if modelname not in model_scores:
                 model_scores[modelname] = {"total_score": 0, "count": 0}
@@ -87,7 +86,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 video_score = int(match.group(1)) if match else "Error"
                 results[i][modelname] = video_score
 
-                # 将最终评分累加到模型总分中
                 model_scores[modelname]["total_score"] += video_score
                 model_scores[modelname]["count"] += 1
 
@@ -103,5 +101,5 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
     return {
         "score": results,
-        "average_scores": average_scores,  # 每个模型的平均分
+        "average_scores": average_scores,  # mean score per model
     }

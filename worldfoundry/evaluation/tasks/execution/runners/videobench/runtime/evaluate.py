@@ -89,16 +89,14 @@ def main():
     bench_runner = VideoBench(args.full_json_dir, args.output_path, args.config_path)
     os.makedirs(args.log_path, exist_ok=True)
 
-    # 处理提示词
+    # Either a JSON file mapping extracted prompts to actual prompts, or a single prompt.
     prompt_list = {}
     if args.prompt_file and os.path.exists(args.prompt_file):
-        # 从文件加载提示词映射
         with open(args.prompt_file) as f:
             prompt_list = json.load(f)
             if not isinstance(prompt_list, dict):
                 raise ValueError("Prompt file must contain a dictionary mapping extracted prompts to actual prompts")
     elif args.prompt != "None":
-        # 使用单个提示词
         prompt_list = args.prompt
 
     dimension_str = args.dimension[0]

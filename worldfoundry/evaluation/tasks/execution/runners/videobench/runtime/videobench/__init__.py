@@ -54,7 +54,7 @@ class VideoBench:
         """Build full info JSON file containing video paths and prompts"""
         cur_full_info_list = []
 
-        # 定义维度映射关系
+        # Evaluation dimension -> video directory under ``videos_path``.
         dimension_mapping = {
             "aesthetic_quality": "video-text consistency",
             "imaging_quality": "video-text consistency",
@@ -71,7 +71,6 @@ class VideoBench:
             self.check_dimension_requires_extra_info(dimension_list)
             actual_dimensions = {dimension_mapping[dim] for dim in dimension_list}
 
-            # 处理 prompt_list
             prompts_to_process = []
             if isinstance(prompt_list, str):
                 prompts_to_process.append(prompt_list)
@@ -86,7 +85,7 @@ class VideoBench:
                 for actual_dim in actual_dimensions:
                     dimension_path = os.path.join(videos_path, actual_dim)
                     if os.path.exists(dimension_path):
-                        # 只处理指定的模型
+                        # Every model directory is searched.
                         available_models = [
                             name
                             for name in os.listdir(dimension_path)
@@ -116,17 +115,14 @@ class VideoBench:
                     "The 'models' parameter cannot be empty. Please specify at least one model to evaluate."
                 )
 
-            # 获取实际的数据目录
+            # Video directories used by the requested dimensions.
             actual_dimensions = {dimension_mapping[dim] for dim in dimension_list}
 
-            # 获取 videos_path 下的所有 model_name
             _model_names = [d for d in os.listdir(videos_path) if os.path.isdir(os.path.join(videos_path, d))]
 
-            # 从 full_info_dir 中加载所有 prompts
             full_info_list = load_json(self.full_info_dir)
             all_prompts = [item["prompt"] for item in full_info_list]
 
-            # 处理 prompt_list
             prompts_to_process = []
             if isinstance(prompt_list, str):
                 prompts_to_process.append(prompt_list)
@@ -135,9 +131,8 @@ class VideoBench:
             else:
                 prompts_to_process.extend(prompt_list)
 
-            # 对每个 prompt 进行处理
             for prompt in prompts_to_process:
-                # 在 full_info_list 中找到最相似的 prompt
+                # Benchmark prompt closest to the requested one, used when no file name contains it.
                 from difflib import SequenceMatcher
 
                 def similar(a, b):
@@ -147,11 +142,9 @@ class VideoBench:
                 print(f"Most similar prompt to '{prompt}': {prompt_similar}")
 
                 videos_dict = {}
-                # 遍历每个维度目录
                 for actual_dim in actual_dimensions:
                     dimension_path = os.path.join(videos_path, actual_dim)
                     if os.path.exists(dimension_path):
-                        # 遍历每个模型目录
                         available_models = [
                             name
                             for name in os.listdir(dimension_path)
@@ -160,29 +153,25 @@ class VideoBench:
                         for model_name in available_models:
                             model_path = os.path.join(dimension_path, model_name)
 
-                            # 检查是否是有效目录
                             if not os.path.isdir(model_path):
                                 print(f"Warning: Model directory {model_path} not found, skipping...")
                                 continue
 
-                            # 获取模型目录中的所有视频文件
                             video_files = [
                                 f
                                 for f in os.listdir(model_path)
                                 if Path(f).suffix.lower() in [".mp4", ".gif", ".jpg", ".png"]
                             ]
 
-                            # 优先检查完全匹配的视频
+                            # A file name containing the prompt takes precedence; only listed models are kept.
                             exact_matches = [f for f in video_files if prompt in get_prompt_from_filename(f)]
                             if exact_matches:
-                                # 如果找到完全匹配的视频，检查模型是否在 models 中
                                 if model_name in models:
                                     video_path = os.path.join(dimension_path, model_name, exact_matches[0])
                                     videos_dict[model_name] = os.path.abspath(video_path).replace("\\", "/")
-                                # 跳过不在 models 中的模型
                                 continue
 
-                            # 如果没有完全匹配的视频，查找与 prompt_similar 相似的视频
+                            # Otherwise fall back to the most similar benchmark prompt, for any model.
                             similar_matches = [f for f in video_files if prompt_similar in get_prompt_from_filename(f)]
                             if similar_matches:
                                 video_path = os.path.join(dimension_path, model_name, similar_matches[0])
@@ -196,33 +185,29 @@ class VideoBench:
             full_info_list = load_json(self.full_info_dir)
 
             for prompt_dict in full_info_list:
-                # 检查是否有任何请求的维度在这个提示词的维度列表中
                 if any(dim in dimension_list for dim in prompt_dict["dimension"]):
                     prompt = prompt_dict["prompt"]
                     videos_dict = {}
 
-                    # 获取实际的数据目录
+                    # Video directories used by the requested dimensions of this prompt.
                     actual_dimensions = {
                         dimension_mapping[dim] for dim in dimension_list if dim in prompt_dict["dimension"]
                     }
 
-                    # 遍历每个实际维度目录
                     for actual_dim in actual_dimensions:
                         dimension_path = os.path.join(videos_path, actual_dim)
                         if os.path.exists(dimension_path):
-                            # 处理当前目录下的模型
                             available_models = [
                                 name
                                 for name in os.listdir(dimension_path)
                                 if os.path.isdir(os.path.join(dimension_path, name))
                             ]
-                            # 初始化后缀分组
-                            suffix_videos = {idx: {} for idx in range(3)}  # 用于存储 _0, _1, _2 的分组
-                            no_suffix_videos = {}  # 用于存储没有后缀的视频
+                            # Videos are named "<prompt>.mp4" or "<prompt>_<0|1|2>.mp4"; each suffix forms one group.
+                            suffix_videos = {idx: {} for idx in range(3)}
+                            no_suffix_videos = {}
                             for model_name in available_models:
                                 model_path = os.path.join(dimension_path, model_name)
                                 if os.path.isdir(model_path):
-                                    # 首先检查无后缀的视频
                                     no_suffix_video_name = f"{prompt}.mp4"
                                     no_suffix_video_path = os.path.join(
                                         dimension_path, model_name, no_suffix_video_name
@@ -233,28 +218,24 @@ class VideoBench:
                                         # if verbose:
                                         #     print(f'Successfully found video without suffix: {no_suffix_video_path}')
                                     else:
-                                        # 检查带后缀的视频
                                         for idx in range(3):
                                             video_name = f"{prompt}_{idx}.mp4"
                                             video_path = os.path.join(dimension_path, model_name, video_name)
 
                                             if os.path.exists(video_path):
-                                                # 将视频路径存入对应的后缀分组
                                                 suffix_videos[idx][model_name] = video_path.replace("\\", "/")
                                                 # if verbose:
                                                 #     print(f'Successfully found video: {video_path}')
                                             elif verbose:
                                                 print(f"Error!!! Required video not found: {video_path}")
 
-                            # 如果存在无后缀的视频，优先添加到 cur_full_info_list
                             if no_suffix_videos:
                                 cur_full_info_list.append(
                                     {"prompt_en": prompt, "dimension": dimension_list, "videos": no_suffix_videos}
                                 )
 
-                            # 将每个后缀的分组信息添加到 cur_full_info_list
                             for _idx, videos_dict in suffix_videos.items():
-                                if videos_dict:  # 确保分组中有视频
+                                if videos_dict:
                                     cur_full_info_list.append(
                                         {"prompt_en": prompt, "dimension": dimension_list, "videos": videos_dict}
                                     )
@@ -266,7 +247,6 @@ class VideoBench:
 
     def evaluate_dimension(self, dimension, videos_path, name, dimension_list, prompt_list, mode, models=[], **kwargs):  # noqa: B006 - Read-only default; retain the public signature.
         """Evaluate a single dimension by importing and running its module"""
-        # 只传入当前维度
         cur_dimension_list = [dimension]
 
         cur_full_info_path = self.build_full_info_json(
@@ -303,12 +283,10 @@ class VideoBench:
 
             elif dimension in dynamic_dimensions:
                 if mode == "custom_nonstatic":
-                    # 自定义模式使用 gridview 的评估函数
                     from .dynamicquality_gridview_customized import eval
 
                     results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
                 else:
-                    # 标准模式使用原来的评估函数
                     from .dynamicquality import eval
 
                     results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
@@ -355,11 +333,9 @@ class VideoBench:
                 **kwargs,
             )
 
-            # 为每个维度创建输出目录
             dimension_output_dir = os.path.join(self.output_path, dimension)
             os.makedirs(dimension_output_dir, exist_ok=True)
 
-            # 保存结果
             VideoTextAlignment_dimensions = ["color", "object_class", "scene", "action", "video-text consistency"]
             if dimension in VideoTextAlignment_dimensions:
                 save_json(

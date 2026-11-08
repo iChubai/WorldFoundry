@@ -178,23 +178,19 @@ class Host:
         return response
 
     def get_question(self, response):
+        # Everything after "[Your question]:" or "[Your questions]:", or None when neither occurs.
         pattern = r"\[Your questions?\]:\s*(.*)"
-
-        # 搜索并提取 [Your question]: 或 [Your questions]: 后的内容
         result = re.search(pattern, response, re.DOTALL)
 
         if result:
-            # 提取 [Your question]: 或 [Your questions]: 后面的所有内容
             question = result.group(1).strip()
             return question
         else:
-            # 如果没有匹配到 [Your question]: 或 [Your questions]:，返回 None
             return None
 
     def question(self):
-        # 1. 各智能体独立获得响应并添加到各自的历史记录中
+        # Each agent asks questions in turn, based on the shared history so far.
         self.logger.info("==============agent qa_history============")
-        # 2. 按顺序让每个智能体基于当前的历史记录做出回答
         # self.logger.info('==============reflect============')
         for _i, agent in enumerate(self.agents):
             # combined_history = "\n".join(self.description)
@@ -242,7 +238,7 @@ class Host:
         response = self.call_oai(self.messages)
         match = re.search(r"\[Descriptions\]:(.*?)\[Answers\]", response, re.DOTALL)
         if match:
-            description = match.group(1).strip()  # 提取匹配的内容并去除首尾空格
+            description = match.group(1).strip()
         else:
             print("No information found.")
         self.qa_history.append(f"\nThis is the answer of the questions: {response}\n\n")
@@ -288,16 +284,17 @@ class Host:
         return response
 
 
-# 处理输出结果，按指定格式提取所需内容
 def extract_content_from_result(final_result):
-    content_score = "None"  # 初始化为 "error"
+    """Return the score in the "Evaluation Result" after "Updated Video Description", or the string ``"None"``.
+
+    The score is the last single digit before "because" in the first "Evaluation Result" section.
+    """
+    content_score = "None"
     start_index = final_result.find("Updated Video Description")
 
     if start_index != -1:
-        # 提取 "Updated Video Description" 后面的内容
         all_content = final_result[start_index + len("Updated Video Description") :].strip()
 
-        # 找到第一个字母的位置
         first_letter_index = next((i for i, char in enumerate(all_content) if char.isalpha()), None)
         if first_letter_index is not None:
             all_content = all_content[first_letter_index:].strip()
@@ -305,33 +302,28 @@ def extract_content_from_result(final_result):
         while True:
             eval_result_index = all_content.find("Evaluation Result")
             if eval_result_index != -1:
-                # 提取描述部分
                 # content_des = all_content[:eval_result_index].strip()
                 remaining_content = all_content[eval_result_index + len("Evaluation Result") :].strip()
 
-                # 查找 "because"
                 because_index = remaining_content.find("because")
                 if because_index != -1:
-                    # 提取 "because" 前的内容
                     before_because = remaining_content[:because_index].strip()
 
-                    # 找到离 "because" 最近的数字
                     for i in range(len(before_because) - 1, -1, -1):
                         if before_because[i].isdigit():
                             content_score = int(before_because[i])
                             break
 
-                    # 如果找到评分，则退出循环
                     if content_score != "error":
                         break
                 else:
-                    print("未找到 'because'")
+                    print("'because' not found")
                     break
             else:
-                print("未找到更多 'Evaluation Result' 部分")
+                print("No further 'Evaluation Result' section found")
                 break
     else:
-        print("未找到 'Updated Video Description' 部分")
+        print("No 'Updated Video Description' section found")
 
     return content_score
 
@@ -369,7 +361,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
         history[i] = {}
         score[i]["prompt_en"] = data["prompt"]
 
-        # 动态获取模型列表
         available_models = list(data["frames"].keys())
         models_to_process = models if models else available_models
 
@@ -377,7 +368,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
             if modelname not in model_scores:
                 model_scores[modelname] = {"total_score": 0, "count": 0}
 
-            # 为自定义模型创建消息
             modelmessage = f"{len(data['frames'][modelname])} frames from {modelname}."
             agents = [Agent("Assistant-one", logger, prompt, config), Agent("Assistant-two", logger, prompt, config)]
             host = Host("Host", logger, prompt, config, modelname, modelmessage, agents)
@@ -388,15 +378,12 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
 
             logger.info(f">>>>>>>>This is the {i}_{modelname} round>>>>>>>")
             try:
-                # 收集初始描述
                 init_response = host.initial_result()
                 logger.info(f">>>>>>>>>>initial response:\n{init_response}")
-                # 收集问答记录
                 questions = host.question()
                 logger.info(f">>>>>>>>>>questions:\n{questions}")
                 answers = host.answer()
                 logger.info(f">>>>>>>>>>answers:\n{answers}")
-                # 基于描述和问答给出最终评分
                 final_result = host.summarize_and_get_results()
                 history[i][modelname] = {
                     "initial_response": init_response,
@@ -405,11 +392,9 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 }
                 logger.info(f">>>>>>>the {i}_{modelname} round >>>>>>Discussion and judge:\n" + final_result + "\n")
 
-                # 处理格式以写入json
                 content_score = extract_content_from_result(final_result)
                 score[i][modelname] = content_score
 
-                # 将最终评分累加到模型总分中
                 model_scores[modelname]["total_score"] += content_score
                 model_scores[modelname]["count"] += 1
 
@@ -426,7 +411,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     }
 
     return {
-        "history": history,  # 评估历史记录
-        "score": score,  # 最终评分结果
-        "average_scores": average_scores,  # 每个模型的平均分
+        "history": history,
+        "score": score,
+        "average_scores": average_scores,  # mean score per model
     }

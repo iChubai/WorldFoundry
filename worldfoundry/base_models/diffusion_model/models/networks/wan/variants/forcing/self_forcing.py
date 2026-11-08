@@ -111,8 +111,10 @@ class CausalWanSelfAttention(nn.Module):
         """Bind a pipeline-scoped provider for the cached self-attention.
 
         ``None`` and ``"torch"`` keep the dense PyTorch SDPA path of the
-        official runtime. Any other provider runs through the shared
-        attention dispatcher and can change the rounding of the output.
+        official runtime, which is bitwise exact. Any other provider runs
+        through the shared attention dispatcher and is approximate: it changes
+        the BF16 rounding of every call, so a rollout no longer reproduces the
+        official samples.
         """
 
         self.attention_backend = None if backend is None else str(backend)

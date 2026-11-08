@@ -76,6 +76,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_autoregressive_window_runner.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_vae_acceleration_policy.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_streaming_chunk.py \
+	tests/base_models/diffusion_model/models/autoencoders/test_wan21_tae_preview.py \
 	tests/core/acceleration/test_fused_fp8_ffn.py \
 	tests/core/acceleration/test_convolution_layout.py \
 	tests/core/attention/test_native_cudnn_fp8.py \

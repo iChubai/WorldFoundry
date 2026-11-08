@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -396,3 +397,127 @@ def test_native_self_forcing_pipeline_forwards_release_defaults() -> None:
     assert NativeSelfForcingPipeline._checkpoint_overrides(None, {"checkpoint_path": "/ckpt/self_forcing_dmd.pt"}) == {
         "dit": "/ckpt/self_forcing_dmd.pt"
     }
+
+
+def _block_input(denoiser: SelfForcingWanDenoiser, cache: dict[str, Any], *, start: int) -> DenoiserInput:
+    latents = torch.randn(1, 16, 3, 4, 4, generator=torch.Generator().manual_seed(7 + start))
+    return DenoiserInput(
+        latents=latents,
+        timestep=torch.tensor(750.0),
+        next_timestep=torch.tensor(0.0),
+        conditioning={
+            "context": torch.randn(1, 8, 16, generator=torch.Generator().manual_seed(9)),
+            "kv_cache": cache,
+            "current_start": start,
+        },
+        step_index=1,
+        total_steps=4,
+    )
+
+
+def _two_block_outputs(model: CausalWanModel) -> list[torch.Tensor]:
+    denoiser = SelfForcingWanDenoiser(model, block_size=3, cache_frames=6, compute_dtype=torch.float32)
+    cache = denoiser.create_kv_cache(
+        batch_size=1,
+        n_views=1,
+        latent_frames_per_view=6,
+        frame_sequence_length=4,
+        device=torch.device("cpu"),
+        dtype=torch.float32,
+    )
+    return [denoiser(_block_input(denoiser, cache, start=start)).sample for start in (0, 12)]
+
+
+def test_self_forcing_attention_policy_routes_cached_self_attention(monkeypatch: pytest.MonkeyPatch) -> None:
+    from worldfoundry.core.attention.backends import dispatch, probe
+    from worldfoundry.core.model_loading.optimize import apply_attention_policy
+
+    model = _tiny_model()
+    report = apply_attention_policy(model, "auto", device="cpu")
+    assert report.configured_modules == len(model.blocks)
+    assert {block.self_attn.attention_backend for block in model.blocks} == {"torch"}
+
+    calls: list[tuple[str | None, tuple[int, ...]]] = []
+
+    def recording_attention_forward(q, k, v, **kwargs):
+        calls.append((kwargs["backend"], tuple(k.shape)))
+        return dispatch.torch_sdpa(
+            q, k, v, kwargs["q_pattern"], kwargs["k_pattern"], kwargs["v_pattern"], kwargs["out_pattern"]
+        )
+
+    monkeypatch.setattr(dispatch, "attention_forward", recording_attention_forward)
+    exact = _two_block_outputs(model)
+    assert calls == []
+
+    monkeypatch.setattr(probe, "resolve_attention_backend", lambda requested, device=None, **_: requested)
+    apply_attention_policy(model, "flash_attention_3", device="cpu")
+    routed = _two_block_outputs(model)
+
+    # Two layers per call; the second block attends over the six cached frames.
+    assert calls == [("flash_attention_3", (1, 12, 2, 12))] * 2 + [("flash_attention_3", (1, 24, 2, 12))] * 2
+    # The default path hands SDPA bf16-rounded Q/K/V even for a float32 model.
+    for actual, expected in zip(routed, exact, strict=True):
+        torch.testing.assert_close(actual, expected, rtol=0, atol=1e-3)
+
+
+def test_self_forcing_builder_declares_blocks_for_regional_compile(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from worldfoundry.core.execution import compile_cache
+
+    compiled: list[object] = []
+
+    def record_compile(function, **_: object):
+        compiled.append(function)
+        return lambda *args, **kwargs: function(*args, **kwargs)
+
+    monkeypatch.setattr(compile_cache, "compile_callable_cached", record_compile)
+    monkeypatch.setattr(wan_denoisers, "SELF_FORCING_WAN21_T2V_1P3B_CONFIG", TINY_CONFIG)
+    checkpoint = tmp_path / "self_forcing_dmd.pt"
+    torch.save({"generator_ema": {"model." + k: v for k, v in _tiny_model().state_dict().items()}}, checkpoint)
+
+    denoiser = build_self_forcing_wan21_denoiser(
+        ComponentBuildContext(
+            model_id=SELF_FORCING_MODEL_ID,
+            key=ComponentKey(ComponentKind.DENOISER),
+            policy=RuntimePolicy(
+                device="cpu",
+                dtype=torch.float32,
+                compile=True,
+                options={"compile_scope": "regional"},
+            ),
+            checkpoints={"weights": CheckpointSpec(source=checkpoint)},
+        )
+    )
+
+    assert denoiser.model._worldfoundry_compile_config["regions"] == ["blocks.0", "blocks.1"]
+    assert len(compiled) == len(denoiser.model.blocks)
+
+
+def test_native_self_forcing_pipeline_forwards_speed_options(monkeypatch: pytest.MonkeyPatch) -> None:
+    from worldfoundry.pipelines import native_diffusion
+
+    captured: dict[str, Any] = {}
+
+    def load(model_id: str, *, policy: RuntimePolicy, **kwargs: Any) -> Any:
+        captured.update(model_id=model_id, policy=policy, **kwargs)
+        return SimpleNamespace(model_id=model_id)
+
+    monkeypatch.setattr(native_diffusion.NativeDiffusionPipeline, "from_pretrained", load)
+    NativeSelfForcingPipeline.from_pretrained(
+        device="cpu",
+        torch_dtype="bf16",
+        offload_mode="none",
+        attention_backend="flash_attention_3",
+        compile=True,
+        compile_scope="regional",
+        vae_preview_decoder_path="/models/taew2_1.pth",
+    )
+
+    policy = captured["policy"]
+    assert captured["model_id"] == SELF_FORCING_MODEL_ID
+    assert policy.attention.value == "flash_attention_3"
+    assert policy.compile is True
+    assert policy.options["compile_scope"] == "regional"
+    assert policy.options["vae_preview_decoder_path"] == "/models/taew2_1.pth"

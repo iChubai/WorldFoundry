@@ -105,6 +105,17 @@ class CausalWanSelfAttention(nn.Module):
         self.o = nn.Linear(dim, dim)
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+        self.attention_backend: str | None = None
+
+    def set_attention_backend(self, backend: str | None) -> None:
+        """Bind a pipeline-scoped provider for the cached self-attention.
+
+        ``None`` and ``"torch"`` keep the dense PyTorch SDPA path of the
+        official runtime. Any other provider runs through the shared
+        attention dispatcher and can change the rounding of the output.
+        """
+
+        self.attention_backend = None if backend is None else str(backend)
 
     def forward(
         self,
@@ -250,11 +261,23 @@ class CausalWanSelfAttention(nn.Module):
                 local_start_index = local_end_index - num_new_tokens
                 kv_cache["k"][:, local_start_index:local_end_index] = roped_key
                 kv_cache["v"][:, local_start_index:local_end_index] = v
-            x = attention(
-                roped_query,
-                kv_cache["k"][:, max(0, local_end_index - self.max_attention_size):local_end_index],
-                kv_cache["v"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
-            )
+            cached_k = kv_cache["k"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
+            cached_v = kv_cache["v"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
+            if self.attention_backend in (None, "torch"):
+                x = attention(roped_query, cached_k, cached_v)
+            else:
+                from worldfoundry.core.attention.backends.dispatch import attention_forward
+
+                x = attention_forward(
+                    roped_query,
+                    cached_k,
+                    cached_v,
+                    q_pattern="b s n d",
+                    k_pattern="b s n d",
+                    v_pattern="b s n d",
+                    out_pattern="b s n d",
+                    backend=self.attention_backend,
+                )
             kv_cache["global_end_index"].fill_(current_end)
             kv_cache["local_end_index"].fill_(local_end_index)
 

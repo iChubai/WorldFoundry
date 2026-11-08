@@ -2693,3 +2693,226 @@ def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch
             await manager.close_active()
 
     asyncio.run(exercise())
+
+
+class _ContinuousRuntime:
+    """Fake resident runtime; ``gate`` holds each generation until the test releases it."""
+
+    last_generation_metrics: dict[str, float] = {}
+
+    def __init__(self, *, gated: bool = False) -> None:
+        self.prompts: list[str | None] = []
+        self.gate = asyncio.Event()
+        if not gated:
+            self.gate.set()
+
+    def next_chunk_frames(self, default: int) -> int:
+        return default
+
+    async def generate(self, interactions: list[str], *, prompt: str | None = None, **kwargs: Any):
+        del interactions, kwargs
+        self.prompts.append(prompt)
+        await self.gate.wait()
+        return [np.zeros((180, 320, 3), dtype=np.uint8)], 1.0
+
+
+def _continuous_session(
+    transport: str,
+    sink: _AxisSink,
+    *,
+    continuous: bool = True,
+    max_chunks: int | None = 3,
+) -> _ActivePeer | _ActiveSocket:
+    """A prompt-scheduled session as ``create_answer`` / ``serve_socket`` build it for the spec."""
+    fields: dict[str, Any] = {
+        "resampler": RealtimeControlResampler(fps=16, start_time=0.0, realtime_keys=()),
+        "prompt_scheduled": True,
+        "initial_segment_pending": True,
+        "base_prompt": "fox",
+        "continuous": continuous,
+        "max_chunks": max_chunks if continuous else None,
+    }
+    if transport == "socket":
+        active: _ActivePeer | _ActiveSocket = _ActiveSocket(
+            socket=sink, frame_packets=asyncio.Queue(maxsize=64), **fields
+        )
+    else:
+        active = _ActivePeer(peer=None, channel=sink, frames=LatestFrameBuffer(maxsize=64), **fields)
+    active.first_action.set()
+    return active
+
+
+def _start_worker(peers: RealtimePeerManager, active: _ActivePeer | _ActiveSocket) -> asyncio.Task[Any]:
+    if isinstance(active, _ActiveSocket):
+        return asyncio.create_task(peers._socket_generation_worker(active))
+    return asyncio.create_task(peers._generation_worker(active))
+
+
+def _chunks_done(sink: _AxisSink) -> list[dict[str, Any]]:
+    return [message for message in sink.messages if message["type"] == "chunk_done"]
+
+
+async def _settle() -> None:
+    """Give an idle worker enough loop turns to start another chunk if it wrongly would."""
+    await asyncio.sleep(0.05)
+
+
+async def _stop_worker(active: _ActivePeer | _ActiveSocket, worker: asyncio.Task[Any]) -> None:
+    active.closed = True
+    worker.cancel()
+    await asyncio.gather(worker, return_exceptions=True)
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_continuous_session_generates_max_chunks_without_input_then_stops(transport: str) -> None:
+    async def exercise() -> None:
+        sink = _AxisSink()
+        runtime = _ContinuousRuntime()
+        active = _continuous_session(transport, sink, max_chunks=3)
+        policy = active.frame_queue_policy if isinstance(active, _ActiveSocket) else active.frames.policy
+        assert policy is FrameQueuePolicy.ORDERED_QUALITY
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=16, chunk_frames=9)
+        worker = _start_worker(peers, active)
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 3), 5)
+            await _settle()
+            assert runtime.prompts == [None, None, None]
+            chunks = _chunks_done(sink)
+            assert [chunk["rollout_chunks"] for chunk in chunks] == [1, 2, 3]
+            assert {chunk["max_chunks"] for chunk in chunks} == {3}
+            assert {chunk["advance"] for chunk in chunks} == {"continuous"}
+            assert not active.first_action.is_set()
+            assert not any(message["type"] == "error" for message in sink.messages)
+        finally:
+            await _stop_worker(active, worker)
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_continuous_session_pause_stops_auto_advance_and_resume_continues(transport: str) -> None:
+    async def exercise() -> None:
+        sink = _AxisSink()
+        runtime = _ContinuousRuntime(gated=True)
+        active = _continuous_session(transport, sink, max_chunks=3)
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=16, chunk_frames=9)
+        worker = _start_worker(peers, active)
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: len(runtime.prompts) == 1), 5)
+            await _handle_axis_message(peers, active, {"type": "pause", "request_id": "pause-1"})
+            pause_ack = next(message for message in sink.messages if message["type"] == "pause_ack")
+            assert pause_ack == {
+                "type": "pause_ack",
+                "ok": True,
+                "request_id": "pause-1",
+                "status": "paused",
+                "advance": "continuous",
+                "rollout_chunks": 0,
+                "max_chunks": 3,
+                "paused": True,
+            }
+            runtime.gate.set()
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) == 1), 5)
+            await _settle()
+            assert len(runtime.prompts) == 1
+            assert _chunks_done(sink)[0]["paused"] is True
+            assert not active.first_action.is_set()
+
+            await _handle_axis_message(peers, active, {"type": "resume", "request_id": "resume-1"})
+            resume_ack = next(message for message in sink.messages if message["type"] == "resume_ack")
+            assert resume_ack["ok"] is True and resume_ack["status"] == "resumed"
+            assert resume_ack["rollout_chunks"] == 1
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 3), 5)
+            await _settle()
+            assert len(runtime.prompts) == 3
+            assert [chunk["rollout_chunks"] for chunk in _chunks_done(sink)] == [1, 2, 3]
+        finally:
+            await _stop_worker(active, worker)
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_continuous_session_prompt_update_restarts_rollout_count(transport: str) -> None:
+    async def exercise() -> None:
+        sink = _AxisSink()
+        runtime = _ContinuousRuntime()
+        active = _continuous_session(transport, sink, max_chunks=2)
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=16, chunk_frames=9)
+        worker = _start_worker(peers, active)
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 2), 5)
+            await _settle()
+            # A complete rollout has no blocks left: STEP and the unchanged prompt are dropped.
+            await _handle_axis_message(peers, active, {"type": "step", "request_id": "step-1"})
+            await _handle_axis_message(peers, active, {"type": "prompt_update", "prompt": " fox "})
+            await _settle()
+            assert runtime.prompts == [None, None]
+            assert active.pending_steps == 0
+
+            await _handle_axis_message(peers, active, {"type": "prompt_update", "prompt": "owl"})
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 4), 5)
+            await _settle()
+            assert runtime.prompts == [None, None, "owl", None]
+            assert [chunk["rollout_chunks"] for chunk in _chunks_done(sink)] == [1, 2, 1, 2]
+            assert not any(message["type"] == "error" for message in sink.messages)
+        finally:
+            await _stop_worker(active, worker)
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_input_driven_session_rejects_pause_and_keeps_chunk_payload(transport: str) -> None:
+    async def exercise() -> None:
+        sink = _AxisSink()
+        runtime = _ContinuousRuntime()
+        active = _continuous_session(transport, sink, continuous=False)
+        policy = active.frame_queue_policy if isinstance(active, _ActiveSocket) else active.frames.policy
+        assert policy is FrameQueuePolicy.ORDERED_QUALITY
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=16, chunk_frames=9)
+        worker = _start_worker(peers, active)
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 1), 5)
+            await _handle_axis_message(peers, active, {"type": "resume", "request_id": "resume-1"})
+            await _settle()
+            assert runtime.prompts == [None]
+            chunk = _chunks_done(sink)[0]
+            assert not {"advance", "rollout_chunks", "max_chunks", "paused"} & chunk.keys()
+            resume_ack = next(message for message in sink.messages if message["type"] == "resume_ack")
+            assert resume_ack == {
+                "type": "resume_ack",
+                "ok": False,
+                "request_id": "resume-1",
+                "message": "This session generates only on input.",
+            }
+        finally:
+            await _stop_worker(active, worker)
+
+    asyncio.run(exercise())
+
+
+def test_continuous_controls_session_advances_without_held_keys() -> None:
+    async def exercise() -> None:
+        sink = _AxisSink()
+        runtime = _ContinuousRuntime()
+        active = _ActivePeer(
+            peer=None,
+            channel=sink,
+            frames=LatestFrameBuffer(maxsize=8),
+            resampler=RealtimeControlResampler(fps=16, start_time=0.0),
+            continuous=True,
+            max_chunks=2,
+        )
+        active.first_action.set()
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=16, chunk_frames=4)
+        worker = _start_worker(peers, active)
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 2), 5)
+            await _settle()
+            assert len(runtime.prompts) == 2
+            assert [chunk["interactions"] for chunk in _chunks_done(sink)] == [[], []]
+        finally:
+            await _stop_worker(active, worker)
+
+    asyncio.run(exercise())

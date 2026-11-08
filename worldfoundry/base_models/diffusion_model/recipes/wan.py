@@ -632,7 +632,10 @@ def self_forcing_wan21_t2v_1p3b_recipe() -> NativeDiffusionRecipe:
     The released sampler denoises three-latent-frame blocks at the unwarped
     indices (1000, 750, 500, 250), which the runner warps onto the shift-5
     flow calendar, and commits each clean block to the KV cache at timestep 0.
+    The codec runs in bf16 with the official wrapper's bf16 latent scale.
     """
+
+    import torch
 
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     wan = _checkpoints(
@@ -673,7 +676,12 @@ def self_forcing_wan21_t2v_1p3b_recipe() -> NativeDiffusionRecipe:
                 build_wan_flow_match_euler_scheduler,
                 options={"shift": 5.0},
             ),
-            ComponentSpec(codec, build_wan_video_decoder, {"weights": "vae"}),
+            ComponentSpec(
+                codec,
+                build_wan_video_decoder,
+                {"weights": "vae"},
+                {"dtype": torch.bfloat16, "std_reciprocal_in_codec_dtype": True},
+            ),
         ),
         execution=ExecutionSpec(
             strategy="autoregressive-window",

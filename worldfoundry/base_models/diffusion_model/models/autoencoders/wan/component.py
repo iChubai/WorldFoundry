@@ -1058,7 +1058,10 @@ def _build_wan_video_decoder(
         ),
     )
     parallel_degree = 1 if raw_parallel_degree is None or raw_parallel_degree is False else int(raw_parallel_degree)
-    return _load_wan_video_decoder(
+    std_reciprocal_in_codec_dtype = context.component_options.get("std_reciprocal_in_codec_dtype", False)
+    if not isinstance(std_reciprocal_in_codec_dtype, bool):
+        raise TypeError("std_reciprocal_in_codec_dtype must be a bool")
+    codec = _load_wan_video_decoder(
         context.require_checkpoint("weights"),
         replace(
             context.policy,
@@ -1103,6 +1106,11 @@ def _build_wan_video_decoder(
         chunk_duration=int(context.component_options.get("chunk_duration", 81)),
         variant=variant,
     )
+    if std_reciprocal_in_codec_dtype:
+        # Self-Forcing's official VAE wrapper casts the latent std to the codec
+        # dtype before inverting it; every encode/decode path reads this scale.
+        codec.vae.scale = [codec.vae.mean, 1.0 / codec.vae.std.to(codec.dtype)]
+    return codec
 
 
 def load_wan_video_codec(

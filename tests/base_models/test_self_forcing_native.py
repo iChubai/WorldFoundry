@@ -253,6 +253,10 @@ def test_self_forcing_recipe_registry_and_checkpoints() -> None:
     assert denoiser.factory is build_self_forcing_wan21_denoiser
     assert dict(denoiser.options) == {"block_size": 3, "cache_frames": 21, "timestep_shift": 5.0}
     assert components[recipe.execution.bindings["scheduler"]].options["shift"] == 5.0
+    assert dict(components[recipe.execution.bindings["decoder"]].options) == {
+        "dtype": torch.bfloat16,
+        "std_reciprocal_in_codec_dtype": True,
+    }
     assert "latent_encoder" not in recipe.execution.bindings
 
     dit = recipe.checkpoints["dit"]

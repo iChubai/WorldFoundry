@@ -1,10 +1,10 @@
-"""Native Self-Forcing text-to-video pipeline and its resident realtime session."""
+"""Native Self-Forcing and Causal-Forcing pipelines and their resident realtime session."""
 
 from __future__ import annotations
 
 import time
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
 
@@ -77,13 +77,19 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         codec = self._codec
         return RealtimeSpec(
             fps=self.DEFAULT_FPS,
-            first_chunk_frames=codec.get_pixel_num_frames(block_size),
+            first_chunk_frames=codec.get_pixel_num_frames(block_size + self._seeded_first_frames),
             steady_chunk_frames=block_size * codec.temporal_compression_factor,
             controls=("prompt_update",),
             keys=(),
             advance="continuous",
             max_chunks=max_chunks,
         )
+
+    @property
+    def _seeded_first_frames(self) -> int:
+        """Latent frames the open rollout committed from an input image (0 or 1); its first chunk decodes them."""
+        stream = self._realtime_stream
+        return 0 if stream is None or stream.first_frame_latent is None else 1
 
     def prepare_realtime(self) -> dict[str, Any]:
         """Report the cadence of a default-length rollout (7 chunks for 81 frames)."""
@@ -117,7 +123,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         started = time.perf_counter()
         request, _ = self._prepare_call(prompt=prompt, images=images, seed=seed, **kwargs)
         self._realtime_seed = request.sampling.seed
-        self._realtime_options = dict(kwargs)
+        self._realtime_options = dict(kwargs, images=images)
         try:
             stream = self._open_realtime_rollout(prompt, request)
         except BaseException:
@@ -137,6 +143,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
     ) -> dict[str, Any]:
         """Commit and decode the next latent block as uint8 THWC frames.
 
+        The first chunk of an image-seeded rollout also decodes the image's latent frame.
         A non-empty ``prompt`` that differs from the rollout's prompt first reopens
         the rollout with that prompt and the configured seed. ``realtime_metrics``
         reports ``model_ms``, ``decode_ms``, the 1-based ``chunk_index`` and
@@ -145,7 +152,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         del interactions, kwargs
         stream = self._realtime_stream
         if stream is None:
-            raise RuntimeError("Self-Forcing realtime session is not configured; call configure_realtime() first.")
+            raise RuntimeError(f"{self.OWNER} realtime session is not configured; call configure_realtime() first.")
         prompt = str(prompt or "").strip()
         if prompt and prompt != self._realtime_prompt:
             stream.close()
@@ -157,7 +164,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
                 raise
         if stream.done:
             raise RuntimeError(
-                f"Self-Forcing realtime rollout already produced all {stream.total_blocks} chunks; "
+                f"{self.OWNER} realtime rollout already produced all {stream.total_blocks} chunks; "
                 "update the prompt or reset to start a new rollout."
             )
         runner = self._window_runner
@@ -166,6 +173,8 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
             first_chunk = stream.completed_blocks == 0
             started = time.perf_counter()
             latents = stream.step()
+            if first_chunk and stream.first_frame_latent is not None:
+                latents = torch.cat((stream.first_frame_latent, latents), dim=2)
             if synchronize:
                 torch.cuda.synchronize(runner.device)
             decode_started = time.perf_counter()
@@ -211,4 +220,46 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         self.reset_realtime()
 
 
-__all__ = ["NativeSelfForcingPipeline"]
+class NativeCausalForcingPipeline(NativeSelfForcingPipeline):
+    """Released Causal-Forcing generators on the native forcing rollout, offline and in realtime.
+
+    ``model_id`` (or ``variant``) selects ``causal-forcing-chunkwise`` (the
+    default, three-latent-frame blocks), ``causal-forcing-framewise`` (one-frame
+    blocks) or the Causal Forcing++ frame-wise ``causal-forcing-framewise-1step``
+    and ``-2step`` students, which spend four steps on the first frame. The
+    frame-wise student also accepts one image, as the official ``--i2v`` route
+    does: the image becomes the clean first latent frame and the rollout produces
+    the remaining frames.
+    """
+
+    MODEL_ID = "causal-forcing-chunkwise"
+    OWNER = "Causal-Forcing"
+    ALLOW_MODEL_ID_OVERRIDE = True
+    DEFAULT_STEPS_BY_MODEL_ID: ClassVar[Mapping[str, int]] = {
+        "causal-forcing-chunkwise": 4,
+        "causal-forcing-framewise": 4,
+        "causal-forcing-framewise-1step": 1,
+        "causal-forcing-framewise-2step": 2,
+    }
+    IMAGE_MODEL_IDS: ClassVar[frozenset[str]] = frozenset({"causal-forcing-framewise"})
+
+    def __init__(
+        self,
+        *,
+        native_pipeline: NativeDiffusionPipeline,
+        device: str,
+        model_id: str | None = None,
+    ) -> None:
+        resolved = native_pipeline.model_id
+        if resolved not in self.DEFAULT_STEPS_BY_MODEL_ID:
+            raise ValueError(
+                f"{resolved!r} is not a native Causal-Forcing recipe; "
+                f"expected one of {sorted(self.DEFAULT_STEPS_BY_MODEL_ID)}"
+            )
+        self.DEFAULT_NUM_INFERENCE_STEPS = self.DEFAULT_STEPS_BY_MODEL_ID[resolved]
+        self.ACCEPTS_IMAGES = resolved in self.IMAGE_MODEL_IDS
+        self.GENERATION_TYPE = "ti2v" if self.ACCEPTS_IMAGES else "t2v"
+        super().__init__(native_pipeline=native_pipeline, device=device, model_id=model_id)
+
+
+__all__ = ["NativeCausalForcingPipeline", "NativeSelfForcingPipeline"]

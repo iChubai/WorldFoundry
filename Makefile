@@ -70,6 +70,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/base_models/test_flashdreams_sana_wm_streaming.py \
 	tests/base_models/test_flashdreams_fastvideo_causal_wan.py \
 	tests/base_models/test_self_forcing_native.py \
+	tests/base_models/test_causal_forcing_native.py \
 	tests/base_models/diffusion_model/test_causal_attention_padding.py \
 	tests/base_models/diffusion_model/test_causal_cache_positions.py \
 	tests/base_models/diffusion_model/optimizations/test_causal_qkv_fusion.py \

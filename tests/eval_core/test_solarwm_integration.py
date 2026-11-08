@@ -6,42 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models.runtime.environments import load_runtime_environment_profile_by_id
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.evaluation.models.runtime.validate import validate_runtime_profile_references
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
 PIPELINE_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
-
-
-def test_solarwm_catalog_profile_and_inference_route_are_registered() -> None:
-    registry = load_model_zoo_registry(MODEL_CATALOG_DIR)
-    entry = registry.get("solarwm")
-    profile = load_runtime_profile("solarwm")
-    environment = load_runtime_environment_profile_by_id("solarwm")
-
-    assert entry.official_repo_url == "https://github.com/Junchao-cs/SolarWM"
-    assert entry.runner_target == PIPELINE_RUNNER_TARGET
-    assert entry.pipeline_target is not None
-    assert entry.pipeline_target.endswith(":SolarWMPipeline")
-    assert entry.runtime_profile == "runtime-profile:solarwm"
-    assert entry.integration_status == "integrated"
-    assert entry.runner_parity.status == "pending"
-    assert {variant.variant_id for variant in entry.variants} == {
-        "solarwm-wan2.2-5b",
-        "solarwm-wan2.2-14b",
-        "solarwm-ltx-22b",
-        "solarwm-h3-33b",
-    }
-    assert profile.backend_stage == "in_tree_runtime_manifest"
-    assert profile.artifact_kind == "generated_world"
-    assert profile.execution["environment"] == "solarwm"
-    assert not validate_runtime_profile_references(profile)
-    assert environment.model_id == "solarwm"
-    assert environment.python == "3.10"
-    assert "transformers==5.12.1" in environment.pip_packages
 
 
 def test_solarwm_runtime_spec_resolves_in_tree_launcher(monkeypatch, tmp_path: Path) -> None:

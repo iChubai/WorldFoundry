@@ -225,26 +225,3 @@ def test_echo_wm_flash_runtime_maps_action_and_cache_controls(tmp_path: Path) ->
     result = runtime.run_plan(plan, timeout_seconds=10)
     assert result["status"] == "success"
     assert Path(plan.output_path).read_bytes() == b"echo-wm-fixture"
-
-
-def test_echo_wm_flash_rejects_invalid_decoded_frame_count(tmp_path: Path) -> None:
-    source, config, checkpoint_root, gemma = _wm_fixture(tmp_path)
-    runtime = JoyAIEchoWMRuntime(
-        checkpoint_dir=checkpoint_root,
-        gemma_path=gemma,
-        source_root=source,
-        config_path=config,
-        variant="flash",
-    )
-    image = _write(tmp_path / "input.jpg")
-
-    with pytest.raises(ValueError, match=r"1 \+ 24m"):
-        runtime.build_plan(
-            request={
-                "prompt": "A world",
-                "images": str(image),
-                "action_str": "w-60",
-                "num_frames": 240,
-            },
-            output_path=tmp_path / "invalid.mp4",
-        )

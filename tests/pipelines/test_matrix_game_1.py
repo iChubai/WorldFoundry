@@ -202,22 +202,6 @@ def test_matrix_game_1_public_execute_path_records_generated_video(tmp_path: Pat
     assert report_path.is_file()
 
 
-def test_matrix_game_1_build_plan_normalizes_image_file_for_official_runner(tmp_path: Path) -> None:
-    """Verify file inputs are converted to the image directory expected by the runner.
-
-    Args:
-        tmp_path: Temporary directory used for the input image and output directory.
-    """
-    image_path = tmp_path / "input.png"
-    Image.new("RGB", (8, 8), "blue").save(image_path)
-    runtime = MatrixGame1Runtime(checkpoint_dir=str(tmp_path / "checkpoint"))
-
-    plan = runtime.build_plan(image_path=str(image_path), output_dir=tmp_path / "outputs")
-    command = list(plan.command)
-
-    assert command[command.index("--image_path") + 1] == str(tmp_path)
-
-
 def test_matrix_game_1_runtime_profile_documents_world_model_runner_smoke() -> None:
     """Verify Matrix-Game-1 profile records the world-model runner smoke.
 

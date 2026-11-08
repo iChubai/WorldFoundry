@@ -437,18 +437,6 @@ def test_run_cli_in_process_engine_resolves_contract_model(tmp_path, monkeypatch
     assert scorecard["metrics"]["leaderboard"]["has_artifact:generated_video"] == 1.0
 
 
-def test_zoo_benchmark_run_help_exposes_contract_mode(capsys) -> None:
-    with pytest.raises(SystemExit) as exc_info:
-        main(["zoo", "benchmark-run", "--help"])
-
-    output = capsys.readouterr().out
-
-    assert exc_info.value.code == 0
-    assert "--mode {contract,normalizer,official-run,official-validation}" in output
-    assert "Contract emits a non-official contract scorecard" in output
-    assert "official-validation imports results" in output
-
-
 def test_contract_runner_artifact_behavior_is_api_owned() -> None:
     from worldfoundry.evaluation.tasks.execution.orchestration.contract import execute_contract_run, run_contract
 

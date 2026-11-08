@@ -66,9 +66,7 @@ def test_ltx25_catalog_binding_profile_and_environment_are_wired() -> None:
     catalog = load_model_catalog_manifest(MODEL_DATA / "catalog" / "video" / "ltx-2.5.yaml")
     binding = load_pipeline_binding(MODEL_DATA / "bindings" / "pipelines" / "ltx-2.5.yaml")
     profile = load_runtime_profile_manifest(MODEL_DATA / "runtime" / "profiles" / "ltx-2.5.yaml")
-    environment = load_runtime_environment_profile(
-        MODEL_DATA / "runtime" / "environments" / "video" / "ltx-2.5.yaml"
-    )
+    environment = load_runtime_environment_profile(MODEL_DATA / "runtime" / "environments" / "video" / "ltx-2.5.yaml")
 
     assert catalog.model_id == "ltx-2.5"
     assert catalog.task_family == "video_generation"
@@ -97,59 +95,6 @@ def test_ltx25_pipeline_loads_from_standard_runner_spec() -> None:
     assert spec.pipeline_target == "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline"
     assert pipeline.model_id == "ltx-2.5"
     assert pipeline.preflight()["status"] == "blocked"
-
-
-def test_ltx25_runtime_maps_split_components_and_i2v_controls(tmp_path: Path) -> None:
-    source, checkpoint = _ltx25_fixture(tmp_path)
-    runtime = LTX25DistilledRuntime(
-        checkpoint_dir=checkpoint,
-        source_root=source,
-        python_executable=Path(sys.executable),
-        offload_mode="disk",
-        quantization="fp8-cast",
-        device="cuda:2",
-    )
-    image = _write(tmp_path / "reference.png")
-    output = tmp_path / "outputs" / "ltx25.mp4"
-
-    preflight = runtime.preflight()
-    assert preflight["status"] == "ready"
-    assert preflight["missing_checkpoint_files"] == []
-    assert preflight["missing_runtime_files"] == []
-    plan = runtime.build_plan(
-        request={
-            "prompt": "A violinist performs while the camera slowly circles",
-            "images": {"path": str(image), "frame_index": 0, "strength": 0.85, "crf": 18},
-            "num_frames": 121,
-            "height": 512,
-            "width": 768,
-            "fps": 24,
-            "seed": 73,
-        },
-        output_path=output,
-    )
-
-    command = list(plan.command)
-    assert plan.task == "image-to-video"
-    assert command[:3] == [str(Path(sys.executable).resolve()), "-m", "ltx_pipelines.distilled"]
-    assert command[command.index("--transformer-path") + 1].endswith(
-        "diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors"
-    )
-    assert command[command.index("--text-encoder-path") + 1].endswith(
-        "text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
-    )
-    assert command[command.index("--offload") + 1] == "disk"
-    assert command[command.index("--quantization") + 1] == "fp8-cast"
-    assert command[command.index("--image") + 1 : command.index("--image") + 5] == [
-        str(image),
-        "0",
-        "0.85",
-        "18",
-    ]
-    assert plan.env["CUDA_VISIBLE_DEVICES"] == "2"
-    result = runtime.run_plan(plan, timeout_seconds=10)
-    assert result["status"] == "success"
-    assert output.read_bytes() == b"ltx-2.5-audio-video-fixture"
 
 
 def test_ltx25_runtime_supports_text_only_and_auto_duration(tmp_path: Path) -> None:

@@ -5,7 +5,13 @@ export type OrgIdentity = {
   name: string;
   abbr: string;
   src?: string;
+  /** Square symbol cropped from a wide logo, used below title size. */
+  markSrc?: string;
+  /** Wide text-only logo; below title size the mark shows `abbr`. */
+  wordmark?: boolean;
 };
+
+export type IdentityMarkSize = 'small' | 'medium' | 'large';
 
 const orgs = logoMap.orgs as Record<string, OrgIdentity>;
 const modelLogos = logoMap.modelLogos as Record<string, string>;
@@ -74,4 +80,10 @@ export function resolveModelOrgKey(id: string, provider?: string) {
 
 export function resolveBenchmarkOrg(id: string, logoKey?: string): OrgIdentity | undefined {
   return orgFromKey(logoKey || benchmarkLogos[id]);
+}
+
+/** Image for an identity mark; wide logos only appear in full at title size. */
+export function orgMarkSrc(org: OrgIdentity | undefined, size: IdentityMarkSize): string | undefined {
+  if (!org || size === 'large') return org?.src;
+  return org.markSrc ?? (org.wordmark ? undefined : org.src);
 }

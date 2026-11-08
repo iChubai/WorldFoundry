@@ -17,6 +17,9 @@ Public surface:
   without reading the whole file.
 - :func:`torchrun_module_command` / :func:`run_torchrun_module` —
   build or run ``python -m torch.distributed.run --standalone``.
+- :func:`package_module_command` — build ``python -m worldfoundry...``,
+  optionally under single-node ``torch.distributed.run``; model runtimes use
+  it to start in-tree workers without adding ``PYTHONPATH`` entries.
 """
 
 from __future__ import annotations
@@ -384,7 +387,44 @@ def run_torchrun_module(
     )
 
 
+def package_module_command(
+    module: str,
+    args: Sequence[str | os.PathLike[str] | int | float] = (),
+    *,
+    python_executable: str | os.PathLike[str] | None = None,
+    nproc_per_node: int | None = None,
+    launcher_options: Sequence[str] = ("--standalone",),
+    launcher: Sequence[str] | None = None,
+) -> list[str]:
+    """Build the command that runs an in-tree WorldFoundry module in a child interpreter.
+
+    Without ``nproc_per_node`` the command is ``python -m MODULE ARGS``. With it,
+    the module runs under single-node torchrun: ``python -m torch.distributed.run
+    LAUNCHER_OPTIONS --nproc_per_node N -m MODULE ARGS``; ``launcher`` replaces
+    the ``python -m torch.distributed.run`` prefix with an explicit ``torchrun``
+    executable. The child inherits the caller's environment and import path; the
+    command never adds ``PYTHONPATH`` entries.
+
+    Raises:
+        ValueError: If ``module`` is not a dotted ``worldfoundry`` module path or
+            ``nproc_per_node`` is not positive.
+    """
+
+    parts = module.split(".")
+    if parts[0] != "worldfoundry" or not all(part.isidentifier() for part in parts):
+        raise ValueError(f"only in-tree worldfoundry modules can be launched, got {module!r}")
+    python = os.fspath(python_executable) if python_executable is not None else sys.executable
+    module_args = ["-m", module, *map(str, args)]
+    if nproc_per_node is None:
+        return [python, *module_args]
+    if nproc_per_node < 1:
+        raise ValueError("nproc_per_node must be positive")
+    prefix = list(launcher) if launcher else [python, "-m", "torch.distributed.run"]
+    return [*prefix, *launcher_options, "--nproc_per_node", str(nproc_per_node), *module_args]
+
+
 __all__ = [
+    "package_module_command",
     "process_group_alive",
     "process_identity",
     "read_text_tail",

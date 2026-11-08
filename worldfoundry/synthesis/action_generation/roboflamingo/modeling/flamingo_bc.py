@@ -241,7 +241,7 @@ class BCFlamingo(nn.Module):
             output = self.lang_encoder(
                 input_ids=lang_x,
                 attention_mask=attention_mask,
-                # labels=labels,  # 不输入label，程序就不会计算loss
+                # labels=labels,  # Without labels the language model skips the loss.
                 past_key_values=past_key_values,
                 use_cache=use_cache,
             )

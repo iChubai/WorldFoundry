@@ -83,7 +83,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         return getattr(self._window_runner.windowed_denoiser, "kv_window", None) is not None
 
     def _realtime_spec(self, max_chunks: int | None) -> RealtimeSpec:
-        """One chunk per latent block: the causal codec emits 9 frames first, then 12."""
+        """One chunk per latent block, sized by the causal codec: 9 then 12 frames for three-frame blocks, 1 then 4 for one-frame blocks."""
         block_size = int(self._window_runner.windowed_denoiser.block_size)
         codec = self._codec
         return RealtimeSpec(
@@ -103,7 +103,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         return 0 if stream is None or stream.first_frame_latent is None else 1
 
     def prepare_realtime(self) -> dict[str, Any]:
-        """Report the cadence of a default-length rollout (7 chunks for 81 frames), or an unbounded one."""
+        """Report the cadence of a default-length rollout (7 three-frame or 21 one-frame chunks for 81 frames), or an unbounded one."""
         if self._unbounded_rollout:
             return {"realtime_spec": self._realtime_spec(None).to_payload()}
         block_size = int(self._window_runner.windowed_denoiser.block_size)

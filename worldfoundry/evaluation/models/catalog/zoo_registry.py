@@ -145,7 +145,6 @@ def _resolve_entry_pipeline_route(entry: ModelZooEntry) -> tuple[str, str] | Non
         pipeline_target=entry.pipeline_target,
         pipeline_binding=entry.pipeline_binding,
         runtime_profile=None,
-        include_plugins=False,
     )
     if route is None:
         return None
@@ -165,7 +164,6 @@ def _resolve_variant_pipeline_route(entry: ModelZooEntry, variant: ModelVariantS
         pipeline_target=variant.pipeline_target,
         pipeline_binding=variant.pipeline_binding,
         runtime_profile=None,
-        include_plugins=False,
     )
     if route is None:
         route = resolve_pipeline_route(
@@ -173,7 +171,6 @@ def _resolve_variant_pipeline_route(entry: ModelZooEntry, variant: ModelVariantS
             pipeline_target=variant.pipeline_target,
             pipeline_binding=variant.pipeline_binding or entry.pipeline_binding,
             runtime_profile=None,
-            include_plugins=False,
         )
     if route is None:
         return None

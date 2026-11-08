@@ -1,14 +1,13 @@
-"""Model runner registry: discover, register, and resolve world-model runners.
+"""Model runner registry: register and resolve world-model runners.
 
 Builtin runtime runners register eagerly; arbitrary ``module:Class`` targets
-defer import until :meth:`ModelRunnerRegistry.create`.  Plugin runners overlay
-via entry points and ``WORLDFOUNDRY_MODEL_RUNNERS``.
+defer import until :meth:`ModelRunnerRegistry.create`.
 
 Sections:
 
-* **Entry dataclasses** — registry entries, issues, discovery reports.
+* **Entry dataclass** — one registered runner target.
 * **ModelRunnerRegistry** — keyed lookup, lazy import, runner instantiation.
-* **Module helpers** — default snapshot, plugin overlay, listing utilities.
+* **Module helpers** — default snapshot and listing utilities.
 """
 
 from __future__ import annotations
@@ -84,50 +83,6 @@ class ModelRunnerRegistryEntry:
             "source": self.source,
             "origin": self.origin,
             "runner_class": runner_class,
-        }
-
-
-@dataclass(frozen=True)
-class ModelRunnerRegistryIssue:
-    """Validation issue from runner discovery."""
-
-    code: str
-    message: str
-    severity: str = "warning"
-    name: str = ""
-    origin: str = ""
-    details: Mapping[str, Any] | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the issue to a JSON-friendly dictionary."""
-        return {
-            "code": self.code,
-            "message": self.message,
-            "severity": self.severity,
-            "name": self.name,
-            "origin": self.origin,
-            "details": dict(self.details or {}),
-        }
-
-
-@dataclass(frozen=True)
-class ModelRunnerRegistryReport:
-    """Discovery report of runner entries and validation issues."""
-
-    entries: tuple[ModelRunnerRegistryEntry, ...]
-    issues: tuple[ModelRunnerRegistryIssue, ...] = ()
-
-    @property
-    def ok(self) -> bool:
-        """Return ``True`` if no issue has severity ``"error"``."""
-        return not any(issue.severity == "error" for issue in self.issues)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the report to a JSON-friendly dictionary."""
-        return {
-            "ok": self.ok,
-            "entries": [entry.to_dict() for entry in self.entries],
-            "issues": [issue.to_dict() for issue in self.issues],
         }
 
 
@@ -270,59 +225,18 @@ _BUILTIN_MODEL_RUNNER_REGISTRY = ModelRunnerRegistry()
 
 
 def default_model_runner_registry() -> ModelRunnerRegistry:
-    """Return the cached model runner registry overlaid with discovered plugins.
-
-    The returned registry includes builtin runners and any third-party plugins
-    discovered via entry-points and the ``WORLDFOUNDRY_MODEL_RUNNERS`` env var.
-    """
+    """Return a fresh registry of the builtin runtime runners."""
     return model_runner_registry_snapshot()
 
 
 def builtin_model_runner_registry() -> ModelRunnerRegistry:
-    """Return the core built-in model runner registry (no plugins)."""
+    """Return the core built-in model runner registry."""
     return _BUILTIN_MODEL_RUNNER_REGISTRY
 
 
-def model_runner_registry_snapshot(*, include_plugins: bool = True) -> ModelRunnerRegistry:
-    """Return fresh registry snapshot with optional plugin overlay."""
-    registry = ModelRunnerRegistry(entries=_BUILTIN_MODEL_RUNNER_REGISTRY.list(), include_builtins=False)
-    if not include_plugins:
-        return registry
-    return _overlay_plugin_runners(registry)[0]
-
-
-def model_runner_registry_report(*, include_plugins: bool = True) -> ModelRunnerRegistryReport:
-    """Build discovery report with entries and plugin validation issues."""
-    registry = ModelRunnerRegistry(entries=_BUILTIN_MODEL_RUNNER_REGISTRY.list(), include_builtins=False)
-    issues: list[ModelRunnerRegistryIssue] = []
-    if include_plugins:
-        registry, plugin_issues = _overlay_plugin_runners(registry)
-        issues.extend(plugin_issues)
-    return ModelRunnerRegistryReport(entries=registry.list(), issues=tuple(issues))
-
-
-def _overlay_plugin_runners(
-    registry: ModelRunnerRegistry,
-) -> tuple[ModelRunnerRegistry, tuple[ModelRunnerRegistryIssue, ...]]:
-    """Overlay plugin runners; record collisions as warnings."""
-    from .plugins import discover_model_runner_plugins
-
-    discovery = discover_model_runner_plugins()
-    issues = list(discovery.issues)
-    for entry in discovery.entries:
-        try:
-            registry.register(entry)
-        except ValueError as exc:
-            issues.append(
-                ModelRunnerRegistryIssue(
-                    code="plugin_runner_collision",
-                    message=str(exc),
-                    severity="warning",
-                    name=entry.name,
-                    origin=entry.origin,
-                )
-            )
-    return registry, tuple(issues)
+def model_runner_registry_snapshot() -> ModelRunnerRegistry:
+    """Return a fresh, mutable copy of the builtin model runner registry."""
+    return ModelRunnerRegistry(entries=_BUILTIN_MODEL_RUNNER_REGISTRY.list(), include_builtins=False)
 
 
 def list_model_runner_registry_entries() -> tuple[ModelRunnerRegistryEntry, ...]:

@@ -1,22 +1,15 @@
 from __future__ import annotations
 
 import importlib
-import importlib.util
 import os
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 cli_main = importlib.import_module("worldfoundry.cli.main")
 cli_embodied = importlib.import_module("worldfoundry.cli.embodied")
 
 
 def _load_docker_runner():
-    path = REPO_ROOT / "worldfoundry/evaluation/tasks/embodied/docker_runner.py"
-    spec = importlib.util.spec_from_file_location("_worldfoundry_embodied_docker_runner_test", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return importlib.import_module("worldfoundry.evaluation.tasks.embodied.docker_runner")
 
 
 def test_embodied_accept_license_flags_merge_with_existing_environment(monkeypatch) -> None:

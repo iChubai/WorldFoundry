@@ -14,6 +14,12 @@ FIXTURES_ROOT = REPO_ROOT / "worldfoundry" / "data" / "test_cases" / "evaluation
 PYTHON = sys.executable
 
 
+def _require_local(path: Path) -> None:
+    """Skip when local-only fixtures or scripts (git-ignored) are absent from this checkout."""
+    if not path.exists():
+        pytest.skip(f"local-only asset is not present: {path.relative_to(REPO_ROOT)}")
+
+
 def _subprocess_env() -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(REPO_ROOT)
@@ -67,6 +73,7 @@ def test_embodied_contract_scorecard(tmp_path: Path, benchmark_id: str) -> None:
     ],
 )
 def test_embodied_official_validation_fixtures(tmp_path: Path, benchmark_id: str, fixture_rel: str) -> None:
+    _require_local(FIXTURES_ROOT)
     fixture_path = FIXTURES_ROOT / fixture_rel
     assert fixture_path.exists(), fixture_path
     output_dir = tmp_path / "validation" / benchmark_id
@@ -102,6 +109,7 @@ def test_embodied_official_validation_fixtures(tmp_path: Path, benchmark_id: str
 
 
 def test_embodied_fixture_manifest_matches_parametrize() -> None:
+    _require_local(FIXTURES_ROOT)
     manifest = _load_fixture_manifest()
     fixture_ids = {item["benchmark_id"] for item in manifest["fixtures"]}
     contract_ids = set(manifest["contract_benchmark_ids"])

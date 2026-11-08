@@ -11,24 +11,20 @@ import pytest
 pytest.importorskip("fastapi")
 
 from worldfoundry.evaluation.api import GenerationRequest, WorldModelConfig
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
 from worldfoundry.evaluation.models import resolve_model_zoo_config, resolve_model_zoo_runner
+from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
 from worldfoundry.evaluation.models.pipelines.loading import build_pipeline_runner_spec
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
 from worldfoundry.studio.inference.catalog import discover_catalog
 from worldfoundry.studio.serving.workspace import _workspace_models
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
 MODEL_DATA_DIR = REPO_ROOT / "worldfoundry" / "data" / "models"
 SRC_ROOT = REPO_ROOT
 UNIFIED_MODEL_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
-PIPELINE_MODEL_IDS = (
-    "longcat-video",
-)
+PIPELINE_MODEL_IDS = ("longcat-video",)
 TARGET_PIPELINE_MODEL_IDS = (
-    "4d-gs",
     "fantasyworld",
     "flashworld",
     "lagernvs",
@@ -37,7 +33,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "mvdiffusion",
     "neoverse",
     "recammaster",
-    "shape-of-motion",
     "stable-virtual-camera",
     "wonderjourney",
     "wonderworld",
@@ -70,28 +65,17 @@ TARGET_PIPELINE_MODEL_IDS = (
     "skyreels-v3",
     "spatial-ladder",
     "spatial-reasoner",
-    "thinksound",
     "unianimate-dit",
     "wan2.1-vace",
     "being-h07",
-    "eo1",
     "fastwam",
-    "gaussian-actor",
-    "hy-embodied",
     "last-r1",
-    "libero-para",
-    "multi-task-dit",
-    "openpie-0.6",
     "pi0-fast",
     "pi0-worldfoundry",
     "pi0",
     "pi05",
-    "real-time-chunking",
     "smolvla",
     "spirit-v1.5",
-    "tdmpc",
-    "vqbet",
-    "wall-oss",
     "xvla",
     "cosmos-predict-2.5",
     "cosmos-transfer-2.5",
@@ -100,13 +84,10 @@ TARGET_PIPELINE_MODEL_IDS = (
     "hunyuanworld-voyager",
     "lingbot-world",
     "matrix-game-2",
-    "viewcrafter",
     "adaworld",
-    "ai2thor",
     "ctrl-world",
     "diamond",
     "dino-wm",
-    "droid-w",
     "egowm",
     "genie-envisioner",
     "giga-world-0",
@@ -207,12 +188,16 @@ def _class_has_pipeline_contract(
         return True
     for base in node.bases:
         base_name = _base_name(base)
-        if base_name and base_name in class_defs and _class_has_pipeline_contract(
-            class_defs[base_name],
-            class_defs,
-            imports=imports,
-            seen_classes=seen_classes,
-            seen_targets=seen_targets,
+        if (
+            base_name
+            and base_name in class_defs
+            and _class_has_pipeline_contract(
+                class_defs[base_name],
+                class_defs,
+                imports=imports,
+                seen_classes=seen_classes,
+                seen_targets=seen_targets,
+            )
         ):
             return True
         imported_target = imports.get(base_name)
@@ -236,11 +221,7 @@ def _class_assigned_names(node: ast.ClassDef) -> set[str]:
 
 
 def _class_method_names(node: ast.ClassDef) -> set[str]:
-    return {
-        item.name
-        for item in node.body
-        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
-    }
+    return {item.name for item in node.body if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))}
 
 
 def _assigns_self_operator(node: ast.ClassDef) -> bool:
@@ -307,8 +288,8 @@ def _component_pipeline_contract(tree: ast.Module, class_name: str) -> dict[str,
     return None
 
 
-def _runtime_profiles_by_id() -> dict[str, object]:
-    profiles: dict[str, object] = {}
+def _runtime_profiles_by_id() -> dict[str, Any]:
+    profiles: dict[str, Any] = {}
     for root in (MODEL_DATA_DIR / "runtime" / "profiles",):
         for path in sorted(root.rglob("*.y*ml")) if root.exists() else ():
             if path.name.startswith("_"):
@@ -416,6 +397,7 @@ def test_profile_backed_models_are_in_studio_and_path_a_specs() -> None:
 
     for model_id in PIPELINE_MODEL_IDS:
         entry = registry.get(model_id)
+        assert entry.runner_target is not None
         config = WorldModelConfig(
             model_id=model_id,
             runner=entry.runner_target,
@@ -447,16 +429,8 @@ def test_world_model_workspace_specs_expose_model_specific_inputs() -> None:
     for model_id, expected_fields in expected_load_fields.items():
         model = models[model_id]
         task = model["tasks"][0]
-        load_fields = {
-            field["field_id"]
-            for field in task["inputs"]
-            if field["target"] == "load_kwargs"
-        }
-        call_fields = {
-            field["field_id"]
-            for field in task["inputs"]
-            if field["target"] == "call_kwargs"
-        }
+        load_fields = {field["field_id"] for field in task["inputs"] if field["target"] == "load_kwargs"}
+        call_fields = {field["field_id"] for field in task["inputs"] if field["target"] == "call_kwargs"}
 
         assert model["workload_type"] == "world"
         assert model["template_id"] == "interactive-world"

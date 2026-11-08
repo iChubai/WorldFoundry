@@ -447,12 +447,8 @@ EvalCrafter 已支持的三项 CLIP 指标和 `final_result.txt` 导入都运行
 入口或 setup 命令、资产要求和已验证范围；如果还没有可复现的环境配置，对应 metric
 必须保持 blocked，不能通过 fallback 分数伪装成成功。
 
-可复用 foundation model 放在 `worldfoundry/base_models`。这些组件为后续完整套件集成提供
-基础；组件存在并不代表当前 bounded EvalCrafter runner 已经调用它们：
-
-- **DeepFace runtime** (`worldfoundry/base_models/perception_core/face/deepface`) — 可供后续 celebrity identity 集成；当前支持的 CLIP 子集不会执行它。
-- **DOVER runtime** (`worldfoundry/base_models/perception_core/video_quality/dover`) — 可供后续视频质量集成；当前支持的 CLIP 子集不会执行它。
-- **VideoMAE action recipe** (`worldfoundry/base_models/perception_core/action_recognition/videomae_mmaction`) — 只保留 EvalCrafter 实际使用的 VideoMAEv2 config 和 Kinetics-400 label map。MMAction2 作为环境依赖安装，不把完整框架源码复制进仓库。
+仓内 DOVER runtime（`worldfoundry/base_models/perception_core/video_quality/dover`）可供后续
+EvalCrafter 视频质量集成；当前支持的 CLIP 子集不会执行它。
 
 已支持的子集只需要 CLIP ViT-B/32；将它放到标准 checkpoint root，或显式设置覆盖变量：
 

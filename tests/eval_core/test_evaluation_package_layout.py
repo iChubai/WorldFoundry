@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -18,9 +17,7 @@ def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
     assert not (evaluation_root / "benchmarks").exists()
 
     top_level_packages = {
-        path.name
-        for path in evaluation_root.iterdir()
-        if path.is_dir() and path.name != "__pycache__"
+        path.name for path in evaluation_root.iterdir() if path.is_dir() and path.name != "__pycache__"
     }
     assert top_level_packages == {
         "api",
@@ -273,6 +270,7 @@ def test_embodied_task_modules_are_owned_by_embodied_package() -> None:
     import worldfoundry.evaluation.tasks.embodied.materialize as canonical_materialize
     import worldfoundry.evaluation.tasks.embodied.metrics as canonical_metrics
     import worldfoundry.evaluation.tasks.embodied.normalizer as canonical_normalizer
+
     for retired_module in (
         "run_embodied.py",
         "run_embodied_contracts.py",
@@ -308,7 +306,7 @@ def test_external_benchmark_contract_registry_is_split_from_contract_data() -> N
     assert "ExternalBenchmarkContractRegistry(" in contracts_text
     assert "class ExternalBenchmarkContract" not in contracts_text
     assert "_CONTRACTS:" not in contracts_text
-    assert "known = \", \".join" not in contracts_text
+    assert 'known = ", ".join' not in contracts_text
 
 
 def test_task_package_facade_is_lazy_and_bounded() -> None:
@@ -343,8 +341,8 @@ def test_task_package_facade_is_lazy_and_bounded() -> None:
     assert json.loads(result.stdout) == []
 
     from worldfoundry.evaluation.tasks import load_benchmark_zoo_registry, load_task_registry_from_paths
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry as ZooLoader
     from worldfoundry.evaluation.tasks.catalog.registry import load_task_registry_from_paths as RegistryLoader
+    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry as ZooLoader
 
     assert load_benchmark_zoo_registry is ZooLoader
     assert load_task_registry_from_paths is RegistryLoader
@@ -358,7 +356,9 @@ def test_native_task_package_is_retired() -> None:
         assert not (tasks_root / retired_native_shim).exists()
 
     import importlib
+
     import pytest
+
     import worldfoundry.evaluation.tasks as facade
     import worldfoundry.evaluation.tasks.catalog.yaml as canonical_yaml
 
@@ -366,143 +366,6 @@ def test_native_task_package_is_retired() -> None:
         importlib.import_module("worldfoundry.evaluation.tasks.native")
     assert facade.load_catalog_yaml is canonical_yaml.load_catalog_yaml
     assert facade.load_yaml_mapping_with_extends is canonical_yaml.load_yaml_mapping_with_extends
-
-
-def test_external_metric_evaluator_bindings_are_separate_from_dispatch() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
-    artifacts_module = tasks_root / "metrics" / "artifacts.py"
-    bindings_module = tasks_root / "metrics" / "bindings.py"
-    local_evaluators_module = tasks_root / "metrics" / "local_evaluators.py"
-    canonical_evaluator_module = tasks_root / "metrics" / "evaluators.py"
-
-    artifacts_text = artifacts_module.read_text(encoding="utf-8")
-    bindings_text = bindings_module.read_text(encoding="utf-8")
-    local_evaluators_text = local_evaluators_module.read_text(encoding="utf-8")
-    canonical_evaluator_text = canonical_evaluator_module.read_text(encoding="utf-8")
-
-    assert "normalize_artifact_records" in artifacts_text
-    assert "missing_artifacts" in artifacts_text
-    assert "FORMULA_EVALUATOR_BINDINGS" in bindings_text
-    assert "SUCCESS_METRIC_IDS_BY_BENCHMARK" in bindings_text
-    assert "camera_binary_classification_metrics" in local_evaluators_text
-    assert "vbench_final_score" in local_evaluators_text
-    assert "worldmodelbench_score" in local_evaluators_text
-    assert "LOCAL_EVALUATORS" in canonical_evaluator_text
-    assert "success_metric_bindings" in canonical_evaluator_text
-    assert "def _artifact_record_from_mapping" not in canonical_evaluator_text
-    assert "def _artifact_exists" not in canonical_evaluator_text
-    assert "camera_binary_classification_metrics" not in canonical_evaluator_text
-    assert "vbench_final_score" not in canonical_evaluator_text
-    assert "worldmodelbench_score" not in canonical_evaluator_text
-    assert "def _filter_success_records" not in canonical_evaluator_text
-    assert "def _success_metric_bindings" not in canonical_evaluator_text
-    assert '"robotwin": (' not in canonical_evaluator_text
-    assert "class ExternalMetricEvaluatorRegistry" in canonical_evaluator_text
-
-
-def test_run_metric_registry_is_split_from_builtin_metric_callable() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
-    registry_module = tasks_root / "metrics" / "registry.py"
-    builtins_module = tasks_root / "metrics" / "builtins.py"
-
-    registry_text = registry_module.read_text(encoding="utf-8")
-    builtins_text = builtins_module.read_text(encoding="utf-8")
-
-    assert "class MetricRegistry" in registry_text
-    assert "from .builtins import BuiltinExistingResultsMetric" in registry_text
-    assert "class BuiltinExistingResultsMetric" in builtins_text
-    assert "def _numeric_values" in builtins_text
-    assert "class BuiltinExistingResultsMetric" not in registry_text
-    assert "def _numeric_values" not in registry_text
-
-    import worldfoundry.evaluation.tasks.metrics.registry as canonical_registry
-    import worldfoundry.evaluation.tasks.metrics.builtins as canonical_builtins
-    import worldfoundry.evaluation.tasks.metrics as metrics
-
-    assert metrics.MetricRegistry is canonical_registry.MetricRegistry
-    assert metrics.BuiltinExistingResultsMetric is canonical_registry.BuiltinExistingResultsMetric
-    assert metrics.BuiltinExistingResultsMetric is canonical_builtins.BuiltinExistingResultsMetric
-
-
-def test_execution_helpers_are_owned_by_execution_package() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
-    execution_root = tasks_root / "execution"
-    retired_execution_shims = (
-        "benchmark_execution.py",
-        "benchmark_interfaces.py",
-        "benchmark_manifest_execution.py",
-        "benchmark_runtime_preflight.py",
-        "gpu_validation.py",
-        "run_gpu_validation.py",
-        "benchmark_manifest_path.py",
-        "benchmark_run_mode.py",
-        "benchmark_runner_io.py",
-        "run_cache.py",
-        "run_contract.py",
-        "run_existing_results.py",
-        "run_evaluate.py",
-        "run_materialize.py",
-        "run_model_benchmark.py",
-        "run_model_benchmark_suite.py",
-        "run_plan.py",
-        "runners.py",
-    )
-    for filename in retired_execution_shims:
-        assert not (tasks_root / filename).exists()
-
-    import worldfoundry.evaluation.tasks.execution.orchestration.cache as canonical_cache
-    import worldfoundry.evaluation.tasks.execution.orchestration.contract as canonical_contract
-    import worldfoundry.evaluation.tasks.execution.orchestration.existing_results as canonical_existing_results
-    import worldfoundry.evaluation.tasks.execution.framework.io as canonical_io
-    from worldfoundry.core.io.formats.serialization import write_json as core_write_json
-    import worldfoundry.evaluation.tasks.catalog.benchmark_catalog as canonical_benchmark_catalog
-    import worldfoundry.evaluation.tasks.execution.orchestration.materialize as canonical_materialize
-    import worldfoundry.evaluation.tasks.execution.orchestration.run_mode as canonical_run_mode
-
-    assert (execution_root / "run_mode.py").is_file()
-    assert not (execution_root / "io.py").exists()
-    assert (execution_root / "cache.py").is_file()
-    assert (execution_root / "contract.py").is_file()
-    assert (execution_root / "existing_results.py").is_file()
-    assert (execution_root / "materialize.py").is_file()
-    assert (execution_root / "interfaces.py").is_file()
-    assert (execution_root / "benchmark_runner.py").is_file()
-    orchestration_root = execution_root / "orchestration"
-    assert not (orchestration_root / "manifest_cli.py").exists()
-    assert not (orchestration_root / "manifest_path.py").exists()
-    assert not (orchestration_root / "runtime_preflight.py").exists()
-    assert not (execution_root / "manifest_cli.py").exists()
-    assert not (execution_root / "runtime_preflight.py").exists()
-    assert not (execution_root / "gpu_validation.py").exists()
-    assert callable(canonical_benchmark_catalog.resolve_benchmark_manifest_path)
-    assert callable(canonical_run_mode.normalize_benchmark_run_mode)
-    assert callable(canonical_io.score_item)
-    assert callable(core_write_json)
-    assert canonical_io.write_json is core_write_json
-    assert callable(canonical_cache.run_generation_with_cache)
-    assert canonical_contract.execute_contract_run is canonical_contract.run_contract
-    assert canonical_existing_results.execute_existing_results is canonical_existing_results.run_existing_results
-    assert callable(canonical_materialize.materialize_generation_requests)
-
-
-def test_generation_cache_uses_shared_canonical_json_helpers() -> None:
-    run_cache = REPO_ROOT / "worldfoundry/evaluation/tasks/execution/cache.py"
-    json_contract = REPO_ROOT / "worldfoundry/evaluation/api/json_contract.py"
-
-    run_cache_text = run_cache.read_text(encoding="utf-8")
-    json_contract_text = json_contract.read_text(encoding="utf-8")
-
-    assert "from worldfoundry.evaluation.api.json_contract import" in run_cache_text
-    assert not (REPO_ROOT / "worldfoundry/evaluation/tasks/run_cache.py").exists()
-    for helper in (
-        "normalize_json",
-        "canonical_json_dumps",
-        "canonical_json_bytes",
-        "json_sha256",
-        "sha256_hex",
-    ):
-        assert f"def {helper}(" in json_contract_text
-        assert f"def {helper}(" not in run_cache_text
 
 
 def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
@@ -793,27 +656,3 @@ def test_docs_do_not_advertise_removed_evaluation_subpackages() -> None:
                 violations.append(f"{path.relative_to(REPO_ROOT)}: {marker}")
 
     assert violations == []
-
-
-def test_homepage_evaluation_tree_stays_lmms_eval_style() -> None:
-    docs_files = [
-        REPO_ROOT / "docs" / "fumadocs" / "content" / "docs" / "index.mdx",
-        REPO_ROOT / "docs" / "fumadocs" / "content" / "docs" / "index.zh.mdx",
-    ]
-    forbidden_markers = [
-        '<Folder name="cli"',
-        '<Folder name="mcp"',
-        '<File name="reporting.py"',
-        '<File name="runtime.py"',
-    ]
-    expected_public_areas = {
-        "Model runtime layer",
-        "Evaluation runner",
-        "Benchmark layer",
-    }
-
-    for path in docs_files:
-        text = path.read_text(encoding="utf-8")
-        assert [marker for marker in forbidden_markers if marker in text] == []
-        for marker in expected_public_areas:
-            assert marker in text

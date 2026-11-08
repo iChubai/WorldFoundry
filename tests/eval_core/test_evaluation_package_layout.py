@@ -407,10 +407,10 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
         "loading",
         "bindings",
         "aliases",
-        "discovery",
     ):
         assert (pipeline_root / f"{module}.py").is_file()
     for removed_module in (
+        "discovery",
         "dispatch",
         "handlers",
         "components",
@@ -435,9 +435,10 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
         assert (models_root / "catalog" / f"{module}.py").is_file()
     for module in ("profiles", "environments", "assets"):
         assert (models_root / "runtime" / f"{module}.py").is_file()
-    for module in ("builtins", "pipeline", "plugins", "registry", "resolver"):
+    for module in ("builtins", "pipeline", "registry", "resolver"):
         assert (models_root / "runners" / f"{module}.py").is_file()
-    assert not (models_root / "runners" / "reference.py").exists()
+    for removed_module in ("plugins", "reference"):
+        assert not (models_root / "runners" / f"{removed_module}.py").exists()
 
 
 def test_model_package_facade_is_lazy_and_bounded() -> None:

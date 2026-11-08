@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import numpy as np
@@ -39,6 +39,7 @@ from worldfoundry.core.media.processing.postprocess import (
     VideoSpec,
     frame_list_from_chunks,
 )
+from worldfoundry.core.media.processing.presets import build_postprocessor, normalize_postprocess_preset_name
 from worldfoundry.core.observability.logging_setup import get_logger, write_jsonl_event
 from worldfoundry.core.observability.realtime_timing import RealtimeChunkTiming, RealtimeTimingWindow
 from worldfoundry.studio.inference.catalog import CatalogEntry
@@ -664,43 +665,57 @@ def _realtime_rtx_device(launch_device: str) -> int:
     return int(match.group(1) or 0) if match else 0
 
 
+_REALTIME_RTX_VARIABLES = (
+    "WORLDFOUNDRY_REALTIME_RTX_SCALE",
+    "WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH",
+    "WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT",
+    "WORLDFOUNDRY_REALTIME_RTX_QUALITY",
+    "WORLDFOUNDRY_REALTIME_RTX_DEVICE",
+    "WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING",
+    "WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM",
+)
+
+
+def _realtime_rtx_options() -> dict[str, object]:
+    """Read ``WORLDFOUNDRY_REALTIME_RTX_*`` overrides; ``None`` keeps the preset default."""
+
+    return {
+        "scale": _env_optional_float("WORLDFOUNDRY_REALTIME_RTX_SCALE"),
+        "output_width": _env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH"),
+        "output_height": _env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT"),
+        # RTXVideoSuperResolutionConfig rejects names outside the quality literal.
+        "quality": os.getenv("WORLDFOUNDRY_REALTIME_RTX_QUALITY", "").strip().upper() or None,
+        "non_blocking": _env_bool("WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING", False),
+        "use_current_stream": _env_bool("WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM", True),
+    }
+
+
 def _realtime_postprocess_stream(
     *,
     fps: int,
     launch_config: StudioLaunchConfig,
     native_resolution: tuple[int, int] | None = None,
 ) -> VideoPostprocessStream:
-    """Resolve the explicitly selected realtime output processor."""
+    """Build and probe the selected realtime output processor before serving."""
 
-    preset = os.getenv("WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET", "identity").strip()
-    normalized = preset.lower().replace("_", "-")
-    if normalized in {"", "none", "off", "identity"}:
-        return VideoPostprocessStream(
-            chain=VideoPostprocessChain((IdentityVideoPostProcessor(),)),
-            fps=fps,
-            profile_cuda=_env_bool("WORLDFOUNDRY_REALTIME_PROFILE_CUDA_POSTPROCESS", False),
-        )
+    from worldfoundry.core.media.processing.rtx import RTX_POSTPROCESS_PRESET_NAMES
 
-    from worldfoundry.core.media.processing.rtx import (
-        RTXVideoSuperResolutionQuality,
-        require_rtx_vfx_runtime,
-        rtx_postprocessor_from_preset,
-    )
-
-    device = _realtime_rtx_device(launch_config.device or "cuda")
-    processor = rtx_postprocessor_from_preset(
-        normalized,
-        scale=_env_optional_float("WORLDFOUNDRY_REALTIME_RTX_SCALE"),
-        output_width=_env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH"),
-        output_height=_env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT"),
-        # RTXVideoSuperResolutionConfig rejects names outside the quality literal.
-        quality=cast(
-            RTXVideoSuperResolutionQuality | None,
-            os.getenv("WORLDFOUNDRY_REALTIME_RTX_QUALITY", "").strip().upper() or None,
-        ),
-        device=device,
-        non_blocking=_env_bool("WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING", False),
-        use_current_stream=_env_bool("WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM", True),
+    preset = normalize_postprocess_preset_name(os.getenv("WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET", "identity"))
+    if preset in RTX_POSTPROCESS_PRESET_NAMES:
+        options: dict[str, object] | None = _realtime_rtx_options()
+    else:
+        options = None
+        rtx_variables = [name for name in _REALTIME_RTX_VARIABLES if os.getenv(name, "").strip()]
+        if rtx_variables:
+            raise ValueError(
+                f"{', '.join(rtx_variables)} apply only to RTX postprocess presets "
+                f"({', '.join(RTX_POSTPROCESS_PRESET_NAMES)}); "
+                f"WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET selects {preset!r}."
+            )
+    processor = build_postprocessor(
+        preset,
+        device=_realtime_rtx_device(launch_config.device or "cuda"),
+        options=options,
     )
     input_spec = None
     if native_resolution is not None:
@@ -711,20 +726,9 @@ def _realtime_postprocess_stream(
             channels=3,
             dtype="uint8",
         )
-    capability = require_rtx_vfx_runtime(
-        device=device,
-        config=processor.config,
-        input_spec=input_spec,
-        run_inference=True,
-    )
-    logger.info(
-        "Enabled realtime RTX postprocess preset=%s quality=%s device=cuda:%d gpu=%s nvidia_vfx=%s",
-        normalized,
-        processor.config.quality,
-        device,
-        capability.gpu_name or "unknown",
-        capability.package_version or "unknown",
-    )
+    processor.probe(input_spec)
+    if not isinstance(processor, IdentityVideoPostProcessor):
+        logger.info("Enabled realtime postprocess preset=%s processor=%s", preset, processor.name)
     return VideoPostprocessStream(
         chain=VideoPostprocessChain((processor,)),
         fps=fps,

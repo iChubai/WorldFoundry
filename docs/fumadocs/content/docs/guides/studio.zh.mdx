@@ -468,6 +468,11 @@ transport 像素量和 `postprocess_ms`，因此应按下方门禁做 A/B trace�
 从 1.5x `HIGH` 起步；只有实测 GPU 仍有余量时再启用 `ULTRA` 或 2–4x。
 `rtx-deblur-ultra` 保持原分辨率，不会增加传输带宽。
 
+`WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET` 对应后处理预设注册表
+（`worldfoundry.core.media.processing.presets`）中的一项，每个 Studio 进程只运行一个
+预设。Studio 会在对外服务前构建所选处理器并执行其 probe；只有选择 RTX 预设时才接受
+`WORLDFOUNDRY_REALTIME_RTX_*` 覆盖项，否则直接报错。
+
 ### 浏览器呈现计时与编码器反馈
 
 WebRTC 状态栏中的 **E2E** 是浏览器提交控制，到呈现消费该控制的 chunk 中某一帧

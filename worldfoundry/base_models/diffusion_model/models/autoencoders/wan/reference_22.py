@@ -13,6 +13,7 @@ twin.  DreamX-World wraps this via
 Header-level docs only; residual stacks are graph math.
 """
 
+import itertools
 import logging
 from dataclasses import dataclass
 
@@ -23,7 +24,6 @@ from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
-import itertools
 
 __all__ = [
     "WAN_2P2_VAE_MEAN",

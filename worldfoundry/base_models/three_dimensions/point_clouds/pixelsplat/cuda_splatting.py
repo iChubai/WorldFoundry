@@ -14,6 +14,8 @@ add_runtime_extension_overlay(
     environment_variable="WORLDFOUNDRY_DIFF_GAUSSIAN_RASTERIZATION_EXTENSION_DIR",
 )
 
+import contextlib
+
 from diff_gaussian_rasterization import (
     GaussianRasterizationSettings,
     GaussianRasterizer,
@@ -21,7 +23,6 @@ from diff_gaussian_rasterization import (
 from einops import einsum, rearrange, repeat
 
 from .projection import get_fov, homogenize_points
-import contextlib
 
 
 def get_projection_matrix(

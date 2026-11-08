@@ -1,3 +1,4 @@
+import contextlib
 import os
 import tempfile
 import warnings
@@ -9,7 +10,6 @@ import yaml
 from .tarsier.dataset.utils import format_one_sample, get_visual_type
 from .tarsier.tasks.utils import load_model_and_processor
 from .vqa_model import VQAScoreModel
-import contextlib
 
 warnings.filterwarnings("ignore")
 

@@ -1,5 +1,6 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> scene_render.py functionality."""
 
+import contextlib
 from pathlib import Path
 
 import imageio
@@ -13,7 +14,6 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.sh_utils import RGB2SH, SH2RGB
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.gs_effects import GSEffects
 from worldfoundry.core.media.artifacts import apply_color_map_to_image
-import contextlib
 
 
 def rotation_matrix_to_quaternion(R):

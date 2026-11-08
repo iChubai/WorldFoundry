@@ -9,6 +9,7 @@ do not comment every conv.  Runner recipes use
 """
 
 import contextlib
+import itertools
 
 import torch
 import torch.nn as nn
@@ -17,7 +18,6 @@ from einops import rearrange, repeat
 from tqdm import tqdm
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-import itertools
 
 CACHE_T = 2
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import multiprocessing
 import os
 import shutil
@@ -11,7 +12,6 @@ import sys
 from pathlib import Path
 
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
-import contextlib
 
 RUNTIME_ROOT = Path(__file__).resolve().parent / "mega_sam_runtime"
 

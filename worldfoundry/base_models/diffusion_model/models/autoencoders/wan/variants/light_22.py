@@ -23,6 +23,7 @@ elif hasattr(torch._dynamo.config, "accumulated_recompile_limit"):
     torch._dynamo.config.accumulated_recompile_limit = 1024
 torch._dynamo.config.suppress_errors = True
 
+import itertools
 import os
 import time
 
@@ -32,7 +33,6 @@ from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
-import itertools
 
 __all__ = [
     "Wan2_2_VAE",

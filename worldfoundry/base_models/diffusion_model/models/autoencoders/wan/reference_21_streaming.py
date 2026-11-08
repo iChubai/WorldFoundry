@@ -13,6 +13,7 @@ Use when a recipe needs cached streaming rather than
 the one-shot :class:`~.model.WanVideoVAE`.
 """
 
+import itertools
 import logging
 
 import torch
@@ -22,7 +23,6 @@ from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
-import itertools
 
 __all__ = [
     "Wan2_1_VAE",

@@ -11,6 +11,7 @@ instead of :mod:`~..model`.  Not a new latent scale.
 Sibling of :mod:`.action_21` and :mod:`~..reference_21`.
 """
 
+import itertools
 import logging
 
 import torch
@@ -21,7 +22,6 @@ from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
-import itertools
 
 __all__ = [
     "WanVAE",

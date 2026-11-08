@@ -4,11 +4,11 @@ A collection of useful functions for 3D computer vision and graphics researchers
 - Use `utils3d.{np/pt}.{function}` to specifically call the Numpy or Pytorch version.
 """
 
+import contextlib
 from typing import TYPE_CHECKING
 
 from .helpers import lazy_import
 from .helpers import lazy_import_from as lazy_import_from
-import contextlib
 
 with contextlib.suppress(ImportError):
     from .interface import *

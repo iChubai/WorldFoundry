@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import itertools
 import os
 
 import numpy as np
@@ -24,7 +25,6 @@ import trimesh
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
 from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import export_to_depth_vis
-import itertools
 
 
 def set_sky_depth(prediction: Prediction, sky_mask: np.ndarray, sky_depth_def: float = 98.0):

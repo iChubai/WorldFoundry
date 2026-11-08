@@ -21,12 +21,12 @@ Contract, kept identical to the reference:
 
 from __future__ import annotations
 
+import itertools
 import math
 from collections.abc import Sequence
 from typing import Any
 
 import torch
-import itertools
 
 
 # --------------------------------------------------------------------------- #

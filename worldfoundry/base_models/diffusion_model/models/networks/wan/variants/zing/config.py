@@ -1,12 +1,12 @@
 # Adapted from seedleap/zing-world-model (Apache-2.0).
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 import yaml
-import itertools
 
 
 @dataclass(frozen=True)

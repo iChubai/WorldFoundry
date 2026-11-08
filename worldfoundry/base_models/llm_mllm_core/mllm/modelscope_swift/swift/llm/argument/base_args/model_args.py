@@ -1,5 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import ast
+import contextlib
 import json
 import math
 import os
@@ -16,7 +17,6 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
     get_model_name,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_dist_setting, get_logger
-import contextlib
 
 logger = get_logger()
 

@@ -1,5 +1,6 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> iphone_dataset.py functionality."""
 
+import contextlib
 import json
 import os
 import os.path as osp
@@ -30,7 +31,6 @@ from flow3d.data.utils import (
     parse_tapir_track_info,
 )
 from flow3d.transforms import rt_to_mat4
-import contextlib
 
 
 @dataclass

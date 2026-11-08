@@ -1,3 +1,4 @@
+import contextlib
 import inspect
 import os
 from typing import Any
@@ -11,7 +12,6 @@ from worldfoundry.base_models.three_dimensions.point_clouds.loger.utils.geometry
     depth_edge,
 )
 from worldfoundry.core.model_loading import load_torch_checkpoint
-import contextlib
 
 
 class LoGeRRepresentation:

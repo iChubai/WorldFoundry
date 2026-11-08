@@ -6,6 +6,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
+import contextlib
 import json
 import os
 import random
@@ -18,7 +19,6 @@ from omegaconf import DictConfig, OmegaConf
 from src import dnnlib
 from src.dataset_support.layers import sample_frames
 from torchvision import transforms
-import contextlib
 
 try:
     import pyspng

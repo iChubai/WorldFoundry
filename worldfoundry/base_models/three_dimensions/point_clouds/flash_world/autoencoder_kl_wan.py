@@ -14,6 +14,8 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> flash_world -> autoencoder_kl_wan.py functionality."""
 
+import itertools
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,7 +30,6 @@ from diffusers.utils import logging
 from diffusers.utils.accelerate_utils import apply_forward_hook
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-import itertools
 
 # Import base components from the canonical Wan autoencoder role.
 try:

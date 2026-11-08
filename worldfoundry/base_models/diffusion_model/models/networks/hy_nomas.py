@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 from functools import partial
 from types import SimpleNamespace
@@ -17,7 +18,6 @@ from torch.nn import functional as F
 
 from worldfoundry.core.attention import attention_forward
 from worldfoundry.core.nn import ConditioningProjection, DiTModulation, RMSNorm, TransformerMLP
-import itertools
 
 
 def _attention(

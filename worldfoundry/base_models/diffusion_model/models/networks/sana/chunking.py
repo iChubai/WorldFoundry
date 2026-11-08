@@ -23,8 +23,8 @@ start indices and detects uniform vs first-frame / first-plus-one patterns
 so the scan can stay vectorized.
 """
 
-from typing import Any
 import itertools
+from typing import Any
 
 
 def is_chunk_causal_request(

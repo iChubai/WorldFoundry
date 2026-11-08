@@ -19,9 +19,10 @@ bounded-memory numerical reference for CPU and environments without FA3.
 
 from __future__ import annotations
 
+import itertools
+
 import torch
 import torch.nn.functional as F
-import itertools
 
 _BF16 = torch.bfloat16
 _FP32 = torch.float32

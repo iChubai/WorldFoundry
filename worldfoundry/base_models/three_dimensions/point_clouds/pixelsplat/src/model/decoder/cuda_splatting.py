@@ -14,6 +14,8 @@ add_runtime_extension_overlay(
     environment_variable="WORLDFOUNDRY_DIFF_GAUSSIAN_RASTERIZATION_EXTENSION_DIR",
 )
 
+import contextlib
+
 from diff_gaussian_rasterization import (
     GaussianRasterizationSettings,
     GaussianRasterizer,
@@ -24,7 +26,6 @@ from torch import Tensor
 
 from ...geometry.projection import get_fov, homogenize_points
 from ..encoder.epipolar.conversions import depth_to_relative_disparity
-import contextlib
 
 
 def get_projection_matrix(

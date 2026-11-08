@@ -9,6 +9,7 @@ active-chunk refinement.
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
@@ -29,7 +30,6 @@ from ..contracts import (
 from ..extensions import DiffusionRunContext
 from ..models.networks.sana.chunking import chunk_index_from_chunk_size
 from .base import NativeDiffusionRunner
-import itertools
 
 
 @dataclass(frozen=True, slots=True)

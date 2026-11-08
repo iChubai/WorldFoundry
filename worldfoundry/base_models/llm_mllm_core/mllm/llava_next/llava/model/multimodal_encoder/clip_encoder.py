@@ -1,9 +1,10 @@
+import contextlib
+
 import torch
 import torch.nn as nn
 from transformers import CLIPImageProcessor, CLIPVisionConfig, CLIPVisionModel
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
-import contextlib
 
 with contextlib.suppress(BaseException):
     from s2wrapper import forward as multiscale_forward

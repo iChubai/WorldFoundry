@@ -20,6 +20,7 @@ swaps in the fused kernels behind the ``can_use_fused_*`` probes).
 
 from __future__ import annotations
 
+import itertools
 import math
 from typing import Any
 
@@ -40,7 +41,6 @@ from .ops import (
     rope_cos_sin_cache,
     silu_mul,
 )
-import itertools
 
 _BF16 = torch.bfloat16
 _FP32 = torch.float32

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 from typing import Any
 
 import torch
-import itertools
 
 
 def _scalar_timestep(value: Any, *, allow_batch: bool = False) -> float:

@@ -9,11 +9,12 @@ through the standard runner loop.
 
 from __future__ import annotations
 
+import itertools
+
 import torch
 
 from ..components import ComponentBuildContext
 from ..contracts import SamplingConfig, SchedulerStep
-import itertools
 
 
 class LTXFixedEulerScheduler:

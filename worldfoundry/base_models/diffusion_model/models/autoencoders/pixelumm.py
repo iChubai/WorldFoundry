@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -19,7 +20,6 @@ from torch.nn import functional as F
 from worldfoundry.core.nn import RMSNorm
 
 from ..networks.hy_nomas import _attention
-import itertools
 
 TUBELET = (4, 16, 16)
 TUBE_DIM = TUBELET[0] * TUBELET[1] * TUBELET[2] * 3

@@ -1,5 +1,6 @@
 # Copyright 2022 MosaicML Examples authors
 # SPDX-License-Identifier: Apache-2.0
+import itertools
 import math
 import warnings
 from collections.abc import Sequence
@@ -7,7 +8,6 @@ from functools import partial
 
 import torch
 from torch import nn
-import itertools
 
 
 def torch_default_param_init_fn_(

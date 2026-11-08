@@ -2,9 +2,10 @@
 Taken from https://github.com/lucidrains/flamingo-pytorch
 """
 
+import contextlib
+
 import torch
 from einops import rearrange, repeat
-import contextlib
 
 with contextlib.suppress(BaseException):
     from einops_exts import rearrange_many

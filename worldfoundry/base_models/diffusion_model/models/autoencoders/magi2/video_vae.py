@@ -10,6 +10,7 @@ so the module runs eagerly (they were transparent wrappers that did not change
 the wrapped computation, and error out on some torch builds).
 """
 
+import itertools
 import logging
 import warnings
 
@@ -19,7 +20,6 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from .config import WAN22_LATENTS_MEAN, WAN22_LATENTS_STD
-import itertools
 
 __all__ = ["Wan2_2_VAE", "get_vae2_2"]
 

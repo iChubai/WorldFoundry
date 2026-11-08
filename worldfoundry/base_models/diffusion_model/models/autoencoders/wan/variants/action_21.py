@@ -21,11 +21,12 @@ __all__ = [
     "_video_vae",
 ]
 
+import itertools
+
 from einops import rearrange, repeat
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
-import itertools
 
 CACHE_T = 2
 

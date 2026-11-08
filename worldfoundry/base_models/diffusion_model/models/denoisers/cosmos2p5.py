@@ -7,6 +7,7 @@ sees the vendor checkpoint layout.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from dataclasses import replace
 
@@ -16,7 +17,6 @@ from ...components import BuildPurpose, ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.cosmos2p5.model import Cosmos25Transfer3DModel, Cosmos25Transformer3DModel
-import contextlib
 
 _KEY_REPLACEMENTS = {
     "adaln_modulation_self_attn.1": "norm1.linear_1",

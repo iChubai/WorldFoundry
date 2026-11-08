@@ -37,6 +37,7 @@ checkpoint-facing parameter name are preserved.
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 
 import torch
@@ -60,7 +61,6 @@ from .preview_layers import (
     create_activation_func,
     create_linear,
 )
-import itertools
 
 _FP32 = torch.float32
 _BF16 = torch.bfloat16

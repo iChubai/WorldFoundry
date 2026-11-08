@@ -1,10 +1,11 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_vae.py functionality."""
 
+import itertools
+
 import torch
 from torch import nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-import itertools
 
 CACHE_T = 2
 

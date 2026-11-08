@@ -12,6 +12,8 @@ same T/H/W.  Latent width stays checkpoint-compatible.
 Wan-family variant, not a separate geometry autoencoder.
 """
 
+import itertools
+
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
@@ -19,7 +21,6 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-import itertools
 
 __all__ = [
     "WanVAE",

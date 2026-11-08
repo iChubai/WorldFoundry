@@ -7,10 +7,10 @@ import worldfoundry.pipelines.warp_as_history as wah_pipelines
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import SOURCE_ROOT as PI3_SOURCE_ROOT
 from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.warp_as_history.pipeline_warp_as_history import WarpAsHistoryPipeline
-from worldfoundry.studio.inference.catalog import (
+from worldfoundry.studio.inference.catalog import discover_catalog
+from worldfoundry.studio.inference.catalog.models.video_generation import (
     _warp_as_history_default_load_kwargs,
     _warp_as_history_default_ref,
-    discover_catalog,
 )
 from worldfoundry.synthesis.visual_generation.warp_as_history.variants import (
     get_warp_as_history_variant,

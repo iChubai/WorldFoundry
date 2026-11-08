@@ -15,9 +15,9 @@ from typing import Iterator
 from fastapi.testclient import TestClient
 
 import worldfoundry.studio.inference.requests as inference_requests
-import worldfoundry.studio.serving.workspace as workspace_app
-from worldfoundry.studio.serving.jobs import StudioJobStore
-from worldfoundry.studio.serving.workspace import WORKSPACE_HTML, create_app
+import worldfoundry.studio.workspace.app as workspace_app
+from worldfoundry.studio.workspace.app import WORKSPACE_HTML, create_app
+from worldfoundry.studio.workspace.jobs import StudioJobStore
 
 
 @pytest.fixture(autouse=True)

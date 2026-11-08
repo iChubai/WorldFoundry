@@ -50,9 +50,9 @@ def test_matrix_game_1_catalog_resolves_persistent_env_layout(tmp_path: Path, mo
     project_root = tmp_path / "WorldFoundry"
     environment = tmp_path / "envs" / "matrix-game-1"
     environment.mkdir(parents=True)
-    monkeypatch.setattr(studio_catalog, "_project_root", lambda: project_root)
+    monkeypatch.setattr(studio_catalog.resolve, "_project_root", lambda: project_root)
 
-    load_kwargs = studio_catalog._matrix_game_1_default_load_kwargs()
+    load_kwargs = studio_catalog.models.world_models._matrix_game_1_default_load_kwargs()
 
     assert load_kwargs["conda_dir"] == str(environment)
 

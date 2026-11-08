@@ -6,7 +6,7 @@ from typing import Any, Mapping
 
 import pytest
 
-# worldfoundry.studio.serving.workspace requires the optional fastapi dependency at
+# worldfoundry.studio.workspace.app requires the optional fastapi dependency at
 # import time; skip this module in environments without the [api] extra.
 pytest.importorskip("fastapi")
 
@@ -16,7 +16,7 @@ from worldfoundry.evaluation.models import resolve_model_zoo_config, resolve_mod
 from worldfoundry.evaluation.models.pipelines.loading import build_pipeline_runner_spec
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
 from worldfoundry.studio.inference.catalog import discover_catalog
-from worldfoundry.studio.serving.workspace import _workspace_models
+from worldfoundry.studio.workspace.app import _workspace_models
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

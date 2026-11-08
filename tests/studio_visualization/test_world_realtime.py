@@ -25,9 +25,8 @@ from worldfoundry.studio.inference.execution import (
     StudioManager,
 )
 from worldfoundry.studio.serving.realtime.media import FrameQueuePolicy
-from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
 from worldfoundry.studio.visualization.backends import world_realtime as realtime_backend
-from worldfoundry.studio.visualization.backends.world import world_frontend_html
+from worldfoundry.studio.visualization.backends.world import world_frontend_html, world_frontend_js
 from worldfoundry.studio.visualization.backends.world_realtime import (
     LatestFrameBuffer,
     OutputResolutionState,
@@ -50,9 +49,7 @@ from worldfoundry.studio.visualization.backends.world_realtime import (
     normalize_text_events,
     realtime_frames_from_result,
 )
-from worldfoundry.studio.visualization.backends.world_realtime_client import (
-    WORLD_REALTIME_CLIENT_JS,
-)
+from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
 
 
 async def _wait_for_condition(condition: Callable[[], bool]) -> None:
@@ -1383,7 +1380,7 @@ def test_realtime_client_exposes_event_resolution_step_and_panel_controls() -> N
         "if (record.floating && Number.isFinite(record.left)",
         "if (state.channel || state.peer || state.socket) await closePeer(false)",
     ):
-        assert marker in WORLD_REALTIME_CLIENT_JS
+        assert marker in world_frontend_js()
 
 
 def test_control_state_resolves_conflicts_by_last_press() -> None:

@@ -584,7 +584,7 @@ def _infer_group_from_workload(workload: str) -> str:
 def _studio_entries_by_model_id() -> dict[str, Any]:
     """Index studio catalog entries by ``model_id`` and aliases, cached across calls."""
     try:
-        from worldfoundry.studio.ui.catalog import _studio_catalog
+        from worldfoundry.studio.inference.listing import _studio_catalog
 
         entries: dict[str, Any] = {}
         for entry in _studio_catalog():

@@ -35,7 +35,7 @@ from worldfoundry.base_models.three_dimensions.depth.base import DepthType
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.logging import pbar
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.misc import unpack_optional
-from worldfoundry.studio.visualization.plugins.scene3d.projection import (
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.visualization import (
     POINTS_STENCIL,
     draw_lines_batch,
     draw_points_batch,

@@ -22,6 +22,7 @@ def test_ltx25_default_variant_maps_the_complete_official_runtime() -> None:
         "execute": True,
         "timeout_seconds": 7200,
         "return_dict": True,
+        "offload_mode": "cpu",
     }
 
     required = entry.default_load_kwargs["required_components"]

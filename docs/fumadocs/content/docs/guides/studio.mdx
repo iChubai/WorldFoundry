@@ -20,8 +20,8 @@ Studio exposes multiple frontends:
 Before opening the Spark viewer, install its version-pinned browser modules:
 
 ```bash
-python -m worldfoundry.studio.ui.vendor_assets
-python -m worldfoundry.studio.ui.vendor_assets --check
+python -m worldfoundry.studio.visualization.vendor_assets
+python -m worldfoundry.studio.visualization.vendor_assets --check
 ```
 
 The installer downloads missing, empty, or unreadable files and reuses readable
@@ -1290,39 +1290,40 @@ modules at the Studio root.
 
 | Location | Responsibility |
 | --- | --- |
-| `inference/catalog.py` | Discover pipelines and resolve model defaults and checkpoints. |
+| `inference/catalog/` | Model catalog: `discovery.py` (AST pipeline scan, entry building, `find_entry`), `models/<family>.py` (curated overrides and per-model defaults), `resolve.py` (checkpoint and path resolution), `params.py` (shared parameter templates). |
 | `inference/config.py` | Runtime environment and distributed process topology. |
 | `inference/execution.py` | Prepare inputs, load pipelines, execute, and persist raw run artifacts. |
 | `inference/dispatch.py` | GPU admission, managed subprocesses, resident workers, cancellation, and deadlines. |
 | `inference/paths.py`, `inference/variants.py` | Runtime paths and model variant selection. |
-| `serving/workspace.py`, `serving/jobs.py` | Workspace API and in-process UI job scheduling. |
+| `inference/listing.py` | Studio-visible catalog listing shared by the Workspace, launcher, and TUI. |
 | `serving/` | Authentication, file serving, telemetry, and realtime transport. |
-| `ui/launcher.py`, `ui/launch_config.py` | Standalone frontend routing and browser launch options. |
-| `ui/workspace.html`, `ui/workspace.py` | Packaged Workspace page and its asset loader. |
-| `ui/` | Browser launch options, model interfaces, shared browser assets, and the Workspace page. |
-| `visualization/` | Artifact discovery, viewer routing, geometry presentation, and browser backends. |
+| `visualization/` | Artifact routing (`registry.py`, `artifacts.py`, `run_record.py`), preview conversion (`presentation.py`), and browser backends. |
+| `visualization/launcher.py`, `visualization/launch_config.py` | Standalone frontend routing and browser launch options. |
+| `visualization/interfaces.py`, `visualization/vendor_assets.py` | Model interface specs and pinned browser modules. |
+| `workspace/app.py`, `workspace/jobs.py` | Workspace API and in-process UI job scheduling. |
+| `assets/web/` | Packaged Workspace page and the world frontend CSS/JS. |
 | `cli.py` | Installed `wf-studio` command. |
 | `runtime_job.py` | Subprocess and resident inference worker entrypoint. |
 | `workspace_job.py` | CLI adapter for Workspace inference requests. |
 
 The inference modules do not import the frontend, serving, or visualization
 packages. `StudioManager` saves raw artifacts by default. Frontends explicitly
-install `visualization.studio.prepare_run_record` as the `record_processor`
-when they need viewer manifests or preview conversion.
+install `visualization.presentation.prepare_run_record` as the `record_processor`
+when they need preview conversion.
 
 `studio/native` and its CUDA/C++/ImGui frontend have been removed. The standalone
 browser backends remain available through `wf-studio`.
 
-### Retained rendering helpers
+### Rendering helpers outside Studio
 
-`visualization/plugins` contains only implementations with current callers:
+Model-side rendering lives with the model code, so `base_models` never imports Studio:
 
 | Implementation | Caller |
 | --- | --- |
-| `perception/render.py` | `models visualize` CLI and Grounding DINO annotation. |
-| `scene3d/projection.py` | VIPE projection videos, SLAM overlays, and video writing. |
-| `scene3d/depth_anything_v3/export_vis.py` | Depth Anything 3 depth, feature, and Gaussian exports. |
-| `styles/colormaps.py` | Depth and normal rendering in `perception/render.py`. |
+| `base_models/perception_core/visualization/render.py` | `models visualize` CLI and Grounding DINO annotation. |
+| `base_models/perception_core/visualization/colormaps.py` | Depth and normal rendering in `render.py`. |
+| `base_models/three_dimensions/general_3d/vipe/utils/visualization.py` | VIPE projection videos, SLAM overlays, and video writing. |
+| `base_models/three_dimensions/depth/depth_anything/depth_anything_v3/utils/visualize.py` | Depth Anything 3 depth, feature, and Gaussian exports. |
 
 Wan Animate conditioning images are model inputs, owned by
 `base_models/diffusion_model/models/encoders/wan/variants/animate/render.py`

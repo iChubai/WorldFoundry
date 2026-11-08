@@ -37,32 +37,30 @@ from worldfoundry.studio.serving import (
     send_json_response,
     send_text_response,
 )
-from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
-from worldfoundry.studio.ui.vendor_assets import (
-    SPARK_MODULE_PATH,
-    THREE_CORE_MODULE_PATH,
-    THREE_MODULE_PATH,
-    VENDOR_ASSET_INSTALL_COMMAND,
-    VENDOR_ROOT,
-    VendorAssetError,
-    require_vendor_assets,
-)
-from worldfoundry.studio.visualization.core.artifacts import (
+from worldfoundry.studio.visualization.artifacts import (
     StudioVisualizationArtifact,
     infer_visualization_artifact,
 )
-from worldfoundry.studio.visualization.core.registry import (
+from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
+from worldfoundry.studio.visualization.registry import (
     EMBODIED_VISUALIZATION,
     INTERACTIVE_WORLD_VISUALIZATION,
     MEDIA_VISUALIZATION,
     RERUN_VISUALIZATION,
     SPARK_VISUALIZATION,
     VISER_VISUALIZATION,
-    BackendCapabilities,
     StudioVisualizationBackend,
     StudioVisualizationLaunch,
     StudioVisualizationRegistry,
     model_visualization_profile,
+)
+from worldfoundry.studio.visualization.vendor_assets import (
+    SPARK_MODULE_PATH,
+    THREE_CORE_MODULE_PATH,
+    THREE_MODULE_PATH,
+    VENDOR_ASSET_INSTALL_COMMAND,
+    VendorAssetError,
+    require_vendor_assets,
 )
 
 WORLD_FRONTEND = INTERACTIVE_WORLD_VISUALIZATION
@@ -124,7 +122,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("interactive-world", "world-model"),
             match=_profile_mode(WORLD_FRONTEND),
             serve=_world_backend,
-            capabilities=BackendCapabilities(frozenset({"image", "video"}), score=50),
         ),
         StudioVisualizationBackend(
             mode=POINTS_FRONTEND,
@@ -133,9 +130,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("viser", "geometry", "pointcloud", "point-cloud"),
             match=_profile_mode(POINTS_FRONTEND),
             serve=_points_backend,
-            capabilities=BackendCapabilities(
-                frozenset({"point_cloud", "mesh", "camera", "trajectory", "depth"}), score=80
-            ),
         ),
         StudioVisualizationBackend(
             mode=SPARK_FRONTEND,
@@ -144,7 +138,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("3dgs", "splat", "gaussian-splat"),
             match=_profile_mode(SPARK_FRONTEND),
             serve=_spark_backend,
-            capabilities=BackendCapabilities(frozenset({"gaussian_splat"}), partial=False, score=90),
         ),
         StudioVisualizationBackend(
             mode=EMBODIED_FRONTEND,
@@ -153,7 +146,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("sim", "simulator"),
             match=_profile_mode(EMBODIED_FRONTEND),
             serve=_embodied_backend,
-            capabilities=BackendCapabilities(frozenset({"action_trace", "trajectory", "video"}), score=75),
         ),
         StudioVisualizationBackend(
             mode=RERUN_FRONTEND,
@@ -162,9 +154,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("rrd",),
             match=_profile_mode(RERUN_FRONTEND),
             serve=_rerun_backend,
-            capabilities=BackendCapabilities(
-                frozenset({"timeline", "image", "video", "point_cloud", "mesh", "camera", "trajectory"}), score=70
-            ),
         ),
         StudioVisualizationBackend(
             mode=MEDIA_FRONTEND,
@@ -173,7 +162,6 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("preview", "video", "image"),
             match=_profile_mode(MEDIA_FRONTEND),
             serve=_media_backend,
-            capabilities=BackendCapabilities(frozenset({"image", "video", "audio", "optical_flow"}), score=60),
         ),
     )
 )
@@ -198,10 +186,6 @@ MEDIA_ASSET_EXTS = {
     ".flac",
     ".ogg",
 }
-STUDIO_ASSET_DIR = VENDOR_ROOT.parent
-VENDOR_DIR = VENDOR_ROOT
-SPARK_VENDOR_DIR = SPARK_MODULE_PATH.parent
-THREE_VENDOR_DIR = THREE_MODULE_PATH.parent
 
 
 def resolve_frontend_mode(
@@ -897,22 +881,6 @@ def _port_from_url(url: str) -> int | None:
         return int(parsed.port) if parsed.port is not None else None
     except ValueError:
         return None
-
-
-def _pick_sidecar_port(host: str, preferred: int, *, avoid: set[int] | None = None) -> int:
-    """Return a free auxiliary TCP port for viewers with a sidecar service."""
-
-    avoid = avoid or set()
-    for offset in range(64):
-        port = preferred + offset
-        if port in avoid:
-            continue
-        if _tcp_port_available(host, port):
-            return port
-    bind_host = "127.0.0.1" if host in {"", "0.0.0.0", "::", "localhost"} else host
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind((bind_host, 0))
-        return int(sock.getsockname()[1])
 
 
 def _tcp_port_available(host: str, port: int) -> bool:

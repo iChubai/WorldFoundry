@@ -85,14 +85,6 @@ def test_abgr_conversion_channel_order_and_alpha() -> None:
     assert (rgba[..., 3] == 255).all()
 
 
-def test_payload_nal_scan_finds_idr() -> None:
-    idr = b"\x00\x00\x01" + bytes([nvenc._H264_NAL_TYPE_IDR])
-    non_idr = b"\x00\x00\x01" + bytes([1])
-    assert nvenc._payload_contains_nal_type(idr, nvenc._H264_NAL_TYPE_IDR) is True
-    assert nvenc._payload_contains_nal_type(non_idr, nvenc._H264_NAL_TYPE_IDR) is False
-    assert nvenc._payload_contains_nal_type(b"", nvenc._H264_NAL_TYPE_IDR) is False
-
-
 def test_build_video_track_falls_back_when_nvenc_unsupported(monkeypatch) -> None:
     _install_media_stubs(monkeypatch)
     from worldfoundry.studio.serving.realtime.media import LatestFrameBuffer

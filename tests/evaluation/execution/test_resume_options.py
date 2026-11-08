@@ -16,8 +16,8 @@ from worldfoundry.evaluation import framework
 from worldfoundry.evaluation.tasks.datasets import build_dataset_manifest, write_dataset_manifest
 from worldfoundry.evaluation.tasks.execution.orchestration import model_benchmark, model_benchmark_suite, service
 from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import EvaluateRunRequest
-from worldfoundry.studio.serving import workspace
-from worldfoundry.studio.serving.workspace import JobCreateRequest
+from worldfoundry.studio.workspace import app as workspace
+from worldfoundry.studio.workspace.app import JobCreateRequest
 
 pytestmark = pytest.mark.unit
 

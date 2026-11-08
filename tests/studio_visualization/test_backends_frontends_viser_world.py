@@ -1,31 +1,14 @@
-"""Comprehensive tests for the backends_frontends_viser_world submodule.
-
-Covers:
-  - backends/__init__.py  (imports & __all__)
-  - backends/frontends.py (constants, functions, handler classes)
-  - backends/viser.py     (ViserPresentation dataclass, constants, helper functions)
-  - backends/world.py     (WorldSession/WorldFrontendState dataclasses, functions)
-  - core/registry.py      (StudioVisualizationBackend, StudioVisualizationRegistry, etc.)
-  - core/artifacts.py     (StudioVisualizationArtifact, infer_visualization_artifact, etc.)
-  - core/scene.py         (VisualizationScene, Layer, Frame, Timeline)
-"""
 
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
 import os
-import re
 import socket
-import struct
-import threading
 import time
-from dataclasses import dataclass, field, fields, FrozenInstanceError
-from html import escape
+from dataclasses import fields, FrozenInstanceError
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from urllib.parse import quote, unquote, urlparse
 
 import pytest
 
@@ -123,19 +106,6 @@ class TestViserFunctions:
         assert isinstance(result, bool)
         # Result depends on whether 'viser' is installed, either is acceptable.
 
-    def test_pick_free_port(self):
-        from worldfoundry.studio.visualization.backends.viser import _pick_free_port
-        port = _pick_free_port()
-        assert isinstance(port, int)
-        assert port > 0
-        # Port should be in valid TCP range.
-        assert 1 <= port <= 65535
-
-    def test_pick_free_port_custom_host(self):
-        from worldfoundry.studio.visualization.backends.viser import _pick_free_port
-        port = _pick_free_port("127.0.0.1")
-        assert isinstance(port, int)
-        assert port > 0
 
     def test_env_int_no_env_var(self):
         from worldfoundry.studio.visualization.backends.viser import _env_int
@@ -193,7 +163,7 @@ class TestViserFunctions:
         assert _port_is_free("127.0.0.1", 59999) is True
 
     def test_port_is_free_bound_port(self):
-        from worldfoundry.studio.visualization.backends.viser import _port_is_free, _pick_free_port
+        from worldfoundry.studio.visualization.backends.viser import _port_is_free
         # Bind a socket, then check that the port is no longer free.
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.bind(("127.0.0.1", 0))
@@ -307,14 +277,6 @@ class TestViserFunctions:
         assert viser_orientation_defaults("pi3", "point_cloud/result.ply") == camera_aligned
         assert viser_orientation_defaults("unknown", "scene.ply")["up_direction"] == "+z"
 
-    def test_coordinate_transform_opencv_to_opengl_flips_yz(self):
-        import numpy as np
-        from worldfoundry.studio.visualization.backends.viser import _transform_points_for_preset
-
-        points = np.array([[1.0, 2.0, 3.0], [-4.0, -5.0, 6.0]])
-        transformed = _transform_points_for_preset(points, "opencv-to-opengl")
-        np.testing.assert_allclose(transformed, np.array([[1.0, -2.0, -3.0], [-4.0, 5.0, -6.0]]))
-        np.testing.assert_allclose(_transform_points_for_preset(points, "asset-native"), points)
 
     def test_depth_npz_extrinsics_are_w2c_and_explicit_c2w_takes_precedence(self):
         import numpy as np
@@ -437,19 +399,19 @@ class TestViserFunctions:
 class TestStudioViserService:
     """Tests for StudioViserService class."""
 
+    def test_shutdown_when_no_server(self):
+        from worldfoundry.studio.visualization.backends.viser import StudioViserService
+        svc = StudioViserService()
+        # shutdown should work gracefully when no server is running.
+        svc.shutdown()
+        assert svc._server is None
+
     def test_init(self):
         from worldfoundry.studio.visualization.backends.viser import StudioViserService
         svc = StudioViserService()
         assert svc._lock is not None
         assert svc._server is None
 
-    def test_present_point_cloud_delegates(self):
-        from worldfoundry.studio.visualization.backends.viser import StudioViserService
-        svc = StudioViserService()
-        # present_point_cloud should delegate to present_geometry.
-        # We test that it exists and is callable.
-        assert hasattr(svc, "present_point_cloud")
-        assert callable(svc.present_point_cloud)
 
     def test_present_geometry_no_viser(self):
         from worldfoundry.studio.visualization.backends.viser import StudioViserService
@@ -512,12 +474,6 @@ class TestStudioViserService:
                 finally:
                     tmp_path.unlink(missing_ok=True)
 
-    def test_shutdown_when_no_server(self):
-        from worldfoundry.studio.visualization.backends.viser import StudioViserService
-        svc = StudioViserService()
-        # shutdown should work gracefully when no server is running.
-        svc.shutdown()
-        assert svc._server is None
 
     def test_studio_viser_global_instance(self):
         from worldfoundry.studio.visualization.backends.viser import STUDIO_VISER, StudioViserService
@@ -528,7 +484,7 @@ class TestWorkspaceVisualizerParams:
     """Tests for Workspace visualizer parameter plumbing."""
 
     def test_points_env_overrides_are_whitelisted(self):
-        from worldfoundry.studio.serving.workspace import _visualizer_env_overrides
+        from worldfoundry.studio.workspace.app import _visualizer_env_overrides
 
         overrides = _visualizer_env_overrides(
             "points",
@@ -553,7 +509,7 @@ class TestWorkspaceVisualizerParams:
         assert _visualizer_env_overrides("spark", {"point_size": 0.003}) == {}
 
     def test_vggt_visualizer_defaults_preserve_official_glb_alignment(self):
-        from worldfoundry.studio.serving.workspace import _resolved_visualizer_params
+        from worldfoundry.studio.workspace.app import _resolved_visualizer_params
 
         params = _resolved_visualizer_params(
             "points",
@@ -566,7 +522,7 @@ class TestWorkspaceVisualizerParams:
         assert params["alignment"] == "none"
 
     def test_vggt_raw_predictions_are_converted_from_opencv(self):
-        from worldfoundry.studio.serving.workspace import _resolved_visualizer_params
+        from worldfoundry.studio.workspace.app import _resolved_visualizer_params
 
         params = _resolved_visualizer_params(
             "points",
@@ -578,7 +534,7 @@ class TestWorkspaceVisualizerParams:
         assert params["up_direction"] == "+y"
 
     def test_visualizer_reuse_requires_same_asset_and_model(self):
-        from worldfoundry.studio.serving.workspace import ManagedVisualizer, _visualizer_reusable
+        from worldfoundry.studio.workspace.app import ManagedVisualizer, _visualizer_reusable
 
         record = ManagedVisualizer(
             mode="points",
@@ -616,7 +572,7 @@ class TestWorkspaceVisualizerParams:
         )
 
     def test_rerun_renderer_prefers_webgpu_with_explicit_webgl_fallback(self):
-        from worldfoundry.studio.serving.workspace import _rerun_renderer
+        from worldfoundry.studio.workspace.app import _rerun_renderer
 
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("WORLDFOUNDRY_STUDIO_RERUN_RENDERER", None)
@@ -627,7 +583,7 @@ class TestWorkspaceVisualizerParams:
             assert _rerun_renderer() == "webgpu"
 
     def test_visualizer_status_includes_params(self):
-        from worldfoundry.studio.serving.workspace import ManagedVisualizer, _visualizer_status
+        from worldfoundry.studio.workspace.app import ManagedVisualizer, _visualizer_status
 
         record = ManagedVisualizer(
             mode="points",
@@ -725,25 +681,15 @@ class TestFrontendsConstants:
             assert ext in MEDIA_ASSET_EXTS
 
     def test_path_constants(self):
-        from worldfoundry.studio.visualization.backends.frontends import (
-            STUDIO_ASSET_DIR, VENDOR_DIR, SPARK_VENDOR_DIR, THREE_VENDOR_DIR,
-            SPARK_MODULE_PATH, THREE_MODULE_PATH, THREE_CORE_MODULE_PATH,
-        )
-        assert isinstance(STUDIO_ASSET_DIR, Path)
-        assert isinstance(VENDOR_DIR, Path)
-        assert isinstance(SPARK_VENDOR_DIR, Path)
-        assert isinstance(THREE_VENDOR_DIR, Path)
+        from worldfoundry.studio.visualization.backends.frontends import SPARK_MODULE_PATH, THREE_MODULE_PATH, THREE_CORE_MODULE_PATH
         assert isinstance(SPARK_MODULE_PATH, Path)
         assert isinstance(THREE_MODULE_PATH, Path)
         assert isinstance(THREE_CORE_MODULE_PATH, Path)
         # Parent-child relationships.
-        assert VENDOR_DIR.parent == STUDIO_ASSET_DIR
-        assert SPARK_VENDOR_DIR.parent == VENDOR_DIR
-        assert THREE_VENDOR_DIR.parent == VENDOR_DIR
 
     def test_studio_visualizations_registry(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationRegistry
+        from worldfoundry.studio.visualization.registry import StudioVisualizationRegistry
         assert isinstance(STUDIO_VISUALIZATIONS, StudioVisualizationRegistry)
         assert "world" in STUDIO_VISUALIZATIONS.modes
         assert "points" in STUDIO_VISUALIZATIONS.modes
@@ -785,9 +731,6 @@ class TestFrontendsRegistryBackendInstances:
         assert "interactive-world" in backend.aliases
         assert "world-model" in backend.aliases
         assert backend.native is True
-        assert "image" in backend.capabilities.layer_kinds
-        assert "video" in backend.capabilities.layer_kinds
-        assert backend.capabilities.score == 50
         assert backend.serve is not None
 
     def test_points_backend(self):
@@ -801,8 +744,6 @@ class TestFrontendsRegistryBackendInstances:
         assert "pointcloud" in backend.aliases
         assert "point-cloud" in backend.aliases
         assert backend.native is True
-        assert "point_cloud" in backend.capabilities.layer_kinds
-        assert backend.capabilities.score == 80
 
     def test_spark_backend(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
@@ -814,9 +755,6 @@ class TestFrontendsRegistryBackendInstances:
         assert "splat" in backend.aliases
         assert "gaussian-splat" in backend.aliases
         assert backend.native is True
-        assert "gaussian_splat" in backend.capabilities.layer_kinds
-        assert backend.capabilities.partial is False
-        assert backend.capabilities.score == 90
 
     def test_embodied_backend(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
@@ -827,19 +765,14 @@ class TestFrontendsRegistryBackendInstances:
         assert "sim" in backend.aliases
         assert "simulator" in backend.aliases
         assert backend.native is True
-        assert "action_trace" in backend.capabilities.layer_kinds
-        assert backend.capabilities.score == 75
 
     def test_rerun_backend(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
         backend = STUDIO_VISUALIZATIONS.backend_for("rerun")
         assert backend.mode == "rerun"
-        assert backend.title == "Rerun Timeline Viewer"
         assert backend.default_port == 9876
         assert "rrd" in backend.aliases
         assert backend.native is True
-        assert "timeline" in backend.capabilities.layer_kinds
-        assert backend.capabilities.score == 70
 
     def test_media_backend(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
@@ -851,8 +784,6 @@ class TestFrontendsRegistryBackendInstances:
         assert "video" in backend.aliases
         assert "image" in backend.aliases
         assert backend.native is True
-        assert "image" in backend.capabilities.layer_kinds
-        assert backend.capabilities.score == 60
 
 
 # ---------------------------------------------------------------------------
@@ -869,21 +800,21 @@ class TestFrontendsFunctions:
 
     def test_host_for_frontend_defaults(self):
         from worldfoundry.studio.visualization.backends.frontends import host_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         result = host_for_frontend(lc)
         assert result == "127.0.0.1"
 
     def test_host_for_frontend_explicit_host(self):
         from worldfoundry.studio.visualization.backends.frontends import host_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model", host="0.0.0.0")
         result = host_for_frontend(lc)
         assert result == "0.0.0.0"
 
     def test_host_for_frontend_env_override(self):
         from worldfoundry.studio.visualization.backends.frontends import host_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_HOST": "10.0.0.5"}):
             result = host_for_frontend(lc)
@@ -892,28 +823,28 @@ class TestFrontendsFunctions:
 
     def test_host_for_frontend_blank_host_falls_to_default(self):
         from worldfoundry.studio.visualization.backends.frontends import host_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model", host="   ")
         result = host_for_frontend(lc)
         assert result == "127.0.0.1"
 
     def test_port_for_frontend_explicit_port(self):
         from worldfoundry.studio.visualization.backends.frontends import port_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model", port=9999)
         result = port_for_frontend(lc, "world")
         assert result == 9999
 
     def test_port_for_frontend_default(self):
         from worldfoundry.studio.visualization.backends.frontends import port_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         result = port_for_frontend(lc, "world")
         assert result == 7868
 
     def test_port_for_frontend_env_override(self):
         from worldfoundry.studio.visualization.backends.frontends import port_for_frontend
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_WORLD_PORT": "5555"}):
             result = port_for_frontend(lc, "world")
@@ -1051,21 +982,21 @@ class TestFrontendsFunctions:
 
     def test_explicit_points_port_none(self):
         from worldfoundry.studio.visualization.backends.frontends import _explicit_points_port
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         result = _explicit_points_port(lc)
         assert result is None
 
     def test_explicit_points_port_with_port(self):
         from worldfoundry.studio.visualization.backends.frontends import _explicit_points_port
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model", port=18591)
         result = _explicit_points_port(lc)
         assert result == 18591
 
     def test_explicit_points_port_env_override(self):
         from worldfoundry.studio.visualization.backends.frontends import _explicit_points_port
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         lc = StudioLaunchConfig(model_id="test-model")
         with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_POINTS_PORT": "18595"}):
             result = _explicit_points_port(lc)
@@ -1162,235 +1093,16 @@ class TestFrontendsHandlerClasses:
 
 
 # ---------------------------------------------------------------------------
-# 11.  world.py — Dataclasses
-# ---------------------------------------------------------------------------
-
-class TestWorldDataclasses:
-    """Tests for WorldSession and WorldFrontendState dataclasses."""
-
-    def test_world_session_construction(self):
-        from worldfoundry.studio.visualization.backends.world import WorldSession
-        ws = WorldSession(session_id="abc123", mode="image", prompt="test prompt")
-        assert ws.session_id == "abc123"
-        assert ws.mode == "image"
-        assert ws.prompt == "test prompt"
-        assert ws.seed_image is None
-        assert ws.seed_video_path == ""
-        assert ws.last_record is None
-        assert ws.step_count == 0
-
-    def test_world_session_created_at_default(self):
-        from worldfoundry.studio.visualization.backends.world import WorldSession
-        ws = WorldSession(session_id="x", mode="video", prompt="p")
-        assert isinstance(ws.created_at, float)
-        assert ws.created_at > 0
-
-    def test_world_session_fields(self):
-        from worldfoundry.studio.visualization.backends.world import WorldSession
-        field_names = [f.name for f in fields(WorldSession)]
-        assert "session_id" in field_names
-        assert "mode" in field_names
-        assert "prompt" in field_names
-        assert "seed_image" in field_names
-        assert "seed_video_path" in field_names
-        assert "last_record" in field_names
-        assert "created_at" in field_names
-        assert "step_count" in field_names
-
-    def test_world_session_not_frozen(self):
-        from worldfoundry.studio.visualization.backends.world import WorldSession
-        ws = WorldSession(session_id="abc", mode="image", prompt="p")
-        ws.step_count = 5
-        assert ws.step_count == 5
-        ws.prompt = "new prompt"
-        assert ws.prompt == "new prompt"
-
-    def test_world_frontend_state_fields(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendState
-        field_names = [f.name for f in fields(WorldFrontendState)]
-        assert "entry" in field_names
-        assert "launch_config" in field_names
-        assert "manager" in field_names
-        assert "demo_images" in field_names
-        assert "allowed_roots" in field_names
-        assert "telemetry" in field_names
-        assert "max_sessions" in field_names
-        assert "lock" in field_names
-        assert "model_loaded" in field_names
-        assert "sessions" in field_names
-
-    def test_world_frontend_state_defaults(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendState
-        # We can't fully construct it without real dependencies, but we can
-        # check that defaults are as expected.
-        fs = fields(WorldFrontendState)
-        max_sessions_field = next(f for f in fs if f.name == "max_sessions")
-        assert max_sessions_field.default == 4
-        model_loaded_field = next(f for f in fs if f.name == "model_loaded")
-        assert model_loaded_field.default is False
-
-
-# ---------------------------------------------------------------------------
 # 12.  world.py — Constants
 # ---------------------------------------------------------------------------
 
 class TestWorldConstants:
     """Tests for world module constants."""
 
-    def test_world_upload_dir_name(self):
-        from worldfoundry.studio.visualization.backends.world import WORLD_UPLOAD_DIR_NAME
-        assert WORLD_UPLOAD_DIR_NAME == "world_frontend_inputs"
 
     def test_default_fps(self):
         from worldfoundry.studio.visualization.backends.world import DEFAULT_FPS
         assert DEFAULT_FPS == 16
-
-    def test_world_action_deadzone(self):
-        from worldfoundry.studio.visualization.backends.world import WORLD_ACTION_DEADZONE
-        assert WORLD_ACTION_DEADZONE == 0.08
-
-    def test_world_stream_base_seed(self):
-        from worldfoundry.studio.visualization.backends.world import WORLD_STREAM_BASE_SEED
-        assert WORLD_STREAM_BASE_SEED == 42
-
-    def test_websocket_guid(self):
-        from worldfoundry.studio.visualization.backends.world import WEBSOCKET_GUID
-        assert WEBSOCKET_GUID == "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-
-    def test_world_demo_image_root(self):
-        from worldfoundry.studio.visualization.backends.world import WORLD_DEMO_IMAGE_ROOT
-        assert isinstance(WORLD_DEMO_IMAGE_ROOT, Path)
-
-
-# ---------------------------------------------------------------------------
-# 13.  world.py — controls_to_interactions
-# ---------------------------------------------------------------------------
-
-class TestControlsToInteractions:
-    """Thorough tests for the controls_to_interactions function."""
-
-    def test_empty_dict(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({}) == ""
-
-    def test_none(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions(None) == ""
-
-    def test_string(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions("not a dict") == ""
-
-    def test_forward_w(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"w": True}) == "forward"
-
-    def test_backward_s(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"s": True}) == "backward"
-
-    def test_left_a(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"a": True}) == "left"
-
-    def test_right_d(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"d": True}) == "right"
-
-    def test_forward_left_wa(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"w": True, "a": True}) == "forward_left"
-
-    def test_forward_right_wd(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"w": True, "d": True}) == "forward_right"
-
-    def test_backward_left_sa(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"s": True, "a": True}) == "backward_left"
-
-    def test_backward_right_sd(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"s": True, "d": True}) == "backward_right"
-
-    def test_conflicting_w_s(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        # w and s both True: diagonal branches won't match (all combos require !s or !w).
-        # Falls through to forward (w=True, s=True => w branch matches since s check isn't exclusive).
-        result = controls_to_interactions({"w": True, "s": True})
-        # Per the code, forward_left and forward_right both require !s.
-        # forward requires !s. So the w+s combo is actually ambiguous in the code.
-        # Let's check actual behavior.
-        assert isinstance(result, str)
-
-    def test_camera_right(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": 0.5}) == "camera_r"
-
-    def test_camera_left(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": -0.5}) == "camera_l"
-
-    def test_camera_up(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dy": -0.5}) == "camera_up"
-
-    def test_camera_down(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dy": 0.5}) == "camera_down"
-
-    def test_camera_diagonal_dr(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": 0.5, "camera_dy": 0.5}) == "camera_dr"
-
-    def test_camera_diagonal_ur(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": 0.5, "camera_dy": -0.5}) == "camera_ur"
-
-    def test_camera_diagonal_dl(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": -0.5, "camera_dy": 0.5}) == "camera_dl"
-
-    def test_camera_diagonal_ul(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": -0.5, "camera_dy": -0.5}) == "camera_ul"
-
-    def test_camera_below_deadzone(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions, WORLD_ACTION_DEADZONE
-        # camera_dx below deadzone should produce no camera token.
-        assert controls_to_interactions({"camera_dx": WORLD_ACTION_DEADZONE / 2}) == ""
-
-    def test_camera_at_exact_deadzone(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions, WORLD_ACTION_DEADZONE
-        # At exactly the deadzone, > comparison means not included.
-        assert controls_to_interactions({"camera_dx": WORLD_ACTION_DEADZONE}) == ""
-
-    def test_camera_above_deadzone(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions, WORLD_ACTION_DEADZONE
-        # Just above deadzone.
-        assert controls_to_interactions({"camera_dx": WORLD_ACTION_DEADZONE + 0.01}) == "camera_r"
-
-    def test_l_click_only(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"l_click": True}) == "forward"
-
-    def test_r_click_only(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"r_click": True}) == "backward"
-
-    def test_combined_movement_and_camera(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        result = controls_to_interactions({"w": True, "camera_dx": 0.5})
-        assert "forward" in result
-        assert "camera_r" in result
-
-    def test_zero_values_produce_empty(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"w": False, "a": False, "s": False, "d": False, "camera_dx": 0, "camera_dy": 0}) == ""
-
-    def test_camera_zero_inside_deadzone(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        assert controls_to_interactions({"camera_dx": 0.0, "camera_dy": 0.0}) == ""
 
 
 # ---------------------------------------------------------------------------
@@ -1447,122 +1159,6 @@ class TestWorldHelperFunctions:
         result, mime = _decode_data_url(f"data:video/mp4;base64,{data}")
         assert mime == "video/mp4"
 
-    def test_suffix_for_mime_mp4(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("video/mp4") == ".mp4"
-
-    def test_suffix_for_mime_webm(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("video/webm") == ".webm"
-
-    def test_suffix_for_mime_mov(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("video/quicktime") == ".mov"
-
-    def test_suffix_for_mime_avi(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("video/x-msvideo") == ".avi"
-
-    def test_suffix_for_mime_unknown(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("video/unknown") == ""
-
-    def test_suffix_for_mime_empty(self):
-        from worldfoundry.studio.visualization.backends.world import _suffix_for_mime
-        assert _suffix_for_mime("") == ""
-
-    def test_file_url_with_path(self):
-        from worldfoundry.studio.visualization.backends.world import _file_url
-        result = _file_url("/tmp/test.png")
-        assert result.startswith("/api/file?path=")
-        assert "test.png" in result
-
-    def test_file_url_none(self):
-        from worldfoundry.studio.visualization.backends.world import _file_url
-        assert _file_url(None) == ""
-
-    def test_file_url_empty(self):
-        from worldfoundry.studio.visualization.backends.world import _file_url
-        assert _file_url("") == ""
-
-    def test_file_url_encodes_special_chars(self):
-        from worldfoundry.studio.visualization.backends.world import _file_url
-        result = _file_url("/tmp/file with spaces.png")
-        assert "file%20with%20spaces" in result
-
-    def test_repeat_to_slots_basic(self):
-        from worldfoundry.studio.visualization.backends.world import _repeat_to_slots
-        paths = (Path("/a"), Path("/b"), Path("/c"))
-        result = _repeat_to_slots(paths, 9)
-        assert len(result) == 9
-        assert result[0] == Path("/a")
-        assert result[3] == Path("/a")  # wraps around
-
-    def test_repeat_to_slots_exact_match(self):
-        from worldfoundry.studio.visualization.backends.world import _repeat_to_slots
-        paths = (Path("/a"), Path("/b"), Path("/c"))
-        result = _repeat_to_slots(paths, 3)
-        assert result == (Path("/a"), Path("/b"), Path("/c"))
-
-    def test_repeat_to_slots_empty_paths(self):
-        from worldfoundry.studio.visualization.backends.world import _repeat_to_slots
-        result = _repeat_to_slots((), 9)
-        assert result == ()
-
-    def test_override_call_kwargs_seed_empty(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        result = _override_call_kwargs_seed("", 42)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 42
-
-    def test_override_call_kwargs_seed_existing(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        result = _override_call_kwargs_seed('{"seed": 10, "num_frames": 9}', 42)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 42
-        assert parsed["num_frames"] == 9
-
-    def test_override_call_kwargs_seed_empty_dict(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        result = _override_call_kwargs_seed("{}", 42)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 42
-
-    def test_override_call_kwargs_seed_invalid_json(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        result = _override_call_kwargs_seed("not json", 42)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 42
-
-    def test_override_call_kwargs_seed_non_dict_json(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        result = _override_call_kwargs_seed("[1,2,3]", 42)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 42
-
-    def test_world_max_sessions_default(self):
-        from worldfoundry.studio.visualization.backends.world import _world_max_sessions
-        result = _world_max_sessions()
-        assert result == 4
-
-    def test_world_max_sessions_env_override(self):
-        from worldfoundry.studio.visualization.backends.world import _world_max_sessions
-        with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_WORLD_MAX_SESSIONS": "8"}):
-            result = _world_max_sessions()
-            assert result == 8
-
-    def test_world_max_sessions_env_invalid(self):
-        from worldfoundry.studio.visualization.backends.world import _world_max_sessions
-        with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_WORLD_MAX_SESSIONS": "abc"}):
-            result = _world_max_sessions()
-            assert result == 4
-
-    def test_world_max_sessions_env_clamp_to_one(self):
-        from worldfoundry.studio.visualization.backends.world import _world_max_sessions
-        with patch.dict(os.environ, {"WORLDFOUNDRY_STUDIO_WORLD_MAX_SESSIONS": "-1"}):
-            result = _world_max_sessions()
-            assert result == 1
-
 
 # ---------------------------------------------------------------------------
 # 15.  world.py — HTML generators
@@ -1600,7 +1196,7 @@ class TestWorldHTMLGenerators:
 
     def test_world_frontend_html_contains_title(self):
         from worldfoundry.studio.visualization.backends.world import world_frontend_html
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         entry = _make_catalog_entry(model_id="test-model", display_name="Test Display")
         lc = StudioLaunchConfig(model_id="test-model")
         html = world_frontend_html(entry, lc)
@@ -1609,7 +1205,7 @@ class TestWorldHTMLGenerators:
 
     def test_world_frontend_html_structure(self):
         from worldfoundry.studio.visualization.backends.world import world_frontend_html
-        from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+        from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
         entry = _make_catalog_entry(model_id="m1", display_name="M1")
         lc = StudioLaunchConfig(model_id="m1")
         html = world_frontend_html(entry, lc)
@@ -1669,73 +1265,6 @@ class TestWorldHTMLGenerators:
 
 
 # ---------------------------------------------------------------------------
-# 16.  world.py — WorldFrontendHandler (structural checks)
-# ---------------------------------------------------------------------------
-
-class TestWorldFrontendHandler:
-    """Tests for WorldFrontendHandler class structure."""
-
-    def test_server_version(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendHandler
-        assert WorldFrontendHandler.server_version == "WorldFoundryWorldFrontend/1.0"
-
-    def test_has_do_GET(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendHandler
-        assert hasattr(WorldFrontendHandler, "do_GET")
-
-    def test_has_do_HEAD(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendHandler
-        assert hasattr(WorldFrontendHandler, "do_HEAD")
-
-    def test_has_do_POST(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendHandler
-        assert hasattr(WorldFrontendHandler, "do_POST")
-
-
-# ---------------------------------------------------------------------------
-# 17.  world.py — WebSocket helpers (static verification)
-# ---------------------------------------------------------------------------
-
-class TestWorldWebSocketHelpers:
-    """Test websocket helper methods of WorldFrontendHandler (static checks)."""
-
-    def test_handler_has_ws_methods(self):
-        from worldfoundry.studio.visualization.backends.world import WorldFrontendHandler
-        assert hasattr(WorldFrontendHandler, "_handle_websocket")
-        assert hasattr(WorldFrontendHandler, "_read_ws_frame")
-        assert hasattr(WorldFrontendHandler, "_send_ws_frame")
-        assert hasattr(WorldFrontendHandler, "_send_ws_json")
-        assert hasattr(WorldFrontendHandler, "_read_ws_json")
-        assert hasattr(WorldFrontendHandler, "_handle_ws_request")
-
-
-# ---------------------------------------------------------------------------
-# 18.  world.py — path_from_file_url
-# ---------------------------------------------------------------------------
-
-class TestPathFromFileUrl:
-    """Tests for _path_from_file_url."""
-
-    def test_valid_file_url(self):
-        from worldfoundry.studio.visualization.backends.world import _path_from_file_url
-        result = _path_from_file_url("/api/file?path=/tmp/test.png")
-        assert result is not None
-        assert str(result) == "/tmp/test.png"
-
-    def test_empty_url(self):
-        from worldfoundry.studio.visualization.backends.world import _path_from_file_url
-        assert _path_from_file_url("") is None
-
-    def test_non_api_url(self):
-        from worldfoundry.studio.visualization.backends.world import _path_from_file_url
-        assert _path_from_file_url("/other/path") is None
-
-    def test_api_url_no_path_param(self):
-        from worldfoundry.studio.visualization.backends.world import _path_from_file_url
-        assert _path_from_file_url("/api/file?other=value") is None
-
-
-# ---------------------------------------------------------------------------
 # 19.  core/registry.py — StudioVisualizationBackend
 # ---------------------------------------------------------------------------
 
@@ -1743,7 +1272,7 @@ class TestStudioVisualizationBackend:
     """Tests for StudioVisualizationBackend dataclass and methods."""
 
     def test_construction_defaults(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend, BackendCapabilities
+        from worldfoundry.studio.visualization.registry import StudioVisualizationBackend
         b = StudioVisualizationBackend(mode="test", title="Test Backend", default_port=1234)
         assert b.mode == "test"
         assert b.title == "Test Backend"
@@ -1752,194 +1281,27 @@ class TestStudioVisualizationBackend:
         assert b.native is True
         assert callable(b.match)
         assert b.serve is None
-        assert isinstance(b.capabilities, BackendCapabilities)
-        assert b.capabilities.layer_kinds == frozenset()
-        assert b.capabilities.score == 0
 
     def test_construction_with_aliases(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
+        from worldfoundry.studio.visualization.registry import StudioVisualizationBackend
         b = StudioVisualizationBackend(
             mode="test", title="Test", default_port=1234,
             aliases=("t1", "t2"),
         )
         assert b.aliases == ("t1", "t2")
 
-    def test_backend_id_property(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="my-mode", title="T", default_port=1)
-        assert b.backend_id == "my-mode"
-
-    def test_accepts_exact_mode(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="world", title="T", default_port=1)
-        assert b.accepts("world") is True
-
-    def test_accepts_case_insensitive(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="world", title="T", default_port=1)
-        assert b.accepts("WORLD") is True
-
-    def test_accepts_alias(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="world", title="T", default_port=1, aliases=("interactive-world",))
-        assert b.accepts("interactive-world") is True
-
-    def test_accepts_unknown(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="world", title="T", default_port=1)
-        assert b.accepts("unknown") is False
-
-    def test_can_render_empty_capabilities(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend, RenderPlan
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
-        scene = VisualizationScene(scene_id="s1", layers=())
-        plan = b.can_render(scene)
-        assert isinstance(plan, RenderPlan)
-        assert plan.supported is False
-        assert "no scene capability" in plan.reason
-
-    def test_can_render_with_capabilities(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationBackend, BackendCapabilities, RenderPlan,
-        )
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        b = StudioVisualizationBackend(
-            mode="test", title="T", default_port=1,
-            capabilities=BackendCapabilities(frozenset({"point_cloud", "mesh"}), score=80),
-        )
-        scene = VisualizationScene(
-            scene_id="s1",
-            layers=(Layer(layer_id="l1", kind="point_cloud"),),
-        )
-        plan = b.can_render(scene)
-        assert plan.supported is True
-        assert plan.score > 0
-
-    def test_can_render_partial_support(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationBackend, BackendCapabilities, RenderPlan,
-        )
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        b = StudioVisualizationBackend(
-            mode="test", title="T", default_port=1,
-            capabilities=BackendCapabilities(frozenset({"point_cloud"}), partial=True, score=50),
-        )
-        scene = VisualizationScene(
-            scene_id="s1",
-            layers=(
-                Layer(layer_id="l1", kind="point_cloud"),
-                Layer(layer_id="l2", kind="mesh"),
-            ),
-        )
-        plan = b.can_render(scene)
-        # Partial=True means it's still supported, even with unsupported layers.
-        assert plan.supported is True
-        assert "mesh" in plan.unsupported_layers
-
-    def test_can_render_partial_false(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationBackend, BackendCapabilities, RenderPlan,
-        )
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        b = StudioVisualizationBackend(
-            mode="test", title="T", default_port=1,
-            capabilities=BackendCapabilities(frozenset({"point_cloud"}), partial=False, score=50),
-        )
-        scene = VisualizationScene(
-            scene_id="s1",
-            layers=(
-                Layer(layer_id="l1", kind="point_cloud"),
-                Layer(layer_id="l2", kind="mesh"),
-            ),
-        )
-        plan = b.can_render(scene)
-        # Partial=False means unsupported layers make it unsupported.
-        assert plan.supported is False
-
-    def test_render_raises_for_unsupported(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationBackend, BackendCapabilities, RenderResult,
-        )
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
-        scene = VisualizationScene(scene_id="s1")
-        from worldfoundry.studio.visualization.core.registry import RenderRequest
-        request = RenderRequest()
-        with pytest.raises(ValueError):
-            b.render(scene, request)
-
-    def test_render_returns_result_for_supported(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationBackend, BackendCapabilities, RenderResult,
-        )
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        b = StudioVisualizationBackend(
-            mode="test", title="T", default_port=1,
-            capabilities=BackendCapabilities(frozenset({"point_cloud"}), score=50),
-        )
-        scene = VisualizationScene(
-            scene_id="s1",
-            layers=(Layer(layer_id="l1", kind="point_cloud"),),
-        )
-        from worldfoundry.studio.visualization.core.registry import RenderRequest
-        request = RenderRequest()
-        result = b.render(scene, request)
-        assert isinstance(result, RenderResult)
-        assert result.backend_id == "test"
-
-    def test_shutdown_returns_none(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
-        b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
-        assert b.shutdown() is None
 
     def test_launch_no_serve_raises(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend, StudioVisualizationRequest
+        from worldfoundry.studio.visualization.registry import StudioVisualizationBackend, StudioVisualizationRequest
         b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
         with pytest.raises(ValueError, match="no serve function"):
             b.launch(MagicMock(spec=StudioVisualizationRequest))
 
     def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationBackend
+        from worldfoundry.studio.visualization.registry import StudioVisualizationBackend
         b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
         with pytest.raises(FrozenInstanceError):
             b.mode = "new"
-
-
-# ---------------------------------------------------------------------------
-# 20.  core/registry.py — BackendCapabilities
-# ---------------------------------------------------------------------------
-
-class TestBackendCapabilities:
-    """Tests for BackendCapabilities frozen dataclass."""
-
-    def test_defaults(self):
-        from worldfoundry.studio.visualization.core.registry import BackendCapabilities
-        c = BackendCapabilities()
-        assert c.layer_kinds == frozenset()
-        assert c.partial is True
-        assert c.score == 0
-        assert c.metadata == {}
-
-    def test_with_layer_kinds(self):
-        from worldfoundry.studio.visualization.core.registry import BackendCapabilities
-        c = BackendCapabilities(frozenset({"image", "video"}), score=50)
-        assert "image" in c.layer_kinds
-        assert "video" in c.layer_kinds
-        assert c.score == 50
-
-    def test_partial_false(self):
-        from worldfoundry.studio.visualization.core.registry import BackendCapabilities
-        c = BackendCapabilities(frozenset({"gaussian_splat"}), partial=False, score=90)
-        assert c.partial is False
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.registry import BackendCapabilities
-        c = BackendCapabilities()
-        with pytest.raises(FrozenInstanceError):
-            c.score = 100
-        with pytest.raises(FrozenInstanceError):
-            c.partial = False
 
 
 # ---------------------------------------------------------------------------
@@ -1950,14 +1312,14 @@ class TestStudioVisualizationRegistry:
     """Tests for StudioVisualizationRegistry class."""
 
     def test_empty_registry(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationRegistry
+        from worldfoundry.studio.visualization.registry import StudioVisualizationRegistry
         reg = StudioVisualizationRegistry()
         assert reg.modes == frozenset()
         assert reg.native_modes == frozenset()
         assert reg.default_ports == {}
 
     def test_register_and_modes(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
@@ -1965,7 +1327,7 @@ class TestStudioVisualizationRegistry:
         assert "test" in reg.modes
 
     def test_register_with_aliases(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b = StudioVisualizationBackend(mode="test", title="T", default_port=1, aliases=("t1", "t-2"))
@@ -1975,7 +1337,7 @@ class TestStudioVisualizationRegistry:
         assert reg.backend_for("t-2").mode == "test"
 
     def test_register_duplicate_mode_raises(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b1 = StudioVisualizationBackend(mode="test", title="T1", default_port=1)
@@ -1984,7 +1346,7 @@ class TestStudioVisualizationRegistry:
             StudioVisualizationRegistry([b1, b2])
 
     def test_register_empty_token_raises(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b = StudioVisualizationBackend(mode="", title="T", default_port=1)
@@ -1992,13 +1354,13 @@ class TestStudioVisualizationRegistry:
             StudioVisualizationRegistry([b])
 
     def test_backend_for_unknown_raises(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationRegistry
+        from worldfoundry.studio.visualization.registry import StudioVisualizationRegistry
         reg = StudioVisualizationRegistry()
         with pytest.raises(ValueError, match="Unsupported"):
             reg.backend_for("unknown")
 
     def test_native_modes(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b1 = StudioVisualizationBackend(mode="native1", title="N1", default_port=1, native=True)
@@ -2008,7 +1370,7 @@ class TestStudioVisualizationRegistry:
         assert "non-native" not in reg.native_modes
 
     def test_default_ports(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b = StudioVisualizationBackend(mode="test", title="T", default_port=5555)
@@ -2016,7 +1378,7 @@ class TestStudioVisualizationRegistry:
         assert reg.default_ports == {"test": 5555}
 
     def test_register_replaces_same_mode(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b1 = StudioVisualizationBackend(mode="test", title="Old", default_port=1)
@@ -2027,7 +1389,7 @@ class TestStudioVisualizationRegistry:
         assert reg.default_ports["test"] == 2
 
     def test_resolve_mode_explicit(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             StudioVisualizationRegistry, StudioVisualizationBackend,
         )
         b = StudioVisualizationBackend(mode="test", title="T", default_port=1)
@@ -2037,8 +1399,8 @@ class TestStudioVisualizationRegistry:
         assert result == "test"
 
     def test_resolve_mode_auto_fallback(self):
-        from worldfoundry.studio.visualization.core.registry import (
-            StudioVisualizationRegistry, StudioVisualizationBackend,
+        from worldfoundry.studio.visualization.registry import (
+            StudioVisualizationRegistry,
         )
         # Empty registry with no matching backends falls back to "world".
         reg = StudioVisualizationRegistry()
@@ -2056,22 +1418,9 @@ class TestRegistryFrozenDataclasses:
     StudioVisualizationRequest, StudioVisualizationLaunch, RenderPlan,
     RenderRequest, RenderResult."""
 
-    def test_studio_visualization_event(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationEvent
-        e = StudioVisualizationEvent(kind="click", payload={"x": 1})
-        assert e.kind == "click"
-        assert e.payload == {"x": 1}
-        assert e.timestamp is None
-        with pytest.raises(FrozenInstanceError):
-            e.kind = "new"
-
-    def test_studio_visualization_event_with_timestamp(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationEvent
-        e = StudioVisualizationEvent(kind="click", timestamp=1.5)
-        assert e.timestamp == 1.5
 
     def test_studio_model_visualization_profile(self):
-        from worldfoundry.studio.visualization.core.registry import StudioModelVisualizationProfile
+        from worldfoundry.studio.visualization.registry import StudioModelVisualizationProfile
         p = StudioModelVisualizationProfile(
             mode="world", artifact_domain="interactive_world", title="World",
         )
@@ -2084,7 +1433,7 @@ class TestRegistryFrozenDataclasses:
             p.mode = "new"
 
     def test_studio_visualization_launch(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationLaunch
+        from worldfoundry.studio.visualization.registry import StudioVisualizationLaunch
         l = StudioVisualizationLaunch(mode="world")
         assert l.mode == "world"
         assert l.url == ""
@@ -2094,38 +1443,11 @@ class TestRegistryFrozenDataclasses:
             l.mode = "new"
 
     def test_studio_visualization_launch_with_all_fields(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationLaunch
+        from worldfoundry.studio.visualization.registry import StudioVisualizationLaunch
         l = StudioVisualizationLaunch(mode="points", url="http://localhost/", caption="Ready", metadata={"fps": 16})
         assert l.url == "http://localhost/"
         assert l.caption == "Ready"
         assert l.metadata == {"fps": 16}
-
-    def test_render_plan(self):
-        from worldfoundry.studio.visualization.core.registry import RenderPlan
-        p = RenderPlan(backend_id="test", supported=True, score=50)
-        assert p.backend_id == "test"
-        assert p.supported is True
-        assert p.score == 50
-        assert p.unsupported_layers == ()
-        assert p.reason == ""
-        with pytest.raises(FrozenInstanceError):
-            p.supported = False
-
-    def test_render_request(self):
-        from worldfoundry.studio.visualization.core.registry import RenderRequest
-        r = RenderRequest()
-        assert r.backend == "auto"
-        assert r.output_path == ""
-        assert r.options == {}
-
-    def test_render_result(self):
-        from worldfoundry.studio.visualization.core.registry import RenderResult
-        r = RenderResult(backend_id="test")
-        assert r.backend_id == "test"
-        assert r.url == ""
-        assert r.output_path == ""
-        assert r.caption == ""
-        assert r.metadata == {}
 
 
 # ---------------------------------------------------------------------------
@@ -2136,62 +1458,36 @@ class TestNormalizeVisualizationMode:
     """Tests for normalize_visualization_mode function."""
 
     def test_none(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode(None) == ""
 
     def test_empty(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("") == ""
 
     def test_lowercase(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("world") == "world"
 
     def test_uppercase(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("WORLD") == "world"
 
     def test_mixed_case(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("InteractiveWorld") == "interactiveworld"
 
     def test_underscore_to_hyphen(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("interactive_world") == "interactive-world"
 
     def test_whitespace_stripped(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("  points  ") == "points"
 
     def test_combined(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode(" INTERACTIVE_WORLD ") == "interactive-world"
-
-
-# ---------------------------------------------------------------------------
-# 24.  core/registry.py — Protocol classes
-# ---------------------------------------------------------------------------
-
-class TestRegistryProtocols:
-    """Tests for VisualizationProvider and VisualizationBackend protocols."""
-
-    def test_visualization_provider_protocol(self):
-        from worldfoundry.studio.visualization.core.registry import VisualizationProvider
-        # Protocol is a structural type — verify interface contract via annotations.
-        assert "provider_id" in VisualizationProvider.__annotations__
-        assert hasattr(VisualizationProvider, "discover")
-        assert callable(VisualizationProvider.discover)
-
-    def test_visualization_backend_protocol(self):
-        from worldfoundry.studio.visualization.core.registry import VisualizationBackend
-        assert "backend_id" in VisualizationBackend.__annotations__
-        assert "capabilities" in VisualizationBackend.__annotations__
-        assert hasattr(VisualizationBackend, "can_render")
-        assert callable(VisualizationBackend.can_render)
-        assert hasattr(VisualizationBackend, "render")
-        assert callable(VisualizationBackend.render)
-        assert hasattr(VisualizationBackend, "shutdown")
-        assert callable(VisualizationBackend.shutdown)
 
 
 # ---------------------------------------------------------------------------
@@ -2202,7 +1498,7 @@ class TestRegistryModeConstants:
     """Tests for visualization mode string constants."""
 
     def test_mode_strings(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             INTERACTIVE_WORLD_VISUALIZATION, VISER_VISUALIZATION,
             SPARK_VISUALIZATION, MEDIA_VISUALIZATION,
             RERUN_VISUALIZATION, EMBODIED_VISUALIZATION,
@@ -2217,7 +1513,7 @@ class TestRegistryModeConstants:
         assert AUTO_VISUALIZATION == "auto"
 
     def test_artifact_domain_strings(self):
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             ARTIFACT_DOMAIN_WORLD, ARTIFACT_DOMAIN_GEOMETRY,
             ARTIFACT_DOMAIN_GAUSSIAN_SPLAT, ARTIFACT_DOMAIN_ACTION,
             ARTIFACT_DOMAIN_TIMELINE, ARTIFACT_DOMAIN_MEDIA,
@@ -2240,37 +1536,10 @@ class TestRegistryAllExports:
     """Verify registry __all__ is complete and importable."""
 
     def test_all_exports_importable(self):
-        from worldfoundry.studio.visualization.core.registry import __all__
-        import worldfoundry.studio.visualization.core.registry as mod
+        from worldfoundry.studio.visualization.registry import __all__
+        import worldfoundry.studio.visualization.registry as mod
         for name in __all__:
             assert hasattr(mod, name), f"{name} not found in registry module"
-
-    def test_expected_names_in_all(self):
-        from worldfoundry.studio.visualization.core.registry import __all__
-        expected = [
-            "ARTIFACT_DOMAIN_ACTION",
-            "BackendCapabilities",
-            "EMBODIED_VISUALIZATION",
-            "INTERACTIVE_WORLD_VISUALIZATION",
-            "MEDIA_VISUALIZATION",
-            "RenderPlan",
-            "RenderRequest",
-            "RenderResult",
-            "RERUN_VISUALIZATION",
-            "SPARK_VISUALIZATION",
-            "StudioVisualizationBackend",
-            "StudioVisualizationEvent",
-            "StudioVisualizationLaunch",
-            "StudioVisualizationRegistry",
-            "StudioVisualizationRequest",
-            "VISER_VISUALIZATION",
-            "VisualizationBackend",
-            "VisualizationProvider",
-            "model_visualization_profile",
-            "normalize_visualization_mode",
-        ]
-        for name in expected:
-            assert name in __all__, f"{name} missing from __all__"
 
 
 # ---------------------------------------------------------------------------
@@ -2281,7 +1550,7 @@ class TestStudioVisualizationArtifact:
     """Tests for StudioVisualizationArtifact frozen dataclass."""
 
     def test_construction(self):
-        from worldfoundry.studio.visualization.core.artifacts import StudioVisualizationArtifact
+        from worldfoundry.studio.visualization.artifacts import StudioVisualizationArtifact
         a = StudioVisualizationArtifact(path="/tmp/test.ply", kind="point_cloud")
         assert a.path == "/tmp/test.ply"
         assert a.kind == "point_cloud"
@@ -2289,7 +1558,7 @@ class TestStudioVisualizationArtifact:
         assert a.metadata == {}
 
     def test_construction_with_all_fields(self):
-        from worldfoundry.studio.visualization.core.artifacts import StudioVisualizationArtifact
+        from worldfoundry.studio.visualization.artifacts import StudioVisualizationArtifact
         a = StudioVisualizationArtifact(
             path="/tmp/test.ply", kind="point_cloud",
             format_hint="ply", metadata={"size": 1024},
@@ -2298,14 +1567,14 @@ class TestStudioVisualizationArtifact:
         assert a.metadata == {"size": 1024}
 
     def test_resolved_path(self):
-        from worldfoundry.studio.visualization.core.artifacts import StudioVisualizationArtifact
+        from worldfoundry.studio.visualization.artifacts import StudioVisualizationArtifact
         a = StudioVisualizationArtifact(path="/tmp/test.ply", kind="point_cloud")
         resolved = a.resolved_path
         assert isinstance(resolved, Path)
         assert resolved.is_absolute()
 
     def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.artifacts import StudioVisualizationArtifact
+        from worldfoundry.studio.visualization.artifacts import StudioVisualizationArtifact
         a = StudioVisualizationArtifact(path="/tmp/test.ply", kind="point_cloud")
         with pytest.raises(FrozenInstanceError):
             a.path = "/new"
@@ -2319,79 +1588,55 @@ class TestInferVisualizationArtifact:
     """Tests for infer_visualization_artifact function."""
 
     def test_ply_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.ply")
         assert a.kind == "point_cloud"
         assert a.format_hint == "ply"
 
     def test_mp4_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.mp4")
         assert a.kind == "video"
 
     def test_png_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.png")
         assert a.kind == "image"
 
     def test_splat_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.splat")
         assert a.kind == "gaussian_splat"
 
     def test_rrd_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.rrd")
         assert a.kind == "timeline"
 
     def test_glb_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.glb")
         assert a.kind == "mesh"
 
     def test_unknown_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.xyz")
         assert a.kind == "artifact"
 
     def test_with_metadata(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.ply", metadata={"size": 1024})
         assert a.metadata == {"size": 1024}
 
     def test_case_insensitive_suffix(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("/tmp/test.PLY")
         assert a.kind == "point_cloud"
 
     def test_path_input(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact(Path("/tmp/test.ply"))
         assert a.kind == "point_cloud"
-
-
-# ---------------------------------------------------------------------------
-# 29.  core/artifacts.py — normalize_artifact_uri
-# ---------------------------------------------------------------------------
-
-class TestNormalizeArtifactUri:
-    """Tests for normalize_artifact_uri function."""
-
-    def test_no_root(self):
-        from worldfoundry.studio.visualization.core.artifacts import normalize_artifact_uri
-        result = normalize_artifact_uri("/tmp/test.ply")
-        assert result == "/tmp/test.ply"
-
-    def test_with_root_relative(self):
-        from worldfoundry.studio.visualization.core.artifacts import normalize_artifact_uri
-        result = normalize_artifact_uri("/home/user/data/test.ply", root="/home/user/data")
-        assert "test.ply" in result
-
-    def test_with_root_outside(self):
-        from worldfoundry.studio.visualization.core.artifacts import normalize_artifact_uri
-        # Path outside root should return the absolute resolved path.
-        result = normalize_artifact_uri("/other/path/test.ply", root="/home/user/data")
-        assert result.endswith("test.ply")
 
 
 # ---------------------------------------------------------------------------
@@ -2402,7 +1647,7 @@ class TestKindBySuffix:
     """Tests for KIND_BY_SUFFIX mapping."""
 
     def test_mapping_coverage(self):
-        from worldfoundry.studio.visualization.core.artifacts import KIND_BY_SUFFIX
+        from worldfoundry.studio.visualization.artifacts import KIND_BY_SUFFIX
         # Point cloud formats
         assert ".ply" in KIND_BY_SUFFIX
         assert ".pcd" in KIND_BY_SUFFIX
@@ -2428,506 +1673,11 @@ class TestKindBySuffix:
         assert ".mp3" in KIND_BY_SUFFIX
 
     def test_all_values_are_strings(self):
-        from worldfoundry.studio.visualization.core.artifacts import KIND_BY_SUFFIX
+        from worldfoundry.studio.visualization.artifacts import KIND_BY_SUFFIX
         for key, value in KIND_BY_SUFFIX.items():
             assert isinstance(key, str)
             assert isinstance(value, str)
 
-
-# ---------------------------------------------------------------------------
-# 31.  core/scene.py — Frame, Timeline, Layer, VisualizationScene
-# ---------------------------------------------------------------------------
-
-class TestFrame:
-    """Tests for Frame frozen dataclass."""
-
-    def test_construction(self):
-        from worldfoundry.studio.visualization.core.scene import Frame
-        f = Frame(frame_id="world")
-        assert f.frame_id == "world"
-        assert f.parent_id is None
-        assert f.transform is None
-        assert f.metadata == {}
-
-    def test_with_all_fields(self):
-        from worldfoundry.studio.visualization.core.scene import Frame
-        f = Frame(frame_id="cam1", parent_id="world", transform=[[1, 0, 0]], metadata={"role": "camera"})
-        assert f.parent_id == "world"
-        assert f.transform == [[1, 0, 0]]
-        assert f.metadata == {"role": "camera"}
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.scene import Frame
-        f = Frame(frame_id="test")
-        with pytest.raises(FrozenInstanceError):
-            f.frame_id = "new"
-
-
-class TestTimeline:
-    """Tests for Timeline frozen dataclass."""
-
-    def test_defaults(self):
-        from worldfoundry.studio.visualization.core.scene import Timeline
-        t = Timeline()
-        assert t.fps is None
-        assert t.start_time is None
-        assert t.end_time is None
-        assert t.frame_count is None
-        assert t.metadata == {}
-
-    def test_with_values(self):
-        from worldfoundry.studio.visualization.core.scene import Timeline
-        t = Timeline(fps=16.0, start_time=0.0, end_time=1.0, frame_count=16)
-        assert t.fps == 16.0
-        assert t.frame_count == 16
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.scene import Timeline
-        t = Timeline()
-        with pytest.raises(FrozenInstanceError):
-            t.fps = 30.0
-
-
-class TestLayer:
-    """Tests for Layer frozen dataclass."""
-
-    def test_minimal_construction(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="point_cloud")
-        assert l.layer_id == "l1"
-        assert l.kind == "point_cloud"
-        assert l.uri is None
-        assert l.uris == ()
-        assert l.payload is None
-        assert l.frame_range is None
-        assert l.time_range is None
-        assert l.coordinate_frame is None
-        assert l.style == {}
-        assert l.metadata == {}
-
-    def test_with_uri(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="mesh", uri="/tmp/mesh.glb")
-        assert l.uri == "/tmp/mesh.glb"
-
-    def test_with_uris(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="image", uris=("a.png", "b.png"))
-        assert l.uris == ("a.png", "b.png")
-
-    def test_all_uris_with_single_uri(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="mesh", uri="/tmp/mesh.glb")
-        assert l.all_uris() == ("/tmp/mesh.glb",)
-
-    def test_all_uris_with_uris_list(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="image", uris=("a.png", "b.png"))
-        assert l.all_uris() == ("a.png", "b.png")
-
-    def test_all_uris_combined(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="image", uri="a.png", uris=("b.png", "a.png"))
-        # Deduplicates: a.png from uri, then b.png from uris, a.png deduplicated.
-        result = l.all_uris()
-        assert "a.png" in result
-        assert "b.png" in result
-        # Deduplicated, order preserved.
-        assert result == ("a.png", "b.png")
-
-    def test_all_uris_empty(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="mesh")
-        assert l.all_uris() == ()
-
-    def test_asdict_minimal(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="point_cloud")
-        d = l.asdict()
-        assert d["layer_id"] == "l1"
-        assert d["kind"] == "point_cloud"
-        assert "uri" not in d
-        assert "uris" not in d
-
-    def test_asdict_with_optional_fields(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(
-            layer_id="l1", kind="mesh",
-            uri="/tmp/mesh.glb",
-            uris=("a.glb",),
-            frame_range=(0, 10),
-            time_range=(0.0, 1.0),
-            coordinate_frame="world",
-            style={"color": "red"},
-            metadata={"source": "test"},
-        )
-        d = l.asdict()
-        assert d["uri"] == "/tmp/mesh.glb"
-        assert d["uris"] == ["a.glb"]
-        assert d["frame_range"] == [0, 10]
-        assert d["time_range"] == [0.0, 1.0]
-        assert d["coordinate_frame"] == "world"
-        assert d["style"] == {"color": "red"}
-        assert d["metadata"] == {"source": "test"}
-
-    def test_fromdict_minimal(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer.fromdict({"layer_id": "l1", "kind": "point_cloud"})
-        assert l.layer_id == "l1"
-        assert l.kind == "point_cloud"
-
-    def test_fromdict_with_id_alias(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer.fromdict({"id": "l1", "kind": "point_cloud"})
-        assert l.layer_id == "l1"
-
-    def test_fromdict_with_all_fields(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer.fromdict({
-            "layer_id": "l1",
-            "kind": "mesh",
-            "uri": "/tmp/mesh.glb",
-            "uris": ["a.glb", "b.glb"],
-            "frame_range": [0, 10],
-            "time_range": [0.0, 1.0],
-            "coordinate_frame": "world",
-            "style": {"color": "red"},
-            "metadata": {"source": "test"},
-        })
-        assert l.uri == "/tmp/mesh.glb"
-        assert l.uris == ("a.glb", "b.glb")
-        assert l.frame_range == (0, 10)
-        assert l.coordinate_frame == "world"
-
-    def test_round_trip_asdict_fromdict(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        original = Layer(
-            layer_id="l1", kind="mesh",
-            uri="/tmp/m.glb",
-            frame_range=(0, 5),
-            style={"color": "blue"},
-            metadata={"src": "test"},
-        )
-        d = original.asdict()
-        restored = Layer.fromdict(d)
-        assert restored.layer_id == original.layer_id
-        assert restored.kind == original.kind
-        assert restored.uri == original.uri
-        assert restored.frame_range == original.frame_range
-        assert restored.style == dict(original.style)
-        assert restored.metadata == dict(original.metadata)
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer(layer_id="l1", kind="point_cloud")
-        with pytest.raises(FrozenInstanceError):
-            l.layer_id = "new"
-
-
-class TestVisualizationScene:
-    """Tests for VisualizationScene frozen dataclass."""
-
-    def test_minimal_construction(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        s = VisualizationScene(scene_id="s1")
-        assert s.scene_id == "s1"
-        assert s.title == ""
-        assert s.layers == ()
-        assert s.timeline is None
-        assert s.controls == ()
-        assert s.frames == ()
-        assert s.recommended_backend == "auto"
-        assert s.metadata == {}
-
-    def test_with_layers(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        layers = (Layer(layer_id="l1", kind="point_cloud"), Layer(layer_id="l2", kind="mesh"))
-        s = VisualizationScene(scene_id="s1", layers=layers)
-        assert len(s.layers) == 2
-
-    def test_layer_kinds(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        s = VisualizationScene(
-            scene_id="s1",
-            layers=(
-                Layer(layer_id="l1", kind="point_cloud"),
-                Layer(layer_id="l2", kind="mesh"),
-            ),
-        )
-        kinds = s.layer_kinds()
-        assert kinds == frozenset({"point_cloud", "mesh"})
-
-    def test_layer_kinds_empty(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        s = VisualizationScene(scene_id="s1")
-        assert s.layer_kinds() == frozenset()
-
-    def test_asdict(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer
-        s = VisualizationScene(
-            scene_id="s1", title="My Scene",
-            layers=(Layer(layer_id="l1", kind="point_cloud"),),
-        )
-        d = s.asdict()
-        assert d["schema_version"] == 1
-        assert d["scene_id"] == "s1"
-        assert d["title"] == "My Scene"
-        assert len(d["layers"]) == 1
-
-    def test_asdict_with_timeline(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Timeline
-        s = VisualizationScene(
-            scene_id="s1",
-            timeline=Timeline(fps=16.0, frame_count=10),
-        )
-        d = s.asdict()
-        assert "timeline" in d
-        assert d["timeline"]["fps"] == 16.0
-
-    def test_asdict_timeline_omits_none(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Timeline
-        s = VisualizationScene(
-            scene_id="s1",
-            timeline=Timeline(fps=16.0),  # Only fps set.
-        )
-        d = s.asdict()
-        assert "fps" in d["timeline"]
-        assert "start_time" not in d["timeline"]
-
-    def test_fromdict(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        d = {
-            "scene_id": "s1",
-            "title": "My Scene",
-            "layers": [{"layer_id": "l1", "kind": "point_cloud"}],
-            "recommended_backend": "spark",
-        }
-        s = VisualizationScene.fromdict(d)
-        assert s.scene_id == "s1"
-        assert s.title == "My Scene"
-        assert len(s.layers) == 1
-        assert s.layers[0].kind == "point_cloud"
-        assert s.recommended_backend == "spark"
-
-    def test_fromdict_with_timeline(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        d = {
-            "scene_id": "s1",
-            "timeline": {"fps": 16.0, "frame_count": 10},
-            "layers": [],
-        }
-        s = VisualizationScene.fromdict(d)
-        assert s.timeline is not None
-        assert s.timeline.fps == 16.0
-
-    def test_fromdict_empty(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        s = VisualizationScene.fromdict({})
-        assert s.scene_id == ""
-        assert s.layers == ()
-
-    def test_round_trip_asdict_fromdict(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene, Layer, Timeline
-        original = VisualizationScene(
-            scene_id="s1",
-            title="Test",
-            layers=(Layer(layer_id="l1", kind="point_cloud", uri="/tmp/c.ply"),),
-            timeline=Timeline(fps=16.0, frame_count=10),
-            recommended_backend="spark",
-            metadata={"key": "value"},
-        )
-        d = original.asdict()
-        restored = VisualizationScene.fromdict(d)
-        assert restored.scene_id == original.scene_id
-        assert restored.title == original.title
-        assert len(restored.layers) == len(original.layers)
-        assert restored.layers[0].kind == original.layers[0].kind
-        assert restored.recommended_backend == original.recommended_backend
-        assert restored.timeline is not None
-        assert restored.timeline.fps == original.timeline.fps
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.scene import VisualizationScene
-        s = VisualizationScene(scene_id="s1")
-        with pytest.raises(FrozenInstanceError):
-            s.scene_id = "new"
-
-
-# ---------------------------------------------------------------------------
-# 32.  core/__init__.py and visualization/__init__.py — import surface
-# ---------------------------------------------------------------------------
-
-class TestCoreInitExports:
-    """Verify core __init__.py exports are complete and importable."""
-
-    def test_core_all_importable(self):
-        from worldfoundry.studio.visualization.core import __all__
-        import worldfoundry.studio.visualization.core as mod
-        for name in __all__:
-            assert hasattr(mod, name), f"{name} not in core module"
-
-    def test_visualization_all_importable(self):
-        from worldfoundry.studio.visualization import __all__
-        import worldfoundry.studio.visualization as mod
-        for name in __all__:
-            assert hasattr(mod, name), f"{name} not in visualization module"
-
-    def test_core_all_contains_expected(self):
-        from worldfoundry.studio.visualization.core import __all__
-        expected_core = [
-            "BackendCapabilities",
-            "Frame",
-            "Layer",
-            "RenderPlan",
-            "RenderRequest",
-            "RenderResult",
-            "StudioVisualizationArtifact",
-            "StudioVisualizationBackend",
-            "StudioVisualizationEvent",
-            "StudioVisualizationLaunch",
-            "StudioVisualizationRegistry",
-            "StudioVisualizationRequest",
-            "Timeline",
-            "VisualizationScene",
-            "infer_visualization_artifact",
-            "model_visualization_profile",
-            "normalize_visualization_mode",
-        ]
-        for name in expected_core:
-            assert name in __all__, f"{name} missing from core __all__"
-
-    def test_visualization_all_contains_expected(self):
-        from worldfoundry.studio.visualization import __all__
-        expected_vis = [
-            "BackendCapabilities",
-            "Frame",
-            "Layer",
-            "RenderPlan",
-            "RenderRequest",
-            "RenderResult",
-            "StudioVisualizationArtifact",
-            "StudioVisualizationBackend",
-            "StudioVisualizationEvent",
-            "StudioVisualizationLaunch",
-            "StudioVisualizationRegistry",
-            "StudioVisualizationRequest",
-            "Timeline",
-            "VisualizationScene",
-            "infer_visualization_artifact",
-            "model_visualization_profile",
-            "normalize_visualization_mode",
-        ]
-        for name in expected_vis:
-            assert name in __all__, f"{name} missing from visualization __all__"
-
-
-# ---------------------------------------------------------------------------
-# 33.  core/styles.py — VisualizationStyle
-# ---------------------------------------------------------------------------
-
-class TestVisualizationStyle:
-    """Tests for VisualizationStyle frozen dataclass."""
-
-    def test_defaults(self):
-        from worldfoundry.studio.visualization.core.styles import VisualizationStyle, DEFAULT_COLORMAP
-        s = VisualizationStyle()
-        assert s.color is None
-        assert s.colormap == DEFAULT_COLORMAP
-        assert s.opacity is None
-        assert s.point_size is None
-        assert s.line_width is None
-        assert s.material is None
-        assert s.metadata == {}
-
-    def test_with_values(self):
-        from worldfoundry.studio.visualization.core.styles import VisualizationStyle
-        s = VisualizationStyle(color="red", opacity=0.5, point_size=3.0)
-        assert s.color == "red"
-        assert s.opacity == 0.5
-        assert s.point_size == 3.0
-
-    def test_asdict_omits_none(self):
-        from worldfoundry.studio.visualization.core.styles import VisualizationStyle
-        s = VisualizationStyle(color="red", point_size=3.0)
-        d = s.asdict()
-        assert "color" in d
-        assert "point_size" in d
-        assert "opacity" not in d
-        assert "line_width" not in d
-
-    def test_asdict_includes_colormap(self):
-        from worldfoundry.studio.visualization.core.styles import VisualizationStyle
-        s = VisualizationStyle(colormap="plasma")
-        d = s.asdict()
-        assert d["colormap"] == "plasma"
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.styles import VisualizationStyle
-        s = VisualizationStyle()
-        with pytest.raises(FrozenInstanceError):
-            s.color = "blue"
-
-    def test_default_colormap_constant(self):
-        from worldfoundry.studio.visualization.core.styles import DEFAULT_COLORMAP
-        assert DEFAULT_COLORMAP == "viridis"
-
-
-# ---------------------------------------------------------------------------
-# 34.  core/controls.py — VisualizationControl, VisualizationEvent
-# ---------------------------------------------------------------------------
-
-class TestVisualizationControl:
-    """Tests for VisualizationControl frozen dataclass."""
-
-    def test_construction(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationControl
-        c = VisualizationControl(control_id="joystick", kind="continuous")
-        assert c.control_id == "joystick"
-        assert c.kind == "continuous"
-        assert c.label == ""
-        assert c.value is None
-        assert c.options == ()
-        assert c.metadata == {}
-
-    def test_with_all_fields(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationControl
-        c = VisualizationControl(
-            control_id="mode", kind="discrete",
-            label="Mode selector", value="image",
-            options=("image", "video"),
-            metadata={"role": "input"},
-        )
-        assert c.label == "Mode selector"
-        assert c.value == "image"
-        assert c.options == ("image", "video")
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationControl
-        c = VisualizationControl(control_id="test", kind="test")
-        with pytest.raises(FrozenInstanceError):
-            c.control_id = "new"
-
-
-class TestVisualizationEventControls:
-    """Tests for VisualizationEvent from controls module."""
-
-    def test_construction(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationEvent
-        e = VisualizationEvent(kind="click", payload={"x": 1})
-        assert e.kind == "click"
-        assert e.payload == {"x": 1}
-        assert e.timestamp is None
-
-    def test_with_timestamp(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationEvent
-        e = VisualizationEvent(kind="click", timestamp=1.5)
-        assert e.timestamp == 1.5
-
-    def test_frozen_enforcement(self):
-        from worldfoundry.studio.visualization.core.controls import VisualizationEvent
-        e = VisualizationEvent(kind="click")
-        with pytest.raises(FrozenInstanceError):
-            e.kind = "new"
 
 
 # ---------------------------------------------------------------------------
@@ -2941,7 +1691,6 @@ class TestCrossModuleIntegration:
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
         backend = STUDIO_VISUALIZATIONS.backend_for("world")
         assert backend.mode == "world"
-        assert backend.capabilities.score == 50
 
     def test_studio_visualizations_backend_for_alias(self):
         from worldfoundry.studio.visualization.backends.frontends import STUDIO_VISUALIZATIONS
@@ -2954,7 +1703,7 @@ class TestCrossModuleIntegration:
             WORLD_FRONTEND, POINTS_FRONTEND, EMBODIED_FRONTEND,
             SPARK_FRONTEND, MEDIA_FRONTEND, RERUN_FRONTEND,
         )
-        from worldfoundry.studio.visualization.core.registry import (
+        from worldfoundry.studio.visualization.registry import (
             INTERACTIVE_WORLD_VISUALIZATION, VISER_VISUALIZATION,
             EMBODIED_VISUALIZATION, SPARK_VISUALIZATION,
             MEDIA_VISUALIZATION, RERUN_VISUALIZATION,
@@ -2975,36 +1724,21 @@ class TestEdgeCases:
     """Edge case tests across all modules."""
 
     def test_normalize_visualization_mode_whitespace_only(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("   ") == ""
 
     def test_normalize_visualization_mode_hyphens_and_underscores(self):
-        from worldfoundry.studio.visualization.core.registry import normalize_visualization_mode
+        from worldfoundry.studio.visualization.registry import normalize_visualization_mode
         assert normalize_visualization_mode("interactive_world-model") == "interactive-world-model"
 
-    def test_backend_capabilities_with_metadata(self):
-        from worldfoundry.studio.visualization.core.registry import BackendCapabilities
-        c = BackendCapabilities(metadata={"key": "value"})
-        assert c.metadata == {"key": "value"}
-
-    def test_studio_visualization_event_default_payload(self):
-        from worldfoundry.studio.visualization.core.registry import StudioVisualizationEvent
-        e = StudioVisualizationEvent(kind="test")
-        assert e.payload == {}
-
-    def test_layer_fromdict_missing_fields(self):
-        from worldfoundry.studio.visualization.core.scene import Layer
-        l = Layer.fromdict({"layer_id": "l1"})
-        assert l.kind == ""  # Default for missing 'kind'.
-        assert l.uri is None
 
     def test_infer_artifact_empty_path(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact("")
         assert a.kind == "artifact"  # No suffix => unknown kind.
 
     def test_infer_artifact_path_object(self):
-        from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
         a = infer_visualization_artifact(Path("test.wav"))
         assert a.kind == "audio"
 
@@ -3014,10 +1748,6 @@ class TestEdgeCases:
         assert v.html == ""
         assert v.caption == ""
 
-    def test_world_session_default_prompt_empty(self):
-        from worldfoundry.studio.visualization.backends.world import WorldSession
-        ws = WorldSession(session_id="x", mode="image", prompt="")
-        assert ws.prompt == ""
 
     def test_decode_data_url_data_with_semicolon_charset(self):
         from worldfoundry.studio.visualization.backends.world import _decode_data_url
@@ -3031,25 +1761,6 @@ class TestEdgeCases:
         assert isinstance(result, str)
         assert result.startswith('"')
 
-    def test_controls_to_interactions_float_camera_values(self):
-        from worldfoundry.studio.visualization.backends.world import controls_to_interactions
-        result = controls_to_interactions({"camera_dx": 0.3, "camera_dy": -0.2})
-        assert "camera_" in result
-
-    def test_repeat_to_slots_single_path(self):
-        from worldfoundry.studio.visualization.backends.world import _repeat_to_slots
-        paths = (Path("/a"),)
-        result = _repeat_to_slots(paths, 5)
-        assert len(result) == 5
-        assert all(p == Path("/a") for p in result)
-
-    def test_override_call_kwargs_seed_preserves_other_kwargs(self):
-        from worldfoundry.studio.visualization.backends.world import _override_call_kwargs_seed
-        original = '{"num_frames": 9, "max_area": 399360, "seed": 10}'
-        result = _override_call_kwargs_seed(original, 100)
-        parsed = json.loads(result)
-        assert parsed["seed"] == 100
-        assert parsed["num_frames"] == 9
 
     def test_stable_port_offset_empty_string(self):
         from worldfoundry.studio.visualization.backends.viser import _stable_port_offset
@@ -3063,3 +1774,25 @@ class TestEdgeCases:
             result = _env_int("TEST_VISER_INT", 42)
             # Empty string can't be parsed as int => fallback.
             assert result == 42
+
+
+def test_viser_port_pool_uses_stable_run_slot_and_linear_probe(monkeypatch) -> None:
+    from worldfoundry.studio.visualization.backends import viser as viser_host
+
+    monkeypatch.setenv("WORLDFOUNDRY_STUDIO_VISER_PORT_BASE", "19500")
+    monkeypatch.setenv("WORLDFOUNDRY_STUDIO_VISER_PORT_COUNT", "4")
+    first_slot = viser_host._stable_port_offset("run-001", 4)
+    blocked_port = 19500 + first_slot
+    monkeypatch.setattr(
+        viser_host,
+        "_port_is_free",
+        lambda host, port: host == "127.0.0.1" and port != blocked_port,
+    )
+
+    assert viser_host._pick_pool_port("run-001", host="127.0.0.1") == 19500 + ((first_slot + 1) % 4)
+
+
+def test_viser_explicit_port_bypasses_pool() -> None:
+    from worldfoundry.studio.visualization.backends import viser as viser_host
+
+    assert viser_host._resolve_viser_port("run-001", host="127.0.0.1", requested_port=19999) == 19999

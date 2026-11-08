@@ -2200,21 +2200,6 @@ def _retire_idle_resident_workers_for_cuda_request(
     return len(retired_workers)
 
 
-def _retire_idle_resident_workers_for_new_resident_key(
-    base_key: tuple[str, ...],
-    requested_count: int,
-) -> int:
-    """Make CUDA capacity for a new resident key without retiring a reusable worker."""
-
-    with _RESIDENT_WORKERS_LOCK:
-        has_reusable_worker = any(
-            worker.base_key == base_key and worker.process.poll() is None for worker in _RESIDENT_WORKERS.values()
-        )
-    if has_reusable_worker:
-        return 0
-    return _retire_idle_resident_workers_for_cuda_request(requested_count)
-
-
 def _drop_resident_worker(worker: _ResidentWorker, *, force: bool = False, only_if_idle: bool = False) -> None:
     with _RESIDENT_WORKERS_LIFECYCLE_LOCK:
         with _RESIDENT_WORKERS_LOCK:

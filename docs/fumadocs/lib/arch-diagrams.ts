@@ -911,7 +911,7 @@ const STUDIO: ArchDiagramSpec = {
         en: 'Parse wf-studio flags into a launch config',
         zh: '把 wf-studio 的 flags 收成启动配置',
       },
-      file: 'studio/ui/launch_config.py',
+      file: 'studio/visualization/launch_config.py',
     },
     config: {
       role: { en: 'Frontend', zh: '前端' },
@@ -920,7 +920,7 @@ const STUDIO: ArchDiagramSpec = {
         en: 'Route model or artifact metadata to a standalone browser frontend',
         zh: '根据模型或 artifact 元数据选择独立浏览器前端',
       },
-      file: 'studio/ui/launcher.py',
+      file: 'studio/visualization/launcher.py',
     },
     catalog: {
       role: { en: 'Discovery', zh: '发现' },
@@ -929,7 +929,7 @@ const STUDIO: ArchDiagramSpec = {
         en: 'AST-scan pipeline modules without importing CUDA stacks',
         zh: '用 AST 扫描 pipeline 模块，不 import CUDA 栈',
       },
-      file: 'studio/inference/catalog.py',
+      file: 'studio/inference/catalog/discovery.py',
     },
     manager: {
       role: { en: 'Orchestration', zh: '编排' },

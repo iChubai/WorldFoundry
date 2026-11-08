@@ -30,7 +30,7 @@ pytestmark = pytest.mark.unit
 def test_class_string_constant(declaration: str, expected: str | None) -> None:
     node = ast.parse("class SamplePipeline:\n    " + declaration.replace("\n", "\n    ")).body[0]
     assert isinstance(node, ast.ClassDef)
-    assert catalog._class_string_constant(node, "MODEL_ID") == expected
+    assert catalog.discovery._class_string_constant(node, "MODEL_ID") == expected
 
 
 @pytest.mark.parametrize(
@@ -48,7 +48,7 @@ def test_class_string_constant(declaration: str, expected: str | None) -> None:
 def test_class_bool_constant(declaration: str, expected: bool | None) -> None:
     node = ast.parse("class SamplePipeline:\n    " + declaration.replace("\n", "\n    ")).body[0]
     assert isinstance(node, ast.ClassDef)
-    assert catalog._class_bool_constant(node, "ABSTRACT_PIPELINE") is expected
+    assert catalog.discovery._class_bool_constant(node, "ABSTRACT_PIPELINE") is expected
 
 
 def test_discovery_preserves_annotated_ids_and_abstract_status(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -63,9 +63,9 @@ def test_discovery_preserves_annotated_ids_and_abstract_status(monkeypatch: pyte
         '    MODEL_ID: ClassVar[str] = "declared-model-id"\n',
         encoding="utf-8",
     )
-    monkeypatch.setattr(catalog, "_pipeline_file_candidates", lambda: (source,))
-    monkeypatch.setattr(catalog, "_source_root", lambda: tmp_path)
+    monkeypatch.setattr(catalog.discovery, "_pipeline_file_candidates", lambda: (source,))
+    monkeypatch.setattr(catalog.discovery, "_source_root", lambda: tmp_path)
 
-    entries = catalog._discover_ast_pipelines.__wrapped__()
+    entries = catalog.discovery._discover_ast_pipelines.__wrapped__()
 
     assert [(entry.model_id, entry.class_name) for entry in entries] == [("declared-model-id", "SamplePipeline")]

@@ -20,8 +20,8 @@ Studio 现在有多前端入口：
 打开 Spark viewer 前，安装其版本固定的浏览器模块：
 
 ```bash
-python -m worldfoundry.studio.ui.vendor_assets
-python -m worldfoundry.studio.ui.vendor_assets --check
+python -m worldfoundry.studio.visualization.vendor_assets
+python -m worldfoundry.studio.visualization.vendor_assets --check
 ```
 
 安装命令下载缺失、空内容或无法读取的文件，并复用可读且非空的本地模块。
@@ -1195,21 +1195,23 @@ Studio 的实现各自只有一个 canonical import path，根目录仅保留 CL
 
 | 路径 | 职责 |
 | --- | --- |
-| `inference/catalog.py` | pipeline 发现、模型默认参数与 checkpoint 解析 |
+| `inference/catalog/` | 模型 catalog：`discovery.py`（AST 扫描 pipeline、构建条目、`find_entry`）、`models/<family>.py`（按模型家族的 curated override 与默认参数）、`resolve.py`（checkpoint 与路径解析）、`params.py`（共享参数模板） |
 | `inference/config.py` | 运行环境与分布式进程拓扑 |
 | `inference/execution.py` | 输入准备、模型加载、执行与原始 artifact 保存 |
 | `inference/dispatch.py` | GPU admission、受管子进程、resident worker、取消与 deadline |
 | `inference/paths.py`、`inference/variants.py` | 运行路径和模型变体选择 |
-| `serving/workspace.py`、`serving/jobs.py` | Workspace API 与 UI 任务调度 |
+| `inference/listing.py` | Workspace、launcher 与 TUI 共用的 Studio 可见模型列表 |
 | `serving/` | 认证、文件服务、遥测和 realtime transport |
-| `ui/` | 浏览器启动选项、模型接口、共享浏览器资源与 Workspace 页面 |
-| `ui/workspace.html`、`ui/workspace.py` | 打包的 Workspace 页面和资源加载器 |
-| `visualization/` | artifact 发现、viewer 路由与 geometry 展示 |
+| `visualization/` | artifact 路由（`registry.py`、`artifacts.py`、`run_record.py`）、预览转换（`presentation.py`）与浏览器后端 |
+| `visualization/launcher.py`、`visualization/launch_config.py` | 独立前端路由与浏览器启动选项 |
+| `visualization/interfaces.py`、`visualization/vendor_assets.py` | 模型接口描述与固定版本的浏览器模块 |
+| `workspace/app.py`、`workspace/jobs.py` | Workspace API 与 UI 任务调度 |
+| `assets/web/` | 打包的 Workspace 页面与 world 前端 CSS/JS |
 | `cli.py`、`runtime_job.py`、`workspace_job.py` | 安装命令与子进程入口 |
 
-推理模块不导入 UI、serving 或 visualization。`StudioManager` 默认保存原始 artifact；需要预览的前端显式安装 `visualization.studio.prepare_run_record` 为 `record_processor`。原 `studio/native` 的 CUDA/C++/ImGui 前端已删除。
+推理模块不导入 workspace、serving 或 visualization。`StudioManager` 默认保存原始 artifact；需要预览的前端显式安装 `visualization.presentation.prepare_run_record` 为 `record_processor`。原 `studio/native` 的 CUDA/C++/ImGui 前端已删除。
 
-`visualization/plugins` 保留实际调用的实现：`perception/render.py` 用于 CLI 和 Grounding DINO；`scene3d/projection.py` 服务 VIPE；`scene3d/depth_anything_v3/export_vis.py` 服务 DA3 导出；`styles/colormaps.py` 提供 depth / normal 着色。未使用的 media、robotics、pixelSplat training 可视化、重复 DVLT、HED 和 sky-segmentation/GLB 链已删除。
+模型侧的渲染代码与模型放在一起，`base_models` 不导入 Studio：`base_models/perception_core/visualization/render.py` 用于 CLI 和 Grounding DINO，`colormaps.py` 提供 depth / normal 着色；`vipe/utils/visualization.py` 服务 VIPE；`depth_anything_v3/utils/visualize.py` 服务 DA3 导出。
 
 Wan Animate conditioning image 是模型输入，由 `base_models/diffusion_model/models/encoders/wan/variants/animate/render.py` 持有；`AAPoseMeta.draw_aapose` 不依赖 Studio。
 

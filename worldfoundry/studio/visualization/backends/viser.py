@@ -48,15 +48,6 @@ def viser_importable() -> bool:
     return importlib.util.find_spec("viser") is not None
 
 
-def _pick_free_port(host: str = "127.0.0.1") -> int:
-    """Reserve an ephemeral TCP port on ``host``."""
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind((host, 0))
-        port = int(sock.getsockname()[1])
-    return port
-
-
 def _env_int(name: str, default: int, *, minimum: int = 1) -> int:
     """Parse a positive integer env var with a bounded fallback."""
 
@@ -212,20 +203,6 @@ def _coordinate_transform_matrix(preset: str) -> Any | None:
         matrix[2, 2] = -1.0
         return matrix
     return None
-
-
-def _transform_points_for_preset(points: Any, preset: str) -> Any:
-    """Apply the selected coordinate transform to Nx3 points."""
-
-    matrix = _coordinate_transform_matrix(preset)
-    return _transform_points(points, matrix)
-
-
-def _apply_mesh_transform_for_preset(mesh: Any, preset: str) -> None:
-    """Apply the selected coordinate transform to a Trimesh object in-place."""
-
-    matrix = _coordinate_transform_matrix(preset)
-    _apply_mesh_transform(mesh, matrix)
 
 
 def _transform_points(points: Any, matrix: Any | None) -> Any:
@@ -481,13 +458,6 @@ def npz_has_supported_geometry(path: Path) -> bool:
             return "depth" in keys and bool(keys & {"intrinsic", "intrinsics"})
     except Exception:
         return False
-
-
-def _points_from_npz_arrays(data: Any) -> Any | None:
-    """Load explicit XYZ-like arrays from known NPZ keys."""
-
-    extracted = _points_and_finite_mask_from_npz_arrays(data)
-    return extracted[0] if extracted is not None else None
 
 
 def _points_and_finite_mask_from_npz_arrays(data: Any) -> tuple[Any, Any] | None:
@@ -833,17 +803,6 @@ class StudioViserService:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._server = None
-
-    def present_point_cloud(
-        self,
-        *,
-        run_id: str,
-        cloud_path: Path,
-        model_id: str = "",
-    ) -> ViserPresentation:
-        """Boot or refresh Viser with ``cloud_path`` and return iframe markup."""
-
-        return self.present_geometry(run_id=run_id, geometry_path=cloud_path, model_id=model_id)
 
     def present_geometry(
         self,

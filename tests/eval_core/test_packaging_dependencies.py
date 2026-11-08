@@ -110,9 +110,9 @@ def test_studio_static_assets_are_packaged() -> None:
 
     assert "assets/**/*" in package_data["worldfoundry.studio"]
     assert (REPO_ROOT / "worldfoundry/studio/assets").is_dir()
-    assert "ui/*.html" in package_data["worldfoundry.studio"]
+    assert (REPO_ROOT / "worldfoundry/studio/assets/web/workspace.html").is_file()
     assert "assets/vendor/**/*" in excluded_package_data["*"]
-    assert (REPO_ROOT / "worldfoundry/studio/ui/vendor_assets.py").is_file()
+    assert (REPO_ROOT / "worldfoundry/studio/visualization/vendor_assets.py").is_file()
 
 
 def test_unified_requirements_install_data_gpu_probe_dependencies() -> None:

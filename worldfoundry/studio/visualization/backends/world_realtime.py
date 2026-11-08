@@ -78,7 +78,7 @@ from worldfoundry.studio.serving.realtime.telemetry import (
     frame_pixels,
 )
 from worldfoundry.studio.serving.realtime.webrtc import bind_video_sender
-from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
+from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
 
 _MIN_OUTPUT_WIDTH = realtime_media.MIN_OUTPUT_WIDTH
 _MIN_OUTPUT_HEIGHT = realtime_media.MIN_OUTPUT_HEIGHT
@@ -3069,18 +3069,6 @@ class RealtimePeerManager:
             raise
         except Exception:
             await self.close_active()
-
-    async def _socket_liveness_watchdog(self, active: _ActiveSocket) -> None:
-        interval = _env_int("WORLDFOUNDRY_REALTIME_LIVENESS_INTERVAL_SECONDS", 1)
-        timeout = _env_int("WORLDFOUNDRY_REALTIME_LIVENESS_TIMEOUT_SECONDS", 30)
-        try:
-            while not active.closed:
-                await asyncio.sleep(interval)
-                if asyncio.get_running_loop().time() - active.last_client_message_at > timeout:
-                    await self.close_active()
-                    return
-        except asyncio.CancelledError:
-            raise
 
     @staticmethod
     async def _socket_send(active: _ActiveSocket, payload: Mapping[str, Any]) -> None:

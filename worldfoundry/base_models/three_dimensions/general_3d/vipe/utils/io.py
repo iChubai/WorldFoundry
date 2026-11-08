@@ -33,7 +33,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.lietorch impo
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import FrameAttribute, VideoFrame, VideoStream
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.geometry import se3_matrix_to_se3
-from worldfoundry.studio.visualization.plugins.scene3d.projection import VideoWriter
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.visualization import VideoWriter
 
 logger = logging.getLogger(__name__)
 

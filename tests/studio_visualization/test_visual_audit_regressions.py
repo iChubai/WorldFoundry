@@ -22,11 +22,11 @@ def _entry() -> CatalogEntry:
 
 
 def test_auto_routing_prefers_artifact_and_distinguishes_ply(tmp_path: Path) -> None:
+    from worldfoundry.studio.visualization.artifacts import infer_visualization_artifact
     from worldfoundry.studio.visualization.backends.frontends import (
         STUDIO_VISUALIZATIONS,
         resolve_frontend_mode,
     )
-    from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
 
     point_ply = tmp_path / "points.ply"
     point_ply.write_text("ply\nformat ascii 1.0\nelement vertex 0\nend_header\n", encoding="ascii")
@@ -69,7 +69,7 @@ def test_auto_routing_prefers_artifact_and_distinguishes_ply(tmp_path: Path) -> 
 
 
 def test_rerun_scene_extraction_applies_dumped_node_transforms() -> None:
-    from worldfoundry.studio.visualization.studio import _scene_points_and_colors
+    from worldfoundry.studio.visualization.presentation import _scene_points_and_colors
 
     class Geometry:
         def __init__(self, x: float) -> None:

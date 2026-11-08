@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("numpy")
 
-from worldfoundry.studio.serving import workspace as workspace_app
+from worldfoundry.studio.workspace import app as workspace_app
 from worldfoundry.studio.inference.execution import RunRecord
 
 

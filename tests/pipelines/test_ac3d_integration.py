@@ -71,7 +71,7 @@ def test_ac3d_default_runtime_root_is_in_tree(monkeypatch, tmp_path: Path) -> No
 def test_ac3d_studio_dataset_default_ignores_official_source_repo(monkeypatch, tmp_path: Path) -> None:
     from worldfoundry.studio.inference import catalog as studio_catalog
 
-    text = Path(studio_catalog.__file__).read_text(encoding="utf-8")
+    text = Path(studio_catalog.models.video_generation.__file__).read_text(encoding="utf-8")
     section = text[text.index("def _ac3d_default_video_root_dir") : text.index("def _ac3d_default_call_kwargs")]
     assert "official_runtime_repo_path" not in section
 
@@ -82,7 +82,7 @@ def test_ac3d_studio_dataset_default_ignores_official_source_repo(monkeypatch, t
     (dataset_root / "annotations" / "test.json").write_text("[]\n", encoding="utf-8")
     monkeypatch.setenv("WORLDFOUNDRY_AC3D_VIDEO_ROOT_DIR", str(dataset_root))
 
-    assert studio_catalog._ac3d_default_video_root_dir() == str(dataset_root)
+    assert studio_catalog.models.video_generation._ac3d_default_video_root_dir() == str(dataset_root)
 
 
 def test_ac3d_runtime_builds_official_command(monkeypatch, tmp_path: Path) -> None:

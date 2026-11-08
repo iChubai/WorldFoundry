@@ -132,8 +132,8 @@ def test_pusa_lightx2v_load_defaults_accept_hugging_face_mirror_name(monkeypatch
         requested_names.append(names)
         return fallback
 
-    monkeypatch.setattr(studio_catalog, "_checkpoint_model_ref", capture_checkpoint_names)
-    studio_catalog._pusa_vidgen_default_load_kwargs()
+    monkeypatch.setattr(studio_catalog.resolve, "_checkpoint_model_ref", capture_checkpoint_names)
+    studio_catalog.models.video_generation._pusa_vidgen_default_load_kwargs()
 
     assert (
         "lightx2v--Wan2.2-Lightning",
@@ -209,8 +209,8 @@ def test_hunyuanvideo15_workspace_composes_complete_local_component_roots(tmp_pa
         path.touch()
     monkeypatch.setenv("WORLDFOUNDRY_CKPT_DIR", str(tmp_path))
 
-    t2v = studio_catalog._hunyuanvideo15_default_load_kwargs(image_to_video=False)
-    i2v = studio_catalog._hunyuanvideo15_default_load_kwargs(image_to_video=True)
+    t2v = studio_catalog.models.video_generation._hunyuanvideo15_default_load_kwargs(image_to_video=False)
+    i2v = studio_catalog.models.video_generation._hunyuanvideo15_default_load_kwargs(image_to_video=True)
 
     assert t2v == {
         "attention_backend": "flash",

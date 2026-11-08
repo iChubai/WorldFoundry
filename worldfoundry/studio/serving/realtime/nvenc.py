@@ -35,8 +35,6 @@ from worldfoundry.studio.serving.realtime.telemetry import FrameContext, frame_c
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from av.packet import Packet
 
-# H.264 Annex-B NAL type identifier for an IDR (keyframe) slice.
-_H264_NAL_TYPE_IDR = 5
 
 # RTP video clock, per RFC 6184. aiortc's H264Encoder.pack() rescales from the
 # packet's declared time_base into this base, so stamping packets on 1/90000 is
@@ -81,21 +79,6 @@ def _encoder_supported(nvc: Any, gpu_id: int, *, width: int = 0, height: int = 0
         if value and ((minimum and value < minimum) or (maximum and value > maximum)):
             return False, f"NVENC {dimension} {value} is outside GPU {gpu_id} limits {minimum}..{maximum}"
     return True, ""
-
-
-def _payload_contains_nal_type(payload: bytes, nal_type: int) -> bool:
-    """Scan an Annex-B H.264 payload for the presence of a specific NAL type."""
-    i = 0
-    while True:
-        idx = payload.find(b"\x00\x00\x01", i)
-        if idx < 0:
-            return False
-        nal_start = idx + 3
-        if nal_start >= len(payload):
-            return False
-        if (payload[nal_start] & 0x1F) == nal_type:
-            return True
-        i = nal_start + 1
 
 
 def _rgb_frame_to_abgr_cuda(frame_rgb_uint8: Any, torch_module: Any, *, gpu_id: int = 0) -> Any:

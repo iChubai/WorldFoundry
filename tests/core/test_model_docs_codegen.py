@@ -178,8 +178,8 @@ def test_checkpoint_defaults_are_resolved_inside_the_documentation_scope(
     from worldfoundry.studio.inference import catalog
 
     _, commands = generators
-    monkeypatch.setattr(catalog, "_checkpoint_model_ref", lambda *names, **kwargs: "installed/model")
-    monkeypatch.setattr(catalog, "_prefer_existing_model_ref", lambda *names: "installed/model")
+    monkeypatch.setattr(catalog.resolve, "_checkpoint_model_ref", lambda *names, **kwargs: "installed/model")
+    monkeypatch.setattr(catalog.resolve, "_prefer_existing_model_ref", lambda *names: "installed/model")
     defaults = catalog.CURATED_OVERRIDES[model_id]["default_call_kwargs"]
     assert callable(defaults)
     assert defaults()[field] == "installed/model"
@@ -201,18 +201,18 @@ def test_documentation_defaults_ignore_existing_checkpoints(
     checkpoint.mkdir()
     (checkpoint / "config.json").write_text("{}", encoding="utf-8")
     missing = tmp_path / "declared-model"
-    monkeypatch.setattr(catalog, "_cache_candidates", lambda *names: [str(checkpoint)])
+    monkeypatch.setattr(catalog.resolve, "_cache_candidates", lambda *names: [str(checkpoint)])
 
-    assert catalog._checkpoint_model_ref("model", fallback="owner/model") == str(checkpoint)
-    assert catalog._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(checkpoint)
-    assert catalog._local_root_with_files([checkpoint], ["config.json"]) == str(checkpoint)
+    assert catalog.resolve._checkpoint_model_ref("model", fallback="owner/model") == str(checkpoint)
+    assert catalog.resolve._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(checkpoint)
+    assert catalog.resolve._local_root_with_files([checkpoint], ["config.json"]) == str(checkpoint)
 
     with commands._canonical_catalog_defaults():
-        assert catalog._checkpoint_model_ref("model", fallback="owner/model") == "owner/model"
-        assert catalog._checkpoint_model_ref("model") == str(checkpoint_root_path("model"))
-        assert catalog._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(missing)
-        assert catalog._local_root_with_files([checkpoint], ["config.json"]) == ""
+        assert catalog.resolve._checkpoint_model_ref("model", fallback="owner/model") == "owner/model"
+        assert catalog.resolve._checkpoint_model_ref("model") == str(checkpoint_root_path("model"))
+        assert catalog.resolve._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(missing)
+        assert catalog.resolve._local_root_with_files([checkpoint], ["config.json"]) == ""
 
-    assert catalog._checkpoint_model_ref("model", fallback="owner/model") == str(checkpoint)
-    assert catalog._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(checkpoint)
-    assert catalog._local_root_with_files([checkpoint], ["config.json"]) == str(checkpoint)
+    assert catalog.resolve._checkpoint_model_ref("model", fallback="owner/model") == str(checkpoint)
+    assert catalog.resolve._prefer_existing_model_ref(str(missing), str(checkpoint)) == str(checkpoint)
+    assert catalog.resolve._local_root_with_files([checkpoint], ["config.json"]) == str(checkpoint)

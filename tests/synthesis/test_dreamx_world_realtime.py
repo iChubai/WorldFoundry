@@ -18,7 +18,7 @@ from worldfoundry.pipelines.dreamx_world import DreamXWorld5BCamPipeline
 from worldfoundry.studio.inference.catalog import find_entry
 from worldfoundry.studio.inference.dispatch import _requested_torchrun_nproc
 from worldfoundry.studio.inference.execution import TORCHRUN_LINGBOT_FAST_ENV, StudioManager
-from worldfoundry.studio.ui.launch_config import StudioLaunchConfig, launch_uses_lingbot_torchrun_rollout
+from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig, launch_uses_lingbot_torchrun_rollout
 from worldfoundry.synthesis.visual_generation.dreamx_world import realtime
 from worldfoundry.synthesis.visual_generation.dreamx_world.runtime.utils.prompt_embeddings import (
     validate_prompt_embedding_pair,

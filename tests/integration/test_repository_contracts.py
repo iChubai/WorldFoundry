@@ -18,7 +18,7 @@ def _parse(relpath: str) -> ast.Module:
 
 
 def test_workspace_app_uses_start_new_session_not_preexec_fn() -> None:
-    source = (REPO_ROOT / "worldfoundry/studio/serving/workspace.py").read_text(encoding="utf-8")
+    source = (REPO_ROOT / "worldfoundry/studio/workspace/app.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     popen_calls = [
         node
@@ -210,7 +210,7 @@ def _comprehension_targets(node: ast.AST) -> list[ast.expr]:
 
 
 def test_workspace_app_loop_vars_do_not_shadow_dataclasses_field() -> None:
-    tree = _parse("worldfoundry/studio/serving/workspace.py")
+    tree = _parse("worldfoundry/studio/workspace/app.py")
     shadowed: list[int] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.For) and isinstance(node.target, ast.Name) and node.target.id == "field":

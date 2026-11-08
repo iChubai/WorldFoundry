@@ -749,7 +749,6 @@ include-package-data = true
 ]
 "worldfoundry.studio" = [
     "assets/**/*",
-    "ui/*.html",
 ]
 "worldfoundry.synthesis.visual_generation.lingbot_video" = [
     "default_negative_prompt*.json",

@@ -23,7 +23,7 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.gsply_helpers import save_gaussian_ply
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.layout_helpers import hcat, vcat
-from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import vis_depth_map_tensor
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import vis_depth_map_tensor
 
 VIDEO_QUALITY_MAP = {
     "low": {"crf": "28", "preset": "veryfast"},

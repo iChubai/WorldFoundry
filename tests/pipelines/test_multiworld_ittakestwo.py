@@ -158,7 +158,7 @@ def test_multiworld_catalog_defaults_map_all_native_checkpoint_roles(monkeypatch
     monkeypatch.setenv("WORLDFOUNDRY_CKPT_DIR", str(checkpoint_root))
     monkeypatch.setenv("WORLDFOUNDRY_HFD_ROOT", str(tmp_path / "ckpt"))
 
-    components = catalog._multiworld_ittakestwo_default_load_kwargs()["required_components"]
+    components = catalog.models.world_models._multiworld_ittakestwo_default_load_kwargs()["required_components"]
 
     assert Path(components["runtime_root"]) == Path(runtime_env.__file__).resolve().parent
     assert Path(components["config_path"]).is_file()

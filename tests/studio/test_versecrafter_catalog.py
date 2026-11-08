@@ -4,10 +4,7 @@ import numpy as np
 import pytest
 
 import worldfoundry.studio.inference.catalog as catalog
-from worldfoundry.studio.inference.catalog import (
-    _versecrafter_default_load_kwargs,
-    _versecrafter_default_ref,
-)
+from worldfoundry.studio.inference.catalog.models.video_generation import _versecrafter_default_load_kwargs, _versecrafter_default_ref
 from worldfoundry.pipelines.versecrafter.pipeline_versecrafter import VerseCrafterPipeline
 from worldfoundry.synthesis.visual_generation.versecrafter.worldfoundry_runtime import (
     VerseCrafterRuntime,
@@ -38,7 +35,7 @@ def test_versecrafter_catalog_resolves_all_local_checkpoints(tmp_path, monkeypat
 def test_versecrafter_catalog_uses_public_hub_fallbacks(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("WORLDFOUNDRY_CKPT_DIR", str(tmp_path / "ckpt"))
     monkeypatch.setenv("WORLDFOUNDRY_HFD_ROOT", str(tmp_path / "hfd"))
-    monkeypatch.setattr(catalog, "_cache_candidates", lambda *names: [])
+    monkeypatch.setattr(catalog.resolve, "_cache_candidates", lambda *names: [])
 
     assert _versecrafter_default_ref() == "TencentARC/VerseCrafter"
     assert _versecrafter_default_load_kwargs() == {

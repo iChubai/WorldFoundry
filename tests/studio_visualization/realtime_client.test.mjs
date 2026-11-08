@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
 
-const file = new URL('../../worldfoundry/studio/visualization/backends/world_realtime_client.py', import.meta.url);
-const script = readFileSync(file, 'utf8').split('WORLD_REALTIME_CLIENT_JS = r"""')[1].split('"""')[0];
+const file = new URL('../../worldfoundry/studio/assets/web/world.js', import.meta.url);
+const script = readFileSync(file, 'utf8');
 const metricsCode = script.slice(script.indexOf('class PresentationMetrics'), script.indexOf('const state ='));
 
 function metrics() {

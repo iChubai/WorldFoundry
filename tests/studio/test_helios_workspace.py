@@ -11,7 +11,7 @@ import json
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.studio.inference.catalog import find_entry
 from worldfoundry.studio.inference.requests import JobCreateRequest, build_inference_run_kwargs
-from worldfoundry.studio.serving.workspace import _model_payload
+from worldfoundry.studio.workspace.app import _model_payload
 from worldfoundry.synthesis.visual_generation.official_video_runtime import OfficialVideoRuntime
 
 

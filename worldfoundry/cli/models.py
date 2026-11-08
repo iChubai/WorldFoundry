@@ -268,7 +268,7 @@ def _handle_models_visualize(args: argparse.Namespace) -> int:
     import numpy as np
     from PIL import Image
 
-    from worldfoundry.studio.visualization.plugins.perception.render import (
+    from worldfoundry.base_models.perception_core.visualization.render import (
         load_json_detections,
         render_depth,
         render_detections,

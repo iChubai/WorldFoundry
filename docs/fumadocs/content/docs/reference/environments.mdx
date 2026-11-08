@@ -149,7 +149,7 @@ Start the Workspace after setup:
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 PYTHONPATH=. WORLDFOUNDRY_WORKSPACE_MAX_JOBS=8 \
-python -m worldfoundry.studio.serving.workspace --host 127.0.0.1 --port 7870
+python -m worldfoundry.studio.workspace.app --host 127.0.0.1 --port 7870
 ```
 
 Use explicit roots when datasets or checkpoints should live on shared storage:

@@ -91,17 +91,6 @@ PREVIEW_VIDEO_VALIDATE_ENV = "WORLDFOUNDRY_STUDIO_VALIDATE_PREVIEW_VIDEO"
 VIDEO_PREVIEW_IMAGE_ENV = "WORLDFOUNDRY_STUDIO_EXTRACT_VIDEO_PREVIEW_IMAGE"
 RERUN_PREVIEW_ENV = "WORLDFOUNDRY_STUDIO_BUILD_RERUN_PREVIEW"
 PREVIEW_ASSET_EXTS = {*IMAGE_EXTS, *VIDEO_EXTS, *SPLAT_EXTS, *MODEL_EXTS, ".rrd"}
-VIEWPORT_ARTIFACT_EXTS = {
-    *PREVIEW_ASSET_EXTS,
-    ".json",
-    ".jsonl",
-    ".npz",
-    ".npy",
-    ".pkl",
-    ".yaml",
-    ".yml",
-    ".toml",
-}
 
 
 def _output_suffix_from_infer_metadata(entry: CatalogEntry, infer_metadata: dict[str, Any] | None) -> str:
@@ -1115,10 +1104,6 @@ def _ordered_artifacts_for_preview(artifacts: Sequence[str]) -> list[str]:
         seen.add(normalized)
         unique.append(normalized)
     return sorted(unique, key=_artifact_priority)
-
-
-def _viewport_artifact_paths(artifacts: Sequence[str]) -> list[str]:
-    return [path for path in artifacts if os.path.splitext(path)[1].lower() in VIEWPORT_ARTIFACT_EXTS]
 
 
 def _is_decodable_video(path: str) -> bool:
@@ -2678,37 +2663,6 @@ class StudioManager:
 
         return False, None
 
-    def _reset_cached_model_local(self, model_id: str) -> str:
-        with self.lock:
-            matching_contexts = [
-                context
-                for context in self.pipeline_cache.values()
-                if context.entry.model_id == model_id and not context.dispose_when_idle
-            ]
-            if not matching_contexts:
-                try:
-                    entry = find_entry(model_id)
-                    return f"No cached interactive state for {entry.display_name}."
-                except Exception:
-                    return f"No cached interactive state for {model_id}."
-            for context in matching_contexts:
-                self._pin_pipeline_context(context)
-
-        messages: list[str] = []
-        try:
-            for context in matching_contexts:
-                driver = self.runtime_driver_for(context.entry)
-                with context.lifecycle_lock:
-                    messages.append(driver.reset(self, context))
-        finally:
-            for context in matching_contexts:
-                self._release_pipeline_lease(context)
-
-        deduped_messages = list(dict.fromkeys(messages))
-        if len(deduped_messages) == 1:
-            return deduped_messages[0]
-        return " ".join(deduped_messages)
-
     def _unload_local(self, model_id: str | None = None) -> str:
         with self.lock:
             removed: list[str] = []
@@ -2772,8 +2726,6 @@ class StudioManager:
                     materialize=False,
                     realtime=True,
                 )
-            elif kind == "reset_model":
-                local_result = self._reset_cached_model_local(str(command["model_id"]))
             elif kind == "unload_model":
                 model_id = command.get("model_id") or None
                 local_result = self._unload_local(str(model_id) if model_id else None)
@@ -2931,14 +2883,6 @@ class StudioManager:
         finally:
             del pipeline
             self._collect_device_memory()
-
-    def _dispose_pipeline(self, pipeline: Any) -> None:
-        """Compatibility helper for detached, caller-owned pipeline values."""
-
-        if pipeline is None:
-            return
-        del pipeline
-        self._collect_device_memory()
 
     def _collect_device_memory(self) -> None:
         gc.collect()
@@ -3434,21 +3378,6 @@ class StudioManager:
             _ensure_dir(Path(request.output_dir))
         return record
 
-    def reset_cached_model(self, model_id: str) -> str:
-        if _torchrun_lingbot_fast_enabled() and model_id in {
-            LINGBOT_WORLD_MODEL_ID,
-            LINGBOT_WORLD_V2_MODEL_ID,
-            MATRIX_GAME3_MODEL_ID,
-            LONGVIE2_MODEL_ID,
-            HELIOS_MODEL_ID,
-            DREAMX_WORLD_MODEL_ID,
-            LINGBOT_WORLD_V2_SMALL_MODEL_ID,
-        }:
-            command = {"kind": "reset_model", "model_id": model_id}
-            result = self._run_torchrun_command(command)
-            return str(result or "")
-        return self._reset_cached_model_local(model_id)
-
     def materialize_run(
         self,
         ctx: PipelineContext,
@@ -3652,8 +3581,8 @@ class StudioManager:
                 previews = select_previews()
         record_materialize_timing("materialize_video_frame_extract_ms", t_video_frame)
 
-        # Inference persists model outputs. Viewer conversion and viewport
-        # manifests belong to the optional presentation adapter.
+        # Inference persists model outputs. Viewer conversion belongs to the
+        # optional presentation adapter.
         preview_model = previews["preview_model"]
         rrd_path = previews["rrd_path"]
         materialize_timings["materialize_preview_convert_ms"] = 0.0
@@ -3711,7 +3640,6 @@ class StudioManager:
             }
 
         artifact_list = sorted(saved_artifacts)
-        materialize_timings["materialize_viewports_ms"] = 0.0
         materialize_timings["materialize_total_ms"] = (time.perf_counter() - materialize_t0) * 1000.0
         metadata_payload["studio_performance"] = {
             key: round(float(value), 3) for key, value in materialize_timings.items()
@@ -3869,16 +3797,3 @@ class StudioManager:
         return message
 
 
-def recent_runs_table(records: Sequence[RunRecord]) -> list[list[str]]:
-    rows = []
-    for record in records:
-        rows.append(
-            [
-                record.run_id,
-                record.display_name,
-                record.mode,
-                record.status,
-                Path(record.output_dir).name,
-            ]
-        )
-    return rows

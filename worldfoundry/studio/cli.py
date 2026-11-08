@@ -22,7 +22,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     """Launch a standalone Studio browser frontend."""
 
     _prepare_cuda_allocator()
-    from worldfoundry.studio.ui.launcher import main as standalone_main
+    from worldfoundry.studio.visualization.launcher import main as standalone_main
 
     standalone_main(argv)
 

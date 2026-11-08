@@ -41,7 +41,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base impo
 )
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils import io
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.geometry import project_points_to_panorama, se3_to_so3, so3_to_se3
-from worldfoundry.studio.visualization.plugins.scene3d.projection import save_projection_video
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.visualization import save_projection_video
 
 from . import AnnotationPipelineOutput, Pipeline
 from .processors import EquirectProjectionProcessor, TrackAnythingProcessor

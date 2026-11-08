@@ -34,7 +34,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base impo
 )
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils import io
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
-from worldfoundry.studio.visualization.plugins.scene3d.projection import save_projection_video
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.visualization import save_projection_video
 
 from . import AnnotationPipelineOutput, Pipeline
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.adaptive_models import AdaptiveDepthModels

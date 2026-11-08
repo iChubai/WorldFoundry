@@ -13,7 +13,7 @@ import ast
 from pathlib import Path
 
 WORKSPACE_APP_PATH = (
-    Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "serving" / "workspace.py"
+    Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "workspace" / "app.py"
 )
 
 
@@ -27,7 +27,7 @@ def test_no_preexec_fn_in_workspace_app() -> None:
         if keyword.arg == "preexec_fn"
     ]
     assert offenders == [], (
-        f"serving/workspace.py passes preexec_fn at lines {offenders}; use "
+        f"workspace/app.py passes preexec_fn at lines {offenders}; use "
         "start_new_session=True instead (thread-unsafe, SA-8/PLW1509)."
     )
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from worldfoundry.studio.inference.catalog import _cameractrl_default_load_kwargs
+from worldfoundry.studio.inference.catalog.models.video_generation import _cameractrl_default_load_kwargs
 from worldfoundry.synthesis.visual_generation.cameractrl.cameractrl_runtime.inference import (
     fuse_motion_adapter,
 )

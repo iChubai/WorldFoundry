@@ -59,7 +59,3 @@ class StudioServiceTelemetry:
         payload.update(extra)
         return payload
 
-    def record_error(self, error: object) -> None:
-        with self._lock:
-            self.failed_requests += 1
-            self.last_error = str(error)

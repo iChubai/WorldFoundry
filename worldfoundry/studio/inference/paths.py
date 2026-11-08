@@ -11,7 +11,6 @@ from worldfoundry.runtime.env import (
     first_env_path,
     resolve_cache_dir,
     resolve_ckpt_dir,
-    resolve_data_dir,
     resolve_hf_cache_dir,
     resolve_hfd_root,
     resolve_model_dir,
@@ -172,19 +171,3 @@ def studio_hfd_cache_roots(
     )
 
 
-def studio_path_summary(env: EnvMapping | None = None) -> dict[str, str | list[str]]:
-    """Build a startup-safe summary of Studio filesystem roots.
-
-    Args:
-        env: Optional environment mapping; defaults to the process environment.
-    """
-
-    environ = os.environ if env is None else env
-    return {
-        "workspace_root": str(studio_workspace_root(environ)),
-        "data_dir": str(resolve_data_dir(environ)),
-        "model_dir": str(resolve_model_dir(environ)),
-        "cache_dir": str(resolve_cache_dir(environ)),
-        "model_roots": [str(path) for path in studio_model_roots(environ)],
-        "hfd_cache_roots": [str(path) for path in studio_hfd_cache_roots(environ)],
-    }

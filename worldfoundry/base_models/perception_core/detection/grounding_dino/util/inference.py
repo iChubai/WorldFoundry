@@ -157,7 +157,7 @@ def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor
     h, w, _ = image_source.shape
     boxes = boxes * torch.Tensor([w, h, w, h])
     xyxy = box_convert(boxes=boxes, in_fmt="cxcywh", out_fmt="xyxy").numpy()
-    from worldfoundry.studio.visualization.plugins.perception.render import render_detections
+    from worldfoundry.base_models.perception_core.visualization.render import render_detections
 
     rendered = render_detections(image_source, xyxy, labels=phrases, scores=logits.tolist())
     return cv2.cvtColor(rendered, cv2.COLOR_RGB2BGR)

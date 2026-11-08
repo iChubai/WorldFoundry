@@ -145,7 +145,7 @@ setup 后启动 Workspace：
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 PYTHONPATH=. WORLDFOUNDRY_WORKSPACE_MAX_JOBS=8 \
-python -m worldfoundry.studio.serving.workspace --host 127.0.0.1 --port 7870
+python -m worldfoundry.studio.workspace.app --host 127.0.0.1 --port 7870
 ```
 
 如果 datasets 或 checkpoints 要放到共享存储，显式传入路径：

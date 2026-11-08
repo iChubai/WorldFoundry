@@ -19,15 +19,10 @@ def extract_scores_from_result(response):
     scores = []
 
     for match in because_matches:
-        start_idx = match.start()
-
-        # The score is the last number before "because"; search the reversed prefix for it.
-        preceding_content = response[:start_idx]
-        preceding_number_match = re.search(r"\d+", preceding_content[::-1])
-
-        if preceding_number_match:
-            number = preceding_number_match.group()[::-1]
-            scores.append(int(number))
+        # The score is the last number before "because".
+        preceding_numbers = re.findall(r"\d+", response[: match.start()])
+        if preceding_numbers:
+            scores.append(int(preceding_numbers[-1]))
 
     return scores
 

@@ -4,6 +4,20 @@ from pathlib import Path
 from .utils import get_prompt_from_filename, load_json, save_json
 
 
+def _prompts_to_process(prompt_list):
+    """Return a single prompt string, the values of a prompt mapping, or the prompts of a sequence as a list."""
+    if isinstance(prompt_list, str):
+        return [prompt_list]
+    if isinstance(prompt_list, dict):
+        return list(prompt_list.values())
+    return list(prompt_list)
+
+
+def _model_dirs(dimension_path):
+    """Return the names of the model directories directly inside ``dimension_path``."""
+    return [name for name in os.listdir(dimension_path) if os.path.isdir(os.path.join(dimension_path, name))]
+
+
 class VideoBench:
     def __init__(self, full_info_dir, output_path, config_path):
         """
@@ -71,13 +85,7 @@ class VideoBench:
             self.check_dimension_requires_extra_info(dimension_list)
             actual_dimensions = {dimension_mapping[dim] for dim in dimension_list}
 
-            prompts_to_process = []
-            if isinstance(prompt_list, str):
-                prompts_to_process.append(prompt_list)
-            elif isinstance(prompt_list, dict):
-                prompts_to_process.extend(prompt_list.values())
-            else:
-                prompts_to_process.extend(prompt_list)
+            prompts_to_process = _prompts_to_process(prompt_list)
             print(f"Prompts to process: {prompts_to_process}")
             for prompt in prompts_to_process:
                 videos_by_prompt = {}
@@ -86,11 +94,7 @@ class VideoBench:
                     dimension_path = os.path.join(videos_path, actual_dim)
                     if os.path.exists(dimension_path):
                         # Every model directory is searched.
-                        available_models = [
-                            name
-                            for name in os.listdir(dimension_path)
-                            if os.path.isdir(os.path.join(dimension_path, name))
-                        ]
+                        available_models = _model_dirs(dimension_path)
                         for model_name in available_models:
                             model_path = os.path.join(dimension_path, model_name)
                             if os.path.isdir(model_path):
@@ -123,13 +127,7 @@ class VideoBench:
             full_info_list = load_json(self.full_info_dir)
             all_prompts = [item["prompt"] for item in full_info_list]
 
-            prompts_to_process = []
-            if isinstance(prompt_list, str):
-                prompts_to_process.append(prompt_list)
-            elif isinstance(prompt_list, dict):
-                prompts_to_process.extend(prompt_list.values())
-            else:
-                prompts_to_process.extend(prompt_list)
+            prompts_to_process = _prompts_to_process(prompt_list)
 
             for prompt in prompts_to_process:
                 # Benchmark prompt closest to the requested one, used when no file name contains it.
@@ -145,11 +143,7 @@ class VideoBench:
                 for actual_dim in actual_dimensions:
                     dimension_path = os.path.join(videos_path, actual_dim)
                     if os.path.exists(dimension_path):
-                        available_models = [
-                            name
-                            for name in os.listdir(dimension_path)
-                            if os.path.isdir(os.path.join(dimension_path, name))
-                        ]
+                        available_models = _model_dirs(dimension_path)
                         for model_name in available_models:
                             model_path = os.path.join(dimension_path, model_name)
 
@@ -197,11 +191,7 @@ class VideoBench:
                     for actual_dim in actual_dimensions:
                         dimension_path = os.path.join(videos_path, actual_dim)
                         if os.path.exists(dimension_path):
-                            available_models = [
-                                name
-                                for name in os.listdir(dimension_path)
-                                if os.path.isdir(os.path.join(dimension_path, name))
-                            ]
+                            available_models = _model_dirs(dimension_path)
                             # Videos are named "<prompt>.mp4" or "<prompt>_<0|1|2>.mp4"; each suffix forms one group.
                             suffix_videos = {idx: {} for idx in range(3)}
                             no_suffix_videos = {}
@@ -268,33 +258,20 @@ class VideoBench:
 
             if dimension in VideoTextAlignment_dimensions:
                 from .VideoTextAlignment import eval
-
-                results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
-
             elif dimension in static_dimensions:
                 if mode == "custom_static":
                     from .staticquality_customized import eval
-
-                    results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
                 else:
                     from .staticquality import eval
-
-                    results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
-
             elif dimension in dynamic_dimensions:
                 if mode == "custom_nonstatic":
                     from .dynamicquality_gridview_customized import eval
-
-                    results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
                 else:
                     from .dynamicquality import eval
-
-                    results = eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
-
             else:
                 raise ValueError(f"Unknown dimension: {dimension}")
 
-            return results
+            return eval(self.config, prompt[dimension], dimension, cur_full_info_path, models)
 
         except Exception as e:
             print(f"Error evaluating {dimension}: {e}")
@@ -342,17 +319,11 @@ class VideoBench:
                     dimension_results["history"], os.path.join(dimension_output_dir, f"{name}_history_results.json")
                 )
 
-                combined_scores = {
-                    "average_scores": dimension_results.get("average_scores", {}),
-                    "scores": dimension_results.get("score", {}),
-                }
-                save_json(combined_scores, os.path.join(dimension_output_dir, f"{name}_score_results.json"))
-            else:
-                combined_scores = {
-                    "average_scores": dimension_results.get("average_scores", {}),
-                    "scores": dimension_results.get("score", {}),
-                }
-                save_json(combined_scores, os.path.join(dimension_output_dir, f"{name}_score_results.json"))
+            combined_scores = {
+                "average_scores": dimension_results.get("average_scores", {}),
+                "scores": dimension_results.get("score", {}),
+            }
+            save_json(combined_scores, os.path.join(dimension_output_dir, f"{name}_score_results.json"))
 
             results[dimension] = dimension_results
 

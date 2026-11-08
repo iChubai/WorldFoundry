@@ -40,7 +40,7 @@ def extract_frames(video_path, output_folder, num_frames=8):
         return
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frames_to_capture = set([0, total_frames - 1])
+    frames_to_capture = {0, total_frames - 1}
     frames_interval = (total_frames - 1) // (num_frames - 1)
     for i in range(1, num_frames - 1):
         frames_to_capture.add(i * frames_interval)

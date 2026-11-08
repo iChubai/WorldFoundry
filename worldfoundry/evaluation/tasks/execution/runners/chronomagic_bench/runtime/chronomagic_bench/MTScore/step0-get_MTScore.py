@@ -51,14 +51,14 @@ def retry_setup(config, max_attempts=3, delay=2):
             print(f"Attempt {attempts + 1} failed: {e}")
             attempts += 1
             if attempts == max_attempts:
-                raise Exception("All attempts failed.")
+                raise Exception("All attempts failed.")  # noqa: B904 - Preserve the implicit context.
             print(f"Retrying in {delay} seconds...")
             time.sleep(delay)
 
 
 def calculate_video_score(video_path, text_to_index, text_candidates, intern_model, config):
     video = cv2.VideoCapture(video_path)
-    frames = [x for x in _frame_from_video(video)]
+    frames = list(_frame_from_video(video))
 
     texts, probs = retrieve_text(frames, text_candidates, model=intern_model, topk=5, config=config)
 
@@ -101,7 +101,7 @@ def main():
 
     try:
         config = Config.from_file(args.config_path)
-    except:
+    except BaseException:
         config = Config.from_file(args.config_path.replace("configs/", "MTScore/configs/"))
 
     config = eval_dict_leaf(config)

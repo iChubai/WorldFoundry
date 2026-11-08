@@ -4,16 +4,13 @@ import argparse
 import ast
 import importlib.util
 import json
-import os
 import os.path as osp
 import re
-import shutil
-import tempfile
 from copy import deepcopy
 
 import yaml
 
-__all__ = ["Config", "pretty_text"]
+__all__ = ["Config", "pretty_text"]  # noqa: F822 - Upstream export list; pretty_text is a Config classmethod and nothing star-imports this module.
 
 
 BASE_KEY = "_base_"
@@ -143,7 +140,7 @@ class EasyDict(dict):
         for k, v in d.items():
             setattr(self, k, v)
         # Class attributes
-        for k in self.__class__.__dict__.keys():
+        for k in self.__class__.__dict__:
             if not (k.startswith("__") and k.endswith("__")) and k not in ("update", "pop"):
                 setattr(self, k, getattr(self, k))
 
@@ -152,13 +149,13 @@ class EasyDict(dict):
             value = [self.__class__(x) if isinstance(x, dict) else x for x in value]
         elif isinstance(value, dict) and not isinstance(value, self.__class__):
             value = self.__class__(value)
-        super(EasyDict, self).__setattr__(name, value)
-        super(EasyDict, self).__setitem__(name, value)
+        super().__setattr__(name, value)
+        super().__setitem__(name, value)
 
     __setitem__ = __setattr__
 
     def update(self, e=None, **f):
-        d = e or dict()
+        d = e or {}
         d.update(f)
         for k in d:
             setattr(self, k, d[k])
@@ -166,7 +163,7 @@ class EasyDict(dict):
     def pop(self, k, d=None):
         if hasattr(self, k):
             delattr(self, k)
-        return super(EasyDict, self).pop(k, d)
+        return super().pop(k, d)
 
 
 class Config:
@@ -207,10 +204,11 @@ class Config:
         """
         if savepath is None:
             savepath = osp.join(cfg.WORKSPACE, "config.json")
-        json.dump(cfg, open(savepath, "w"), indent=2)
+        with open(savepath, "w") as f:
+            json.dump(cfg, f, indent=2)
 
     @classmethod
-    def get_config(cls, default_config: dict = None):
+    def get_config(cls, default_config: dict | None = None):
         """get a `Config` instance.
 
         Args:
@@ -270,9 +268,11 @@ class Config:
             cfg_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
 
         elif filepath.endswith((".yml", ".yaml")):
-            cfg_dict = yaml.load(open(filepath), Loader=yaml.Loader)
+            with open(filepath) as f:
+                cfg_dict = yaml.load(f, Loader=yaml.Loader)
         elif filepath.endswith(".json"):
-            cfg_dict = json.load(open(filepath))
+            with open(filepath) as f:
+                cfg_dict = json.load(f)
         else:
             raise OSError("Only py/yml/yaml/json type are supported now!")
 
@@ -285,12 +285,12 @@ class Config:
             base_filename = cfg_dict.pop(BASE_KEY)
             base_filename = base_filename if isinstance(base_filename, list) else [base_filename]
 
-            cfg_dict_list = list()
+            cfg_dict_list = []
             for f in base_filename:
                 _cfg_dict = Config.from_file(osp.join(cfg_dir, f))
                 cfg_dict_list.append(_cfg_dict)
 
-            base_cfg_dict = dict()
+            base_cfg_dict = {}
             for c in cfg_dict_list:
                 if len(base_cfg_dict.keys() & c.keys()) > 0:
                     raise KeyError("Duplicate key is not allowed among bases")
@@ -408,6 +408,6 @@ def eval_string(string, d):
 
     try:
         v = ast.literal_eval(string)
-    except:
+    except BaseException:
         v = string
     return v

@@ -152,13 +152,12 @@ def call_gpt(prompt, model_name="gpt-4o-2024-05-13"):
 def save_output(video_id, prompt, output_file):
     if not has_been_processed(video_id, output_file):
         result = call_gpt(prompt)
-        with file_lock:
-            with open(output_file, "r+", encoding="utf-8") as f:
-                data = json.load(f)
-                data[video_id] = result
-                f.seek(0)
-                json.dump(data, f, indent=4)
-                f.truncate()
+        with file_lock, open(output_file, "r+", encoding="utf-8") as f:
+            data = json.load(f)
+            data[video_id] = result
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
         print(f"Processed and saved output for Video ID {video_id}")
 
 

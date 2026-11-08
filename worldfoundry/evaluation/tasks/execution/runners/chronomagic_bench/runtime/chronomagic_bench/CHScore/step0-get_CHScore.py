@@ -38,13 +38,12 @@ def read_video_from_path(path, size=None):
         return None
 
     frames = []
-    for i, im in enumerate(reader):
+    for _i, im in enumerate(reader):
         image = Image.fromarray(im)
-        if size is not None:
-            if min(image.size) > size:
-                scale = size / min(image.size)
-                new_size = (int(image.size[0] * scale), int(image.size[1] * scale))
-                image = image.resize(new_size, Image.Resampling.LANCZOS)
+        if size is not None and min(image.size) > size:
+            scale = size / min(image.size)
+            new_size = (int(image.size[0] * scale), int(image.size[1] * scale))
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
 
         frames.append(np.array(image))
     return np.stack(frames)
@@ -180,7 +179,7 @@ def main(args):
                 else:
                     all_scores_data = []
 
-                processed_video_names = {list(video_scores.keys())[0] for video_scores in all_scores_data}
+                processed_video_names = {list(video_scores.keys())[0] for video_scores in all_scores_data}  # noqa: RUF015 - Keeps the eager IndexError for an empty record.
 
                 for video_file in tqdm(os.listdir(input_dir), unit="video", leave=False):
                     if video_file.endswith(".mp4"):
@@ -200,7 +199,7 @@ def main(args):
                         all_scores_data.append({video_name: scores})
 
                 total_average_score = (
-                    sum([list(video_scores.values())[0]["TSI_score"] for video_scores in all_scores_data])
+                    sum([list(video_scores.values())[0]["TSI_score"] for video_scores in all_scores_data])  # noqa: RUF015 - Keeps the eager IndexError for an empty record.
                     / len(all_scores_data)
                     if all_scores_data
                     else 0
@@ -225,7 +224,7 @@ def main(args):
             else:
                 all_scores_data = []
 
-            processed_video_names = {list(video_scores.keys())[0] for video_scores in all_scores_data}
+            processed_video_names = {list(video_scores.keys())[0] for video_scores in all_scores_data}  # noqa: RUF015 - Keeps the eager IndexError for an empty record.
 
             for video_file in tqdm(os.listdir(input_dir), unit="video", leave=False):
                 if video_file.endswith(".mp4"):
@@ -245,7 +244,7 @@ def main(args):
                     all_scores_data.append({video_name: scores})
 
             total_average_score = (
-                sum([list(video_scores.values())[0]["TSI_score"] for video_scores in all_scores_data])
+                sum([list(video_scores.values())[0]["TSI_score"] for video_scores in all_scores_data])  # noqa: RUF015 - Keeps the eager IndexError for an empty record.
                 / len(all_scores_data)
                 if all_scores_data
                 else 0

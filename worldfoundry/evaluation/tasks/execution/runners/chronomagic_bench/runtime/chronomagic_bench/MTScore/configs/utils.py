@@ -32,7 +32,7 @@ def normalize(data):
     return (data / 255.0 - v_mean) / v_std
 
 
-def frames2tensor(vid_list, fnum=8, target_size=(224, 224), device=torch.device("cuda")):
+def frames2tensor(vid_list, fnum=8, target_size=(224, 224), device=torch.device("cuda")):  # noqa: B008 - Upstream default device; retain the public signature.
     assert len(vid_list) >= fnum
     step = len(vid_list) // fnum
     vid_list = vid_list[::step][:fnum]
@@ -44,7 +44,7 @@ def frames2tensor(vid_list, fnum=8, target_size=(224, 224), device=torch.device(
     return vid_tube
 
 
-def get_text_feat_dict(texts, clip, text_feat_d={}):
+def get_text_feat_dict(texts, clip, text_feat_d={}):  # noqa: B006 - Callers pass their own dict; retain the public signature.
     for t in texts:
         feat = clip.get_txt_feat(t)
         text_feat_d[t] = feat
@@ -55,7 +55,7 @@ def get_vid_feat(frames, vlm):
     return vlm.get_vid_features(frames)
 
 
-def retrieve_text(frames, texts, model, topk: int = 5, config: dict = {}, device=torch.device("cuda")):
+def retrieve_text(frames, texts, model, topk: int = 5, config: dict = {}, device=torch.device("cuda")):  # noqa: B006, B008 - Read-only default and upstream default device; retain the public signature.
     vlm = model
     vlm = vlm.to(device)
 
@@ -95,11 +95,11 @@ def setup_internvideo2(config: dict):
     ) or "s3://" in config.pretrained_path:
         checkpoint = torch.load(config.pretrained_path, map_location="cpu")
         try:
-            if "model" in checkpoint.keys():
+            if "model" in checkpoint:  # noqa: SIM108 - Commented branches.
                 state_dict = checkpoint["model"]
             else:
                 state_dict = checkpoint["module"]  # This is a deepspeed stage 1 model
-        except:
+        except BaseException:
             state_dict = checkpoint
 
         if config.get("origin_num_frames") is not None:

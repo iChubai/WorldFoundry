@@ -285,6 +285,12 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             "fastvideo_causal_wan22_i2v_14b_recipe",
             ("FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers",),
         ),
+        (
+            "self-forcing",
+            ".wan",
+            "self_forcing_wan21_t2v_1p3b_recipe",
+            ("gdhe17/Self-Forcing", "self-forcing-dmd"),
+        ),
         ("sd2-inpaint", ".stable_diffusion", "sd2_inpaint_recipe", ()),
         ("wonderworld-marigold-depth", ".stable_diffusion", "wonderworld_depth_recipe", ()),
         ("marigold-normals-v0-1", ".stable_diffusion", "marigold_normals_recipe", ()),

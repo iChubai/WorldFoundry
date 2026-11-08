@@ -35,9 +35,7 @@ body:has(.pi-doc-shell) {
   color: var(--pi-ink);
   color-scheme: light;
   flex: 1;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace, 'Noto Sans SC', sans-serif;
+  font-family: var(--pi-mono-font);
   font-size: 14px;
   line-height: 1.52;
   min-height: 100vh;
@@ -336,13 +334,9 @@ body:has(.pi-doc-shell) {
   --pi-doc-content-width: 50rem;
 }
 
-/* Model home pages have no right TOC — keep the 50rem column centered. */
+/* Model home pages have no right TOC; they keep the same left-aligned 50rem column. */
 .pi-doc-shell.pi-doc-shell-model-detail {
   --pi-doc-content-width: 50rem;
-}
-
-.pi-doc-shell-model-detail .pi-doc-article-inner {
-  margin-inline: auto;
 }
 
 .pi-doc-shell-model-detail .pi-doc-description {
@@ -356,7 +350,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-doc-shell-benchmark-detail .pi-doc-main {
-  padding: 20px 18px 28px;
+  padding-block: 20px 28px;
 }
 
 .pi-doc-shell-benchmark-detail .pi-doc-breadcrumb {
@@ -373,6 +367,13 @@ body:has(.pi-doc-shell) {
 
 .pi-doc-shell-benchmark-detail .pi-doc-title-heading .wf-model-mark-large {
   width: 48px;
+}
+
+.pi-doc-shell-benchmark-detail .pi-doc-title-heading .wf-model-mark-large.has-logo {
+  height: 48px;
+  max-width: 144px;
+  min-width: 48px;
+  width: auto;
 }
 
 .pi-doc-shell-benchmark-detail .pi-doc-title-row h1 {
@@ -781,7 +782,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-open-hero h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--pi-brand-font);
   font-size: clamp(44px, 8vw, 76px);
   font-weight: 400;
   line-height: 0.98;
@@ -871,11 +872,16 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-ecosystem-hero h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--pi-brand-font);
   font-size: clamp(52px, 9vw, 88px);
   font-weight: 400;
   line-height: 0.98;
   margin: 0 0 14px;
+}
+
+.pi-ecosystem-hero .pi-label,
+.pi-open-hero .pi-label {
+  margin: 0 0 12px;
 }
 
 .pi-ecosystem-hero p:not(.pi-label) {
@@ -930,7 +936,7 @@ body:has(.pi-doc-shell) {
   width: 100%;
 }
 
-.pi-coming-soon h2 {
+.pi-open-section.pi-coming-soon h2 {
   border-top: none;
   margin-bottom: 10px;
   padding-top: 0;
@@ -946,7 +952,7 @@ body:has(.pi-doc-shell) {
 
 .pi-open-section h2 {
   border-top: 1px solid var(--pi-line);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--pi-brand-font);
   font-size: 28px;
   font-weight: 400;
   line-height: 1.1;
@@ -1023,7 +1029,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-footer p {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--pi-brand-font);
   font-size: 18px;
   margin: 0;
 }
@@ -1405,7 +1411,7 @@ body:has(.pi-doc-shell) {
   animation-delay: calc(var(--pi-workflow-index) * 2.15s);
   border: 1px solid color-mix(in srgb, white 18%, var(--pi-ink));
   border-radius: 999px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   line-height: 1;
   position: absolute;
@@ -1853,7 +1859,7 @@ body:has(.pi-doc-shell) {
 .pi-doc-link-child {
   color: var(--pi-muted);
   font-size: 0.8125rem;
-  margin-left: 0.35rem;
+  margin-left: 1.55rem;
   padding: 0.35rem 0.55rem 0.35rem calc(0.55rem - 2px);
 }
 
@@ -2083,6 +2089,22 @@ body:has(.pi-doc-shell) {
 
 .pi-doc-title-heading .wf-model-mark-large {
   width: 56px;
+}
+
+/* Wide wordmarks keep their aspect ratio in page titles instead of shrinking into a square. */
+.pi-doc-title-heading .wf-model-mark-large.has-logo {
+  aspect-ratio: auto;
+  display: inline-flex;
+  height: 56px;
+  justify-content: center;
+  max-width: 168px;
+  min-width: 56px;
+  width: auto;
+}
+
+.pi-doc-title-heading .wf-model-mark-large.has-logo .wf-model-mark-image {
+  max-width: 100%;
+  width: auto;
 }
 
 .pi-doc-title-row h1 {
@@ -2412,7 +2434,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-metric-quick-nav {
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--pi-elevated) 55%, transparent);
   border: 1px solid var(--pi-line);
   margin: 20px 0 28px;
 }
@@ -2476,7 +2498,7 @@ body:has(.pi-doc-shell) {
 .pi-metric-quick-nav-list a {
   color: var(--pi-muted);
   display: inline-block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   line-height: 1.45;
   padding: 2px 0;
@@ -3102,6 +3124,8 @@ body:has(.pi-doc-shell) {
   border-radius: 0 !important;
   box-shadow: none !important;
   margin: -1rem !important;
+  max-width: none;
+  width: auto;
 }
 
 .pi-doc-content .wf-docs-tabs-panel > figure.shiki:last-child:not(:only-child) {
@@ -3110,6 +3134,8 @@ body:has(.pi-doc-shell) {
   border-top: 1px solid var(--pi-line) !important;
   box-shadow: none !important;
   margin: 0.75rem -1rem -1rem !important;
+  max-width: none;
+  width: auto;
 }
 
 .pi-doc-content .fd-step figure.shiki {
@@ -3179,7 +3205,7 @@ body:has(.pi-doc-shell) {
 
 .pi-doc-content figure.shiki > div.flex.items-center.gap-2 figcaption {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
 }
 
 .pi-doc-content > :last-child {
@@ -3276,7 +3302,7 @@ body:has(.pi-doc-shell) {
   border: 1px solid color-mix(in srgb, var(--pi-ink) 10%, var(--pi-line)) !important;
   box-shadow: 0 8px 22px color-mix(in srgb, var(--pi-ink) 4%, transparent);
   color: var(--pi-ink) !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--pi-mono-font);
   font-size: var(--pi-doc-pre-size);
   letter-spacing: 0;
   line-height: var(--pi-doc-pre-leading);
@@ -3301,7 +3327,7 @@ body:has(.pi-doc-shell) {
 
 .pi-doc-content figure.shiki code {
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--pi-mono-font);
   font-size: var(--pi-doc-pre-size);
   letter-spacing: 0;
   line-height: var(--pi-doc-pre-leading);
@@ -3329,7 +3355,7 @@ body:has(.pi-doc-shell) {
   border: 0;
   color: var(--pi-ink);
   font-size: var(--pi-doc-code-size);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   padding: 0;
 }
@@ -3410,7 +3436,7 @@ body:has(.pi-doc-shell) {
 }
 
 .wf-api-symbol-name code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.95em;
   font-weight: 600;
 }
@@ -3546,7 +3572,7 @@ body:has(.pi-doc-shell) {
 
 .wf-api-sig-code {
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12.5px;
   font-weight: 400;
   line-height: 1.55;
@@ -3626,7 +3652,7 @@ body:has(.pi-doc-shell) {
 .wf-api-meta-value {
   color: var(--pi-muted);
   flex: 0 1 auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   line-height: 1.45;
   min-width: 0;
@@ -3770,7 +3796,7 @@ body:has(.pi-doc-shell) {
 
 .wf-api-parameter-name {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 13px;
   font-weight: 600;
 }
@@ -3784,7 +3810,7 @@ body:has(.pi-doc-shell) {
 
 .wf-api-type {
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -3865,13 +3891,9 @@ body:has(.pi-doc-shell) {
 
 .wf-api-catalog-section-head h2 {
   border: 0;
-  color: var(--pi-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  color: var(--pi-ink);
   margin: 0 0 6px;
   padding: 0;
-  text-transform: none;
 }
 
 .wf-api-catalog-section-head p {
@@ -3905,7 +3927,7 @@ body:has(.pi-doc-shell) {
 
 .wf-api-catalog-card .pi-kv-read.wf-api-catalog-symbols,
 .wf-api-catalog-symbols {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.75rem;
   grid-column: 1 / -1;
   letter-spacing: -0.01em;
@@ -4457,7 +4479,7 @@ body:has(.pi-doc-shell) {
   border: 0;
   color: var(--pi-ink);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.75rem;
   line-height: 1.45;
   padding: 0;
@@ -4584,7 +4606,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-doc-content .pi-kv-catalog .pi-kv-names code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
 }
 
 .pi-doc-content .pi-kv-catalog kbd {
@@ -4595,7 +4617,7 @@ body:has(.pi-doc-shell) {
   box-shadow: none;
   color: var(--pi-ink);
   display: inline-flex;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -4778,7 +4800,7 @@ body:has(.pi-doc-shell) {
 }
 
 .pi-doc-content :where([role='tablist']) {
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--pi-elevated) 55%, transparent);
   border: 1px solid var(--pi-line);
 }
 
@@ -4913,8 +4935,9 @@ body:has(.pi-doc-shell) {
     margin-left: 0;
   }
 
-  .pi-doc-link-child {
-    margin-left: 18px;
+  .pi-doc-link-child,
+  .pi-doc-link-deep {
+    margin-left: 1.55rem;
   }
 }
 
@@ -5073,7 +5096,7 @@ body:has(.pi-doc-shell) {
 
 .wf-system-workflow-index {
   color: var(--pi-brand-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -5098,7 +5121,7 @@ body:has(.pi-doc-shell) {
 
 .wf-system-workflow-stage .wf-system-workflow-label {
   color: var(--pi-brand-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -5158,7 +5181,7 @@ body:has(.pi-doc-shell) {
   border-radius: 4px;
   color: var(--pi-brand-accent);
   display: inline-flex;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 650;
   gap: 0.35rem;
@@ -5201,7 +5224,7 @@ body:has(.pi-doc-shell) {
 
 .wf-system-architecture-index {
   color: var(--pi-brand-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -5252,7 +5275,7 @@ body:has(.pi-doc-shell) {
   color: var(--pi-ink);
   display: inline-flex;
   flex: none;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   letter-spacing: 0;
   line-height: 1.2;
@@ -5372,7 +5395,7 @@ body:has(.pi-doc-shell) {
 .wf-home-workflow-section,
 .wf-home-community,
 .wf-home-resources {
-  padding: clamp(88px, 10vw, 128px) 0;
+  padding: clamp(64px, 7vw, 96px) 0;
   position: relative;
 }
 
@@ -5603,7 +5626,7 @@ body:has(.pi-doc-shell) {
 .wf-progression-spine-index {
   color: var(--pi-brand-accent);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -5687,7 +5710,7 @@ body:has(.pi-doc-shell) {
 
 .wf-home-capability-index {
   color: var(--pi-brand-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -5987,7 +6010,7 @@ body:has(.pi-doc-shell) {
   animation: wf-home-workflow-rail-label 12s ease-out infinite;
   animation-delay: calc(var(--wf-rail-index) * 2.35s);
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -6269,7 +6292,7 @@ body:has(.pi-doc-shell) {
   background: color-mix(in srgb, var(--wf-band-a) 72%, var(--wf-surface));
   border-top: 1px solid color-mix(in srgb, var(--pi-ink) 8%, transparent);
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   letter-spacing: 0.01em;
   line-height: 1.65;
@@ -6684,7 +6707,7 @@ a.wf-catalog-entry {
 
 .wf-catalog-entry-id {
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   font-weight: 550;
   opacity: 0.4;
@@ -7081,7 +7104,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   .wf-home-workflow-section,
   .wf-home-community,
   .wf-home-resources {
-    padding: 72px 0;
+    padding: 56px 0;
   }
 
   .wf-home-center-intro {
@@ -7292,6 +7315,15 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   cursor: pointer;
 }
 
+@media (max-width: 640px) {
+  /* The stacked full-width CTAs occupy the bottom of the card. */
+  .wf-home-hero-play {
+    bottom: auto;
+    right: 12px;
+    top: 12px;
+  }
+}
+
 .wf-home-hero-content {
   animation: none;
 }
@@ -7322,16 +7354,16 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 .wf-home-hero-catalog-link {
   animation-delay: 440ms;
   align-items: center;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.9);
   display: inline-flex;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-family: var(--pi-mono-font);
+  font-size: 12px;
   gap: 7px;
   justify-content: flex-start;
   letter-spacing: 0.02em;
   margin-top: 15px;
   text-decoration: none;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   transition: color 160ms ease, gap 160ms ease;
 }
 
@@ -7510,7 +7542,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-home-configurator-controls span {
   color: var(--pi-brand-accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -7588,7 +7620,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-home-configurator-terminal-head > span {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 0.08em;
@@ -7688,7 +7720,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 .wf-home-configurator-terminal code {
   color: var(--pi-ink);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   line-height: 1.8;
   overflow-wrap: anywhere;
@@ -7707,7 +7739,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-home-configurator-terminal footer span {
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 10px;
 }
 
@@ -8004,7 +8036,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 }
 
 .wf-model-mark > span {
-  font-family: "Iowan Old Style", Palatino, Georgia, "Times New Roman", serif;
+  font-family: var(--pi-brand-font), Georgia, 'Times New Roman', serif;
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.08em;
@@ -8230,7 +8262,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   color: var(--pi-muted);
   display: flex;
   flex-wrap: wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   gap: 8px;
   justify-content: flex-end;
@@ -8315,7 +8347,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   background: transparent;
   border-radius: 0;
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1;
@@ -8335,7 +8367,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .pi-doc-content .wf-recipe-catalog-toolbar > p {
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
 }
 
@@ -8821,7 +8853,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   background: transparent;
   color: var(--pi-ink);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.8125rem;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -8837,7 +8869,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   background: transparent;
   color: var(--pi-muted);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.6875rem;
   font-weight: 400;
   letter-spacing: -0.02em;
@@ -9023,7 +9055,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 }
 
 .wf-command-builder-runtime code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-weight: 500;
 }
 
@@ -9145,7 +9177,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   background: transparent;
   border: 0;
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0;
@@ -9167,7 +9199,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-command-builder-disclosure code {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0;
@@ -9286,7 +9318,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 .wf-command-builder-contract-row-name {
   color: var(--pi-ink);
   flex: none;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   font-weight: 650;
   line-height: 1.25;
@@ -9305,7 +9337,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   color: var(--pi-ink);
   display: block;
   flex: none;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   font-weight: 550;
   justify-self: end;
@@ -9421,7 +9453,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-command-builder-field-default code {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -9480,7 +9512,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
 .wf-command-builder-value code {
   color: var(--pi-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   line-height: 1.5;
   white-space: pre;
@@ -9515,7 +9547,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   border: 0;
   border-radius: 0;
   color: var(--pi-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 11px;
   padding: 0;
 }
@@ -9716,7 +9748,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 .wf-command-builder-code code {
   color: var(--pi-ink);
   display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--pi-mono-font);
   font-size: 13px;
   height: auto;
   line-height: 1.7;
@@ -9902,6 +9934,13 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 
   .pi-doc-title-heading .wf-model-mark-large {
     width: 54px;
+  }
+
+  .pi-doc-title-heading .wf-model-mark-large.has-logo {
+    height: 54px;
+    max-width: 150px;
+    min-width: 54px;
+    width: auto;
   }
 
   .wf-recipe-catalog-toolbar {

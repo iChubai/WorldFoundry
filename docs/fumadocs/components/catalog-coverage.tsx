@@ -66,8 +66,9 @@ function EntryRow({
   );
 }
 
-export function CatalogCoverage() {
-  const { modelsTotal, benchmarksTotal, modelFamilies, benchmarkGroups } = catalogCoverage;
+/** `modelCount` is the number of published model recipes, so the totals match the model catalog. */
+export function CatalogCoverage({ modelCount }: { modelCount: number }) {
+  const { benchmarksTotal, modelFamilies, benchmarkGroups } = catalogCoverage;
   const [surface, setSurface] = useState<Surface>('models');
   const [familyId, setFamilyId] = useState(modelFamilies[0]?.id ?? 'video');
   const [groupId, setGroupId] = useState(benchmarkGroups[0]?.id ?? 'video');
@@ -127,7 +128,7 @@ export function CatalogCoverage() {
       <div className="wf-catalog-lede">
         <div className="wf-catalog-totals" aria-label="Catalog totals">
           <p>
-            <strong>{modelsTotal}</strong> models
+            <strong>{modelCount}</strong> models
             <span aria-hidden="true"> · </span>
             <strong>{benchmarksTotal}</strong> benchmarks
           </p>

@@ -166,11 +166,6 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
             </article>
           </div>
         </div>
-
-        <div className="wf-home-hero-carousel-caption" aria-live="polite">
-          <strong>{homeHeroVideo.label}</strong>
-          <span>{homeHeroVideo.caption}</span>
-        </div>
       </div>
     </div>
   );

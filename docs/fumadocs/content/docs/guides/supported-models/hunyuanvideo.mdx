@@ -19,11 +19,6 @@ The same stack also runs as HunyuanVideo-I2V. Image-to-video reconstructs the re
 
 HunyuanVideo denoises in a spatial-temporally compressed latent produced by a Causal 3D VAE. A large language model encodes the text prompt as the condition; the generator takes Gaussian noise plus that condition and outputs a latent, which the 3D VAE decoder turns into an image or a video.
 
-<figure className="wf-recipe-media is-diagram">
-  <DocsImage src="/models/hunyuanvideo/overall.png" alt="HunyuanVideo overall architecture — Causal 3D VAE, LLM text encoder, and latent diffusion" />
-  <figcaption>HunyuanVideo overall architecture — Causal 3D VAE, LLM text encoder, and latent diffusion</figcaption>
-</figure>
-
 The backbone is a Transformer with Full Attention and a Dual-stream to Single-stream layout: video and text tokens first pass through separate blocks so each modality can learn its own modulation, then they are concatenated and fused in later blocks.
 
 <figure className="wf-recipe-media is-diagram">

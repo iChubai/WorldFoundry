@@ -26,7 +26,6 @@ export type CatalogBenchmarkGroup = {
 };
 
 export type CatalogCoverageData = {
-  modelsTotal: number;
   modelsListed?: number;
   benchmarksTotal: number;
   modelFamilies: CatalogFamily[];

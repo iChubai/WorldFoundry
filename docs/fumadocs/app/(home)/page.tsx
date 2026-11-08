@@ -216,7 +216,7 @@ export default function HomePage() {
                   </Link>
                 </div>
                 <Link className="wf-home-hero-catalog-link" href="/docs/guides/supported-models">
-                  {catalogCoverage.modelsTotal} model entries · {catalogCoverage.benchmarksTotal} browsable benchmarks
+                  {modelRecipeIndex.total} models · {catalogCoverage.benchmarksTotal} browsable benchmarks
                   <ArrowRight aria-hidden="true" size={13} strokeWidth={1.7} />
                 </Link>
               </div>
@@ -275,14 +275,14 @@ export default function HomePage() {
               Catalog
             </p>
             <h2 id="wf-catalog-title">
-              {catalogCoverage.modelsTotal} model entries, <span>one</span> operational vocabulary.
+              {modelRecipeIndex.total} models, <span>one</span> operational vocabulary.
             </h2>
             <p>
               Video, 3D/4D, interactive worlds, and embodied systems share manifests and readiness
               signals. Catalog inclusion is not uniform runtime maturity.
             </p>
           </header>
-          <CatalogCoverage />
+          <CatalogCoverage modelCount={modelRecipeIndex.total} />
         </section>
 
         <section

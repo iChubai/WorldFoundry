@@ -1332,9 +1332,9 @@
   box-shadow: none;
 }
 
-/* Keep publisher marks full-color on a neutral plate in dark mode. */
+/* Publisher marks are drawn for light backgrounds; keep a light plate in dark mode. */
 .dark .wf-model-mark.has-logo {
-  background: color-mix(in srgb, var(--pi-paper) 70%, #f3efe6);
+  background: color-mix(in srgb, var(--pi-paper) 12%, #f3efe6);
   border-color: var(--pi-line);
 }
 
@@ -1692,41 +1692,20 @@
 }
 
 .wf-home-hero-card-overlay::before {
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    transparent 30%,
-    rgba(10, 9, 7, 0.58) 78%,
-    rgba(10, 9, 7, 0.72) 100%
-  );
+  /* Darken the lower-left copy area so small text stays legible over any frame. */
+  background:
+    linear-gradient(90deg, rgba(10, 9, 7, 0.5) 0%, rgba(10, 9, 7, 0.22) 45%, transparent 70%),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 24%,
+      rgba(10, 9, 7, 0.52) 64%,
+      rgba(10, 9, 7, 0.76) 100%
+    );
   content: '';
   inset: 0;
   pointer-events: none;
   position: absolute;
-}
-
-.wf-home-hero-carousel-caption {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin: 1.125rem auto 0;
-  max-width: min(96vw, 111.375rem);
-  min-height: 2.75rem;
-  text-align: center;
-  width: 100%;
-}
-
-.wf-home-hero-carousel-caption strong {
-  color: var(--pi-ink);
-  font-size: 0.875rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-}
-
-.wf-home-hero-carousel-caption span {
-  color: var(--pi-muted);
-  font-size: 0.8125rem;
-  line-height: 1.5;
 }
 
 @media (max-width: 900px) {
@@ -1780,7 +1759,7 @@
 /* ---------- Home hero: Fumadocs-style kicker ---------- */
 .wf-home-hero-kicker {
   animation: wf-hero-copy-enter 760ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
-  color: #e7d3b3;
+  color: #f2e4cc;
   font-family:
     'Noto Sans SC', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
@@ -1790,7 +1769,9 @@
   line-height: 1.45;
   margin: 0 0 0.75rem;
   max-width: 34em;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(0, 0, 0, 0.35);
   text-transform: none;
   text-wrap: balance;
 }
@@ -1967,14 +1948,44 @@
   width: 1.15rem;
 }
 
+/* One header row on phones: icon-only search and a single language toggle. */
 @media (max-width: 720px) {
   .pi-doc-header .pi-nav {
     display: none;
   }
 
+  .pi-doc-header .wf-home-site-header-tools {
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-left: auto;
+  }
+
   .pi-doc-header .pi-site-search-trigger {
-    min-width: 2.25rem;
-    padding-inline: 0.5rem;
+    font-size: 0 !important;
+    justify-content: center;
+    padding-inline: 0 !important;
+    width: 2.25rem;
+  }
+
+  .pi-doc-header .pi-language-switch a[aria-current='true'] {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .pi-doc-header .pi-doc-header-brand {
+    gap: 8px;
+  }
+
+  .pi-doc-header .pi-brand-display-compact {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .pi-doc-header .pi-doc-header-inner {
+    flex-wrap: wrap !important;
   }
 }
 
@@ -2018,6 +2029,41 @@
   gap: 8px;
   min-height: 0;
   padding: 8px 4px 0;
+}
+
+/* Phones: one compact row per stage instead of a tall stacked card. */
+@media (max-width: 640px) {
+  .pi-doc-welcome-workflow {
+    --pi-workflow-icon-size: 40px;
+  }
+
+  .pi-doc-welcome-workflow-track {
+    gap: 4px;
+  }
+
+  .pi-doc-welcome-workflow-card {
+    align-items: center;
+    column-gap: 14px;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    justify-items: start;
+    padding: 6px 4px;
+    row-gap: 2px;
+    text-align: left;
+  }
+
+  .pi-doc-welcome-workflow-marker {
+    grid-row: 1 / span 2;
+    height: auto;
+    width: auto;
+  }
+
+  .pi-doc-welcome-workflow-title {
+    justify-content: flex-start;
+    max-width: none;
+    min-height: 0;
+    text-align: left;
+  }
 }
 
 .pi-doc-welcome-workflow-stage:hover .pi-doc-welcome-workflow-card,

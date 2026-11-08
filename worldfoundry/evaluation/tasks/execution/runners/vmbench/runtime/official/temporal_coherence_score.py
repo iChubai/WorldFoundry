@@ -422,10 +422,8 @@ if __name__ == "__main__":
             for _idx, obj_info in enumerate(appear_objects):
                 mask = obj_info["mask"]
                 frame = obj_info["first_appearance"]
-                # 确保 mask 是二维数组
                 if mask.ndim != 2:
                     continue
-                # 将 mask 转换为 PIL Image
                 image = Image.fromarray((mask * 255).astype(np.uint8), mode="L")
                 appear_mask_list.append(image)
                 query_frames.append(frame)

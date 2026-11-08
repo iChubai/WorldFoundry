@@ -134,7 +134,7 @@ class CommonUtils:
             colored_mask = np.zeros_like(image)
             for uid in unique_ids:
                 colored_mask[mask == uid] = colors[uid]
-            alpha = 0.5  # 调整 alpha 值以改变透明度
+            alpha = 0.5  # mask opacity
             output_image = cv2.addWeighted(image, 1 - alpha, colored_mask, alpha, 0)
 
             file_path = os.path.join(json_path, "mask_" + raw_image_name.split(".")[0] + ".json")

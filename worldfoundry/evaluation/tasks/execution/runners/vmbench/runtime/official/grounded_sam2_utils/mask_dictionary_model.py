@@ -145,19 +145,17 @@ class ObjectInfo:
         return self.instance_id
 
     def update_box(self):
-        # 找到所有非零值的索引
         nonzero_indices = torch.nonzero(self.mask)
 
-        # 如果没有非零值，返回一个空的边界框
+        # An empty mask leaves the box unchanged.
         if nonzero_indices.size(0) == 0:
             # print("nonzero_indices", nonzero_indices)
             return []
 
-        # 计算最小和最大索引
         y_min, x_min = torch.min(nonzero_indices, dim=0)[0]
         y_max, x_max = torch.max(nonzero_indices, dim=0)[0]
 
-        # 创建边界框 [x_min, y_min, x_max, y_max]
+        # Inclusive pixel bounds [x_min, y_min, x_max, y_max].
         bbox = [x_min.item(), y_min.item(), x_max.item(), y_max.item()]
         self.x1 = bbox[0]
         self.y1 = bbox[1]

@@ -78,8 +78,7 @@ class ResnetBlock3D(nn.Module):
 class TemporalDownsample(nn.Module):
     def __init__(self, channels):
         super().__init__()
-        # 时序下采样: kernel=3, stride=(2,1,1), padding=(1,1,1)
-        # T -> T/2, H, W 保持不变
+        # Temporal downsampling: T -> T/2, H and W unchanged.
         self.conv = nn.Conv3d(channels, channels, kernel_size=3, stride=(2, 1, 1), padding=(1, 1, 1))
 
     def forward(self, x):
@@ -93,14 +92,13 @@ class WanEncoderAttentionBlock(nn.Module):
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
 
-        # 内部使用 WanSelfAttention，保持与主干网络一致的 3D RoPE 和 FlashAttention
+        # WanSelfAttention keeps the backbone's 3D RoPE and FlashAttention.
         self.attn = WanSelfAttention(dim, num_heads, window_size=window_size, qk_norm=True, eps=eps)
 
         # Pre-Norm
         self.norm = WanLayerNorm(dim, eps)
 
     def _build_freqs(self, device):
-        # 构建 RoPE 频率参数
         d = self.head_dim
         freqs = torch.cat(
             [rope_params(1024, d - 4 * (d // 6)), rope_params(1024, 2 * (d // 6)), rope_params(1024, 2 * (d // 6))],
@@ -112,28 +110,27 @@ class WanEncoderAttentionBlock(nn.Module):
         # Input: (B, C, T, H, W)
         B, C, T, H, W = x.shape
 
-        # 1. 转换格式: (B, C, T, H, W) -> (B, L, C)
-        # 先 permute 到 (B, T, H, W, C)，再 flatten
+        # 1. (B, C, T, H, W) -> (B, T, H, W, C) -> (B, L, C)
         x_in = x.permute(0, 2, 3, 4, 1).flatten(1, 3)
 
         # 2. Norm
         x_norm = self.norm(x_in)
 
-        # 3. 构造 Metadata
+        # 3. Attention metadata
         # grid_sizes: [B, 3] -> [[T, H, W], ...]
         grid_sizes = torch.tensor([T, H, W], device=x.device).unsqueeze(0).repeat(B, 1)
 
         # seq_lens: [B]
         seq_lens = torch.tensor([T * H * W] * B, device=x.device, dtype=torch.long)
 
-        # freqs: RoPE (可以考虑缓存，这里为了独立性实时生成)
+        # RoPE frequencies are rebuilt on every call.
         freqs = self._build_freqs(x.device)
 
         # 4. Attention Forward
-        # Encoder 内部通常不需要 causal mask 或 ignore mask
+        # The encoder attends without a causal or ignore mask.
         x_out = self.attn(x_norm, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=freqs, token_ignore_mask=None)
 
-        # 5. Residual + 恢复形状
+        # 5. Residual and restore the shape
         x_out = x_in + x_out
 
         # (B, L, C) -> (B, T, H, W, C) -> (B, C, T, H, W)
@@ -145,12 +142,12 @@ class WanEncoderAttentionBlock(nn.Module):
 class TemporalLatentEncoder(nn.Module):
     def __init__(self, in_channels=16, hidden_dim=256, num_heads=8, use_checkpoint=True):
         """
-        高配版时序 Encoder
-        结构: ConvIn -> ResBlock*2 -> Down -> ResBlock*2 -> Down -> ResBlock -> WanAttn -> ResBlock -> ConvOut
-        输入输出: (B, 16, T, H, W) -> (B, 16, T/4, H, W)
+        Temporal latent encoder that compresses time by 4.
+        Structure: ConvIn -> ResBlock*2 -> Down -> ResBlock*2 -> Down -> ResBlock -> WanAttn -> ResBlock -> ConvOut
+        Shapes: (B, 16, T, H, W) -> (B, 16, T/4, H, W)
 
         Args:
-            use_checkpoint: 是否使用 gradient checkpointing 节省显存（默认开启）
+            use_checkpoint: Use gradient checkpointing during training to save memory.
         """
         super().__init__()
         self.use_checkpoint = use_checkpoint
@@ -171,7 +168,7 @@ class TemporalLatentEncoder(nn.Module):
         # 4. Mid Block (Res + WanAttention + Res)
         self.mid_block = nn.Sequential(
             ResnetBlock3D(hidden_dim, hidden_dim),
-            WanEncoderAttentionBlock(dim=hidden_dim, num_heads=num_heads),  # 使用 Wanx 风格 Attention
+            WanEncoderAttentionBlock(dim=hidden_dim, num_heads=num_heads),  # Wan-style attention
             ResnetBlock3D(hidden_dim, hidden_dim),
         )
 
@@ -195,7 +192,7 @@ class TemporalLatentEncoder(nn.Module):
 
         x = self.conv_in(x)
 
-        # 🔴 使用 gradient checkpointing 节省显存
+        # Gradient checkpointing saves memory during training.
         if self.use_checkpoint and self.training:
             x = checkpoint(self._forward_down_block1, x, use_reentrant=False)
             x = checkpoint(self._forward_down_block2, x, use_reentrant=False)
@@ -214,29 +211,27 @@ class TemporalLatentEncoder(nn.Module):
 
 def temporal_sample(x: torch.Tensor, rate: int, dim: int = 2) -> torch.Tensor:
     """
-    在指定维度采样，首尾必保留
+    Subsample ``x`` along ``dim`` with stride ``rate``, always keeping the first and last elements.
 
     Args:
-        x (torch.Tensor): 输入张量，默认 shape = (B, C, T, H, W)
-        rate (int): 采样率（步长）
-        dim (int): 采样的维度，默认=2 (T维)
+        x (torch.Tensor): Input tensor, typically (B, C, T, H, W).
+        rate (int): Sampling stride.
+        dim (int): Sampled dimension, 2 (time) by default.
 
     Returns:
-        torch.Tensor: 采样后的张量
+        torch.Tensor: The subsampled tensor.
     """
-    assert x.dim() >= dim + 1, f"输入维度 {x.dim()} 小于 dim={dim}"
+    assert x.dim() >= dim + 1, f"Input has {x.dim()} dimensions; dim={dim} is out of range"
     N = x.shape[dim]
 
-    # 初步采样下标
     indices = torch.arange(0, N, step=rate, device=x.device)
 
-    # 确保首尾都在
+    # Keep the first and last indices.
     if indices[0] != 0:
         indices = torch.cat([torch.tensor([0], device=x.device), indices])
     if indices[-1] != N - 1:
         indices = torch.cat([indices, torch.tensor([N - 1], device=x.device)])
 
-    # 去重并排序
     indices = torch.unique(indices, sorted=True)
 
     return torch.index_select(x, dim, indices)
@@ -457,7 +452,7 @@ class WanRMSNorm(nn.Module):
 class ActionEncoder(nn.Module):
     def __init__(self, vocab_size=10, embed_dim=256, hidden_dim=512, out_dim=1536):
         super().__init__()
-        # 将整数映射到向量
+        # Embeddings of the discrete move and view actions.
         self.embedding_move = nn.Embedding(vocab_size, embed_dim)
         self.embedding_view = nn.Embedding(vocab_size, embed_dim)
 
@@ -476,7 +471,7 @@ class ActionEncoder(nn.Module):
         self.proj = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, move, view):
-        # x: (B, L+1)，整数输入
+        # move, view: (B, L+1) integer action indices
         x_move = self.embedding_move(move).transpose(1, 2)
         x_view = self.embedding_view(view).transpose(1, 2)
         x = torch.cat([x_move, x_view], dim=1)
@@ -615,14 +610,14 @@ class WanSelfAttention(nn.Module):
             raise (NotImplementedError)
         else:
             B, S, H, D = q.shape
-            # 👉 你需要提前传入 num_c（或在这里根据场景算出）
+            # num_c (number of conditioning tokens) is set on the module by the model forward pass.
             num_c = getattr(self, "num_c", 0)
             if num_c > 0 and num_c < S:
-                # 2️⃣ 当前 noisy 帧 Qz 看 [Kc; Kz]
+                # Noisy-frame queries Qz attend to [Kc; Kz].
                 q_z, k_z, v_z = q[:, num_c:], k, v
                 x = flash_attention(q_z, k_z, v_z, window_size=self.window_size).type_as(x)
             else:
-                # 没有分段信息，默认用标准路径
+                # Without a conditioning split, use standard attention.
                 x = flash_attention(q, k, v, k_lens=seq_lens, window_size=self.window_size).type_as(x)
         # output
         x = x.flatten(2)
@@ -759,7 +754,7 @@ class WanAttentionBlock(nn.Module):
 
         num_hist = getattr(self.self_attn, "num_c", 0)
         hist, noisy = x[:, :num_hist], x[:, num_hist:]
-        _, H, W = grid_sizes[0].tolist()  # 假设所有样本一致
+        _, H, W = grid_sizes[0].tolist()  # All samples share the same grid size.
         B = grid_sizes.shape[0]
         T_noisy = noisy.shape[1] // (H * W)
         T_hist = hist.shape[1] // (H * W)
@@ -892,7 +887,7 @@ class WanModel(nn.Module):
         cross_attn_norm=True,
         eps=1e-6,
         enable_context_parallel=False,
-        use_convenc=True,  # 🔴 新增参数：是否使用卷积编码器进行时序压缩
+        use_convenc=True,  # Whether to create the convolutional temporal encoder.
     ):
         r"""
         Initialize the diffusion model backbone.
@@ -950,7 +945,7 @@ class WanModel(nn.Module):
         self.cross_attn_norm = cross_attn_norm
         self.eps = eps
         self.enable_context_parallel = enable_context_parallel
-        self.use_convenc = use_convenc  # 🔴 保存参数
+        self.use_convenc = use_convenc
 
         # hack y_embedder, not support uncond training now, pls use negative prompt for uncond
         self.y_embedder = None
@@ -965,7 +960,6 @@ class WanModel(nn.Module):
         self.time_projection = nn.Sequential(nn.SiLU(), nn.Linear(dim, dim * 6))
 
         self.action_encoder = ActionEncoder()
-        # 🔴 只在 use_convenc=True 时创建时序编码器
         if self.use_convenc:
             self.latent_encoder = TemporalLatentEncoder()
         else:
@@ -1016,36 +1010,34 @@ class WanModel(nn.Module):
         TARGET_T_MID = MAX_T_OUT * COMPRESSION_RATE  # 80
         W_IN = 64
         W_OUT_PER_CHUNK = W_IN // COMPRESSION_RATE  # 16
-        TARGET_N_CHUNKS = 5  # 确保 T_mid = 80
+        TARGET_N_CHUNKS = 5  # 5 chunks * 16 frames gives T_mid = 80
 
         dtype = self.patch_embedding.weight.dtype
         B, _, T, H, W = x.shape
-        device = x.device  # 获取当前设备
-        T_in = image_cond.shape[2]  # 原始输入的时间维度长度
+        device = x.device
+        T_in = image_cond.shape[2]  # Temporal length of the uncompressed condition
 
-        # 1. 提取局部记忆 (Last Frame Memory) - 必须在压缩前进行
+        # 1. Local memory (last frame), taken before compression.
         loc_mem = image_cond[:, :, -1:, :, :].to(dtype)
 
-        # 2. 确保输入数据类型正确
         image_cond = image_cond.to(dtype)
 
-        # ----------------- [NEW LOGIC START] 时序压缩逻辑 -----------------
+        # ----------------- Temporal compression (requires use_convenc=True) -----------------
 
-        # 🔴 只在 use_convenc=True 时执行时序压缩
         if T_in <= TARGET_T_MID:
-            # 情况 A: T_in <= 80，直接一次编码
+            # T_in <= 80: encode once.
             image_cond = self.latent_encoder(image_cond)
 
         else:
-            # 情况 B: T_in > 80，滑动窗口 + 二次压缩
+            # T_in > 80: sliding-window encoding, then a second compression.
 
-            # --- Step 1: 滑动窗口分块编码 (T_in -> T_mid=80) ---
+            # --- Step 1: encode sliding-window chunks (T_in -> T_mid=80) ---
 
-            # 计算步长 S，确保 5 个 Chunk 覆盖 T_in
+            # Stride S so that the 5 chunks span T_in.
             S_denom = TARGET_N_CHUNKS - 1
             # S = floor( (T_in - W_IN) / (N_chunks - 1) )
             S = math.floor((T_in - W_IN) / S_denom)
-            S = max(1, S)  # 最小步长为 1
+            S = max(1, S)
 
             latent_chunks = []
 
@@ -1055,41 +1047,38 @@ class WanModel(nn.Module):
 
                 chunk = image_cond[:, :, start:end, :, :]
 
-                # 处理填充：如果 end > T_in，则需要填充
+                # Zero-pad the end of the time dimension when the chunk runs past T_in.
                 padding_len = W_IN - chunk.shape[2]
                 if padding_len > 0:
-                    # 在时序维度 (dim=2) 末尾填充 0
-                    # F.pad 参数: (W_pad_start, W_pad_end, H_pad_start, H_pad_end, T_pad_start, T_pad_end)
                     chunk = F.pad(chunk, (0, 0, 0, 0, 0, padding_len))
 
-                # 编码块 (W_IN -> W_OUT_PER_CHUNK=16)
-                # 第一次编码通常冻结
+                # Encode the chunk (W_IN -> W_OUT_PER_CHUNK=16).
                 # with torch.no_grad():
                 # self.latent_encoder.eval()
                 encoded_chunk = self.latent_encoder(chunk)
                 # self.latent_encoder.train()
 
-                # 裁剪到预期的输出长度 (防止 padding 导致的额外输出)
+                # Trim to the expected output length.
                 encoded_chunk = encoded_chunk[:, :, :W_OUT_PER_CHUNK, :, :]
                 latent_chunks.append(encoded_chunk)
 
-            # 拼接中间序列 T_mid (T_mid = 80)
+            # Intermediate sequence, T_mid = 80
             image_cond = torch.cat(latent_chunks, dim=2)
             T_mid = image_cond.shape[2]
 
-            # --- Step 2: 二次压缩 (T_mid=80 -> T_out=20) ---
+            # --- Step 2: second compression (T_mid=80 -> T_out=20) ---
 
             if T_mid > MAX_T_OUT:
-                # 此时 T_mid = 80，是 4 的倍数，直接编码即可
+                # T_mid = 80 is a multiple of 4 and is encoded directly.
                 image_cond = self.latent_encoder(image_cond)
                 # T_out = 20
 
-        # ----------------- [NEW LOGIC END] -----------------
+        # ----------------- End of temporal compression -----------------
 
-        # 3. 拼接压缩后的 Condition 和 Loc_Mem
+        # 3. Append the local memory to the compressed condition.
         image_cond = torch.cat((image_cond, loc_mem), dim=2)
 
-        # 4. 拼接 Condition 和 Noisy Input
+        # 4. Prepend the condition to the noisy input.
         x = torch.cat((image_cond, x.to(dtype)), dim=2)  # B, C, T_all, H, W
         # print("x init shape: ", x.shape)
         # print("image_cond init shape: ", image_cond.shape)
@@ -1105,7 +1094,7 @@ class WanModel(nn.Module):
         N_t = T // self.patch_size[0]
         N_h = H // self.patch_size[1]
         N_w = W // self.patch_size[2]
-        T_cond = image_cond.shape[2]  # 新的 T_cond 约为 21 (20 + 1 loc_mem)
+        T_cond = image_cond.shape[2]  # About 21: 20 compressed frames + 1 local-memory frame
         num_c = (T_cond // self.patch_size[0]) * (H // self.patch_size[1]) * (W // self.patch_size[2])
         for block in self.blocks:
             block.self_attn.num_c = num_c
@@ -1130,11 +1119,6 @@ class WanModel(nn.Module):
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]  # fp32 -> bf16
 
-        # *******************************************************************
-        # 注意：这里的 action_encoder 调用已经更新为 move 和 view
-        # 假设 self.action_encoder 现在接收 move 和 view 两个参数
-        # *******************************************************************
-
         # Action Embedding Logic
         action_embedding_2 = (
             self.action_encoder(move[:, -81:], view[:, -81:]).to(dtype).permute(0, 2, 1).unsqueeze(-1).unsqueeze(-1)
@@ -1151,7 +1135,7 @@ class WanModel(nn.Module):
         # concat action embedding 1 and 2
         action_embedding = torch.cat((padding_embedding, action_embedding_2), dim=2)
 
-        # 切片 action embedding to meet the length of x (the last action)
+        # Slice the action embedding to the length of x (keeping the last actions).
         action_embedding = action_embedding[:, :, -T_all:]
         # print("action", action_embedding.shape)
         # print("u shape 1", x[0].shape)
@@ -1170,7 +1154,7 @@ class WanModel(nn.Module):
             e = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, t).float())
             e0 = self.time_projection(e).unflatten(1, (6, self.dim))
             assert e.dtype == torch.float32 and e0.dtype == torch.float32
-        t_no_noise = torch.zeros_like(t)  # 对应 t = 0
+        t_no_noise = torch.zeros_like(t)
 
         with autocast_context(x, dtype=torch.float32):
             e_no_noise = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, t_no_noise).float())

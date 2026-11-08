@@ -106,7 +106,7 @@ def load_condition_models(
         config = textenc_class.config_class.from_pretrained(
             model_id, subfolder="text_encoder", revision=revision, cache_dir=cache_dir
         )
-        text_encoder = textenc_class(config)  # 仅初始化模型，不加载权重
+        text_encoder = textenc_class(config)  # Initialize from the config without loading weights.
 
     return {"tokenizer": tokenizer, "text_encoder": text_encoder}
 

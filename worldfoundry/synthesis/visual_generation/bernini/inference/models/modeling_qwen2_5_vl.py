@@ -121,7 +121,7 @@ elif fa2_installed:
     from flash_attn import flash_attn_func, flash_attn_varlen_func
     from flash_attn.bert_padding import unpad_input
 else:
-    raise ValueError("不能在fa2和fa3都不支持的情况下工作！！！！")
+    raise ValueError("Neither FlashAttention 2 nor FlashAttention 3 is available.")
 
 if is_flash_attn_2_available() and IS_CUDA_AVAILABLE:
     from flash_attn.layers.rotary import apply_rotary_emb

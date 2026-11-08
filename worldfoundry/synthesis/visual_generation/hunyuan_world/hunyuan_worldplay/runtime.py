@@ -132,24 +132,24 @@ class HunyuanWorldPlayRuntime:
         **kwargs,
     ):
         """
-        从预训练模型加载并创建 HunyuanWorldPlayRuntime 实例
+        Load a pretrained pipeline and wrap it in a HunyuanWorldPlayRuntime.
 
         Args:
-            pretrained_model_name_or_path: 预训练模型路径或 HuggingFace 模型名称
-            transformer_version: transformer 版本（如 "480p_i2v"）
-            args: 额外参数（可选）
-            device: 设备（如 "cuda"）
-            create_sr_pipeline: 是否创建超分辨率 pipeline
-            force_sparse_attn: 是否强制使用稀疏注意力
-            transformer_dtype: transformer 数据类型
-            enable_offloading: 是否启用 offloading
-            enable_group_offloading: 是否启用 group offloading
-            overlap_group_offloading: 是否重叠 group offloading
-            action_ckpt: action 模型检查点路径
-            **kwargs: 其他参数
+            pretrained_model_name_or_path: Local model path or HuggingFace model name.
+            transformer_version: Transformer variant, for example "480p_i2v".
+            args: Unused.
+            device: Target device, for example "cuda".
+            create_sr_pipeline: Whether to create the super-resolution pipeline.
+            force_sparse_attn: Whether to force sparse attention.
+            transformer_dtype: Transformer dtype.
+            enable_offloading: Whether to enable model offloading.
+            enable_group_offloading: Whether to enable group offloading.
+            overlap_group_offloading: Whether to overlap group offloading with compute.
+            action_ckpt: Path of the action model checkpoint.
+            **kwargs: Unused.
 
         Returns:
-            HunyuanWorldPlayRuntime: 合成类实例
+            HunyuanWorldPlayRuntime: The runtime instance.
         """
         pipeline = _HunyuanWorldPlayInternalPipeline.create_pipeline(
             pretrained_model_name_or_path,
@@ -194,33 +194,33 @@ class HunyuanWorldPlayRuntime:
 
     def api_init(self, *, api_key, endpoint):
         """
-        API 初始化（可选）
+        No-op; this runtime runs locally and needs no API setup.
         """
 
     @torch.no_grad()
     def predict(self, *, data):
         """
-        推理方法
+        Run inference with the pipeline.
 
         Args:
-            data: 包含推理所需参数的字典，包括：
-                - prompt: 文本提示
-                - aspect_ratio: 宽高比
-                - video_length: 视频长度
-                - reference_image: 参考图像（可选）
-                - viewmats: 视角矩阵
-                - Ks: 相机内参
-                - action: 动作信号
-                - 其他参数...
+            data: Keyword arguments of the pipeline call, including:
+                - prompt: text prompt
+                - aspect_ratio: aspect ratio
+                - video_length: video length
+                - reference_image: reference image (optional)
+                - viewmats: view matrices
+                - Ks: camera intrinsics
+                - action: action signal
+                - other pipeline arguments
 
         Returns:
-            HunyuanVideoPipelineOutput: 包含生成的视频帧
+            HunyuanVideoPipelineOutput: The generated video frames.
         """
         return self.model(**data)
 
     def __call__(self, *args, **kwargs):
         """
-        直接调用 model 的 __call__ 方法
+        Call the underlying pipeline directly.
         """
         return self.model(*args, **kwargs)
 

@@ -10,6 +10,7 @@ No file in this directory is a personal GitHub avatar.
 | `adobe.svg` | Adobe | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF0000 | CC0-1.0 | benchmark:phyeduvideo, model:self-forcing |
 | `agibot.jpg` | AgiBot | GitHub organization brand avatar (github.com/AgibotTech), pre-existing repo asset | Organization brand mark | benchmark:ewmbench, model:genie-envisioner, model:go1 |
 | `ai2.svg` | Allen Institute for AI (Ai2) | https://commons.wikimedia.org/wiki/File:Allen_Institute_for_Artificial_Intelligence.svg | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot, model:wilddet3d |
+| `ai2-mark.svg` | Allen Institute for AI (Ai2) | Symbol cropped from `ai2.svg` for compact catalog marks | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot, model:wilddet3d |
 | `airi.svg` | AIRI (Artificial Intelligence Research Institute) | Original simple wordmark rendition for the identity mark | Public domain (text logo) | benchmark:mikasa |
 | `alayalab.svg` | AlayaLab | Original simple A monogram for the identity mark | Public domain (simple geometry) | model:alayaworld, model:evoke |
 | `alibaba.svg` | Alibaba | https://commons.wikimedia.org/wiki/File:Alibaba_en_logo.svg | Public domain (text logo) | benchmark:worldolympiad, model:easyanimate, model:i2vgen-xl, model:modelscope-t2v, model:moverse, model:qwen2.5-omni, model:uni3c, model:unianimate-dit |
@@ -45,6 +46,7 @@ No file in this directory is a personal GitHub avatar.
 | `gigaai.png` | GigaAI | GitHub organization brand avatar (github.com/open-gigaai), pre-existing repo asset | Organization brand mark | model:giga-brain-0, model:giga-world-0, model:giga-world-policy-0.5 |
 | `google.svg` | Google | https://commons.wikimedia.org/wiki/File:Google_"G"_logo.svg | Public domain (simple geometry) | benchmark:videophy, benchmark:videophy2, model:rt-1, model:t2v_turbo_t2v |
 | `google-deepmind.svg` | Google DeepMind | https://commons.wikimedia.org/wiki/File:Google_DeepMind_logo.svg | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:monst3r, model:veo3 |
+| `google-deepmind-mark.svg` | Google DeepMind | Symbol cropped from `google-deepmind.svg` for compact catalog marks | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:monst3r, model:veo3 |
 | `happyoyster.svg` | HappyOyster | Original simple oyster/pearl monogram for the identity mark | Public domain (simple geometry) | model:happyoyster |
 | `harvard.png` | Harvard University | https://commons.wikimedia.org/wiki/File:Harvard_University_shield.png | Public domain | benchmark:memobench |
 | `hku.png` | The University of Hong Kong | Official university coat of arms from the HKU site mark (www.hku.hk), shield cropped for the identity mark | Organization brand mark | benchmark:robotwin, benchmark:t2v-compbench, model:mem-0, model:sc-gs |
@@ -60,6 +62,7 @@ No file in this directory is a personal GitHub avatar.
 | `jhu.png` | Johns Hopkins University | https://commons.wikimedia.org/wiki/File:Johns_Hopkins_University_logo.png | Public domain (text logo) | benchmark:world-in-world, model:spatial-reasoner |
 | `kaist.svg` | KAIST | https://commons.wikimedia.org/wiki/File:KAIST_logo.svg | Public domain | model:worldcam |
 | `koc.svg` | Koç University | https://commons.wikimedia.org/wiki/File:Koç_University_logo.svg | Public domain | benchmark:physvidbench |
+| `koc-mark.svg` | Koç University | Symbol cropped from `koc.svg` for compact catalog marks | Public domain | benchmark:physvidbench |
 | `krea.png` | Krea AI | GitHub organization brand avatar (github.com/krea-ai), pre-existing repo asset | Organization brand mark | model:krea-realtime-video |
 | `kuaishou.svg` | Kuaishou | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF4906 | CC0-1.0 | model:kling-api, model:recammaster, model:shotstream |
 | `lightricks.jpg` | Lightricks | GitHub organization brand avatar (github.com/Lightricks), pre-existing repo asset | Organization brand mark | model:ltx-2.5, model:ltx-2.x, model:ltx-video |
@@ -94,7 +97,9 @@ No file in this directory is a personal GitHub avatar.
 | `runway.png` | Runway | GitHub organization brand avatar (github.com/runwayml), pre-existing repo asset | Organization brand mark | model:runway-gen4p5 |
 | `sandai.jpg` | Sand AI | GitHub organization brand avatar (github.com/SandAI-org), pre-existing repo asset | Organization brand mark | model:magi-1, model:magi2-preview |
 | `sensetime.png` | SenseTime | https://commons.wikimedia.org/wiki/File:SenseTime_logo.png | CC BY-SA 4.0 | model:kairos-sensenova |
+| `sensetime-mark.png` | SenseTime | Symbol cropped from `sensetime.png` for compact catalog marks | CC BY-SA 4.0 | model:kairos-sensenova |
 | `sfu.png` | Simon Fraser University | https://commons.wikimedia.org/wiki/File:SFU_logo.png | Public domain (text logo) | model:mvdiffusion |
+| `sfu-mark.png` | Simon Fraser University | Symbol cropped from `sfu.png` for compact catalog marks | Public domain (text logo) | model:mvdiffusion |
 | `shanda.svg` | Shanda AI | Original simple wordmark rendition for the identity mark | Public domain (text logo) | model:wildworld |
 | `shanghai-ai-lab.png` | Shanghai AI Laboratory | GitHub organization brand avatar (github.com/OpenGVLab) | Organization brand mark | benchmark:phygenbench, benchmark:vbench, benchmark:vbench-2.0, benchmark:vbench-plus-plus, model:eventvla, model:internvla-a1, model:longvie-1, model:longvie-2, model:rise, model:vchitect-2-t2v |
 | `shengshu.jpg` | Shengshu Technology | GitHub organization brand avatar (github.com/shengshu-ai), pre-existing repo asset | Organization brand mark | model:minwm-hy-action2v, model:minwm-wan-action2v |
@@ -113,13 +118,16 @@ No file in this directory is a personal GitHub avatar.
 | `tamu.svg` | Texas A&M University | https://commons.wikimedia.org/wiki/File:Texas_A&M_University_logo.svg | Public domain (text logo) | benchmark:phyfps-bench-gen, benchmark:visual-chronometer |
 | `tencent.svg` | Tencent | https://commons.wikimedia.org/wiki/File:Tencent_Logo.svg | Public domain (text logo) | benchmark:evalcrafter, benchmark:mirabench, model:dynamicrafter, model:flashworld, model:motionctrl, model:open-magvit2, model:rolling-forcing, model:versecrafter, model:videocrafter, model:videocrafter1-i2v, model:videocrafter1-t2v, model:videocrafter2-t2v |
 | `tencent-hunyuan.png` | Tencent Hunyuan | Official Hunyuan header mark from hunyuan.tencent.com (https://hunyuan-blog-web-prod-1258344703.cos.ap-guangzhou.myqcloud.com/assets/hy-blog-logo-zh-DxX4P937.png) | Organization brand mark | model:hunyuan-game-craft, model:hunyuanvideo, model:hunyuanvideo-1.5, model:hunyuanworld-1, model:hunyuanworld-mirror, model:hunyuanworld-voyager, model:hy-embodied-vla, model:hy-world-2.0, model:hy-worldplay, model:hyworld-worldgen |
+| `tencent-hunyuan-mark.png` | Tencent Hunyuan | Symbol cropped from `tencent-hunyuan.png` for compact catalog marks | Organization brand mark | model:hunyuan-game-craft, model:hunyuanvideo, model:hunyuanvideo-1.5, model:hunyuanworld-1, model:hunyuanworld-mirror, model:hunyuanworld-voyager, model:hy-embodied-vla, model:hy-world-2.0, model:hy-worldplay, model:hyworld-worldgen |
 | `tsinghua.png` | Tsinghua University | https://commons.wikimedia.org/wiki/File:Tsinghua_University_Logo.svg | Public domain | benchmark:iworld-bench, benchmark:worldarena, benchmark:worldreasonbench, model:astra, model:causal-forcing, model:ctrl-world, model:h-rdt, model:rdt-1b, model:sama-14b, model:vid2world, model:xvla |
 | `ucas.png` | University of Chinese Academy of Sciences | Official university brand mark (www.ucas.ac.cn), CAS seal cropped and restored to UCAS navy #003087 | Organization brand mark | model:consistent4d, model:scope |
 | `ucla.svg` | UCLA | Original simple circular-seal rendition of the UCLA wordmark | Public domain (simple seal rendition) | benchmark:worldbench |
 | `ucsd.svg` | UC San Diego | https://commons.wikimedia.org/wiki/File:Seal_of_the_University_of_California,_San_Diego.svg | Public domain | benchmark:maniskill, benchmark:maniskill2, benchmark:videoscience-bench |
 | `umass.svg` | UMass Amherst | https://commons.wikimedia.org/wiki/File:UMass_Amherst_athletics_logo.svg | Public domain (simple geometry) | model:tesseract |
 | `umich.svg` | University of Michigan | https://commons.wikimedia.org/wiki/File:University_of_Michigan_logo.svg | Public domain (simple geometry) | benchmark:robomme, model:hexplane, model:mme-vla |
+| `umich-mark.svg` | University of Michigan | Symbol cropped from `umich.svg` for compact catalog marks | Public domain (simple geometry) | benchmark:robomme, model:hexplane, model:mme-vla |
 | `unige.svg` | University of Geneva | https://commons.wikimedia.org/wiki/File:Uni_GE_logo.svg | Public domain | model:diamond, model:iris |
+| `unige-mark.svg` | University of Geneva | Symbol cropped from `unige.svg` for compact catalog marks | Public domain | model:diamond, model:iris |
 | `upc.svg` | Universitat Politècnica de Catalunya (IRI, CSIC-UPC) | https://commons.wikimedia.org/wiki/File:Logo_UPC.svg | Public domain | model:d-nerf |
 | `uq.svg` | The University of Queensland | Original simple circular-seal rendition of the UQ coat of arms (cross pattee and open book) in official UQ purple #51247A | Public domain (simple seal rendition) | model:vggt-world |
 | `usc.svg` | University of Southern California | https://commons.wikimedia.org/wiki/File:USC_Trojans_logo.svg | Public domain (text logo) | model:gaussianflow |
@@ -133,7 +141,11 @@ No file in this directory is a personal GitHub avatar.
 | `x-humanoid.svg` | X-Humanoid (Beijing Humanoid Robot Innovation Center) | Original simple X monogram for the identity mark | Public domain (simple geometry) | model:wow |
 | `xiaomi.svg` | Xiaomi Robotics | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF6900 | CC0-1.0 | model:x-wam, model:xiaomi-robotics-0, model:xiaomi-robotics-1 |
 | `zhipu.png` | Zhipu AI | https://commons.wikimedia.org/wiki/File:Zhipu_AI.png | Public domain (text logo) | model:cogvideox |
+| `zhipu-mark.png` | Zhipu AI | Symbol cropped from `zhipu.png` for compact catalog marks | Public domain (text logo) | model:cogvideox |
 | `zju.png` | Zhejiang University | Official university emblem published at https://www.zju.edu.cn/572/list.htm | Organization brand mark | model:a1, model:prior-depth-anything, model:spatial-ladder, model:track-anything-prior |
 
 Institutions without a committed logo render their abbreviation instead:
 .
+
+Text-only wordmarks render their abbreviation in compact catalog marks:
+`alibaba` ("AL"), `amap` ("AM"), `cmu` ("CMU"), `eth` ("ETH"), `freiburg` ("UFR"), `jhu` ("JHU"), `sjsu` ("SJSU"), `tencent` ("TC").

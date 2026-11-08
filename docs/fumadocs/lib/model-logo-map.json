@@ -382,6 +382,7 @@
       "abbr": "AI2",
       "key": "ai2",
       "license": "Public domain (text logo)",
+      "markSrc": "/org-logos/ai2-mark.svg",
       "name": "Allen Institute for AI (Ai2)",
       "source": "https://commons.wikimedia.org/wiki/File:Allen_Institute_for_Artificial_Intelligence.svg",
       "src": "/org-logos/ai2.svg"
@@ -408,7 +409,8 @@
       "license": "Public domain (text logo)",
       "name": "Alibaba",
       "source": "https://commons.wikimedia.org/wiki/File:Alibaba_en_logo.svg",
-      "src": "/org-logos/alibaba.svg"
+      "src": "/org-logos/alibaba.svg",
+      "wordmark": true
     },
     "amap": {
       "abbr": "AM",
@@ -416,7 +418,8 @@
       "license": "Public domain (text logo)",
       "name": "Amap (Alibaba)",
       "source": "https://commons.wikimedia.org/wiki/File:Alibaba_en_logo.svg",
-      "src": "/org-logos/alibaba.svg"
+      "src": "/org-logos/alibaba.svg",
+      "wordmark": true
     },
     "antgroup": {
       "abbr": "AG",
@@ -512,7 +515,8 @@
       "license": "Public domain (text logo)",
       "name": "Carnegie Mellon University",
       "source": "https://commons.wikimedia.org/wiki/File:Carnegie_Mellon_wordmark.svg",
-      "src": "/org-logos/cmu.svg"
+      "src": "/org-logos/cmu.svg",
+      "wordmark": true
     },
     "createai": {
       "abbr": "CR",
@@ -584,7 +588,8 @@
       "license": "Public domain (text logo)",
       "name": "ETH Zurich",
       "source": "https://commons.wikimedia.org/wiki/File:ETH_Zürich_Logo_black.svg",
-      "src": "/org-logos/eth.svg"
+      "src": "/org-logos/eth.svg",
+      "wordmark": true
     },
     "farama": {
       "abbr": "FR",
@@ -600,7 +605,8 @@
       "license": "CC BY-SA 4.0",
       "name": "University of Freiburg",
       "source": "https://commons.wikimedia.org/wiki/File:Wortmarke-grundform-universitaet_freiburg_blau_rgb.png",
-      "src": "/org-logos/freiburg.png"
+      "src": "/org-logos/freiburg.png",
+      "wordmark": true
     },
     "fudan": {
       "abbr": "FDU",
@@ -662,6 +668,7 @@
       "abbr": "GDM",
       "key": "google-deepmind",
       "license": "Public domain (simple geometry)",
+      "markSrc": "/org-logos/google-deepmind-mark.svg",
       "name": "Google DeepMind",
       "source": "https://commons.wikimedia.org/wiki/File:Google_DeepMind_logo.svg",
       "src": "/org-logos/google-deepmind.svg"
@@ -768,7 +775,8 @@
       "license": "Public domain (text logo)",
       "name": "Johns Hopkins University",
       "source": "https://commons.wikimedia.org/wiki/File:Johns_Hopkins_University_logo.png",
-      "src": "/org-logos/jhu.png"
+      "src": "/org-logos/jhu.png",
+      "wordmark": true
     },
     "kaist": {
       "abbr": "KAIST",
@@ -782,6 +790,7 @@
       "abbr": "KU",
       "key": "koc",
       "license": "Public domain",
+      "markSrc": "/org-logos/koc-mark.svg",
       "name": "Koç University",
       "source": "https://commons.wikimedia.org/wiki/File:Koç_University_logo.svg",
       "src": "/org-logos/koc.svg"
@@ -1054,6 +1063,7 @@
       "abbr": "ST",
       "key": "sensetime",
       "license": "CC BY-SA 4.0",
+      "markSrc": "/org-logos/sensetime-mark.png",
       "name": "SenseTime",
       "source": "https://commons.wikimedia.org/wiki/File:SenseTime_logo.png",
       "src": "/org-logos/sensetime.png"
@@ -1062,6 +1072,7 @@
       "abbr": "SFU",
       "key": "sfu",
       "license": "Public domain (text logo)",
+      "markSrc": "/org-logos/sfu-mark.png",
       "name": "Simon Fraser University",
       "source": "https://commons.wikimedia.org/wiki/File:SFU_logo.png",
       "src": "/org-logos/sfu.png"
@@ -1104,7 +1115,8 @@
       "license": "Public domain",
       "name": "San José State University",
       "source": "https://commons.wikimedia.org/wiki/File:San_Jose_State_University_logo.svg",
-      "src": "/org-logos/sjsu.svg"
+      "src": "/org-logos/sjsu.svg",
+      "wordmark": true
     },
     "sjtu": {
       "abbr": "SJTU",
@@ -1200,12 +1212,14 @@
       "license": "Public domain (text logo)",
       "name": "Tencent",
       "source": "https://commons.wikimedia.org/wiki/File:Tencent_Logo.svg",
-      "src": "/org-logos/tencent.svg"
+      "src": "/org-logos/tencent.svg",
+      "wordmark": true
     },
     "tencent-hunyuan": {
       "abbr": "HY",
       "key": "tencent-hunyuan",
       "license": "Organization brand mark",
+      "markSrc": "/org-logos/tencent-hunyuan-mark.png",
       "name": "Tencent Hunyuan",
       "source": "Official Hunyuan header mark from hunyuan.tencent.com (https://hunyuan-blog-web-prod-1258344703.cos.ap-guangzhou.myqcloud.com/assets/hy-blog-logo-zh-DxX4P937.png)",
       "src": "/org-logos/tencent-hunyuan.png"
@@ -1254,6 +1268,7 @@
       "abbr": "UM",
       "key": "umich",
       "license": "Public domain (simple geometry)",
+      "markSrc": "/org-logos/umich-mark.svg",
       "name": "University of Michigan",
       "source": "https://commons.wikimedia.org/wiki/File:University_of_Michigan_logo.svg",
       "src": "/org-logos/umich.svg"
@@ -1262,6 +1277,7 @@
       "abbr": "UNIGE",
       "key": "unige",
       "license": "Public domain",
+      "markSrc": "/org-logos/unige-mark.svg",
       "name": "University of Geneva",
       "source": "https://commons.wikimedia.org/wiki/File:Uni_GE_logo.svg",
       "src": "/org-logos/unige.svg"
@@ -1366,6 +1382,7 @@
       "abbr": "ZP",
       "key": "zhipu",
       "license": "Public domain (text logo)",
+      "markSrc": "/org-logos/zhipu-mark.png",
       "name": "Zhipu AI",
       "source": "https://commons.wikimedia.org/wiki/File:Zhipu_AI.png",
       "src": "/org-logos/zhipu.png"

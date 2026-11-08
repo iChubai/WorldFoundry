@@ -186,6 +186,9 @@ def recolor_university_seals() -> int:
 # --------------------------------------------------------------------------
 # Institution registry. `abbr` is shown when no logo file is available.
 # `logo=None` means the identity mark renders the abbreviation.
+# Wide logos stay legible in compact catalog marks through `mark`, a square
+# symbol cropped from the official logo, or `wordmark=True`, which renders the
+# abbreviation for text-only wordmarks. Page titles always show `logo`.
 # --------------------------------------------------------------------------
 ORGS: dict[str, dict] = {
     # -- Companies / industrial labs -------------------------------------
@@ -193,6 +196,7 @@ ORGS: dict[str, dict] = {
         "name": "Tencent",
         "abbr": "TC",
         "logo": "tencent.svg",
+        "wordmark": True,
         "source": commons("Tencent Logo.svg"),
         "license": "Public domain (text logo)",
     },
@@ -200,6 +204,7 @@ ORGS: dict[str, dict] = {
         "name": "Tencent Hunyuan",
         "abbr": "HY",
         "logo": "tencent-hunyuan.png",
+        "mark": "tencent-hunyuan-mark.png",
         "source": "Official Hunyuan header mark from hunyuan.tencent.com (https://hunyuan-blog-web-prod-1258344703.cos.ap-guangzhou.myqcloud.com/assets/hy-blog-logo-zh-DxX4P937.png)",
         "license": "Organization brand mark",
     },
@@ -207,6 +212,7 @@ ORGS: dict[str, dict] = {
         "name": "Alibaba",
         "abbr": "AL",
         "logo": "alibaba.svg",
+        "wordmark": True,
         "source": commons("Alibaba en logo.svg"),
         "license": "Public domain (text logo)",
     },
@@ -263,6 +269,7 @@ ORGS: dict[str, dict] = {
         "name": "Amap (Alibaba)",
         "abbr": "AM",
         "logo": "alibaba.svg",
+        "wordmark": True,
         "source": commons("Alibaba en logo.svg"),
         "license": "Public domain (text logo)",
     },
@@ -298,6 +305,7 @@ ORGS: dict[str, dict] = {
         "name": "Google DeepMind",
         "abbr": "GDM",
         "logo": "google-deepmind.svg",
+        "mark": "google-deepmind-mark.svg",
         "source": commons("Google DeepMind logo.svg"),
         "license": "Public domain (simple geometry)",
     },
@@ -403,6 +411,7 @@ ORGS: dict[str, dict] = {
         "name": "Zhipu AI",
         "abbr": "ZP",
         "logo": "zhipu.png",
+        "mark": "zhipu-mark.png",
         "source": commons("Zhipu AI.png"),
         "license": "Public domain (text logo)",
     },
@@ -410,6 +419,7 @@ ORGS: dict[str, dict] = {
         "name": "SenseTime",
         "abbr": "ST",
         "logo": "sensetime.png",
+        "mark": "sensetime-mark.png",
         "source": commons("SenseTime logo.png"),
         "license": "CC BY-SA 4.0",
     },
@@ -859,6 +869,7 @@ ORGS: dict[str, dict] = {
         "name": "ETH Zurich",
         "abbr": "ETH",
         "logo": "eth.svg",
+        "wordmark": True,
         "source": commons("ETH Zürich Logo black.svg"),
         "license": "Public domain (text logo)",
     },
@@ -866,6 +877,7 @@ ORGS: dict[str, dict] = {
         "name": "University of Geneva",
         "abbr": "UNIGE",
         "logo": "unige.svg",
+        "mark": "unige-mark.svg",
         "source": commons("Uni GE logo.svg"),
         "license": "Public domain",
     },
@@ -873,6 +885,7 @@ ORGS: dict[str, dict] = {
         "name": "University of Freiburg",
         "abbr": "UFR",
         "logo": "freiburg.png",
+        "wordmark": True,
         "source": commons("Wortmarke-grundform-universitaet freiburg blau rgb.png"),
         "license": "CC BY-SA 4.0",
     },
@@ -908,6 +921,7 @@ ORGS: dict[str, dict] = {
         "name": "University of Michigan",
         "abbr": "UM",
         "logo": "umich.svg",
+        "mark": "umich-mark.svg",
         "source": commons("University of Michigan logo.svg"),
         "license": "Public domain (simple geometry)",
     },
@@ -964,6 +978,7 @@ ORGS: dict[str, dict] = {
         "name": "Johns Hopkins University",
         "abbr": "JHU",
         "logo": "jhu.png",
+        "wordmark": True,
         "source": commons("Johns Hopkins University logo.png"),
         "license": "Public domain (text logo)",
     },
@@ -971,6 +986,7 @@ ORGS: dict[str, dict] = {
         "name": "Carnegie Mellon University",
         "abbr": "CMU",
         "logo": "cmu.svg",
+        "wordmark": True,
         "source": commons("Carnegie Mellon wordmark.svg"),
         "license": "Public domain (text logo)",
     },
@@ -978,6 +994,7 @@ ORGS: dict[str, dict] = {
         "name": "Simon Fraser University",
         "abbr": "SFU",
         "logo": "sfu.png",
+        "mark": "sfu-mark.png",
         "source": commons("SFU logo.png"),
         "license": "Public domain (text logo)",
     },
@@ -1013,6 +1030,7 @@ ORGS: dict[str, dict] = {
         "name": "Koç University",
         "abbr": "KU",
         "logo": "koc.svg",
+        "mark": "koc-mark.svg",
         "source": commons("Koç University logo.svg"),
         "license": "Public domain",
     },
@@ -1020,6 +1038,7 @@ ORGS: dict[str, dict] = {
         "name": "San José State University",
         "abbr": "SJSU",
         "logo": "sjsu.svg",
+        "wordmark": True,
         "source": commons("San Jose State University logo.svg"),
         "license": "Public domain",
     },
@@ -1028,6 +1047,7 @@ ORGS: dict[str, dict] = {
         "name": "Allen Institute for AI (Ai2)",
         "abbr": "AI2",
         "logo": "ai2.svg",
+        "mark": "ai2-mark.svg",
         "source": commons("Allen Institute for Artificial Intelligence.svg"),
         "license": "Public domain (text logo)",
     },
@@ -1476,6 +1496,13 @@ def build_org_entries() -> dict[str, dict]:
             if not path.is_file():
                 raise SystemExit(f"missing logo asset for {org_id}: {path}")
             entry["src"] = f"/org-logos/{logo}"
+        mark = meta.get("mark")
+        if mark:
+            if not (LOGO_DIR / mark).is_file():
+                raise SystemExit(f"missing compact mark for {org_id}: {LOGO_DIR / mark}")
+            entry["markSrc"] = f"/org-logos/{mark}"
+        if meta.get("wordmark"):
+            entry["wordmark"] = True
         if meta.get("source"):
             entry["source"] = meta["source"]
         if meta.get("license"):
@@ -1552,6 +1579,12 @@ def write_sources(orgs: dict[str, dict]) -> None:
         license_ = entry.get("license", "-")
         usage = ", ".join(sorted(used_by.get(org_id, []))) or "-"
         lines.append(f"| `{fname}` | {entry['name']} | {source} | {license_} | {usage} |")
+        if "markSrc" in entry:
+            mark = entry["markSrc"].split("/")[-1]
+            lines.append(
+                f"| `{mark}` | {entry['name']} | Symbol cropped from `{fname}` for compact catalog marks "
+                f"| {license_} | {usage} |"
+            )
     lines.append("")
     lines.append("Institutions without a committed logo render their abbreviation instead:")
     abbr_only = [
@@ -1560,6 +1593,10 @@ def write_sources(orgs: dict[str, dict]) -> None:
         if "src" not in entry
     ]
     lines.append(", ".join(abbr_only) + ".")
+    lines.append("")
+    lines.append("Text-only wordmarks render their abbreviation in compact catalog marks:")
+    wordmarks = [f'`{org_id}` ("{entry["abbr"]}")' for org_id, entry in sorted(orgs.items()) if entry.get("wordmark")]
+    lines.append(", ".join(wordmarks) + ".")
     lines.append("")
     SOURCES_PATH.write_text("\n".join(lines))
     print(f"wrote {SOURCES_PATH}")
@@ -1577,10 +1614,11 @@ def main() -> None:
     total_models = len(MODEL_ORGS) + len(UNRESOLVED_MODELS)
     total_benches = len(BENCHMARK_ORGS) + len(UNRESOLVED_BENCHMARKS)
     with_logo = {k for k, v in ORGS.items() if v.get("logo")}
+    with_mark = {k for k, v in ORGS.items() if v.get("mark")}
     print(
         f"models: {len(MODEL_ORGS)}/{total_models} mapped, "
         f"benchmarks: {len(BENCHMARK_ORGS)}/{total_benches} mapped, "
-        f"orgs: {len(ORGS)} ({len(with_logo)} with logo files), "
+        f"orgs: {len(ORGS)} ({len(with_logo)} with logo files, {len(with_mark)} compact marks), "
         f"simple-icon fills: {colored}, university seals: {seals}"
     )
 

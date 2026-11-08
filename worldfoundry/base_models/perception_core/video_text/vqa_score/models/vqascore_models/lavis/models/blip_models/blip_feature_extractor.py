@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import warnings
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -42,7 +43,7 @@ class BlipFeatureExtractor(BlipBase):
         >>> model = load_model("blip_feature_extractor", "base")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/blip_feature_extractor_base.yaml",
         # "large": "configs/models/blip_feature_extractor_large.yaml",
     }

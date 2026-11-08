@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 
@@ -172,7 +172,7 @@ register_template(
 
 
 class CogTemplate(Template):
-    placeholder_tokens = ["<|reserved_special_token_0|>"]
+    placeholder_tokens: ClassVar[list] = ["<|reserved_special_token_0|>"]
 
     use_model = True
 
@@ -287,7 +287,7 @@ register_template(
 
 
 class GLMEdgeVTemplate(Template):
-    placeholder_tokens = ["<|begin_of_image|>"]
+    placeholder_tokens: ClassVar[list] = ["<|begin_of_image|>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

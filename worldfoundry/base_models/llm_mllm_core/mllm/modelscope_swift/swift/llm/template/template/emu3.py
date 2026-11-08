@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
 import random
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from PIL import Image
@@ -172,7 +172,7 @@ register_template(
 
 class Emu3ChatTemplate(Template):
     system = "You are a helpful assistant."
-    image_placeholder = ["<|image token|>"]
+    image_placeholder: ClassVar[list] = ["<|image token|>"]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)

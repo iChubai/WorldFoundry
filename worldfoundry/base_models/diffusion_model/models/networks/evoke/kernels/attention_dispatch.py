@@ -13,7 +13,7 @@ def create_navit_attention_masks(
     device: torch.device,
     restrict_self_attn: bool = False,
     guidance_cross_attn: bool = False,
-    warp_len_list: list = None,
+    warp_len_list: list | None = None,
 ):
     # Per-stage synchronized warp tokens; layout per stage = [shared_history | warp_s | noise_s].
     # warp_len_list is in the SAME order as original_context_length_list (caller passes both reversed).

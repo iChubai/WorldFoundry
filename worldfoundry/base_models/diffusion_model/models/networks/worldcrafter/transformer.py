@@ -8,6 +8,7 @@ Adapted from TencentARC/WorldCrafter at 7e57e4d; see THIRD-PARTY-NOTICES (WorldC
 
 import json
 import os
+from typing import ClassVar
 
 import torch
 from diffusers.utils import logging
@@ -65,10 +66,10 @@ class WorldCrafterTransformer3DModel(HeliosTransformer3DModel):
     _block_class = WorldCrafterTransformerBlock
     _history_patch_name = "patch_memory"
     _history_patch_scale = 1
-    _no_split_modules = ["WorldCrafterTransformerBlock", "HeliosOutputNorm"]
-    _repeated_blocks = ["WorldCrafterTransformerBlock"]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q", r"patch_long\..*"]
-    _skip_layerwise_casting_patterns = [
+    _no_split_modules: ClassVar[list] = ["WorldCrafterTransformerBlock", "HeliosOutputNorm"]
+    _repeated_blocks: ClassVar[list] = ["WorldCrafterTransformerBlock"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q", r"patch_long\..*"]
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",

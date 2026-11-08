@@ -12,10 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from dataclasses import dataclass
-from typing import Literal
+from typing import ClassVar, Literal
 
 import numpy as np
 import torch
@@ -35,7 +34,7 @@ class EvokeSchedulerOutput(BaseOutput):
 
 
 class EvokeScheduler(SchedulerMixin, ConfigMixin):
-    _compatibles = []
+    _compatibles: ClassVar[list] = []
     order = 1
 
     @register_to_config
@@ -443,14 +442,14 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
         timestep: int | torch.Tensor = None,
         sample: torch.Tensor = None,
         return_dict: bool = True,
-        model_outputs: list = None,
-        timestep_list: list = None,
+        model_outputs: list | None = None,
+        timestep_list: list | None = None,
         sigma_before: torch.Tensor = None,
         sigma: torch.Tensor = None,
         sigma_next: torch.Tensor = None,
-        cus_step_index: int = None,
-        cus_lower_order_num: int = None,
-        cus_this_order: int = None,
+        cus_step_index: int | None = None,
+        cus_lower_order_num: int | None = None,
+        cus_this_order: int | None = None,
         cus_last_sample: torch.Tensor = None,
     ) -> EvokeSchedulerOutput | tuple:
         if self.num_inference_steps is None:

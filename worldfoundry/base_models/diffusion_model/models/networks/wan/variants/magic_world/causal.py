@@ -6,6 +6,7 @@ hooks.  No VACE or linear attn.
 
 import copy
 import math
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -103,7 +104,7 @@ class CausalWanSelfAttention(nn.Module):
         new_v: torch.Tensor,
         current_sink_k: torch.Tensor,
         current_sink_v: torch.Tensor,
-        alpha: float = None,
+        alpha: float | None = None,
     ) -> tuple:
         """
         Args:
@@ -415,8 +416,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
     r"""MagicWorld causal Wan with persistent KV cache."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(
@@ -684,8 +685,8 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         y=None,
         y_camera=None,
         y_history=None,
-        kv_cache: dict = None,
-        crossattn_cache: dict = None,
+        kv_cache: dict | None = None,
+        crossattn_cache: dict | None = None,
         current_start: int = 0,
         cache_start: int = 0,
     ):

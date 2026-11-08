@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -54,7 +55,7 @@ class AlbefRetrieval(AlbefBase, MomentumDistilationMixin, SharedQueueMixin):
         >>> model = load_model("albef_retrieval", "flickr")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "coco": "configs/models/albef_retrieval_coco.yaml",
         "flickr": "configs/models/albef_retrieval_flickr.yaml",
     }

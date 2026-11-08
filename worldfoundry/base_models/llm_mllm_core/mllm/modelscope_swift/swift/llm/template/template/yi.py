@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 
@@ -26,7 +26,7 @@ yi_vl_default_system = (
 
 
 class YiVLTemplate(Template):
-    image_placeholder = [[-200], "\n"]
+    image_placeholder: ClassVar[list] = [[-200], "\n"]
     use_model = True
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:

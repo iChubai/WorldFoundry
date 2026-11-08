@@ -13,6 +13,7 @@ This is the H3 video decode graph, not a text encoder ViT.
 """
 
 import logging
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -82,7 +83,7 @@ class ViTBase(nn.Module):
     values that ``forward`` needs are stored as plain attributes.
     """
 
-    _no_split_modules = ["TransformerBlock"]
+    _no_split_modules: ClassVar[list] = ["TransformerBlock"]
 
     def _init_weights(self):
         def basic_init(m):
@@ -163,7 +164,7 @@ class ViT3DDecoder(ViTBase):
         dim_head: int = 64,
         norm_type: str = "layer_norm",
         norm_affine: bool = True,
-        qk_norm_type: str = None,
+        qk_norm_type: str | None = None,
         qk_norm_affine: bool = False,
         ffn_activation_fn: str = "gelu",
         ffn_use_gated: bool = False,

@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
 from collections.abc import Sequence
+from typing import ClassVar
 
 import torch.nn as nn
 from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
@@ -55,7 +56,7 @@ class CSPNeXt(BaseBackbone):
 
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
-    arch_settings = {
+    arch_settings: ClassVar[dict] = {
         "P5": [
             [64, 128, 3, True, False],
             [128, 256, 6, True, False],
@@ -79,10 +80,10 @@ class CSPNeXt(BaseBackbone):
         input_channels: int = 3,
         out_indices: Sequence[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: dict | list[dict] = None,
+        plugins: dict | list[dict] | None = None,
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
-        arch_ovewrite: dict = None,
+        arch_ovewrite: dict | None = None,
         channel_attention: bool = True,
         conv_cfg: OptConfigType = None,
         norm_cfg: ConfigType = {"type": "BN"},

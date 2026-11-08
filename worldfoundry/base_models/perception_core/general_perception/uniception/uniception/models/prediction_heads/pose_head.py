@@ -59,7 +59,7 @@ class PoseHead(nn.Module):
         input_feature_dim: int,
         num_resconv_block: int = 2,
         rot_representation_dim: int = 4,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):

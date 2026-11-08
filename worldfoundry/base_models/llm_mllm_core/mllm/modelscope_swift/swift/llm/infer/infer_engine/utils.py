@@ -240,8 +240,8 @@ def patch_lmdeploy(load_weights=False):
             model_name,
             chat_template_name,
             engine_config: TurbomindEngineConfig,
-            group_size: int = None,
-            out_dir: str = None,
+            group_size: int | None = None,
+            out_dir: str | None = None,
         ):
             from lmdeploy.turbomind.deploy.converter import get_tm_model_origin
 
@@ -263,8 +263,8 @@ def patch_lmdeploy(load_weights=False):
         self,
         model_path: str,
         tokenizer: object,
-        model_name: str = None,
-        chat_template_name: str = None,
+        model_name: str | None = None,
+        chat_template_name: str | None = None,
         engine_config: TurbomindEngineConfig = None,
         model_source: ModelSource = ModelSource.WORKSPACE,
         **kwargs,

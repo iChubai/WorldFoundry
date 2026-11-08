@@ -9,6 +9,7 @@
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -586,7 +587,7 @@ class BertPreTrainedModel(PreTrainedModel):
 
     config_class = BertConfig
     base_model_prefix = "bert"
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids"]
 
     def _init_weights(self, module):
         """Initialize the weights"""
@@ -858,8 +859,8 @@ class BertModel(BertPreTrainedModel):
 
 
 class BertLMHeadModel(BertPreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = [r"pooler"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids", r"predictions.decoder.bias"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -1012,8 +1013,8 @@ class BertLMHeadModel(BertPreTrainedModel):
 
 
 class BertForMaskedLM(BertPreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = [r"pooler"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids", r"predictions.decoder.bias"]
 
     def __init__(self, config):
         super().__init__(config)

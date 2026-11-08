@@ -132,7 +132,7 @@ class Qwen2VLModel(VQAScoreModel):
             self.model.parameters()
         ).device  # If there are multiple GPUs put the model on the first parameters GPU
 
-    def load_images(self, paths: list[str], fps: float = None) -> list[torch.Tensor | list[torch.Tensor]]:
+    def load_images(self, paths: list[str], fps: float | None = None) -> list[torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         fps = fps if fps is not None else self.model_info.get("fps", 8.0)
         for path in paths:

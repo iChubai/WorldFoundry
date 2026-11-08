@@ -57,7 +57,7 @@ class GPT4VModel(VQAScoreModel):
         self.tokenizer = tiktoken.encoding_for_model("gpt-4o")
         self.client = OpenAI(api_key=self.api_key)
 
-    def load_images(self, paths: list[str], num_frames: int = None) -> list[dict]:
+    def load_images(self, paths: list[str], num_frames: int | None = None) -> list[dict]:
         loaded_data = []
         for path in paths:
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file

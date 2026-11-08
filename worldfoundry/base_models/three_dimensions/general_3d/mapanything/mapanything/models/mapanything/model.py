@@ -98,9 +98,9 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         pred_head_config: dict,
         geometric_input_config: dict,
         fusion_norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         load_specific_pretrained_submodules: bool = False,
-        specific_pretrained_submodules: list = None,
+        specific_pretrained_submodules: list | None = None,
         torch_hub_force_reload: bool = False,
         use_register_tokens_from_encoder: bool = False,
         info_sharing_mlp_layer_str: str = "mlp",
@@ -1171,7 +1171,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         scale_head_inputs: torch.Tensor,
         img_shape: tuple[int, int],
         memory_efficient_inference: bool = False,
-        minibatch_size: int = None,
+        minibatch_size: int | None = None,
     ):
         """
         Run Prediction Heads & Post-Process Outputs
@@ -1707,7 +1707,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         self,
         views: list[dict[str, Any]],
         memory_efficient_inference: bool = True,
-        minibatch_size: int = None,
+        minibatch_size: int | None = None,
         use_amp: bool = True,
         amp_dtype: str = "bf16",
         apply_mask: bool = True,

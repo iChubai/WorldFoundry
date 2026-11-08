@@ -207,7 +207,7 @@ class Attention(nn.Module):
         num_heads: int,
         downsample_rate: int = 1,
         dropout: float = 0.0,
-        kv_in_dim: int = None,
+        kv_in_dim: int | None = None,
         use_fa3: bool = False,
     ) -> None:
         """Init.

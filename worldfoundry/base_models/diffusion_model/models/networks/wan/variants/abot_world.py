@@ -7,7 +7,7 @@ on the Wan 2.2 official stem.  Adds action + causal hooks.
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from torch import nn
@@ -714,14 +714,14 @@ class _CausalHead(nn.Module):
 class ABotWorldModel(nn.Module, NativeConfigMixin):
     """ABot-World causal DiT with action and reference-view conditioning."""
 
-    ignore_for_config = [
+    ignore_for_config: ClassVar[list] = [
         "patch_size",
         "cross_attn_norm",
         "qk_norm",
         "text_dim",
         "window_size",
     ]
-    _no_split_modules = ["_CausalBlock"]
+    _no_split_modules: ClassVar[list] = ["_CausalBlock"]
 
     @register_to_config
     def __init__(

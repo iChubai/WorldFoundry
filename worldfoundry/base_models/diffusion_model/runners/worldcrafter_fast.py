@@ -22,8 +22,8 @@ from .helios import XLA_AVAILABLE
 def sample_fast(
     self,
     latents: torch.Tensor = None,
-    pyramid_num_stages: int = None,
-    pyramid_num_inference_steps_list: list[int] = None,
+    pyramid_num_stages: int | None = None,
+    pyramid_num_inference_steps_list: list[int] | None = None,
     prompt_embeds: torch.Tensor = None,
     guidance_scale: float | None = 1.0,
     indices_hidden_states: torch.Tensor = None,

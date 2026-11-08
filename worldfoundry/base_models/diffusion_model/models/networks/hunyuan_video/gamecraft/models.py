@@ -133,7 +133,7 @@ class DoubleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple = None,
+        freqs_cis: tuple | None = None,
         use_sage: bool = True,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         img_mod1_shift, img_mod1_scale, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate = self.img_mod(
@@ -250,7 +250,7 @@ class SingleStreamBlock(nn.Module):
         mlp_act_type: str = "gelu_tanh",
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
-        qk_scale: float = None,
+        qk_scale: float | None = None,
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
     ):
@@ -298,7 +298,7 @@ class SingleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         use_sage: bool = True,
     ) -> torch.Tensor:
         mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
@@ -395,7 +395,7 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
         args,
         patch_size: list = [1, 2, 2],
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
-        out_channels: int = None,
+        out_channels: int | None = None,
         hidden_size: int = 3072,
         mlp_width_ratio: float = 4.0,
         mlp_act_type: str = "gelu_tanh",

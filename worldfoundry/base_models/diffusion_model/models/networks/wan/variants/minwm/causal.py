@@ -6,6 +6,7 @@ modules.  Adds causal attention.
 
 import math
 import os
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -705,8 +706,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(nn.Module, NativeConfigMixin):
     r"""MinWM causal Wan 2.1 transformer (chunk KV cache)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     # FSDP shard conditions — infra only, no model change
@@ -1102,8 +1103,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         seq_len,
         clip_fea=None,
         y=None,
-        kv_cache: dict = None,
-        crossattn_cache: dict = None,
+        kv_cache: dict | None = None,
+        crossattn_cache: dict | None = None,
         current_start: int = 0,
         cache_start: int = 0,
         viewmats=None,

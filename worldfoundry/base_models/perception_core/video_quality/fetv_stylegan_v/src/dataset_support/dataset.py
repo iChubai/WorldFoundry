@@ -272,7 +272,7 @@ class VideoFramesFolderDataset(Dataset):
         path,  # Path to directory or zip.
         cfg: DictConfig,  # Config
         resolution=None,  # Unused arg for backward compatibility
-        load_n_consecutive: int = None,  # Should we load first N frames for each video?
+        load_n_consecutive: int | None = None,  # Should we load first N frames for each video?
         load_n_consecutive_random_offset: bool = True,  # Should we use a random offset when loading consecutive frames?
         subsample_factor: int = 1,  # Sampling factor, i.e. decreasing the temporal resolution
         discard_short_videos: bool = False,  # Should we discard videos that are shorter than `load_n_consecutive`?
@@ -469,7 +469,7 @@ class VideoFramesFolderDataset(Dataset):
     def get_video_len(self, idx: int) -> int:
         return min(self.max_num_frames, len(self._video_idx2frames[self._raw_idx[idx]]))
 
-    def _load_raw_frames(self, raw_idx: int, frames_idx: list[int] = None) -> tuple[np.ndarray, np.ndarray]:
+    def _load_raw_frames(self, raw_idx: int, frames_idx: list[int] | None = None) -> tuple[np.ndarray, np.ndarray]:
         frame_paths = self._video_idx2frames[raw_idx]
         total_len = len(frame_paths)
         offset = 0

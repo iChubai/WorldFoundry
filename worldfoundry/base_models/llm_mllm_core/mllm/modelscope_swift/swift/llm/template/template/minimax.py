@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
 
@@ -33,7 +33,7 @@ register_template(MinimaxTemplateMeta(LLMTemplateType.minimax))
 
 
 class MinimaxVLTemplate(Template):
-    image_placeholder = ["<image>"]
+    image_placeholder: ClassVar[list] = ["<image>"]
     skip_prompt = True
 
     def replace_tag(

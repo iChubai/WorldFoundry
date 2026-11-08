@@ -25,8 +25,8 @@ class ResidualConvBlock(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_channels: int = None,
-        hidden_channels: int = None,
+        out_channels: int | None = None,
+        hidden_channels: int | None = None,
         kernel_size: int = 3,
         padding_mode: str = "replicate",
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",

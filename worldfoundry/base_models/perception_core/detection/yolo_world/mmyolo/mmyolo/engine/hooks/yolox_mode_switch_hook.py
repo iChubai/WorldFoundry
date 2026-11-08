@@ -22,7 +22,7 @@ class YOLOXModeSwitchHook(Hook):
             Defaults to 15.
     """
 
-    def __init__(self, num_last_epochs: int = 15, new_train_pipeline: Sequence[dict] = None):
+    def __init__(self, num_last_epochs: int = 15, new_train_pipeline: Sequence[dict] | None = None):
         self.num_last_epochs = num_last_epochs
         self.new_train_pipeline_cfg = new_train_pipeline
 

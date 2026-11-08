@@ -79,7 +79,7 @@ class Bottleneck(nn.Module):
 class AttentionPool2d(nn.Module):
     """Attention pool d implementation."""
 
-    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None):
+    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int | None = None):
         """Init.
 
         Args:

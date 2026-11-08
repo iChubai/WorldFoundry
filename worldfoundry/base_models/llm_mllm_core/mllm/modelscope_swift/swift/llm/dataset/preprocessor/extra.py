@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -11,8 +11,8 @@ class GroundingMixin:
 
     task_type: str | None = None
 
-    _grounding_language_mixin = [0.8, 0.2]
-    _grounding_prompts = {
+    _grounding_language_mixin: ClassVar[list] = [0.8, 0.2]
+    _grounding_prompts: ClassVar[dict] = {
         "grounding": {
             "en": [
                 ("<ref-object>", "<bbox>"),

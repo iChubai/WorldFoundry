@@ -21,7 +21,7 @@ class MLPHead(nn.Module):
         output_dim: int,
         num_mlp_layers: int = 2,
         hidden_dim: int = 196,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):

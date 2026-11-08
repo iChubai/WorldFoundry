@@ -1,5 +1,6 @@
 # Copyright (c) Tencent. All rights reserved.
 import os.path as osp
+from typing import ClassVar
 
 from mmdet.datasets.coco import CocoDataset
 from mmengine.fileio import get_local_path, join_path
@@ -12,7 +13,7 @@ from mmyolo.registry import DATASETS
 class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
     """Mixed grounding dataset."""
 
-    METAINFO = {"classes": ("object",), "palette": [(220, 20, 60)]}
+    METAINFO: ClassVar[dict] = {"classes": ("object",), "palette": [(220, 20, 60)]}
 
     def load_data_list(self) -> list[dict]:
         """Load annotations from an annotation file named as ``self.ann_file``

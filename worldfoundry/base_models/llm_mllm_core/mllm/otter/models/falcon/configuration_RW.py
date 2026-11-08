@@ -13,6 +13,8 @@
 # limitations under the License.
 """Bloom configuration"""
 
+from typing import ClassVar
+
 from transformers.configuration_utils import PretrainedConfig
 from transformers.utils import logging
 
@@ -21,8 +23,8 @@ logger = logging.get_logger(__name__)
 
 class RWConfig(PretrainedConfig):
     model_type = "RefinedWebModel"
-    keys_to_ignore_at_inference = ["past_key_values"]
-    attribute_map = {
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
+    attribute_map: ClassVar[dict] = {
         "num_hidden_layers": "n_layer",
         "num_attention_heads": "n_head",
     }

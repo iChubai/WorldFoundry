@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 import torch.nn as nn
@@ -30,7 +30,7 @@ register_template(MegrezTemplateMeta(LLMTemplateType.megrez))
 
 class MegrezOmniTemplate(Template):
     skip_prompt = False
-    placeholder_tokens = ["<|unk|>"]
+    placeholder_tokens: ClassVar[list] = ["<|unk|>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

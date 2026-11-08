@@ -36,7 +36,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         self,
         pos_type="rope100",
         decoder_size="large",
-        ttt_insert_after: int | list[int] = None,
+        ttt_insert_after: int | list[int] | None = None,
         ttt_head_dim: int = 512,
         ttt_inter_multi: int = 2,
         num_muon_update_steps: int = 5,

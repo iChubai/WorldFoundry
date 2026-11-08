@@ -48,8 +48,8 @@ class STream3R(nn.Module, PyTorchModelHubMixin):
         self,
         images: torch.Tensor,
         mode: str = "causal",
-        aggregator_kv_cache_list: list[list[torch.Tensor]] = None,
-        camera_head_kv_cache_list: list[list[list[torch.Tensor]]] = None,
+        aggregator_kv_cache_list: list[list[torch.Tensor]] | None = None,
+        camera_head_kv_cache_list: list[list[list[torch.Tensor]]] | None = None,
     ):
         """
         Forward pass of the STream3R model.

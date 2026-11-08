@@ -1,6 +1,7 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import copy
 import os.path as osp
+from typing import ClassVar
 
 from mmdet.datasets import CocoDataset
 from mmdet.datasets.api_wrappers import COCO
@@ -30,7 +31,7 @@ v3det_ignore_list = [
 class V3DetDataset(CocoDataset):
     """Objects365 v1 dataset for detection."""
 
-    METAINFO = {"classes": "classes", "palette": None}
+    METAINFO: ClassVar[dict] = {"classes": "classes", "palette": None}
 
     COCOAPI = COCO
     # ann_id is unique in coco dataset.

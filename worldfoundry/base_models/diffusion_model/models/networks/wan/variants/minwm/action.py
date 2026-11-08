@@ -5,6 +5,7 @@ Action tokens on top of :mod:`.causal`.  Adds action + causal hooks.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -644,8 +645,8 @@ class RegisterTokens(nn.Module):
 class WanModel(nn.Module, NativeConfigMixin):
     r"""MinWM action-conditioned causal Wan 2.1 transformer."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     @register_to_config

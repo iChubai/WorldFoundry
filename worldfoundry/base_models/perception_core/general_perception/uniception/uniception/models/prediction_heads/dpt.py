@@ -48,7 +48,7 @@ class DPTFeature(nn.Module):
         feature_dim: int = 256,
         use_bn: bool = False,
         output_width_ratio=1,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         checkpoint_gradient: bool = False,
         nonlinearity: str = "relu",
         *args,
@@ -242,7 +242,7 @@ class DPTRegressionProcessor(nn.Module):
         input_feature_dim: int,
         output_dim: int,
         hidden_dims: list[int] | None = None,  # when not given, use input_feature_dim//2
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         checkpoint_gradient: bool = False,
         nonlinearity: str = "relu",
         *args,
@@ -319,7 +319,7 @@ class DPTSegmentationProcessor(nn.Module):
         output_dim: int,
         hidden_dim: int | None = None,  # when not given, use input_feature_dim
         use_bn: bool = False,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):
@@ -402,7 +402,7 @@ class DPTFeatureDoubleUpsampling(nn.Module):
         feature_dim: int = 256,
         use_bn: bool = False,
         output_width_ratio=1,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         checkpoint_gradient: bool = False,
         *args,
         **kwargs,

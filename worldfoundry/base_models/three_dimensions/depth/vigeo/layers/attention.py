@@ -90,12 +90,12 @@ class Attention(nn.Module):
         self,
         x: Tensor,
         pos: Tensor = None,
-        segment_lengths: list[int] = None,
+        segment_lengths: list[int] | None = None,
         attn_mask=None,
         past_key_value=None,
         use_cache=False,
-        cache_budget: int = None,
-        tokens_per_frame: int = None,
+        cache_budget: int | None = None,
+        tokens_per_frame: int | None = None,
     ):
         B, SN, C = x.shape
         qkv = self.qkv(x).reshape(B, SN, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)

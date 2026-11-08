@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 from PIL import Image
@@ -42,7 +42,7 @@ register_template(ChatmlTemplateMeta(RMTemplateType.internlm2_reward, suffix=["<
 
 
 class InternLMXComposer2Template(Template):
-    image_placeholder = ["</s>"]
+    image_placeholder: ClassVar[list] = ["</s>"]
     version = "v2"
     skip_prompt = False
     use_model = True

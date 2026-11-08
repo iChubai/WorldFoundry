@@ -8,6 +8,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 import logging
 import random
 import string
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -39,7 +40,7 @@ class Blip2T5Instruct(Blip2Base):
         >>> model = load_model("blip2_t5_instruct", "flant5xl")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "flant5xl": "configs/models/blip2/blip2_instruct_flant5xl.yaml",
         "flant5xxl": "configs/models/blip2/blip2_instruct_flant5xxl.yaml",
     }

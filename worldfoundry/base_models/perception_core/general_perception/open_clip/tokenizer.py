@@ -11,6 +11,7 @@ import string
 import warnings
 from collections.abc import Callable
 from functools import lru_cache, partial
+from typing import ClassVar
 
 import ftfy
 import numpy as np
@@ -692,7 +693,7 @@ class SigLipTokenizer:
     into OpenCLIP. Leaving code here in case future models use new tokenizers.
     """
 
-    VOCAB_FILES = {
+    VOCAB_FILES: ClassVar[dict] = {
         # english, vocab_size=32_000
         "c4-en": "http://storage.googleapis.com/t5-data/vocabs/cc_en.32000/sentencepiece.model",
         # used in multilingual models (mT5, PaLI), vocab_size=250_000

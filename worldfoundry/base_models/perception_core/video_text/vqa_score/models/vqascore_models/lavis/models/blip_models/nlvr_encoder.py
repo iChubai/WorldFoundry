@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -601,7 +602,7 @@ class BertPreTrainedModel(PreTrainedModel):
 
     config_class = BertConfig
     base_model_prefix = "bert"
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids"]
 
     def _init_weights(self, module):
         """Initialize the weights"""

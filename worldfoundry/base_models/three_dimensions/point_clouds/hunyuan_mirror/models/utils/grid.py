@@ -47,7 +47,7 @@ def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: floa
 
 # Inspired by https://github.com/microsoft/moge
 def create_uv_grid(
-    width: int, height: int, aspect_ratio: float = None, dtype: torch.dtype = None, device: torch.device = None
+    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
 ) -> torch.Tensor:
     """
     Create a normalized UV grid of shape (width, height, 2).

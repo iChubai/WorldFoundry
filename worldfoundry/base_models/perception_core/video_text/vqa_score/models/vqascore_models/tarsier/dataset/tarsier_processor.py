@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import torch
 from PIL import Image
 from transformers import Qwen2VLImageProcessor
@@ -17,8 +19,15 @@ class TarsierProcessorKwargs(ProcessingKwargs, total=False):
 
 
 class TarsierProcessor(ProcessorMixin):
-    attributes = ["image_processor", "tokenizer"]
-    valid_kwargs = ["chat_template", "image_token", "patch_size", "merge_size", "temporal_patch_size", "max_seq_len"]
+    attributes: ClassVar[list] = ["image_processor", "tokenizer"]
+    valid_kwargs: ClassVar[list] = [
+        "chat_template",
+        "image_token",
+        "patch_size",
+        "merge_size",
+        "temporal_patch_size",
+        "max_seq_len",
+    ]
     image_processor_class = "AutoImageProcessor"
     tokenizer_class = "AutoTokenizer"
 

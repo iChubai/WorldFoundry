@@ -4,6 +4,7 @@ import os
 import os.path as osp
 from collections import defaultdict
 from io import BytesIO
+from typing import ClassVar
 
 import PIL.Image
 import requests
@@ -162,9 +163,9 @@ class VILAProcessorKwargs(ProcessingKwargs, total=False):
 
 class VILAProcessor(ProcessorMixin):
     # attributes = ["image_processor", "tokenizer"]
-    attributes = []
+    attributes: ClassVar[list] = []
     # valid_kwargs = ["chat_template"]
-    valid_kwargs = []
+    valid_kwargs: ClassVar[list] = []
     # image_processor_class = "VILAImageProcessor"
     # tokenizer_class = ("VILATokenizer", "VILATokenizerFast")
 

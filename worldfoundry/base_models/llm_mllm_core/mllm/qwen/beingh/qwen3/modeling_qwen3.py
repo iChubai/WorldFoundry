@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from functools import partial
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -439,8 +440,8 @@ class Qwen3PreTrainedModel(PreTrainedModel):
     config_class = Qwen3Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen3DecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values"]
+    _no_split_modules: ClassVar[list] = ["Qwen3DecoderLayer"]
+    _skip_keys_device_placement: ClassVar[list] = ["past_key_values"]
     _supports_flash_attn_2 = True
     _supports_sdpa = True
     _supports_flex_attn = True
@@ -868,9 +869,9 @@ class Qwen3Model(Qwen3PreTrainedModel):
 class Qwen3ForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
     """Qwen for causal lm implementation."""
 
-    _tied_weights_keys = ["lm_head.weight"]
-    _tp_plan = {"lm_head": "colwise_rep"}
-    _pp_plan = {"lm_head": (["hidden_states"], ["logits"])}
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
+    _tp_plan: ClassVar[dict] = {"lm_head": "colwise_rep"}
+    _pp_plan: ClassVar[dict] = {"lm_head": (["hidden_states"], ["logits"])}
 
     def __init__(self, config):
         """Init.

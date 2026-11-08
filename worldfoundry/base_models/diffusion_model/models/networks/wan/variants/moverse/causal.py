@@ -5,6 +5,7 @@ inference is :mod:`.mmdit`.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -725,14 +726,14 @@ class CausalHead(nn.Module):
 class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
     r"""MoVerse causal Wan 2.x rollout graph."""
 
-    ignore_for_config = [
+    ignore_for_config: ClassVar[list] = [
         "patch_size",
         "cross_attn_norm",
         "qk_norm",
         "text_dim",
         "causal_rope_fn",
     ]
-    _no_split_modules = ["WanAttentionBlock"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(
@@ -869,8 +870,8 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         seq_len,
         clip_fea=None,
         y=None,
-        kv_cache: dict = None,
-        crossattn_cache: dict = None,
+        kv_cache: dict | None = None,
+        crossattn_cache: dict | None = None,
         current_start: int = 0,
     ):
         r"""

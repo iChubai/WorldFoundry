@@ -34,7 +34,7 @@ except Exception as e:
 CONFIG_ROOT = resolve_data_path("models", "runtime", "configs", "depth_anything_v3", "configs")
 
 
-def load_config(path: str, argv: list[str] = None) -> DictConfig | ListConfig:
+def load_config(path: str, argv: list[str] | None = None) -> DictConfig | ListConfig:
     """
     Load a configuration. Will resolve inheritance.
     Supports both file paths and module paths (e.g., worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.configs.giant).

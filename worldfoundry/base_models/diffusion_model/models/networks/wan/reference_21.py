@@ -21,6 +21,7 @@ native packed graph in :mod:`.model`.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -485,8 +486,8 @@ class MLPProj(torch.nn.Module):
 class WanModel(nn.Module, NativeConfigMixin):
     r"""Official-layout Wan 2.1 T2V / I2V / FLF2V DiT (list-of-videos packing)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(

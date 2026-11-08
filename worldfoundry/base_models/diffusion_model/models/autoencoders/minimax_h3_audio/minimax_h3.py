@@ -12,6 +12,8 @@ layerwise offload; they are informational only here.
 Package entry re-exports this type from :mod:`..minimax_h3_audio`.
 """
 
+from typing import ClassVar
+
 from .audio_vae import DacAudioVAE
 from .config import MiniMaxH3AudioVAEConfig
 
@@ -25,7 +27,7 @@ class MiniMaxH3AudioVAE(DacAudioVAE):
     # ModuleList), retained here only as informational metadata.
     """Encode/decode MiniMax H3 audio with published latent statistics."""
 
-    layer_names = [
+    layer_names: ClassVar[list] = [
         "encoder.block",
         *(f"decoder.ups.{index}" for index in range(7)),
         "decoder.resblocks",

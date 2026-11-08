@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import numpy as np
 import torch
@@ -31,7 +31,7 @@ register_template(GemmaTemplateMeta(LLMTemplateType.gemma))
 
 
 class PaliGemmaTemplate(Template):
-    placeholder_tokens = ["<image>"]
+    placeholder_tokens: ClassVar[list] = ["<image>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
@@ -99,7 +99,7 @@ register_template(Gemma3TextTemplateMeta(LLMTemplateType.gemma3_text, template_c
 
 class Gemma3VisionTemplate(Gemma3Template):
     boi_token_id = 255999
-    placeholder_tokens = ["<start_of_image>"]
+    placeholder_tokens: ClassVar[list] = ["<start_of_image>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

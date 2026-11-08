@@ -231,7 +231,7 @@ def save_checkpoint(
     *,
     safe_serialization: bool = True,
     max_shard_size: int | str = "5GB",
-    model_dirs: list[str] = None,
+    model_dirs: list[str] | None = None,
     additional_saved_files: list[str] | None = None,
 ) -> None:
     if model is not None:

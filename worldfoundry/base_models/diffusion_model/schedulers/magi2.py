@@ -10,7 +10,7 @@ refiner renoise sigma (``magi2_refiner_noise_value``).
 """
 
 import math
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -72,7 +72,7 @@ class FlowUniPCMultistepScheduler(SchedulerMixin, ConfigMixin):
             sigma is the same as the last sigma in the training schedule. If `zero`, the final sigma is set to 0.
     """
 
-    _compatibles = [e.name for e in KarrasDiffusionSchedulers]
+    _compatibles: ClassVar[list] = [e.name for e in KarrasDiffusionSchedulers]
     order = 1
 
     @register_to_config

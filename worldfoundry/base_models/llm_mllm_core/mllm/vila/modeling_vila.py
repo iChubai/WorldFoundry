@@ -3,7 +3,7 @@ import logging
 import os
 import os.path
 from collections import defaultdict, deque
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -91,7 +91,7 @@ class VILAPretrainedModel(PreTrainedModel):
     main_input_name = "input_embeds"
     supports_gradient_checkpointing = True
     _supports_flash_attn_2 = True
-    _no_split_modules = ["Qwen2DecoderLayer", "SiglipEncoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer", "SiglipEncoderLayer"]
 
     def __init__(self, config: VILAConfig, *args, **kwargs):
         super().__init__(config)
@@ -482,7 +482,7 @@ class VILAForCausalLM(VILAPretrainedModel):
         self,
         input_ids: torch.FloatTensor | None = None,
         media: dict[str, list[torch.Tensor]] | None = None,
-        media_config: dict[str, dict[str, Any]] = None,
+        media_config: dict[str, dict[str, Any]] | None = None,
         attention_mask: torch.LongTensor | None = None,
         return_output_ids_only: bool = False,
         **generation_kwargs,

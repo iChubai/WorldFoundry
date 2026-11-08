@@ -1,7 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
@@ -30,7 +29,7 @@ register_template(MoonlightTemplateMeta(LLMTemplateType.moonlight))
 
 
 class KimiVLTemplate(Template):
-    placeholder_tokens = ["<|media_pad|>"]
+    placeholder_tokens: ClassVar[list] = ["<|media_pad|>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

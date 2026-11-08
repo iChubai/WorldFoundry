@@ -12,13 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import glob
 import json
 import math
 import os
 from functools import lru_cache
-from typing import Any
+from typing import Any, ClassVar
 
 import einops
 import torch
@@ -292,8 +291,8 @@ class EvokeAttnProcessor:
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
-        original_context_length_list: list = None,
+        original_context_length: int | None = None,
+        original_context_length_list: list | None = None,
         enable_navit: bool = False,
         is_first_denoising_step: bool = False,
         history_seq_len_override: int | None = None,
@@ -633,7 +632,7 @@ class EvokeAttnProcessor2_0:
 
 class EvokeAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = EvokeAttnProcessor
-    _available_processors = [EvokeAttnProcessor]
+    _available_processors: ClassVar[list] = [EvokeAttnProcessor]
 
     def __init__(
         self,
@@ -778,8 +777,8 @@ class EvokeAttention(torch.nn.Module, AttentionModuleMixin):
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
-        original_context_length_list: list = None,
+        original_context_length: int | None = None,
+        original_context_length_list: list | None = None,
         enable_navit: bool = False,
         **kwargs,
     ) -> torch.Tensor:
@@ -973,8 +972,8 @@ class EvokeTransformerBlock(nn.Module):
         rotary_emb: torch.Tensor,
         navit_hidden_attention_mask: torch.Tensor | None = None,
         navit_encoder_attention_mask: torch.Tensor | None = None,
-        original_context_length: int = None,
-        original_context_length_list: list = None,
+        original_context_length: int | None = None,
+        original_context_length_list: list | None = None,
         is_first_denoising_step: bool = False,
         cam_token_seq: torch.Tensor | None = None,
         cam_noise_slots: list | None = None,
@@ -1189,7 +1188,7 @@ class EvokeTransformer3DModel(
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",
@@ -1197,8 +1196,8 @@ class EvokeTransformer3DModel(
         "condition_embedder",
         "norm",
     ]
-    _no_split_modules = ["EvokeTransformerBlock", "EvokeOutputNorm"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["EvokeTransformerBlock", "EvokeOutputNorm"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "norm1",
@@ -1206,9 +1205,9 @@ class EvokeTransformer3DModel(
         "norm3",
         "history_key_scale",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["EvokeTransformerBlock"]
-    _cp_plan = {
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["EvokeTransformerBlock"]
+    _cp_plan: ClassVar[dict] = {
         # Context-parallel split/gather plan for attention and FFN.
         "blocks.*.attn1": {
             "hidden_states": ContextParallelInput(split_dim=1, expected_dims=3, split_output=False),

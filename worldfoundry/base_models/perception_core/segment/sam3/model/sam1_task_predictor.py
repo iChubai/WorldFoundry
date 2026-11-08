@@ -170,10 +170,10 @@ class SAM3InteractiveImagePredictor(nn.Module):
 
     def predict_batch(
         self,
-        point_coords_batch: list[np.ndarray] = None,
-        point_labels_batch: list[np.ndarray] = None,
-        box_batch: list[np.ndarray] = None,
-        mask_input_batch: list[np.ndarray] = None,
+        point_coords_batch: list[np.ndarray] | None = None,
+        point_labels_batch: list[np.ndarray] | None = None,
+        box_batch: list[np.ndarray] | None = None,
+        mask_input_batch: list[np.ndarray] | None = None,
         multimask_output: bool = True,
         return_logits: bool = False,
         normalize_coords=True,

@@ -16,7 +16,7 @@ class MultiModalDataset:
     def __init__(
         self,
         dataset: BaseDataset | dict,
-        class_text_path: str = None,
+        class_text_path: str | None = None,
         test_mode: bool = True,
         pipeline: list[dict | Callable] = [],
         lazy_init: bool = False,
@@ -98,7 +98,7 @@ class MultiModalMixedDataset(MultiModalDataset):
     def __init__(
         self,
         dataset: BaseDataset | dict,
-        class_text_path: str = None,
+        class_text_path: str | None = None,
         dataset_type: str = "detection",
         test_mode: bool = True,
         pipeline: list[dict | Callable] = [],

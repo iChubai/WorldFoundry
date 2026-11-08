@@ -18,6 +18,7 @@ https://github.com/huggingface/transformers/blob/794fde7b1c3d041519fc28ea3e1461b
 """
 
 import math
+from typing import ClassVar
 
 import omegaconf
 import torch
@@ -935,7 +936,7 @@ QWEN2VL_START_DOCSTRING = r"""
 class Qwen2VLPreTrainedModel(PreTrainedModel):
     config_class = Qwen2VLConfig
     base_model_prefix = "model"
-    _no_split_modules = ["Qwen2VLDecoderLayer", "Qwen2VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2VLDecoderLayer", "Qwen2VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -956,7 +957,7 @@ class Qwen2VLPreTrainedModel(PreTrainedModel):
 
 class Qwen2VisionTransformerPretrainedModel(nn.Module):
     config_class = Qwen2VLVisionConfig
-    _no_split_modules = ["Qwen2VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2VLVisionBlock"]
 
     def __init__(self, config) -> None:
         super().__init__()

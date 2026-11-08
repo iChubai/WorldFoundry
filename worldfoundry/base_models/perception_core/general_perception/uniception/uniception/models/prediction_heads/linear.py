@@ -23,7 +23,7 @@ class LinearFeature(nn.Module):
         input_feature_dim: int,
         output_dim: int,
         patch_size: int,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):

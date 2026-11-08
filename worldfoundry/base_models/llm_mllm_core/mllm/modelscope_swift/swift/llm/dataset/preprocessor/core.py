@@ -4,7 +4,7 @@ import os
 from collections import Counter
 from collections.abc import Callable
 from contextlib import contextmanager, suppress
-from typing import Any, Union
+from typing import Any, ClassVar, Union
 
 import numpy as np
 from datasets import Dataset as HfDataset
@@ -25,7 +25,7 @@ logger = get_logger()
 
 
 class RowPreprocessor:
-    standard_keys = [
+    standard_keys: ClassVar[list] = [
         "messages",
         "rejected_response",
         "label",

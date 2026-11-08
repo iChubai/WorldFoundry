@@ -206,8 +206,8 @@ class PerceptionLMModel:
         num_frames: int = 32,
         num_tiles: int = 36,
         temperature: float = 0.0,
-        top_p: float = None,
-        top_k: int = None,
+        top_p: float | None = None,
+        top_k: int | None = None,
         max_new_tokens: int = 256,
     ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
@@ -250,8 +250,8 @@ class PerceptionLMModel:
         num_frames: int = 32,
         num_tiles: int = 36,
         temperature: float = 0.0,
-        top_p: float = None,
-        top_k: int = None,
+        top_p: float | None = None,
+        top_k: int | None = None,
         max_new_tokens: int = 256,
     ) -> list[str]:
         """

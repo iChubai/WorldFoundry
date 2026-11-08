@@ -104,7 +104,7 @@ def sliding_window(
 
 
 def masked_min(
-    input: Tensor, mask: torch.BoolTensor, dim: int = None, keepdim: bool = False
+    input: Tensor, mask: torch.BoolTensor, dim: int | None = None, keepdim: bool = False
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     """Similar to torch.min, but with mask"""
     if dim is None:
@@ -116,7 +116,7 @@ def masked_min(
 
 
 def masked_max(
-    input: Tensor, mask: torch.BoolTensor, dim: int = None, keepdim: bool = False
+    input: Tensor, mask: torch.BoolTensor, dim: int | None = None, keepdim: bool = False
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     """Similar to torch.max, but with mask"""
     if dim is None:

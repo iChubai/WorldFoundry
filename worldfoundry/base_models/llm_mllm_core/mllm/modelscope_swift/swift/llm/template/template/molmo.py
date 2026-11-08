@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 
@@ -11,7 +11,7 @@ from ..utils import Context, findall
 
 
 class MolmoTemplate(Template):
-    placeholder_tokens = ["<im_patch>"]
+    placeholder_tokens: ClassVar[list] = ["<im_patch>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

@@ -7,6 +7,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import warnings
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -41,7 +42,7 @@ from torch import nn
 
 @registry.register_model("albef_classification")
 class AlbefClassification(AlbefBase, MomentumDistilationMixin):
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "ve": "configs/models/albef_classification_ve.yaml",
     }
 

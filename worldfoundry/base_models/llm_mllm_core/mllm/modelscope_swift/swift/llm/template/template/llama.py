@@ -1,8 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-
 import datetime as dt
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 import torch.nn as nn
@@ -128,7 +127,7 @@ register_template(Llama3_2TemplateMeta(MLLMTemplateType.llama3_2_vision, templat
 
 
 class Llama4Template(Template):
-    placeholder_tokens = ["<|patch|>"]
+    placeholder_tokens: ClassVar[list] = ["<|patch|>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
@@ -192,7 +191,7 @@ register_template(
 
 class Llama3_1OmniTemplate(Template):
     skip_prompt = False
-    audio_placeholder = [[-200]]
+    audio_placeholder: ClassVar[list] = [[-200]]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         import whisper

@@ -1368,7 +1368,7 @@ class MinimalDiT(nn.Module):
         extra_t_extrapolation_ratio: float = 1.0,
         rope_enable_fps_modulation: bool = True,
         n_dense_blocks: int = -1,
-        natten_parameters: dict | list = None,
+        natten_parameters: dict | list | None = None,
         # if True, will closely match wan's strategy to use fp32 in certain layers/operations
         use_wan_fp32_strategy: bool = False,
     ) -> None:
@@ -1732,7 +1732,7 @@ class MinimalDiT(nn.Module):
 
 
 def replace_selfattn_op_with_sparse_attn_op(
-    model: MinimalDiT, n_dense_blocks: int = 0, natten_parameters: dict | list = None
+    model: MinimalDiT, n_dense_blocks: int = 0, natten_parameters: dict | list | None = None
 ) -> MinimalDiT:
     """
     Replace the self-attention operator with a sparse self-attention operator.

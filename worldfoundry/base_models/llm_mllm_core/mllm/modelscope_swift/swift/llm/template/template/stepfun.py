@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from ..base import Template
 from ..constant import MLLMTemplateType
@@ -35,7 +35,7 @@ class GOTImageEvalProcessor:
 
 
 class GOT_OCR2Template(Template):
-    placeholder_tokens = ["<imgpad>"]
+    placeholder_tokens: ClassVar[list] = ["<imgpad>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
@@ -73,7 +73,7 @@ register_template(
 
 
 class GOT_OCR2HfTemplate(Template):
-    placeholder_tokens = ["<imgpad>"]
+    placeholder_tokens: ClassVar[list] = ["<imgpad>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

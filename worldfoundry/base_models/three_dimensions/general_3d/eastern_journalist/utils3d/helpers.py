@@ -80,7 +80,7 @@ class no_warnings:
         self.warnings_manager.__exit__(exc_type, exc_val, exc_tb)
 
 
-def lazy_import(globals: Dict[str, Any], module: str, as_: str = None):
+def lazy_import(globals: Dict[str, Any], module: str, as_: str | None = None):
     """Lazy import.
 
     Args:
@@ -253,7 +253,7 @@ def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
 
 
 @contextmanager
-def timeit(name: str = None):
+def timeit(name: str | None = None):
     """Timeit.
 
     Args:

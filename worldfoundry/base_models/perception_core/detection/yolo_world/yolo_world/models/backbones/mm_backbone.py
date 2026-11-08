@@ -125,7 +125,7 @@ class PseudoLanguageBackbone(BaseModule):
         text_embed_path (str): path to the text embedding file
     """
 
-    def __init__(self, text_embed_path: str = "", test_embed_path: str = None, init_cfg: OptMultiConfig = None):
+    def __init__(self, text_embed_path: str = "", test_embed_path: str | None = None, init_cfg: OptMultiConfig = None):
         super().__init__(init_cfg)
         # {text:embed}
         self.text_embed = torch.load(text_embed_path, map_location="cpu")

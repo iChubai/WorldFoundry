@@ -1,6 +1,7 @@
 import math
 import os
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -228,7 +229,7 @@ class Qwen2VLConfig(PretrainedConfig):
     ```"""
 
     model_type = "qwen2_vl"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,
@@ -505,7 +506,7 @@ class Qwen2VLPreTrainedModel(PreTrainedModel):
     config_class = Qwen2VLConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2VLDecoderLayer", "Qwen2VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2VLDecoderLayer", "Qwen2VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = False
@@ -526,7 +527,7 @@ class Qwen2VLPreTrainedModel(PreTrainedModel):
 
 class Qwen2VisionTransformerPretrainedModel(Qwen2VLPreTrainedModel):
     config_class = Qwen2VLVisionConfig
-    _no_split_modules = ["Qwen2VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2VLVisionBlock"]
 
     def __init__(self, config) -> None:
         super().__init__(config)
@@ -1139,7 +1140,7 @@ class Qwen2VLModel(Qwen2VLPreTrainedModel):
 
 
 class Qwen2VLForCausalLM(Qwen2VLPreTrainedModel, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         super().__init__(config)

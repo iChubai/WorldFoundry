@@ -4,6 +4,7 @@ Requires Transformer 4.28 and above, implementation may change according the Lla
 
 import logging
 import string
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -27,7 +28,7 @@ class Blip2VicunaInstruct(Blip2Base):
         >>> model = load_model("blip2_vicuna_instruct", "vicuna7b")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "vicuna7b": "configs/models/blip2/blip2_instruct_vicuna7b.yaml",
         "vicuna13b": "configs/models/blip2/blip2_instruct_vicuna13b.yaml",
     }

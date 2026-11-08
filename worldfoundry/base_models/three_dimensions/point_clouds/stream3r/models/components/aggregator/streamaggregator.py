@@ -184,7 +184,7 @@ class STreamAggregator(nn.Module):
         return mask
 
     def forward(
-        self, images: torch.Tensor, mode: str = "causal", kv_cache_list: list[list[torch.Tensor]] = None
+        self, images: torch.Tensor, mode: str = "causal", kv_cache_list: list[list[torch.Tensor]] | None = None
     ) -> tuple[list[torch.Tensor], int]:
         """
         Args:

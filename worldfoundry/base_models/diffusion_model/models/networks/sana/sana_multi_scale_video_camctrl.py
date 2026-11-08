@@ -733,7 +733,7 @@ class SanaMSVideoCamCtrl(Sana):
         flash_attn_window_count=None,
         pack_latents=False,
         camctrl_type: str = "PluckerPatchifyAdd",
-        camctrl_layers_num: int = None,
+        camctrl_layers_num: int | None = None,
         cam_attn_compress: int = 2,
         init_cam_from_base: bool = False,
         use_delta_actions: bool = False,

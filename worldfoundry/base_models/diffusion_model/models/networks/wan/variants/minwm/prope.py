@@ -72,10 +72,10 @@ def prope_qkv(
     *,
     viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
     Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
-    patches_x: int = None,  # How many patches wide is each image?
-    patches_y: int = None,  # How many patches tall is each image?
-    image_width: int = None,  # Width of the image. Used to normalize intrinsics.
-    image_height: int = None,  # Height of the image. Used to normalize intrinsics.
+    patches_x: int | None = None,  # How many patches wide is each image?
+    patches_y: int | None = None,  # How many patches tall is each image?
+    image_width: int | None = None,  # Width of the image. Used to normalize intrinsics.
+    image_height: int | None = None,  # Height of the image. Used to normalize intrinsics.
     coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
     coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
     mask: torch.Tensor | None = None,

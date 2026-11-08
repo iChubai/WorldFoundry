@@ -20,6 +20,7 @@
 
 import math
 import warnings
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -989,8 +990,8 @@ class LlamaPreTrainedModel(PreTrainedModel):
     config_class = LlamaConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["LlamaDecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values", "causal_mask"]
+    _no_split_modules: ClassVar[list] = ["LlamaDecoderLayer"]
+    _skip_keys_device_placement: ClassVar[list] = ["past_key_values", "causal_mask"]
     _supports_flash_attn_2 = True
     _supports_sdpa = True
     _supports_cache_class = True
@@ -1308,7 +1309,7 @@ class LlamaModel(LlamaPreTrainedModel):
 
 
 class LlamaForCausalLM(LlamaPreTrainedModel):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         super().__init__(config)

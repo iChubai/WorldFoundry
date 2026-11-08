@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 from torch import nn
@@ -42,7 +42,7 @@ class MiniCPMVTemplate(Template):
     is_v2_5 = False
     use_model = True
     skip_prompt = False
-    placeholder_tokens = ["<unk>"]
+    placeholder_tokens: ClassVar[list] = ["<unk>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

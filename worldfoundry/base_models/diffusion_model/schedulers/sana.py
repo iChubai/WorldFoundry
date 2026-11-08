@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 from torch import Tensor
@@ -188,7 +189,7 @@ def build_sana_longlive_scheduler(context: ComponentBuildContext) -> SanaLongLiv
 class SanaStreamingEulerScheduler(WanFlowMatchEulerScheduler):
     """Euler flow schedule including released 2/4-step streaming timesteps."""
 
-    _FIXED_TIMESTEPS = {
+    _FIXED_TIMESTEPS: ClassVar[dict] = {
         2: (1000.0, 743.0),
         4: (1000.0, 961.0, 893.0, 743.0),
     }

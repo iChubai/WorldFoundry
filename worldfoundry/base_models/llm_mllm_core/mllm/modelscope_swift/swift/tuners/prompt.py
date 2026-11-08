@@ -148,7 +148,7 @@ class Prompt(SwiftAdapter):
         )
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         modules = find_sub_module(module, f"prompt_{adapter_name}")
         for _module in modules:
             _module: ActivationMixin

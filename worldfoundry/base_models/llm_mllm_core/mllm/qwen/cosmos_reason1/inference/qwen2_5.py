@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
+from typing import ClassVar
 
 import omegaconf
 import torch
@@ -333,7 +333,7 @@ class Qwen2_5_VLVisionBlock(nn.Module):
 
 class Qwen2_5_VisionTransformerPretrainedModel(nn.Module):
     config_class = Qwen2_5_VLVisionConfig
-    _no_split_modules = ["Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLVisionBlock"]
 
     def __init__(self, config) -> None:
         super().__init__()

@@ -308,7 +308,7 @@ class CameraCausalHead(nn.Module):
         self,
         aggregated_tokens_list: list,
         mask=None,
-        num_iterations: int = None,
+        num_iterations: int | None = None,
         causal_inference=False,
         num_frame_per_block=1,
         num_frame_for_scale=-1,

@@ -13,6 +13,8 @@
 # limitations under the License.
 """Qwen3 model configuration"""
 
+from typing import ClassVar
+
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation
 from transformers.utils import logging
@@ -129,7 +131,7 @@ class Qwen3Config(PretrainedConfig):
     ```"""
 
     model_type = "qwen3"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,

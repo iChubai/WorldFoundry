@@ -225,7 +225,7 @@ class PriorDepthAnything(nn.Module):
         image: str | torch.Tensor | np.ndarray = None,
         prior: str | torch.Tensor | np.ndarray = None,
         geometric: str | torch.Tensor | np.ndarray = None,
-        pattern: str = None,
+        pattern: str | None = None,
         double_global=False,
         prior_cover=False,
         visualize=False,

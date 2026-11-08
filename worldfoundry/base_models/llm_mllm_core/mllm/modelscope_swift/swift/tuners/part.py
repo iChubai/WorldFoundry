@@ -113,7 +113,7 @@ class Part(SwiftAdapter):
         )
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         name_list = [name for name, _ in module.named_modules(remove_duplicate=False)]
         for name in name_list:
             sub_module: nn.Module = module.get_submodule(name)

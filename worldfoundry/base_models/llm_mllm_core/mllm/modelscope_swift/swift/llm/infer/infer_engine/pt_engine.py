@@ -61,7 +61,7 @@ class PtEngine(InferEngine):
         model_id_or_path: str,
         torch_dtype: torch.dtype | None = None,
         *,
-        adapters: list[str] = None,
+        adapters: list[str] | None = None,
         max_batch_size: int = 1,  # 0/1: no limit
         model_type: str | None = None,
         use_hf: bool | None = None,

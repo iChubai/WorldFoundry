@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PyTorch BERT model."""
-# Adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
 
+# Adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
 import builtins
 import copy
 import json
 import logging
 import math
 import os
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint as checkpoint
@@ -307,7 +308,7 @@ class PretrainedConfig:
     Handle a few common parameters and methods for loading/downloading/saving configurations.
     """
 
-    pretrained_config_archive_map = {}
+    pretrained_config_archive_map: ClassVar[dict] = {}
 
     def __init__(self, **kwargs):
         self.finetuning_task = kwargs.pop("finetuning_task", None)

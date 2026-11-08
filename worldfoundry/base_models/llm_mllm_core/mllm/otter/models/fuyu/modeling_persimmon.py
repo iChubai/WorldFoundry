@@ -19,6 +19,7 @@
 """PyTorch Persimmon model."""
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -472,7 +473,7 @@ class PersimmonPreTrainedModel(PreTrainedModel):
     config_class = PersimmonConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["PersimmonDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["PersimmonDecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
 
     def _init_weights(self, module):
@@ -738,7 +739,7 @@ class PersimmonModel(PersimmonPreTrainedModel):
 
 
 class PersimmonForCausalLM(PersimmonPreTrainedModel):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     # Copied from transformers.models.llama.modeling_llama.LlamaForCausalLM.__init__ with LLAMA->PERSIMMON,Llama->Persimmon
     def __init__(self, config):

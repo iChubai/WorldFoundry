@@ -62,7 +62,7 @@ class NEFTune(SwiftAdapter):
         )
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         for sub_module in module.modules():
             if isinstance(sub_module, torch.nn.Embedding):
                 sub_module.nef_activated = activate

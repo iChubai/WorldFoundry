@@ -1,5 +1,6 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+from typing import ClassVar
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import ConvModule
 from mmdet.models.backbones.csp_darknet import Focus
@@ -41,58 +42,58 @@ class YOLOv7Backbone(BaseBackbone):
             list[:obj:`ConfigDict`]): Initialization config dict.
     """
 
-    _tiny_stage1_cfg = {"type": "TinyDownSampleBlock", "middle_ratio": 0.5}
-    _tiny_stage2_4_cfg = {"type": "TinyDownSampleBlock", "middle_ratio": 1.0}
-    _l_expand_channel_2x = {
+    _tiny_stage1_cfg: ClassVar[dict] = {"type": "TinyDownSampleBlock", "middle_ratio": 0.5}
+    _tiny_stage2_4_cfg: ClassVar[dict] = {"type": "TinyDownSampleBlock", "middle_ratio": 1.0}
+    _l_expand_channel_2x: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.5,
         "block_ratio": 0.5,
         "num_blocks": 2,
         "num_convs_in_block": 2,
     }
-    _l_no_change_channel = {
+    _l_no_change_channel: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.25,
         "block_ratio": 0.25,
         "num_blocks": 2,
         "num_convs_in_block": 2,
     }
-    _x_expand_channel_2x = {
+    _x_expand_channel_2x: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.4,
         "block_ratio": 0.4,
         "num_blocks": 3,
         "num_convs_in_block": 2,
     }
-    _x_no_change_channel = {
+    _x_no_change_channel: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.2,
         "block_ratio": 0.2,
         "num_blocks": 3,
         "num_convs_in_block": 2,
     }
-    _w_no_change_channel = {
+    _w_no_change_channel: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.5,
         "block_ratio": 0.5,
         "num_blocks": 2,
         "num_convs_in_block": 2,
     }
-    _e_no_change_channel = {
+    _e_no_change_channel: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 0.4,
         "block_ratio": 0.4,
         "num_blocks": 3,
         "num_convs_in_block": 2,
     }
-    _d_no_change_channel = {
+    _d_no_change_channel: ClassVar[dict] = {
         "type": "ELANBlock",
         "middle_ratio": 1 / 3,
         "block_ratio": 1 / 3,
         "num_blocks": 4,
         "num_convs_in_block": 2,
     }
-    _e2e_no_change_channel = {
+    _e2e_no_change_channel: ClassVar[dict] = {
         "type": "EELANBlock",
         "num_elan_block": 2,
         "middle_ratio": 0.4,
@@ -103,7 +104,7 @@ class YOLOv7Backbone(BaseBackbone):
 
     # From left to right:
     # in_channels, out_channels, Block_params
-    arch_settings = {
+    arch_settings: ClassVar[dict] = {
         "Tiny": [
             [64, 64, _tiny_stage1_cfg],
             [64, 128, _tiny_stage2_4_cfg],
@@ -160,7 +161,7 @@ class YOLOv7Backbone(BaseBackbone):
         input_channels: int = 3,
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: dict | list[dict] = None,
+        plugins: dict | list[dict] | None = None,
         norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
         act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,

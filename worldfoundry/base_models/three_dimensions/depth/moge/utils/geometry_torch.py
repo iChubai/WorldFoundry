@@ -91,7 +91,7 @@ def geometric_mean(
 
 
 def normalized_view_plane_uv(
-    width: int, height: int, aspect_ratio: float = None, dtype: torch.dtype = None, device: torch.device = None
+    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
 ) -> torch.Tensor:
     "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
     if aspect_ratio is None:

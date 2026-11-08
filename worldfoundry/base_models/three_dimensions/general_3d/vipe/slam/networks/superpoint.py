@@ -20,6 +20,7 @@ Authors: Rémi Pautrat, Paul-Edouard Sarlin
 
 from collections import OrderedDict
 from types import SimpleNamespace
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -108,7 +109,7 @@ class VGGBlock(nn.Sequential):
 class SuperPoint(nn.Module):
     """Super point implementation."""
 
-    default_conf = {
+    default_conf: ClassVar[dict] = {
         "nms_radius": 4,
         "max_num_keypoints": None,
         "detection_threshold": 0.005,

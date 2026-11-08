@@ -147,10 +147,10 @@ class MMDoubleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple = None,
-        condition_type: str = None,
+        freqs_cis: tuple | None = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Joint-attend video ``img`` and text ``txt`` (both ``B S C``); return the pair."""
         if condition_type == "token_replace":
@@ -313,7 +313,7 @@ class MMSingleStreamBlock(nn.Module):
         mlp_act_type: str = "gelu_tanh",
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
-        qk_scale: float = None,
+        qk_scale: float | None = None,
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
     ):
@@ -367,10 +367,10 @@ class MMSingleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
-        condition_type: str = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> torch.Tensor:
         """Single-stream block on concatenated video+text tokens ``B (Sv+St) C``."""
         if condition_type == "token_replace":
@@ -510,7 +510,7 @@ class HYVideoDiffusionTransformer(nn.Module):
         args: Any,
         patch_size: list = [1, 2, 2],
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
-        out_channels: int = None,
+        out_channels: int | None = None,
         hidden_size: int = 3072,
         heads_num: int = 24,
         mlp_width_ratio: float = 4.0,

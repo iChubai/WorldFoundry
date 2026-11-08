@@ -91,8 +91,8 @@ class GSFeatHead(_BaseDPTHead):
         token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
-        frame_start: int = None,
-        frame_end: int = None,
+        frame_start: int | None = None,
+        frame_end: int | None = None,
     ) -> torch.Tensor:
         """Helper function to forward impl.
 

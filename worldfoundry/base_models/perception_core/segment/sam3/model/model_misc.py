@@ -11,6 +11,7 @@ import weakref
 from collections.abc import Iterator
 from contextlib import AbstractContextManager
 from enum import Enum, auto
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -442,7 +443,7 @@ def multi_head_attention_forward(
 class MultiheadAttention(nn.Module):
     """Multihead attention implementation."""
 
-    __constants__ = ["batch_first"]
+    __constants__: ClassVar[list] = ["batch_first"]
     bias_k: torch.Tensor | None
     bias_v: torch.Tensor | None
 
@@ -1076,7 +1077,7 @@ class SAM3Output(list):
 
     def __init__(
         self,
-        output: list[list[dict]] = None,
+        output: list[list[dict]] | None = None,
         iter_mode: IterMode = IterMode.ALL_STEPS_PER_STAGE,
         loss_stages: list[int] | None = None,
     ):

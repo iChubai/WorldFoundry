@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from copy import deepcopy
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -51,7 +52,7 @@ class AlbefPretrain(AlbefBase, MomentumDistilationMixin, SharedQueueMixin):
         - base: ALBEF base model used for pretraining.
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/albef_pretrain_base.yaml",
     }
 

@@ -252,7 +252,7 @@ class StepVideoTransformerBlock(nn.Module):
         kv: torch.Tensor | None = None,
         timestep: torch.LongTensor | None = None,
         attn_mask=None,
-        rope_positions: list = None,
+        rope_positions: list | None = None,
     ) -> torch.Tensor:
         """AdaLN-gated self-attn + text CA + FFN on ``B S C`` tokens."""
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (

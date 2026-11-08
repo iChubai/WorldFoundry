@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from ..base import Template
 from ..constant import MLLMTemplateType
@@ -10,7 +10,7 @@ from .llm import mistral_2501_system
 
 
 class Mistral2503Template(Template):
-    placeholder_tokens = ["[IMG]"]
+    placeholder_tokens: ClassVar[list] = ["[IMG]"]
     image_token = 10
 
     def replace_tag(

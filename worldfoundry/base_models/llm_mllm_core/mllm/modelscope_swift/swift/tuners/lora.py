@@ -161,7 +161,7 @@ class LoRA(SwiftAdapter):
         )
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         set_adapter(module, adapter_name, activate, offload)
         for sub_module in module.modules():
             if isinstance(sub_module, (LoraLayer, LoRALayer)):

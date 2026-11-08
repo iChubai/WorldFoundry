@@ -22,6 +22,7 @@ per-frame tokens and unpatchifies to ``B F C H W``.
 """
 
 from types import SimpleNamespace
+from typing import ClassVar
 
 import torch
 from einops import rearrange, repeat
@@ -34,7 +35,7 @@ from .normalization import AdaLayerNormSingle, PixArtAlphaTextProjection
 class StepVideoModel(nn.Module):
     """Checkpoint-compatible StepVideo transformer (AdaLN-single, 3D RoPE)."""
 
-    _no_split_modules = ["StepVideoTransformerBlock", "PatchEmbed"]
+    _no_split_modules: ClassVar[list] = ["StepVideoTransformerBlock", "PatchEmbed"]
 
     def __init__(
         self,
@@ -150,7 +151,7 @@ class StepVideoModel(nn.Module):
         encoder_hidden_states: torch.Tensor | None = None,
         encoder_hidden_states_2: torch.Tensor | None = None,
         timestep: torch.LongTensor | None = None,
-        added_cond_kwargs: dict[str, torch.Tensor] = None,
+        added_cond_kwargs: dict[str, torch.Tensor] | None = None,
         encoder_attention_mask: torch.Tensor | None = None,
         fps: torch.Tensor = None,
         return_dict: bool = True,

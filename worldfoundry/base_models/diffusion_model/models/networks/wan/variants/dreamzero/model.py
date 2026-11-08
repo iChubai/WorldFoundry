@@ -7,6 +7,7 @@ injected in :mod:`.action` via the Pi0 encoder in :mod:`.action_encoder`.
 
 import math
 import os
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -768,8 +769,8 @@ class RegisterTokens(nn.Module):
 class WanModel(nn.Module, NativeConfigMixin):
     r"""DreamZero official-layout Wan 2.1 stem (action injected in .action)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     @register_to_config

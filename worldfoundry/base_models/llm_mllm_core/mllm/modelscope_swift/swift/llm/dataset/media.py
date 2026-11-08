@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
 import shutil
-from typing import Literal
+from typing import ClassVar, Literal
 
 import aiohttp
 from modelscope.hub.utils.utils import get_cache_dir
@@ -17,7 +17,7 @@ class MediaResource:
     cache_dir = os.path.join(get_cache_dir(), "media_resources")
     lock_dir = os.path.join(get_cache_dir(), "lockers")
 
-    media_type_urls = {
+    media_type_urls: ClassVar[set] = {
         "llava",
         "coco",
         "sam",

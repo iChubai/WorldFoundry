@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from functools import lru_cache
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -188,7 +187,7 @@ class HeliosAttnProcessor:
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         query, key, value = _get_qkv_projections(attn, hidden_states, encoder_hidden_states)
 
@@ -233,7 +232,7 @@ class HeliosAttnProcessor:
 
 class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = HeliosAttnProcessor
-    _available_processors = [HeliosAttnProcessor]
+    _available_processors: ClassVar[list] = [HeliosAttnProcessor]
 
     def __init__(
         self,
@@ -348,7 +347,7 @@ class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         return self.processor(
@@ -523,7 +522,7 @@ class HeliosTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **attention_kwargs,
     ) -> torch.Tensor:
         if temb.ndim == 4:
@@ -630,7 +629,7 @@ class HeliosTransformer3DModel(
             The number of channels to use for the added key and value projections. If `None`, no projection is used.
     """
 
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",
@@ -638,8 +637,8 @@ class HeliosTransformer3DModel(
         "condition_embedder",
         "norm",
     ]
-    _no_split_modules = ["HeliosTransformerBlock", "HeliosOutputNorm"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["HeliosTransformerBlock", "HeliosOutputNorm"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "norm1",
@@ -647,13 +646,13 @@ class HeliosTransformer3DModel(
         "norm3",
         "history_key_scale",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["HeliosTransformerBlock"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["HeliosTransformerBlock"]
     # Diffusers still injects its parallel attention configuration, while the
     # model forward below owns the semantic history/main sharding. Keeping the
     # generic hook plan empty avoids three full-width split/gather boundaries
     # per block (120 gathers per transformer call).
-    _cp_plan = {}
+    _cp_plan: ClassVar[dict] = {}
     _block_class = HeliosTransformerBlock
     _history_patch_name = "patch_long"
     _history_patch_scale = 4

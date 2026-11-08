@@ -1519,8 +1519,8 @@ class Sam3MultiplexBase(Sam3VideoBase):
         sam2_update_plan: dict[str, np.ndarray],
         orig_vid_height: int,
         orig_vid_width: int,
-        reconditioned_obj_ids: set = None,
-        det_to_matched_trk_obj_ids: dict = None,
+        reconditioned_obj_ids: set | None = None,
+        det_to_matched_trk_obj_ids: dict | None = None,
     ):
         """Build outputs.
 
@@ -1600,7 +1600,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
         binary_low_res_masks: Tensor,
         last_occluded: Tensor,  # GPU tensor (N_obj,) with frame indices
         obj_ids: np.ndarray,  # numpy array of object IDs
-        frame_idx: int = None,
+        frame_idx: int | None = None,
         reverse: bool = False,
     ):
         """Helper function to get objects to suppress based on most recently occluded.

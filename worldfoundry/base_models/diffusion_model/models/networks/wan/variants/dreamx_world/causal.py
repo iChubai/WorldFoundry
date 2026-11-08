@@ -4,6 +4,7 @@ Causal self-attention on the DreamX stem.  Adds causal hooks.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -572,8 +573,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
     """Wan diffusion backbone for causal camera-controlled video generation (inference only)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["CausalWanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["CausalWanAttentionBlock"]
 
     @register_to_config
     def __init__(

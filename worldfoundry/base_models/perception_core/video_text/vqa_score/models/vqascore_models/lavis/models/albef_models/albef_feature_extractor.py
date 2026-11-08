@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import warnings
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -35,7 +36,7 @@ from transformers import BertConfig
 
 @registry.register_model("albef_feature_extractor")
 class AlbefFeatureExtractor(AlbefBase):
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/albef_feature_extractor.yaml",
     }
 

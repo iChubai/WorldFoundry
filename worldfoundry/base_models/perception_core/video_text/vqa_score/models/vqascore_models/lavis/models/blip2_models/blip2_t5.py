@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import logging
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -31,7 +32,7 @@ class Blip2T5(Blip2Base):
         >>> model = load_model("blip2_t5", "pretrain_flant5xl")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "pretrain_flant5xl": "configs/models/blip2/blip2_pretrain_flant5xl.yaml",
         "pretrain_flant5xl_vitL": "configs/models/blip2/blip2_pretrain_flant5xl_vitL.yaml",
         "pretrain_flant5xxl": "configs/models/blip2/blip2_pretrain_flant5xxl.yaml",

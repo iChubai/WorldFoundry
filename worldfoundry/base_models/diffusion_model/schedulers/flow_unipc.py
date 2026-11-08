@@ -409,7 +409,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         model_output: torch.Tensor,
         *args,
         sample: torch.Tensor = None,
-        order: int = None,  # pyright: ignore
+        order: int | None = None,  # pyright: ignore
         sigma: torch.Tensor = None,
         sigma_next: torch.Tensor = None,
         **kwargs,
@@ -549,7 +549,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         *args,
         last_sample: torch.Tensor = None,
         this_sample: torch.Tensor = None,
-        order: int = None,  # pyright: ignore
+        order: int | None = None,  # pyright: ignore
         sigma_before: torch.Tensor = None,
         sigma: torch.Tensor = None,
         **kwargs,

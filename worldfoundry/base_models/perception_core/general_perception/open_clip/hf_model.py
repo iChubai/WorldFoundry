@@ -145,8 +145,8 @@ class HFTextEncoder(nn.Module):
         model_name_or_path: str,
         output_dim: int,
         config: PretrainedConfig = None,
-        pooler_type: str = None,
-        proj_type: str = None,
+        pooler_type: str | None = None,
+        proj_type: str | None = None,
         pretrained: bool = True,
         output_tokens: bool = False,
     ):

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
+from typing import ClassVar
 
 import numpy as np
 from mmengine.hooks import ParamSchedulerHook
@@ -24,7 +25,7 @@ class YOLOv5ParamSchedulerHook(ParamSchedulerHook):
 
     priority = 9
 
-    scheduler_maps = {"linear": linear_fn, "cosine": cosine_fn}
+    scheduler_maps: ClassVar[dict] = {"linear": linear_fn, "cosine": cosine_fn}
 
     def __init__(
         self,

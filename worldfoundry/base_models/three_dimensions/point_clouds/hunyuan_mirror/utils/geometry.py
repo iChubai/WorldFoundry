@@ -55,7 +55,7 @@ def angle_diff_vec3_numpy(v1: np.ndarray, v2: np.ndarray, eps: float = 1e-12):
 
 
 @no_warnings(category=RuntimeWarning)
-def points_to_normals(point: np.ndarray, mask: np.ndarray = None, edge_threshold: float = None) -> np.ndarray:
+def points_to_normals(point: np.ndarray, mask: np.ndarray = None, edge_threshold: float | None = None) -> np.ndarray:
     """
     Calculate normal map from point map. Value range is [-1, 1].
 
@@ -365,8 +365,8 @@ def max_pool_2d(
 @no_warnings(category=RuntimeWarning)
 def depth_edge(
     depth: np.ndarray,
-    atol: float = None,
-    rtol: float = None,
+    atol: float | None = None,
+    rtol: float | None = None,
     kernel_size: int = 3,
     mask: np.ndarray = None,
 ) -> np.ndarray:
@@ -409,8 +409,8 @@ def depth_edge(
 
 def depth_aliasing(
     depth: np.ndarray,
-    atol: float = None,
-    rtol: float = None,
+    atol: float | None = None,
+    rtol: float | None = None,
     kernel_size: int = 3,
     mask: np.ndarray = None,
 ) -> np.ndarray:

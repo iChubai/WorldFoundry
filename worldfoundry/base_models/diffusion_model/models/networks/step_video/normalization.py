@@ -165,7 +165,7 @@ class TimestepEmbedding(nn.Module):
         in_channels: int,
         time_embed_dim: int,
         act_fn: str = "silu",
-        out_dim: int = None,
+        out_dim: int | None = None,
         post_act_fn: str | None = None,
         cond_proj_dim=None,
         sample_proj_bias=True,
@@ -289,7 +289,7 @@ class AdaLayerNormSingle(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        added_cond_kwargs: dict[str, torch.Tensor] = None,
+        added_cond_kwargs: dict[str, torch.Tensor] | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Return ``(6*C modulation, raw timestep embedding)`` for the DiT blocks."""
         embedded_timestep = self.emb(timestep * self.time_step_rescale, **added_cond_kwargs)

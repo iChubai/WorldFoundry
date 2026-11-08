@@ -1,5 +1,6 @@
 import random as random
 import re
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -33,7 +34,7 @@ def load_video(path, num_frames=4):
 
 
 class MplugOwlProcessor(ProcessorMixin):
-    attributes = []
+    attributes: ClassVar[list] = []
     tokenizer_class = "MplugOwlTokenizer"
 
     def __init__(self, image_processor=None, tokenizer=None, **kwargs):

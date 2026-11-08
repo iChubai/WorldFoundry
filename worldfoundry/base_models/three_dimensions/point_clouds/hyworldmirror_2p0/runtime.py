@@ -283,13 +283,13 @@ class WorldMirrorPipeline:
         pretrained_model_name_or_path: str = "tencent/HY-World-2.0",
         *,
         subfolder: str = "HY-WorldMirror-2.0",
-        config_path: str = None,
-        ckpt_path: str = None,
-        device: str = None,
+        config_path: str | None = None,
+        ckpt_path: str | None = None,
+        device: str | None = None,
         use_fsdp: bool = False,
         enable_bf16: bool = False,
         fsdp_cpu_offload: bool = False,
-        disable_heads: list = None,
+        disable_heads: list | None = None,
     ) -> "WorldMirrorPipeline":
         """Load model and create pipeline instance.
 
@@ -462,15 +462,15 @@ class WorldMirrorPipeline:
         max_resolution: int = 1920,
         compress_gs_max_points: int = 5_000_000,
         # Prior
-        prior_cam_path: str = None,
-        prior_depth_path: str = None,
+        prior_cam_path: str | None = None,
+        prior_depth_path: str | None = None,
         # Rendered video
         save_rendered: bool = False,
         render_interp_per_pair: int = 15,
         render_depth: bool = False,
         # Misc
         log_time: bool = True,
-        strict_output_path: str = None,
+        strict_output_path: str | None = None,
     ) -> str:
         """Run inference on images/video and save results.
 

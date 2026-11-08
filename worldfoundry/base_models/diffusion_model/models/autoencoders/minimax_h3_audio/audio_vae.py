@@ -224,7 +224,7 @@ class DacAudioVAE(nn.Module):
         self,
         encoder_dim: int = 64,
         encoder_rates: list[int] = [2, 4, 8, 8],
-        latent_dim: int = None,
+        latent_dim: int | None = None,
         decoder_dim: int = 1536,
         decoder_rates: list[int] = [8, 8, 4, 2],
         sample_rate: int = 44100,
@@ -314,7 +314,7 @@ class DacAudioVAE(nn.Module):
 
         return audio_data
 
-    def encode(self, audio_data: torch.Tensor, sample_rate: int = None):
+    def encode(self, audio_data: torch.Tensor, sample_rate: int | None = None):
         """Encode waveform into the deterministic posterior-mean latent.
 
         Mirrors the SGLang MiniMax H3 reference-encoding path

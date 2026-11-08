@@ -1,9 +1,9 @@
 # port of models described in RW
 # We use the bloom model as a starting point for these model.
 # Please refer to the bloom models for usage instructions.
-
 import math
 import warnings
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -432,7 +432,7 @@ class DecoderLayer(nn.Module):
 
 
 class RWPreTrainedModel(PreTrainedModel):
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"h.*.self_attention.scale_mask_softmax.causal_mask",
         r"lm_head.weight",
     ]
@@ -444,7 +444,7 @@ class RWPreTrainedModel(PreTrainedModel):
     config_class = RWConfig
     base_model_prefix = "transformer"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["DecoderLayer"]
 
     def __init__(self, *inputs, **kwargs):
         super().__init__(*inputs, **kwargs)
@@ -712,7 +712,7 @@ class RWModel(RWPreTrainedModel):
 
 
 class RWForCausalLM(RWPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"h.*.self_attention.scale_mask_softmax.causal_mask",
         r"lm_head.weight",
     ]
@@ -855,7 +855,7 @@ class RWForCausalLM(RWPreTrainedModel):
 
 
 class RWForSequenceClassification(RWPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"h.*.self_attention.scale_mask_softmax.causal_mask",
         r"lm_head.weight",
     ]
@@ -971,7 +971,7 @@ class RWForSequenceClassification(RWPreTrainedModel):
 
 
 class RWForTokenClassification(RWPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"h.*.self_attention.scale_mask_softmax.causal_mask",
         r"lm_head.weight",
     ]
@@ -1064,7 +1064,7 @@ class RWForTokenClassification(RWPreTrainedModel):
 
 
 class RWForQuestionAnswering(RWPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"h.*.self_attention.scale_mask_softmax.causal_mask",
         r"lm_head.weight",
     ]

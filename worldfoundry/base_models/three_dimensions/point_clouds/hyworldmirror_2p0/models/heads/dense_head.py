@@ -139,8 +139,8 @@ class _BaseDPTHead(nn.Module):
         H: int,
         W: int,
         patch_start_idx: int,
-        frame_start: int = None,
-        frame_end: int = None,
+        frame_start: int | None = None,
+        frame_end: int | None = None,
     ) -> torch.Tensor:
         """Extract multi-scale features from tokens, fuse via scratch network, and upsample."""
         ph = H // self.patch_size
@@ -386,8 +386,8 @@ class DPTHead(_BaseDPTHead):
         token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
-        frame_start: int = None,
-        frame_end: int = None,
+        frame_start: int | None = None,
+        frame_end: int | None = None,
     ) -> torch.Tensor:
         """
         Core forward implementation for DPT head.
@@ -531,7 +531,7 @@ class DPTHead(_BaseDPTHead):
 ################################################################################
 
 
-def _make_fusion_block(features: int, size: int = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
+def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
     """Helper function to make fusion block.
 
     Args:
@@ -731,8 +731,8 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: tuple[int, int] = None,
-    scale_factor: float = None,
+    size: tuple[int, int] | None = None,
+    scale_factor: float | None = None,
     mode: str = "bilinear",
     align_corners: bool = True,
 ) -> torch.Tensor:

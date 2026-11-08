@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import ast
 import os
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from datasets import Dataset as HfDataset
@@ -124,7 +124,7 @@ register_dataset(
 
 
 class SA1BDenseCaptionPreprocessor(RowPreprocessor):
-    column_mapping = {
+    column_mapping: ClassVar[dict] = {
         "url": "images",
     }
 
@@ -406,7 +406,7 @@ class LLaVAVideo178KPreprocessor(MessagesPreprocessor):
         self.subset = subset
         super().__init__(columns=columns)
 
-    video_resources = {
+    video_resources: ClassVar[dict] = {
         "0_30_s_academic_v0_1": _generate_url_list(
             "https://www.modelscope.cn/datasets/lmms-lab/LLaVA-Video-178K/resolve/master/"
             "0_30_s_academic_v0_1/0_30_s_academic_v0_1_videos_{}.tar.gz",
@@ -1176,7 +1176,7 @@ register_dataset(
 
 
 class CocoPreprocessor(ResponsePreprocessor):
-    category = [
+    category: ClassVar[list] = [
         "person",
         "bicycle",
         "car",

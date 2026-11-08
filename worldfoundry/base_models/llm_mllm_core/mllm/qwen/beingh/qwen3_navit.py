@@ -6,6 +6,7 @@
 import glob
 import re
 from functools import partial
+from typing import ClassVar
 
 import torch
 from safetensors import safe_open
@@ -40,7 +41,7 @@ class Qwen3Config(_Qwen3Config):
     """Qwen config implementation."""
 
     model_type = "qwen3"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(self, qk_norm=True, layer_module="Qwen3DecoderLayer", **kwargs):
         """Init.
@@ -671,7 +672,7 @@ class Qwen3Model(Qwen3PreTrainedModel):
 class Qwen3ForCausalLM(Qwen3PreTrainedModel):
     """Qwen for causal lm implementation."""
 
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         """Init.

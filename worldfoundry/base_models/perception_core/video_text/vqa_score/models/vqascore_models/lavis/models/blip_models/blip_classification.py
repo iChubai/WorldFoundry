@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -35,7 +36,7 @@ from torch import nn
 
 @registry.register_model("blip_classification")
 class BlipClassification(BlipBase, MomentumDistilationMixin):
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/blip_classification_base.yaml",
     }
 

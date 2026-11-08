@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import logging
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -41,7 +42,7 @@ class Blip2Qformer(Blip2Base):
         >>> model = load_model("blip2", "pretrain")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "pretrain": "configs/models/blip2/blip2_pretrain.yaml",
         "pretrain_vitL": "configs/models/blip2/blip2_pretrain_vitL.yaml",
         "coco": "configs/models/blip2/blip2_coco.yaml",

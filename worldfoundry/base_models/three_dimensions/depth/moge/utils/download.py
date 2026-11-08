@@ -9,7 +9,7 @@ from tqdm import tqdm
 __all__ = ["download_bytes", "download_file"]
 
 
-def download_file(url: str, filepath: Union[str, Path], headers: dict = None, resume: bool = True) -> None:
+def download_file(url: str, filepath: Union[str, Path], headers: dict | None = None, resume: bool = True) -> None:
     """Download file.
 
     Args:
@@ -56,7 +56,7 @@ def download_file(url: str, filepath: Union[str, Path], headers: dict = None, re
                 pbar.update(len(chunk))
 
 
-def download_bytes(url: str, headers: dict = None) -> bytes:
+def download_bytes(url: str, headers: dict | None = None) -> bytes:
     """Download bytes.
 
     Args:

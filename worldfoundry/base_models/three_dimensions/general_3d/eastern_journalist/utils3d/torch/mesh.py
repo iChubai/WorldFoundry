@@ -688,9 +688,9 @@ def remove_isolated_pieces(
     vertices: Tensor,
     faces: Tensor,
     connected_components: List[Tensor] = None,
-    thresh_num_faces: int = None,
-    thresh_radius: float = None,
-    thresh_boundary_ratio: float = None,
+    thresh_num_faces: int | None = None,
+    thresh_radius: float | None = None,
+    thresh_boundary_ratio: float | None = None,
     remove_unreferenced: bool = True,
 ) -> Tuple[Tensor, Tensor]:
     """

@@ -1257,8 +1257,8 @@ class Sam3VideoBase(nn.Module):
         tracker_update_plan: dict[str, npt.NDArray],
         orig_vid_height: int,
         orig_vid_width: int,
-        reconditioned_obj_ids: set = None,
-        det_to_matched_trk_obj_ids: dict = None,
+        reconditioned_obj_ids: set | None = None,
+        det_to_matched_trk_obj_ids: dict | None = None,
     ):
         """Build outputs.
 
@@ -1344,7 +1344,7 @@ class Sam3VideoBase(nn.Module):
         binary_low_res_masks: Tensor,
         last_occluded: list[int],
         obj_ids: list[int],
-        frame_idx: int = None,
+        frame_idx: int | None = None,
         reverse: bool = False,
     ):
         """Helper function to get objects to suppress based on most recently occluded.

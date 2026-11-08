@@ -5,6 +5,8 @@ SPDX-License-Identifier: BSD-3-Clause
 For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
+from typing import ClassVar
+
 import torch
 import torch.nn.functional as F
 
@@ -40,7 +42,7 @@ class BlipITM(BlipBase):
         >>> model = load_model("blip_image_text_matching", "large")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/blip_itm_base.yaml",
         "large": "configs/models/blip_itm_large.yaml",
     }

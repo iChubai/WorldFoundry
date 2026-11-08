@@ -111,7 +111,7 @@ class ModelConfig:
 
 def parse_args_with_yaml(
     dataclass_types: tuple[type, ...],
-    config_path: str = None,
+    config_path: str | None = None,
     allow_extra_keys: bool = True,
     is_train: bool = True,
 ) -> tuple[Any, ...]:

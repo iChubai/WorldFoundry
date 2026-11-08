@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from functools import partial
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 from torch import nn
@@ -20,7 +20,7 @@ from .utils import ChatmlTemplateMeta
 class InternvlTemplate(Template):
     skip_prompt = False
     num_image_token = None
-    placeholder_tokens = ["<IMG_CONTEXT>"]
+    placeholder_tokens: ClassVar[list] = ["<IMG_CONTEXT>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

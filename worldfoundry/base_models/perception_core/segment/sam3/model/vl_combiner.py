@@ -307,7 +307,7 @@ class VisionOnly(nn.Module):
         eval_chunk_size=4,
         eval_cast_to_cpu=False,
         scalp=0,
-        compile_mode: str = None,
+        compile_mode: str | None = None,
         compile_extra_args: dict | None = None,
     ):
         """Init.
@@ -400,7 +400,7 @@ class TriHeadVisionOnly(VisionOnly):
         eval_chunk_size=4,
         eval_cast_to_cpu=False,
         scalp=0,
-        compile_mode: str = None,
+        compile_mode: str | None = None,
         compile_extra_args: dict | None = None,
     ):
         """Init.

@@ -268,7 +268,7 @@ class MoGeModel_v2(nn.Module):
     def infer(
         self,
         image: torch.Tensor,
-        num_tokens: int = None,
+        num_tokens: int | None = None,
         resolution_level: int = 9,
         force_projection: bool = True,
         apply_mask: bool = True,

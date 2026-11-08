@@ -11,6 +11,8 @@ Subject-ref memory adds learned embeddings concatenated into the stream.
 Reuses Wan ``MLP`` / ``CrossAttention`` / ``Head`` from ``../wan.model``.
 """
 
+from typing import ClassVar
+
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -232,7 +234,7 @@ class DiTBlock(nn.Module):
 class WanModel(torch.nn.Module):
     """Matrix Game 3.5 backbone: 3D patch DiT with optional camera PRoPE and ref memory."""
 
-    _repeated_blocks = ["DiTBlock"]
+    _repeated_blocks: ClassVar[list] = ["DiTBlock"]
 
     def __init__(
         self,

@@ -319,7 +319,7 @@ def depth_map_edge(
 
 @no_warnings(category=RuntimeWarning)
 def depth_map_aliasing(
-    depth: ndarray, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: ndarray = None
+    depth: ndarray, atol: float | None = None, rtol: float | None = None, kernel_size: int = 3, mask: ndarray = None
 ) -> ndarray:
     """
     Compute the map that indicates the aliasing of x depth map, identifying pixels which neither close to the maximum nor the minimum of its neighbors.
@@ -390,7 +390,7 @@ def normal_map_edge(normals: ndarray, tol: float, kernel_size: int = 3, mask: nd
 
 
 @no_warnings(category=RuntimeWarning)
-def point_map_to_normal_map(point: ndarray, mask: ndarray = None, edge_threshold: float = None) -> ndarray:
+def point_map_to_normal_map(point: ndarray, mask: ndarray = None, edge_threshold: float | None = None) -> ndarray:
     """Calculate normal map from point map. Value range is [-1, 1].
 
     ## Parameters
@@ -454,7 +454,7 @@ def point_map_to_normal_map(point: ndarray, mask: ndarray = None, edge_threshold
 
 
 def depth_map_to_normal_map(
-    depth: ndarray, intrinsics: ndarray, mask: ndarray = None, edge_threshold: float = None
+    depth: ndarray, intrinsics: ndarray, mask: ndarray = None, edge_threshold: float | None = None
 ) -> ndarray:
     """Calculate normal map from depth map. Value range is [-1, 1]. Normal direction in OpenCV identity camera's coordinate system.
 

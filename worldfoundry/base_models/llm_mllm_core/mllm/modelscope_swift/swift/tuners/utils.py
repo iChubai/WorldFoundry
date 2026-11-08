@@ -282,11 +282,13 @@ class SwiftAdapter:
         raise NotImplementedError
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         raise NotImplementedError
 
     @staticmethod
-    def save_memory(module: torch.nn.Module, adapter_name: str, module_key: str, activate: bool, offload: str = None):
+    def save_memory(
+        module: torch.nn.Module, adapter_name: str, module_key: str, activate: bool, offload: str | None = None
+    ):
         if not isinstance(module, torch.nn.Module):
             return
         if activate:
@@ -369,7 +371,7 @@ class ModulesToSaveWrapper(ActivationMixin, _ModulesToSaveWrapper):
             raise ValueError("ModulesToSaveWrapper does not support multiple active adapters")
         return active_adapters[0]
 
-    def set_adapter(self, adapter_name: str, offload: str = None):
+    def set_adapter(self, adapter_name: str, offload: str | None = None):
         if adapter_name not in self.modules_to_save:
             raise ValueError(f"Adapter {adapter_name} not found in {self.modules_to_save.keys()}")
         self.modules_to_save[adapter_name].requires_grad_(True)
@@ -377,7 +379,7 @@ class ModulesToSaveWrapper(ActivationMixin, _ModulesToSaveWrapper):
         SwiftAdapter.save_memory(self.modules_to_save[adapter_name], adapter_name, self.module_key, True)
         SwiftAdapter.save_memory(self.original_module, "original_module", self.module_key, False, offload=offload)
 
-    def deactivate_adapter(self, adapter_name: str, offload: str = None):
+    def deactivate_adapter(self, adapter_name: str, offload: str | None = None):
         if adapter_name in self.modules_to_save and self.unique_thread:
             self.modules_to_save[adapter_name].requires_grad_(False)
         self.set_activation(adapter_name, False)

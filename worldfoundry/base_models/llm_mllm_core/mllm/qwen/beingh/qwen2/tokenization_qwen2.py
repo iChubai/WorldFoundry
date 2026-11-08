@@ -7,6 +7,7 @@ import json
 import os
 import unicodedata
 from functools import lru_cache
+from typing import ClassVar
 
 import regex as re
 from transformers.tokenization_utils import AddedToken, PreTrainedTokenizer
@@ -116,7 +117,7 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
     """
 
     vocab_files_names = VOCAB_FILES_NAMES
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names: ClassVar[list] = ["input_ids", "attention_mask"]
 
     def __init__(
         self,

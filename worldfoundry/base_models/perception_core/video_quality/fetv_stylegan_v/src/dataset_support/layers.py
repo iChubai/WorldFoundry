@@ -219,7 +219,7 @@ class Conv2dLayer(torch.nn.Module):
 
 @persistence.persistent_class
 class GenInput(nn.Module):
-    def __init__(self, cfg: DictConfig, channel_dim: int, motion_v_dim: int = None):
+    def __init__(self, cfg: DictConfig, channel_dim: int, motion_v_dim: int | None = None):
         super().__init__()
 
         self.cfg = cfg

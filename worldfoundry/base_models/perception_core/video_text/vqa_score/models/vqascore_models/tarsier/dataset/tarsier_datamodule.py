@@ -181,7 +181,7 @@ class TarsierDataProcessor:
         return self.processor(messages, image_processing_config)
 
 
-def init_processor(processor: TarsierProcessor | str = None, config: dict = None):
+def init_processor(processor: TarsierProcessor | str = None, config: dict | None = None):
     config = DictToObject(config) if isinstance(config, dict) else config
     if isinstance(processor, str):
         sub_processor = TarsierProcessor.from_pretrained(processor, padding_side="left", trust_remote_code=True)

@@ -252,7 +252,7 @@ class LLaMAPro(SwiftAdapter):
         return module.get_submodule(model_key_mapping.module_list)
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         module.activate_module(activate)
 
     @staticmethod

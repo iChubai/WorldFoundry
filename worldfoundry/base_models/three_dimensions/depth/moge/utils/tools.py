@@ -226,7 +226,7 @@ class timeit:
 
     _history: Dict[str, List["timeit"]] = {}
 
-    def __init__(self, name: str = None, verbose: bool = True, average: bool = False):
+    def __init__(self, name: str | None = None, verbose: bool = True, average: bool = False):
         """Init.
 
         Args:

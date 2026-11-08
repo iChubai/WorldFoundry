@@ -356,7 +356,7 @@ class WanUpsample(nn.Upsample):
 class WanResample(nn.Module):
     r"""A custom resampling module for 2D and 3D data."""
 
-    def __init__(self, dim: int, mode: str, upsample_out_dim: int = None) -> None:
+    def __init__(self, dim: int, mode: str, upsample_out_dim: int | None = None) -> None:
         super().__init__()
         self.dim = dim
         self.mode = mode

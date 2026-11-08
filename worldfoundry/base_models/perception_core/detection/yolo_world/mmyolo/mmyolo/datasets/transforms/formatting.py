@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from mmcv.transforms import to_tensor
@@ -17,7 +19,7 @@ class PackDetInputs(MMDET_PackDetInputs):
     Compared to mmdet, we just add the `gt_panoptic_seg` field and logic.
     """
 
-    mapping_table = {
+    mapping_table: ClassVar[dict] = {
         "gt_bboxes": "bboxes",
         "gt_bboxes_labels": "labels",
         "gt_masks": "masks",

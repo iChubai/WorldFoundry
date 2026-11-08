@@ -128,7 +128,7 @@ class PseudoLanguageBackbone(BaseModule):
     def __init__(
         self,
         text_embed_path: str = "",
-        test_embed_path: str = None,
+        test_embed_path: str | None = None,
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg)

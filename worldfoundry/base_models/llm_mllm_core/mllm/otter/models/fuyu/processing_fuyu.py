@@ -16,7 +16,7 @@ Image/Text processor class for GIT
 """
 
 import re
-from typing import Union
+from typing import ClassVar, Union
 
 import numpy as np
 from transformers.processing_utils import ProcessorMixin
@@ -316,7 +316,7 @@ class FuyuProcessor(ProcessorMixin):
             The tokenizer is a required input.
     """
 
-    attributes = ["image_processor", "tokenizer"]
+    attributes: ClassVar[list] = ["image_processor", "tokenizer"]
     image_processor_class = "FuyuImageProcessor"
     tokenizer_class = "AutoTokenizer"
 

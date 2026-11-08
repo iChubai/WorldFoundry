@@ -84,7 +84,7 @@ class GeminiModel(VQAScoreModel):
         else:
             self.client = genai.Client(api_key=self.api_key)
 
-    def load_images(self, paths: list[str], num_frames: int = None) -> list[dict]:
+    def load_images(self, paths: list[str], num_frames: int | None = None) -> list[dict]:
         loaded_data = []
         for path in paths:
             # Handle video files - Gemini can take videos directly

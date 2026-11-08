@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 import transformers
@@ -18,7 +18,7 @@ from .utils import ChatmlTemplateMeta
 
 
 class LlavaHfTemplate(Template):
-    placeholder_tokens = ["<image>"]
+    placeholder_tokens: ClassVar[list] = ["<image>"]
 
     @property
     def image_token_index(self):
@@ -272,7 +272,7 @@ register_template(
 
 class LLavaLlama3HfTemplate(Template):
     # xtuner
-    image_placeholder = ["<image>\n"]
+    image_placeholder: ClassVar[list] = ["<image>\n"]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)

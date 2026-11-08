@@ -5,6 +5,7 @@
 import os
 from dataclasses import dataclass
 from functools import partial, reduce
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -38,7 +39,7 @@ class SigLipImageProcessor:
         image_mean=(0.5, 0.5, 0.5),
         image_std=(0.5, 0.5, 0.5),
         size=(384, 384),
-        crop_size: dict[str, int] = None,
+        crop_size: dict[str, int] | None = None,
         resample=PILImageResampling.BICUBIC,
         rescale_factor=1 / 255,
         data_format=ChannelDimension.FIRST,
@@ -510,7 +511,7 @@ class SigLipMultiheadAttentionPoolingHead(nn.Module):
 class SigLipVisionModel(SigLipPreTrainedModel):
     config_class = SigLipVisionConfig
     main_input_name = "pixel_values"
-    _no_split_modules = ["SigLipEncoderLayer"]
+    _no_split_modules: ClassVar[list] = ["SigLipEncoderLayer"]
 
     def __init__(self, config: SigLipVisionConfig):
         super().__init__(config)

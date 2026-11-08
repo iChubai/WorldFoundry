@@ -36,6 +36,7 @@ The differentiable path supports:
 """
 
 import math
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -175,7 +176,7 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
             The merge size of the vision encoder to llm encoder.
     """
 
-    model_input_names = ["pixel_values", "image_grid_thw", "pixel_values_videos", "video_grid_thw"]
+    model_input_names: ClassVar[list] = ["pixel_values", "image_grid_thw", "pixel_values_videos", "video_grid_thw"]
 
     def __init__(
         self,
@@ -213,10 +214,10 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
     def _preprocess_differentiable(
         self,
         images: torch.Tensor,
-        do_resize: bool = None,
-        do_rescale: bool = None,
-        rescale_factor: float = None,
-        do_normalize: bool = None,
+        do_resize: bool | None = None,
+        do_rescale: bool | None = None,
+        rescale_factor: float | None = None,
+        do_normalize: bool | None = None,
         image_mean: float | list[float] | None = None,
         image_std: float | list[float] | None = None,
     ):
@@ -301,14 +302,14 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
     def _preprocess(
         self,
         images: ImageInput | VideoInput,
-        do_resize: bool = None,
+        do_resize: bool | None = None,
         resample: PILImageResampling = None,
-        do_rescale: bool = None,
-        rescale_factor: float = None,
-        do_normalize: bool = None,
+        do_rescale: bool | None = None,
+        rescale_factor: float | None = None,
+        do_normalize: bool | None = None,
         image_mean: float | list[float] | None = None,
         image_std: float | list[float] | None = None,
-        do_convert_rgb: bool = None,
+        do_convert_rgb: bool | None = None,
         data_format: ChannelDimension | None = ChannelDimension.FIRST,
         input_data_format: str | ChannelDimension | None = None,
     ):
@@ -433,10 +434,10 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
     def preprocess_tensor(
         self,
         images: torch.Tensor,
-        do_resize: bool = None,
-        do_rescale: bool = None,
-        rescale_factor: float = None,
-        do_normalize: bool = None,
+        do_resize: bool | None = None,
+        do_rescale: bool | None = None,
+        rescale_factor: float | None = None,
+        do_normalize: bool | None = None,
         image_mean: float | list[float] | None = None,
         image_std: float | list[float] | None = None,
     ):
@@ -474,15 +475,15 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         self,
         images: ImageInput,
         videos: VideoInput = None,
-        do_resize: bool = None,
-        size: dict[str, int] = None,
+        do_resize: bool | None = None,
+        size: dict[str, int] | None = None,
         resample: PILImageResampling = None,
-        do_rescale: bool = None,
-        rescale_factor: float = None,
-        do_normalize: bool = None,
+        do_rescale: bool | None = None,
+        rescale_factor: float | None = None,
+        do_normalize: bool | None = None,
         image_mean: float | list[float] | None = None,
         image_std: float | list[float] | None = None,
-        do_convert_rgb: bool = None,
+        do_convert_rgb: bool | None = None,
         return_tensors: str | TensorType | None = None,
         data_format: ChannelDimension | None = ChannelDimension.FIRST,
         input_data_format: str | ChannelDimension | None = None,

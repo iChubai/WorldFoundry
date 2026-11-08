@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import os
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -44,7 +45,7 @@ class BlipNLVR(BlipBase, MomentumDistilationMixin):
         >>> model = load_model("blip_nlvr", "nlvr")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "nlvr": "configs/models/blip_nlvr.yaml",
     }
 

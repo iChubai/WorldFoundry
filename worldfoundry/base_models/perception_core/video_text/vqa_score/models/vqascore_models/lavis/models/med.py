@@ -9,6 +9,7 @@ https://github.com/huggingface/transformers/blob/v4.15.0/src/transformers/models
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -621,7 +622,7 @@ class BertPreTrainedModel(PreTrainedModel):
 
     config_class = BertConfig
     base_model_prefix = "bert"
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids"]
 
     def _init_weights(self, module):
         """Initialize the weights"""
@@ -886,8 +887,8 @@ class BertModel(BertPreTrainedModel):
 
 
 class BertForMaskedLM(BertPreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = [r"pooler"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids", r"predictions.decoder.bias"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -999,8 +1000,8 @@ class BertForMaskedLM(BertPreTrainedModel):
 
 
 class BertLMHeadModel(BertPreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = [r"pooler"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"position_ids", r"predictions.decoder.bias"]
 
     def __init__(self, config):
         super().__init__(config)

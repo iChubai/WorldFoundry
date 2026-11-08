@@ -8,6 +8,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 import logging
 import os
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -52,7 +53,7 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
         >>> model = load_model("albef_vqa", "vqav2")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "vqav2": "configs/models/albef_vqav2.yaml",
     }
 

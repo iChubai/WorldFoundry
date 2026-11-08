@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any
+from typing import Any, ClassVar
 
 from ..base import Template
 from ..constant import MLLMTemplateType
@@ -9,8 +9,8 @@ from ..utils import findall
 
 
 class PixtralTemplate(Template):
-    image_placeholder = ["[IMG]"]
-    placeholder_tokens = ["[IMG]"]
+    image_placeholder: ClassVar[list] = ["[IMG]"]
+    placeholder_tokens: ClassVar[list] = ["[IMG]"]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)

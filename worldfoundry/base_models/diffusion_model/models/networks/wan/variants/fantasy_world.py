@@ -9,7 +9,7 @@ Adds camera / IRG fusion.  No VACE trunk, causal cache, or linear attn.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -396,7 +396,7 @@ class CameraPoseEncoder(nn.Module):
 class FantasyWorldCameraCondition(nn.Module):
     """Install released Wan2.1 camera processors and own their pose encoder."""
 
-    _CHANNELS_BY_INFORMATION = {"all": 12, "rgb_conf": 4, "plucker": 6}
+    _CHANNELS_BY_INFORMATION: ClassVar[dict] = {"all": 12, "rgb_conf": 4, "plucker": 6}
 
     def __init__(
         self,

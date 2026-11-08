@@ -22,6 +22,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from http import HTTPStatus
+from typing import ClassVar
 
 import dashscope
 import torch
@@ -288,7 +289,7 @@ class DashScopePromptExpander(PromptExpander):
 class QwenPromptExpander(PromptExpander):
     """Qwen prompt expander implementation."""
 
-    model_dict = {
+    model_dict: ClassVar[dict] = {
         "QwenVL2.5_3B": "Qwen/Qwen2.5-VL-3B-Instruct",
         "QwenVL2.5_7B": "Qwen/Qwen2.5-VL-7B-Instruct",
         "Qwen2.5_3B": "Qwen/Qwen2.5-3B-Instruct",

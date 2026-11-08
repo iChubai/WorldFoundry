@@ -2,6 +2,7 @@ import warnings
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import onnxruntime
@@ -16,7 +17,7 @@ warnings.filterwarnings(action="ignore", category=DeprecationWarning)
 
 
 class TRTWrapper(torch.nn.Module):
-    dtype_mapping = {}
+    dtype_mapping: ClassVar[dict] = {}
 
     def __init__(self, weight: str | Path, device: torch.device | None):
         super().__init__()

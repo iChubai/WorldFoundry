@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> vis -> utils.py functionality."""
 
 import colorsys
-from typing import cast
+from typing import ClassVar, cast
 
 import cv2
 import numpy as np
@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 class Singleton(type):
     """Singleton implementation."""
 
-    _instances = {}
+    _instances: ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs):
         """Call."""
@@ -32,7 +32,7 @@ class Singleton(type):
 class VisManager(metaclass=Singleton):
     """Vis manager implementation."""
 
-    _servers = {}
+    _servers: ClassVar[dict] = {}
 
 
 def get_server(port: int | None = None) -> ViserServer:

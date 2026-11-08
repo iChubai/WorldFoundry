@@ -5,6 +5,8 @@ SPDX-License-Identifier: BSD-3-Clause
 For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
+from typing import ClassVar
+
 import torch
 
 from ...common.registry import registry
@@ -41,7 +43,7 @@ class BlipCaption(BlipBase):
         >>> model = load_model("blip_caption", "large_coco")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base_coco": "configs/models/blip_caption_base_coco.yaml",
         "large_coco": "configs/models/blip_caption_large_coco.yaml",
     }

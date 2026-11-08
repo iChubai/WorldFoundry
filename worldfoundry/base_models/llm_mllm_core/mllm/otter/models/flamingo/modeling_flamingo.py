@@ -1,5 +1,6 @@
 import random
 from collections.abc import Callable
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -495,7 +496,7 @@ class FlamingoPreTrainedModel(PreTrainedModel):
     config_class = FlamingoConfig
     base_model_prefix = "flamingo"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["FlamingoPerceiverBlock", "CLIPEncoderLayer", "FlamingoLayer"]
+    _no_split_modules: ClassVar[list] = ["FlamingoPerceiverBlock", "CLIPEncoderLayer", "FlamingoLayer"]
 
     def _init_weights(self, module):
         """Flamingo requires no specific initialization"""

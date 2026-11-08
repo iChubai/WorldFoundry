@@ -106,7 +106,7 @@ class CameraHead(nn.Module):
         aggregated_tokens_list: list,
         num_iterations: int = 4,
         mode: str = "causal",
-        kv_cache_list: list[list[list[torch.Tensor]]] = None,
+        kv_cache_list: list[list[list[torch.Tensor]]] | None = None,
     ) -> list:
         """
         Forward pass to predict camera parameters.
@@ -142,7 +142,7 @@ class CameraHead(nn.Module):
         pose_tokens: torch.Tensor,
         num_iterations: int,
         attn_mask: torch.Tensor,
-        kv_cache_list: list[tuple[torch.Tensor, torch.Tensor]] = None,
+        kv_cache_list: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
     ) -> list:
         """
         Iteratively refine camera pose predictions.

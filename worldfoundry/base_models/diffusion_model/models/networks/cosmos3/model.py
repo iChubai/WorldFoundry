@@ -28,6 +28,7 @@ recipe.  Do not introduce runner logic here.
 
 import math
 from types import SimpleNamespace
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -192,7 +193,7 @@ class Cosmos3PackedMoTAttention(nn.Module):
     understanding (causal) and generation (full) token streams."""
 
     _default_processor_cls = Cosmos3AttnProcessor
-    _available_processors = [Cosmos3AttnProcessor]
+    _available_processors: ClassVar[list] = [Cosmos3AttnProcessor]
 
     def __init__(
         self,
@@ -302,7 +303,7 @@ class Cosmos3VLTextMoTDecoderLayer(nn.Module):
 class Cosmos3OmniTransformer(nn.Module):
     """Checkpoint-compatible Cosmos3 inference transformer on WorldFoundry primitives."""
 
-    _no_split_modules = ["Cosmos3VLTextMoTDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Cosmos3VLTextMoTDecoderLayer"]
 
     def __init__(
         self,

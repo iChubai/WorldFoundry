@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from torch import Tensor, nn
 from torch.nn import functional as F
 
@@ -13,7 +15,7 @@ from worldfoundry.base_models.perception_core.general_perception.dinov3.hub.back
 class DINOv3Adapter(nn.Module):
     """Expose the feature-map interface expected by the DAP checkpoint."""
 
-    _MODEL_NAMES = {"vits", "vitb", "vitl"}
+    _MODEL_NAMES: ClassVar[set] = {"vits", "vitb", "vitl"}
 
     def __init__(self, model_name: str) -> None:
         super().__init__()

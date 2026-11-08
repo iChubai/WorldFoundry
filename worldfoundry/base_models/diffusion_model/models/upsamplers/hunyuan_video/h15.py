@@ -195,7 +195,7 @@ class SRTo1080pUpsampler(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
         self.is_residual = is_residual
 
-    def forward(self, z: Tensor, target_shape: Sequence[int] = None) -> Tensor:
+    def forward(self, z: Tensor, target_shape: Sequence[int] | None = None) -> Tensor:
         """
         Args:
             z: (B, C, T, H, W)

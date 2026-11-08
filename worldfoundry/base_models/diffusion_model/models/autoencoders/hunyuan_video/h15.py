@@ -213,7 +213,7 @@ class CausalConv3d(nn.Module):
         return self.conv(x)
 
 
-def prepare_causal_attention_mask(n_frame: int, n_hw: int, dtype, device, batch_size: int = None):
+def prepare_causal_attention_mask(n_frame: int, n_hw: int, dtype, device, batch_size: int | None = None):
     """Prepare a causal attention mask for 3D videos.
 
     Args:
@@ -643,7 +643,7 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         ffactor_temporal: int,
         sample_size: int,
         sample_tsize: int,
-        scaling_factor: float = None,
+        scaling_factor: float | None = None,
         shift_factor: float | None = None,
         downsample_match_channel: bool = True,
         upsample_match_channel: bool = True,

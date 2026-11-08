@@ -1,5 +1,6 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+from typing import ClassVar
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import ConvModule
 from mmdet.utils import ConfigType, OptMultiConfig
@@ -51,7 +52,7 @@ class PPYOLOECSPResNet(BaseBackbone):
 
     # From left to right:
     # in_channels, out_channels, num_blocks
-    arch_settings = {"P5": [[64, 128, 3], [128, 256, 6], [256, 512, 6], [512, 1024, 3]]}
+    arch_settings: ClassVar[dict] = {"P5": [[64, 128, 3], [128, 256, 6], [256, 512, 6], [512, 1024, 3]]}
 
     def __init__(
         self,
@@ -61,8 +62,8 @@ class PPYOLOECSPResNet(BaseBackbone):
         input_channels: int = 3,
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: dict | list[dict] = None,
-        arch_ovewrite: dict = None,
+        plugins: dict | list[dict] | None = None,
+        arch_ovewrite: dict | None = None,
         block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": True, "use_alpha": True},
         norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
         act_cfg: ConfigType = {"type": "SiLU", "inplace": True},

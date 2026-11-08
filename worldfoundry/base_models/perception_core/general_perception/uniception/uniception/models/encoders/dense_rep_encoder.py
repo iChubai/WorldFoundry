@@ -70,7 +70,7 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
         post_pe_norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),
         interpolate_antialias: bool = False,
         interpolate_offset: float = 0.1,
-        pretrained_checkpoint_path: str = None,
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):

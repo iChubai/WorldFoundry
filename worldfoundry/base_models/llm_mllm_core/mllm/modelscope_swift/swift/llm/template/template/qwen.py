@@ -2,7 +2,7 @@
 import os
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 import torch.nn.functional as F
@@ -209,7 +209,7 @@ register_template(QwenTemplateMeta(MLLMTemplateType.qwen2_audio, template_cls=Qw
 class Qwen2VLTemplate(Template):
     image_token_id = 151655
     video_token_id = 151656
-    placeholder_tokens = ["<|image_pad|>", "<|video_pad|>"]
+    placeholder_tokens: ClassVar[list] = ["<|image_pad|>", "<|video_pad|>"]
     version = "v2"
     use_model = True
 
@@ -422,7 +422,7 @@ register_template(
 
 class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
     version = "omni"
-    placeholder_tokens = ["<|IMAGE|>", "<|AUDIO|>", "<|VIDEO|>"]
+    placeholder_tokens: ClassVar[list] = ["<|IMAGE|>", "<|AUDIO|>", "<|VIDEO|>"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -689,7 +689,7 @@ register_template(
 
 
 class Ovis2Template(Ovis1_6Template):
-    placeholder_tokens = ["<|image_pad|>", "<|video_pad|>"]
+    placeholder_tokens: ClassVar[list] = ["<|image_pad|>", "<|video_pad|>"]
     nframes = 12
 
     def replace_tag(

@@ -7,6 +7,7 @@ import glob
 import re
 from dataclasses import dataclass
 from functools import partial
+from typing import ClassVar
 
 import torch
 from safetensors import safe_open
@@ -136,7 +137,7 @@ class Qwen2Config(_Qwen2Config):
     ```"""
 
     model_type = "qwen2"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,
@@ -1507,7 +1508,7 @@ def interpolate_layer_params(expert_state_dict, expert_pos, param_name_template,
 class Qwen2ForCausalLM(Qwen2PreTrainedModel):
     """Qwen for causal lm implementation."""
 
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         """Init.

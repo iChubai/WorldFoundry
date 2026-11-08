@@ -1608,7 +1608,17 @@ class DiffusionWrapper(nn.Module):
         self.diffusion_model = instantiate_from_config(diff_model_config)
         self.conditioning_key = conditioning_key
 
-    def forward(self, x, t, c_concat: list = None, c_crossattn: list = None, c_adm=None, s=None, mask=None, **kwargs):
+    def forward(
+        self,
+        x,
+        t,
+        c_concat: list | None = None,
+        c_crossattn: list | None = None,
+        c_adm=None,
+        s=None,
+        mask=None,
+        **kwargs,
+    ):
         """Route ``c_concat`` / ``c_crossattn`` into the 3D UNet."""
         if "fps" in kwargs and "fs" not in kwargs:
             kwargs["fs"] = kwargs["fps"]

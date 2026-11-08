@@ -7,6 +7,7 @@ Adds action conditioning.  No VACE, causal, or linear attn.
 # Inference-only DreamZero runtime retained in-tree.
 import math
 import os
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -499,8 +500,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(nn.Module, NativeConfigMixin):
     r"""DreamZero Wan 2.1 DiT with Pi0 action-token conditioning."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = False
 
     @register_to_config

@@ -58,7 +58,7 @@ class EasyDict(dict):
 class Logger:
     """Redirect stderr to stdout, optionally print stdout to a file, and optionally force flushing on both stdout and the file."""
 
-    def __init__(self, file_name: str = None, file_mode: str = "w", should_flush: bool = True):
+    def __init__(self, file_name: str | None = None, file_mode: str = "w", should_flush: bool = True):
         self.file = None
 
         if file_name is not None:
@@ -282,7 +282,7 @@ def get_obj_by_name(name: str) -> Any:
     return get_obj_from_module(module, obj_name)
 
 
-def call_func_by_name(*args, func_name: str = None, **kwargs) -> Any:
+def call_func_by_name(*args, func_name: str | None = None, **kwargs) -> Any:
     """Finds the python object with the given name and calls it as a function."""
     assert func_name is not None
     func_obj = get_obj_by_name(func_name)
@@ -290,7 +290,7 @@ def call_func_by_name(*args, func_name: str = None, **kwargs) -> Any:
     return func_obj(*args, **kwargs)
 
 
-def construct_class_by_name(*args, class_name: str = None, **kwargs) -> Any:
+def construct_class_by_name(*args, class_name: str | None = None, **kwargs) -> Any:
     """Finds the python class with the given name and constructs it with the given arguments."""
     return call_func_by_name(*args, func_name=class_name, **kwargs)
 
@@ -320,7 +320,7 @@ def get_top_level_function_name(obj: Any) -> str:
 
 
 def list_dir_recursively_with_ignore(
-    dir_path: str, ignores: list[str] = None, add_base_to_relative: bool = False
+    dir_path: str, ignores: list[str] | None = None, add_base_to_relative: bool = False
 ) -> list[tuple[str, str]]:
     """List all files recursively in a given directory while ignoring given file and directory names.
     Returns list of tuples containing both absolute and relative paths."""
@@ -391,7 +391,7 @@ def is_url(obj: Any, allow_file_urls: bool = False) -> bool:
 
 def open_url(
     url: str,
-    cache_dir: str = None,
+    cache_dir: str | None = None,
     num_attempts: int = 10,
     verbose: bool = True,
     return_filename: bool = False,

@@ -23,7 +23,7 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import TypeAlias
+from typing import ClassVar, TypeAlias
 
 import torch
 import torch.nn as nn
@@ -229,7 +229,7 @@ class MultiModalityRMSNorm(nn.Module):
     per modality and each group uses its own weight chunk.
     """
 
-    __constants__ = ["dim", "eps", "num_modality"]
+    __constants__: ClassVar[list] = ["dim", "eps", "num_modality"]
 
     def __init__(
         self,

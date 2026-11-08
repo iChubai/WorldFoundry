@@ -5,6 +5,7 @@ Adds causal / fast-attention hooks.  Licensed CC BY-NC-SA 4.0 upstream.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -384,8 +385,8 @@ class CausalHead(nn.Module):
 class WanModelFast(nn.Module, NativeConfigMixin):
     r"""LingBot-World-V2 causal-fast DiT."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     prepare_camera_condition = prepare_wan_camera_condition
 
     @register_to_config

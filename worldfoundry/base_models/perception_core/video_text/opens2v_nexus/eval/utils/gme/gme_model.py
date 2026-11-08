@@ -171,7 +171,7 @@ class GmeQwen2VL:
 
     def get_fused_embeddings(
         self,
-        texts: list[str] = None,
+        texts: list[str] | None = None,
         images: list[Image.Image] | DataLoader = None,
         **kwargs,
     ):

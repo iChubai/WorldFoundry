@@ -89,13 +89,13 @@ class WorldCrafterPipeline(HeliosPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 384,
         width: int = 640,
         num_frames: int = 132,
         num_inference_steps: int = 50,
-        sigmas: list[float] = None,
+        sigmas: list[float] | None = None,
         guidance_scale: float = 5.0,
         num_videos_per_prompt: int | None = 1,
         generator: torch.Generator | list[torch.Generator] | None = None,

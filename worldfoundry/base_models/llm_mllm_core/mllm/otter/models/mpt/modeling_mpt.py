@@ -5,7 +5,7 @@ Inspired by https://github.com/karpathy/minGPT/blob/master/mingpt/model.py
 
 import math
 import warnings
-from typing import Union
+from typing import ClassVar, Union
 
 import torch
 import torch.distributed as dist
@@ -34,7 +34,7 @@ Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
 class MPTPreTrainedModel(PreTrainedModel):
     config_class = MPTConfig
     base_model_prefix = "model"
-    _no_split_modules = ["MPTBlock"]
+    _no_split_modules: ClassVar[list] = ["MPTBlock"]
 
 
 class MPTModel(MPTPreTrainedModel):

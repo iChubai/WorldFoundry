@@ -123,9 +123,9 @@ class InternVideo2Model(VQAScoreModel):
         num_frames: int = 8,
         question_template: str = 'Does this figure show "{}"? Please answer yes or no.',
         answer_template: str = "Yes",
-        num_segments: int = None,
-        resolution: int = None,
-        hd_num: int = None,
+        num_segments: int | None = None,
+        resolution: int | None = None,
+        hd_num: int | None = None,
     ) -> torch.Tensor:
         assert len(paths) == len(texts), "Number of paths and texts must match"
 
@@ -279,7 +279,12 @@ class InternVideo2Model(VQAScoreModel):
         return torch.tensor(lm_probs)
 
     def generate(
-        self, images: list[str], texts: list[str], num_frames: int = 8, resolution: int = None, hd_num: int = None
+        self,
+        images: list[str],
+        texts: list[str],
+        num_frames: int = 8,
+        resolution: int | None = None,
+        hd_num: int | None = None,
     ) -> torch.Tensor:
         assert len(images) == len(texts), "Number of paths and texts must match"
 

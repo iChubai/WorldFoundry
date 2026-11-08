@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 
 def normalized_view_plane_uv(
-    width: int, height: int, aspect_ratio: float = None, dtype: torch.dtype = None, device: torch.device = None
+    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
 ) -> torch.Tensor:
     "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
     if aspect_ratio is None:
@@ -32,8 +32,8 @@ class ResidualConvBlock(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_channels: int = None,
-        hidden_channels: int = None,
+        out_channels: int | None = None,
+        hidden_channels: int | None = None,
         padding_mode: str = "replicate",
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
         norm: Literal["group_norm", "layer_norm"] = "group_norm",
@@ -180,7 +180,11 @@ class ConvHead(nn.Module):
         )
 
     def forward(
-        self, hidden_states: torch.Tensor, image: torch.Tensor = None, patch_h: int = None, patch_w: int = None
+        self,
+        hidden_states: torch.Tensor,
+        image: torch.Tensor = None,
+        patch_h: int | None = None,
+        patch_w: int | None = None,
     ):
         if image is not None:
             img_h, img_w = image.shape[-2:]

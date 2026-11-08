@@ -19,6 +19,7 @@
 """PyTorch LLaMA model."""
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -347,8 +348,8 @@ class LlamaPreTrainedModel(PreTrainedModel):
     config_class = LlamaConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["LlamaDecoderLayer"]
-    _keys_to_ignore_on_load_unexpected = [r"decoder\.version"]
+    _no_split_modules: ClassVar[list] = ["LlamaDecoderLayer"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = [r"decoder\.version"]
 
     def _init_weights(self, module):
         std = self.config.initializer_range
@@ -787,7 +788,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
     LLAMA_START_DOCSTRING,
 )
 class LlamaForSequenceClassification(LlamaPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [r"lm_head.weight"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [r"lm_head.weight"]
 
     def __init__(self, config):
         super().__init__(config)

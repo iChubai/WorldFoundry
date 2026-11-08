@@ -36,11 +36,11 @@ class InferenceStage:
         self,
         seperate_cfg: bool = False,
         take_over: bool = False,
-        input_params: tuple[str] = None,
-        output_params: tuple[str] = None,
-        input_params_posi: dict[str, str] = None,
-        input_params_nega: dict[str, str] = None,
-        onload_model_names: tuple[str] = None,
+        input_params: tuple[str] | None = None,
+        output_params: tuple[str] | None = None,
+        input_params_posi: dict[str, str] | None = None,
+        input_params_nega: dict[str, str] | None = None,
+        onload_model_names: tuple[str] | None = None,
     ):
         """Init.
 
@@ -641,7 +641,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
         if verbose >= 1:
             print(f"{cleared_num} LoRA layers are cleared.")
 
-    def download_and_load_models(self, model_configs: list[ModelConfig] = [], vram_limit: float = None):
+    def download_and_load_models(self, model_configs: list[ModelConfig] = [], vram_limit: float | None = None):
         """Download and load models.
 
         Args:

@@ -554,11 +554,11 @@ def get_model_tokenizer(
     # model kwargs
     model_type: str | None = None,
     quantization_config=None,
-    max_memory: str | dict[str, Any] = None,
+    max_memory: str | dict[str, Any] | None = None,
     attn_impl: Literal["flash_attn", "sdpa", "eager", None] = None,
     rope_scaling: dict[str, Any] | None = None,
     automodel_class=None,
-    task_type: Literal["causal_lm", "seq_cls"] = None,
+    task_type: Literal["causal_lm", "seq_cls"] | None = None,
     num_labels: int | None = None,
     model_kwargs: dict[str, Any] | None = None,
     **kwargs,

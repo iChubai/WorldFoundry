@@ -1,5 +1,5 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
-from typing import Any
+from typing import Any, ClassVar
 
 from ..base import Template
 from ..constant import MLLMTemplateType
@@ -9,7 +9,7 @@ from ..utils import align_image_inputs
 
 
 class Idefics3Template(Template):
-    placeholder_tokens = ["<image>"]
+    placeholder_tokens: ClassVar[list] = ["<image>"]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)

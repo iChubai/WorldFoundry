@@ -126,7 +126,7 @@ def render_interpolated_video(
     interp_per_pair: int = 20,
     loop_reverse: bool = True,
     save_mode: str = "split",
-    frame_times: list = None,
+    frame_times: list | None = None,
     render_depth: bool = False,
 ) -> None:
     """Render an interpolated fly-through video from Gaussian splat predictions.

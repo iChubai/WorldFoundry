@@ -139,7 +139,7 @@ def load(
     name: str,
     device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",
     jit: bool = False,
-    download_root: str = None,
+    download_root: str | None = None,
 ):
     """Load a CLIP model
 

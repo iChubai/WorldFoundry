@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import html
 import math
 from collections.abc import Callable
 from itertools import accumulate
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import regex as re
@@ -143,8 +142,8 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
     """
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
-    _optional_components = ["transformer"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _optional_components: ClassVar[list] = ["transformer"]
 
     def __init__(
         self,
@@ -173,7 +172,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 226,
         device: torch.device | None = None,
@@ -620,8 +619,8 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
     def stage2_sample(
         self,
         latents: torch.Tensor = None,
-        pyramid_num_stages: int = None,
-        pyramid_num_inference_steps_list: list[int] = None,
+        pyramid_num_stages: int | None = None,
+        pyramid_num_inference_steps_list: list[int] | None = None,
         prompt_embeds: torch.Tensor = None,
         negative_prompt_embeds: torch.Tensor = None,
         guidance_scale: float | None = 5.0,
@@ -827,13 +826,13 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 384,
         width: int = 640,
         num_frames: int = 132,
         num_inference_steps: int = 50,
-        sigmas: list[float] = None,
+        sigmas: list[float] | None = None,
         guidance_scale: float = 5.0,
         num_videos_per_prompt: int | None = 1,
         generator: torch.Generator | list[torch.Generator] | None = None,

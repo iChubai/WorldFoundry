@@ -3,7 +3,7 @@ import ast
 import json
 import re
 from functools import partial
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -171,7 +171,7 @@ register_dataset(
 
 
 class FireflyPreprocessor(ResponsePreprocessor):
-    _firefly_kind_list = {
+    _firefly_kind_list: ClassVar[set] = {
         "ProseGeneration",
         "MRC",
         "JinYongGeneration",

@@ -208,8 +208,8 @@ class DPTHead_3D_Causal(nn.Module):
         aggregated_tokens_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
-        frames_start_idx: int = None,
-        frames_end_idx: int = None,
+        frames_start_idx: int | None = None,
+        frames_end_idx: int | None = None,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """Helper function to forward impl first part.
 
@@ -327,7 +327,7 @@ class DPTHead_3D_Causal(nn.Module):
         return out
 
 
-def _make_fusion_block(features: int, size: int = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
+def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
     """Helper function to make fusion block.
 
     Args:
@@ -511,8 +511,8 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: tuple[int, int] = None,
-    scale_factor: float = None,
+    size: tuple[int, int] | None = None,
+    scale_factor: float | None = None,
     mode: str = "bilinear",
     align_corners: bool = True,
 ) -> torch.Tensor:

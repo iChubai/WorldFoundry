@@ -3,6 +3,8 @@
 
 """Tokenization classes for Qwen2."""
 
+from typing import ClassVar
+
 from transformers.tokenization_utils import AddedToken
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 from transformers.utils import logging
@@ -64,7 +66,7 @@ class Qwen2TokenizerFast(PreTrainedTokenizerFast):
     """
 
     vocab_files_names = VOCAB_FILES_NAMES
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names: ClassVar[list] = ["input_ids", "attention_mask"]
     slow_tokenizer_class = Qwen2Tokenizer
 
     def __init__(

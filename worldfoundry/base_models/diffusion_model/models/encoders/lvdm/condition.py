@@ -13,6 +13,7 @@ This is the OpenCLIP family, not Gemma or UMT5.
 
 import os
 from pathlib import Path
+from typing import ClassVar
 
 import kornia
 import open_clip
@@ -245,7 +246,7 @@ class FrozenT5Embedder(AbstractEncoder):
 class FrozenCLIPEmbedder(AbstractEncoder):
     """Uses the CLIP transformer encoder for text (from huggingface)"""
 
-    LAYERS = ["last", "pooled", "hidden"]
+    LAYERS: ClassVar[list] = ["last", "pooled", "hidden"]
 
     def __init__(
         self,
@@ -383,7 +384,7 @@ class FrozenOpenCLIPEmbedder(AbstractEncoder):
     Uses the OpenCLIP transformer encoder for text
     """
 
-    LAYERS = [
+    LAYERS: ClassVar[list] = [
         # "pooled",
         "last",
         "penultimate",

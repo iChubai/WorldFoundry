@@ -1,7 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import torch
 from torch import nn
@@ -117,7 +117,7 @@ register_template(Phi4TemplateMeta(LLMTemplateType.phi4))
 
 
 class Phi3VisionTemplate(Template):
-    image_placeholder = ["<|image|><s>\n"]  # <|image|>\n
+    image_placeholder: ClassVar[list] = ["<|image|><s>\n"]  # <|image|>\n
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
@@ -159,7 +159,7 @@ class Phi3VisionTemplate(Template):
 
 
 class Phi4MMTemplate(Template):
-    placeholder_tokens = ["<|endoftext10|>", "<|endoftext11|>"]
+    placeholder_tokens: ClassVar[list] = ["<|endoftext10|>", "<|endoftext11|>"]
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs

@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -44,7 +45,7 @@ class BlipPretrain(BlipBase, SharedQueueMixin, MomentumDistilationMixin):
         - base: BLIP base model before pretraining.
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "base": "configs/models/blip_pretrain_base.yaml",
         # "large": "configs/models/blip_pretrain_large.yaml",
     }

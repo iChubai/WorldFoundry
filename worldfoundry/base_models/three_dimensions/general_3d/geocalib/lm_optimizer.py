@@ -8,7 +8,7 @@ import logging
 import time
 from collections.abc import Callable
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -142,7 +142,7 @@ def optimizer_step(G: torch.Tensor, H: torch.Tensor, lambda_: torch.Tensor, eps:
 class LMOptimizer(nn.Module):
     """Levenberg-Marquardt optimizer for camera calibration."""
 
-    default_conf = {
+    default_conf: ClassVar[dict] = {
         # Camera model parameters
         "camera_model": "pinhole",  # {"pinhole", "simple_radial", "simple_spherical"}
         "shared_intrinsics": False,  # share focal length across all images in batch
@@ -186,7 +186,7 @@ class LMOptimizer(nn.Module):
         logger.debug(f"Using camera model: {camera_model} (with distortion: {self.camera_has_distortion})")
 
     def setup_optimization_and_priors(
-        self, data: dict[str, torch.Tensor] = None, shared_intrinsics: bool = False
+        self, data: dict[str, torch.Tensor] | None = None, shared_intrinsics: bool = False
     ) -> None:
         """Setup the optimization and priors for the LM optimizer.
 

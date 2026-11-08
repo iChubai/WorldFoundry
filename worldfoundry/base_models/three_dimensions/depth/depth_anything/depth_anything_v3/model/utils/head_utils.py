@@ -167,7 +167,7 @@ def make_sincos_pos_embed(embed_dim: int, pos: torch.Tensor, omega_0: float = 10
 def create_uv_grid(
     width: int,
     height: int,
-    aspect_ratio: float = None,
+    aspect_ratio: float | None = None,
     dtype: torch.dtype = None,
     device: torch.device = None,
 ) -> torch.Tensor:

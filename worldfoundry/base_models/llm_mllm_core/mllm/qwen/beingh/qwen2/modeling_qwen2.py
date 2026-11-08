@@ -4,6 +4,7 @@
 """PyTorch Qwen2 model."""
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
@@ -719,7 +720,7 @@ class Qwen2PreTrainedModel(PreTrainedModel):
     config_class = Qwen2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_cache_class = True
@@ -1007,7 +1008,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     """Qwen for causal lm implementation."""
 
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         """Init.

@@ -10,6 +10,7 @@ Adds action conditioning.  No VACE, camera ControlNet, or linear attn.
 import math
 import re
 import time
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -925,8 +926,8 @@ class Head(nn.Module):
 class WanModel(nn.Module, NativeConfigMixin):
     r"""Wan 2.2 action-conditioned DiT (per-token timestep, optional INT8 Q)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     prepare_camera_condition = prepare_action22_camera_condition
 
     @register_to_config

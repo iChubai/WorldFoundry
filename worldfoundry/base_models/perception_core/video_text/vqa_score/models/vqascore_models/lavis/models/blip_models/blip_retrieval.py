@@ -6,6 +6,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 from copy import deepcopy
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -59,7 +60,7 @@ class BlipRetrieval(BlipBase, MomentumDistilationMixin, SharedQueueMixin):
         >>> model = load_model("blip_retrieval", "flickr")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "coco": "configs/models/blip_retrieval_coco.yaml",
         "flickr": "configs/models/blip_retrieval_flickr.yaml",
     }

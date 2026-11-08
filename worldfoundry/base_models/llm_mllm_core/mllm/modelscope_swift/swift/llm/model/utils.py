@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 from functools import wraps
 from types import MethodType
-from typing import Any, Literal, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar
 
 import torch
 from accelerate.utils import find_device
@@ -30,8 +30,8 @@ class AttnImpl:
     sdpa = "sdpa"
     eager = "eager"
 
-    attn_impl_keys = ["_attn_implementation", "attn_implementation", "llm_attn_implementation"]
-    use_flash_attn_keys = ["_flash_attn_2_enabled", "use_flash_attn", "_use_flash_attention_2"]
+    attn_impl_keys: ClassVar[list] = ["_attn_implementation", "attn_implementation", "llm_attn_implementation"]
+    use_flash_attn_keys: ClassVar[list] = ["_flash_attn_2_enabled", "use_flash_attn", "_use_flash_attention_2"]
 
     @staticmethod
     def to_use_flash_attn(attn_impl: str | None, auto_value: _T = None) -> bool | _T:
@@ -453,7 +453,7 @@ class InitModelStrategy:
     def orthogonal_init(param: torch.Tensor) -> None:
         nn.init.orthogonal_(param, gain=1.0)
 
-    _INIT_STRATEGY_MAP = {
+    _INIT_STRATEGY_MAP: ClassVar[dict] = {
         "zero": constant_init,
         "uniform": uniform_init,
         "normal": normal_init,

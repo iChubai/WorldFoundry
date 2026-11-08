@@ -19,6 +19,7 @@ live here.  Those are :mod:`.variants` or the native packed :mod:`.model`.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -374,8 +375,8 @@ class Head(nn.Module):
 class WanModel(nn.Module, NativeConfigMixin):
     r"""Official-layout Wan 2.2 DiT with per-token timestep modulation."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(

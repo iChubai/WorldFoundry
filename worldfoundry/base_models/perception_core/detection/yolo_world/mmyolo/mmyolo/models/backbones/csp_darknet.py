@@ -1,5 +1,6 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+from typing import ClassVar
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
@@ -58,7 +59,7 @@ class YOLOv5CSPDarknet(BaseBackbone):
 
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
-    arch_settings = {
+    arch_settings: ClassVar[dict] = {
         "P5": [
             [64, 128, 3, True, False],
             [128, 256, 6, True, False],
@@ -77,7 +78,7 @@ class YOLOv5CSPDarknet(BaseBackbone):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: dict | list[dict] = None,
+        plugins: dict | list[dict] | None = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
@@ -209,7 +210,7 @@ class YOLOv8CSPDarknet(BaseBackbone):
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
     # the final out_channels will be set according to the param.
-    arch_settings = {
+    arch_settings: ClassVar[dict] = {
         "P5": [
             [64, 128, 3, True, False],
             [128, 256, 6, True, False],
@@ -222,7 +223,7 @@ class YOLOv8CSPDarknet(BaseBackbone):
         self,
         arch: str = "P5",
         last_stage_out_channels: int = 1024,
-        plugins: dict | list[dict] = None,
+        plugins: dict | list[dict] | None = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
@@ -356,7 +357,7 @@ class YOLOXCSPDarknet(BaseBackbone):
 
     # From left to right:
     # in_channels, out_channels, num_blocks, add_identity, use_spp
-    arch_settings = {
+    arch_settings: ClassVar[dict] = {
         "P5": [
             [64, 128, 3, True, False],
             [128, 256, 9, True, False],
@@ -368,7 +369,7 @@ class YOLOXCSPDarknet(BaseBackbone):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: dict | list[dict] = None,
+        plugins: dict | list[dict] | None = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,

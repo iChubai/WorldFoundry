@@ -275,7 +275,7 @@ def build_mesh_from_depth_map(
 
 @batched(2)
 def depth_map_edge(
-    depth: Tensor, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: Tensor = None
+    depth: Tensor, atol: float | None = None, rtol: float | None = None, kernel_size: int = 3, mask: Tensor = None
 ) -> torch.BoolTensor:
     """
     Compute the edge mask of a depth map. The edge is defined as the pixels whose neighbors have a large difference in depth.
@@ -307,7 +307,7 @@ def depth_map_edge(
 
 @batched(2)
 def depth_map_aliasing(
-    depth: Tensor, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: Tensor = None
+    depth: Tensor, atol: float | None = None, rtol: float | None = None, kernel_size: int = 3, mask: Tensor = None
 ) -> torch.BoolTensor:
     """
     Compute the map that indicates the aliasing of a depth map. The aliasing is defined as the pixels which neither close to the maximum nor the minimum of its neighbors.

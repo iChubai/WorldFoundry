@@ -10,6 +10,7 @@ Adds linear attention and TeaCache hooks.  No VACE or causal cache.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.cuda.amp as amp
@@ -942,8 +943,8 @@ class WanModel(nn.Module, NativeConfigMixin):
     r"""Wan 2.1 official-layout stem; subclassed by the linear-attention variant."""
 
     # ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    ignore_for_config = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(
@@ -1237,7 +1238,7 @@ class WanModel(nn.Module, NativeConfigMixin):
 class WanLinearAttentionModel(WanModel):
     """Wan 2.1 stem whose self-attn layers can be flash or linear."""
 
-    ignore_for_config = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
+    ignore_for_config: ClassVar[list] = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
 
     @register_to_config
     def __init__(

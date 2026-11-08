@@ -15,7 +15,7 @@
 
 import logging
 import math
-from typing import Any
+from typing import Any, ClassVar
 
 try:
     from flash_attn.flash_attn_interface import flash_attn_unpadded_func
@@ -402,20 +402,20 @@ class MplugOwlPreTrainedModel(PreTrainedModel):
     config_class = MplugOwlConfig
     base_model_prefix = "mplug_owl"
     supports_gradient_checkpointing = True
-    _keys_to_ignore_on_load_missing = [
+    _keys_to_ignore_on_load_missing: ClassVar[list] = [
         r"position_ids",
         r"language_model.encoder.embed_tokens.weight",
         r"language_model.decoder.embed_tokens.weight",
         r"language_model.lm_head.weight",
     ]
-    _no_split_modules = [
+    _no_split_modules: ClassVar[list] = [
         "MplugOwlVisionEncoderLayer",
         "LlamaDecoderLayer",
         "MplugOwlVisualAbstractorLayer",
         "LlamaForCausalLM",
         "Parameter",
     ]
-    _keep_in_fp32_modules = ["wo"]
+    _keep_in_fp32_modules: ClassVar[list] = ["wo"]
 
     def _init_weights(self, module):
         """Initialize the weights"""

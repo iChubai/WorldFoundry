@@ -5,6 +5,7 @@ Self-Forcing runtime.  Adds causal attention; no VACE or linear attn.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -438,8 +439,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(nn.Module, NativeConfigMixin):
     r"""Self-Forcing causal Wan (chunk KV cache, teacher-forcing train)."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     @register_to_config
@@ -828,8 +829,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         seq_len,
         clip_fea=None,
         y=None,
-        kv_cache: dict = None,
-        crossattn_cache: dict = None,
+        kv_cache: dict | None = None,
+        crossattn_cache: dict | None = None,
         current_start: int = 0,
         cache_start: int = 0,
     ):

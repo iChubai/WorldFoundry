@@ -8,6 +8,7 @@ Adds action + causal attention.  No VACE or linear attn.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -446,8 +447,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(nn.Module, NativeConfigMixin):
     r"""Causal Wan 2.1 action DiT with chunk KV cache and frame-offset RoPE."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     @register_to_config
@@ -774,10 +775,10 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         cond_concat,
         mouse_cond=None,
         keyboard_cond=None,
-        kv_cache: dict = None,
+        kv_cache: dict | None = None,
         kv_cache_mouse=None,
         kv_cache_keyboard=None,
-        crossattn_cache: dict = None,
+        crossattn_cache: dict | None = None,
         current_start: int = 0,
         cache_start: int = 0,
     ):

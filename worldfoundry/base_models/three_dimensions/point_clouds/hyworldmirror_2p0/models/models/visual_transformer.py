@@ -360,7 +360,7 @@ class VisualGeometryTransformer(nn.Module):
         images: torch.Tensor,
         priors: list | None = None,
         cond_flags: list[int] = [0, 0, 0],
-        ctx_frames: int = None,
+        ctx_frames: int | None = None,
         enable_bf16=False,
         sp_size: int = 1,
         sp_group: torch._C._distributed_c10d.ProcessGroup = None,

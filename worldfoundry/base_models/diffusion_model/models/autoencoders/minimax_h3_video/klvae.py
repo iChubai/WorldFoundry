@@ -10,6 +10,7 @@ locally with world_size=1, rank=0, which is what SGLang used by default.
 import logging
 import math
 import os
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -111,7 +112,7 @@ class AutoencoderKL(nn.Module):
     values the original stored via ``@register_to_config``.
     """
 
-    _compilable_modules = ["encoder", "decoder"]
+    _compilable_modules: ClassVar[list] = ["encoder", "decoder"]
 
     def setup_forward(self, **kwargs):
         self.clip_length = kwargs.get("clip_length", 17)

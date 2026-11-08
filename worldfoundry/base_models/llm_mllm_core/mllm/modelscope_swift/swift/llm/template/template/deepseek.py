@@ -1,6 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -50,10 +50,10 @@ register_template(
 
 
 class DeepseekVLTemplate(Template):
-    image_placeholder = ["<image_placeholder>"]
+    image_placeholder: ClassVar[list] = ["<image_placeholder>"]
     skip_prompt = False
     use_model = True
-    placeholder_tokens = ["<image_placeholder>"]
+    placeholder_tokens: ClassVar[list] = ["<image_placeholder>"]
 
     image_token_num_per_image: int = 576
 
@@ -245,7 +245,7 @@ register_template(
 
 class DeepseekJanus(DeepseekVLTemplate):
     is_janus = True
-    image_placeholder = ["<image_placeholder>\n"]
+    image_placeholder: ClassVar[list] = ["<image_placeholder>\n"]
 
 
 register_template(DeepseekVLTemplateMeta(MLLMTemplateType.deepseek_janus, template_cls=DeepseekJanus))
@@ -276,8 +276,8 @@ register_template(
 
 
 class DeepseekVL2Template(DeepseekVLTemplate):
-    image_placeholder = ["<image>\n"]
-    placeholder_tokens = ["<image>"]
+    image_placeholder: ClassVar[list] = ["<image>\n"]
+    placeholder_tokens: ClassVar[list] = ["<image>"]
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         from deepseek_vl2.models.processing_deepseek_vl_v2 import VLChatProcessorOutput

@@ -52,7 +52,7 @@ class CSPNeXtPAFPN(BaseYOLONeck):
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
         upsample_cfg: ConfigType = {"scale_factor": 2, "mode": "nearest"},
-        conv_cfg: bool = None,
+        conv_cfg: bool | None = None,
         norm_cfg: ConfigType = {"type": "BN"},
         act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = {

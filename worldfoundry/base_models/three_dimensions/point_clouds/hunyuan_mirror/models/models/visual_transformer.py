@@ -298,7 +298,7 @@ class VisualGeometryTransformer(nn.Module):
         images: torch.Tensor,
         priors: list | None = None,
         cond_flags: list[int] = [0, 0, 0],
-        ctx_frames: int = None,
+        ctx_frames: int | None = None,
     ) -> tuple[list[torch.Tensor], int]:
         """
         Args:

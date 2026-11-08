@@ -63,7 +63,7 @@ def harmonic_mean_numpy(
 
 
 def normalized_view_plane_uv_numpy(
-    width: int, height: int, aspect_ratio: float = None, dtype: np.dtype = np.float32
+    width: int, height: int, aspect_ratio: float | None = None, dtype: np.dtype = np.float32
 ) -> np.ndarray:
     "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
     if aspect_ratio is None:
@@ -191,7 +191,7 @@ def solve_optimal_shift(uv: np.ndarray, xyz: np.ndarray, focal: float):
 
 
 def recover_focal_shift_numpy(
-    points: np.ndarray, mask: np.ndarray = None, focal: float = None, downsample_size: Tuple[int, int] = (64, 64)
+    points: np.ndarray, mask: np.ndarray = None, focal: float | None = None, downsample_size: Tuple[int, int] = (64, 64)
 ):
     """Recover focal shift numpy.
 

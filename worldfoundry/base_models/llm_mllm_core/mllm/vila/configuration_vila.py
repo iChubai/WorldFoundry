@@ -1,9 +1,11 @@
+from typing import ClassVar
+
 from transformers import PretrainedConfig
 
 
 class VILAConfig(PretrainedConfig):
     model_type = "vila"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,

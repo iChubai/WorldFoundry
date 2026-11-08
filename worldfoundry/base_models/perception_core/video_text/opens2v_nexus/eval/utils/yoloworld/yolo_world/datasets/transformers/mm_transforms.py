@@ -10,7 +10,7 @@ from mmyolo.registry import TRANSFORMS
 class RandomLoadText:
     def __init__(
         self,
-        text_path: str = None,
+        text_path: str | None = None,
         prompt_format: str = "{}",
         num_neg_samples: tuple[int, int] = (80, 80),
         max_num_samples: int = 80,
@@ -97,7 +97,7 @@ class RandomLoadText:
 class LoadText:
     def __init__(
         self,
-        text_path: str = None,
+        text_path: str | None = None,
         prompt_format: str = "{}",
         multi_prompt_flag: str = "/",
     ) -> None:

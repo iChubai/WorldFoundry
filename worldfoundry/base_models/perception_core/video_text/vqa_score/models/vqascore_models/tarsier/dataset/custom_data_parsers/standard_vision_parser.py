@@ -58,7 +58,7 @@ class VisionParser:
     2. text 的特殊处理：调整 box；过滤面积太小的OCR
     """
 
-    def transform(self, data_dict: dict, image_processing_config: dict = None) -> dict:
+    def transform(self, data_dict: dict, image_processing_config: dict | None = None) -> dict:
         self.check_format(data_dict, image_processing_config)
 
         self.set_n_frames(data_dict)

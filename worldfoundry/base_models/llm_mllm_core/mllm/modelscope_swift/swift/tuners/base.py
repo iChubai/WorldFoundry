@@ -50,7 +50,7 @@ class SwiftModel(nn.Module):
         self,
         model: Union[nn.Module, "SwiftModel"],
         config: SwiftConfig | dict[str, SwiftConfig],
-        extra_state_keys: list[str] = None,
+        extra_state_keys: list[str] | None = None,
         inference_mode: bool = False,
         **kwargs,
     ):
@@ -128,7 +128,7 @@ class SwiftModel(nn.Module):
                 self.deactivate_adapter(adapter)
         return deactivated
 
-    def load_state_dict(self, state_dict, strict=True, adapter_name: str = None):
+    def load_state_dict(self, state_dict, strict=True, adapter_name: str | None = None):
         if adapter_name is not None:
             output: SwiftOutput = self.adapters[adapter_name]
             if getattr(output.config, "modules_to_save", None):
@@ -171,7 +171,7 @@ class SwiftModel(nn.Module):
         destination=None,
         prefix="",
         keep_vars=False,
-        adapter_name: str = None,
+        adapter_name: str | None = None,
         peft_format: bool = False,
         **kwargs,
     ):
@@ -311,10 +311,10 @@ class SwiftModel(nn.Module):
     def from_pretrained(
         cls,
         model: Union[nn.Module, "SwiftModel"],
-        model_id: str = None,
-        adapter_name: str | list[str] | dict[str, str] = None,
+        model_id: str | None = None,
+        adapter_name: str | list[str] | dict[str, str] | None = None,
         inference_mode: bool = True,
-        revision: str = None,
+        revision: str | None = None,
         **kwargs,
     ):
         """Load a set of tuners and corresponding weights by a model_id.
@@ -562,7 +562,7 @@ class SwiftModel(nn.Module):
         self,
         save_directory: str,
         safe_serialization: bool = False,
-        adapter_name: str | list[str] = None,
+        adapter_name: str | list[str] | None = None,
         **kwargs,
     ):
         """Save the adapters to a local directory.
@@ -663,7 +663,7 @@ class SwiftModel(nn.Module):
         finally:
             self.set_active_adapters(adapter_names=self.adapters.keys())
 
-    def set_active_adapters(self, adapter_names: list[str] | str, offload: str = None):
+    def set_active_adapters(self, adapter_names: list[str] | str, offload: str | None = None):
         """Set activated adapters
 
         Args:
@@ -702,7 +702,7 @@ class SwiftModel(nn.Module):
         )
         self.active_adapters = self.active_adapters | {adapter_name}
 
-    def deactivate_adapter(self, adapter_name: str, offload: str = None):
+    def deactivate_adapter(self, adapter_name: str, offload: str | None = None):
         """Deactivate one adapter
 
         Args:
@@ -916,9 +916,9 @@ class Swift:
     @staticmethod
     def from_pretrained(
         model: nn.Module | SwiftModel | PeftModel,
-        model_id: str = None,
-        adapter_name: str | list[str] | dict[str, str] = None,
-        revision: str = None,
+        model_id: str | None = None,
+        adapter_name: str | list[str] | dict[str, str] | None = None,
+        revision: str | None = None,
         **kwargs,
     ):
         """Prepare a model by a model_id in the ModelScope hub or a local dir.

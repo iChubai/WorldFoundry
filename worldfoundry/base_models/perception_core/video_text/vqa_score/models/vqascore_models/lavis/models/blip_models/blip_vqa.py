@@ -5,6 +5,8 @@ SPDX-License-Identifier: BSD-3-Clause
 For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
+from typing import ClassVar
+
 import torch
 import torch.nn.functional as F
 
@@ -44,7 +46,7 @@ class BlipVQA(BlipBase):
         >>> model = load_model("blip_vqa", "aokvqa")
     """
 
-    PRETRAINED_MODEL_CONFIG_DICT = {
+    PRETRAINED_MODEL_CONFIG_DICT: ClassVar[dict] = {
         "vqav2": "configs/models/blip_vqav2.yaml",
         "okvqa": "configs/models/blip_vqa_okvqa.yaml",
         "aokvqa": "configs/models/blip_vqa_aokvqa.yaml",

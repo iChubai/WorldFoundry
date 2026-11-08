@@ -9,7 +9,7 @@ from contextlib import contextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import asdict
 from functools import partial, wraps
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 import torch.nn as nn
@@ -44,14 +44,22 @@ class MaxLengthError(ValueError):
 
 
 class Template(ProcessorMixin):
-    special_tokens = ["<image>", "<video>", "<audio>", "<bbox>", "<ref-object>", "<cot-process>", "<start-image>"]
-    special_keys = ["images", "videos", "audios", "objects"]
+    special_tokens: ClassVar[list] = [
+        "<image>",
+        "<video>",
+        "<audio>",
+        "<bbox>",
+        "<ref-object>",
+        "<cot-process>",
+        "<start-image>",
+    ]
+    special_keys: ClassVar[list] = ["images", "videos", "audios", "objects"]
 
-    image_placeholder = ["<image>"]
-    video_placeholder = ["<video>"]
-    audio_placeholder = ["<audio>"]
-    cot_process_placeholder = ["ки"]
-    placeholder_tokens = []  # For clearer printing
+    image_placeholder: ClassVar[list] = ["<image>"]
+    video_placeholder: ClassVar[list] = ["<video>"]
+    audio_placeholder: ClassVar[list] = ["<audio>"]
+    cot_process_placeholder: ClassVar[list] = ["ки"]
+    placeholder_tokens: ClassVar[list] = []  # For clearer printing
     load_images = True
     skip_prompt = True
     use_model = False

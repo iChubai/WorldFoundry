@@ -22,7 +22,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from torch import nn
@@ -306,7 +306,7 @@ class BooleanFlag(AbstractEmbModel):
 class GeneralConditioner(nn.Module, ABC):
     """Compose multiple embedding modules into one structured condition."""
 
-    KEY2DIM = {"crossattn_emb": 1}
+    KEY2DIM: ClassVar[dict] = {"crossattn_emb": 1}
 
     def __init__(self, **emb_models: Any) -> None:
         super().__init__()

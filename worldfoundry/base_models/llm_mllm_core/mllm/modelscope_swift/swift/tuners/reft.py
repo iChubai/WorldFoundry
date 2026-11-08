@@ -212,5 +212,5 @@ class Reft(SwiftAdapter):
         return True
 
     @staticmethod
-    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):
+    def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str | None = None):
         assert activate, "ReFT does not support deactivate"

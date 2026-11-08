@@ -5,6 +5,7 @@ self-attention plus camera tokens; no VACE or linear attn.
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -217,8 +218,8 @@ class CausalHead(nn.Module):
 class CausalWanModel(nn.Module, NativeConfigMixin):
     r"""Causal Wan 2.1 camera DiT with chunk KV cache."""
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
     _supports_gradient_checkpointing = True
 
     @register_to_config
@@ -348,8 +349,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         context,
         seq_len,
         y=None,
-        kv_cache: dict = None,
-        crossattn_cache: dict = None,
+        kv_cache: dict | None = None,
+        crossattn_cache: dict | None = None,
         kv_size=(0, 0),
         image_latent_input: torch.Tensor = None,
         render_latent_input: torch.Tensor = None,

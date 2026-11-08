@@ -359,7 +359,11 @@ def opencv_camera_to_plucker(poses, K, H, W):
 
 
 def depth_edge(
-    depth: torch.Tensor, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: torch.Tensor = None
+    depth: torch.Tensor,
+    atol: float | None = None,
+    rtol: float | None = None,
+    kernel_size: int = 3,
+    mask: torch.Tensor = None,
 ) -> torch.BoolTensor:
     """
     Compute the edge mask of a depth map. The edge is defined as the pixels whose neighbors have a large difference in depth.

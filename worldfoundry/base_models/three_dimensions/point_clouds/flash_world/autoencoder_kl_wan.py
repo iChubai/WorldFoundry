@@ -425,7 +425,7 @@ class WanResample(nn.Module):
             - 'downsample3d': 3D downsampling with zero-padding, convolution, and causal 3D convolution.
     """
 
-    def __init__(self, dim: int, mode: str, upsample_out_dim: int = None) -> None:
+    def __init__(self, dim: int, mode: str, upsample_out_dim: int | None = None) -> None:
         """Init.
 
         Args:

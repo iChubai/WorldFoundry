@@ -7,6 +7,7 @@
 import collections.abc as collections
 from pathlib import Path
 from types import SimpleNamespace
+from typing import ClassVar
 
 import cv2
 import kornia
@@ -71,7 +72,7 @@ def fit_features_to_multiple(
 class ImagePreprocessor:
     """Preprocess images for calibration."""
 
-    default_conf = {
+    default_conf: ClassVar[dict] = {
         "resize": 320,  # target edge length, None for no resizing
         "edge_divisible_by": None,
         "side": "short",

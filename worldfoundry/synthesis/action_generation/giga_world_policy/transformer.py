@@ -676,6 +676,56 @@ class CasualWorldActionTransformer(
             return self.action_decoder(action_states, emb_ids=emb_ids)
         return self.action_decoder(action_states)
 
+    def _embed_conditions(
+        self,
+        timestep: torch.Tensor,
+        encoder_hidden_states: torch.Tensor,
+        encoder_hidden_states_image: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Embed the timestep and the text and image conditions.
+
+        Returns:
+            ``(temb, timestep_proj, encoder_hidden_states)``: ``timestep_proj`` is split into 6 modulation
+            chunks along the last-but-one dimension, and image tokens are prepended to the text tokens.
+        """
+        # timestep shape: batch_size, or batch_size, seq_len (wan 2.2 ti2v)
+        if timestep.ndim == 2:
+            ts_seq_len = timestep.shape[1]
+            timestep = timestep.flatten()  # batch_size * seq_len
+        else:
+            ts_seq_len = None
+
+        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
+            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        )
+        if ts_seq_len is not None:
+            # batch_size, seq_len, 6, inner_dim
+            timestep_proj = timestep_proj.unflatten(2, (6, -1))
+        else:
+            # batch_size, 6, inner_dim
+            timestep_proj = timestep_proj.unflatten(1, (6, -1))
+
+        if encoder_hidden_states_image is not None:
+            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
+        return temb, timestep_proj, encoder_hidden_states
+
+    def _modulate_output(self, hidden_states: torch.Tensor, temb: torch.Tensor) -> torch.Tensor:
+        """Apply the output norm with the timestep shift and scale."""
+        if temb.ndim == 3:
+            # batch_size, seq_len, inner_dim (wan 2.2 ti2v)
+            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
+            shift = shift.squeeze(2)
+            scale = scale.squeeze(2)
+        else:
+            # batch_size, inner_dim
+            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
+
+        # With multi-GPU inference through accelerate, shift and scale live on the first device while
+        # hidden_states ends up on the last one.
+        shift = shift.to(hidden_states.device)
+        scale = scale.to(hidden_states.device)
+        return (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+
     def forward(self, *args, **kwargs):
         action_only = kwargs.pop("action_only", False)
         no_video_tokens = kwargs.pop("no_video_tokens", False)
@@ -759,22 +809,9 @@ class CasualWorldActionTransformer(
         else:
             rotary_emb = extra_rotary_emb
 
-        if timestep.ndim == 2:
-            ts_seq_len = timestep.shape[1]
-            timestep = timestep.flatten()
-        else:
-            ts_seq_len = None
-
-        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        temb, timestep_proj, encoder_hidden_states = self._embed_conditions(
+            timestep, encoder_hidden_states, encoder_hidden_states_image
         )
-        if ts_seq_len is not None:
-            timestep_proj = timestep_proj.unflatten(2, (6, -1))
-        else:
-            timestep_proj = timestep_proj.unflatten(1, (6, -1))
-
-        if encoder_hidden_states_image is not None:
-            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         L = hidden_states.shape[1]
         device = hidden_states.device
@@ -795,16 +832,7 @@ class CasualWorldActionTransformer(
                     hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, self_attention_mask
                 )
 
-        if temb.ndim == 3:
-            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-            shift = shift.squeeze(2)
-            scale = scale.squeeze(2)
-        else:
-            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
-
-        shift = shift.to(hidden_states.device)
-        scale = scale.to(hidden_states.device)
-        hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+        hidden_states = self._modulate_output(hidden_states, temb)
 
         pred_action_states = hidden_states[
             :, num_state_tokens + num_ref_tokens : num_state_tokens + num_ref_tokens + num_action_tokens
@@ -895,22 +923,9 @@ class CasualWorldActionTransformer(
             ),
         )
 
-        if timestep.ndim == 2:
-            ts_seq_len = timestep.shape[1]
-            timestep = timestep.flatten()
-        else:
-            ts_seq_len = None
-
-        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        temb, timestep_proj, encoder_hidden_states = self._embed_conditions(
+            timestep, encoder_hidden_states, encoder_hidden_states_image
         )
-        if ts_seq_len is not None:
-            timestep_proj = timestep_proj.unflatten(2, (6, -1))
-        else:
-            timestep_proj = timestep_proj.unflatten(1, (6, -1))
-
-        if encoder_hidden_states_image is not None:
-            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         L = hidden_states.shape[1]
         device = hidden_states.device
@@ -933,16 +948,7 @@ class CasualWorldActionTransformer(
                     hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, self_attention_mask
                 )
 
-        if temb.ndim == 3:
-            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-            shift = shift.squeeze(2)
-            scale = scale.squeeze(2)
-        else:
-            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
-
-        shift = shift.to(hidden_states.device)
-        scale = scale.to(hidden_states.device)
-        hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+        hidden_states = self._modulate_output(hidden_states, temb)
 
         action_states = hidden_states[:, -(num_action_tokens + num_noisy_tokens) : -num_noisy_tokens]
         action_pred = self._decode_action_tokens(action_states, emb_ids=emb_ids)
@@ -1036,23 +1042,9 @@ class CasualWorldActionTransformer(
         )
 
         # 7. Timestep and text conditioning.
-        if timestep.ndim == 2:
-            ts_seq_len = timestep.shape[1]
-            timestep = timestep.flatten()
-        else:
-            ts_seq_len = None
-
-        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        temb, timestep_proj, encoder_hidden_states = self._embed_conditions(
+            timestep, encoder_hidden_states, encoder_hidden_states_image
         )
-
-        if ts_seq_len is not None:
-            timestep_proj = timestep_proj.unflatten(2, (6, -1))
-        else:
-            timestep_proj = timestep_proj.unflatten(1, (6, -1))
-
-        if encoder_hidden_states_image is not None:
-            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         # 8. Causal attention mask.
         L = hidden_states.shape[1]
@@ -1073,14 +1065,7 @@ class CasualWorldActionTransformer(
             hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, self_attention_mask)
 
         # 10. Output norm and modulation.
-        if temb.ndim == 3:
-            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-            shift, scale = shift.squeeze(2), scale.squeeze(2)
-        else:
-            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
-
-        shift, scale = shift.to(hidden_states.device), scale.to(hidden_states.device)
-        hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+        hidden_states = self._modulate_output(hidden_states, temb)
 
         # 11. Output heads: action prediction.
         pred_action_states = hidden_states[:, s_r_end:action_end]
@@ -1185,23 +1170,9 @@ class CasualWorldActionTransformer(
 
         timestep = timestep[:, : hidden_states.shape[1]]
         # 7. Timestep and text conditioning.
-        if timestep.ndim == 2:
-            ts_seq_len = timestep.shape[1]
-            timestep = timestep.flatten()
-        else:
-            ts_seq_len = None
-
-        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        temb, timestep_proj, encoder_hidden_states = self._embed_conditions(
+            timestep, encoder_hidden_states, encoder_hidden_states_image
         )
-
-        if ts_seq_len is not None:
-            timestep_proj = timestep_proj.unflatten(2, (6, -1))
-        else:
-            timestep_proj = timestep_proj.unflatten(1, (6, -1))
-
-        if encoder_hidden_states_image is not None:
-            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         # 8. Causal attention mask.
         L = hidden_states.shape[1]
@@ -1221,14 +1192,7 @@ class CasualWorldActionTransformer(
         for block in self.blocks:
             hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, self_attention_mask)
         # 10. Output norm and modulation.
-        if temb.ndim == 3:
-            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-            shift, scale = shift.squeeze(2), scale.squeeze(2)
-        else:
-            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
-
-        shift, scale = shift.to(hidden_states.device), scale.to(hidden_states.device)
-        hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+        hidden_states = self._modulate_output(hidden_states, temb)
 
         # 11. Output heads: action prediction.
         pred_action_states = hidden_states[:, s_r_end:action_end]
@@ -1334,25 +1298,9 @@ class CasualWorldActionTransformer(
             ),
         )
 
-        # timestep shape: batch_size, or batch_size, seq_len (wan 2.2 ti2v)
-        if timestep.ndim == 2:
-            ts_seq_len = timestep.shape[1]
-            timestep = timestep.flatten()  # batch_size * seq_len
-        else:
-            ts_seq_len = None
-
-        temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, encoder_hidden_states, encoder_hidden_states_image, timestep_seq_len=ts_seq_len
+        temb, timestep_proj, encoder_hidden_states = self._embed_conditions(
+            timestep, encoder_hidden_states, encoder_hidden_states_image
         )
-        if ts_seq_len is not None:
-            # batch_size, seq_len, 6, inner_dim
-            timestep_proj = timestep_proj.unflatten(2, (6, -1))
-        else:
-            # batch_size, 6, inner_dim
-            timestep_proj = timestep_proj.unflatten(1, (6, -1))
-
-        if encoder_hidden_states_image is not None:
-            encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         L = hidden_states.shape[1]
         device = hidden_states.device
@@ -1377,23 +1325,7 @@ class CasualWorldActionTransformer(
                 )
 
         # 5. Output norm, projection & unpatchify
-        if temb.ndim == 3:
-            # batch_size, seq_len, inner_dim (wan 2.2 ti2v)
-            shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-            shift = shift.squeeze(2)
-            scale = scale.squeeze(2)
-        else:
-            # batch_size, inner_dim
-            shift, scale = (self.scale_shift_table.to(temb.device) + temb.unsqueeze(1)).chunk(2, dim=1)
-
-        # Move the shift and scale tensors to the same device as hidden_states.
-        # When using multi-GPU inference via accelerate these will be on the
-        # first device rather than the last device, which hidden_states ends up
-        # on.
-        shift = shift.to(hidden_states.device)
-        scale = scale.to(hidden_states.device)
-
-        hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
+        hidden_states = self._modulate_output(hidden_states, temb)
         action_states = hidden_states[:, -(num_action_tokens + num_noisy_tokens) : -num_noisy_tokens]
         hidden_states = torch.cat(
             [hidden_states[:, num_state_tokens:s_r_end], hidden_states[:, -num_noisy_tokens:]], dim=1

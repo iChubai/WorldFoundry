@@ -11,7 +11,7 @@ Requires pre-computed DA3 cache (depth.npy, extrinsics.npy, intrinsics.npy).
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import cv2
 import numpy as np
@@ -105,10 +105,7 @@ def _extract_frames_resized(video_path: str, depth_shape, fps: float) -> np.ndar
         cap.release()
         return None
 
-    if fps <= 0 or fps >= video_fps:
-        step = 1
-    else:
-        step = max(1, int(round(video_fps / fps)))
+    step = 1 if fps <= 0 or fps >= video_fps else max(1, round(video_fps / fps))
     indices = list(range(0, total, step))[:N]
 
     frames = []

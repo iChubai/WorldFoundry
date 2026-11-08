@@ -1,6 +1,5 @@
 """Dynamic degree — VBench-aligned RAFT optical flow with Farneback fallback."""
 
-import logging
 from types import SimpleNamespace
 
 import cv2

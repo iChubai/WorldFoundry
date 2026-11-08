@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -56,12 +56,12 @@ Answer in JSON format ONLY. Each reason must be within 20 words.
 
 
 def evaluate_case(
-    frames: list[Image.Image] = None,
+    frames: list[Image.Image] | None = None,
     visible_part: str = "",
     offscreen_part: str = "",
     style: str = "realistic",
     vlm_client: VLMClient | None = None,
-    video_url: str = None,
+    video_url: str | None = None,
     **vlm_kwargs,
 ) -> dict[str, Any]:
     """Evaluate scene adherence for a single case.
@@ -89,7 +89,7 @@ def evaluate_case(
     )
 
     last_error = None
-    for attempt in range(3):
+    for _attempt in range(3):
         try:
             raw_response = client.ask(prompt, frames, video_url=video_url)
             parsed = _parse_json_response(raw_response)
@@ -123,7 +123,7 @@ def _parse_json_response(raw: str) -> dict:
     raw = raw.strip()
     if raw.startswith("```"):
         lines = raw.split("\n")
-        lines = [l for l in lines if not l.strip().startswith("```")]
+        lines = [line for line in lines if not line.strip().startswith("```")]
         raw = "\n".join(lines)
     # Try direct parse first
     raw = re.sub(r",\s*}", "}", raw)

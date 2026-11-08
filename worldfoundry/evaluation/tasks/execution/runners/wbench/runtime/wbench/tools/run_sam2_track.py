@@ -19,6 +19,7 @@ Output:
 """
 
 import argparse
+import contextlib
 import glob
 import json
 import logging
@@ -28,7 +29,6 @@ import time
 
 import cv2
 import numpy as np
-import torch
 from PIL import Image
 
 from worldfoundry.base_models.perception_core.segment.sam2 import (
@@ -63,7 +63,7 @@ def extract_frames_to_dir(video_path, output_dir, target_fps=5.0):
 
     if 0 < target_fps < native_fps:
         step = native_fps / target_fps
-        indices = sorted(set(int(round(i * step)) for i in range(int(total / step)) if int(round(i * step)) < total))
+        indices = sorted({round(i * step) for i in range(int(total / step)) if round(i * step) < total})
     else:
         indices = list(range(total))
 
@@ -114,10 +114,8 @@ def track_video(
             init_img = Image.open(initial_image_path).convert("RGB").resize((video_w, video_h), Image.LANCZOS)
             init_img.save(os.path.join(frames_dir, "00000.jpg"))
             has_init_frame = True
-            total_frames_in_dir = n_frames + 1
         else:
             has_init_frame = False
-            total_frames_in_dir = n_frames
             # Get video size from first frame
             sample = Image.open(os.path.join(frames_dir, "00000.jpg"))
             video_w, video_h = sample.size
@@ -142,7 +140,7 @@ def track_video(
 
         # Propagate through all frames
         frame_masks = {}
-        for frame_idx, obj_ids, mask_logits in predictor.propagate_in_video(inference_state):
+        for frame_idx, _obj_ids, mask_logits in predictor.propagate_in_video(inference_state):
             mask = (mask_logits[0] > 0.0).cpu().numpy().squeeze().astype(np.uint8)
             frame_masks[frame_idx] = mask
 
@@ -177,10 +175,8 @@ def _gpu_worker(gpu_id, worker_idx, n_workers, task_list, output_base, fps):
     start = worker_idx * n_cores
     cpu_ids = available[start : start + n_cores]
 
-    try:
+    with contextlib.suppress(AttributeError, OSError):
         os.sched_setaffinity(0, cpu_ids)
-    except (AttributeError, OSError):
-        pass
 
     os.environ["OMP_NUM_THREADS"] = str(n_threads)
     os.environ["MKL_NUM_THREADS"] = str(n_threads)

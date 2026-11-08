@@ -12,6 +12,7 @@ Supported models: doubao-seed-2-0-lite-260215, Doubao-Seed-2.0-lite
 """
 
 import base64
+import contextlib
 import logging
 import os
 import re
@@ -21,7 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import ClassVar
 
 import cv2
 import requests
@@ -75,7 +76,7 @@ def encode_video_to_b64url(video_path: str, max_short_side: int = 0) -> str:
         out_h = int(h * scale) // 2 * 2
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)  # noqa: SIM115 - Closed on the next lines; only its name is kept.
     tmp_path = tmp.name
     tmp.close()
 
@@ -94,10 +95,8 @@ def encode_video_to_b64url(video_path: str, max_short_side: int = 0) -> str:
     finally:
         cap.release()
         writer.release()
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(tmp_path)
-        except FileNotFoundError:
-            pass
 
 
 def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float, max_short_side: int = 0) -> str:
@@ -121,7 +120,7 @@ def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float, max_
         out_w = int(w * scale) // 2 * 2
         out_h = int(h * scale) // 2 * 2
 
-    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)  # noqa: SIM115 - Closed on the next lines; only its name is kept.
     tmp_path = tmp.name
     tmp.close()
 
@@ -143,10 +142,8 @@ def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float, max_
     finally:
         cap.release()
         writer.release()
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(tmp_path)
-        except FileNotFoundError:
-            pass
 
 
 @dataclass
@@ -216,9 +213,9 @@ class VLMClient:
         prompt: str,
         max_retries: int,
         max_tokens: int,
-        system_prompt: str = None,
-        video_url: str = None,
-        images: list[Image.Image] = None,
+        system_prompt: str | None = None,
+        video_url: str | None = None,
+        images: list[Image.Image] | None = None,
     ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -280,9 +277,9 @@ class VLMClient:
         prompt: str,
         max_retries: int,
         max_tokens: int,
-        system_prompt: str = None,
-        video_url: str = None,
-        images: list[Image.Image] = None,
+        system_prompt: str | None = None,
+        video_url: str | None = None,
+        images: list[Image.Image] | None = None,
     ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -333,17 +330,17 @@ class VLMClient:
     # -- Public API --------------------------------------------------------
 
     MAX_RETRIES = 6
-    RETRY_BACKOFF = [3, 8, 15, 25, 40, 60]
+    RETRY_BACKOFF: ClassVar[list[int]] = [3, 8, 15, 25, 40, 60]
     RATE_LIMIT_COOLDOWN = 2
 
     def ask(
         self,
         prompt: str,
-        images: list[Image.Image] = None,
+        images: list[Image.Image] | None = None,
         max_retries: int = 6,
         max_tokens: int = 300,
-        system_prompt: str = None,
-        video_url: str = None,
+        system_prompt: str | None = None,
+        video_url: str | None = None,
     ) -> str:
         """Ask a question with video or images. Returns raw text response.
 
@@ -377,7 +374,7 @@ class VLMClient:
                 _request_semaphore.release()
 
     def ask_binary(
-        self, question: str, images: list[Image.Image] = None, max_retries: int = 3, video_url: str = None
+        self, question: str, images: list[Image.Image] | None = None, max_retries: int = 3, video_url: str | None = None
     ) -> bool:
         """Ask a binary (yes/no) question."""
         answer_text = self.ask(

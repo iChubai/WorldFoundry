@@ -4,13 +4,20 @@ Automatically selects appropriate frame sampling strategy per metric (VBench-ali
 """
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import torch
 import torchvision.transforms as T
 from PIL import Image
 
-from src.utils.video_utils import load_video_frames
+from . import (
+    get_aesthetic_quality_metric,
+    get_dynamic_degree_metric,
+    get_hpsv3_quality_metric,
+    get_imaging_quality_metric,
+    get_motion_smoothness_metric,
+    get_temporal_flickering_metric,
+)
 
 _SHARED_RESIZE_CROP_CPU = T.Compose(
     [
@@ -32,15 +39,6 @@ def _shared_preprocess_gpu(frames, device="cuda"):
     batch = T.functional.center_crop(batch, 224)
     return batch.cpu()
 
-
-from . import (
-    get_aesthetic_quality_metric,
-    get_dynamic_degree_metric,
-    get_hpsv3_quality_metric,
-    get_imaging_quality_metric,
-    get_motion_smoothness_metric,
-    get_temporal_flickering_metric,
-)
 
 FRAME_SAMPLING_CONFIG = {
     "aesthetic_quality": {"fps": 2.0},

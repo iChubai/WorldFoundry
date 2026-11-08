@@ -14,7 +14,7 @@ Usage:
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import torch
@@ -39,7 +39,7 @@ ANCHOR_WEIGHTS = torch.tensor([5.0, 4.0, 3.0, 2.0, 1.0])
 class PhysicalPlausibilityEvaluator:
     """Local PAVRM inference using Qwen3-VL reward model (transformers backend)."""
 
-    def __init__(self, model_path: str = None, device: str = "cuda"):
+    def __init__(self, model_path: str | None = None, device: str = "cuda"):
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         if model_path is None:
@@ -127,7 +127,7 @@ class PhysicalPlausibilityEvaluator:
         return results
 
 
-def score_video_api(video_path: str, endpoint: str = None) -> dict[str, Any]:
+def score_video_api(video_path: str, endpoint: str | None = None) -> dict[str, Any]:
     """Score a video via PAVRM HTTP API endpoint (fallback)."""
     import requests
 
@@ -151,7 +151,9 @@ def score_video_api(video_path: str, endpoint: str = None) -> dict[str, Any]:
         return {"raw_score": None, "score": None, "error": str(e)}
 
 
-def compute_case(video_path: str, model_path: str = None, endpoint: str = None, device: str = "cuda") -> dict[str, Any]:
+def compute_case(
+    video_path: str, model_path: str | None = None, endpoint: str | None = None, device: str = "cuda"
+) -> dict[str, Any]:
     """Evaluate physical plausibility. Tries local model first, falls back to API."""
     model_path = (
         model_path

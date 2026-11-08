@@ -32,13 +32,14 @@ import tempfile
 import time
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 import cv2
 import numpy as np
 import src.compat  # noqa: F401 — stub optional deps (moviepy, trimesh, plyfile, etc.)
 
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api import DepthAnything3
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 DA3_MODEL_ID = os.environ.get("WBENCH_DA3_MODEL_ID") or "depth-anything/DA3-LARGE-1.1"
 
@@ -63,10 +64,7 @@ def extract_frames(video_path, fps=3):
     if video_fps <= 0 or total_frames <= 0:
         cap.release()
         return None, None
-    if fps <= 0 or fps >= video_fps:
-        step = 1
-    else:
-        step = max(1, int(round(video_fps / fps)))
+    step = 1 if fps <= 0 or fps >= video_fps else max(1, round(video_fps / fps))
     indices = list(range(0, total_frames, step))
     frames = []
     for idx in indices:

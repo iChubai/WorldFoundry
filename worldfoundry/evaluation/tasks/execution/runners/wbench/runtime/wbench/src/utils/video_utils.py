@@ -1,7 +1,5 @@
 """Video frame loading utilities."""
 
-from typing import List, Optional, Tuple
-
 import cv2
 import numpy as np
 from PIL import Image

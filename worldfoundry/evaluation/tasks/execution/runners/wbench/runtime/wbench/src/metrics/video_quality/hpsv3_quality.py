@@ -1,7 +1,7 @@
 """HPSv3 human preference score — Qwen2-VL-7B based preference model."""
 
 import os
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import torch

@@ -435,7 +435,8 @@ def _run_metric_on_gpu(gpu_id, metric, tasks, eval_dir, model_dir):
         # Skip if already computed
         if os.path.exists(out_file):
             try:
-                existing = json.load(open(out_file))
+                with open(out_file) as handle:
+                    existing = json.load(handle)
                 if existing.get("score") is not None or existing.get("summary"):
                     done += 1
                     continue
@@ -519,7 +520,7 @@ def _run_metric_on_gpu(gpu_id, metric, tasks, eval_dir, model_dir):
                 json.dump(result, f, indent=2, default=str)
 
             elapsed = time.time() - t0
-            score = result.get("score", result.get("summary", {}).get("aesthetic_quality", "?"))
+            _score = result.get("score", result.get("summary", {}).get("aesthetic_quality", "?"))
             print(f"  {tag} [{i + 1}/{len(tasks)}] case_{cid}: {elapsed:.1f}s", flush=True)
             done += 1
 
@@ -552,7 +553,8 @@ def _print_metric_summary(metric, eval_dir, cases_dir):
         n_total += 1
         cid = f.replace("case_", "").replace(".json", "")
         try:
-            data = json.load(open(os.path.join(metric_dir, f)))
+            with open(os.path.join(metric_dir, f)) as handle:
+                data = json.load(handle)
         except Exception:
             n_error += 1
             continue
@@ -647,7 +649,8 @@ def run_phase_gpu(model, video_dir, gpus, metrics=None):
             out_file = os.path.join(eval_dir, metric, f"case_{cid}.json")
             if os.path.exists(out_file):
                 try:
-                    existing = json.load(open(out_file))
+                    with open(out_file) as handle:
+                        existing = json.load(handle)
                     if existing.get("score") is not None or existing.get("summary"):
                         continue
                 except Exception:
@@ -720,34 +723,44 @@ def _vlm_eval_case(task):
         if not os.path.exists(fpath):
             return False
         try:
-            data = json.load(open(fpath))
+            with open(fpath) as handle:
+                data = json.load(handle)
             return data.get("score") is not None
         except Exception:
             return False
 
-    if metrics_filter is None or "scene_adherence" in metrics_filter:
-        if "scene_adherence" in case_data and not _has_valid_score("scene_adherence"):
-            try:
-                result = evaluate_scene_adherence(video_path, case_data, "cpu")
-                _save_metric("scene_adherence", result)
-            except Exception as e:
-                _save_metric("scene_adherence", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "scene_adherence" in metrics_filter)
+        and "scene_adherence" in case_data
+        and not _has_valid_score("scene_adherence")
+    ):
+        try:
+            result = evaluate_scene_adherence(video_path, case_data, "cpu")
+            _save_metric("scene_adherence", result)
+        except Exception as e:
+            _save_metric("scene_adherence", {"score": None, "error": str(e)})
 
-    if metrics_filter is None or "subject_adherence" in metrics_filter:
-        if "subject_adherence" in case_data and not _has_valid_score("subject_adherence"):
-            try:
-                result = evaluate_subject_adherence(video_path, case_data, "cpu")
-                _save_metric("subject_adherence", result)
-            except Exception as e:
-                _save_metric("subject_adherence", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "subject_adherence" in metrics_filter)
+        and "subject_adherence" in case_data
+        and not _has_valid_score("subject_adherence")
+    ):
+        try:
+            result = evaluate_subject_adherence(video_path, case_data, "cpu")
+            _save_metric("subject_adherence", result)
+        except Exception as e:
+            _save_metric("subject_adherence", {"score": None, "error": str(e)})
 
-    if metrics_filter is None or "causal_fidelity" in metrics_filter:
-        if "causal_fidelity" in case_data and not _has_valid_score("causal_fidelity"):
-            try:
-                result = evaluate_causal_fidelity(video_path, case_data, "cpu")
-                _save_metric("causal_fidelity", result)
-            except Exception as e:
-                _save_metric("causal_fidelity", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "causal_fidelity" in metrics_filter)
+        and "causal_fidelity" in case_data
+        and not _has_valid_score("causal_fidelity")
+    ):
+        try:
+            result = evaluate_causal_fidelity(video_path, case_data, "cpu")
+            _save_metric("causal_fidelity", result)
+        except Exception as e:
+            _save_metric("causal_fidelity", {"score": None, "error": str(e)})
 
     from src.metrics.interaction.vlm_interaction import (
         evaluate_event_edit,
@@ -766,29 +779,38 @@ def _vlm_eval_case(task):
             _vlm_client = VLMClient()
         return _vlm_client
 
-    if metrics_filter is None or "event_edit_adherence" in metrics_filter:
-        if "event_edit" in itypes and not _has_valid_score("event_edit_adherence"):
-            try:
-                result = evaluate_event_edit(_get_vlm_client(), video_path, case_data)
-                _save_metric("event_edit_adherence", result)
-            except Exception as e:
-                _save_metric("event_edit_adherence", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "event_edit_adherence" in metrics_filter)
+        and "event_edit" in itypes
+        and not _has_valid_score("event_edit_adherence")
+    ):
+        try:
+            result = evaluate_event_edit(_get_vlm_client(), video_path, case_data)
+            _save_metric("event_edit_adherence", result)
+        except Exception as e:
+            _save_metric("event_edit_adherence", {"score": None, "error": str(e)})
 
-    if metrics_filter is None or "subject_action_adherence" in metrics_filter:
-        if "subject_action" in itypes and not _has_valid_score("subject_action_adherence"):
-            try:
-                result = evaluate_subject_action(_get_vlm_client(), video_path, case_data)
-                _save_metric("subject_action_adherence", result)
-            except Exception as e:
-                _save_metric("subject_action_adherence", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "subject_action_adherence" in metrics_filter)
+        and "subject_action" in itypes
+        and not _has_valid_score("subject_action_adherence")
+    ):
+        try:
+            result = evaluate_subject_action(_get_vlm_client(), video_path, case_data)
+            _save_metric("subject_action_adherence", result)
+        except Exception as e:
+            _save_metric("subject_action_adherence", {"score": None, "error": str(e)})
 
-    if metrics_filter is None or "perspective_switch_adherence" in metrics_filter:
-        if "perspective_switch" in itypes and not _has_valid_score("perspective_switch_adherence"):
-            try:
-                result = evaluate_perspective_switch(_get_vlm_client(), video_path, case_data)
-                _save_metric("perspective_switch_adherence", result)
-            except Exception as e:
-                _save_metric("perspective_switch_adherence", {"score": None, "error": str(e)})
+    if (
+        (metrics_filter is None or "perspective_switch_adherence" in metrics_filter)
+        and "perspective_switch" in itypes
+        and not _has_valid_score("perspective_switch_adherence")
+    ):
+        try:
+            result = evaluate_perspective_switch(_get_vlm_client(), video_path, case_data)
+            _save_metric("perspective_switch_adherence", result)
+        except Exception as e:
+            _save_metric("perspective_switch_adherence", {"score": None, "error": str(e)})
 
     return case_id, "ok"
 
@@ -918,7 +940,8 @@ def generate_report(model, eval_dir, video_dir, cases_dir):
                 continue
             cid = f.replace("case_", "").replace(".json", "")
             try:
-                data = json.load(open(os.path.join(metric_dir, f)))
+                with open(os.path.join(metric_dir, f)) as handle:
+                    data = json.load(handle)
             except Exception:
                 continue
 
@@ -969,7 +992,8 @@ def generate_report(model, eval_dir, video_dir, cases_dir):
                 continue
             cid = f.replace("case_", "").replace(".json", "")
             try:
-                data = json.load(open(os.path.join(metric_dir, f)))
+                with open(os.path.join(metric_dir, f)) as handle:
+                    data = json.load(handle)
             except Exception:
                 continue
             if data.get("score") is not None:
@@ -1091,10 +1115,7 @@ def main():
         sys.exit(1)
 
     videos = find_videos(video_dir)
-    if args.gpus:
-        gpus = [int(g) for g in args.gpus.split(",")]
-    else:
-        gpus = get_all_gpus()
+    gpus = [int(g) for g in args.gpus.split(",")] if args.gpus else get_all_gpus()
 
     metrics_list = resolve_metrics(args.metrics.split(",") if args.metrics else None)
 

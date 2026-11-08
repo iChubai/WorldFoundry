@@ -26,11 +26,11 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 os.environ["PYTHONWARNINGS"] = "ignore"
 
-import time
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import time  # noqa: E402 - Follows the warnings filters set above.
+from pathlib import Path  # noqa: E402 - Follows the warnings filters set above.
+from typing import Any  # noqa: E402 - Follows the warnings filters set above.
 
-import src.compat  # noqa: F401 — stub optional deps before any third-party imports
+import src.compat  # noqa: E402, F401 — stub optional deps before any third-party imports
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -334,9 +334,9 @@ def evaluate_full(
     video_path: str,
     case_data: dict,
     device: str = "cuda",
-    poses_path: str = None,
-    mask_dir: str = None,
-    depth_path: str = None,
+    poses_path: str | None = None,
+    mask_dir: str | None = None,
+    depth_path: str | None = None,
 ) -> dict[str, Any]:
     """Run all applicable metrics on a single video + case."""
     results = {"case_id": case_data.get("id"), "video_path": video_path}
@@ -540,7 +540,7 @@ def _worker_fn(args_tuple):
 
 
 def batch_evaluate(
-    video_dir: str, metrics: list[str], device: str = "cuda", output_dir: str = "results", gpus: str = None
+    video_dir: str, metrics: list[str], device: str = "cuda", output_dir: str = "results", gpus: str | None = None
 ) -> dict[str, Any]:
     import numpy as np
 
@@ -591,7 +591,7 @@ def batch_evaluate(
                 json.dump(case_result, f, indent=2, default=str)
 
     summary = {}
-    for case_id, res in all_results.items():
+    for _case_id, res in all_results.items():
         vq = res.get("video_quality", {}).get("summary", {})
         for metric_name, score in vq.items():
             if score is not None:
@@ -729,29 +729,25 @@ def main():
         case_id = Path(args.video).stem.replace("case_", "").replace("_combined", "")
         results["segment_continuity"] = evaluate_segment_continuity(args.video, case_id)
 
-    if "subject_consistency" in metrics:
-        if args.mask_dir:
-            _header("Subject Consistency")
-            results["subject_consistency"] = evaluate_subject_consistency_cross(args.video, args.mask_dir, args.device)
+    if "subject_consistency" in metrics and args.mask_dir:
+        _header("Subject Consistency")
+        results["subject_consistency"] = evaluate_subject_consistency_cross(args.video, args.mask_dir, args.device)
 
-    if "navigation" in metrics or "all" in metrics:
-        if args.poses and args.case:
-            _header("Navigation Trajectory")
-            with open(args.case) as f:
-                case_data = json.load(f)
-            results["navigation"] = evaluate_navigation(args.poses, case_data)
+    if ("navigation" in metrics or "all" in metrics) and args.poses and args.case:
+        _header("Navigation Trajectory")
+        with open(args.case) as f:
+            case_data = json.load(f)
+        results["navigation"] = evaluate_navigation(args.poses, case_data)
 
-    if "perspective_consistency" in metrics:
-        if args.mask_dir and args.depth:
-            _header("Perspective Consistency")
-            results["perspective_consistency"] = evaluate_perspective_consistency(args.mask_dir, args.depth)
+    if "perspective_consistency" in metrics and args.mask_dir and args.depth:
+        _header("Perspective Consistency")
+        results["perspective_consistency"] = evaluate_perspective_consistency(args.mask_dir, args.depth)
 
-    if "spatial_consistency" in metrics:
-        if args.video and args.poses and args.case:
-            _header("Spatial Consistency")
-            with open(args.case) as f:
-                n_turns = len(json.load(f).get("interactions", []))
-            results["spatial_consistency"] = evaluate_spatial_consistency(args.video, args.poses, n_turns, args.device)
+    if "spatial_consistency" in metrics and args.video and args.poses and args.case:
+        _header("Spatial Consistency")
+        with open(args.case) as f:
+            n_turns = len(json.load(f).get("interactions", []))
+        results["spatial_consistency"] = evaluate_spatial_consistency(args.video, args.poses, n_turns, args.device)
 
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)

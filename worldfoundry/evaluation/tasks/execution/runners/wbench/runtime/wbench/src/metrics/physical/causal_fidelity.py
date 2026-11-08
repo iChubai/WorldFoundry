@@ -14,7 +14,7 @@ Frames: 3fps full video, original resolution (no resize).
 import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from PIL import Image
 

@@ -19,7 +19,6 @@ Usage:
 import math
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 
 
 def _split_equal(total_frames: int, n_turns: int) -> list[tuple[int, int]]:
@@ -60,7 +59,7 @@ def _split_model_b(total_frames: int, chunk_lengths: list[float]) -> list[tuple[
 def _split_model_c(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model C: 16fps, first segment 81 frames, continuation 80 frames"""
     bounds = [(0, 81)]
-    for i in range(1, len(chunk_lengths)):
+    for _i in range(1, len(chunk_lengths)):
         start = bounds[-1][1]
         bounds.append((start, start + 80))
     return bounds
@@ -78,10 +77,7 @@ def _split_model_d(total_frames: int, chunk_lengths: list[float]) -> list[tuple[
     for i, ll in enumerate(latents):
         start = cum * 4
         cum += ll
-        if i < len(latents) - 1:
-            end = cum * 4
-        else:
-            end = total_pixel
+        end = cum * 4 if i < len(latents) - 1 else total_pixel
         bounds.append((start, end))
     return bounds
 
@@ -89,7 +85,7 @@ def _split_model_d(total_frames: int, chunk_lengths: list[float]) -> list[tuple[
 def _split_model_e(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model E: 8fps, first segment 29 frames, continuation 32 frames"""
     bounds = [(0, 29)]
-    for i in range(1, len(chunk_lengths)):
+    for _i in range(1, len(chunk_lengths)):
         start = bounds[-1][1]
         bounds.append((start, start + 32))
     return bounds

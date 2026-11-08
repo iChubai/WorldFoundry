@@ -9,9 +9,8 @@ Computes identity consistency of tracked subjects across frames:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F

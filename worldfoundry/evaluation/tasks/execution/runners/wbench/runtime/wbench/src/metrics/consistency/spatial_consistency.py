@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -60,7 +60,8 @@ def find_loop_cases(cases_dir: str) -> list[tuple[str, dict]]:
     files = sorted(Path(cases_dir).glob("*.json"))
     loop_cases = []
     for file_path in files:
-        case_data = json.load(open(file_path))
+        with open(file_path) as handle:
+            case_data = json.load(handle)
         actions = [t["action"] for t in case_data.get("interactions", [])]
         if not actions or actions[0] not in NAVI_ACTIONS:
             continue
@@ -126,7 +127,7 @@ def evaluate_case(
         return None
 
     per_turn = n_poses / n_turns
-    last_turn_start = int(round((n_turns - 1) * per_turn))
+    last_turn_start = round((n_turns - 1) * per_turn)
     best_index, best_rot = last_turn_start, 999.0
     for pose_idx in range(last_turn_start, n_poses):
         rotation = rot_angle_deg(poses[0, :3, :3].T @ poses[pose_idx, :3, :3])

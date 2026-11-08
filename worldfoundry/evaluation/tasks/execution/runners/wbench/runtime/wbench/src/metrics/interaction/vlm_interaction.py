@@ -11,9 +11,8 @@ Score = correct / total per turn, averaged across turns.
 """
 
 import logging
-import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -546,10 +545,7 @@ def evaluate_perspective_switch(client: VLMClient, video_path: str, case_data: d
             if rm:
                 reason = rm.group(1).strip()
             am = _re.search(r"Answer[:\s]+(yes|no)", resp, _re.IGNORECASE)
-            if am:
-                answer = am.group(1).lower() == "yes"
-            else:
-                answer = resp.lower().strip().startswith("yes")
+            answer = am.group(1).lower() == "yes" if am else resp.lower().strip().startswith("yes")
             return idx, answer, reason
         except Exception as e:
             logger.warning(f"PS task {idx} ({sub_id}) failed: {e}")
@@ -568,7 +564,7 @@ def evaluate_perspective_switch(client: VLMClient, video_path: str, case_data: d
         turn = it["turn"]
         q_map = {}
         q_reasons = {}
-        for i, (t, sub_id, question, expected, _) in enumerate(all_tasks):
+        for i, (t, sub_id, _question, expected, _) in enumerate(all_tasks):
             if t != turn:
                 continue
             result_item = results[i]
@@ -649,7 +645,7 @@ def _execute_binary_tasks(
     for turn_num, action in turns:
         correct, total = 0, 0
         q_details = []
-        for i, (t, sub_id, question, expected, _) in enumerate(tasks):
+        for i, (t, sub_id, _question, expected, _) in enumerate(tasks):
             if t != turn_num:
                 continue
             answer, reason = results[i] if results[i] else (None, "")

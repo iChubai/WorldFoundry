@@ -18,7 +18,7 @@ Algorithm:
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 import cv2
 import numpy as np

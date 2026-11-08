@@ -16050,7 +16050,7 @@
           "task": "vla.policy_rollout",
           "runtimeProfile": "molmoact2",
           "pipelineBinding": "molmoact2",
-          "status": "in_tree_checkpoint_runtime_static_verified",
+          "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
           "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
@@ -16120,7 +16120,7 @@
           "task": "vla.policy_rollout",
           "runtimeProfile": "molmoact2",
           "pipelineBinding": "molmoact2",
-          "status": "in_tree_checkpoint_runtime_static_verified",
+          "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
           "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
@@ -16190,7 +16190,7 @@
           "task": "vla.policy_rollout",
           "runtimeProfile": "molmoact2",
           "pipelineBinding": "molmoact2",
-          "status": "in_tree_checkpoint_runtime_static_verified",
+          "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
           "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
@@ -16260,7 +16260,7 @@
           "task": "vla.policy_rollout",
           "runtimeProfile": "molmoact2",
           "pipelineBinding": "molmoact2",
-          "status": "in_tree_checkpoint_runtime_static_verified",
+          "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
           "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
@@ -16330,7 +16330,7 @@
           "task": "vla.policy_rollout",
           "runtimeProfile": "molmoact2",
           "pipelineBinding": "molmoact2",
-          "status": "in_tree_checkpoint_runtime_static_verified",
+          "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
           "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
@@ -30661,7 +30661,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 24,
               "choices": [],
               "description": "FPS passed to the pipeline for every generated sample."
             },
@@ -30672,7 +30672,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 544,
               "choices": [],
               "description": "Height passed to the pipeline for every generated sample."
             },
@@ -30683,7 +30683,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 960,
               "choices": [],
               "description": "Width passed to the pipeline for every generated sample."
             },
@@ -30694,7 +30694,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 4,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },
@@ -30713,10 +30713,10 @@
               "field": "rounds",
               "option": "--pipeline.rounds",
               "detail": "Optional",
-              "kind": "string",
+              "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 5,
               "choices": [],
               "description": "Rounds passed to the pipeline for every generated sample."
             },
@@ -31254,9 +31254,21 @@
       "sources": [
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/AlayaLab/AlayaWorld",
           "revision": "ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/AlayaLab/AlayaWorld-v1.1-stage2b",
+          "revision": "17f2f8a4939d85920b8a6c5191ce88dec7f862d1"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/AlayaLab/AlayaWorld-v1.1-stage3",
+          "revision": "75fef054c5c0f86fd1450d50f70ef2f0a93fff2b"
         },
         {
           "kind": "docs",
@@ -31509,10 +31521,10 @@
         }
       ],
       "notes": [
-        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
         "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
         "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
-        "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder."
+        "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.",
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace."
       ],
       "docs": {
         "curated": true,
@@ -32788,9 +32800,15 @@
       "sources": [
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/Astronex-Robotics/Astronex-World",
           "revision": "27584bf1a89da01ef35a03b48d83bc818d2adf2b"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/Astronex-Lab/Astronex-World",
+          "revision": "f06ea330f2ce5cabef5fbf175287fe323ec1218c"
         },
         {
           "kind": "docs",
@@ -33066,9 +33084,9 @@
         }
       ],
       "notes": [
-        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
         "Official inference command construction is CPU-validated; checkpoint-backed generation remains pending.",
-        "The released action prediction head is zero initialized; action prediction is not advertised."
+        "The released action prediction head is zero initialized; action prediction is not advertised.",
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace."
       ],
       "docs": {
         "curated": true,
@@ -48723,10 +48741,30 @@
       },
       "sources": [
         {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/wm/"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2608.23189"
+        },
+        {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/jd-opensource/JoyAI-Echo",
           "revision": "a08f1274573d7cd6ec66719f204951f4227a5173"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/Echo-Team/Echo-WM"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized"
         },
         {
           "kind": "docs",
@@ -48739,12 +48777,15 @@
         {
           "id": "Echo-Team/Echo-WM",
           "revision": "04efdf813648f698680c10024f22f351a0273163",
-          "role": "base_and_flash_checkpoints"
+          "role": "base_and_flash_checkpoints",
+          "gated": false,
+          "private": false
         },
         {
           "id": "google/gemma-3-12b-it-qat-q4_0-unquantized",
           "revision": "68f7ee4fbd59087436ada77ed2d62f373fdd4482",
-          "role": "gated_text_encoder"
+          "role": "gated_text_encoder",
+          "gated": true
         }
       ],
       "variants": [],
@@ -49084,6 +49125,9 @@
         }
       ],
       "notes": [
+        "The Base and Flash Preview entrypoints share one WorldFoundry pipeline and select variant-specific official CLIs.",
+        "Action DSL, first-frame, audio toggles, guidance, cache-window, and action-overlay controls are mapped explicitly.",
+        "Checkpoint-backed GPU artifact parity remains pending because this workspace has no CUDA device or weights.",
         "Base and Flash command construction, control mapping, and frame-count validation are CPU-tested.",
         "Checkpoint-backed audio-video quality parity requires CUDA and external assets.",
         "variant=base routes to inference_wm.py; variant=flash routes to inference_wm_causal.py.",
@@ -49121,14 +49165,14 @@
           "Camera Controlled Video",
           "Interactive World Model",
           "Dedicated env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
+          "Gated or private weights — check access first"
         ],
         "highlightsZh": [
           "image-to-world-video",
           "相机可控视频生成",
           "交互式世界模型",
           "独立环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
+          "权重为 gated/私有——请先确认访问权限"
         ],
         "modalities": {
           "inputs": [
@@ -53729,7 +53773,7 @@
         "check": "wf zoo model-download --model-id hailuo-2p3 --check-local --json",
         "run": "wf run \\\n  hailuo-2p3 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/hailuo-2p3.yaml"
     },
     {
       "id": "helios",
@@ -54772,7 +54816,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 121,
               "choices": [],
               "description": "Frames passed to the pipeline for every generated sample."
             },
@@ -54783,7 +54827,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 24,
               "choices": [],
               "description": "FPS passed to the pipeline for every generated sample."
             },
@@ -54794,7 +54838,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 512,
               "choices": [],
               "description": "Height passed to the pipeline for every generated sample."
             },
@@ -54805,7 +54849,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 768,
               "choices": [],
               "description": "Width passed to the pipeline for every generated sample."
             },
@@ -54816,7 +54860,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 4,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },
@@ -54827,7 +54871,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 1.0,
               "choices": [],
               "description": "Guidance passed to the pipeline for every generated sample."
             },
@@ -54838,7 +54882,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 42,
               "choices": [],
               "description": "Seed passed to the pipeline for every generated sample."
             },
@@ -59063,9 +59107,14 @@
       "sources": [
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/Video-Rebirth/hyperflow",
           "revision": "1dd2f342aba5ab51da02b62885939655e8e268da"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/videorebirth/hyperflow"
         },
         {
           "kind": "docs",
@@ -60675,10 +60724,30 @@
       },
       "sources": [
         {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2608.23383"
+        },
+        {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/jd-opensource/JoyAI-Echo",
           "revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/jdopensource/JoyAI-Echo"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/google/gemma-3-12b-it"
         },
         {
           "kind": "docs",
@@ -60691,11 +60760,14 @@
         {
           "id": "jdopensource/JoyAI-Echo",
           "revision": "9ec5d876c4ac73e2912a18e11c03fb03489d0903",
-          "role": "echo15_bf16_fp8_fp4"
+          "role": "echo15_bf16_fp8_fp4",
+          "gated": false,
+          "private": false
         },
         {
           "id": "google/gemma-3-12b-it",
-          "role": "gated_text_encoder"
+          "role": "gated_text_encoder",
+          "gated": true
         }
       ],
       "variants": [],
@@ -60881,6 +60953,9 @@
         }
       ],
       "notes": [
+        "WorldFoundry normalizes R2V requests and launches the official Echo-LongVideo CLI in its dedicated environment.",
+        "BF16, FP8, FP4, consumer, and low-VRAM upstream configuration routes are represented.",
+        "The local BF16, FP8, and FP4 Echo checkpoints and CUDA devices are present, but GPU inference is blocked by the gated Gemma 3 12B encoder and missing dedicated environment.",
         "Command construction and official request-schema mapping are CPU-tested.",
         "Checkpoint-backed audio-video quality parity requires CUDA and external assets.",
         "Echo-LongVideo and Echo-WM deliberately use different upstream Python environments.",
@@ -60918,14 +60993,14 @@
           "Audio Video Generation",
           "Long Video Generation",
           "Dedicated env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
+          "Gated or private weights — check access first"
         ],
         "highlightsZh": [
           "参考图生成视频",
           "音视频联合生成",
           "长视频生成",
           "独立环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
+          "权重为 gated/私有——请先确认访问权限"
         ],
         "modalities": {
           "inputs": [
@@ -64927,7 +65002,7 @@
         "check": "wf zoo model-download --model-id kling-api --check-local --json",
         "run": "wf run \\\n  kling-api \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/kling-api.yaml"
     },
     {
       "id": "krea-realtime-video",
@@ -70678,10 +70753,25 @@
       },
       "sources": [
         {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://ltx.video"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2601.03233"
+        },
+        {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/Lightricks/LTX-2",
           "revision": "a95ab856bf29407b6b066ede0abe1846050db56c"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/Lightricks/LTX-2.5"
         },
         {
           "kind": "docs",
@@ -70694,7 +70784,8 @@
         {
           "id": "Lightricks/LTX-2.5",
           "revision": "bf86adedf518142442575d1ce2e767b7d01c8c76",
-          "role": "distilled_split_components"
+          "role": "distilled_split_components",
+          "private": false
         }
       ],
       "variants": [],
@@ -70801,7 +70892,7 @@
               "kind": "string",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": "cpu",
               "choices": [],
               "description": "Offload Mode passed to the pipeline for every generated sample."
             },
@@ -70902,6 +70993,9 @@
         }
       ],
       "notes": [
+        "WorldFoundry launches the version-pinned official ltx_pipelines.distilled entrypoint in a dedicated environment.",
+        "Split checkpoint mapping, T2V/I2V conditioning, audio-video output, offload, and quantization command contracts are CPU-tested.",
+        "Local required split components now pass CPU preflight; the two previously incomplete large files match the pinned official SHA-256 values. Checkpoint-backed GPU artifact parity remains pending.",
         "Command construction and official split-component mapping are validated without importing upstream CUDA code.",
         "Visual and synchronized-audio quality parity still requires a checkpoint-backed GPU run.",
         "Prediction never clones source or downloads checkpoints; all source and component paths are preflighted.",
@@ -73726,7 +73820,7 @@
         "check": "wf zoo model-download --model-id luma-ray2 --check-local --json",
         "run": "wf run \\\n  luma-ray2 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/luma-ray2.yaml"
     },
     {
       "id": "magi-1",
@@ -75236,7 +75330,7 @@
         "check": "wf zoo model-download --model-id magi2-preview --check-local --json",
         "run": "wf run \\\n  magi2-preview \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/video/magi2_preview.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/video/magi2-preview.yaml"
     },
     {
       "id": "magicworld",
@@ -75576,7 +75670,11 @@
         "matrix-game1",
         "skywork-matrix-game"
       ],
-      "tasks": [],
+      "tasks": [
+        "interactive-world-model",
+        "game-video",
+        "action-control"
+      ],
       "status": {
         "group": "integrated",
         "label": "Integrated",
@@ -75639,13 +75737,40 @@
           "Official requirements are recorded inline in this runtime profile and worldfoundry/data/models/runtime/configs/matrix_game_1/environment.yml."
         ]
       },
-      "sources": [],
+      "sources": [
+        {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://matrix-game-homepage.github.io/"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2506.18701"
+        },
+        {
+          "kind": "source",
+          "label": "GitHub",
+          "url": "https://github.com/SkyworkAI/Matrix-Game"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/Skywork/Matrix-Game"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/SkyworkAI/Matrix-Game#readme"
+        }
+      ],
       "checkpoints": [
         {
           "id": "Skywork/Matrix-Game",
           "revision": "6de128116624c07e6ab3ca341978e3e582b67638",
           "role": "official_matrix_game_1_checkpoint",
-          "status": "official_demo_parity_pending"
+          "gated": false,
+          "private": false
         }
       ],
       "variants": [],
@@ -75819,6 +75944,10 @@
         }
       ],
       "notes": [
+        "Runtime profile and conda env are maintained under runtime_profiles/world.",
+        "Studio/API dispatch is wired through the in-tree official runner with the unified environment profile.",
+        "Official-demo visual parity remains pending. The generic Studio fixture generated noisy visuals; WorldFoundry now stages an in-domain GameWorldScore initial image under worldfoundry/data/test_cases/matrix-game-1/official_initial_image for the next Studio validation pass.",
+        "The 65-frame official default hit single-A100 80GB OOM in the unified env and needs an accepted memory strategy before promotion.",
         "Matrix-Game-1 is registered as its own model id and never routes through Matrix-Game-2.",
         "Local cache ${WORLDFOUNDRY_HFD_ROOT}/Skywork--Matrix-Game now contains the seven DiT shards, four text_encoder_i2v shards, VAE weight, configs, and assets required by the vendored runner.",
         "Matrix-Game-1 uses torch 2.5.1+cu124; prefer worldfoundry-unified-cu128 on modern NVIDIA hosts.",
@@ -75851,10 +75980,16 @@
           "Matrix-Game-1 使用 torch 2.5.1+cu124；现代 NVIDIA 主机上建议用 worldfoundry-unified-cu128 环境。追求更新质量与已验证 runner 请见 matrix-game-2 与 matrix-game-3。"
         ],
         "highlights": [
+          "Interactive World Model",
+          "Game Video",
+          "Action Control",
           "Unified env · Python 3.11 · CUDA 12.8",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
+          "交互式世界模型",
+          "game-video",
+          "action-control",
           "统一环境 · Python 3.11 · CUDA 12.8",
           "公开的 Hugging Face 权重"
         ],
@@ -79316,7 +79451,7 @@
         "check": "wf zoo model-download --model-id minimax-h3 --check-local --json",
         "run": "wf run \\\n  minimax-h3 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/video/minimax_h3.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/video/minimax-h3.yaml"
     },
     {
       "id": "minwm-hy-action2v",
@@ -91306,9 +91441,14 @@
       "sources": [
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/Pika-Labs/Pika-H3-Flex",
           "revision": "0ddf55ad7067ca1e76812253bd7b4600df87f759"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/Pika-Labs/Pika-H3-Flex"
         },
         {
           "kind": "docs",
@@ -94655,7 +94795,7 @@
         "check": "wf zoo model-download --model-id runway-gen4p5 --check-local --json",
         "run": "wf run \\\n  runway-gen4p5 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/runway-gen4p5.yaml"
     },
     {
       "id": "sama-14b",
@@ -97716,9 +97856,21 @@
         },
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/Junchao-cs/SolarWM",
           "revision": "2fe1ea9aca072f787bbba07ee9380b0e1ea7563b"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/junchaoh-cs/SolarWM",
+          "revision": "fe1587a9392bb91df5c90bcbe849064a5e88c546"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/junchaoh-cs/SolarWM-H3-33B",
+          "revision": "028f22ab01b61cd5f14237f4eded507782d1d054"
         },
         {
           "kind": "docs",
@@ -97731,8 +97883,7 @@
         {
           "id": "junchaoh-cs/SolarWM",
           "revision": "fe1587a9392bb91df5c90bcbe849064a5e88c546",
-          "role": "primary",
-          "gated": true
+          "role": "primary"
         },
         {
           "id": "junchaoh-cs/SolarWM-H3-33B",
@@ -98306,10 +98457,10 @@
         }
       ],
       "notes": [
-        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
         "Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.",
         "Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.",
-        "Checkpoint-backed GPU generation is pending."
+        "Checkpoint-backed GPU generation is pending.",
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace."
       ],
       "docs": {
         "curated": true,
@@ -98652,7 +98803,7 @@
         "check": "wf zoo model-download --model-id sora2 --check-local --json",
         "run": "wf run \\\n  sora2 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/sora2.yaml"
     },
     {
       "id": "spatia",
@@ -107067,7 +107218,7 @@
         "check": "wf zoo model-download --model-id veo3 --check-local --json",
         "run": "wf run \\\n  veo3 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/veo3.yaml"
     },
     {
       "id": "versecrafter",
@@ -109594,7 +109745,7 @@
         "check": "wf zoo model-download --model-id wan-2p5 --check-local --json",
         "run": "wf run \\\n  wan-2p5 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/wan-2p5.yaml"
     },
     {
       "id": "wan-2p6",
@@ -109960,7 +110111,7 @@
         "check": "wf zoo model-download --model-id wan-2p6 --check-local --json",
         "run": "wf run \\\n  wan-2p6 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/wan-2p6.yaml"
     },
     {
       "id": "wan-2p7",
@@ -110304,7 +110455,7 @@
         "check": "wf zoo model-download --model-id wan-2p7 --check-local --json",
         "run": "wf run \\\n  wan-2p7 \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/wan-2p7.yaml"
     },
     {
       "id": "wan2.1-vace",
@@ -113559,7 +113710,7 @@
         "check": "wf zoo model-download --model-id worldlabs --check-local --json",
         "run": "wf run \\\n  worldlabs \\\n  --pipeline.task-profile default \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/video_world_apis.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/hosted_api/worldlabs.yaml"
     },
     {
       "id": "worldlabs-marble-1.1",
@@ -114567,7 +114718,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 125,
               "choices": [],
               "description": "Frames passed to the pipeline for every generated sample."
             },
@@ -114578,7 +114729,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 16,
               "choices": [],
               "description": "FPS passed to the pipeline for every generated sample."
             },
@@ -114589,7 +114740,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 448,
               "choices": [],
               "description": "Height passed to the pipeline for every generated sample."
             },
@@ -114600,7 +114751,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 832,
               "choices": [],
               "description": "Width passed to the pipeline for every generated sample."
             },
@@ -114611,7 +114762,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 4,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },
@@ -114622,7 +114773,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 1.0,
               "choices": [],
               "description": "Guidance passed to the pipeline for every generated sample."
             },
@@ -114633,7 +114784,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 42,
               "choices": [],
               "description": "Seed passed to the pipeline for every generated sample."
             },
@@ -114666,7 +114817,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 7.0,
               "choices": [],
               "description": "Shift passed to the pipeline for every generated sample."
             },
@@ -114753,7 +114904,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 125,
               "choices": [],
               "description": "Frames passed to the pipeline for every generated sample."
             },
@@ -114764,7 +114915,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 16,
               "choices": [],
               "description": "FPS passed to the pipeline for every generated sample."
             },
@@ -114775,7 +114926,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 448,
               "choices": [],
               "description": "Height passed to the pipeline for every generated sample."
             },
@@ -114786,7 +114937,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 832,
               "choices": [],
               "description": "Width passed to the pipeline for every generated sample."
             },
@@ -114797,7 +114948,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 4,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },
@@ -114808,7 +114959,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 1.0,
               "choices": [],
               "description": "Guidance passed to the pipeline for every generated sample."
             },
@@ -114819,7 +114970,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 42,
               "choices": [],
               "description": "Seed passed to the pipeline for every generated sample."
             },
@@ -114852,7 +115003,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 7.0,
               "choices": [],
               "description": "Shift passed to the pipeline for every generated sample."
             },
@@ -114939,7 +115090,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 125,
               "choices": [],
               "description": "Frames passed to the pipeline for every generated sample."
             },
@@ -114950,7 +115101,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 16,
               "choices": [],
               "description": "FPS passed to the pipeline for every generated sample."
             },
@@ -114961,7 +115112,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 448,
               "choices": [],
               "description": "Height passed to the pipeline for every generated sample."
             },
@@ -114972,7 +115123,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 832,
               "choices": [],
               "description": "Width passed to the pipeline for every generated sample."
             },
@@ -114983,7 +115134,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 4,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },
@@ -114994,7 +115145,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 1.0,
               "choices": [],
               "description": "Guidance passed to the pipeline for every generated sample."
             },
@@ -115005,7 +115156,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 42,
               "choices": [],
               "description": "Seed passed to the pipeline for every generated sample."
             },
@@ -115038,7 +115189,7 @@
               "kind": "number",
               "target": "call",
               "required": false,
-              "default": null,
+              "default": 7.0,
               "choices": [],
               "description": "Shift passed to the pipeline for every generated sample."
             },
@@ -115552,9 +115703,15 @@
       "sources": [
         {
           "kind": "source",
-          "label": "Source",
+          "label": "GitHub",
           "url": "https://github.com/seedleap/zing-world-model",
           "revision": "11212da06f63290f4d354cdc0324241ba6eac356"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/seedleap/zing-0.5",
+          "revision": "b9ca1ed1de750bf19a0e6562c6cd71fa7ef35648"
         },
         {
           "kind": "docs",
@@ -115742,9 +115899,9 @@
         }
       ],
       "notes": [
-        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
         "Tiny CPU transformer state-dict and FP32/BF16 rollout parity checked against upstream, including eviction and prompt switches.",
-        "Checkpoint-backed GPU generation and native auxiliary-model parity are pending."
+        "Checkpoint-backed GPU generation and native auxiliary-model parity are pending.",
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace."
       ],
       "docs": {
         "curated": true,
@@ -135759,7 +135916,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-600m-512px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana600M512pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135797,7 +135954,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135835,7 +135992,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-512px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M512pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135873,7 +136030,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-512px-multiling",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M512pxMultilingPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135911,7 +136068,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135949,7 +136106,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-1024px-multiling",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxMultilingPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -135987,7 +136144,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-1024px-bf16",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxBf16Pipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136025,7 +136182,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-2k-bf16",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M2kBf16Pipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136063,7 +136220,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-1600m-4k-bf16",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M4kBf16Pipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136101,7 +136258,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana1p5-1600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1p51600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136139,7 +136296,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana1p5-4800m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:Sana1p54800M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136177,7 +136334,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-sprint-600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:SanaSprint600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136215,7 +136372,7 @@
           "task": "text-to-image",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-sprint-1600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:SanaSprint1600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136253,7 +136410,7 @@
           "task": "image-conditioned-generation",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-controlnet-600m-1024px",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:SanaControlnet600M1024pxPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -136291,7 +136448,7 @@
           "task": "image-conditioned-generation",
           "runtimeProfile": "sana",
           "pipelineBinding": "sana-controlnet-1600m-1024px-bf16",
-          "status": "runtime_ported",
+          "status": "runtime_ported_and_streaming_variants_workspace_validated",
           "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:SanaControlnet1600M1024pxBf16Pipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
@@ -147606,7 +147763,7 @@
         "check": "wf zoo model-download --model-id abot-world-0-5b-lf --check-local --json",
         "run": "wf run \\\n  abot-world-0-5b-lf \\\n  --pipeline.task-profile interactive-video \\\n  --json"
       },
-      "catalogPath": "worldfoundry/data/models/catalog/world_models/abot-world.yaml"
+      "catalogPath": "worldfoundry/data/models/catalog/world_models/abot-world-0-5b-lf.yaml"
     },
     {
       "id": "fastwam",

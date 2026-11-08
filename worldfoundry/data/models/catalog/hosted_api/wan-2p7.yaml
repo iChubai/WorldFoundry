@@ -1,0 +1,67 @@
+id: wan-2p7
+name: Wan 2.7 API
+aliases:
+- wan2.7
+- wan-2.7
+tasks:
+- image-to-video
+- hosted-api
+provider: api
+source:
+  status: api
+  official_repo_url: https://dashscope.aliyun.com/
+official_sources:
+  project_page: https://dashscope.aliyun.com/
+integration:
+  status: integrated
+  notes:
+  - Hosted DashScope API Studio pipeline is available; users must provide their own
+    provider API key.
+runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+pipeline_binding: wan-2p7
+runner_parity:
+  status: not_applicable
+demo_parity:
+  status: not_applicable
+docs:
+  publisher: Alibaba (Tongyi Lab)
+  publisher_kind: company
+  publisher_zh: 阿里巴巴（通义实验室）
+  overview: Wan 2.7 API is the newest DashScope-hosted Wan endpoint in this catalog,
+    recorded for image-to-video. It follows the same integration pattern as the Wan
+    2.5/2.6 entries — WorldFoundry submits the start image to Alibaba Cloud and archives
+    the returned clip — and carries aliases wan2.7 and wan-2.7. Keep in mind the exact
+    served model revision is controlled by Alibaba, not this repo.
+  overview_zh: Wan 2.7 API 是本 catalog 中最新的 DashScope 托管 Wan 接入点，记录图生视频任务。集成方式与 Wan
+    2.5/2.6 条目一致——WorldFoundry 把起始图提交给阿里云并归档返回的视频——并带有 wan2.7、wan-2.7 两个别名。注意实际服务的模型修订版由阿里控制，而非本仓库。
+  architecture: Wan 2.7 belongs to Tongyi Lab's Wan video-generation family; its API-served
+    architecture and scale are not published, and this repository records only the
+    endpoint integration.
+  architecture_zh: Wan 2.7 属于通义实验室的 Wan 视频生成系列；其 API 版本的架构与规模未公开，本仓库仅记录端点集成信息。
+  usage_notes: 'The catalog marks this entry as integrated: the hosted-API Studio
+    pipeline is available, but you must supply your own provider API key and account.
+    No weights are downloaded and no GPU environment is provisioned locally — generation
+    happens on the provider side, so cost, quota, and content policy follow your provider
+    account. Keys are issued via Alibaba Cloud DashScope (dashscope.aliyun.com).'
+  usage_notes_zh: Catalog 将该条目标记为 integrated：托管 API 的 Studio pipeline 已可用，但你必须自备服务方的
+    API key 与账号。本地不会下载任何权重、也不会创建 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。API key 通过阿里云
+    DashScope（dashscope.aliyun.com）开通。
+  limitations:
+  - Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+  - The provider controls model versioning, so outputs can change over time without
+    any change in this repository — the manifest records runner parity as not applicable
+    for this reason.
+  - No local weights, no offline mode, and no reproducibility pinning beyond the request
+    parameters WorldFoundry stores.
+  limitations_zh:
+  - 需要付费的服务方账号与 API key；WorldFoundry 不提供任何凭据。
+  - 模型版本由服务方控制，输出可能随时间变化而与本仓库无关——因此 manifest 将 runner parity 记录为 not applicable。
+  - 没有本地权重、不支持离线运行；除 WorldFoundry 保存的请求参数外，无法进一步固定可复现性。
+  recommended_benchmarks:
+  - id: vbench
+    reason: Standard multi-dimension quality suite for comparing hosted text/image-to-video
+      outputs.
+    reason_zh: 对比托管文/图生视频输出的标准多维质量评测。
+  - id: physics-iq
+    reason: Probes whether provider-side video models respect basic physical plausibility.
+    reason_zh: 检验服务方视频模型是否遵循基本物理合理性。

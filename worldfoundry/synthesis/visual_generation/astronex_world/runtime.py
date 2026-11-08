@@ -40,7 +40,7 @@ class AstronexWorldRuntime(OfficialInferenceRuntime):
         self.checkpoint_dir = local_path(checkpoint_dir)
         self.mode = mode
         self.config_path = Path(
-            resolve_data_path(f"models/runtime/configs/astronex-world/{'causal_consumer' if consumer else mode}.yaml")
+            resolve_data_path(f"models/runtime/configs/astronex_world/{'causal_consumer' if consumer else mode}.yaml")
         )
 
     def required_assets(self):

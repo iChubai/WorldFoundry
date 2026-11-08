@@ -358,10 +358,7 @@ def test_model_zoo_repo_manifests_all_load() -> None:
     assert sum(count for path, count in loaded.items() if path.startswith("video/")) >= 10
     assert sum(count for path, count in loaded.items() if path.startswith("world_models/")) >= 10
     assert sum(count for path, count in loaded.items() if path.startswith("three_d_four_d/")) >= 10
-    assert all(
-        count == 1 or path == "hosted_api/video_world_apis.yaml"
-        for path, count in loaded.items()
-    )
+    assert all(count == 1 for count in loaded.values())
 
 
 def test_model_data_uses_per_model_yaml_manifests() -> None:
@@ -369,11 +366,7 @@ def test_model_data_uses_per_model_yaml_manifests() -> None:
     catalog_root = models_root / "catalog"
 
     assert sorted(path.relative_to(catalog_root) for path in catalog_root.rglob("*.json")) == []
-    assert all(
-        len(load_entries(path)) == 1 or path.relative_to(catalog_root) == Path("hosted_api/video_world_apis.yaml")
-        for path in catalog_root.rglob("*.yaml")
-        if not path.name.startswith("_")
-    )
+    assert all(len(load_entries(path)) == 1 for path in catalog_root.rglob("*.yaml") if not path.name.startswith("_"))
 
 
 def test_model_zoo_integrated_targets_are_in_tree() -> None:

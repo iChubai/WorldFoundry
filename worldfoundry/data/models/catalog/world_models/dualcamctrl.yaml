@@ -60,7 +60,6 @@ runner_parity:
   status: verified
 catalog_category: world_models
 catalog_scope: world-model/camera-control models
-schema_version: 2
 docs:
   publisher: The Hong Kong University of Science and Technology (Guangzhou) (EnVision Lab)
   publisher_kind: university

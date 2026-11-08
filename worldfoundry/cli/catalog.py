@@ -601,17 +601,20 @@ def _conda_specs_by_model(
 
 def _profile_to_row(item: Mapping[str, Any], conda_specs: Mapping[str, Mapping[str, Any]]) -> RuntimeProfileRow | None:
     """Convert a runtime profile manifest item to a :class:`RuntimeProfileRow`, merging Conda spec data."""
-    profile_id = item.get("id")
+    profile_id = item.get("id") or item.get("model_id")
     if not profile_id:
         return None
     spec = conda_specs.get(str(profile_id), {})
+    # Schema v2 profiles keep status fields under ``execution``.
+    execution = item.get("execution")
+    status = {**(execution if isinstance(execution, Mapping) else {}), **item}
     return RuntimeProfileRow(
         profile_id=str(profile_id),
         task_family=None if item.get("task_family") is None else str(item.get("task_family")),
         artifact_kind=None if item.get("artifact_kind") is None else str(item.get("artifact_kind")),
-        backend_stage=str(item.get("backend_stage") or "unknown"),
-        integration_status=str(item.get("integration_status") or "unknown"),
-        runtime_status=str(item.get("runtime_status") or "unknown"),
+        backend_stage=str(status.get("backend_stage") or "unknown"),
+        integration_status=str(status.get("integration_status") or "unknown"),
+        runtime_status=str(status.get("runtime_status") or "unknown"),
         conda_env_name=None if spec.get("env_name") is None else str(spec.get("env_name")),
         conda_env_prefix=None if spec.get("env_prefix") is None else str(spec.get("env_prefix")),
         conda_driver_status=None if spec.get("driver_status") is None else str(spec.get("driver_status")),

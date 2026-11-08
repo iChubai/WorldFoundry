@@ -25,6 +25,3 @@ notes:
 - Base-model profile for the DUSt3R catalog entry; not a standalone pipeline runner.
 - WorldFoundry exposes this prior through the shared geometry-prior pipeline/operator
   contract.
-backend_stage: in_tree_geometry_prior_runtime
-runtime_status: checkpoint_verified
-integration_status: verified

@@ -2072,7 +2072,7 @@ def test_infinite_world_default_config_lives_in_data_runtime_configs(tmp_path: P
         default_config_path,
     )
 
-    config_path = REPO_ROOT / "worldfoundry/data/models/runtime/configs/infinite_world.yaml"
+    config_path = REPO_ROOT / "worldfoundry/data/models/runtime/configs/infinite_world/inference.yaml"
     runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/infinite_world/infinite_world_runtime"
     old_hidden_config = (
         REPO_ROOT / "worldfoundry/synthesis/visual_generation/infinite_world" / ("infworld_" + "config.yaml")
@@ -2601,10 +2601,8 @@ def test_show_o_runtime_logic_lives_under_synthesis():
         assert marker not in synthesis_text
 
 
-def test_show_o_demo_configs_live_in_data_runtime_configs():
+def test_show_o_runtime_is_inference_only():
     runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/show_o/show_o_runtime"
-    config_root = REPO_ROOT / "worldfoundry/data/models/runtime/configs/show_o"
-    prompt_root = config_root / "validation_prompts"
 
     assert not (runtime_root / "configs").exists()
     assert not (runtime_root / "training").exists()
@@ -2614,17 +2612,6 @@ def test_show_o_demo_configs_live_in_data_runtime_configs():
     assert not (runtime_root / "CONTRIBUTING_ROADMAP.md").exists()
     assert (runtime_root / "inference_support/prompting_utils.py").is_file()
     assert (runtime_root / "inference_support/runtime_utils.py").is_file()
-    assert {
-        "showo_demo.yaml",
-        "showo_demo_512x512.yaml",
-        "showo_demo_w_clip_vit.yaml",
-        "showo_demo_w_clip_vit_512x512.yaml",
-    } == {path.name for path in config_root.glob("*.yaml")}
-    assert {
-        "imagenet_prompts.txt",
-        "showoprompts.txt",
-        "text2image_prompts.txt",
-    } == {path.name for path in prompt_root.glob("*.txt")}
     assert not (runtime_root / "training/questions.json").exists()
 
     package_text = (runtime_root / "__init__.py").read_text(encoding="utf-8")
@@ -2926,15 +2913,11 @@ def test_videocrafter_configs_live_in_data_runtime_configs():
         assert "videocrafter_runtime/configs" not in text
 
 
-def test_genie_envisioner_configs_live_in_data_runtime_configs():
-    config_root = REPO_ROOT / "worldfoundry/data/models/runtime/configs/genie_envisioner"
+def test_genie_envisioner_runtime_has_no_vendored_configs():
     old_config_root = (
         REPO_ROOT / "worldfoundry/synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime/configs"
     )
 
-    assert (config_root / "acwm_cosmos.yaml").is_file()
-    assert (config_root / "ltx_model/video_model_infer_slow.yaml").is_file()
-    assert (config_root / "ltx_model/calvin/stats_calvin_rel.yaml").is_file()
     assert not old_config_root.exists()
 
 

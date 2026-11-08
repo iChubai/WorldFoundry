@@ -33,6 +33,24 @@ Model 与 benchmark catalog 是并行 pipeline。二者仅在 run time 汇合—
 
 **Runtime profile** 在 `worldfoundry/data/models/runtime/profiles/` 中与 catalog YAML 并列，记录 YAML 无法表达的 blocker：dependency stack、command shape、checkpoint layout、device expectations 与 demo parity status。
 
+## 目录总览
+
+`worldfoundry/data/` 下只放声明式元数据；checkpoint、数据集与运行产物都不放在这里。
+
+| 路径 | 内容 |
+| --- | --- |
+| `models/catalog/<category>/<model-id>.yaml` | 每个文件一个 catalog 条目，以 `id` 为键（公开身份、来源、变体、状态与文档种子） |
+| `models/bindings/pipelines/<binding-id>.yaml` | 通用 pipeline runner 的导入目标与调用方式 |
+| `models/runtime/profiles/<model-id>.yaml` | `schema_version: 2` 执行 profile：checkpoint、输入、产物类型、`execution` 块与调用默认值 |
+| `models/runtime/environments/` | 专用 conda 环境，仅用于有记录的依赖冲突 |
+| `models/runtime/configs/<package>/` | 静态预设与示例输入，目录以读取它们的 synthesis 或 pipeline 包命名（snake_case，如 `dino_wm/`、`alayaworld_v11/`）；多个模型共用的目录使用家族名（如 `vla_va_wam/`、`video_official/`） |
+| `models/runtime/assets/` | 模型 checkpoint 的资产清单 |
+| `benchmarks/catalog/`、`benchmarks/tasks/`、`benchmarks/runtime_profiles/` | 每棵树中每个 benchmark 一个文件，以 benchmark id 为键 |
+| `benchmarks/assets/`、`benchmarks/eval_configs/`、`benchmarks/requirements/` | Prompt 集、参考文件、评测预设与固定版本的评测依赖 |
+| `test_cases/` | 不纳入 Git；fixture 语料已外部化，需要时在本地放置 |
+
+Catalog 条目与变体通过 `runtime_profile` 与 `pipeline_binding` 引用 profile 和 binding，每个 profile 也通过 `execution.pipeline_binding` 声明自己执行的 binding。每个 binding 的 `model_id` 等于引用它的条目、变体或 profile 的 id，因此像 `wan2.1-t2v-1.3b-832x480-81f` 这样的预设 profile 即使与其 catalog 变体导入同一个 pipeline，也保留自己的 binding；`make lint` 会校验这一点。Studio 以 profile 的调用默认值为底、叠加自身 override，因此生成默认值只在 profile 中写一次。
+
 ## 解析 Pipeline
 
 Python 不会随意直读 raw YAML。每个 catalog 领域遵循相同三步：**schema 解析** 把较松的作者输入归一化为 typed entry；**registry 构建** 创建 CLI 查询用的 alias 索引；**spec 转换** 产出 evaluation API 导入的公开契约。

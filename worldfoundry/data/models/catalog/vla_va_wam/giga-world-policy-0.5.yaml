@@ -39,7 +39,6 @@ output_artifacts:
 pipeline_binding: giga-world-policy-0.5
 runtime_profile: runtime-profile:giga-world-policy-0.5
 catalog_category: vla_va_wam
-schema_version: 2
 docs:
   publisher: GigaAI
   publisher_kind: company

@@ -39,7 +39,6 @@ output_artifacts:
 pipeline_binding: rise
 runtime_profile: runtime-profile:rise
 catalog_category: vla_va_wam
-schema_version: 2
 docs:
   publisher: Shanghai AI Laboratory (OpenDriveLab)
   publisher_kind: lab

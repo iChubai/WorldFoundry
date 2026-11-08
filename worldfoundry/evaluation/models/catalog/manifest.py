@@ -26,6 +26,17 @@ from .schema import ModelZooEntry, load_entries, select_default_variant
 SourceModelMap = Mapping[str, Any]
 SourceFamilyMaps = Mapping[str, SourceModelMap]
 DEFAULT_MODEL_CATALOG_ROOT = DATA_ROOT / "models" / "catalog"
+DEFAULT_RUNTIME_PROFILE_ROOT = DATA_ROOT / "models" / "runtime" / "profiles"
+
+
+def _runtime_profile_task_family(entry: ModelZooEntry) -> str:
+    """Task family declared by the runtime profile the catalog entry points at."""
+    profile_id = str(entry.runtime_profile or "").removeprefix("runtime-profile:") or entry.model_id
+    path = DEFAULT_RUNTIME_PROFILE_ROOT / f"{profile_id}.yaml"
+    if not path.is_file():
+        return ""
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return str(data.get("task_family") or "") if isinstance(data, Mapping) else ""
 
 
 # ── Coercion helpers ─────────────────────────────────────────
@@ -245,13 +256,14 @@ class ModelCatalogManifest:
             for index, ref in enumerate(entry.checkpoint_refs or (entry.checkpoint,), start=1)
             if ref.hf_repo_id
         }
+        task_family = _runtime_profile_task_family(entry) or (entry.tasks[0] if entry.tasks else "")
         manifest = cls(
             model_id=entry.model_id,
             name=entry.name or entry.model_id,
             family=entry.provider or "",
             domain=entry.tasks[0] if entry.tasks else "",
             capabilities={
-                "task_family": entry.tasks[0] if entry.tasks else "",
+                "task_family": task_family,
                 "modalities": list(entry.output_artifacts),
             },
             availability={

@@ -504,7 +504,7 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         self.gemma_path = _expand_path(gemma_path) or DEFAULT_HFD_ROOT / "google--gemma-3-12b-it-qat-q4_0-unquantized"
         default_config = "inference_wm.yaml" if self.variant == "base" else "inference_wm_causal.yaml"
         self.config_path = _expand_path(config_path) or Path(
-            resolve_data_path(f"models/runtime/configs/joyai-echo-wm/{default_config}")
+            resolve_data_path(f"models/runtime/configs/joyai_echo/{default_config}")
         )
 
     @property

@@ -33,6 +33,24 @@ On disk, manifests are grouped by domain so maintainers can scan related entries
 
 **Runtime profiles** in `worldfoundry/data/models/runtime/profiles/` sit beside catalog YAML and record blockers YAML alone cannot express: dependency stack, command shape, checkpoint layout, device expectations, and demo parity status.
 
+## Directory map
+
+Everything under `worldfoundry/data/` is declarative metadata; checkpoints, datasets, and run outputs never live here.
+
+| Path | Contents |
+| --- | --- |
+| `models/catalog/<category>/<model-id>.yaml` | One catalog entry per file, keyed by `id` (public identity, provenance, variants, status, docs seed) |
+| `models/bindings/pipelines/<binding-id>.yaml` | Import target and invocation form for the generic pipeline runner |
+| `models/runtime/profiles/<model-id>.yaml` | `schema_version: 2` execution profile: checkpoints, inputs, artifact kind, `execution` block, call defaults |
+| `models/runtime/environments/` | Dedicated conda environments, only for documented dependency conflicts |
+| `models/runtime/configs/<package>/` | Static presets and example inputs, in a directory named after the synthesis or pipeline package that reads them (snake_case, for example `dino_wm/`, `alayaworld_v11/`); directories shared by several models use the family name (for example `vla_va_wam/`, `video_official/`) |
+| `models/runtime/assets/` | Asset manifests for model checkpoints |
+| `benchmarks/catalog/`, `benchmarks/tasks/`, `benchmarks/runtime_profiles/` | One benchmark per file in each tree, keyed by benchmark id |
+| `benchmarks/assets/`, `benchmarks/eval_configs/`, `benchmarks/requirements/` | Prompt sets, reference files, evaluation presets, and pinned evaluator dependencies |
+| `test_cases/` | Not tracked; the fixture corpus was externalized and is staged locally when needed |
+
+Catalog entries and variants reference a runtime profile and a binding (`runtime_profile`, `pipeline_binding`), and each profile names the binding it executes (`execution.pipeline_binding`). Every binding's `model_id` equals the id of the entry, variant, or profile that references it, so a preset profile such as `wan2.1-t2v-1.3b-832x480-81f` keeps its own binding even when it imports the same pipeline as its catalog variant; `make lint` enforces this. Studio merges a profile's call defaults under its own overrides, so generation defaults are written once, in the profile.
+
 ## Parsing pipeline
 
 Python code never reads raw YAML ad hoc. Each catalog domain follows the same three-step pattern: **schema parse** normalizes loose author input into typed entries, **registry build** creates alias indexes for CLI queries, and **spec conversion** emits public contracts the evaluation API imports.

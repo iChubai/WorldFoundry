@@ -23,4 +23,3 @@ runner_parity:
   notes:
   - The official three-step post-distillation command is wired; H200-class checkpoint execution has not been verified in this tree.
 catalog_category: world_models
-schema_version: 2

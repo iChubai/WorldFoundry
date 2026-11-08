@@ -1,8 +1,6 @@
 artifact_filename: wilddet3d_predictions.npz
 artifact_kind: generated_3d_asset
-backend_stage: in_tree_runtime_manifest
 display_name: WildDet3D
-id: wilddet3d
 schema_version: 2
 model_id: wilddet3d
 groups:
@@ -30,15 +28,20 @@ input_schema:
   image: true
   prompt: true
   video: false
-integration_status: runtime_ported
 notes:
-- Runs the pinned official checkout through a small WorldFoundry launcher; upstream SAM-licensed source is not vendored.
-- Set WORLDFOUNDRY_WILDDET3D_SOURCE to the cloned checkout with SAM3 and LingBot-Depth submodules, or stage it under the configured model source root.
-- Requires the full detector checkpoint and official robbyant/lingbot-depth-postrain-dc-vitl14/model.pt for geometry architecture construction.
-- Pass image_path and a comma-separated class prompt; optional intrinsics_path is a 3x3 NumPy matrix. Output is a NumPy archive of detections and depth.
-runtime_status: official_runtime_checkpoint_bound
+- Runs the pinned official checkout through a small WorldFoundry launcher; upstream
+  SAM-licensed source is not vendored.
+- Set WORLDFOUNDRY_WILDDET3D_SOURCE to the cloned checkout with SAM3 and LingBot-Depth
+  submodules, or stage it under the configured model source root.
+- Requires the full detector checkpoint and official robbyant/lingbot-depth-postrain-dc-vitl14/model.pt
+  for geometry architecture construction.
+- Pass image_path and a comma-separated class prompt; optional intrinsics_path is
+  a 3x3 NumPy matrix. Output is a NumPy archive of detections and depth.
 task_family: three_dimension
 execution:
   pipeline_binding: wilddet3d
   backend_stage: in_tree_runtime_manifest
   runtime_status: official_runtime_checkpoint_bound
+  integration_status: runtime_ported
+integration:
+  status: runtime_ported

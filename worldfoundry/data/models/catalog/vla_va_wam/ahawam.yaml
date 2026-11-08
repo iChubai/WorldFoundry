@@ -39,7 +39,6 @@ pipeline_binding: ahawam
 runtime_profile: runtime-profile:ahawam
 catalog_category: vla_va_wam
 catalog_scope: VLA / VA(VAM) / WAM model entries tracked as upstream provenance, checkpoint metadata, and runtime-profile planning records.
-schema_version: 2
 docs:
   publisher: Open-source research release (institution not recorded)
   publisher_kind: lab

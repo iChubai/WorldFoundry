@@ -45,7 +45,6 @@ output_artifacts:
 pipeline_binding: tinyvla
 runtime_profile: runtime-profile:tinyvla
 catalog_category: vla_va_wam
-schema_version: 2
 docs:
   publisher: Open-source research release (institution not recorded)
   publisher_kind: lab

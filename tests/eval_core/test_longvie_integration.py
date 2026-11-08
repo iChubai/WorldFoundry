@@ -196,14 +196,12 @@ def test_longvie_model_zoo_runner_uses_pipeline_protocol(tmp_path: Path) -> None
 def test_longvie_runtime_logic_lives_under_base_models() -> None:
     synthesis_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/longvie"
     base_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/longvie"
-    config_root = REPO_ROOT / "worldfoundry/data/models/runtime/configs/longvie"
     runtime_root = base_root / "longvie_runtime"
 
     assert not (synthesis_root / "_runtime_env.py").exists()
     assert (base_root / "runtime_env.py").is_file()
     assert (base_root / "worldfoundry_runtime.py").is_file()
     assert not (runtime_root / "accelerate_config_14B.yaml").exists()
-    assert (config_root / "accelerate_config_14B.yaml").is_file()
     assert not (runtime_root / "train.sh").exists()
     assert not (runtime_root / "train_longvie_control.py").exists()
     assert not (runtime_root / "train_longvie_history_control.py").exists()

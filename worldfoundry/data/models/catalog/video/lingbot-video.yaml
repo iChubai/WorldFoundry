@@ -53,7 +53,6 @@ runtime_profile: runtime-profile:lingbot-video
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lingbot-video
 catalog_category: video
-schema_version: 2
 docs:
   publisher: Robbyant (Ant Group)
   publisher_kind: company

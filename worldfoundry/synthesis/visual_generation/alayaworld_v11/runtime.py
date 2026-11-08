@@ -100,7 +100,7 @@ class AlayaWorldV11Runtime(OfficialInferenceRuntime):
             "gemma_path": str(self.gemma_path),
             "vigeo_checkpoint": str(self.vigeo_checkpoint),
             "vigeo_source_root": str(self.vigeo_source_root),
-            "config": str(resolve_data_path(f"models/runtime/configs/alayaworld-v1.1/{self.variant}.yaml")),
+            "config": str(resolve_data_path(f"models/runtime/configs/alayaworld_v11/{self.variant}.yaml")),
         }
         if request.get("camera_path") is not None:
             camera = local_path(request["camera_path"])

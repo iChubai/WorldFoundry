@@ -37,6 +37,3 @@ notes:
 - Independent base-model profile for the Segment-and-Track-Anything prior under worldfoundry.base_models.perception_core.tracking.track_anything.
 - WorldFoundry exposes this prior through the shared geometry-prior pipeline/operator
   contract.
-backend_stage: in_tree_geometry_prior_runtime
-runtime_status: in_tree_runtime_wired
-integration_status: integrated

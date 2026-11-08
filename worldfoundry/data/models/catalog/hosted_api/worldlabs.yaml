@@ -1,0 +1,63 @@
+id: worldlabs
+name: World Labs API
+tasks:
+- world-generation
+- assets
+- hosted-api
+provider: api
+source:
+  status: api
+  official_repo_url: https://www.worldlabs.ai/
+official_sources:
+  project_page: https://www.worldlabs.ai/
+integration:
+  status: integrated
+  notes:
+  - Hosted API Studio pipeline is available; users must provide their own provider
+    API key.
+runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+pipeline_binding: worldlabs
+runner_parity:
+  status: not_applicable
+demo_parity:
+  status: not_applicable
+docs:
+  publisher: World Labs
+  publisher_kind: company
+  publisher_zh: World Labs
+  overview: World Labs API is the hosted entry for World Labs' generative world service,
+    recorded for world-generation and asset outputs rather than flat video. Instead
+    of returning a clip, the service produces explorable 3D world content on World
+    Labs' infrastructure; WorldFoundry archives what the API returns as artifacts.
+    This is the only hosted_api entry in the catalog aimed at world generation instead
+    of video generation.
+  overview_zh: World Labs API 是 World Labs 生成式世界服务的托管条目，记录的任务是世界生成与资产输出，而非普通视频。服务在
+    World Labs 的基础设施上生成可探索的 3D 世界内容，WorldFoundry 将 API 返回的内容归档为产物。这是 catalog 中唯一面向世界生成（而非视频生成）的
+    hosted_api 条目。
+  architecture: World Labs has not published the architecture behind its world generation
+    service; this repository records only the hosted endpoint integration and the
+    artifact kinds it returns.
+  architecture_zh: World Labs 未公开其世界生成服务背后的架构；本仓库仅记录托管端点的集成方式及其返回的产物类型。
+  usage_notes: 'The catalog marks this entry as integrated: the hosted-API Studio
+    pipeline is available, but you must supply your own provider API key and account.
+    No weights are downloaded and no GPU environment is provisioned locally — generation
+    happens on the provider side, so cost, quota, and content policy follow your provider
+    account. Access is provisioned through World Labs'' platform (worldlabs.ai).'
+  usage_notes_zh: Catalog 将该条目标记为 integrated：托管 API 的 Studio pipeline 已可用，但你必须自备服务方的
+    API key 与账号。本地不会下载任何权重、也不会创建 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。访问权限通过 World
+    Labs 平台（worldlabs.ai）开通。
+  limitations:
+  - Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+  - The provider controls model versioning, so outputs can change over time without
+    any change in this repository — the manifest records runner parity as not applicable
+    for this reason.
+  - No local weights, no offline mode, and no reproducibility pinning beyond the request
+    parameters WorldFoundry stores.
+  limitations_zh:
+  - 需要付费的服务方账号与 API key；WorldFoundry 不提供任何凭据。
+  - 模型版本由服务方控制，输出可能随时间变化而与本仓库无关——因此 manifest 将 runner parity 记录为 not applicable。
+  - 没有本地权重、不支持离线运行；除 WorldFoundry 保存的请求参数外，无法进一步固定可复现性。
+  recommended_benchmarks:
+  - id: worldscore
+    reason: Unified benchmark for scoring generated explorable worlds.
+    reason_zh: 评估可探索生成世界的统一基准。

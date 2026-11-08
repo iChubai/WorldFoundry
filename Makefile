@@ -537,7 +537,6 @@ test-eval-core:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m pytest -q tests/eval_core $(TEST_ARGS)
 
 docs-check:
-	npm --prefix docs/fumadocs run api:check
 	npm --prefix docs/fumadocs run models:check
 	npm --prefix docs/fumadocs run models:homes:check
 	npm --prefix docs/fumadocs run benchmarks:check

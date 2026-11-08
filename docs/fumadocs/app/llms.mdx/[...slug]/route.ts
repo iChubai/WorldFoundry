@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation';
 
 export const revalidate = false;
 
-export async function GET(_req: Request, { params }: RouteContext<'/llms.mdx/docs/[[...slug]]'>) {
+export async function GET(_req: Request, { params }: RouteContext<'/llms.mdx/[...slug]'>) {
   const { slug } = await params;
-  const { locale, pageSlugs } = resolveMarkdownSlug(slug);
-  const page = source.getPage(pageSlugs, locale);
+  const target = resolveMarkdownSlug(slug);
+  const page = target ? source.getPage(target.pageSlugs, target.locale) : undefined;
   if (!page) notFound();
 
   return new Response(await getPageSourceMarkdown(page), {

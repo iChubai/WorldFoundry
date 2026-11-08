@@ -116,9 +116,7 @@ def _capture_pty(arguments: tuple[str, ...], *, columns: int, rows: int) -> str:
     return_code = process.wait()
     output = b"".join(chunks).decode("utf-8", errors="replace")
     if return_code != 0:
-        raise RuntimeError(
-            f"worldfoundry command exited {return_code}: {' '.join(arguments)}\n{output}"
-        )
+        raise RuntimeError(f"worldfoundry command exited {return_code}: {' '.join(arguments)}\n{output}")
     return output
 
 

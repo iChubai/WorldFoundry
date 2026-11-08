@@ -1,7 +1,6 @@
 /* Visual polish layer — defers tokens to app/styles/tokens.css. */
 
 /* ---------- Shared chrome (docs + home header tools) ---------- */
-.pi-doc-header-tools,
 .wf-home-site-header-tools {
   align-items: center;
   display: flex;
@@ -244,24 +243,16 @@
   background: transparent;
   border: 0;
   box-shadow: none;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-top: 1rem;
-  padding: 0.35rem 0 0;
 }
 
-.pi-doc-action-chip,
 .pi-doc-action-link {
-  background: transparent;
   border: 0;
   border-radius: 0;
   font-size: inherit;
-  font-weight: 400;
   padding: 0;
   transition: color 150ms ease, transform 160ms ease-out;
 }
 
-.pi-doc-action-chip:hover,
 .pi-doc-action-link:hover {
   background: transparent;
   border-color: transparent;
@@ -439,7 +430,6 @@
   transform: none;
 }
 
-.pi-doc-welcome-quicklink,
 .pi-doc-welcome-badge {
   border-radius: var(--pi-radius-xl);
   box-shadow: none;
@@ -450,10 +440,6 @@
 .wf-home-main .wf-home-resource-card,
 .wf-home-main .wf-home-community-panel,
 .wf-home-main .wf-home-configurator {
-  border-radius: var(--pi-radius-xl);
-}
-
-.wf-home-main .wf-home-ecosystem-chips a {
   border-radius: var(--pi-radius-xl);
 }
 
@@ -961,19 +947,6 @@
   color: var(--pi-brand-accent) !important;
 }
 
-.dark .pi-doc-hub-hero {
-  background: var(--pi-elevated);
-  border-color: var(--pi-line);
-  box-shadow: none;
-}
-
-.dark .pi-doc-hub-actions a:first-child,
-.dark .pi-doc-hub-actions a:hover {
-  background: var(--pi-brand-accent);
-  border-color: var(--pi-brand-accent);
-  color: var(--pi-paper);
-}
-
 .dark .pi-doc-content :where([class*='prose-no-margin'][class*='overflow-auto']) {
   scrollbar-color: var(--pi-muted) color-mix(in srgb, var(--pi-paper) 80%, var(--pi-elevated));
 }
@@ -1040,8 +1013,6 @@
 }
 
 .dark .pi-doc-content .wf-recipe-family-tabs button {
-  background: transparent;
-  border-color: transparent;
   color: var(--pi-muted);
 }
 
@@ -1049,36 +1020,6 @@
   background: transparent;
   border-color: transparent;
   color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .wf-recipe-family-tabs button.is-active {
-  background: transparent;
-  border-color: transparent;
-  border-bottom-color: var(--pi-brand-accent);
-  color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .wf-recipe-family-tabs button.is-active span {
-  background: transparent;
-  color: var(--pi-muted);
-}
-
-.dark .pi-doc-content .wf-recipe-status-verified,
-.dark .pi-doc-content .wf-recipe-status-integrated {
-  background: color-mix(in srgb, var(--pi-brand-accent) 14%, var(--pi-elevated));
-  border-color: color-mix(in srgb, var(--pi-brand-accent) 40%, var(--pi-line));
-  color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .wf-recipe-task-chip {
-  background: color-mix(in srgb, var(--pi-elevated) 82%, var(--pi-paper));
-  border-color: var(--pi-line);
-  color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .wf-recipe-task-chip.is-more {
-  background: color-mix(in srgb, var(--pi-brand-accent) 16%, var(--pi-elevated));
-  border-color: color-mix(in srgb, var(--pi-brand-accent) 40%, var(--pi-line));
 }
 
 .dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder {
@@ -1234,8 +1175,7 @@
   color: var(--pi-ink);
 }
 
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-choices span,
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-task-list span {
+.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-choices span {
   background: transparent;
   border-color: transparent;
   color: var(--pi-ink);
@@ -1286,7 +1226,6 @@
   color: var(--pi-ink);
 }
 
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-command,
 .dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-code {
   background: color-mix(in srgb, var(--pi-elevated) 94%, var(--pi-paper));
   color: var(--pi-ink);
@@ -1323,8 +1262,7 @@
   border-color: var(--pi-line);
 }
 
-.dark .pi-doc-content .pi-studio-viz-overview,
-.dark .pi-doc-content .pi-studio-viz-card {
+.dark .pi-doc-content .pi-studio-viz-overview {
   background: color-mix(in srgb, var(--pi-paper) 86%, var(--pi-elevated));
   border-color: var(--pi-line);
 }
@@ -1343,21 +1281,6 @@
   background: color-mix(in srgb, var(--pi-ink) 8%, var(--pi-paper));
   border-color: color-mix(in srgb, var(--pi-ink) 18%, var(--pi-line));
   color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .pi-studio-viz-card-status {
-  background: color-mix(in srgb, var(--pi-brand-accent) 12%, transparent);
-  border-color: color-mix(in srgb, var(--pi-brand-accent) 28%, var(--pi-line));
-  color: var(--pi-brand-accent);
-}
-
-.dark .pi-doc-content .pi-studio-viz-card-cmd code {
-  background: color-mix(in srgb, var(--pi-paper) 72%, var(--pi-elevated));
-  color: var(--pi-ink);
-}
-
-.dark .pi-doc-content .pi-studio-viz-card-planned .pi-studio-viz-card-image {
-  opacity: 0.58;
 }
 
 .dark .wf-home-main .wf-home-capability-card,
@@ -1401,16 +1324,6 @@
 .dark .wf-site-footer-column a:hover,
 .dark .wf-site-footer-copyright a:hover {
   color: var(--pi-brand-accent);
-}
-
-.dark .wf-home-main .wf-home-ecosystem-chips a {
-  background: color-mix(in srgb, var(--pi-paper) 86%, var(--pi-elevated));
-  border-color: var(--pi-line);
-}
-
-.dark .wf-home-main .wf-home-ecosystem-chips a:hover {
-  background: var(--pi-elevated);
-  border-color: var(--pi-soft-line);
 }
 
 .dark .pi-open-logo {
@@ -1479,11 +1392,6 @@
   color: var(--pi-brand-accent) !important;
 }
 
-.dark .pi-doc-welcome-workflow-caption {
-  border-top-color: var(--pi-line) !important;
-  color: var(--pi-muted) !important;
-}
-
 .dark .pi-doc-welcome-badge {
   background: color-mix(in srgb, var(--pi-paper) 88%, var(--pi-elevated)) !important;
   border-color: var(--pi-line) !important;
@@ -1496,21 +1404,6 @@
 }
 
 .dark .pi-doc-welcome-badge-count {
-  color: var(--pi-muted) !important;
-}
-
-.dark .pi-doc-welcome-quicklink {
-  background: color-mix(in srgb, var(--pi-paper) 90%, var(--pi-elevated)) !important;
-  border-color: var(--pi-line) !important;
-  color: var(--pi-ink) !important;
-}
-
-.dark .pi-doc-welcome-quicklink:hover {
-  background: var(--pi-elevated) !important;
-  border-color: var(--pi-soft-line) !important;
-}
-
-.dark .pi-doc-welcome-quicklink-description {
   color: var(--pi-muted) !important;
 }
 
@@ -1634,14 +1527,12 @@
   background: transparent !important;
 }
 
-.dark .pi-doc-action-chip,
 .dark .pi-doc-action-link {
   background: transparent !important;
   border-color: transparent !important;
   color: inherit;
 }
 
-.dark .pi-doc-action-chip:hover,
 .dark .pi-doc-action-link:hover {
   color: var(--pi-ink);
 }
@@ -1686,13 +1577,7 @@
   color: var(--pi-brand-accent) !important;
 }
 
-.dark .pi-doc-welcome-quicklink-icon {
-  background: color-mix(in srgb, var(--pi-brand-accent) 14%, var(--pi-elevated)) !important;
-  border-color: color-mix(in srgb, var(--pi-brand-accent) 22%, var(--pi-line)) !important;
-  color: var(--pi-brand-accent) !important;
-}
-
-/* ---------- Home hero: RoboDojo-scale overlapping media carousel ---------- */
+/* ---------- Home hero: RoboDojo-scale media card ---------- */
 .wf-home-hero-carousel {
   margin: 0 auto;
   max-width: 100%;
@@ -1785,8 +1670,7 @@
 }
 
 .wf-home-hero-card-poster,
-.wf-home-hero-card-video,
-.wf-home-hero-card-image {
+.wf-home-hero-card-video {
   display: block;
   height: 100%;
   inset: 0;
@@ -1843,63 +1727,6 @@
   color: var(--pi-muted);
   font-size: 0.8125rem;
   line-height: 1.5;
-}
-
-.wf-home-hero-carousel-controls {
-  align-items: center;
-  display: flex;
-  gap: 0.875rem;
-  justify-content: center;
-  margin-top: 0.875rem;
-  pointer-events: auto;
-}
-
-.wf-home-hero-carousel-nav {
-  align-items: center;
-  background: var(--pi-elevated);
-  border: 1px solid var(--pi-line);
-  border-radius: 999px;
-  color: var(--pi-ink);
-  cursor: pointer;
-  display: inline-flex;
-  height: 2rem;
-  justify-content: center;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
-  width: 2rem;
-}
-
-.wf-home-hero-carousel-nav:hover {
-  background: var(--pi-paper-hover);
-  border-color: var(--pi-soft-line);
-  color: var(--pi-brand-accent);
-}
-
-.wf-home-hero-carousel-dots {
-  display: inline-flex;
-  gap: 0.375rem;
-}
-
-.wf-home-hero-carousel-dots button {
-  background: color-mix(in srgb, var(--pi-ink) 22%, transparent);
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  height: 0.4375rem;
-  padding: 0;
-  transition:
-    background 160ms ease,
-    transform 160ms ease,
-    width 160ms ease;
-  width: 0.4375rem;
-}
-
-.wf-home-hero-carousel-dots button.is-active {
-  background: var(--pi-brand-accent);
-  transform: scale(1.05);
-  width: 1.375rem;
 }
 
 @media (max-width: 900px) {
@@ -2008,56 +1835,21 @@
   object-fit: contain;
 }
 
-.pi-doc-content .wf-docs-banner {
-  margin-bottom: 1rem;
-}
-
 .pi-doc-content :is([data-inline-toc], .not-prose.rounded-lg.border) {
   margin: 1.25rem 0;
-}
-
-@keyframes wf-docs-pulse {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
 }
 
 /* ---------- Quiet leftover shouty labels (source copy is already sentence case) ---------- */
 .pi-label,
 .pi-metric-quick-nav-group-title,
 .pi-metric-quick-nav.is-rail .pi-metric-quick-nav-group-title,
-.pi-doc-content .wf-model-recipe-identity p,
-.wf-model-recipe-facts dt span,
 .wf-recipe-records dt,
-.wf-recipe-facts dt,
-.wf-recipe-version-matrix dt,
-.wf-recipe-runtime-matrix dt,
-.wf-recipe-evidence-grid dt,
-.wf-recipe-contracts th,
-.wf-recipe-narrative-origin,
-.wf-recipe-highlights > span,
-.wf-recipe-hardware dt,
-.wf-recipe-what-is-meta dt,
-.wf-recipe-reference-meta dt,
-.wf-recipe-reference-peers > span,
-.wf-recipe-usage-workflow > h3,
-.wf-recipe-upstream-label,
 .wf-model-arch-diagram__label,
 .wf-cg-kicker,
 .wf-cg-lane,
 .wf-arch-kind,
-.wf-arch-lane,
-.wf-recipe-catalog-kicker,
-.wf-recipe-eyebrow,
-.wf-recipe-sidebar-identity > div > span,
-.wf-recipe-paper-quote span,
-.wf-recipe-source-links .wf-recipe-source-kind,
 .pi-env-entry-command span,
 .pi-doc-content .pi-env-catalog .pi-env-entry-body > p strong,
-.pi-studio-viz-card-status,
 .wf-home-main .wf-catalog-pane-kicker,
 .wf-home-main .wf-home-configurator-controls span,
 .wf-home-main .wf-home-configurator-terminal-head > span {
@@ -2068,7 +1860,6 @@
 .pi-doc-shell[lang='zh'] .pi-label,
 .pi-doc-shell[lang='zh'] .pi-doc-actions,
 .pi-doc-shell[lang='zh'] .wf-recipe-records dt,
-.pi-doc-shell[lang='zh'] .wf-recipe-facts dt,
 .pi-doc-shell[lang='zh'] .wf-command-builder-controls span {
   letter-spacing: 0;
 }
@@ -2080,10 +1871,8 @@
   outline-offset: 2px;
 }
 
-.pi-doc-action-chip:active,
 .pi-doc-action-link:active,
 .pi-doc-welcome-badge:active,
-.pi-doc-welcome-quicklink:active,
 .wf-recipe-show-more:active,
 .wf-recipe-family-tabs button:active,
 .pi-doc-header .pi-nav a:active,
@@ -2112,18 +1901,7 @@
 }
 
 /* ---------- Dark: leftover light surfaces ---------- */
-.dark .pi-doc-hub-card {
-  background: color-mix(in srgb, var(--pi-paper) 88%, var(--pi-elevated));
-  border-color: var(--pi-line);
-}
 
-.dark .pi-doc-hub-card:hover {
-  background: var(--pi-elevated);
-  border-color: color-mix(in srgb, var(--pi-brand-accent) 28%, var(--pi-line));
-  box-shadow: var(--pi-shadow-soft);
-}
-
-.dark .pi-doc-hub-card-strong,
 .dark .wf-api-catalog-card.is-guide {
   background: color-mix(in srgb, var(--pi-paper) 82%, var(--pi-elevated));
   border-color: color-mix(in srgb, var(--pi-ink) 18%, var(--pi-line));
@@ -2139,9 +1917,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pi-doc-action-chip:active,
   .pi-doc-welcome-badge:active,
-  .pi-doc-welcome-quicklink:active,
   .wf-recipe-show-more:active {
     transform: none;
   }
@@ -2153,7 +1929,7 @@
   }
 }
 
-/* ---------- Wave-1 polish: quieter chrome, one rhythm, fewer boxes ---------- */
+/* ---------- Quieter chrome: one rhythm, fewer boxes ---------- */
 .pi-doc-header .pi-site-search-trigger {
   background: color-mix(in srgb, var(--pi-paper) 62%, var(--pi-elevated)) !important;
   border: 1px solid var(--pi-line) !important;
@@ -2307,24 +2083,17 @@
   padding: 0.35rem 0 0;
 }
 
-.pi-doc-action-chip,
 .pi-doc-action-link {
   background: transparent;
   box-shadow: none;
   font-weight: 400;
 }
 
-.pi-doc-hub-hero,
 .pi-doc-content > p:has(> img[src*='teaser']) img,
 .pi-doc-content img[src*='teaser'],
 .pi-open-logo {
   box-shadow: none;
   border-color: var(--pi-line);
-}
-
-.pi-doc-hub-actions a {
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 .wf-recipe-search {
@@ -2401,8 +2170,6 @@
   transform: scale(0.97);
 }
 
-.pi-doc-badge,
-.pi-studio-viz-card-status,
 .pi-metric-quick-nav-group-title,
 .pi-metric-quick-nav.is-rail .pi-metric-quick-nav-group-title {
   letter-spacing: 0.01em;

@@ -3,6 +3,7 @@ import { BenchmarkPaperFigures } from '@/components/benchmark-paper-figures';
 import {
   getBenchmarkLeaderboard,
   leaderboardColumns,
+  localizedColumnLabel,
   localizedEmptyReason,
   localizedLiveLabel,
   localizedPaperExtra,
@@ -85,7 +86,7 @@ function DetailTable({
             <th scope="col">{t.model}</th>
             {columns.map((column) => (
               <th key={column.id} scope="col">
-                {locale === 'zh' ? column.labelZh || column.label : column.label}
+                {localizedColumnLabel(column, locale)}
               </th>
             ))}
           </tr>

@@ -22,7 +22,7 @@ For evaluate and model-only runs, the first meaningful branch is mode selection:
 
 The happy path looks like this: one `EvaluateRunRequest` enters the facade, a mode is chosen, inputs are loaded or materialized from a task registry, and a delegate runner writes the standard artifact bundle. If something is missing from an output directory, follow this flow to see which runner stage should have produced it.
 
-<CallChainDiagram />
+<ArchDiagram id="workflow" />
 
 ```python
 # worldfoundry/cli/main.py → evaluation/tasks/execution/orchestration/evaluate.py

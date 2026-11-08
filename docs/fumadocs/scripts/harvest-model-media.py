@@ -6,9 +6,7 @@ Face paper thumbnails when they exist. Writes ``lib/model-paper-media.json``
 and patches recipe/index JSON in place so the pages pick up paper figures
 without a full catalog regenerate.
 
-Never attach catalog / Studio demo clips (``kind: video``, ``/demos/*.mp4``)
-to model homepages. Home, Studio gallery, and welcome still use those files
-on disk — this harvest just must not emit them into model-page media.
+Never attach video clips (``kind: video`` or video files) to model homepages.
 """
 
 from __future__ import annotations
@@ -41,7 +39,6 @@ ARXIV_ID_RE = re.compile(
     r"(?:arxiv\.org/(?:abs|pdf|html)|huggingface\.co/papers|hf\.co/papers)/(\d{4}\.\d{4,5})(?:v\d+)?",
     re.I,
 )
-GITHUB_RE = re.compile(r"https?://(?:www\.)?github\.com/([^/]+)/([^/?#]+)", re.I)
 
 # Official paper teaser / overview figures. Download only these author-published
 # assets; never a PDF page-1 render (that stays paper.png beside the title).
@@ -778,8 +775,8 @@ AR5IV_FALLBACK = {
     },
 }
 
-# In-tree paper / architecture stills only. Demo mp4s stay on disk for home /
-# Studio / CDN — they must not be harvested onto model homepages.
+# In-tree paper / architecture stills only; video clips are never harvested onto
+# model homepages.
 LOCAL_MEDIA: dict[str, list[dict[str, str]]] = {
     "hunyuanvideo": [
         {
@@ -931,16 +928,16 @@ def download_curated_figures() -> dict[str, list[str]]:
     return saved
 
 
-def is_demo_video_figure(item: dict[str, str]) -> bool:
+def is_video_figure(item: dict[str, str]) -> bool:
     kind = item.get("kind") or "image"
     src = str(item.get("src") or "").strip().lower()
     if kind == "video":
         return True
-    return src.endswith((".mp4", ".webm", ".mov", ".m4v")) or src.startswith("/demos/")
+    return src.endswith((".mp4", ".webm", ".mov", ".m4v"))
 
 
-def without_demo_videos(figures: list[dict[str, str]]) -> list[dict[str, str]]:
-    return [item for item in figures if not is_demo_video_figure(item)]
+def without_videos(figures: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [item for item in figures if not is_video_figure(item)]
 
 
 def local_figure_exists(src: str) -> bool:
@@ -949,16 +946,13 @@ def local_figure_exists(src: str) -> bool:
     path = PUBLIC / src.lstrip("/")
     if not path.is_file():
         return False
-    # Demo clips stay on disk for home / Studio / CDN; model homes must not list them.
-    if src.startswith("/demos/"):
-        return False
     return path.stat().st_size > 800
 
 
 def merge_official_figures(figures: list[dict[str, str]], model_id: str) -> list[dict[str, str]]:
     official = figure_records(model_id)
     if not official:
-        return without_demo_videos(
+        return without_videos(
             [
                 item
                 for item in figures
@@ -973,7 +967,7 @@ def merge_official_figures(figures: list[dict[str, str]], model_id: str) -> list
         and not str(item.get("src") or "").lower().endswith("/paper.png")
         and local_figure_exists(str(item.get("src") or ""))
     ]
-    return without_demo_videos(official + kept)
+    return without_videos(official + kept)
 
 
 def request(url: str, timeout: int = 20) -> bytes | None:
@@ -1066,7 +1060,7 @@ def apply_payload(media: dict[str, _ModelMedia]) -> None:
         else:
             docs.setdefault("paper", None)
         if extra.get("figures"):
-            docs["figures"] = without_demo_videos(list(extra["figures"]))
+            docs["figures"] = without_videos(list(extra["figures"]))
         else:
             docs.setdefault("figures", [])
     RECIPES.write_text(json.dumps(recipes, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -1104,7 +1098,7 @@ def main() -> None:
         for model_id, extra in list(media.items()):
             if not isinstance(extra, dict):
                 continue
-            extra["figures"] = without_demo_videos(list(extra.get("figures") or []))
+            extra["figures"] = without_videos(list(extra.get("figures") or []))
             media[model_id] = extra
         OUT.write_text(json.dumps(media, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"curated figures for {len(saved)} models -> {OUT}", flush=True)
@@ -1132,7 +1126,7 @@ def main() -> None:
         arxiv_id = arxiv_for.get(model_id)
         if arxiv_id and arxiv_id in papers:
             entry["paper"] = papers[arxiv_id]
-        figures = without_demo_videos([dict(item) for item in LOCAL_MEDIA.get(model_id, [])])
+        figures = without_videos([dict(item) for item in LOCAL_MEDIA.get(model_id, [])])
         if arxiv_id and not (THUMB_DIR / model_id / "paper.png").is_file():
             thumb = download_thumb(arxiv_id, model_id)
             if thumb:

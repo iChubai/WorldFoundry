@@ -498,14 +498,6 @@
       "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped and restored to CAS navy #004B87",
       "src": "/org-logos/cas.png"
     },
-    "cau": {
-      "abbr": "CAU",
-      "key": "cau",
-      "license": "Public domain (simple seal rendition)",
-      "name": "Chung-Ang University (HAI Lab)",
-      "source": "Original simple circular-seal rendition of the CAU monogram",
-      "src": "/org-logos/cau.svg"
-    },
     "cityu": {
       "abbr": "CityU",
       "key": "cityu",
@@ -593,14 +585,6 @@
       "name": "ETH Zurich",
       "source": "https://commons.wikimedia.org/wiki/File:ETH_Zürich_Logo_black.svg",
       "src": "/org-logos/eth.svg"
-    },
-    "exla": {
-      "abbr": "EX",
-      "key": "exla",
-      "license": "Organization brand mark",
-      "name": "Exla AI",
-      "source": "GitHub organization brand avatar (github.com/exla-ai), pre-existing repo asset",
-      "src": "/org-logos/exla.png"
     },
     "farama": {
       "abbr": "FR",
@@ -986,14 +970,6 @@
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #412991",
       "src": "/org-logos/openai.svg"
     },
-    "openenvision": {
-      "abbr": "OE",
-      "key": "openenvision",
-      "license": "Project brand mark",
-      "name": "OpenEnvision",
-      "source": "WorldFoundry / OpenEnvision site mark (docs/fumadocs/public/logo.svg)",
-      "src": "/org-logos/openenvision.svg"
-    },
     "openhelix": {
       "abbr": "OH",
       "key": "openhelix",
@@ -1153,14 +1129,6 @@
       "name": "Snap Inc.",
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark); official brand hex #FFFC00",
       "src": "/org-logos/snap.svg"
-    },
-    "snu": {
-      "abbr": "SNU",
-      "key": "snu",
-      "license": "Public domain (simple shield rendition)",
-      "name": "Seoul National University",
-      "source": "https://commons.wikimedia.org/wiki/File:서울대학교.svg",
-      "src": "/org-logos/snu.svg"
     },
     "sony": {
       "abbr": "SO",
@@ -1370,14 +1338,6 @@
       "source": "Original simple shield rendition of the University of Waterloo coat of arms",
       "src": "/org-logos/waterloo.svg"
     },
-    "worldfoundry": {
-      "abbr": "WF",
-      "key": "worldfoundry",
-      "license": "Project brand mark",
-      "name": "WorldFoundry",
-      "source": "WorldFoundry site mark (docs/fumadocs/public/logo.svg)",
-      "src": "/org-logos/worldfoundry.svg"
-    },
     "worldlabs": {
       "abbr": "WL",
       "key": "worldlabs",
@@ -1393,14 +1353,6 @@
       "name": "X-Humanoid (Beijing Humanoid Robot Innovation Center)",
       "source": "Original simple X monogram for the identity mark",
       "src": "/org-logos/x-humanoid.svg"
-    },
-    "x-square": {
-      "abbr": "XS",
-      "key": "x-square",
-      "license": "Organization brand mark",
-      "name": "X Square Robot",
-      "source": "GitHub organization brand avatar (github.com/X-Square-Robot), pre-existing repo asset",
-      "src": "/org-logos/x-square.png"
     },
     "xiaomi": {
       "abbr": "MI",

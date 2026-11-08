@@ -13,6 +13,7 @@ import re
 import sys
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parents[1] / "lib" / "catalog-coverage-data.json"
@@ -155,9 +156,9 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="Fail when generated coverage data is stale.")
     args = parser.parse_args()
 
-    families = []
+    families: list[dict[str, Any]] = []
     for fam, (label, blurb) in FAMILY_META.items():
-        raw = []
+        raw: list[dict[str, Any]] = []
         catalog_root = ROOT / "worldfoundry/data/models/catalog"
         catalog_paths = list((catalog_root / fam).glob("*.yaml"))
         if fam == "video":
@@ -177,12 +178,12 @@ def main() -> int:
                 status = status or item.get("integration_status") or item.get("status")
                 raw.append({"id": mid, "name": name, "status": status})
 
-        buckets: OrderedDict[str, list[dict]] = OrderedDict()
+        buckets: OrderedDict[str, list[dict[str, Any]]] = OrderedDict()
         for entry in raw:
             key = model_group_key(entry["id"])
             buckets.setdefault(key, []).append(entry)
 
-        entries = []
+        entries: list[dict[str, Any]] = []
         for key, group in buckets.items():
             if len(group) == 1:
                 entry = group[0]
@@ -203,16 +204,14 @@ def main() -> int:
                 display = version_group["name"] if version_group else sorted(names, key=len)[0]
                 aliases = [item["id"] for item in group]
                 statuses = [item.get("status") for item in group if item.get("status")]
-                grouped_entry = {
+                grouped_entry: dict[str, Any] = {
                     "id": key,
                     "name": display,
                     "status": statuses[0] if statuses else None,
                     "aliases": aliases,
                 }
                 if version_group:
-                    grouped_entry["versions"] = [
-                        version_group["versions"][item["id"]] for item in group
-                    ]
+                    grouped_entry["versions"] = [version_group["versions"][item["id"]] for item in group]
                 entries.append(grouped_entry)
         entries.sort(key=lambda item: item["name"].lower())
         families.append(
@@ -226,7 +225,7 @@ def main() -> int:
             }
         )
 
-    bench_groups = []
+    bench_groups: list[dict[str, Any]] = []
     for fam, label in [("video", "Video & world"), ("embodied", "Embodied")]:
         entries = []
         for path in sorted((ROOT / "worldfoundry/data/benchmarks/catalog" / fam).glob("*.yaml")):

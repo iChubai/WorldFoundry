@@ -34,10 +34,9 @@ python -m pip install -e ".[dev,test]"
 pre-commit install
 ```
 
-Model demo videos are served from GitHub CDN; docs development does not need
-`git lfs pull`. Checkpoints, datasets, caches, credentials, and generated run
-artifacts stay outside git. Use a model-specific environment only for a
-documented ABI or simulator conflict.
+Docs development does not need `git lfs pull`. Checkpoints, datasets, caches,
+credentials, and generated run artifacts stay outside git. Use a model-specific
+environment only for a documented ABI or simulator conflict.
 
 ## Coding Conventions
 

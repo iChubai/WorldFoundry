@@ -24,7 +24,6 @@ No file in this directory is a personal GitHub avatar.
 | `bytedance.svg` | ByteDance | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #3C8CFF | CC0-1.0 | model:ati-wan21-14b, model:bernini, model:bernini-r-1.3b, model:bernini-r-14b, model:depth-anything-v1, model:depth-anything-v2-prior, model:depth-anything-v3, model:depth-anything-v3-prior, model:roboflamingo, model:video-depth-anything-prior |
 | `caltech.svg` | California Institute of Technology (Caltech) | Original simple circular-seal rendition of the Caltech seal (torch) | Public domain (simple seal rendition) | benchmark:stevo-bench |
 | `cas.png` | Chinese Academy of Sciences | Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped and restored to CAS navy #004B87 | Organization brand mark | benchmark:devil-dynamics, benchmark:t2v-safety-bench, model:starwm |
-| `cau.svg` | Chung-Ang University (HAI Lab) | Original simple circular-seal rendition of the CAU monogram | Public domain (simple seal rendition) | - |
 | `cityu.svg` | City University of Hong Kong | Original simple circular-seal rendition of the CityU emblem | Public domain (simple seal rendition) | model:pusa-vidgen |
 | `cmu.svg` | Carnegie Mellon University | https://commons.wikimedia.org/wiki/File:Carnegie_Mellon_wordmark.svg | Public domain (text logo) | benchmark:camerabench, model:egowm |
 | `createai.png` | CreateAI | GitHub organization brand avatar (github.com/IamCreateAI), pre-existing repo asset | Organization brand mark | model:neoverse |
@@ -36,7 +35,6 @@ No file in this directory is a personal GitHub avatar.
 | `epfl.svg` | EPFL | https://commons.wikimedia.org/wiki/File:Logo_EPFL.svg | Public domain (text logo) | model:stable-video-infinity |
 | `etched.png` | Etched | GitHub organization brand avatar (github.com/etched-ai), pre-existing repo asset | Organization brand mark | model:oasis-500m |
 | `eth.svg` | ETH Zurich | https://commons.wikimedia.org/wiki/File:ETH_Zürich_Logo_black.svg | Public domain (text logo) | model:geocalib-prior, model:unidepth-v2-prior, model:unik3d-prior |
-| `exla.png` | Exla AI | GitHub organization brand avatar (github.com/exla-ai), pre-existing repo asset | Organization brand mark | - |
 | `farama.png` | Farama Foundation | GitHub organization brand avatar (github.com/Farama-Foundation), pre-existing repo asset | Organization brand mark | benchmark:metaworld |
 | `freiburg.png` | University of Freiburg | https://commons.wikimedia.org/wiki/File:Wortmarke-grundform-universitaet_freiburg_blau_rgb.png | CC BY-SA 4.0 | benchmark:calvin |
 | `fudan.svg` | Fudan University | https://commons.wikimedia.org/wiki/File:Fudan_University_Logo.svg | Public domain | benchmark:vlabench, model:yume |
@@ -85,7 +83,6 @@ No file in this directory is a personal GitHub avatar.
 | `nyu.svg` | New York University | https://commons.wikimedia.org/wiki/File:New_York_University_Seal.svg | Public domain | model:dino-wm, model:solaris |
 | `omniforcing.png` | OmniForcing | GitHub organization brand avatar (github.com/OmniForcing) | Organization brand mark | model:omniforcing |
 | `openai.svg` | OpenAI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #412991 | CC0-1.0 | model:sora2 |
-| `openenvision.svg` | OpenEnvision | WorldFoundry / OpenEnvision site mark (docs/fumadocs/public/logo.svg) | Project brand mark | - |
 | `openhelix.png` | OpenHelix | GitHub organization brand avatar (github.com/OpenHelix-Team) | Organization brand mark | model:spatial-forcing |
 | `oppo.svg` | OPPO Research Institute | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #2D683D | CC0-1.0 | benchmark:videoverse |
 | `oxford.svg` | University of Oxford | https://commons.wikimedia.org/wiki/File:Oxford-University-Circlet.svg | Public domain | benchmark:kinetix, benchmark:likephys, model:splatt3r, model:vmem |
@@ -106,7 +103,6 @@ No file in this directory is a personal GitHub avatar.
 | `sjtu.png` | Shanghai Jiao Tong University | Official university brand mark (www.sjtu.edu.cn), crest cropped for the identity mark | Organization brand mark | benchmark:pawbench, benchmark:video-bench, model:gaussianobject, model:pi3, model:warp-as-history |
 | `skywork.jpg` | Skywork AI (Kunlun) | GitHub organization brand avatar (github.com/SkyworkAI), pre-existing repo asset | Organization brand mark | model:matrix-game-1, model:matrix-game-2, model:matrix-game-3, model:skyreels-v2, model:skyreels-v3 |
 | `snap.svg` | Snap Inc. | Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark); official brand hex #FFFC00 | CC0-1.0 | model:ac3d |
-| `snu.svg` | Seoul National University | https://commons.wikimedia.org/wiki/File:서울대학교.svg | Public domain (simple shield rendition) | - |
 | `sony.svg` | Sony AI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000 | CC0-1.0 | model:mmaudio |
 | `spirit-ai.svg` | Spirit AI | Original simple figure monogram for the identity mark | Public domain (simple geometry) | model:spirit-v1.5 |
 | `stability.png` | Stability AI | GitHub organization brand avatar (github.com/Stability-AI), pre-existing repo asset | Organization brand mark | model:stable-virtual-camera |
@@ -133,10 +129,8 @@ No file in this directory is a personal GitHub avatar.
 | `vivo.svg` | vivo | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #415FFF | CC0-1.0 | model:magicworld |
 | `wan.png` | Wan (Tongyi Wanxiang) | Official Wan brand mark (same emblem as Wan-Video/Wan2.1 assets/logo.png); GitHub organization brand avatar (github.com/Wan-Video) | Organization brand mark | model:wan-2p5, model:wan-2p6, model:wan-2p7, model:wan2.1, model:wan2.1-vace, model:wan2.2, model:wan21-fun-14b-cam, model:wan21-fun-1p3b-cam, model:wan22-fun-5b-cam, model:wan22-fun-a14b-cam |
 | `waterloo.svg` | University of Waterloo | Original simple shield rendition of the University of Waterloo coat of arms | Public domain (simple seal rendition) | benchmark:genai-bench, benchmark:videoscore |
-| `worldfoundry.svg` | WorldFoundry | WorldFoundry site mark (docs/fumadocs/public/logo.svg) | Project brand mark | - |
 | `worldlabs.png` | World Labs | Organization brand avatar, pre-existing repo asset | Organization brand mark | model:worldlabs, model:worldlabs-marble-1.1 |
 | `x-humanoid.svg` | X-Humanoid (Beijing Humanoid Robot Innovation Center) | Original simple X monogram for the identity mark | Public domain (simple geometry) | model:wow |
-| `x-square.png` | X Square Robot | GitHub organization brand avatar (github.com/X-Square-Robot), pre-existing repo asset | Organization brand mark | - |
 | `xiaomi.svg` | Xiaomi Robotics | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF6900 | CC0-1.0 | model:x-wam, model:xiaomi-robotics-0, model:xiaomi-robotics-1 |
 | `zhipu.png` | Zhipu AI | https://commons.wikimedia.org/wiki/File:Zhipu_AI.png | Public domain (text logo) | model:cogvideox |
 | `zju.png` | Zhejiang University | Official university emblem published at https://www.zju.edu.cn/572/list.htm | Organization brand mark | model:a1, model:prior-depth-anything, model:spatial-ladder, model:track-anything-prior |

@@ -1,47 +1,26 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Play } from 'lucide-react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
-import { homeHeroSlides, type HomeHeroSlide } from '@/lib/home-hero-slides';
+import { homeHeroVideo } from '@/lib/home-hero-video';
 
 type ConnectionLike = EventTarget & {
   saveData?: boolean;
 };
 
-function slideAt(index: number, offset: number) {
-  const length = homeHeroSlides.length;
-  return homeHeroSlides[(index + offset + length) % length];
-}
-
 export function HomeHeroMedia({ children }: { children?: ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const [motionAllowed, setMotionAllowed] = useState(false);
   const [videoAllowed, setVideoAllowed] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
-  const [carouselVisible, setCarouselVisible] = useState(true);
+  const [heroVisible, setHeroVisible] = useState(true);
   const [videoReady, setVideoReady] = useState(false);
   const [playbackRequested, setPlaybackRequested] = useState(false);
   const [playing, setPlaying] = useState(false);
   const mountedRef = useRef(false);
 
-  const isCarousel = homeHeroSlides.length > 1;
-  const visibleSlides = useMemo(() => {
-    if (!isCarousel) {
-      const slide = homeHeroSlides[0];
-      return [{ offset: 0 as const, slide, key: slide.id }];
-    }
-
-    return ([-1, 0, 1] as const).map((offset) => ({
-      offset,
-      slide: slideAt(activeIndex, offset),
-      key: `${slideAt(activeIndex, offset).id}-${offset}`,
-    }));
-  }, [activeIndex, isCarousel]);
-
-  const activeSlide = homeHeroSlides[activeIndex];
-  const showVideo = activeSlide.kind === 'video' && ((videoAllowed && motionAllowed) || playbackRequested);
+  const showVideo = (videoAllowed && motionAllowed) || playbackRequested;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -104,7 +83,7 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
     if (!root || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setCarouselVisible(entry?.isIntersecting ?? true),
+      ([entry]) => setHeroVisible(entry?.isIntersecting ?? true),
       { threshold: 0.12 },
     );
     observer.observe(root);
@@ -119,7 +98,7 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
       setVideoReady(true);
     }
 
-    if (!pageVisible || !carouselVisible || !showVideo) {
+    if (!pageVisible || !heroVisible || !showVideo) {
       video.pause();
       return;
     }
@@ -129,146 +108,69 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
     void video.play().catch(() => {
       if (mountedRef.current) setPlaying(false);
     });
-  }, [carouselVisible, motionAllowed, pageVisible, showVideo, activeIndex]);
-
-  const goPrev = useCallback(() => {
-    setActiveIndex((current) => (current - 1 + homeHeroSlides.length) % homeHeroSlides.length);
-    setVideoReady(false);
-    setPlaybackRequested(false);
-    setPlaying(false);
-  }, []);
-
-  const goNext = useCallback(() => {
-    setActiveIndex((current) => (current + 1) % homeHeroSlides.length);
-    setVideoReady(false);
-    setPlaybackRequested(false);
-    setPlaying(false);
-  }, []);
-
-  function renderSlideMedia(slide: HomeHeroSlide, isActive: boolean) {
-    if (slide.kind === 'video') {
-      return (
-        <>
-          <img className="wf-home-hero-card-poster" src={slide.poster} alt="" aria-hidden="true" />
-          {isActive ? (
-            <video
-              ref={videoRef}
-              className={`wf-home-hero-card-video${videoReady ? ' is-ready' : ''}`}
-              src={showVideo ? slide.src : undefined}
-              poster={slide.poster}
-              autoPlay={showVideo}
-              loop
-              muted
-              playsInline
-              preload={showVideo ? 'auto' : 'none'}
-              aria-hidden="true"
-              tabIndex={-1}
-              onCanPlay={() => {
-                if (mountedRef.current) setVideoReady(true);
-              }}
-              onPlaying={() => setPlaying(true)}
-              onPause={() => setPlaying(false)}
-              onError={() => {
-                setPlaying(false);
-                setVideoReady(false);
-              }}
-            />
-          ) : null}
-        </>
-      );
-    }
-
-    return (
-      <img
-        className="wf-home-hero-card-image"
-        src={slide.src}
-        alt=""
-        aria-hidden="true"
-        loading={isActive ? 'eager' : 'lazy'}
-      />
-    );
-  }
+  }, [heroVisible, motionAllowed, pageVisible, showVideo]);
 
   return (
     <div className="wf-home-hero-carousel-shell" aria-label="World model showcase">
       <div className="wf-home-hero-carousel">
         <div className="wf-home-hero-carousel-viewport">
           <div className="wf-home-hero-carousel-track">
-            {visibleSlides.map(({ slide, offset, key }) => {
-              const isActive = offset === 0;
-              const showOverlay = isActive && children && slide.id === homeHeroSlides[0].id;
-              return (
-                <article
-                  key={key}
-                  className={`wf-home-hero-card${isActive ? ' is-active' : ''}${offset === -1 ? ' is-prev' : ''}${offset === 1 ? ' is-next' : ''}`}
-                  aria-hidden={!isActive}
-                >
-                  <div className="wf-home-hero-card-frame">
-                    <div className="wf-home-hero-card-media">
-                      {renderSlideMedia(slide, isActive)}
-                    </div>
-                    {showOverlay ? (
-                      <div className="wf-home-hero-card-overlay">{children}</div>
-                    ) : null}
-                    {isActive && slide.kind === 'video' && !playing ? (
-                      <button
-                        type="button"
-                        className="wf-home-hero-play"
-                        aria-label="Play background video"
-                        onClick={() => {
-                          const video = videoRef.current;
-                          if (!video) return;
-                          video.muted = true;
-                          video.defaultMuted = true;
-                          if (!video.getAttribute('src')) video.src = slide.src;
-                          setPlaybackRequested(true);
-                          void video.play().catch(() => setPlaying(false));
-                        }}
-                      >
-                        <Play aria-hidden="true" size={16} />
-                        Play video
-                      </button>
-                    ) : null}
-                  </div>
-                </article>
-              );
-            })}
+            <article className="wf-home-hero-card is-active">
+              <div className="wf-home-hero-card-frame">
+                <div className="wf-home-hero-card-media">
+                  <img className="wf-home-hero-card-poster" src={homeHeroVideo.poster} alt="" aria-hidden="true" />
+                  <video
+                    ref={videoRef}
+                    className={`wf-home-hero-card-video${videoReady ? ' is-ready' : ''}`}
+                    src={showVideo ? homeHeroVideo.src : undefined}
+                    poster={homeHeroVideo.poster}
+                    autoPlay={showVideo}
+                    loop
+                    muted
+                    playsInline
+                    preload={showVideo ? 'auto' : 'none'}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    onCanPlay={() => {
+                      if (mountedRef.current) setVideoReady(true);
+                    }}
+                    onPlaying={() => setPlaying(true)}
+                    onPause={() => setPlaying(false)}
+                    onError={() => {
+                      setPlaying(false);
+                      setVideoReady(false);
+                    }}
+                  />
+                </div>
+                {children ? <div className="wf-home-hero-card-overlay">{children}</div> : null}
+                {playing ? null : (
+                  <button
+                    type="button"
+                    className="wf-home-hero-play"
+                    aria-label="Play background video"
+                    onClick={() => {
+                      const video = videoRef.current;
+                      if (!video) return;
+                      video.muted = true;
+                      video.defaultMuted = true;
+                      if (!video.getAttribute('src')) video.src = homeHeroVideo.src;
+                      setPlaybackRequested(true);
+                      void video.play().catch(() => setPlaying(false));
+                    }}
+                  >
+                    <Play aria-hidden="true" size={16} />
+                    Play video
+                  </button>
+                )}
+              </div>
+            </article>
           </div>
         </div>
 
         <div className="wf-home-hero-carousel-caption" aria-live="polite">
-          <strong>{activeSlide.label}</strong>
-          <span>{activeSlide.caption}</span>
+          <strong>{homeHeroVideo.label}</strong>
+          <span>{homeHeroVideo.caption}</span>
         </div>
-
-        {isCarousel ? (
-          <div className="wf-home-hero-carousel-controls">
-            <button type="button" className="wf-home-hero-carousel-nav" aria-label="Previous demo" onClick={goPrev}>
-              <ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
-            </button>
-            <div className="wf-home-hero-carousel-dots" role="tablist" aria-label="Demo selection">
-              {homeHeroSlides.map((slide, index) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === activeIndex}
-                  aria-label={slide.label}
-                  className={index === activeIndex ? 'is-active' : undefined}
-                  onClick={() => {
-                    setActiveIndex(index);
-                    setVideoReady(false);
-                    setPlaybackRequested(false);
-                    setPlaying(false);
-                  }}
-                />
-              ))}
-            </div>
-            <button type="button" className="wf-home-hero-carousel-nav" aria-label="Next demo" onClick={goNext}>
-              <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
-            </button>
-          </div>
-        ) : null}
       </div>
     </div>
   );

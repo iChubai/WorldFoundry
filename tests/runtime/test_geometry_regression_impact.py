@@ -12,6 +12,7 @@ import pytest
 
 TOOLS = Path(__file__).resolve().parents[1] / "manual"
 spec = importlib.util.spec_from_file_location("impact_under_test", TOOLS / "geometry_regression_impact.py")
+assert spec is not None and spec.loader is not None
 impact = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(impact)
 

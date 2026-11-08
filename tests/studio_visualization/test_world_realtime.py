@@ -2578,26 +2578,28 @@ def test_interactive_call_kwargs_add_realtime_axes_only_when_declared() -> None:
     assert with_axes["realtime_segments"] == without_axes["realtime_segments"]
 
 
-def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch: pytest.MonkeyPatch) -> None:
+class _FakeChannel:
+    readyState = "open"
+
+    def __init__(self, label: str) -> None:
+        self.label = label
+        self.handlers: dict[str, Callable[..., Any]] = {}
+        self.sent: list[dict[str, Any]] = []
+
+    def on(self, name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        def register(handler: Callable[..., Any]) -> Callable[..., Any]:
+            self.handlers[name] = handler
+            return handler
+
+        return register
+
+    def send(self, raw: str) -> None:
+        self.sent.append(json.loads(raw))
+
+
+def _install_fake_aiortc(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
+    """Replace aiortc and the video track with fakes; return the peer connections ``create_answer`` builds."""
     peers_created: list[Any] = []
-
-    class FakeChannel:
-        readyState = "open"
-
-        def __init__(self, label: str) -> None:
-            self.label = label
-            self.handlers: dict[str, Callable[..., Any]] = {}
-            self.sent: list[dict[str, Any]] = []
-
-        def on(self, name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-            def register(handler: Callable[..., Any]) -> Callable[..., Any]:
-                self.handlers[name] = handler
-                return handler
-
-            return register
-
-        def send(self, raw: str) -> None:
-            self.sent.append(json.loads(raw))
 
     class FakePeerConnection:
         connectionState = "new"
@@ -2642,6 +2644,11 @@ def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch
     monkeypatch.setattr(realtime_backend, "bind_video_sender", lambda *_args: None)
     monkeypatch.setattr(realtime_backend, "_configure_nvenc_h264", lambda *_args: None)
     monkeypatch.setattr(realtime_backend, "_wait_for_ice_gathering", no_ice_wait)
+    return peers_created
+
+
+def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    peers_created = _install_fake_aiortc(monkeypatch)
 
     class Runtime:
         queued_segment_generation = False
@@ -2670,7 +2677,7 @@ def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch
         assert active.resampler.axes == Runtime.realtime_spec.axes
         try:
             on_datachannel = peers_created[0].handlers["datachannel"]
-            controls = FakeChannel("controls")
+            controls = _FakeChannel("controls")
             on_datachannel(controls)
             assert active.channel is controls
             assert [message["type"] for message in controls.sent] == ["ready"]
@@ -2678,7 +2685,7 @@ def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch
             assert all(task is not None for task in tasks)
             active.resampler.on_edge(arrival_time=asyncio.get_running_loop().time(), event="keydown", key="w")
 
-            axes = FakeChannel("axes")
+            axes = _FakeChannel("axes")
             on_datachannel(axes)
             assert active.channel is controls
             assert (active.generation_task, active.liveness_task, active.input_task) == tasks
@@ -2927,5 +2934,113 @@ def test_continuous_controls_session_advances_without_held_keys() -> None:
             assert [chunk["interactions"] for chunk in _chunks_done(sink)] == [[], []]
         finally:
             await _stop_worker(active, worker)
+
+    asyncio.run(exercise())
+
+
+class _ContinuousSpecRuntime:
+    """Resident runtime reporting the native Self-Forcing spec; generation waits until the session closes."""
+
+    queued_segment_generation = False
+    entry = types.SimpleNamespace(default_prompt="fox", default_call_kwargs={})
+    realtime_spec = RealtimeSpec(controls=("prompt_update",), keys=(), advance="continuous", max_chunks=7)
+    transport_native_resolution = None
+    supports_text_events = True
+    last_generation_metrics: dict[str, float] = {}
+    preserve_cuda_frames = False
+
+    async def configure(self, **_kwargs: Any) -> None:
+        pass
+
+    async def reset(self) -> None:
+        pass
+
+    def steady_chunk_frames(self, _default: int) -> int:
+        return self.realtime_spec.steady_chunk_frames
+
+    async def generate(self, _interactions: list[str], **_kwargs: Any) -> tuple[list[np.ndarray], float]:
+        await asyncio.Event().wait()
+        raise AssertionError("unreachable")
+
+
+CONTINUOUS_READY_STATE = {"advance": "continuous", "rollout_chunks": 0, "max_chunks": 7, "paused": False}
+
+
+def test_create_answer_maps_continuous_spec_onto_the_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    peers_created = _install_fake_aiortc(monkeypatch)
+
+    async def exercise() -> None:
+        manager = RealtimePeerManager(runtime=cast(Any, _ContinuousSpecRuntime()), fps=16, chunk_frames=9)
+        await manager.create_answer(offer={"sdp": "offer-sdp", "type": "offer"}, session={})
+        active = manager._active
+        assert active is not None
+        try:
+            assert active.continuous is True
+            assert active.max_chunks == 7
+            assert active.prompt_scheduled is True
+            assert active.frames.policy is FrameQueuePolicy.ORDERED_QUALITY
+            controls = _FakeChannel("controls")
+            peers_created[0].handlers["datachannel"](controls)
+            ready = controls.sent[0]
+            assert ready["type"] == "ready"
+            assert ready["frame_queue_policy"] == FrameQueuePolicy.ORDERED_QUALITY.value
+            assert {name: ready[name] for name in CONTINUOUS_READY_STATE} == CONTINUOUS_READY_STATE
+            assert active.first_action.is_set()
+        finally:
+            await manager.close_active()
+
+    asyncio.run(exercise())
+
+
+def test_serve_socket_maps_continuous_spec_onto_the_session() -> None:
+    from aiohttp import WSMsgType
+
+    class Socket:
+        closed = False
+
+        def __init__(self) -> None:
+            self.messages: list[dict[str, Any]] = []
+            self.release = asyncio.Event()
+
+        async def receive(self) -> object:
+            return types.SimpleNamespace(type=WSMsgType.TEXT, data=json.dumps({"type": "configure", "session": {}}))
+
+        async def send_str(self, raw: str) -> None:
+            self.messages.append(json.loads(raw))
+
+        async def send_bytes(self, _packet: bytes) -> None:
+            pass
+
+        async def close(self) -> None:
+            self.closed = True
+
+        def __aiter__(self) -> Socket:
+            return self
+
+        async def __anext__(self) -> object:
+            await self.release.wait()
+            raise StopAsyncIteration
+
+    async def exercise() -> None:
+        socket = Socket()
+        manager = RealtimePeerManager(runtime=cast(Any, _ContinuousSpecRuntime()), fps=16, chunk_frames=9)
+        serving = asyncio.create_task(manager.serve_socket(socket))
+        try:
+            await asyncio.wait_for(
+                _wait_for_condition(lambda: any(message["type"] == "ready" for message in socket.messages)), 5
+            )
+            active = manager._active_socket
+            assert active is not None
+            assert active.continuous is True
+            assert active.max_chunks == 7
+            assert active.prompt_scheduled is True
+            assert active.frame_queue_policy is FrameQueuePolicy.ORDERED_QUALITY
+            ready = next(message for message in socket.messages if message["type"] == "ready")
+            assert ready["frame_queue_policy"] == FrameQueuePolicy.ORDERED_QUALITY.value
+            assert {name: ready[name] for name in CONTINUOUS_READY_STATE} == CONTINUOUS_READY_STATE
+        finally:
+            socket.release.set()
+            await asyncio.wait_for(serving, 10)
+        assert socket.closed is True
 
     asyncio.run(exercise())

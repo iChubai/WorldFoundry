@@ -142,8 +142,9 @@ class _Codec:
 class _HookRecorder(DiffusionExtension):
     extension_id = "hook-recorder"
 
-    def __init__(self, events: list[str]) -> None:
+    def __init__(self, events: list[str], final_latents: list[torch.Tensor] | None = None) -> None:
         self.events = events
+        self.final_latents = final_latents if final_latents is not None else []
 
     def on_run_start(self, context):
         self.events.append("on_run_start")
@@ -158,6 +159,7 @@ class _HookRecorder(DiffusionExtension):
 
     def on_diffusion_complete(self, context):
         self.events.append("on_diffusion_complete")
+        self.final_latents.append(context.final_latents.clone())
 
     def after_decode(self, context, sample):
         self.events.append("after_decode")
@@ -191,6 +193,7 @@ def _runner(
     *,
     denoiser: _WindowDenoiser | None = None,
     events: list[str] | None = None,
+    final_latents: list[torch.Tensor] | None = None,
 ) -> tuple[AutoregressiveWindowRunner, _WindowDenoiser]:
     spec = _CASES[case]
     denoiser = denoiser or _WindowDenoiser()
@@ -208,7 +211,7 @@ def _runner(
         fixed_timesteps=(1000, 750, 500, 250) if distilled else (),
         context_timestep=spec.context_timestep,
         renoise_dtype=spec.renoise_dtype,
-        extensions=(_HookRecorder(events if events is not None else []),),
+        extensions=(_HookRecorder(events if events is not None else [], final_latents),),
     )
     return runner, denoiser
 
@@ -227,13 +230,18 @@ def _request(case: str, *, seed: int = 11, prompt: str = "a window") -> Diffusio
     )
 
 
-def _assemble(case: str, blocks: Sequence[torch.Tensor], frames: Sequence[tuple[int, int]]) -> torch.Tensor:
-    """Place step() blocks into a BCTHW buffer in the runner's (V T) output layout."""
+def _assemble(
+    case: str,
+    stream: AutoregressiveStream,
+    blocks: Sequence[torch.Tensor],
+    frames: Sequence[tuple[int, int]],
+) -> torch.Tensor:
+    """Place the stream's first frame and step() blocks into a BCTHW buffer in the runner's (V T) output layout."""
 
     spec = _CASES[case]
     output = torch.zeros(1, 1, spec.n_views, spec.frames, 2, 2)
-    if spec.first_frame:
-        output[:, :, :, :1] = 0.25
+    if stream.first_frame_latent is not None:
+        output[:, :, :, :1] = rearrange(stream.first_frame_latent, "B C (V T) H W -> B C V T H W", V=spec.n_views)
     for block, (start, end) in zip(blocks, frames):
         output[:, :, :, start:end] = rearrange(block, "B C (V T) H W -> B C V T H W", V=spec.n_views)
     return rearrange(output, "B C V T H W -> B C (V T) H W")
@@ -603,20 +611,31 @@ def _step_all(stream: AutoregressiveStream) -> tuple[list[torch.Tensor], list[tu
 @pytest.mark.parametrize("case", sorted(_CASES))
 def test_stream_blocks_assemble_to_run_latents(case: str) -> None:
     events: list[str] = []
-    runner, denoiser = _runner(case, events=events)
+    final_latents: list[torch.Tensor] = []
+    runner, denoiser = _runner(case, events=events, final_latents=final_latents)
     stream = runner.open_stream(_request(case))
     assert stream.completed_blocks == 0
     assert stream.last_block_frames is None
+    assert (stream.first_frame_latent is not None) == _CASES[case].first_frame
     blocks, frames = _step_all(stream)
     assert stream.total_blocks == len(blocks)
     stream.close()
 
     expected_steps = _EXPECTED_EVENTS[case].count("after_step")
-    assert events == ["on_run_start", "prepare_conditioning", *["after_step"] * expected_steps, "on_run_end"]
+    assert events == [
+        "on_run_start",
+        "prepare_conditioning",
+        *["after_step"] * expected_steps,
+        "on_diffusion_complete",
+        "on_run_end",
+    ]
     assert denoiser.trace == _EXPECTED_TRACE[case]
     assert [error for _, error in denoiser.end_calls] == [None]
     assert denoiser.live_caches() == 0
-    assert torch.equal(_assemble(case, blocks, frames), runner.run(_request(case)).latents)
+    assembled = _assemble(case, stream, blocks, frames)
+    assert len(final_latents) == 1
+    assert torch.equal(final_latents[0], assembled)
+    assert torch.equal(assembled, runner.run(_request(case)).latents)
 
 
 @pytest.mark.parametrize("case", ["flow-cfg", "distilled-x0-views"])
@@ -646,6 +665,7 @@ def test_close_mid_rollout_releases_caches_and_ends_run_once() -> None:
     stream.close()
 
     assert events.count("on_run_end") == 1
+    assert "on_diffusion_complete" not in events
     assert not any(event.startswith("on_run_error") for event in events)
     assert [error for _, error in denoiser.end_calls] == [None]
     assert denoiser.live_caches() == 0
@@ -681,7 +701,7 @@ def test_step_failure_closes_stream_and_next_stream_matches_fresh_run() -> None:
     blocks, frames = _step_all(recovered)
     recovered.close()
     reference, _ = _runner("flow-cfg")
-    assert torch.equal(_assemble("flow-cfg", blocks, frames), reference.run(_request("flow-cfg")).latents)
+    assert torch.equal(_assemble("flow-cfg", recovered, blocks, frames), reference.run(_request("flow-cfg")).latents)
 
 
 def test_runner_allows_one_active_stream() -> None:
@@ -699,5 +719,23 @@ def test_runner_allows_one_active_stream() -> None:
     assert first_frames == (0, 2)
     blocks, frames = _step_all(stream)
     stream.close()
-    assembled = _assemble("flow-cfg", [first, *blocks], [first_frames, *frames])
+    assembled = _assemble("flow-cfg", stream, [first, *blocks], [first_frames, *frames])
     assert torch.equal(assembled, runner.run(_request("flow-cfg")).latents)
+
+
+def test_first_frame_only_request_completes_at_open(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(_CASES, "first-frame-only", _Case(mode="flow", frames=1, guidance=3.0, first_frame=True))
+    events: list[str] = []
+    final_latents: list[torch.Tensor] = []
+    runner, _ = _runner("first-frame-only", events=events, final_latents=final_latents)
+    stream = runner.open_stream(_request("first-frame-only"))
+    assert stream.done and stream.total_blocks == 0
+    assert stream.first_frame_latent is not None
+    assert len(final_latents) == 1
+    assert torch.equal(final_latents[0], stream.first_frame_latent)
+    stream.close()
+
+    output = runner.run(_request("first-frame-only"))
+    assert torch.equal(output.latents, stream.first_frame_latent)
+    assert events[-3:] == ["on_diffusion_complete", "after_decode", "on_run_end"]
+    assert len(final_latents) == 2

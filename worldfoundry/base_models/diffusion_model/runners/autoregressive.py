@@ -405,7 +405,6 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             state = stream._state
             assert state is not None
             latents = rearrange(state.output_by_view, "B C V T H W -> B C (V T) H W")
-            self._notify_diffusion_complete(context, latents)
             sample = self.components.decoder.decode(latents, request)
             output_frames = stream._output_num_frames
             if output_frames is not None and not request.inputs.get("return_latent", False):
@@ -427,7 +426,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     "prediction_mode": self.prediction_mode,
                     "block_size": stream._block_size,
                     "n_views": stream._n_views,
-                    "first_frame_conditioned": stream._first_frame_conditioned,
+                    "first_frame_conditioned": stream.first_frame_latent is not None,
                     "kv_prefix_frames": stream._prefix_frames,
                 },
             )
@@ -456,7 +455,8 @@ class AutoregressiveStream:
     Created by :meth:`AutoregressiveWindowRunner.open_stream`. The stream owns the
     run context, generator, KV caches, full-length initial noise and latent buffer,
     so stepping to completion reproduces :meth:`AutoregressiveWindowRunner.run`
-    bitwise. Decoding stays with the caller (for example
+    bitwise, including one ``on_diffusion_complete`` once every block is
+    committed. Decoding stays with the caller (for example
     ``WanVideoDecoder.new_stream_state()`` / ``decode_chunk()``).
 
     :meth:`close` releases the caches and runs extension ``on_run_end`` once; it is
@@ -592,6 +592,13 @@ class AutoregressiveStream:
                         conditioning=negative_seed,
                     )
                 start_frame = 1
+            if start_frame >= frames_per_view:
+                # A first-frame-only request has no noisy blocks; the committed
+                # first frame is already the complete rollout.
+                runner._notify_diffusion_complete(
+                    context,
+                    rearrange(output_by_view, "B C V T H W -> B C (V T) H W"),
+                )
         except BaseException as error:
             try:
                 if context is not None:
@@ -607,7 +614,11 @@ class AutoregressiveStream:
         self._frames_per_view = frames_per_view
         self._block_size = block_size
         self._prefix_frames = prefix_frames
-        self._first_frame_conditioned = first_frame_latent is not None
+        self._first_frame_latent = (
+            None
+            if first_frame_latent is None
+            else rearrange(output_by_view[:, :, :, :1], "B C V T H W -> B C (V T) H W").clone()
+        )
         self._frame_sequence_length = frame_sequence_length
         self._output_num_frames = cast(int | None, shared.get("output_num_frames"))
         self._block_starts = tuple(range(start_frame, frames_per_view, block_size))
@@ -640,13 +651,23 @@ class AutoregressiveStream:
         """Per-view latent frame range ``[start, end)`` of the latest :meth:`step`, or ``None`` before it."""
         return self._last_block_frames
 
+    @property
+    def first_frame_latent(self) -> Tensor | None:
+        """Committed frame-0 latent ``B C 1 H W`` of a first-frame request, or ``None``.
+
+        :meth:`step` starts after this frame, so streaming decoders take it from here.
+        """
+        return self._first_frame_latent
+
     @torch.no_grad()
     def step(self) -> Tensor:
         """Denoise the next block, commit it to the KV caches, and return its latents.
 
         The result is a ``B C (V T) H W`` slice of the stream's latent buffer in the
         layout of ``DiffusionOutput.latents``, covering :attr:`last_block_frames` of
-        every view. Stepping a closed or finished stream raises :exc:`RuntimeError`;
+        every view. The step that commits the last block also runs extension
+        ``on_diffusion_complete`` with the full latent buffer. Stepping a closed
+        or finished stream raises :exc:`RuntimeError`;
         any other failure closes the stream through ``on_run_error`` and re-raises.
         """
         state = self._state
@@ -744,11 +765,16 @@ class AutoregressiveStream:
                     branch="negative-cache-commit",
                     conditioning=negative,
                 )
+            self._completed_blocks += 1
+            self._last_block_frames = (start, end)
+            if self.done:
+                runner._notify_diffusion_complete(
+                    context,
+                    rearrange(state.output_by_view, "B C V T H W -> B C (V T) H W"),
+                )
         except BaseException as error:
             self._finish(error)
             raise
-        self._completed_blocks += 1
-        self._last_block_frames = (start, end)
         return rearrange(state.output_by_view[:, :, :, start:end], "B C V T H W -> B C (V T) H W")
 
     def close(self) -> None:

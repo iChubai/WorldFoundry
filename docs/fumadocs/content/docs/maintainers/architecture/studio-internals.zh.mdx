@@ -180,7 +180,8 @@ STEP 或 prompt 更新时生成。`continuous` 会话（例如原生 Self-Forcin
 chunk，worker 立即启动下一个，直到当前 rollout 达到 `max_chunks` 个 chunk；帧队列使用
 `ordered-quality`，生成最多领先播放一个帧队列。`{"type": "pause"}` 与 `{"type": "resume"}`
 停止和恢复自动前进，分别以 `pause_ack` / `resume_ack` 确认。新 prompt 会重开模型 rollout
-并把 chunk 计数归零；在已完成的 rollout 上继续生成的请求会被丢弃。continuous 会话的
+并把 chunk 计数归零。rollout 已完成时，STEP 返回 `ok: false` 的 `step_ack`，其他继续生成的
+请求会被丢弃。continuous 会话的
 `ready`、`chunk_done` 和上述两种确认都带有 `advance`、`rollout_chunks`、`max_chunks` 与
 `paused`。
 

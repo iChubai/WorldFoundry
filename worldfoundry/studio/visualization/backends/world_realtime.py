@@ -2272,6 +2272,18 @@ class RealtimePeerManager:
                     "request_id": request_id,
                     "message": "Queued segment models require their next control videos.",
                 }
+            if (
+                active.continuous
+                and active.max_chunks is not None
+                and active.rollout_chunks >= active.max_chunks
+                and not active.pending_prompt_dirty
+            ):
+                return {
+                    "type": "step_ack",
+                    "ok": False,
+                    "request_id": request_id,
+                    "message": "The rollout is complete; send a new prompt to start another.",
+                }
             active.pending_steps += 1
             arrival = asyncio.get_running_loop().time()
             active.action_arrivals.append(arrival)

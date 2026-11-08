@@ -26,6 +26,7 @@ from worldfoundry.studio.inference.execution import (
 )
 from worldfoundry.studio.serving.realtime.input import RealtimeInputChunk
 from worldfoundry.studio.serving.realtime.media import FrameQueuePolicy
+from worldfoundry.studio.serving.realtime.telemetry import DeliveryTelemetry
 from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
 from worldfoundry.studio.visualization.backends import world_realtime as realtime_backend
 from worldfoundry.studio.visualization.backends.world import world_frontend_html
@@ -2843,8 +2844,20 @@ def test_continuous_session_prompt_update_restarts_rollout_count(transport: str)
         try:
             await asyncio.wait_for(_wait_for_condition(lambda: len(_chunks_done(sink)) >= 2), 5)
             await _settle()
-            # A complete rollout has no blocks left: STEP and the unchanged prompt are dropped.
+            if isinstance(active, _ActivePeer):
+                active.telemetry = DeliveryTelemetry(lambda _message: None)
+            # A complete rollout has no blocks left: STEP is rejected and the unchanged prompt is dropped.
             await _handle_axis_message(peers, active, {"type": "step", "request_id": "step-1"})
+            step_ack = next(message for message in sink.messages if message["type"] == "step_ack")
+            assert step_ack == {
+                "type": "step_ack",
+                "ok": False,
+                "request_id": "step-1",
+                "message": "The rollout is complete; send a new prompt to start another.",
+            }
+            if isinstance(active, _ActivePeer):
+                assert active.telemetry is not None
+                assert list(active.telemetry.step_controls) == []
             await _handle_axis_message(peers, active, {"type": "prompt_update", "prompt": " fox "})
             await _settle()
             assert runtime.prompts == [None, None]

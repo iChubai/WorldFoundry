@@ -184,7 +184,8 @@ current rollout exist, using `ordered-quality` so generation stays at most one
 frame queue ahead of playback. `{"type": "pause"}` and `{"type": "resume"}`
 stop and restart auto-advance and are acknowledged as `pause_ack` /
 `resume_ack`. A new prompt reopens the model rollout and restarts the chunk
-count; work that would continue a finished rollout is dropped. In continuous
+count. On a finished rollout STEP returns `step_ack` with `ok: false`, and
+other work that would continue it is dropped. In continuous
 sessions `ready`, `chunk_done`, and both acknowledgements carry `advance`,
 `rollout_chunks`, `max_chunks`, and `paused`.
 

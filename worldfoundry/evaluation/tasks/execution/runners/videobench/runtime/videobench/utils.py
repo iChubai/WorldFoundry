@@ -1,8 +1,6 @@
 import base64
 import json
-import os
 import re
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -60,7 +58,7 @@ class Video_Dataset:
     def process_video(self, videos_dict, extract_frames_persecond=2, resize_fx=1, resize_fy=1):
         """Process videos from a dictionary of model:path pairs"""
         # 只为videos_dict中存在的模型创建条目
-        base64Frames = {model: [] for model in videos_dict.keys()}
+        base64Frames = {model: [] for model in videos_dict}
 
         # Process each video in the dictionary
         for model_name, video_path in videos_dict.items():
@@ -72,7 +70,7 @@ class Video_Dataset:
     def process_video2gridview(self, videos_dict, extract_frames_persecond=8):
         """Process videos for grid view"""
         # 只为videos_dict中存在的模型创建条目
-        base64Frames = {model: [] for model in videos_dict.keys()}
+        base64Frames = {model: [] for model in videos_dict}
 
         def process_video(model_name, video_path):
             frames = []

@@ -1,7 +1,6 @@
 import argparse
 import json
 import os
-from datetime import datetime
 
 from videobench import VideoBench
 

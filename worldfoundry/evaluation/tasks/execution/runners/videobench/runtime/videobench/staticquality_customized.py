@@ -1,11 +1,7 @@
-import json
 import logging
-import os
 import re
 
-import openai
 from openai import OpenAI
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from .utils import Video_Dataset
 
@@ -69,12 +65,12 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                                 ]
                             ],
                             "These are the frames from the video you are evaluating. \n",
-                            *map(
-                                lambda x: {
+                            *(
+                                {
                                     "type": "image_url",
                                     "image_url": {"url": f"data:image/jpg;base64,{x}", "detail": "low"},
-                                },
-                                frames[modelname],
+                                }
+                                for x in frames[modelname]
                             ),
                             "Assuming there are a video ' scoring 'x',provide your analysis and explanation in the output format as follows:\n"
                             "- video: x ,because ...",
@@ -87,10 +83,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 logger.info(f">>>>>>>This is the {i} round >>>>>>evaluation results>>>>>>:\n{response_content}\n")
 
                 match = re.search(r":\s*(\d+)", response_content)
-                if match:
-                    video_score = int(match.group(1))
-                else:
-                    video_score = "Error"
+                video_score = int(match.group(1)) if match else "Error"
                 results[i][modelname] = video_score
 
                 # 将最终评分累加到模型总分中

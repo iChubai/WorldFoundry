@@ -1,6 +1,4 @@
-import importlib
 import os
-from itertools import chain
 from pathlib import Path
 
 from .utils import get_prompt_from_filename, load_json, save_json
@@ -39,21 +37,18 @@ class VideoBench:
     def check_dimension_requires_extra_info(self, dimension_list):
         """Check if any dimension requires extra information"""
         VideoTextConsistency_dimensions = ["color", "object_class", "scene", "action", "video-text consistency"]
-        for dim in dimension_list:
-            if dim in VideoTextConsistency_dimensions:
-                return True
-        return False
+        return any(dim in VideoTextConsistency_dimensions for dim in dimension_list)
 
     def build_full_info_json(
         self,
         videos_path,
         name,
         dimension_list,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Read-only default; retain the public signature.
         special_str="",
         verbose=True,
         mode="standard",
-        models=[],
+        models=[],  # noqa: B006 - Read-only default; retain the public signature.
         **kwargs,
     ):
         """Build full info JSON file containing video paths and prompts"""
@@ -74,7 +69,7 @@ class VideoBench:
 
         if mode == "custom_nonstatic":
             self.check_dimension_requires_extra_info(dimension_list)
-            actual_dimensions = set(dimension_mapping[dim] for dim in dimension_list)
+            actual_dimensions = {dimension_mapping[dim] for dim in dimension_list}
 
             # 处理 prompt_list
             prompts_to_process = []
@@ -122,10 +117,10 @@ class VideoBench:
                 )
 
             # 获取实际的数据目录
-            actual_dimensions = set(dimension_mapping[dim] for dim in dimension_list)
+            actual_dimensions = {dimension_mapping[dim] for dim in dimension_list}
 
             # 获取 videos_path 下的所有 model_name
-            model_names = [d for d in os.listdir(videos_path) if os.path.isdir(os.path.join(videos_path, d))]
+            _model_names = [d for d in os.listdir(videos_path) if os.path.isdir(os.path.join(videos_path, d))]
 
             # 从 full_info_dir 中加载所有 prompts
             full_info_list = load_json(self.full_info_dir)
@@ -207,9 +202,9 @@ class VideoBench:
                     videos_dict = {}
 
                     # 获取实际的数据目录
-                    actual_dimensions = set(
+                    actual_dimensions = {
                         dimension_mapping[dim] for dim in dimension_list if dim in prompt_dict["dimension"]
-                    )
+                    }
 
                     # 遍历每个实际维度目录
                     for actual_dim in actual_dimensions:
@@ -258,7 +253,7 @@ class VideoBench:
                                 )
 
                             # 将每个后缀的分组信息添加到 cur_full_info_list
-                            for idx, videos_dict in suffix_videos.items():
+                            for _idx, videos_dict in suffix_videos.items():
                                 if videos_dict:  # 确保分组中有视频
                                     cur_full_info_list.append(
                                         {"prompt_en": prompt, "dimension": dimension_list, "videos": videos_dict}
@@ -269,7 +264,7 @@ class VideoBench:
         print(f"Evaluation meta data saved to {cur_full_info_path}")
         return cur_full_info_path
 
-    def evaluate_dimension(self, dimension, videos_path, name, dimension_list, prompt_list, mode, models=[], **kwargs):
+    def evaluate_dimension(self, dimension, videos_path, name, dimension_list, prompt_list, mode, models=[], **kwargs):  # noqa: B006 - Read-only default; retain the public signature.
         """Evaluate a single dimension by importing and running its module"""
         # 只传入当前维度
         cur_dimension_list = [dimension]
@@ -327,7 +322,7 @@ class VideoBench:
             print(f"Error evaluating {dimension}: {e}")
             return {"error": str(e)}
 
-    def evaluate(self, videos_path, name, dimension_list=None, mode="standard", models=[], prompt_list=[], **kwargs):
+    def evaluate(self, videos_path, name, dimension_list=None, mode="standard", models=[], prompt_list=[], **kwargs):  # noqa: B006 - Read-only default; retain the public signature.
         """
         Run evaluation on specified dimensions
 

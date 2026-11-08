@@ -1,9 +1,6 @@
-import json
 import logging
-import os
 import re
 
-import openai
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
@@ -78,12 +75,12 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_frames_content.extend(
                     [
                         f"\n{len(model_frames)} frames from {model_name}\n",
-                        *map(
-                            lambda x: {
+                        *(
+                            {
                                 "type": "image_url",
                                 "image_url": {"url": f"data:image/jpg;base64,{x}", "detail": "low"},
-                            },
-                            model_frames,
+                            }
+                            for x in model_frames
                         ),
                     ]
                 )

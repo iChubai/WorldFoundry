@@ -15,7 +15,7 @@ def all2all(tensor, scatter_dim, gather_dim, cur_group, async_op):
         async_op: The async op.
     """
     group_size = dist.get_world_size(group=cur_group)
-    scatter_tensor_list = list(chunk.contiguous() for chunk in torch.chunk(tensor, chunks=group_size, dim=scatter_dim))
+    scatter_tensor_list = [chunk.contiguous() for chunk in torch.chunk(tensor, chunks=group_size, dim=scatter_dim)]
     gather_tensor_list = [torch.zeros_like(x) for x in scatter_tensor_list]
     comm = dist.all_to_all(gather_tensor_list, scatter_tensor_list, group=cur_group, async_op=async_op)
     if async_op:

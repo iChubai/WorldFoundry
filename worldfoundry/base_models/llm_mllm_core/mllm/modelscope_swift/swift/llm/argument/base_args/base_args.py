@@ -234,7 +234,7 @@ class BaseArguments(
         self.load_data_args = True
         self.ckpt_dir = checkpoint_dir
         self.load_args_from_ckpt()
-        all_keys = list(f.name for f in fields(BaseArguments))
+        all_keys = [f.name for f in fields(BaseArguments)]
         for key in all_keys:
             if not hasattr(self, key):
                 setattr(self, key, None)
@@ -286,7 +286,7 @@ class BaseArguments(
             "response_prefix",
         ]
 
-        data_keys = list(f.name for f in fields(DataArguments))
+        data_keys = [f.name for f in fields(DataArguments)]
         for key, old_value in old_args.items():
             if old_value is None:
                 continue

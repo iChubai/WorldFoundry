@@ -15,7 +15,7 @@ from copy import deepcopy
 
 try:
     from collections.abc import Iterable
-    from typing import Literal, NotRequired, Optional, Required, TypedDict
+    from typing import Literal, NotRequired, Required, TypedDict
 except ImportError:
     from collections.abc import Iterable
     from typing import Literal

@@ -151,7 +151,7 @@ evaluation = {
 
 gradient_checkpointing = True  # for text encoder
 use_flash_sdp = False
-use_mem_efficient_sdp = False and not use_flash_sdp
+use_mem_efficient_sdp = False
 compile_model = False
 
 # ========================= optimizer ==========================

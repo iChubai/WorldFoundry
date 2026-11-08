@@ -223,7 +223,7 @@ def setup_for_distributed(is_master):
 def is_dist_avail_and_initialized():
     if not dist.is_available():
         return False
-    return not (not dist.is_initialized())
+    return dist.is_initialized()
 
 
 def get_world_size():

@@ -172,7 +172,4 @@ def has_batchnorms(model: nn.Module) -> bool:
         The return value.
     """
     bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.SyncBatchNorm)
-    for _, module in model.named_modules():
-        if isinstance(module, bn_types):
-            return True
-    return False
+    return any(isinstance(module, bn_types) for _, module in model.named_modules())

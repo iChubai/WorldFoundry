@@ -214,7 +214,7 @@ class RepViTBlock(nn.Module):
                 nn.Sequential(
                     # pw
                     Conv2d_BN(oup, 2 * oup, 1, 1, 0),
-                    nn.GELU() if use_hs else nn.GELU(),
+                    nn.GELU(),
                     # pw-linear
                     Conv2d_BN(2 * oup, oup, 1, 1, 0, bn_weight_init=0),
                 )
@@ -230,7 +230,7 @@ class RepViTBlock(nn.Module):
                     nn.Sequential(
                         # pw
                         Conv2d_BN(inp, hidden_dim, 1, 1, 0),
-                        nn.GELU() if use_hs else nn.GELU(),
+                        nn.GELU(),
                         # pw-linear
                         Conv2d_BN(hidden_dim, oup, 1, 1, 0, bn_weight_init=0),
                     )
@@ -239,7 +239,7 @@ class RepViTBlock(nn.Module):
                 self.channel_mixer = nn.Sequential(
                     # pw
                     Conv2d_BN(inp, hidden_dim, 1, 1, 0),
-                    nn.GELU() if use_hs else nn.GELU(),
+                    nn.GELU(),
                     # pw-linear
                     Conv2d_BN(hidden_dim, oup, 1, 1, 0, bn_weight_init=0),
                 )

@@ -104,11 +104,7 @@ class CoCa(nn.Module):
             cast_dtype=cast_dtype,
         )
 
-        vocab_size = (
-            text_cfg.vocab_size  # for hf models
-            if hasattr(text_cfg, "hf_model_name") and text_cfg.hf_model_name is not None
-            else text_cfg.vocab_size
-        )
+        vocab_size = text_cfg.vocab_size
 
         self.visual = _build_vision_tower(
             embed_dim=embed_dim,

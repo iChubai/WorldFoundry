@@ -114,74 +114,24 @@ def actp(Gij: SE3, X0: torch.Tensor, compute_jp: bool = False):
         N = d.shape[0]
 
         if isinstance(Gij, SE3):
-            Jp = torch.stack(
-                [
-                    # fmt: off
-                    d,
-                    o,
-                    o,
-                    o,
-                    Z,
-                    -Y,
-                    o,
-                    d,
-                    o,
-                    -Z,
-                    o,
-                    X,
-                    o,
-                    o,
-                    d,
-                    Y,
-                    -X,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    # fmt: on
-                ],
-                dim=-1,
-            ).view(N, *extra_dim_shapes, 4, 6)
+            # fmt: off
+            Jp = torch.stack([
+                d,  o,  o,  o,  Z,  -Y,
+                o,  d,  o,  -Z, o,  X,
+                o,  o,  d,  Y,  -X, o,
+                o,  o,  o,  o,  o,  o,
+            ], dim=-1).view(N, *extra_dim_shapes, 4, 6)
+            # fmt: on
 
         elif isinstance(Gij, Sim3):
-            Jp = torch.stack(
-                [
-                    # fmt: off
-                    d,
-                    o,
-                    o,
-                    o,
-                    Z,
-                    -Y,
-                    X,
-                    o,
-                    d,
-                    o,
-                    -Z,
-                    o,
-                    X,
-                    Y,
-                    o,
-                    o,
-                    d,
-                    Y,
-                    -X,
-                    o,
-                    Z,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    o,
-                    # fmt: on
-                ],
-                dim=-1,
-            ).view(N, *extra_dim_shapes, 4, 7)
+            # fmt: off
+            Jp = torch.stack([
+                d,  o,  o,  o,  Z,  -Y, X,
+                o,  d,  o,  -Z, o,  X,  Y,
+                o,  o,  d,  Y,  -X, o,  Z,
+                o,  o,  o,  o,  o,  o,  o,
+            ], dim=-1).view(N, *extra_dim_shapes, 4, 7)
+            # fmt: on
 
     return X1, Jp
 

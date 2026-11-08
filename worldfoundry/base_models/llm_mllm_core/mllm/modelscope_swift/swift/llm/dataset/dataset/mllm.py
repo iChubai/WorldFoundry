@@ -1077,10 +1077,7 @@ class GritPreprocessor(RowPreprocessor, GroundingMixin):
 
     @staticmethod
     def has_overlap(start_ends):
-        for i in range(1, len(start_ends)):
-            if start_ends[i][0] < start_ends[i - 1][1]:
-                return True
-        return False
+        return any(start_ends[i][0] < start_ends[i - 1][1] for i in range(1, len(start_ends)))
 
     @staticmethod
     def replace_intervals_with_tags(response, start_ends):

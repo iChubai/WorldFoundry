@@ -1,5 +1,5 @@
+import importlib.metadata as importlib_metadata
 import random
-import sys
 
 import torch
 import torch.distributed as dist
@@ -15,12 +15,6 @@ from ..falcon.modelling_RW import RWForCausalLM
 from ..mpt.modeling_mpt import MPTForCausalLM
 from ..mpt_redpajama.mosaic_gpt import MosaicGPT
 from .configuration_otter import OtterConfig
-
-# The package importlib_metadata is in a different place, depending on the python version.
-if sys.version_info < (3, 8):
-    import importlib_metadata
-else:
-    import importlib.metadata as importlib_metadata
 
 
 def master_print(*args, **kwargs):

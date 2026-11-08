@@ -391,7 +391,4 @@ class KeywordsStoppingCriteria(StoppingCriteria):
             if output_ids[0, -keyword_id.shape[0] :] == keyword_id:
                 return True
         outputs = self.tokenizer.batch_decode(output_ids[:, -offset:], skip_special_tokens=True)[0]
-        for keyword in self.keywords:
-            if keyword in outputs:
-                return True
-        return False
+        return any(keyword in outputs for keyword in self.keywords)

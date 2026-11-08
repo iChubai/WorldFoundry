@@ -15,7 +15,6 @@ AVAILABLE_MODELS: dict[str, str] = {
     "instructblip": "InstructBLIP",
     "qwen_vl": "QwenVL",
     "llava_model": "LLaVA_Model",
-    "instructblip": "InstructBLIP",
     "gpt4v": "OpenAIGPT4Vision",
 }
 

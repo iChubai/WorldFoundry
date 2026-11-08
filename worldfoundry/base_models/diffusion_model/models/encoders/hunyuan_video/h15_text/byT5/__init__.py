@@ -182,7 +182,7 @@ def load_byt5_and_byt5_tokenizer(
         cache_dir=huggingface_cache_dir,
     ).get_encoder()
 
-    device = torch.device(device) if "cuda" not in str(device) else torch.device(device)
+    device = torch.device(device)
     byt5_text_encoder = byt5_text_encoder.to(device)
 
     if special_token:

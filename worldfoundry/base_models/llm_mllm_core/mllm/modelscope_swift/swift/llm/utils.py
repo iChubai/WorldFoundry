@@ -89,10 +89,7 @@ def set_generation_config(model: nn.Module, generation_config: GenerationConfig)
 def is_moe_model(model):
     if "Moe" in model.__class__.__name__:
         return True
-    for key in ["num_experts", "num_experts_per_tok", "moe_intermediate_size"]:
-        if hasattr(model.config, key):
-            return True
-    return False
+    return any(hasattr(model.config, key) for key in ["num_experts", "num_experts_per_tok", "moe_intermediate_size"])
 
 
 def find_module_list(model) -> nn.ModuleList | None:

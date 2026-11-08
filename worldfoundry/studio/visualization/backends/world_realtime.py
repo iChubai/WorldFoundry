@@ -54,6 +54,7 @@ from worldfoundry.studio.serving.realtime.input import (
     ControlSegment,
     RealtimeControlResampler,
     RealtimeControlState,
+    axis_samples_from_message,
     interactions_from_keys,
     interactions_from_segments,
 )
@@ -887,6 +888,7 @@ def _interactive_call_kwargs(
     *,
     seed: int,
     control_segments: list[ControlSegment] | None = None,
+    control_axes: Mapping[str, list[float]] | None = None,
 ) -> dict[str, Any]:
     values = {**base, "seed": int(seed)}
     if control_segments is not None:
@@ -897,6 +899,8 @@ def _interactive_call_kwargs(
             }
             for start, end, keys in control_segments
         ]
+    if control_axes:
+        values["realtime_axes"] = {name: list(frames) for name, frames in control_axes.items()}
     if "interaction_speed" in values:
         configured_speed = values["interaction_speed"]
         if isinstance(configured_speed, (list, tuple)) and configured_speed:
@@ -1430,6 +1434,7 @@ class ResidentWorldRuntime:
         *,
         seed: int,
         control_segments: list[ControlSegment] | None = None,
+        control_axes: Mapping[str, list[float]] | None = None,
         prompt: str | None = None,
         dense_video_path: str | None = None,
         sparse_video_path: str | None = None,
@@ -1442,6 +1447,7 @@ class ResidentWorldRuntime:
                     interactions,
                     seed=seed,
                     control_segments=control_segments,
+                    control_axes=control_axes,
                     prompt=prompt,
                     dense_video_path=dense_video_path,
                     sparse_video_path=sparse_video_path,
@@ -1460,6 +1466,7 @@ class ResidentWorldRuntime:
         *,
         seed: int,
         control_segments: list[ControlSegment] | None,
+        control_axes: Mapping[str, list[float]] | None,
         prompt: str | None,
         dense_video_path: str | None,
         sparse_video_path: str | None,
@@ -1498,6 +1505,7 @@ class ResidentWorldRuntime:
                 interactions,
                 seed=seed,
                 control_segments=control_segments,
+                control_axes=control_axes,
             )
             request = replace(
                 self._base_request,
@@ -2469,6 +2477,8 @@ class RealtimePeerManager:
                 resampler=RealtimeControlResampler(
                     fps=self._runtime_input_fps(),
                     start_time=loop.time(),
+                    realtime_keys=self.runtime.realtime_spec.keys,
+                    axes=self.runtime.realtime_spec.axes,
                 ),
                 presentation_mode=presentation_mode,
                 video_track=track,
@@ -2490,6 +2500,14 @@ class RealtimePeerManager:
 
             @pc.on("datachannel")
             def on_datachannel(channel: Any) -> None:
+                if channel.label == "axes":
+                    # The unordered, unreliable axis channel only feeds input;
+                    # the controls channel owns session setup and lifetime.
+                    @channel.on("message")
+                    def on_axis_message(raw: Any) -> None:
+                        active.input_messages.put_nowait(raw)
+
+                    return
                 active.channel = channel
                 channel_open_time = asyncio.get_running_loop().time()
                 active.last_client_message_at = channel_open_time
@@ -2623,6 +2641,8 @@ class RealtimePeerManager:
                 resampler=RealtimeControlResampler(
                     fps=self._runtime_input_fps(),
                     start_time=loop.time(),
+                    realtime_keys=self.runtime.realtime_spec.keys,
+                    axes=self.runtime.realtime_spec.axes,
                 ),
                 frame_packets=asyncio.Queue(
                     maxsize=_env_int(
@@ -2776,6 +2796,12 @@ class RealtimePeerManager:
                 {"type": "segment_queued", "segment_index": active.chunk_index + 1},
             )
             return
+        if message_type == "axis":
+            arrival = asyncio.get_running_loop().time()
+            if active.resampler.on_axis(arrival_time=arrival, samples=axis_samples_from_message(payload)):
+                active.action_arrivals.append(arrival)
+                active.first_action.set()
+            return
         if message_type != "action":
             return
         raw_action = payload.get("action")
@@ -2798,6 +2824,8 @@ class RealtimePeerManager:
                 prompt_event_id: str | None = None
                 forced_step = False
                 segments = None
+                axes = None
+                axis_input = False
                 dense_video_path = None
                 sparse_video_path = None
                 if active.queued_segments:
@@ -2862,23 +2890,27 @@ class RealtimePeerManager:
                         active.pending_prompt = None
                         active.pending_prompt_dirty = False
                         frame_budget = self._runtime_next_input_frames()
-                        segments = active.resampler.sample_chunk(
+                        input_chunk = active.resampler.sample_input_chunk(
                             frame_budget,
                             wall_time=loop.time(),
                         )
-                        interactions = interactions_from_segments(segments)
+                        segments, axes = input_chunk.segments, input_chunk.axes
+                        axis_input = input_chunk.has_axis_input
+                        interactions = interactions_from_segments(segments, active.resampler.realtime_keys)
                     elif active.pending_steps:
                         active.pending_steps -= 1
                         forced_step = True
                         interactions = []
                     else:
                         frame_budget = self._runtime_next_input_frames()
-                        segments = active.resampler.sample_chunk(
+                        input_chunk = active.resampler.sample_input_chunk(
                             frame_budget,
                             wall_time=loop.time(),
                         )
-                        interactions = interactions_from_segments(segments)
-                    if not interactions and not forced_step and not prompt_changed:
+                        segments, axes = input_chunk.segments, input_chunk.axes
+                        axis_input = input_chunk.has_axis_input
+                        interactions = interactions_from_segments(segments, active.resampler.realtime_keys)
+                    if not interactions and not axis_input and not forced_step and not prompt_changed:
                         if not active.resampler.has_pending_input:
                             active.first_action.clear()
                         continue
@@ -2889,6 +2921,7 @@ class RealtimePeerManager:
                         interactions,
                         seed=active.seed + active.chunk_index,
                         control_segments=segments,
+                        control_axes=axes,
                         prompt=next_prompt,
                         dense_video_path=dense_video_path,
                         sparse_video_path=sparse_video_path,
@@ -3147,6 +3180,12 @@ class RealtimePeerManager:
                 active.action_arrivals.append(arrival)
                 active.first_action.set()
             return
+        if message_type == "axis":
+            arrival = asyncio.get_running_loop().time()
+            if active.resampler.on_axis(arrival_time=arrival, samples=axis_samples_from_message(payload)):
+                active.action_arrivals.append(arrival)
+                active.first_action.set()
+            return
         if message_type != "action":
             return
         raw_action = payload.get("action")
@@ -3211,6 +3250,8 @@ class RealtimePeerManager:
                 prompt_event_id: str | None = None
                 forced_step = False
                 segments = None
+                axes = None
+                axis_input = False
                 if active.prompt_scheduled:
                     active.first_action.clear()
                     if active.initial_segment_pending:
@@ -3238,23 +3279,27 @@ class RealtimePeerManager:
                         active.pending_prompt = None
                         active.pending_prompt_dirty = False
                         frame_budget = self._runtime_next_input_frames()
-                        segments = active.resampler.sample_chunk(
+                        input_chunk = active.resampler.sample_input_chunk(
                             frame_budget,
                             wall_time=loop.time(),
                         )
-                        interactions = interactions_from_segments(segments)
+                        segments, axes = input_chunk.segments, input_chunk.axes
+                        axis_input = input_chunk.has_axis_input
+                        interactions = interactions_from_segments(segments, active.resampler.realtime_keys)
                     elif active.pending_steps:
                         active.pending_steps -= 1
                         forced_step = True
                         interactions = []
                     else:
                         frame_budget = self._runtime_next_input_frames()
-                        segments = active.resampler.sample_chunk(
+                        input_chunk = active.resampler.sample_input_chunk(
                             frame_budget,
                             wall_time=loop.time(),
                         )
-                        interactions = interactions_from_segments(segments)
-                    if not interactions and not forced_step and not prompt_changed:
+                        segments, axes = input_chunk.segments, input_chunk.axes
+                        axis_input = input_chunk.has_axis_input
+                        interactions = interactions_from_segments(segments, active.resampler.realtime_keys)
+                    if not interactions and not axis_input and not forced_step and not prompt_changed:
                         if not active.resampler.has_pending_input:
                             active.first_action.clear()
                         continue
@@ -3273,6 +3318,7 @@ class RealtimePeerManager:
                     interactions,
                     seed=active.seed + active.chunk_index,
                     control_segments=segments,
+                    control_axes=axes,
                     prompt=next_prompt,
                 )
                 pixel_post_started = loop.time()

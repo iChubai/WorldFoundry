@@ -8,13 +8,13 @@ import threading
 import time
 import types
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable, cast
 
 import numpy as np
 import pytest
 from PIL import Image
 
-from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
+from worldfoundry.core.execution.realtime.contracts import DEFAULT_REALTIME_KEYS, RealtimeAxis, RealtimeSpec
 from worldfoundry.core.execution.realtime.prewarm import PrewarmTimeoutError
 from worldfoundry.core.media.processing.postprocess import VideoSpec
 from worldfoundry.studio.inference.catalog import find_entry
@@ -24,6 +24,7 @@ from worldfoundry.studio.inference.execution import (
     PreparedInputs,
     StudioManager,
 )
+from worldfoundry.studio.serving.realtime.input import RealtimeInputChunk
 from worldfoundry.studio.serving.realtime.media import FrameQueuePolicy
 from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
 from worldfoundry.studio.visualization.backends import world_realtime as realtime_backend
@@ -637,13 +638,14 @@ def test_generation_worker_uses_split_input_frame_count() -> None:
 
     class Resampler:
         has_pending_input = False
+        realtime_keys = DEFAULT_REALTIME_KEYS
 
         def __init__(self) -> None:
             self.sampled: list[int] = []
 
-        def sample_chunk(self, num_frames: int, *, wall_time: float):
+        def sample_input_chunk(self, num_frames: int, *, wall_time: float) -> RealtimeInputChunk:
             self.sampled.append(num_frames)
-            return [(wall_time, wall_time + 1.0, frozenset({"w"}))]
+            return RealtimeInputChunk([(wall_time, wall_time + 1.0, frozenset({"w"}))], {})
 
     class Runtime:
         last_generation_metrics: dict[str, float] = {}
@@ -700,10 +702,11 @@ def test_generation_worker_uses_split_input_frame_count() -> None:
 def test_generation_worker_logs_periodic_perf(caplog: pytest.LogCaptureFixture) -> None:
     class Resampler:
         has_pending_input = True
+        realtime_keys = DEFAULT_REALTIME_KEYS
 
-        def sample_chunk(self, num_frames: int, *, wall_time: float):
+        def sample_input_chunk(self, num_frames: int, *, wall_time: float) -> RealtimeInputChunk:
             del num_frames
-            return [(wall_time, wall_time + 1.0, frozenset({"w"}))]
+            return RealtimeInputChunk([(wall_time, wall_time + 1.0, frozenset({"w"}))], {})
 
     class Runtime:
         last_generation_metrics = {
@@ -2466,3 +2469,226 @@ def test_realtime_manager_keeps_seed_in_memory_and_skips_materialization(
     assert isinstance(result, np.ndarray)
     assert pipeline.calls[0]["images"] is None
     assert not output_dir.exists()
+
+
+class _AxisSink:
+    readyState = "open"
+    closed = False
+
+    def __init__(self) -> None:
+        self.messages: list[dict[str, Any]] = []
+
+    def send(self, raw: str) -> None:
+        self.messages.append(json.loads(raw))
+
+    async def send_str(self, raw: str) -> None:
+        self.send(raw)
+
+
+def _axis_session(transport: str, sink: _AxisSink) -> _ActivePeer | _ActiveSocket:
+    resampler = RealtimeControlResampler(
+        fps=20,
+        start_time=asyncio.get_running_loop().time(),
+        axes=(RealtimeAxis("yaw", "mouse_x"),),
+    )
+    if transport == "socket":
+        return _ActiveSocket(socket=sink, resampler=resampler, frame_packets=asyncio.Queue(maxsize=8))
+    return _ActivePeer(peer=None, channel=sink, resampler=resampler, frames=LatestFrameBuffer(maxsize=8))
+
+
+async def _handle_axis_message(
+    peers: RealtimePeerManager,
+    active: _ActivePeer | _ActiveSocket,
+    payload: dict[str, Any],
+) -> None:
+    if isinstance(active, _ActiveSocket):
+        await peers._handle_socket_message(active, json.dumps(payload))
+    else:
+        await peers._handle_message(active, json.dumps(payload))
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_axis_messages_feed_declared_axes_on_both_transports(transport: str) -> None:
+    async def exercise() -> None:
+        active = _axis_session(transport, _AxisSink())
+        peers = RealtimePeerManager(runtime=cast(Any, None), fps=20, chunk_frames=4)
+        await _handle_axis_message(peers, active, {"type": "axis", "source": "gamepad", "lx": 0.8})
+        assert not active.first_action.is_set()
+        assert not active.resampler.has_pending_input
+        await _handle_axis_message(peers, active, {"type": "axis", "source": "mouse", "dx": 3.0, "dy": 1.0})
+        assert active.first_action.is_set()
+        assert len(active.action_arrivals) == 1
+        chunk = active.resampler.sample_input_chunk(4, wall_time=asyncio.get_running_loop().time())
+        assert sum(chunk.axes["yaw"]) == pytest.approx(3.0)
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_axis_only_input_generates_with_chunk_axes(transport: str) -> None:
+    calls: list[tuple[list[str], dict[str, Any]]] = []
+
+    class Runtime:
+        last_generation_metrics: dict[str, float] = {}
+
+        def next_chunk_frames(self, default: int) -> int:
+            return default
+
+        async def generate(self, interactions: list[str], **kwargs: Any) -> tuple[list[np.ndarray], float]:
+            calls.append((list(interactions), kwargs))
+            return [np.zeros((4, 6, 3), dtype=np.uint8)], 1.0
+
+    async def exercise() -> None:
+        sink = _AxisSink()
+        active = _axis_session(transport, sink)
+        peers = RealtimePeerManager(runtime=cast(Any, Runtime()), fps=20, chunk_frames=4)
+        await _handle_axis_message(peers, active, {"type": "axis", "source": "mouse", "dx": 2.5})
+        if isinstance(active, _ActiveSocket):
+            worker = asyncio.create_task(peers._socket_generation_worker(active))
+        else:
+            worker = asyncio.create_task(peers._generation_worker(active))
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: bool(calls) and not active.first_action.is_set()), 2)
+            assert len(calls) == 1
+            interactions, kwargs = calls[0]
+            assert interactions == []
+            assert kwargs["control_segments"] is not None
+            assert sum(kwargs["control_axes"]["yaw"]) == pytest.approx(2.5)
+            assert not any(message["type"] == "error" for message in sink.messages)
+        finally:
+            active.closed = True
+            worker.cancel()
+            await asyncio.gather(worker, return_exceptions=True)
+
+    asyncio.run(exercise())
+
+
+def test_interactive_call_kwargs_add_realtime_axes_only_when_declared() -> None:
+    segments = [(0.0, 0.1, frozenset({"w"}))]
+    without_axes = realtime_backend._interactive_call_kwargs(
+        {}, ["forward"], seed=3, control_segments=segments, control_axes={}
+    )
+    assert without_axes == {"seed": 3, "realtime_segments": [{"duration": 0.1, "keys": ["w"]}]}
+    with_axes = realtime_backend._interactive_call_kwargs(
+        {}, ["forward"], seed=3, control_segments=segments, control_axes={"yaw": [0.0, 0.5]}
+    )
+    assert with_axes["realtime_axes"] == {"yaw": [0.0, 0.5]}
+    assert with_axes["realtime_segments"] == without_axes["realtime_segments"]
+
+
+def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    peers_created: list[Any] = []
+
+    class FakeChannel:
+        readyState = "open"
+
+        def __init__(self, label: str) -> None:
+            self.label = label
+            self.handlers: dict[str, Callable[..., Any]] = {}
+            self.sent: list[dict[str, Any]] = []
+
+        def on(self, name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+            def register(handler: Callable[..., Any]) -> Callable[..., Any]:
+                self.handlers[name] = handler
+                return handler
+
+            return register
+
+        def send(self, raw: str) -> None:
+            self.sent.append(json.loads(raw))
+
+    class FakePeerConnection:
+        connectionState = "new"
+
+        def __init__(self, _configuration: object) -> None:
+            self.handlers: dict[str, Callable[..., Any]] = {}
+            self.localDescription = types.SimpleNamespace(sdp="", type="answer")
+            peers_created.append(self)
+
+        def addTrack(self, _track: object) -> object:  # noqa: N802 - aiortc compatibility
+            return object()
+
+        def on(self, name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+            def register(handler: Callable[..., Any]) -> Callable[..., Any]:
+                self.handlers[name] = handler
+                return handler
+
+            return register
+
+        async def setRemoteDescription(self, _description: object) -> None:  # noqa: N802
+            pass
+
+        async def createAnswer(self) -> object:  # noqa: N802
+            return types.SimpleNamespace(sdp="candidate", type="answer")
+
+        async def setLocalDescription(self, _description: object) -> None:  # noqa: N802
+            self.localDescription = types.SimpleNamespace(sdp="answer-sdp", type="answer")
+
+        async def close(self) -> None:
+            self.connectionState = "closed"
+
+    async def no_ice_wait(_peer: object) -> None:
+        pass
+
+    aiortc: Any = types.ModuleType("aiortc")
+    aiortc.RTCConfiguration = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    aiortc.RTCIceServer = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    aiortc.RTCPeerConnection = FakePeerConnection
+    aiortc.RTCSessionDescription = lambda **kwargs: types.SimpleNamespace(**kwargs)
+    monkeypatch.setitem(sys.modules, "aiortc", aiortc)
+    monkeypatch.setattr(realtime_backend, "_build_video_track", lambda **_kwargs: types.SimpleNamespace())
+    monkeypatch.setattr(realtime_backend, "bind_video_sender", lambda *_args: None)
+    monkeypatch.setattr(realtime_backend, "_configure_nvenc_h264", lambda *_args: None)
+    monkeypatch.setattr(realtime_backend, "_wait_for_ice_gathering", no_ice_wait)
+
+    class Runtime:
+        queued_segment_generation = False
+        entry = types.SimpleNamespace(default_prompt="", default_call_kwargs={})
+        realtime_spec = RealtimeSpec(
+            fps=20, first_chunk_frames=4, steady_chunk_frames=4, axes=(RealtimeAxis("yaw", "mouse_x"),)
+        )
+        transport_native_resolution = None
+        supports_text_events = False
+        last_generation_metrics: dict[str, float] = {}
+
+        async def configure(self, **_kwargs: Any) -> None:
+            pass
+
+        async def reset(self) -> None:
+            pass
+
+        def steady_chunk_frames(self, _default: int) -> int:
+            return 4
+
+    async def exercise() -> None:
+        manager = RealtimePeerManager(runtime=cast(Any, Runtime()), fps=20, chunk_frames=4)
+        await manager.create_answer(offer={"sdp": "offer-sdp", "type": "offer"}, session={})
+        active = manager._active
+        assert active is not None
+        assert active.resampler.axes == Runtime.realtime_spec.axes
+        try:
+            on_datachannel = peers_created[0].handlers["datachannel"]
+            controls = FakeChannel("controls")
+            on_datachannel(controls)
+            assert active.channel is controls
+            assert [message["type"] for message in controls.sent] == ["ready"]
+            tasks = (active.generation_task, active.liveness_task, active.input_task)
+            assert all(task is not None for task in tasks)
+            active.resampler.on_edge(arrival_time=asyncio.get_running_loop().time(), event="keydown", key="w")
+
+            axes = FakeChannel("axes")
+            on_datachannel(axes)
+            assert active.channel is controls
+            assert (active.generation_task, active.liveness_task, active.input_task) == tasks
+            assert active.resampler.effective_keys == frozenset({"w"})
+            assert set(axes.handlers) == {"message"}
+            assert axes.sent == []
+            assert [message["type"] for message in controls.sent] == ["ready"]
+
+            raw = json.dumps({"type": "axis", "source": "mouse", "dx": 1.5})
+            axes.handlers["message"](raw)
+            assert active.input_messages.get_nowait() == raw
+        finally:
+            await manager.close_active()
+
+    asyncio.run(exercise())

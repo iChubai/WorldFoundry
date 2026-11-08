@@ -23,6 +23,70 @@ DEFAULT_REALTIME_CONTROLS = (
     "camera_l",
     "camera_r",
 )
+REALTIME_AXIS_SOURCES = ("mouse_x", "mouse_y", "gamepad_lx", "gamepad_ly", "gamepad_rx", "gamepad_ry")
+REALTIME_AXIS_MODES = ("delta", "level")
+
+
+@dataclass(frozen=True, slots=True)
+class RealtimeKey:
+    """One keyboard binding; pressing ``key`` emits ``action``.
+
+    Keys that share a non-empty ``group`` conflict: the most recently pressed
+    one wins. An empty group leaves the key independent of every other key.
+    """
+
+    key: str
+    action: str
+    group: str = ""
+    label: str = ""
+
+    def __post_init__(self) -> None:
+        """Reject bindings that could never be pressed or never produce an action."""
+        if not isinstance(self.key, str) or not self.key or not isinstance(self.action, str) or not self.action:
+            raise ValueError("Realtime keys require a non-empty key and action")
+
+
+@dataclass(frozen=True, slots=True)
+class RealtimeAxis:
+    """One continuous model input resampled onto the chunk timeline.
+
+    ``delta`` axes sum source deltas per frame (mouse motion); ``level`` axes
+    hold the latest source sample per frame (gamepad sticks). Each frame value
+    applies ``deadzone`` (level axes only), then ``scale``, then clamps to
+    ``±limit`` when a limit is set.
+    """
+
+    name: str
+    source: str
+    mode: str = "delta"
+    scale: float = 1.0
+    limit: float | None = None
+    deadzone: float = 0.0
+
+    def __post_init__(self) -> None:
+        """Reject unknown sources or modes, non-positive limits, and negative deadzones."""
+        if not self.name:
+            raise ValueError("Realtime axes require a name")
+        if self.source not in REALTIME_AXIS_SOURCES:
+            raise ValueError(f"Realtime axis source must be one of {', '.join(REALTIME_AXIS_SOURCES)}")
+        if self.mode not in REALTIME_AXIS_MODES:
+            raise ValueError("Realtime axis mode must be 'delta' or 'level'")
+        if self.limit is not None and self.limit <= 0:
+            raise ValueError("Realtime axis limit must be positive when provided")
+        if self.deadzone < 0:
+            raise ValueError("Realtime axis deadzone must be nonnegative")
+
+
+DEFAULT_REALTIME_KEYS = (
+    RealtimeKey("w", "forward", "forward_backward"),
+    RealtimeKey("s", "backward", "forward_backward"),
+    RealtimeKey("a", "left", "left_right"),
+    RealtimeKey("d", "right", "left_right"),
+    RealtimeKey("i", "camera_up", "camera_up_down"),
+    RealtimeKey("k", "camera_down", "camera_up_down"),
+    RealtimeKey("j", "camera_l", "camera_left_right"),
+    RealtimeKey("l", "camera_r", "camera_left_right"),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +122,8 @@ class RealtimeSpec:
     first_input_frames: int | None = None
     steady_input_frames: int | None = None
     sensors: tuple[RealtimeSensor, ...] = ()
+    keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS
+    axes: tuple[RealtimeAxis, ...] = ()
 
     def __post_init__(self) -> None:
         """Reject non-positive clocks or empty control vocabularies before a session starts."""
@@ -78,6 +144,10 @@ class RealtimeSpec:
         indices = [sensor.channel_index for sensor in self.sensors if sensor.channel_index is not None]
         if len(set(indices)) != len(indices):
             raise ValueError("RealtimeSpec sensor channel indices must be unique")
+        if len({binding.key for binding in self.keys}) != len(self.keys):
+            raise ValueError("RealtimeSpec keys must be unique")
+        if len({axis.name for axis in self.axes}) != len(self.axes):
+            raise ValueError("RealtimeSpec axis names must be unique")
 
     @property
     def resolved_input_fps(self) -> float:
@@ -98,7 +168,11 @@ class RealtimeSpec:
         return int(self.steady_input_frames if self.steady_input_frames is not None else self.steady_chunk_frames)
 
     def to_payload(self) -> dict[str, Any]:
-        """JSON-safe dict; omit unset optional input-clock fields so clients do not treat ``null`` as 0."""
+        """JSON-safe dict; omit unset optional fields so clients do not treat ``null`` as 0.
+
+        Default keys and an empty axis list are omitted, so specs that keep the
+        default bindings serialize without them.
+        """
         payload = asdict(self)
         for optional_name in (
             "input_fps",
@@ -110,6 +184,17 @@ class RealtimeSpec:
         payload["controls"] = list(self.controls)
         if not self.sensors:
             payload.pop("sensors")
+        if self.keys == DEFAULT_REALTIME_KEYS:
+            payload.pop("keys")
+        else:
+            payload["keys"] = [asdict(binding) for binding in self.keys]
+        if self.axes:
+            payload["axes"] = [
+                {name: value for name, value in asdict(axis).items() if name != "limit" or value is not None}
+                for axis in self.axes
+            ]
+        else:
+            payload.pop("axes")
         return payload
 
     @classmethod
@@ -154,6 +239,8 @@ class RealtimeSpec:
                 sensors=tuple(RealtimeSensor(**item) for item in value["sensors"])
                 if "sensors" in value
                 else default.sensors,
+                keys=tuple(RealtimeKey(**item) for item in value["keys"]) if "keys" in value else default.keys,
+                axes=tuple(RealtimeAxis(**item) for item in value["axes"]) if "axes" in value else default.axes,
             )
         except (TypeError, ValueError):
             return default
@@ -182,7 +269,12 @@ class InteractiveWorldPipeline(Protocol):
 
 __all__ = [
     "DEFAULT_REALTIME_CONTROLS",
+    "DEFAULT_REALTIME_KEYS",
+    "REALTIME_AXIS_MODES",
+    "REALTIME_AXIS_SOURCES",
     "InteractiveWorldPipeline",
+    "RealtimeAxis",
+    "RealtimeKey",
     "RealtimeSensor",
     "RealtimeSpec",
 ]

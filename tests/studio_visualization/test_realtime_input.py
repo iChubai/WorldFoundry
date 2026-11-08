@@ -7,7 +7,18 @@ from typing import Any, cast
 import numpy as np
 import pytest
 
-from worldfoundry.studio.serving.realtime.input import ControlSegment, RealtimeControlResampler
+from worldfoundry.core.execution.realtime.contracts import (
+    DEFAULT_REALTIME_KEYS,
+    RealtimeAxis,
+    RealtimeKey,
+    RealtimeSpec,
+)
+from worldfoundry.studio.serving.realtime.input import (
+    ControlSegment,
+    RealtimeControlResampler,
+    axis_samples_from_message,
+    interactions_from_segments,
+)
 from worldfoundry.studio.visualization.backends.world_realtime import (
     LatestFrameBuffer,
     RealtimePeerManager,
@@ -242,3 +253,209 @@ def test_realtime_input_workers_keep_inflight_tap_and_isolate_step(
             await asyncio.gather(worker, return_exceptions=True)
 
     asyncio.run(exercise())
+
+
+def _axis_spec_resampler(*axes: RealtimeAxis, start_time: float = 100) -> RealtimeControlResampler:
+    return RealtimeControlResampler(fps=20, start_time=start_time, axes=axes)
+
+
+def test_realtime_spec_payload_round_trips_declared_keys_and_axes() -> None:
+    spec = RealtimeSpec(
+        controls=("jump", "slide", "turn_left"),
+        keys=(
+            RealtimeKey("w", "jump", "vertical", "Jump"),
+            RealtimeKey("s", "slide", "vertical"),
+            RealtimeKey("z", "turn_left"),
+        ),
+        axes=(
+            RealtimeAxis("camera_yaw", "mouse_x", scale=0.01, limit=0.1),
+            RealtimeAxis("move_x", "gamepad_lx", mode="level", deadzone=0.15),
+        ),
+    )
+    payload = json.loads(json.dumps(spec.to_payload()))
+    assert payload["keys"][0] == {"key": "w", "action": "jump", "group": "vertical", "label": "Jump"}
+    assert payload["axes"] == [
+        {"name": "camera_yaw", "source": "mouse_x", "mode": "delta", "scale": 0.01, "limit": 0.1, "deadzone": 0.0},
+        {"name": "move_x", "source": "gamepad_lx", "mode": "level", "scale": 1.0, "deadzone": 0.15},
+    ]
+    assert RealtimeSpec.from_payload(payload) == spec
+    no_keys = RealtimeSpec(keys=())
+    assert no_keys.to_payload()["keys"] == []
+    assert RealtimeSpec.from_payload(no_keys.to_payload()).keys == ()
+
+
+def test_realtime_spec_default_payload_omits_keys_and_axes() -> None:
+    assert RealtimeSpec().to_payload() == {
+        "fps": 16,
+        "first_chunk_frames": 9,
+        "steady_chunk_frames": 9,
+        "controls": ["forward", "backward", "left", "right", "camera_up", "camera_down", "camera_l", "camera_r"],
+        "transport": "in-memory-rgb",
+        "stateful": True,
+    }
+    parsed = RealtimeSpec.from_payload(RealtimeSpec(controls=("prompt_update",)).to_payload())
+    assert parsed.keys == DEFAULT_REALTIME_KEYS
+    assert parsed.axes == ()
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda: RealtimeSpec(keys=(RealtimeKey("w", "forward"), RealtimeKey("w", "jump"))),
+        lambda: RealtimeKey("", "forward"),
+        lambda: RealtimeKey("w", ""),
+        lambda: RealtimeSpec(axes=(RealtimeAxis("yaw", "mouse_x"), RealtimeAxis("yaw", "mouse_y"))),
+        lambda: RealtimeAxis("", "mouse_x"),
+        lambda: RealtimeAxis("yaw", "mouse_wheel"),
+        lambda: RealtimeAxis("yaw", "mouse_x", mode="absolute"),
+        lambda: RealtimeAxis("yaw", "mouse_x", limit=0.0),
+        lambda: RealtimeAxis("yaw", "gamepad_rx", mode="level", deadzone=-0.1),
+    ],
+)
+def test_realtime_spec_rejects_invalid_keys_and_axes(build: Any) -> None:
+    with pytest.raises(ValueError):
+        build()
+
+
+def test_realtime_spec_from_payload_falls_back_on_malformed_axes() -> None:
+    fallback = RealtimeSpec(fps=24)
+    assert (
+        RealtimeSpec.from_payload({"axes": [{"name": "yaw", "source": "mouse_wheel"}]}, fallback=fallback) == fallback
+    )
+    assert RealtimeSpec.from_payload({"keys": ["w"]}, fallback=fallback) == fallback
+
+
+def test_realtime_input_declared_keys_drive_acceptance_groups_and_actions() -> None:
+    realtime_keys = (
+        RealtimeKey("w", "jump", "vertical"),
+        RealtimeKey("s", "slide", "vertical"),
+        RealtimeKey("z", "turn_left"),
+        RealtimeKey("c", "turn_right"),
+    )
+    resampler = RealtimeControlResampler(fps=20, start_time=100, realtime_keys=realtime_keys)
+    assert not resampler.on_edge(arrival_time=100, event="keydown", key="a")
+    for key in ("w", "s", "z", "c"):
+        _edge(resampler, 100, "keydown", key)
+    assert resampler.effective_keys == frozenset({"s", "z", "c"})
+    segments = resampler.sample_chunk(4, wall_time=100)
+    assert _states(segments) == [frozenset({"s", "z", "c"})]
+    assert interactions_from_segments(segments, realtime_keys) == ["slide", "turn_left", "turn_right"]
+
+
+def test_axis_samples_from_message_maps_sources_and_ignores_missing_fields() -> None:
+    assert axis_samples_from_message({"type": "axis", "source": "mouse", "dx": 3, "dy": -1.5}) == {
+        "mouse_x": 3.0,
+        "mouse_y": -1.5,
+    }
+    assert axis_samples_from_message({"source": "gamepad", "lx": 0.5, "ry": -0.25, "ly": "up", "rx": None}) == {
+        "gamepad_lx": 0.5,
+        "gamepad_ry": -0.25,
+    }
+    assert axis_samples_from_message({"source": "mouse", "dx": True, "dy": float("nan")}) == {}
+    assert axis_samples_from_message({"source": "touch", "dx": 1.0}) == {}
+
+
+def test_realtime_input_delta_axis_conserves_irregular_samples_across_chunks() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("yaw", "mouse_x"), RealtimeAxis("pitch", "mouse_y"))
+    arrivals = [
+        (100.003, 1.0),
+        (100.011, 2.5),
+        (100.049, -0.5),
+        (100.051, 4.0),
+        (100.137, 0.25),
+        (100.21, 3.0),
+        (100.262, -1.0),
+        (100.263, 2.0),
+        (100.33, 0.75),
+        (100.39, 0.5),
+        (100.47, 1.5),
+        (100.56, -0.25),
+    ]
+    frames: list[float] = []
+    pending = list(arrivals)
+    # Inference runs slower than playback, so most chunks start in the past.
+    for wall_time in (100.0, 100.35, 100.58, 100.95):
+        while pending and pending[0][0] <= wall_time:
+            stamp, value = pending.pop(0)
+            assert resampler.on_axis(arrival_time=stamp, samples={"mouse_x": value})
+        chunk = resampler.sample_input_chunk(4, wall_time=wall_time)
+        assert chunk.axes["pitch"] == [0.0] * 4
+        frames.extend(chunk.axes["yaw"])
+    assert frames == pytest.approx([0.0] * 4 + [10.25, 1.0, 0.75, 0.0] + [0.5, 1.5, 0.0, -0.25] + [0.0] * 4)
+    assert sum(frames) == pytest.approx(sum(value for _, value in arrivals))
+    assert not resampler.has_pending_input
+
+
+def test_realtime_input_delta_axis_keeps_future_samples_and_moves_late_samples_forward() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("yaw", "mouse_x"))
+    resampler.on_axis(arrival_time=100.1, samples={"mouse_x": 2.0})
+    resampler.on_axis(arrival_time=100.3, samples={"mouse_x": 5.0})
+    chunk = resampler.sample_input_chunk(4, wall_time=100)
+    assert chunk.axes == {"yaw": [0.0, 0.0, 2.0, 0.0]}
+    assert resampler.has_pending_input
+    chunk = resampler.sample_input_chunk(4, wall_time=100.21)
+    assert chunk.axes == {"yaw": [0.0, 0.0, 5.0, 0.0]}
+    assert not resampler.has_pending_input
+    # Arrives after its chunk [100.2, 100.4) was sampled; lands on the next first frame.
+    resampler.on_axis(arrival_time=100.25, samples={"mouse_x": 1.0})
+    chunk = resampler.sample_input_chunk(4, wall_time=100.41)
+    assert chunk.axes == {"yaw": [1.0, 0.0, 0.0, 0.0]}
+    assert chunk.has_axis_input
+
+
+def test_realtime_input_axis_samples_stay_behind_a_postponed_key_tap() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("yaw", "mouse_x"))
+    _edge(resampler, 100.19, "keydown", "d")
+    _edge(resampler, 100.191, "keyup", "d")
+    resampler.on_axis(arrival_time=100.195, samples={"mouse_x": 1.0})
+    first = resampler.sample_input_chunk(4, wall_time=100)
+    assert _states(first.segments) == [frozenset()]
+    assert first.axes == {"yaw": [0.0] * 4}
+    assert not first.has_axis_input
+    # The tap moves to the next chunk and holds a full frame; the delta follows its release.
+    second = resampler.sample_input_chunk(4, wall_time=100.25)
+    assert _states(second.segments) == [frozenset({"d"}), frozenset()]
+    assert second.axes == {"yaw": [0.0, 1.0, 0.0, 0.0]}
+
+
+def test_realtime_input_level_axis_holds_until_a_neutral_sample() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("strafe", "gamepad_lx", mode="level"))
+    assert not resampler.on_axis(arrival_time=100.01, samples={"gamepad_ry": 0.9})
+    assert not resampler.has_pending_input
+    assert resampler.on_axis(arrival_time=100.06, samples={"gamepad_lx": 0.5})
+    assert resampler.sample_input_chunk(4, wall_time=100).axes == {"strafe": [0.0, 0.5, 0.5, 0.5]}
+    assert resampler.has_pending_input
+    assert resampler.sample_input_chunk(4, wall_time=100.2).axes == {"strafe": [0.5] * 4}
+    resampler.on_axis(arrival_time=100.47, samples={"gamepad_lx": 0.0})
+    assert resampler.sample_input_chunk(4, wall_time=100.4).axes == {"strafe": [0.5, 0.0, 0.0, 0.0]}
+    assert not resampler.has_pending_input
+    assert resampler.sample_input_chunk(4, wall_time=100.6).axes == {"strafe": [0.0] * 4}
+
+
+def test_realtime_input_axis_applies_deadzone_then_scale_then_limit() -> None:
+    resampler = _axis_spec_resampler(
+        RealtimeAxis("move", "gamepad_lx", mode="level", scale=2.0, limit=0.5, deadzone=0.2),
+        RealtimeAxis("yaw", "mouse_x", scale=2.0, limit=0.5, deadzone=1.0),
+    )
+    for stamp, level in ((100.0, 0.15), (100.05, 0.2), (100.1, 0.4), (100.15, -0.4)):
+        resampler.on_axis(arrival_time=stamp, samples={"gamepad_lx": level})
+    for stamp, delta in ((100.0, 0.1), (100.06, 0.2), (100.07, 0.2), (100.15, -0.1)):
+        resampler.on_axis(arrival_time=stamp, samples={"mouse_x": delta})
+    axes = resampler.sample_input_chunk(4, wall_time=100).axes
+    assert axes["move"] == pytest.approx([0.0, 0.4, 0.5, -0.5])
+    assert axes["yaw"] == pytest.approx([0.2, 0.5, 0.0, -0.2])
+
+
+def test_realtime_input_pending_axis_input_and_reset() -> None:
+    resampler = _axis_spec_resampler(
+        RealtimeAxis("yaw", "mouse_x"),
+        RealtimeAxis("move", "gamepad_ly", mode="level", deadzone=0.1),
+    )
+    resampler.on_axis(arrival_time=100.01, samples={"gamepad_ly": 0.05})
+    resampler.sample_input_chunk(4, wall_time=100)
+    assert not resampler.has_pending_input
+    resampler.on_axis(arrival_time=100.21, samples={"mouse_x": 2.0, "gamepad_ly": 0.8})
+    assert resampler.has_pending_input
+    resampler.reset(start_time=200)
+    assert not resampler.has_pending_input
+    assert resampler.sample_input_chunk(4, wall_time=200).axes == {"yaw": [0.0] * 4, "move": [0.0] * 4}

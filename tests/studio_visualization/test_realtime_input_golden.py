@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
 from worldfoundry.studio.serving.realtime.input import RealtimeControlResampler, interactions_from_segments
 
 Operation = tuple[Any, ...]
@@ -278,8 +279,12 @@ EXPECTED: dict[str, list[Record]] = {
 }
 
 
-def _replay(resampler: RealtimeControlResampler, operations: list[Operation]) -> list[Record]:
-    """Apply edges, samples and resets; record each result with the live key state."""
+def _replay(resampler: RealtimeControlResampler, operations: list[Operation], *, spec_keys: bool) -> list[Record]:
+    """Apply edges, samples and resets; record each result with the live key state.
+
+    With ``spec_keys`` the replay samples through ``sample_input_chunk`` and maps
+    keys through the resampler's declared bindings, as the realtime workers do.
+    """
 
     records: list[Record] = []
     for operation in operations:
@@ -289,11 +294,15 @@ def _replay(resampler: RealtimeControlResampler, operations: list[Operation]) ->
             result = resampler.on_edge(arrival_time=stamp, event=event, key=key)
         elif operation[0] == "sample":
             _, frames, wall_time = operation
-            segments = resampler.sample_chunk(frames, wall_time=wall_time)
-            result = (
-                [(start, end, tuple(sorted(keys))) for start, end, keys in segments],
-                interactions_from_segments(segments),
-            )
+            if spec_keys:
+                chunk = resampler.sample_input_chunk(frames, wall_time=wall_time)
+                assert chunk.axes == {}
+                segments = chunk.segments
+                interactions = interactions_from_segments(segments, resampler.realtime_keys)
+            else:
+                segments = resampler.sample_chunk(frames, wall_time=wall_time)
+                interactions = interactions_from_segments(segments)
+            result = ([(start, end, tuple(sorted(keys))) for start, end, keys in segments], interactions)
         else:
             resampler.reset(start_time=operation[1])
             result = None
@@ -301,8 +310,18 @@ def _replay(resampler: RealtimeControlResampler, operations: list[Operation]) ->
     return records
 
 
+@pytest.mark.parametrize("spec_keys", [False, True])
 @pytest.mark.parametrize("name", list(SEQUENCES))
-def test_realtime_input_default_keys_match_golden_records(name: str) -> None:
+def test_realtime_input_default_keys_match_golden_records(name: str, spec_keys: bool) -> None:
     fps, start_time, operations = SEQUENCES[name]
-    resampler = RealtimeControlResampler(fps=fps, start_time=start_time)
-    assert _replay(resampler, operations) == EXPECTED[name]
+    if spec_keys:
+        spec = RealtimeSpec()
+        resampler = RealtimeControlResampler(
+            fps=fps,
+            start_time=start_time,
+            realtime_keys=spec.keys,
+            axes=spec.axes,
+        )
+    else:
+        resampler = RealtimeControlResampler(fps=fps, start_time=start_time)
+    assert _replay(resampler, operations, spec_keys=spec_keys) == EXPECTED[name]

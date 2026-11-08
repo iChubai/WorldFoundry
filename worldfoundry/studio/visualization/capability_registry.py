@@ -105,12 +105,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/depth/unidepth/models/unidepthv2/unidepthv2.py",
     ),
     _cap(
-        "unik3d",
-        "three_dimensions/depth/unik3d",
-        ("depth", "normal", "point-cloud"),
-        "three_dimensions/depth/unik3d/unik3d.py",
-    ),
-    _cap(
         "longvie-video-depth",
         "three_dimensions/depth/video_depth_anything_longvie",
         ("depth", "media"),

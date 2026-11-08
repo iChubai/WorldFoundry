@@ -246,24 +246,11 @@ These in-tree runtimes keep checkpoint locations in the shared base-model asset 
         <p>Official source: HF <a href="https://huggingface.co/lpiccinelli/unidepth-v2-vitl14">lpiccinelli/unidepth-v2-vitl14</a>. Expected files: <code>config.json</code>, <code>model.safetensors</code></p>
         <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/'}</code></p>
       </li>
-      <li className="pi-kv-row">
-        <div className="pi-kv-head">
-          <div className="pi-kv-names">
-            <code>unik3d_vitl</code>
-          </div>
-          <span className="pi-kv-default">
-            <span>Override</span>
-            <code>WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR</code>
-          </span>
-        </div>
-        <p>Official source: HF <a href="https://huggingface.co/lpiccinelli/unik3d-vitl">lpiccinelli/unik3d-vitl</a>. Expected files: <code>config.json</code>, <code>model.safetensors</code></p>
-        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/'}</code></p>
-      </li>
     </ul>
   </section>
 </div>
 
-UniDepth V2 and UniK3D are released under CC-BY-NC-4.0. Review the upstream non-commercial terms before downloading or redistributing their weights.
+UniDepth V2 is released under CC-BY-NC-4.0. Review the upstream non-commercial terms before downloading or redistributing its weights.
 
 Inspect the exact URLs, resolved paths, size checks, and export commands without downloading:
 
@@ -273,11 +260,10 @@ wf models assets \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
-  --capability unik3d_vitl \
   --json
 ```
 
-To materialize missing files, add `--execute-downloads`. `HF_ENDPOINT` is honored for the SAM2, UniDepth V2, and UniK3D Hugging Face assets. RepViT-SAM and MiDaS are downloaded from their official GitHub repository or release URLs:
+To materialize missing files, add `--execute-downloads`. `HF_ENDPOINT` is honored for the SAM2 and UniDepth V2 Hugging Face assets. RepViT-SAM and MiDaS are downloaded from their official GitHub repository or release URLs:
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
@@ -286,7 +272,6 @@ wf models assets \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
-  --capability unik3d_vitl \
   --execute-downloads
 ```
 

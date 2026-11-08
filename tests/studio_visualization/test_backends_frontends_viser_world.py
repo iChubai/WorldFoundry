@@ -259,7 +259,6 @@ class TestViserFunctions:
             "up_direction": "+y",
             "alignment": "none",
         }
-        assert viser_orientation_defaults("unik3d-prior", "points.npz") == unidepth
         exported = viser_orientation_defaults("unidepth-v2-prior", "point_cloud.ply")
         assert exported == {
             "coordinate_preset": "asset-native",

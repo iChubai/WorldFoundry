@@ -727,9 +727,9 @@ frame:
   VGGT-Omega official GLBs use `+Y` up and `alignment=none`.
 - A raw VGGT/VGGT-Omega prediction NPZ remains in the model's OpenCV frame, so
   Viser applies `coordinate_preset=opencv-to-opengl` once and uses `+Y` up.
-- Raw UniDepth V2 and UniK3D model-point NPZ files also use the OpenCV camera
-  frame. Their Workspace PLY exporter instead persists `x-right/y-up/z-forward`,
-  so those PLY files use `asset-native`, `+Y` up, and `alignment=none` without a
+- Raw UniDepth V2 model-point NPZ files also use the OpenCV camera frame. Its
+  Workspace PLY exporter instead persists `x-right/y-up/z-forward`, so those PLY
+  files use `asset-native`, `+Y` up, and `alignment=none` without a
   second flip.
 - LoGeR and Pi3 PLY point clouds keep their predicted camera-to-world
   sidecars. Viser applies `first-camera-opengl` to points and cameras together,
@@ -743,7 +743,7 @@ frame:
   orbit, and timeline interaction in a browser.
 
 Workspace resolves the proven VGGT, LoGeR, and Pi3 defaults automatically.
-The Visualizer defaults also cover UniDepth V2 and UniK3D raw/Workspace assets.
+The Visualizer defaults also cover UniDepth V2 raw/Workspace assets.
 The Visualizer Params JSON remains an explicit override for other exporters. Viser reports the
 actual bound port when its requested port is occupied. Rerun uses WebGPU
 by default; set `WORLDFOUNDRY_STUDIO_RERUN_RENDERER=webgl` only when the target

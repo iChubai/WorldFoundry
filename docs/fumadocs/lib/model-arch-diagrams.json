@@ -1586,20 +1586,6 @@
       "caption": "Method overview: Fig. 2: Model Architecture. UniDepthV2 utilizes solely the input image to generate the 3D output ( 𝐎 {O} ). It bootstraps a dense camera prediction ( 𝐂 {C} ) from the Camera Module, injecting prior knowledge on scene.",
       "captionZh": "论文方法总览：UniDepth V2 的几何与深度架构。"
     },
-    "unik3d-prior": {
-      "modelId": "unik3d-prior",
-      "paperSrc": "/models/unik3d-prior/paper.png",
-      "teaserSrc": "/models/unik3d-prior/teaser.webp",
-      "teaserAlt": "Official paper teaser: UniK3D introduces a novel and versatile approach that delivers precise metric 3D geometry estimation from a single image and for any camera type, ranging from pinhole to panoramic, without requiring any camera.",
-      "teaserAltZh": "论文官方 Teaser：UniK3D 的几何与深度论文配图。",
-      "teaserCaption": "Official paper teaser: UniK3D introduces a novel and versatile approach that delivers precise metric 3D geometry estimation from a single image and for any camera type, ranging from pinhole to panoramic, without requiring any camera.",
-      "teaserCaptionZh": "论文官方 Teaser：UniK3D 的几何与深度论文配图。",
-      "src": "/models/unik3d-prior/overview.png",
-      "alt": "Method overview: Model architecture. UniK3D utilizes solely the single input image to generate the 3D output point cloud ( 𝐎 {O} ) for any camera. The projective geometry of the camera is predicted by the Angular Module. The camera.",
-      "altZh": "论文方法总览：UniK3D 的几何与深度架构。",
-      "caption": "Method overview: Model architecture. UniK3D utilizes solely the single input image to generate the 3D output point cloud ( 𝐎 {O} ) for any camera. The projective geometry of the camera is predicted by the Angular Module. The camera.",
-      "captionZh": "论文方法总览：UniK3D 的几何与深度架构。"
-    },
     "vchitect-2-t2v": {
       "modelId": "vchitect-2-t2v",
       "paperSrc": "/models/vchitect-2-t2v/paper.png",

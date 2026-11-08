@@ -149,7 +149,7 @@ def viser_orientation_defaults(model_id: str, geometry_path: str | Path) -> dict
         "up_direction": "+z",
         "alignment": "auto",
     }
-    if model_id in {"vggt", "vggt-omega", "depth-anything-v3"} or model_id in {"unidepth-v2-prior", "unik3d-prior"}:
+    if model_id in {"vggt", "vggt-omega", "depth-anything-v3"} or model_id == "unidepth-v2-prior":
         defaults.update(
             coordinate_preset=("opencv-to-opengl" if Path(geometry_path).suffix.lower() == ".npz" else "asset-native"),
             up_direction="+y",

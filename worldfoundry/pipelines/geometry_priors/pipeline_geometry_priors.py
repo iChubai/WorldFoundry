@@ -68,12 +68,6 @@ class UniDepthV2PriorPipeline(GeometryPriorPipeline):
     MODEL_ID = "unidepth-v2-prior"
 
 
-class UniK3DPriorPipeline(GeometryPriorPipeline):
-    """Pipeline implementation for UniK3DPrior visual generation."""
-
-    MODEL_ID = "unik3d-prior"
-
-
 class VideoDepthAnythingPriorPipeline(GeometryPriorPipeline):
     """Pipeline implementation for VideoDepthAnythingPrior visual generation."""
 
@@ -90,6 +84,5 @@ __all__ = [
     "PriorDepthAnythingPipeline",
     "TrackAnythingPriorPipeline",
     "UniDepthV2PriorPipeline",
-    "UniK3DPriorPipeline",
     "VideoDepthAnythingPriorPipeline",
 ]

@@ -1333,7 +1333,6 @@ MODEL_ORGS: dict[str, str] = {
     "uni3c": "alibaba",
     "unianimate-dit": "alibaba",
     "unidepth-v2-prior": "eth",
-    "unik3d-prior": "eth",
     "uwm": "uwash",
     "vchitect-2-t2v": "shanghai-ai-lab",
     "veo3": "google-deepmind",

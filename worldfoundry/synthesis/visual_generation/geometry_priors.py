@@ -24,7 +24,6 @@ _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "prior-depth-anything": "worldfoundry.base_models.three_dimensions.depth.priorda",
     "track-anything-prior": "worldfoundry.base_models.perception_core.tracking.track_anything",
     "unidepth-v2-prior": "worldfoundry.base_models.three_dimensions.depth.unidepth",
-    "unik3d-prior": "worldfoundry.base_models.three_dimensions.depth.unik3d",
     "video-depth-anything-prior": "worldfoundry.base_models.three_dimensions.depth.videodepthanything",
 }
 
@@ -70,7 +69,6 @@ def _known_checkpoint_candidates(model_id: str) -> tuple[str, ...]:
             root / "unidepth-v2-vitl14",
             root / "lpiccinelli--unidepth-v2-vitl14",
         ),
-        "unik3d-prior": (root / "unik3d-vitl",),
         "video-depth-anything-prior": (root / "Video-Depth-Anything-Large" / "video_depth_anything_vitl.pth",),
     }
     return tuple(str(path) for path in table.get(model_id, ()))
@@ -300,7 +298,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
         from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
 
         ckpt = self._existing_checkpoint(
-            directory_ok=self.model_id in {"prior-depth-anything", "unidepth-v2-prior", "unik3d-prior"}
+            directory_ok=self.model_id in {"prior-depth-anything", "unidepth-v2-prior"}
         )
         if self.model_id == "dap":
             from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.dap_adapter import (
@@ -361,23 +359,6 @@ class GeometryPriorSynthesis(BaseSynthesis):
             src = DepthEstimationInput(
                 rgb=rgb_tensor, intrinsics=torch.tensor([focal], device=device), camera_type=CameraType.PINHOLE
             )
-        elif self.model_id == "unik3d-prior":
-            from worldfoundry.base_models.three_dimensions.depth.unik3d import Unik3DModel
-
-            model = Unik3DModel(type=str(kwargs.get("type") or "l"), model_path=ckpt)
-            camera_model = str(kwargs.get("camera_model") or "auto").strip().lower()
-            if camera_model == "panorama":
-                src = DepthEstimationInput(rgb=rgb_tensor, camera_type=CameraType.PANORAMA)
-            elif camera_model == "pinhole":
-                src = DepthEstimationInput(
-                    rgb=rgb_tensor,
-                    intrinsics=torch.tensor([focal], device=device),
-                    camera_type=CameraType.PINHOLE,
-                )
-            elif camera_model == "auto":
-                src = DepthEstimationInput(rgb=rgb_tensor, camera_type=CameraType.PINHOLE)
-            else:
-                raise ValueError("UniK3D camera_model must be one of: auto, pinhole, panorama")
         else:
             raise RuntimeError(f"Unsupported geometry prior model: {self.model_id}")
 
@@ -391,10 +372,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
             depth_kind=str(getattr(model.depth_type, "value", model.depth_type)),
             max_points=int(kwargs.get("max_points") or 5000),
             focal_length=focal,
-            extra_metadata={
-                "checkpoint_path": ckpt,
-                **({"camera_model": camera_model} if self.model_id == "unik3d-prior" else {}),
-            },
+            extra_metadata={"checkpoint_path": ckpt},
         )
 
     def _run_video_depth(self, *, video: Any, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:

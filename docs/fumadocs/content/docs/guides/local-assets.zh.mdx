@@ -246,24 +246,11 @@ python scripts/setup/prepare_benchmark_assets.py \
         <p>官方来源：HF <a href="https://huggingface.co/lpiccinelli/unidepth-v2-vitl14">lpiccinelli/unidepth-v2-vitl14</a>。文件名：<code>config.json</code>、<code>model.safetensors</code></p>
         <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/'}</code></p>
       </li>
-      <li className="pi-kv-row">
-        <div className="pi-kv-head">
-          <div className="pi-kv-names">
-            <code>unik3d_vitl</code>
-          </div>
-          <span className="pi-kv-default">
-            <span>覆盖变量</span>
-            <code>WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR</code>
-          </span>
-        </div>
-        <p>官方来源：HF <a href="https://huggingface.co/lpiccinelli/unik3d-vitl">lpiccinelli/unik3d-vitl</a>。文件名：<code>config.json</code>、<code>model.safetensors</code></p>
-        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/'}</code></p>
-      </li>
     </ul>
   </section>
 </div>
 
-UniDepth V2 与 UniK3D 权重采用 CC-BY-NC-4.0；下载或再分发前需要核对上游的非商业使用条款。
+UniDepth V2 权重采用 CC-BY-NC-4.0；下载或再分发前需要核对上游的非商业使用条款。
 
 先查看准确 URL、解析后路径、大小校验和 export 命令，不执行下载：
 
@@ -273,11 +260,10 @@ wf models assets \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
-  --capability unik3d_vitl \
   --json
 ```
 
-补齐缺失文件时添加 `--execute-downloads`。SAM2、UniDepth V2 与 UniK3D 的 Hugging Face 下载会遵循 `HF_ENDPOINT`；RepViT-SAM 与 MiDaS 使用各自官方 GitHub repo/release URL：
+补齐缺失文件时添加 `--execute-downloads`。SAM2 与 UniDepth V2 的 Hugging Face 下载会遵循 `HF_ENDPOINT`；RepViT-SAM 与 MiDaS 使用各自官方 GitHub repo/release URL：
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
@@ -286,7 +272,6 @@ wf models assets \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
-  --capability unik3d_vitl \
   --execute-downloads
 ```
 

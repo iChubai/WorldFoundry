@@ -1,5 +1,5 @@
 {
-  "modelsListed": 263,
+  "modelsListed": 262,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -1418,7 +1418,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 30,
+      "count": 29,
       "entries": [
         {
           "id": "cut3r",
@@ -1607,14 +1607,6 @@
           "status": "integrated",
           "aliases": [
             "unidepth-v2-prior"
-          ]
-        },
-        {
-          "id": "unik3d-prior",
-          "name": "UniK 3D",
-          "status": "integrated",
-          "aliases": [
-            "unik3d-prior"
           ]
         },
         {

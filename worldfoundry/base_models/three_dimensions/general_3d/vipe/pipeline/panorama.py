@@ -28,7 +28,6 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import lietor
 # isort: split
 from worldfoundry.base_models.three_dimensions.depth.base import DepthEstimationInput, DepthEstimationModel
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1 import DAPModel
-from worldfoundry.base_models.three_dimensions.depth.unik3d import Unik3DModel
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.slam.interface import SLAMOutput
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.slam.system import SLAMSystem
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import (
@@ -73,9 +72,7 @@ class MergedPanoramaVideoStream(VideoStream):
         self.pano_depth_method = pano_depth_method
         self.pano_depth_model: DepthEstimationModel | None
 
-        if self.pano_depth_method == "unik3d":
-            self.pano_depth_model = Unik3DModel()
-        elif self.pano_depth_method == "dap":
+        if self.pano_depth_method == "dap":
             self.pano_depth_model = DAPModel()
         elif self.pano_depth_method is None:
             self.pano_depth_model = None

@@ -1242,16 +1242,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：UniDepth V2 的几何与深度架构。",
         ),
     },
-    "unik3d-prior": {
-        "teaser": (
-            "Official paper teaser: UniK3D introduces a novel and versatile approach that delivers precise metric 3D geometry estimation from a single image and for any camera type, ranging from pinhole to panoramic, without requiring any camera.",
-            "论文官方 Teaser：UniK3D 的几何与深度论文配图。",
-        ),
-        "overview": (
-            "Method overview: Model architecture. UniK3D utilizes solely the single input image to generate the 3D output point cloud ( 𝐎 {O} ) for any camera. The projective geometry of the camera is predicted by the Angular Module. The camera.",
-            "论文方法总览：UniK3D 的几何与深度架构。",
-        ),
-    },
     "uwm": {
         "overview": (
             "Method overview: Fig. 1: Unified World Models integrates action and video diffusion in a unified transformer architecture controlled by modality-specific diffusion timesteps. The model can be trained on large robotics datasets and.",

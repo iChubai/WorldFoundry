@@ -556,10 +556,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2502.20110v2/teaser1.png",
         "overview": "https://arxiv.org/html/2502.20110v2/overview3.png",
     },
-    "unik3d-prior": {
-        "teaser": "https://arxiv.org/html/2503.16591v1/teaser_cr.png",
-        "overview": "https://arxiv.org/html/2503.16591v1/overview_cr.png",
-    },
     "uwm": {
         "overview": "https://arxiv.org/html/2504.02792v3/teaser.png",
     },

@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 220,
+  "modelsTotal": 219,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -610,7 +610,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 30,
+      "count": 29,
       "entries": [
         {
           "name": "CUT3R",
@@ -703,10 +703,6 @@
         {
           "name": "UniDepth V2",
           "url": "https://github.com/lpiccinelli-eth/UniDepth"
-        },
-        {
-          "name": "UniK3D",
-          "url": "https://github.com/lpiccinelli-eth/UniK3D"
         },
         {
           "name": "VGGT",

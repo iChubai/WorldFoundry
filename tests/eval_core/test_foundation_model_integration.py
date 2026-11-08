@@ -1152,7 +1152,6 @@ def test_geometric_priors_are_independent_model_catalog_entries():
         "prior-depth-anything": "worldfoundry.base_models.three_dimensions.depth.priorda",
         "track-anything-prior": "worldfoundry.base_models.perception_core.tracking.track_anything",
         "unidepth-v2-prior": "worldfoundry.base_models.three_dimensions.depth.unidepth",
-        "unik3d-prior": "worldfoundry.base_models.three_dimensions.depth.unik3d",
         "video-depth-anything-prior": "worldfoundry.base_models.three_dimensions.depth.videodepthanything",
     }
 

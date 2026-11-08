@@ -9,7 +9,6 @@ depth_stack:
     - moge_vitl
     - moge_v2_vitl_normal
     - unidepth_v2_vitl14
-    - unik3d_vitl
   note: Shared monocular and metric-depth assets used by video-world and 3D perception benchmarks.
 
 geometry_stack:

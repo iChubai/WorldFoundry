@@ -10,7 +10,6 @@ from .pipeline_geometry_priors import (
     PriorDepthAnythingPipeline,
     TrackAnythingPriorPipeline,
     UniDepthV2PriorPipeline,
-    UniK3DPriorPipeline,
     VideoDepthAnythingPriorPipeline,
 )
 
@@ -24,6 +23,5 @@ __all__ = [
     "PriorDepthAnythingPipeline",
     "TrackAnythingPriorPipeline",
     "UniDepthV2PriorPipeline",
-    "UniK3DPriorPipeline",
     "VideoDepthAnythingPriorPipeline",
 ]

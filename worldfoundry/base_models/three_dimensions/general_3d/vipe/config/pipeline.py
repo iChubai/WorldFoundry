@@ -65,7 +65,7 @@ class PostConfig(BaseConfigSchema):
 
     depth_align_model: str | None = Field(
         description="Depth model or alignment recipe used after SLAM. Examples include adaptive_unidepth-l, "
-        "adaptive_unidepth-l_svda, adaptive_moge_vda, mvd_dav3, dap, and unik3d. Set to null for pose-only output."
+        "adaptive_unidepth-l_svda, adaptive_moge_vda, mvd_dav3, and dap. Set to null for pose-only output."
     )
 
 

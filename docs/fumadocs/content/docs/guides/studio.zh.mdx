@@ -671,9 +671,9 @@ Spark 前区分普通 PLY geometry 和 Gaussian-splat PLY。
 
 - 已完成 OpenCV-to-OpenGL 对齐的官方 GLB 使用 `asset-native` 和 exporter 声明的
   up axis；VGGT/VGGT-Omega 官方 GLB 使用 `+Y` up、`alignment=none`。
-- VGGT/VGGT-Omega、UniDepth V2 与 UniK3D 的原始 model-point NPZ 保留 OpenCV
+- VGGT/VGGT-Omega 与 UniDepth V2 的原始 model-point NPZ 保留 OpenCV
   camera frame，Viser 只应用一次 `opencv-to-opengl` 并使用 `+Y` up。
-- UniDepth V2/UniK3D 的 Workspace PLY 已写成 `x-right/y-up/z-forward`，因此使用
+- UniDepth V2 的 Workspace PLY 已写成 `x-right/y-up/z-forward`，因此使用
   `asset-native`、`+Y` up、`alignment=none`，不能再次翻转。
 - LoGeR 与 Pi3 的 PLY 保留预测 camera-to-world sidecar；Viser 对 points
   与 cameras 一起应用 `first-camera-opengl`，使用 `+Y` up，并按中心 5-95%
@@ -681,7 +681,7 @@ Spark 前区分普通 PLY geometry 和 Gaussian-splat PLY。
 - Rerun recording 必须声明 world `ViewCoordinates`，并让每个 `Pinhole` 使用同一
   camera convention；Cut3R 的 world/camera 都使用 RDF。
 
-Workspace 会自动解析 VGGT、LoGeR、Pi3、UniDepth V2 与 UniK3D 的上述已验证默认值。其他 exporter 可用 Visualizer Params JSON
+Workspace 会自动解析 VGGT、LoGeR、Pi3 与 UniDepth V2 的上述已验证默认值。其他 exporter 可用 Visualizer Params JSON
 显式覆盖。请求端口被占用时，Viser 会显示实际绑定端口。Rerun 默认使用 WebGPU；
 只有目标浏览器需要时才设置 `WORLDFOUNDRY_STUDIO_RERUN_RENDERER=webgl`。
 

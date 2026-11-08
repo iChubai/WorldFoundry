@@ -33,6 +33,11 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
     ``reset_realtime`` releases both while the weights stay loaded. Streaming a
     rollout to completion yields the frames of one ``__call__`` with the same
     prompt, seed and geometry.
+
+    Loading with ``kv_window="sink5-window7-rerope"`` selects the approximate
+    long-rollout cache: ``__call__`` accepts more than 81 frames, and the
+    realtime rollout is unbounded (``max_chunks`` is ``None``) and runs until it
+    is reset, its first ``num_frames`` matching ``__call__``.
     """
 
     MODEL_ID = "self-forcing"
@@ -48,6 +53,7 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_FPS = 16
     DEFAULT_NEGATIVE_PROMPT = ""
     DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
+    RUNTIME_POLICY_OPTION_KEYS = (*NativeVisualDiffusionPipeline.RUNTIME_POLICY_OPTION_KEYS, "kv_window")
 
     def __init__(
         self,
@@ -71,7 +77,12 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
     def _codec(self) -> WanVideoDecoder:
         return cast("WanVideoDecoder", self._window_runner.components.decoder)
 
-    def _realtime_spec(self, max_chunks: int) -> RealtimeSpec:
+    @property
+    def _unbounded_rollout(self) -> bool:
+        """Whether the denoiser's rolling KV cache lets a realtime rollout run until reset."""
+        return getattr(self._window_runner.windowed_denoiser, "kv_window", None) is not None
+
+    def _realtime_spec(self, max_chunks: int | None) -> RealtimeSpec:
         """One chunk per latent block: the causal codec emits 9 frames first, then 12."""
         block_size = int(self._window_runner.windowed_denoiser.block_size)
         codec = self._codec
@@ -86,14 +97,16 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
         )
 
     def prepare_realtime(self) -> dict[str, Any]:
-        """Report the cadence of a default-length rollout (7 chunks for 81 frames)."""
+        """Report the cadence of a default-length rollout (7 chunks for 81 frames), or an unbounded one."""
+        if self._unbounded_rollout:
+            return {"realtime_spec": self._realtime_spec(None).to_payload()}
         block_size = int(self._window_runner.windowed_denoiser.block_size)
         latent_frames = self._codec.get_latent_num_frames(self.DEFAULT_NUM_FRAMES)
         return {"realtime_spec": self._realtime_spec(latent_frames // block_size).to_payload()}
 
     def _open_realtime_rollout(self, prompt: str, request: DiffusionRequest) -> AutoregressiveStream:
         """Open the rollout of ``request`` with fresh codec history."""
-        stream = self._window_runner.open_stream(request)
+        stream = self._window_runner.open_stream(request, unbounded=self._unbounded_rollout)
         self._realtime_stream = stream
         self._realtime_decode_state = self._codec.new_stream_state()
         self._realtime_prompt = prompt.strip()

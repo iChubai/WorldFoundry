@@ -379,7 +379,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         return clean
 
     @torch.no_grad()
-    def open_stream(self, request: DiffusionRequest) -> AutoregressiveStream:
+    def open_stream(self, request: DiffusionRequest, *, unbounded: bool = False) -> AutoregressiveStream:
         """Open a resident rollout for ``request``; each :meth:`AutoregressiveStream.step` commits one block.
 
         Opening encodes conditions, runs extension ``on_run_start`` /
@@ -387,10 +387,15 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         latent initializer, creates the KV caches, and commits KV-only prefixes or
         the first-frame latent. One stream may be open per runner: opening a second
         one, or calling :meth:`run`, while a stream is open raises :exc:`RuntimeError`.
+
+        An ``unbounded`` stream keeps stepping past the request's frames until it is
+        closed. Those later blocks draw fresh noise from the rollout generator and
+        are returned without being buffered, so they need a denoiser whose KV cache
+        rolls within a fixed size.
         """
         if self._active_stream is not None:
             raise RuntimeError("an autoregressive stream is already open on this runner")
-        stream = AutoregressiveStream(self, request)
+        stream = AutoregressiveStream(self, request, unbounded=unbounded)
         self._active_stream = stream
         return stream
 
@@ -459,14 +464,24 @@ class AutoregressiveStream:
     committed. Decoding stays with the caller (for example
     ``WanVideoDecoder.new_stream_state()`` / ``decode_chunk()``).
 
+    An unbounded stream never finishes: past the request's frames it steps on with
+    fresh per-block noise until :meth:`close`, and never runs ``on_diffusion_complete``.
+
     :meth:`close` releases the caches and runs extension ``on_run_end`` once; it is
     idempotent. A failure inside opening or :meth:`step` runs ``on_run_error``
     instead, releases the caches and leaves the stream closed, so the runner can
     open the next stream.
     """
 
-    def __init__(self, runner: AutoregressiveWindowRunner, request: DiffusionRequest) -> None:
+    def __init__(
+        self,
+        runner: AutoregressiveWindowRunner,
+        request: DiffusionRequest,
+        *,
+        unbounded: bool = False,
+    ) -> None:
         self._runner = runner
+        self._unbounded = unbounded
         self._closed = False
         self._completed_blocks = 0
         self._last_block_frames: tuple[int, int] | None = None
@@ -632,9 +647,9 @@ class AutoregressiveStream:
         )
 
     @property
-    def total_blocks(self) -> int:
-        """Number of noisy blocks in the rollout, excluding prefix and first-frame commits."""
-        return len(self._block_starts)
+    def total_blocks(self) -> int | None:
+        """Number of noisy blocks in the rollout, excluding prefix and first-frame commits; ``None`` if unbounded."""
+        return None if self._unbounded else len(self._block_starts)
 
     @property
     def completed_blocks(self) -> int:
@@ -643,8 +658,8 @@ class AutoregressiveStream:
 
     @property
     def done(self) -> bool:
-        """Whether every block has been committed."""
-        return self._completed_blocks == len(self._block_starts)
+        """Whether every block has been committed; an unbounded stream is never done."""
+        return not self._unbounded and self._completed_blocks == len(self._block_starts)
 
     @property
     def last_block_frames(self) -> tuple[int, int] | None:
@@ -666,7 +681,9 @@ class AutoregressiveStream:
         The result is a ``B C (V T) H W`` slice of the stream's latent buffer in the
         layout of ``DiffusionOutput.latents``, covering :attr:`last_block_frames` of
         every view. The step that commits the last block also runs extension
-        ``on_diffusion_complete`` with the full latent buffer. Stepping a closed
+        ``on_diffusion_complete`` with the full latent buffer. Blocks of an unbounded
+        stream past the request's frames are returned as they are, without a buffer.
+        Stepping a closed
         or finished stream raises :exc:`RuntimeError`;
         any other failure closes the stream through ``on_run_error`` and re-raises.
         """
@@ -680,13 +697,30 @@ class AutoregressiveStream:
         n_views = self._n_views
         frames_per_view = self._frames_per_view
         frame_sequence_length = self._frame_sequence_length
-        start = self._block_starts[self._completed_blocks]
-        end = min(start + self._block_size, frames_per_view)
+        buffered = self._completed_blocks < len(self._block_starts)
+        if buffered:
+            start = self._block_starts[self._completed_blocks]
+            end = min(start + self._block_size, frames_per_view)
+        else:
+            start = frames_per_view + (self._completed_blocks - len(self._block_starts)) * self._block_size
+            end = start + self._block_size
         try:
-            block_noise = rearrange(
-                state.noise_by_view[:, :, :, start:end],
-                "B C V T H W -> B C (V T) H W",
-            )
+            if buffered:
+                block_noise = rearrange(
+                    state.noise_by_view[:, :, :, start:end],
+                    "B C V T H W -> B C (V T) H W",
+                )
+            else:
+                batch, channels, views, _, height, width = state.noise_by_view.shape
+                block_noise = rearrange(
+                    torch.randn(
+                        (batch, channels, views, end - start, height, width),
+                        generator=context.generator,
+                        device=state.noise_by_view.device,
+                        dtype=state.noise_by_view.dtype,
+                    ),
+                    "B C V T H W -> B C (V T) H W",
+                )
             positive = runner._window_conditioning(
                 state.positive_base,
                 n_views=n_views,
@@ -723,9 +757,10 @@ class AutoregressiveStream:
                     block_noise,
                     positive=positive,
                 )
-            state.output_by_view[:, :, :, start:end] = rearrange(
-                block, "B C (V T) H W -> B C V T H W", V=n_views
-            )
+            if buffered:
+                state.output_by_view[:, :, :, start:end] = rearrange(
+                    block, "B C (V T) H W -> B C V T H W", V=n_views
+                )
 
             commit = block
             commit_timestep = runner.context_timestep if runner.prediction_mode == "distilled-x0" else 0
@@ -775,6 +810,8 @@ class AutoregressiveStream:
         except BaseException as error:
             self._finish(error)
             raise
+        if not buffered:
+            return block
         return rearrange(state.output_by_view[:, :, :, start:end], "B C V T H W -> B C (V T) H W")
 
     def close(self) -> None:

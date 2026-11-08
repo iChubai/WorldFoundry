@@ -21,104 +21,9 @@ class AOTEngine(nn.Module):
         self.long_term_mem_gap = long_term_mem_gap
         self.short_term_mem_skip = short_term_mem_skip
         self.max_len_long_term = max_len_long_term
-        self.losses = None
 
         self.restart_engine()
 
-    def forward(
-        self,
-        all_frames,
-        all_masks,
-        batch_size,
-        obj_nums,
-        step=0,
-        tf_board=False,
-        use_prev_pred=False,
-        enable_prev_frame=False,
-        use_prev_prob=False,
-    ):  # only used for training
-        if self.losses is None:
-            self._init_losses()
-
-        self.freeze_id = bool(use_prev_pred)
-        aux_weight = self.aux_weight * max(self.aux_step - step, 0.0) / self.aux_step
-
-        self.offline_encoder(all_frames, all_masks)
-
-        self.add_reference_frame(frame_step=0, obj_nums=obj_nums)
-
-        grad_state = torch.no_grad if aux_weight == 0 else torch.enable_grad
-        with grad_state():
-            ref_aux_loss, ref_aux_mask = self.generate_loss_mask(self.offline_masks[self.frame_step], step)
-
-        aux_losses = [ref_aux_loss]
-        aux_masks = [ref_aux_mask]
-
-        curr_losses, curr_masks = [], []
-        if enable_prev_frame:
-            self.set_prev_frame(frame_step=1)
-            with grad_state():
-                prev_aux_loss, prev_aux_mask = self.generate_loss_mask(self.offline_masks[self.frame_step], step)
-            aux_losses.append(prev_aux_loss)
-            aux_masks.append(prev_aux_mask)
-        else:
-            self.match_propogate_one_frame()
-            curr_loss, curr_mask, curr_prob = self.generate_loss_mask(
-                self.offline_masks[self.frame_step], step, return_prob=True
-            )
-            self.update_short_term_memory(
-                curr_mask if not use_prev_prob else curr_prob,
-                None if use_prev_pred else self.assign_identity(self.offline_one_hot_masks[self.frame_step]),
-            )
-            curr_losses.append(curr_loss)
-            curr_masks.append(curr_mask)
-
-        self.match_propogate_one_frame()
-        curr_loss, curr_mask, curr_prob = self.generate_loss_mask(
-            self.offline_masks[self.frame_step], step, return_prob=True
-        )
-        curr_losses.append(curr_loss)
-        curr_masks.append(curr_mask)
-        for _ in range(self.total_offline_frame_num - 3):
-            self.update_short_term_memory(
-                curr_mask if not use_prev_prob else curr_prob,
-                None if use_prev_pred else self.assign_identity(self.offline_one_hot_masks[self.frame_step]),
-            )
-            self.match_propogate_one_frame()
-            curr_loss, curr_mask, curr_prob = self.generate_loss_mask(
-                self.offline_masks[self.frame_step], step, return_prob=True
-            )
-            curr_losses.append(curr_loss)
-            curr_masks.append(curr_mask)
-
-        aux_loss = torch.cat(aux_losses, dim=0).mean(dim=0)
-        pred_loss = torch.cat(curr_losses, dim=0).mean(dim=0)
-
-        loss = aux_weight * aux_loss + pred_loss
-
-        all_pred_mask = aux_masks + curr_masks
-
-        all_frame_loss = aux_losses + curr_losses
-
-        boards = {"image": {}, "scalar": {}}
-
-        return loss, all_pred_mask, all_frame_loss, boards
-
-    def _init_losses(self):
-        cfg = self.cfg
-
-        from ..layers.loss import CrossEntropyLoss, SoftJaccordLoss
-
-        bce_loss = CrossEntropyLoss(cfg.TRAIN_TOP_K_PERCENT_PIXELS, cfg.TRAIN_HARD_MINING_RATIO * cfg.TRAIN_TOTAL_STEPS)
-        iou_loss = SoftJaccordLoss()
-
-        losses = [bce_loss, iou_loss]
-        loss_weights = [0.5, 0.5]
-
-        self.losses = nn.ModuleList(losses)
-        self.loss_weights = loss_weights
-        self.aux_weight = cfg.TRAIN_AUX_LOSS_WEIGHT
-        self.aux_step = cfg.TRAIN_TOTAL_STEPS * cfg.TRAIN_AUX_LOSS_RATIO + 1e-5
 
     def encode_one_img_mask(self, img=None, mask=None, frame_step=-1):
         if frame_step == -1:
@@ -371,49 +276,6 @@ class AOTEngine(nn.Module):
             pred_prob = torch.softmax(pred_id_logits, dim=1)
             return pred_mask, pred_prob
 
-    def calculate_current_loss(self, gt_mask, step):
-        pred_id_logits = self.pred_id_logits
-
-        pred_id_logits = F.interpolate(
-            pred_id_logits, size=gt_mask.size()[-2:], mode="bilinear", align_corners=self.align_corners
-        )
-
-        label_list = []
-        logit_list = []
-        for batch_idx, obj_num in enumerate(self.obj_nums):
-            now_label = gt_mask[batch_idx].long()
-            now_logit = pred_id_logits[batch_idx, : (obj_num + 1)].unsqueeze(0)
-            label_list.append(now_label.long())
-            logit_list.append(now_logit)
-
-        total_loss = 0
-        for loss, loss_weight in zip(self.losses, self.loss_weights, strict=False):
-            total_loss = total_loss + loss_weight * loss(logit_list, label_list, step)
-
-        return total_loss
-
-    def generate_loss_mask(self, gt_mask, step, return_prob=False):
-        self.decode_current_logits()
-        loss = self.calculate_current_loss(gt_mask, step)
-        if return_prob:
-            mask, prob = self.predict_current_mask(return_prob=True)
-            return loss, mask, prob
-        else:
-            mask = self.predict_current_mask()
-            return loss, mask
-
-    def keep_gt_mask(self, pred_mask, keep_prob=0.2):
-        pred_mask = pred_mask.float()
-        gt_mask = self.offline_masks[self.frame_step].float().squeeze(1)
-
-        shape = [1 for _ in range(pred_mask.ndim)]
-        shape[0] = self.batch_size
-        random_tensor = keep_prob + torch.rand(shape, dtype=pred_mask.dtype, device=pred_mask.device)
-        random_tensor.floor_()  # binarize
-
-        pred_mask = pred_mask * (1 - random_tensor) + gt_mask * random_tensor
-
-        return pred_mask
 
     def restart_engine(self, batch_size=1, enable_id_shuffle=False):
         self.batch_size = batch_size

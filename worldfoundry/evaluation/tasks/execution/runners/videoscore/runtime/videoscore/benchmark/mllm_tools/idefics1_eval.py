@@ -1,6 +1,5 @@
 import os
-import time
-from typing import List
+from typing import ClassVar
 
 import torch
 from transformers import AutoProcessor, IdeficsForVisionText2Text
@@ -8,7 +7,7 @@ from transformers import AutoProcessor, IdeficsForVisionText2Text
 
 class Idefics1:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "HuggingFaceM4/idefics-9b-instruct") -> None:
         """Llava model wrapper

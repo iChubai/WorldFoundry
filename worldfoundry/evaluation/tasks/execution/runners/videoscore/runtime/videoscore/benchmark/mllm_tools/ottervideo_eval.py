@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import ClassVar
 
 from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterVideo as OtterVideoModel
 
@@ -17,7 +17,7 @@ class MyOtterVideoModel(OtterVideoModel):
 
 class OtterVideo:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "luodian/OTTER-Video-LLaMA7B-DenseCaption") -> None:
         """Llava model wrapper

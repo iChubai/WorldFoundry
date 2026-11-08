@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import ClassVar
 
 import torch
 from mantis.models.mllava import LlavaForConditionalGeneration, MLlavaProcessor, chat_mllava
@@ -10,7 +10,7 @@ from .mllm_utils import load_images, merge_images
 
 class MLlava:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "Mantis-VL/mllava_nlvr2_4096") -> None:
         """Llava model wrapper
@@ -61,7 +61,7 @@ class MLlava:
         }
         if self.support_multi_image:
             text_prompt = ""
-            for i, message in enumerate(inputs):
+            for _i, message in enumerate(inputs):
                 if message["type"] == "text":
                     text_prompt += message["content"]
                 elif message["type"] == "image":

@@ -1,11 +1,9 @@
 import base64
 import os
 from io import BytesIO
-from typing import List, Optional, Tuple, Union
 
 import requests
 from PIL import Image, ImageOps
-from sqlalchemy import null
 
 
 def get_api_key(file_path):
@@ -60,7 +58,7 @@ def load_image(image: str | Image.Image, format: str = "RGB", size: tuple | None
         ValueError: If the provided image format is not recognized.
     """
     if isinstance(image, str):
-        if image.startswith("http://") or image.startswith("https://"):
+        if image.startswith(("http://", "https://")):
             image = Image.open(requests.get(image, stream=True).raw)
         elif os.path.isfile(image):
             image = Image.open(image)
@@ -76,7 +74,7 @@ def load_image(image: str | Image.Image, format: str = "RGB", size: tuple | None
         )
     image = ImageOps.exif_transpose(image)
     image = image.convert(format)
-    if size != None:
+    if size is not None:
         image = image.resize(size, Image.LANCZOS)
     return image
 
@@ -108,7 +106,7 @@ class GPT4v:
         self.model_name = model_name
         self.use_encode = are_images_encoded
 
-    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):  # noqa: B006 - Read-only default; retain the public signature.
         prompt_content = []
         text_dict = {"type": "text", "text": text_prompt}
         prompt_content.append(text_dict)
@@ -117,7 +115,7 @@ class GPT4v:
             image_links = [image_links]
         for image_link in image_links:
             image = load_image(image_link)
-            if self.use_encode == True:
+            if self.use_encode:
                 visual_dict = {
                     "type": "image_url",
                     "image_url": {"url": f"data:image/jpeg;base64,{encode_pil_image(image)}"},

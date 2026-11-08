@@ -1,10 +1,8 @@
-from typing import List
-
 import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from skimage import color, io
+from skimage import color
 from skimage.metrics import structural_similarity as ssim
 from tqdm import tqdm
 

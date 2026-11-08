@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import os
@@ -6,11 +5,10 @@ import re
 import time
 from datetime import datetime
 from string import Template
-from typing import List
 
 import fire
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from openai import AzureOpenAI
 from tqdm import tqdm
 from utils_gpt4o import GPT4o
@@ -76,7 +74,7 @@ def query_one_video(logger, item, aws_s3_prefix):
 def eval_gpt4(
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     bench_name: str = "video_feedback",
-    name_postfixs: list[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],  # noqa: B006 - Read-only default; retain the public signature.
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_gpt4o.json",
 ):
     logging.basicConfig(level=logging.INFO)
@@ -103,7 +101,7 @@ def eval_gpt4(
         # test_dataset = Dataset.from_list(test_data)
         # ans_dataset=test_dataset.map(query_one_video,num_proc=8)
 
-        for idx, item in tqdm(enumerate(test_data)):
+        for _idx, item in tqdm(enumerate(test_data)):
             retries = 0
             while retries < MAX_TRY:
                 try:
@@ -145,7 +143,8 @@ def eval_gpt4(
 
             if retries >= MAX_TRY:
                 logger.info("quota may run out")
-                logger.info(f"total num of evaled videos {len(json.load(open(result_file)))}")
+                with open(result_file) as f:
+                    logger.info(f"total num of evaled videos {len(json.load(f))}")
                 break
         if retries >= MAX_TRY:
             break

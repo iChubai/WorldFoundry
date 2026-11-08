@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import ClassVar
 
 from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterHD as OtterHDModel
 
@@ -8,7 +8,7 @@ from .mllm_utils import merge_images
 
 class OtterHD:
     support_multi_image = False
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "Otter-AI/OtterHD-8B") -> None:
         """Llava model wrapper

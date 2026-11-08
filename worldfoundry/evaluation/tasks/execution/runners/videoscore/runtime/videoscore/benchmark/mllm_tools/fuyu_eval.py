@@ -1,9 +1,4 @@
-from io import BytesIO
-from typing import List
-
-import requests
 import torch
-from PIL import Image
 from transformers import AutoTokenizer, FuyuForCausalLM, FuyuProcessor
 
 from .mllm_utils import merge_images
@@ -52,8 +47,8 @@ class Fuyu:
             inputs = self.prepare_prompt(image_links, text_prompt)
             return self.get_parsed_output(inputs)
 
-    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
-        if type(image_links) == str:
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):  # noqa: B006 - Read-only default; retain the public signature.
+        if type(image_links) is str:
             image_links = [image_links]
         image = merge_images(image_links)
         inputs = self.processor(text=text_prompt, images=image, return_tensors="pt").to(self.model.device)

@@ -90,7 +90,7 @@ def main(
 
         # add random as a model
         random_acc = 0
-        for idx, item in ref_data_map.items():
+        for _idx, item in ref_data_map.items():
             model_scores = {model_name: random.random() * 4 for model_name in item["preference"]}
             for left_model_name in item["preference"]:
                 for right_model_name in item["preference"][left_model_name]:
@@ -119,7 +119,8 @@ def main(
                 continue
             print(f"Processing {res_file}")
             file_model_name = res_file.split(".")[0].split("_")[-1]
-            data = json.load(open(f"{result_dir}/{res_file}"))
+            with open(f"{result_dir}/{res_file}") as f:
+                data = json.load(f)
 
             data_map = {}
             last_idx = -1
@@ -198,7 +199,7 @@ def main(
             }
 
         # sort all_model_acc by acc
-        all_model_acc = {k: v for k, v in sorted(all_model_acc.items(), key=lambda item: item[1]["acc"], reverse=True)}
+        all_model_acc = dict(sorted(all_model_acc.items(), key=lambda item: item[1]["acc"], reverse=True))
         pt_table = pt.PrettyTable()
         abb_aspects = {
             "visual quality": "VQ",

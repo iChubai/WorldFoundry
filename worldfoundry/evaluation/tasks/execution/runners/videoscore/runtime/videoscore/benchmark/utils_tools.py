@@ -1,7 +1,6 @@
 import json
 import os
 from io import BytesIO
-from typing import List
 
 import requests
 from PIL import Image
@@ -16,7 +15,8 @@ def _add_to_res_file(eval_res_file, curr_res_compare_dict):
             json.dump([curr_res_compare_dict], f, indent=4)
         return
     else:
-        all_data = json.load(open(eval_res_file))
+        with open(eval_res_file) as f:
+            all_data = json.load(f)
         all_data.append(curr_res_compare_dict)
         with open(eval_res_file, "w") as f:
             json.dump(all_data, f, indent=4)
@@ -99,8 +99,6 @@ def load_image(image_file):
         response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
-        import os
-
         image = Image.open(image_file).convert("RGB")
     return image
 
@@ -108,15 +106,12 @@ def load_image(image_file):
 def load_images(image_files):
     out = []
     for image_file in image_files:
-        if isinstance(image_file, Image.Image):
-            image = image_file.convert("RGB")
-        else:
-            image = load_image(image_file)
+        image = image_file.convert("RGB") if isinstance(image_file, Image.Image) else load_image(image_file)
         out.append(image)
     return out
 
 
-def merge_images(image_links: list = []):
+def merge_images(image_links: list = []):  # noqa: B006 - Read-only default; retain the public signature.
     """Merge multiple images into one image
 
     Args:

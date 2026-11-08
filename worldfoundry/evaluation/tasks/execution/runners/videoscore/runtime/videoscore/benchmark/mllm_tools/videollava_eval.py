@@ -1,18 +1,17 @@
 import os
-import re
-from typing import List
+from typing import ClassVar
 
 import numpy as np
 import torch
 from mantis.models.conversation import conv_videollava as default_conv
-from transformers import AutoConfig, VideoLlavaForConditionalGeneration, VideoLlavaProcessor
+from transformers import VideoLlavaForConditionalGeneration, VideoLlavaProcessor
 
 from .mllm_utils import load_images
 
 
 class VideoLlava:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "LanguageBind/Video-LLaVA-7B-hf", input_type="image") -> None:
         """Llava model wrapper
@@ -54,13 +53,13 @@ class VideoLlava:
         if self.support_multi_image:
             text_prompt = ""
             if self.input_type == "image":
-                for i, message in enumerate(inputs):
+                for _i, message in enumerate(inputs):
                     if message["type"] == "text":
                         text_prompt += message["content"]
                     elif message["type"] == "image":
                         text_prompt += f"{self.image_token} \n"
             elif self.input_type == "video":
-                for i, message in enumerate(inputs):
+                for _i, message in enumerate(inputs):
                     if message["type"] == "text":
                         text_prompt += message["content"]
                 text_prompt = self.video_token + "\n" + text_prompt

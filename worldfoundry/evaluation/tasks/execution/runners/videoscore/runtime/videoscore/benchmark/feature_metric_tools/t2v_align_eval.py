@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import torch.nn.functional as F
 from PIL import Image

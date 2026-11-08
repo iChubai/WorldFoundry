@@ -2,7 +2,6 @@ import logging
 import os
 import re
 from datetime import datetime
-from typing import List
 
 import fire
 import torch
@@ -18,7 +17,7 @@ def main(
     metric_name: str = "CLIP-Score",
     bench_name: str = "video_feedback",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: list[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],  # noqa: B006 - Read-only default; retain the public signature.
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_CLIP-Score.json",
 ):
     print("metric_name", metric_name)
@@ -47,7 +46,7 @@ def main(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, tokenizer, preprocess, processor = None, None, None, None
 
-    if metric_name == "CLIP-sim" or "CLIP-Score":
+    if metric_name == "CLIP-sim" or "CLIP-Score":  # noqa: SIM222 - Upstream condition; always true.
         from transformers import CLIPModel, CLIPProcessor
 
         model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")

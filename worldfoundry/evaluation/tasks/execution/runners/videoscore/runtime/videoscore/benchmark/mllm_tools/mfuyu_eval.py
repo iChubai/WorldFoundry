@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 from mantis.models.mfuyu import MFuyuForCausalLM, MFuyuProcessor, chat_mfuyu
 
@@ -56,8 +54,8 @@ class MFuyu:
         else:
             raise NotImplementedError
 
-    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
-        if type(image_links) == str:
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):  # noqa: B006 - Read-only default; retain the public signature.
+        if type(image_links) is str:
             image_links = [image_links]
         images = load_images(image_links)
         inputs = {

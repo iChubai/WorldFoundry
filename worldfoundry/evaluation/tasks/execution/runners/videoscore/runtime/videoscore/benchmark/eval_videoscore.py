@@ -2,7 +2,6 @@ import logging
 import os
 import re
 from datetime import datetime
-from typing import List
 
 import fire
 import numpy as np
@@ -78,7 +77,7 @@ def main(
     model_repo_name: str = "TIGER-Lab/VideoScore",
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: list[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],  # noqa: B006 - Read-only default; retain the public signature.
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_videoscore.json",
     bench_name: str = "video_feedback",
 ):

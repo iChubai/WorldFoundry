@@ -1,9 +1,7 @@
-from typing import List
-
 import cv2
 import numpy as np
 from PIL import Image
-from skimage import color, io
+from skimage import color
 from skimage.metrics import structural_similarity as ssim
 
 ROUND_DIGIT = 3

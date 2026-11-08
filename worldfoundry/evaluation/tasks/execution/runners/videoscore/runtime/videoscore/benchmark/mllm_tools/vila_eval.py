@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
-from typing import List
+from typing import ClassVar
 
 from transformers import GenerationConfig
 
@@ -11,7 +10,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.vila import Image, load_vila_mo
 
 class VILA:
     support_multi_image = True
-    merged_image_files: list[str] = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(
         self,

@@ -1,12 +1,7 @@
 import os
-import tempfile
-from io import BytesIO
-from typing import List
+from typing import ClassVar
 
-import requests
 import torch
-from mantis.models.conversation import conv_llava_v1
-from PIL import Image
 from transformers import LlavaNextForConditionalGeneration, LlavaNextProcessor
 from transformers.utils import is_flash_attn_2_available
 
@@ -15,7 +10,7 @@ from .mllm_utils import merge_images
 
 class LlavaNext:
     support_multi_image = False
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "llava-hf/llava-v1.6-vicuna-7b-hf") -> None:
         """Llava model wrapper

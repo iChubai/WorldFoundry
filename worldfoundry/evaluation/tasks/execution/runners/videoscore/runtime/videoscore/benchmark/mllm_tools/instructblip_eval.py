@@ -1,7 +1,6 @@
 """InstructBLIP tends to output short text; design prompts for short answers."""
 
 from io import BytesIO
-from typing import List
 
 import requests
 import torch
@@ -12,7 +11,7 @@ from .mllm_utils import merge_images
 
 
 def load_image(image_file):
-    if image_file.startswith("http") or image_file.startswith("https"):
+    if image_file.startswith(("http", "https")):
         response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
@@ -69,8 +68,8 @@ class INSTRUCTBLIP_FLANT5:
             inputs = self.prepare_prompt(image_links, text_prompt)
             return self.get_parsed_output(inputs)
 
-    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
-        if type(image_links) == str:
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):  # noqa: B006 - Read-only default; retain the public signature.
+        if type(image_links) is str:
             image_links = [image_links]
         image = merge_images(image_links)
         inputs = self.processor(image, text_prompt, return_tensors="pt").to(self.model.device)

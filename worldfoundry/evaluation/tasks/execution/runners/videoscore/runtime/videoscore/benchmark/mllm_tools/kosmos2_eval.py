@@ -1,9 +1,5 @@
-from typing import List
-
 import regex as re
-import requests
 import torch
-from PIL import Image
 from transformers import AutoModelForVision2Seq, AutoProcessor, BatchFeature
 
 from .mllm_utils import load_images, merge_images
@@ -35,11 +31,11 @@ class Kosmos2:
 
         first_image_token_id = processor.tokenizer.unk_token_id + 1
 
-        image_input_ids = (
-            [processor.tokenizer.convert_tokens_to_ids(processor.boi_token)]
-            + list(range(first_image_token_id, num_image_tokens + first_image_token_id))
-            + [processor.tokenizer.convert_tokens_to_ids(processor.eoi_token)]
-        )
+        image_input_ids = [
+            processor.tokenizer.convert_tokens_to_ids(processor.boi_token),
+            *list(range(first_image_token_id, num_image_tokens + first_image_token_id)),
+            processor.tokenizer.convert_tokens_to_ids(processor.eoi_token),
+        ]
         image_attention_mask = [1] * len(image_input_ids)
         # `-2`: not including `boi` and `eoi`
         image_embeds_position_mask = [0] + [1] * (len(image_input_ids) - 2) + [0]

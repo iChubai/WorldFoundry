@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from brisque import BRISQUE
 from PIL import Image

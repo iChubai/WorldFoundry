@@ -49,7 +49,7 @@ def main(
 
     # add random as a model
     random_acc = 0
-    for idx, item in ref_data_map.items():
+    for _idx, item in ref_data_map.items():
         left_preference = item["left_preference"]
         right_preference = item["right_preference"]
         left_score = random.random() * 4
@@ -125,7 +125,7 @@ def main(
         }
 
     # sort all_model_acc by acc
-    all_model_acc = {k: v for k, v in sorted(all_model_acc.items(), key=lambda item: item[1]["acc"], reverse=True)}
+    all_model_acc = dict(sorted(all_model_acc.items(), key=lambda item: item[1]["acc"], reverse=True))
 
     pt_table = pt.PrettyTable()
     abb_aspects = {

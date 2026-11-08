@@ -17,7 +17,8 @@ def cal_spearman_correlation(
             continue
         # result_file example: eval_video_feedback_mantisscore.json
         model_name = result_file.split(".")[0].split("_")[-1]
-        all_res = json.load(open(f"{result_dir}/{result_file}"))
+        with open(f"{result_dir}/{result_file}") as file:
+            all_res = json.load(file)
         all_ref_scores = [ast.literal_eval(item["ref"]) for item in all_res]
         all_ans_scores = [ast.literal_eval(item["ans"]) for item in all_res]
 
@@ -49,7 +50,8 @@ def cal_spearman_correlation(
         if not os.path.exists(spcc_file):
             all_spcc = []
         else:
-            all_spcc = json.load(open(spcc_file))
+            with open(spcc_file) as file:
+                all_spcc = json.load(file)
         all_spcc.append(
             {
                 model_name: {

@@ -1,16 +1,13 @@
 import os
-import time
-from typing import Dict, List, Optional, Union
+from typing import ClassVar
 
-import torch
-import torch.nn as nn
 from easy_openai import openai_completions
 from transformers.image_utils import load_image
 
 
 class GPT4V:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "gpt-4v") -> None:
         """Llava model wrapper
@@ -41,7 +38,7 @@ class GPT4V:
         """
         image_links = [x["content"] for x in inputs if x["type"] == "image"]
         if self.support_multi_image:
-            images = [load_image(image_link) for image_link in image_links]
+            _images = [load_image(image_link) for image_link in image_links]
             messages = [
                 {
                     "role": "system",

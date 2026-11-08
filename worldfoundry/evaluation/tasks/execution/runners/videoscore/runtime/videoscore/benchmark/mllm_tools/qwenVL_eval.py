@@ -1,6 +1,5 @@
 import os
 import tempfile
-from typing import List
 
 from PIL import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -51,15 +50,15 @@ class QwenVL:
             finally:
                 self.close()
 
-    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
-        if type(image_links) == str:
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):  # noqa: B006 - Read-only default; retain the public signature.
+        if type(image_links) is str:
             image_links = [image_links]
         true_image_links = []
-        for i, image_link in enumerate(image_links):
+        for _i, image_link in enumerate(image_links):
             if isinstance(image_link, str):
                 true_image_links.append(image_link)
             elif isinstance(image_link, Image.Image):
-                image_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+                image_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)  # noqa: SIM115 - Closed on the next line; only its name is kept.
                 image_file.close()
                 image_link.save(image_file.name)
                 self.merged_image_files.append(image_file.name)
@@ -68,7 +67,7 @@ class QwenVL:
                 raise NotImplementedError
         image_links = true_image_links
         input_list = []
-        for i, image_link in enumerate(image_links):
+        for _i, image_link in enumerate(image_links):
             input_list.append({"image": image_link})
         input_list.append({"text": text_prompt})
         query = self.tokenizer.from_list_format(input_list)
@@ -82,7 +81,7 @@ class QwenVL:
         """Remove all materialized PIL-image inputs, including failure paths."""
         while self.merged_image_files:
             image_file = self.merged_image_files.pop()
-            try:
+            try:  # noqa: SIM105 - Explicit handler pinned by the repository cleanup contract test.
                 os.remove(image_file)
             except FileNotFoundError:
                 pass

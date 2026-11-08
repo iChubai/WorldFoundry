@@ -1,3 +1,5 @@
+from functools import partial
+
 MLLM_LIST = [
     "blip2",
     "instructblip",
@@ -19,7 +21,6 @@ MLLM_LIST = [
     "mantis",
     "videollava",
 ]
-from functools import partial
 
 
 def get_mfuyu(model_name: str):

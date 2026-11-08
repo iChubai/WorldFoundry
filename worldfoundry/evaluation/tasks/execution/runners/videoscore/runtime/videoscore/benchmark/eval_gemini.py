@@ -3,7 +3,6 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import List
 
 import fire
 import google.generativeai as genai
@@ -24,7 +23,7 @@ def eval_gemini(
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     bench_name: str = "video_feedback",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: list[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],  # noqa: B006 - Read-only default; retain the public signature.
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_gemini-1.5-pro.json",
     base_model: str = "gemini-1.5-pro-latest",
 ):
@@ -69,7 +68,7 @@ def eval_gemini(
                     for img_path in img_path_list:
                         img = Image.open(img_path)
                         img_list.append(img)
-                    inputs = [human_text] + img_list
+                    inputs = [human_text, *img_list]
                     chat_session = model.start_chat(history=[])
                     response = chat_session.send_message(inputs)
                     response = response._result.candidates[0].content.parts

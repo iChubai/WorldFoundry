@@ -1,6 +1,5 @@
 import os
-import time
-from typing import List
+from typing import ClassVar
 
 import torch
 from transformers import AutoModelForVision2Seq, AutoProcessor
@@ -10,7 +9,7 @@ from transformers.utils import is_flash_attn_2_available
 
 class Idefics2:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "HuggingFaceM4/idefics2-8b") -> None:
         """Llava model wrapper

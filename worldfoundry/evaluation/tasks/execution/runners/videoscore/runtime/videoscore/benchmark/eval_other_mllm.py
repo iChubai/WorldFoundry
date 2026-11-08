@@ -1,15 +1,13 @@
 import logging
-import multiprocessing
 import os
 import re
 from datetime import datetime
-from typing import List
 
 import fire
 import torch
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from tqdm import tqdm
-from utils_tools import _add_to_res_file, _ans_formatted, merge_images
+from utils_tools import _add_to_res_file, _ans_formatted
 
 ROUND_DIGIT = 3
 NUM_ASPECT = 5
@@ -30,7 +28,7 @@ def _limit_image_tags(input_string, N):
     image_tags = re.findall(r"<image>", input_string)
     if len(image_tags) > N:
         excess_count = len(image_tags) - N
-        result_string = re.sub(r"<image>", "", input_string, excess_count)
+        result_string = re.sub(r"<image>", "", input_string, count=excess_count)
         return result_string
     else:
         return input_string
@@ -54,17 +52,8 @@ def _model_output(model, model_name, img_url_list, input_prompt):
 
 
 def query_one_video(model, model_name, bench_name, item, logger):
-    aws_s3_prefix = "https://video-bench-800.s3.ap-southeast-2.amazonaws.com/frames"
-    if bench_name == "eval_crafter":
-        aws_s3_prefix = "https://eval-crafter-frames.s3.ap-southeast-2.amazonaws.com/frames"
-    if bench_name == "vbench":
-        aws_s3_prefix = "https://vbench-frames.s3.ap-southeast-2.amazonaws.com/frames"
-    if bench_name == "genaibench":
-        aws_s3_prefix = "https://genaibench-frames.s3.ap-southeast-2.amazonaws.com/frames"
-
     vid = item["id"]
     img_name_list = [f"{vid}/{img_file}" for img_file in item["images"]]
-    img_url_list = [f"{aws_s3_prefix}/{vid}/{img_name}" for img_name in item["images"]]
     print("len of img_name_list", len(img_name_list))
     human_text = item["conversations"][0]["value"]
     bot_text = item["conversations"][1]["value"]
@@ -91,7 +80,7 @@ def query_one_video(model, model_name, bench_name, item, logger):
 def main(
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     bench_name: str = "video_feedback",
-    name_postfixs: list[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],  # noqa: B006 - Read-only default; retain the public signature.
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_llava_next.json",
     model_name: str = "llava_next",
 ):

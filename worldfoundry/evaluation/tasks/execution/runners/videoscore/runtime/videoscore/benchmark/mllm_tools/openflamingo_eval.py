@@ -1,29 +1,22 @@
-from typing import List
+from typing import ClassVar
 
 import torch
 from huggingface_hub import hf_hub_download
-from mantis.mllm_tools.mllm_utils import load_images, merge_images
+from mantis.mllm_tools.mllm_utils import load_images
 from mantis.models.conversation import conv_openflamingo
 from mantis.models.openflamingo import OpenFlamingoProcessor, create_model_and_transforms
 
 
 class OpenFlamingo:
     support_multi_image = True
-    xatten_map = {
-        "anas-awadalla/mpt-1b-redpajama-200b": 1,
-        "anas-awadalla/mpt-1b-redpajama-200b-dolly": 1,
-        "togethercomputer/RedPajama-INCITE-Base-3B-v1": 2,
-        "togethercomputer/RedPajama-INCITE-Instruct-3B-v1": 2,
-        "anas-awadalla/mpt-7b": 4,
-    }
-    xatten_map = {
+    xatten_map: ClassVar[dict[str, int]] = {
         "openflamingo/OpenFlamingo-3B-vitl-mpt1b": 1,
         "openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct": 1,
         "openflamingo/OpenFlamingo-4B-vitl-rpj3b": 2,
         "openflamingo/OpenFlamingo-4B-vitl-rpj3b-langinstruct": 2,
         "openflamingo/OpenFlamingo-9B-vitl-mpt7b": 4,
     }
-    lang_encoder_map = {
+    lang_encoder_map: ClassVar[dict[str, str]] = {
         "openflamingo/OpenFlamingo-3B-vitl-mpt1b": "anas-awadalla/mpt-1b-redpajama-200b",
         "openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct": "anas-awadalla/mpt-1b-redpajama-200b-dolly",
         "openflamingo/OpenFlamingo-4B-vitl-rpj3b": "togethercomputer/RedPajama-INCITE-Base-3B-v1",
@@ -48,7 +41,7 @@ class OpenFlamingo:
         try:
             # original pretrained openflamingo model
             checkpoint_path = hf_hub_download(model_id, "checkpoint.pt")
-        except:
+        except BaseException:
             # fine-tuned model on conversational data
             checkpoint_path = hf_hub_download(model_id, "pytorch_model.bin")
         model.load_state_dict(torch.load(checkpoint_path), strict=False)
@@ -110,7 +103,7 @@ class OpenFlamingo:
                 return self.get_parsed_output(inputs)
             elif self.input_type == "chat":
                 text_prompt = ""
-                for i, message in enumerate(inputs):
+                for _i, message in enumerate(inputs):
                     if message["type"] == "text":
                         text_prompt += message["content"]
                     elif message["type"] == "image":
@@ -139,7 +132,7 @@ class OpenFlamingo:
             raise NotImplementedError
 
     def prepare_prompt(self, image_links: list[list[str]], text_prompt: list[str]):
-        if type(image_links) == str:
+        if type(image_links) is str:
             image_links = [[image_links]]
         if isinstance(text_prompt, str):
             text_prompt = [text_prompt]

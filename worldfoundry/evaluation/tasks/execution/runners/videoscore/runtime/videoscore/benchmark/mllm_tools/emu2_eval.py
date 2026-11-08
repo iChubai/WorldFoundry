@@ -1,16 +1,14 @@
 import os
-from typing import Dict, List, Optional, Union
+from typing import ClassVar
 
 import torch
-from accelerate import infer_auto_device_map, load_checkpoint_and_dispatch
-from accelerate.big_modeling import dispatch_model, get_balanced_memory
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.image_utils import load_image
 
 
 class Emu2:
     support_multi_image = True
-    merged_image_files = []
+    merged_image_files: ClassVar[list[str]] = []
 
     def __init__(self, model_path: str = "BAAI/Emu2-Chat") -> None:
         """Llava model wrapper

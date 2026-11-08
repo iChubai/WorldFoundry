@@ -1,46 +1,39 @@
 #!/usr/bin/env python3
-"""
-Metric脚本兼容性工具
-确保所有metric脚本都能正确获取和使用自动生成的问题
-"""
+"""Checks that metric scripts receive the automatically generated evaluation questions."""
 
 from typing import Any
 
 
 def ensure_auxiliary_info_compatibility(prompt_dict_ls: list[dict[str, Any]], dimension: str) -> list[dict[str, Any]]:
-    """
-    检查prompt_dict_ls中的每个项目是否都有auxiliary_info
-    如果没有，则报错并要求用户先生成问题
+    """Check that every prompt entry carries non-empty ``auxiliary_info`` questions.
 
     Args:
-        prompt_dict_ls: 从load_dimension_info返回的prompt字典列表
-        dimension: 评估维度
+        prompt_dict_ls: Prompt dicts returned by ``load_dimension_info``.
+        dimension: Evaluation dimension, used in messages.
 
     Returns:
-        验证后的prompt字典列表
+        ``prompt_dict_ls`` unchanged.
 
     Raises:
-        ValueError: 当发现缺少问题时抛出异常
+        ValueError: An entry has no evaluation questions.
     """
     for i, prompt_dict in enumerate(prompt_dict_ls):
         if "auxiliary_info" not in prompt_dict or not prompt_dict["auxiliary_info"]:
             raise ValueError(
-                f"错误: 维度 '{dimension}' 的第 {i + 1} 项缺少评估问题 (auxiliary_info)。\n"
-                f"请使用自动问题生成功能先生成问题，或检查JSON文件是否正确。\n"
-                f"提示: 运行命令时系统会自动生成问题，如果看到此错误说明API调用失败。"
+                f"Error: item {i + 1} of dimension '{dimension}' has no evaluation questions (auxiliary_info).\n"
+                f"Generate the questions with automatic question generation first, or check the JSON file.\n"
+                f"Hint: questions are generated automatically when the command runs; this error means the API call failed."
             )
 
-    print(f"维度 '{dimension}' 的所有项目都有评估问题，共 {len(prompt_dict_ls)} 项")
+    print(f"All {len(prompt_dict_ls)} items of dimension '{dimension}' have evaluation questions")
     return prompt_dict_ls
 
 
 def get_default_questions_for_dimension(dimension: str) -> list[str]:
-    """
-    获取维度的默认问题 (已弃用)
+    """Return built-in evaluation questions for ``dimension`` (deprecated).
 
-    注意: 此函数已弃用，不建议使用。
-    系统现在要求所有问题都必须通过API实时生成，以确保质量一致性。
-    如果需要问题，请使用自动问题生成功能。
+    Evaluation questions are generated through the API so that their quality is consistent; use automatic
+    question generation instead.
     """
     default_questions = {
         "dynamic_attribute": [
@@ -139,7 +132,7 @@ def get_default_questions_for_dimension(dimension: str) -> list[str]:
         ],
     }
 
-    # 如果没有专门的问题，返回通用问题
+    # Dimensions without dedicated questions get generic ones.
     return default_questions.get(
         dimension.lower(),
         [
@@ -153,14 +146,10 @@ def get_default_questions_for_dimension(dimension: str) -> list[str]:
 
 
 def patch_metric_script_for_compatibility(dimension: str):
-    """
-    为特定维度的metric脚本提供兼容性补丁
-    这个函数可以在metric脚本导入时调用，确保向后兼容性
-    """
-    # 这里可以添加特定维度的兼容性修补逻辑
+    """Hook for per-dimension compatibility patches, called when a metric script is imported; currently a no-op."""
 
 
-# 导出常用的默认问题字典，方便其他脚本使用
+# Built-in questions of the most common dimensions, for import by other scripts.
 DEFAULT_QUESTIONS = {
     "dynamic_attribute": get_default_questions_for_dimension("dynamic_attribute"),
     "camera_motion": get_default_questions_for_dimension("camera_motion"),

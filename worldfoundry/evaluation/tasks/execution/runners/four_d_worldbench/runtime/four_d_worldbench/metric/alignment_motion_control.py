@@ -12,7 +12,6 @@ from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_ma
 from ..paths import keye_model_path
 from .utils import load_dimension_info
 
-# 导入兼容性工具
 try:
     from metric_compatibility import ensure_auxiliary_info_compatibility  # noqa: F401 - Availability probe.
 
@@ -44,7 +43,6 @@ def Keye2_5VL_Video(prompt_dict_ls, model, processor, fps, device):
                 print(f"\n--- Processing question {i + 1}/{len(base_question)} ---")
                 print(f"Question: {base_question[i]}")
 
-                # 初始化当前问题的详细情况
                 question_detail = {"question": base_question[i], "extract_answer": "", "is_yes": False}
 
                 prompt_text = f"""Watch the video carefully and answer the following question about the motion in the specified order in the video:
@@ -66,7 +64,7 @@ Answer: [Yes/No]"""
                         "content": [
                             {
                                 "type": "video",
-                                "video": video_path,  # 传入视频路径
+                                "video": video_path,
                             },
                             {"type": "text", "text": prompt_text},
                         ],
@@ -93,7 +91,7 @@ Answer: [Yes/No]"""
 
                 generated_ids = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-                # 提取生成的token（排除输入token）
+                # Keep only the generated tokens, without the prompt.
                 generated_ids_trimmed = [
                     out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
                 ]

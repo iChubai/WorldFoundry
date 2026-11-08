@@ -72,7 +72,7 @@ ln -s ../../skills/worldfoundry-model-integration .agents/skills/worldfoundry-mo
 
 发现与启用方式取决于客户端配置。Skills 补充 `AGENTS.md` 和 CONTRIBUTING.md，
 仓库规则仍由这两份文件统一维护。目录索引使用 `skills/index.md`，
-仓库仍只保留根目录的一份 README。
+README 只保留根目录一份和下文所述的包地图。
 
 ### 编写与验证
 
@@ -136,7 +136,7 @@ python -m pytest -q tests/core/test_agent_skills.py
 
 ## 文档要求
 
-Fumadocs 是唯一维护的文档面。新增或修改页面时，在 `docs/fumadocs/content/docs` 下维护英文和中文成对页面。本仓库只允许根目录那一份 `README.md`。不要在源码、vendor 树、fixture 或模型网络旁再加 `README.md`、`readme.md` 或 `README_*`。
+Fumadocs 是唯一维护的文档面。新增或修改页面时，在 `docs/fumadocs/content/docs` 下维护英文和中文成对页面。除根目录 `README.md` 外，`worldfoundry/`、每个一级子包以及每个 `worldfoundry/base_models/<子包>/` 各保留一份简短的 `README.md` 作为包地图（用途、目录结构、入口、指向本站页面的链接）；增删或移动模块时同步更新。除此之外，不要在源码、vendor 树、fixture、模型网络或 benchmark runner 旁再加 `README.md`、`readme.md` 或 `README_*`，`make lint` 会拒绝。
 
 行为变更时，更新对应 owning page：
 

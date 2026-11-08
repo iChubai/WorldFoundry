@@ -140,6 +140,12 @@ trusted GPU evidence gates.
 
 - Use the GPU bootstrap as the default first-run path; state hardware, asset, and authentication requirements.
 - Link complex environment, official runtime, and API paths to reference docs.
+- Put user and developer guides in paired English/Chinese Fumadocs pages. Besides the root
+  `README.md`, `worldfoundry/`, each top-level package (`worldfoundry/<package>/`), and each
+  `worldfoundry/base_models/<subpackage>/` keep one short `README.md` as a package map:
+  purpose, layout, entry points, and links to Fumadocs. Update it when you add, move, or
+  remove a module. Deeper source directories, vendor trees, fixtures, model networks, and
+  benchmark runners stay README-free.
 - Run the docs build and docs checks.
 
 ### Add Or Update A CLI Argument
@@ -176,9 +182,9 @@ belong in `synthesis` and `base_models`, respectively.
 
 - training launchers, dataset builders, finetune scripts, or benchmark-only tooling
 - demo media, generated outputs, checkpoints, or downloaded datasets
-- notebooks, README files, or other documentation inside the synthesis tree.
-  The only `README.md` allowed in this repository is the root file; put
-  operational notes in fumadocs instead.
+- notebooks, README files, or other documentation inside the synthesis tree (other than
+  the `worldfoundry/synthesis/README.md` package map); put operational notes in fumadocs
+  instead.
 
 Keep local demo assets in `testcase/` and reference them through explicit input paths; they are not part of the public source distribution.
 

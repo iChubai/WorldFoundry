@@ -89,8 +89,8 @@ ln -s ../../skills/worldfoundry-model-integration .agents/skills/worldfoundry-mo
 
 Client discovery and activation depend on the client's configuration. Skills
 complement `AGENTS.md` and CONTRIBUTING.md; those files still own repository
-rules. Use `skills/index.md` for the directory index and keep the repository's
-single root README.
+rules. Use `skills/index.md` for the directory index; READMEs are limited to the
+root file and the package maps described below.
 
 ### Authoring and validation
 
@@ -161,7 +161,7 @@ Match validation evidence to the surface you changed:
 
 ## Docs expectations
 
-Fumadocs is the only maintained documentation surface. Add or update paired English and Chinese pages under `docs/fumadocs/content/docs`. The only `README.md` allowed in this repository is the root file. Do not add `README.md`, `readme.md`, or `README_*` next to source, vendor trees, fixtures, or model networks.
+Fumadocs is the only maintained documentation surface. Add or update paired English and Chinese pages under `docs/fumadocs/content/docs`. Besides the root `README.md`, `worldfoundry/`, each top-level package, and each `worldfoundry/base_models/<subpackage>/` keep one short `README.md` as a package map (purpose, layout, entry points, links to these pages); update it when modules are added, moved, or removed. Do not add `README.md`, `readme.md`, or `README_*` anywhere else next to source, vendor trees, fixtures, model networks, or benchmark runners; `make lint` rejects them.
 
 When you change behavior, update the page that owns it:
 

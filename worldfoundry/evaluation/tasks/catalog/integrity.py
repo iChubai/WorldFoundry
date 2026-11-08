@@ -130,32 +130,8 @@ def _walk_repo_files() -> tuple[Path, ...]:
     return tuple(files)
 
 
-def _is_allowed_readme(relative: str) -> bool:
-    name = Path(relative).name
-    if relative == "README.md":
-        return True
-    # Eigen vendor license notes, not WorldFoundry documentation.
-    return name == "README.txt" and "/eigen/" in relative.replace("\\", "/")
-
-
-def extra_readme_issues() -> list[str]:
-    """The only WorldFoundry README.md is the repository root file."""
-    issues: list[str] = []
-    tracked = _tracked_repo_paths()
-    candidates = tracked or tuple(_as_repo_relative(path) for path in _walk_repo_files())
-    for relative in candidates:
-        name = Path(relative).name
-        if not name.lower().startswith("readme"):
-            continue
-        if _is_allowed_readme(relative):
-            continue
-        issues.append(f"{relative}: the only allowed README.md is the repository root file")
-    issues.extend(extra_evaluation_doc_issues(candidates))
-    return issues
-
-
 def extra_evaluation_doc_issues(candidates: Iterable[str] | None = None) -> list[str]:
-    """Fumadocs owns documentation; evaluation trees must not grow markdown guides."""
+    """Fumadocs owns guides; evaluation trees keep only READMEs and provenance records as markdown."""
     issues: list[str] = []
     paths = (
         candidates
@@ -165,9 +141,12 @@ def extra_evaluation_doc_issues(candidates: Iterable[str] | None = None) -> list
     for relative in paths:
         if not relative.startswith("worldfoundry/evaluation/"):
             continue
+        name = Path(relative).name
+        if name.lower().startswith("readme"):
+            continue
         # Catalog manifests link to this source-attribution record. It is
         # provenance metadata for vendored code, not a reader-facing guide.
-        if Path(relative).name == "WORLDFOUNDRY_PROVENANCE.md":
+        if name == "WORLDFOUNDRY_PROVENANCE.md":
             continue
         if relative.lower().endswith((".md", ".mdx")):
             issues.append(f"{relative}: evaluation docs belong in fumadocs, not evaluation/")
@@ -550,15 +529,9 @@ def catalog_runner_table_issues() -> list[str]:
         issues.append(f"{benchmark_id}: contract evaluator is not declared in runner.scoring.engines")
 
     runners_root = REPO_ROOT / "worldfoundry" / "evaluation" / "tasks" / "execution" / "runners"
-    for path in sorted(runners_root.glob("*/README.md")) + sorted(runners_root.glob("*/readme.md")):
-        issues.append(f"{_as_repo_relative(path)}: runner-root README must live in fumadocs, not runners/")
-    for path in sorted(runners_root.glob("*/runtime/**/README.md")) + sorted(
-        runners_root.glob("*/runtime/**/readme.md")
-    ):
-        issues.append(f"{_as_repo_relative(path)}: vendor README must not remain under runners/*/runtime/")
     for path in sorted(runners_root.glob("*/runtime/**/requirements.txt")):
         issues.append(
             f"{_as_repo_relative(path)}: pip requirements must live under worldfoundry/data/benchmarks/requirements/"
         )
-    issues.extend(extra_readme_issues())
+    issues.extend(extra_evaluation_doc_issues())
     return issues

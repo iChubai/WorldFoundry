@@ -96,7 +96,6 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         component_options = cls._strip_framework_loading_options(component_options)
         if not component_options:
             component_options = {"represent_model_path": DEFAULT_HUNYUAN_WORLD_VOYAGER_MOGE1_REPO}
-        # 设置默认路径
         if model_path is None:
             model_path = str(resolve_ckpt_dir() / "HunyuanWorld-Voyager")
         skip_representation_model = bool(component_options.pop("skip_representation_model", False))
@@ -268,8 +267,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                 points, colors, extrinsics, intrinsics, height=Height // 2, width=Width // 2
             )
         elif isinstance(interaction_signal, list):
-            # 交互序列 - 多轮逻辑
-            # 使用第一个交互生成 representation
+            # Interaction sequence (multi-turn): the first interaction builds the representation.
             first_interaction = interaction_signal[0]
             self.operators.get_interaction(first_interaction)
             intrinsics_first, extrinsics_first = self.operators.process_interaction(

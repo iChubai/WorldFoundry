@@ -459,7 +459,7 @@ class LoGeRPipeline(PipelineABC):
                     hold_img = self.render_view(camera_to_world=self._current_camera)
                     frames.extend([hold_img] * n_hold)
 
-                    # operator 层：单条交互信号 → delta
+                    # The operator turns each interaction signal into a camera delta.
                     processed = self.process(interactions=[sig])
                     delta = processed["delta"]
                     sub_delta = [d / n_move for d in delta]
@@ -499,7 +499,7 @@ class LoGeRPipeline(PipelineABC):
         """Stream visual generation outputs chunk by chunk."""
         visual_input = videos or video_path or images or image_path
 
-        # ── 有新输入：先做重建 ──
+        # New visual input: reconstruct the scene first.
         if visual_input is not None:
             logger.info("--- Stream: reconstructing scene ---")
             processed = self.process(images=visual_input, interval=kwargs.get("interval", -1))
@@ -516,7 +516,7 @@ class LoGeRPipeline(PipelineABC):
                 raise RuntimeError("No camera parameters available in cached result.")
             self._current_camera = np.array(self._cached_result.camera_params[0]["camera_to_world"])
 
-        # ── 无交互：直接渲染当前视角 ──
+        # No interaction: render the current view.
         if interactions is None:
             return self.render_view(
                 result=self._cached_result,
@@ -524,7 +524,7 @@ class LoGeRPipeline(PipelineABC):
                 camera_to_world=self._current_camera,
             )
 
-        # ── 有交互：operator 层处理，更新相机，渲染 ──
+        # Interactions: the operator computes a camera delta, then the updated view is rendered.
         if isinstance(interactions, str):
             interactions = [interactions]
 

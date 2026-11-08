@@ -463,7 +463,7 @@ HunyuanVideo-1.5 checkpoint layout expected by the native recipes:
   ${target_root}
     text_encoder/llm              # Qwen/Qwen2.5-VL-7B-Instruct
     text_encoder/byt5-small       # google/byt5-small
-    text_encoder/Glyph-SDXL-v2    # AI-ModelScope/Glyph-SDXL-v2
+    text_encoder/Glyph-SDXL-v2    # multimodalart/glyph-sdxl-v2-byt5-small
     vision_encoder/siglip         # black-forest-labs/FLUX.1-Redux-dev
 EOF
 }

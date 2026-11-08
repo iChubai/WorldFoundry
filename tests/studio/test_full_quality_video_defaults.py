@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 import torch
@@ -17,8 +19,8 @@ from worldfoundry.base_models.diffusion_model.recipes.hunyuan_video import (
     hunyuan_video_i2v_recipe,
     hunyuan_video_t2v_recipe,
 )
-from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video import NativeHunyuanVideoPipeline
+from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import find_entry
 from worldfoundry.synthesis.visual_generation.framepack.worldfoundry_runner import _parse_bool
@@ -60,10 +62,7 @@ def test_framepack_workspace_uses_official_full_quality_defaults() -> None:
     assert runtime.runtime["defaults"]["num_steps"] == 25
     assert runtime.runtime["defaults"]["use_teacache"] is True
     assert runtime.runtime["defaults"]["mp4_crf"] == 16
-    assert any(
-        str(path).endswith("/lllyasviel--FramePackI2V_HY")
-        for path in runtime.runtime["checkpoint_candidates"]
-    )
+    assert any(str(path).endswith("/lllyasviel--FramePackI2V_HY") for path in runtime.runtime["checkpoint_candidates"])
 
     tunable = {"cfg", "gs", "rs", "use_teacache", "mp4_crf"}
     assert tunable.issubset(entry.call_params)
@@ -92,10 +91,7 @@ def test_framepack_boolean_cli_values_are_not_silently_coerced() -> None:
 def test_krea_runtime_accepts_normalized_hugging_face_checkpoint_directory() -> None:
     runtime = OfficialVideoRuntime.from_model_id("krea-realtime-video")
 
-    assert any(
-        str(path).endswith("/krea--krea-realtime-video")
-        for path in runtime.runtime["checkpoint_candidates"]
-    )
+    assert any(str(path).endswith("/krea--krea-realtime-video") for path in runtime.runtime["checkpoint_candidates"])
     model_folder_flag = runtime.runtime["command"].index("--model-folder")
     assert runtime.runtime["command"][model_folder_flag + 1] == "{checkpoint_parent}"
 
@@ -168,17 +164,15 @@ def test_hunyuanvideo15_workspace_uses_full_nondistilled_quality_defaults() -> N
     assert "text_encoder/Glyph-SDXL-v2/checkpoints/model.safetensors" in resources
     assert all(not name.endswith((".bin", ".pt")) for name in resources)
 
-    assert NativeHunyuanVideoPipeline._attention_policy(
-        "auto", model_id="hunyuanvideo-1.5-t2v"
-    ) is AttentionBackend.FLASH
-    assert NativeHunyuanVideoPipeline._attention_policy(
-        "torch", model_id="hunyuanvideo-1.5-t2v"
-    ) is AttentionBackend.TORCH
+    assert (
+        NativeHunyuanVideoPipeline._attention_policy("auto", model_id="hunyuanvideo-1.5-t2v") is AttentionBackend.FLASH
+    )
+    assert (
+        NativeHunyuanVideoPipeline._attention_policy("torch", model_id="hunyuanvideo-1.5-t2v") is AttentionBackend.TORCH
+    )
 
 
-def test_hunyuanvideo15_workspace_composes_complete_local_component_roots(
-    tmp_path, monkeypatch
-) -> None:
+def test_hunyuanvideo15_workspace_composes_complete_local_component_roots(tmp_path, monkeypatch) -> None:
     weights = tmp_path / "tencent--HunyuanVideo-1.5"
     for transformer_dir in ("720p_t2v", "720p_i2v"):
         root = weights / "transformer" / transformer_dir
@@ -234,6 +228,44 @@ def test_hunyuanvideo15_workspace_composes_complete_local_component_roots(
     }
 
 
+def test_hunyuanvideo15_glyph_loaders_open_the_recipe_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from worldfoundry.base_models.diffusion_model.models.encoders.hunyuan_video import component, h15_resources
+
+    resources = hunyuan_video15_t2v_recipe().checkpoints["resources"].files
+    for relative_path in resources:
+        path = tmp_path / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    opened: list[str] = []
+
+    def load_glyph(args: dict[str, Any], device: object) -> dict[str, Any]:
+        opened.append(Path(args["byT5_ckpt_path"]).relative_to(tmp_path).as_posix())
+        return {"byt5_tokenizer": None, "byt5_model": None, "byt5_max_length": args["byt5_max_length"]}
+
+    for module in (component, h15_resources):
+        monkeypatch.setattr(module, "load_glyph_byT5_v2", load_glyph)
+        monkeypatch.setattr(module, "MultilingualPromptFormat", lambda **_: object())
+    monkeypatch.setattr(component, "H15TextEncoder", lambda **_: object())
+    monkeypatch.setattr(
+        component,
+        "NativeCheckpointResolver",
+        lambda: SimpleNamespace(materialize=lambda _spec: SimpleNamespace(root=tmp_path)),
+    )
+    context: Any = SimpleNamespace(
+        require_checkpoint=lambda name: name,
+        policy=SimpleNamespace(dtype=torch.bfloat16, device="cpu"),
+        component_options={},
+    )
+
+    component.build_hunyuan_video15_prompt_conditioner(context)
+    h15_resources.HunyuanVideo15Resources._load_byt5(str(tmp_path), True, 256, device="cpu")
+
+    assert len(opened) == 2
+    assert set(opened) <= set(resources)
+
+
 def test_hunyuanvideo_pipeline_accepts_cli_frame_alias() -> None:
     class CapturingNativePipeline:
         def __init__(self) -> None:
@@ -252,14 +284,13 @@ def test_hunyuanvideo_pipeline_accepts_cli_frame_alias() -> None:
 
     pipeline("a cat", frames=9, output_type="latent")
 
+    assert native.request is not None
     assert native.request.num_frames == 9
 
 
 def test_original_hunyuanvideo_declares_external_text_encoder_repositories() -> None:
     for recipe in (hunyuan_video_t2v_recipe(), hunyuan_video_i2v_recipe()):
-        assert recipe.checkpoints["primary"].repo_id == (
-            "xtuner/llava-llama-3-8b-v1_1-transformers"
-        )
+        assert recipe.checkpoints["primary"].repo_id == ("xtuner/llava-llama-3-8b-v1_1-transformers")
         assert recipe.checkpoints["primary"].files == ("config.json",)
         assert recipe.checkpoints["clip"].repo_id == "openai/clip-vit-large-patch14"
         assert recipe.checkpoints["clip"].files == ("config.json",)
@@ -348,9 +379,7 @@ def test_failed_world_demo_defaults_use_matching_image_fixtures() -> None:
     assert find_entry("yume").default_load_kwargs["t5_cpu"] is True
 
     hunyuan_worldplay = find_entry("hunyuan-worldplay")
-    assert {"enable_offloading", "enable_group_offloading"}.issubset(
-        hunyuan_worldplay.load_params
-    )
+    assert {"enable_offloading", "enable_group_offloading"}.issubset(hunyuan_worldplay.load_params)
     assert hunyuan_worldplay.default_load_kwargs == {
         "enable_offloading": True,
         "enable_group_offloading": True,
@@ -358,9 +387,7 @@ def test_failed_world_demo_defaults_use_matching_image_fixtures() -> None:
     }
 
     stable_virtual_camera = find_entry("stable-virtual-camera")
-    assert stable_virtual_camera.default_input_path.endswith(
-        "stable_virtual_camera/basic/blue-car.jpg"
-    )
+    assert stable_virtual_camera.default_input_path.endswith("stable_virtual_camera/basic/blue-car.jpg")
     assert stable_virtual_camera.default_call_kwargs["H"] == 576
     assert stable_virtual_camera.default_call_kwargs["W"] == 576
     assert stable_virtual_camera.default_call_kwargs["T"] == 21

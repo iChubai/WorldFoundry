@@ -55,7 +55,7 @@ class HunyuanVideo15Resources:
             required_glyph_files = [
                 os.path.join(glyph_root, "assets/color_idx.json"),
                 os.path.join(glyph_root, "assets/multilingual_10-lang_idx.json"),
-                os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
+                os.path.join(glyph_root, "checkpoints/model.safetensors"),
             ]
             missing_glyph_files = [path for path in required_glyph_files if not os.path.exists(path)]
             if missing_glyph_files:
@@ -77,7 +77,7 @@ class HunyuanVideo15Resources:
             multilingual_prompt_format_font_path = os.path.join(glyph_root, "assets/multilingual_10-lang_idx.json")
             byt5_args = dict(
                 byT5_google_path=byT5_google_path,
-                byT5_ckpt_path=os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
+                byT5_ckpt_path=os.path.join(glyph_root, "checkpoints/model.safetensors"),
                 multilingual_prompt_format_color_path=multilingual_prompt_format_color_path,
                 multilingual_prompt_format_font_path=multilingual_prompt_format_font_path,
                 byt5_max_length=byt5_max_length,

@@ -299,7 +299,7 @@ def build_hunyuan_video15_prompt_conditioner(
     byt5 = load_glyph_byT5_v2(
         {
             "byT5_google_path": str(root / "text_encoder" / "byt5-small"),
-            "byT5_ckpt_path": str(glyph_root / "checkpoints" / "byt5_model.pt"),
+            "byT5_ckpt_path": str(glyph_root / "checkpoints" / "model.safetensors"),
             "multilingual_prompt_format_color_path": str(glyph_root / "assets" / "color_idx.json"),
             "multilingual_prompt_format_font_path": str(
                 glyph_root / "assets" / "multilingual_10-lang_idx.json"

@@ -700,7 +700,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
                     "Prompt contains quoted glyph text, but Glyph-SDXL-v2 is not "
                     "available. Expected text_encoder/Glyph-SDXL-v2 with "
                     "assets/color_idx.json, assets/multilingual_10-lang_idx.json, "
-                    "and checkpoints/byt5_model.pt."
+                    "and checkpoints/model.safetensors."
                 )
             text_styles = [{"color": None, "font-family": None} for _ in range(len(glyph_texts))]
             formatted_text = self.prompt_format.format_prompt(glyph_texts, text_styles)

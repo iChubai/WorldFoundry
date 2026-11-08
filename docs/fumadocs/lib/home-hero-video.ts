@@ -6,8 +6,6 @@ const HERO_VIDEO_URL =
   'https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/ef8001ec617d9256ee439f2f3452b27b87e3b166/docs/fumadocs/public/cover_4x4_hero.mp4';
 
 export const homeHeroVideo = {
-  label: 'World models',
-  caption: 'Unified inference and evaluation across video, 3D/4D, embodied, and interactive worlds.',
   src: HERO_VIDEO_URL,
   poster: withBasePath('/cover_4x4_hero-poster.webp') ?? '/cover_4x4_hero-poster.webp',
 };

@@ -71,7 +71,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
   const sidebarGroups = getNavGroups(normalized);
-  const githubUrl = getGithubContentUrls(page.path).blob;
+  const editUrl = getGithubContentUrls(page.path).edit;
   const docsHref = getPageUrl([], normalized);
   const apiHubPage = isApiReferenceDocsPage(page.slugs);
 
@@ -125,13 +125,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
       <DocsScrollBridge />
       <SiteHeader
         variant="solid"
-        active={
-          page.slugs[0] === 'guides' && page.slugs[1] === 'supported-models'
-            ? 'models'
-            : page.slugs[0] === 'evaluation' && page.slugs[1] === 'benchmark-hub'
-              ? 'benchmarks'
-              : 'docs'
-        }
+        active="docs"
         navAriaLabel={t.nav}
         docsHref={docsHref}
         docsLabel={t.docs}
@@ -328,12 +322,11 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                   copyMarkdownCopiedLabel={t.askAiCopied}
                   copyMarkdownLabel={t.askAiCopy}
                   editLabel={t.editPage}
-                  githubUrl={githubUrl}
+                  editUrl={editUrl}
                   lastUpdated={lastUpdated}
                   lastUpdatedLabel={t.lastUpdated}
                   markdownLabel={t.markdown}
                   markdownUrl={markdownUrl}
-                  pageTitle={page.data.title}
                 />
 
                 {showToc ? (

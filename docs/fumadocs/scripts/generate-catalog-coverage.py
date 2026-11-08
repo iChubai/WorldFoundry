@@ -220,7 +220,6 @@ def main() -> int:
                 "label": label,
                 "blurb": blurb,
                 "count": len(entries),
-                "catalogCount": len(raw),
                 "entries": entries,
             }
         )
@@ -240,12 +239,9 @@ def main() -> int:
         bench_groups.append({"id": fam, "label": label, "count": len(entries), "entries": entries})
 
     payload = {
-        "modelsTotal": sum(family["catalogCount"] for family in families),
         "modelsListed": sum(family["count"] for family in families),
         "benchmarksTotal": sum(group["count"] for group in bench_groups),
-        "modelFamilies": [
-            {key: value for key, value in family.items() if key != "catalogCount"} for family in families
-        ],
+        "modelFamilies": families,
         "benchmarkGroups": bench_groups,
     }
     serialized = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
@@ -261,7 +257,7 @@ def main() -> int:
     current = OUT.read_text(encoding="utf-8") if OUT.is_file() else ""
     if current != serialized:
         OUT.write_text(serialized, encoding="utf-8")
-    print(f"wrote {OUT} modelsTotal={payload['modelsTotal']} listed={payload['modelsListed']}")
+    print(f"wrote {OUT} listed={payload['modelsListed']} benchmarks={payload['benchmarksTotal']}")
     return 0
 
 

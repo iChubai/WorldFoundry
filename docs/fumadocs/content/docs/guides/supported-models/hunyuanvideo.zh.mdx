@@ -19,11 +19,6 @@ HunyuanVideo 是腾讯的开源视频基础模型：同一套约 130 亿参数�
 
 HunyuanVideo 在因果 3D VAE 压缩后的时空潜空间上去噪。文本提示由大语言模型编码为条件；生成模型以高斯噪声和该条件为输入，输出隐变量，再由 3D VAE 解码器还原为图像或视频。
 
-<figure className="wf-recipe-media is-diagram">
-  <DocsImage src="/models/hunyuanvideo/overall.png" alt="HunyuanVideo 整体架构：因果 3D VAE、大语言模型文本编码与潜空间扩散" />
-  <figcaption>HunyuanVideo 整体架构：因果 3D VAE、大语言模型文本编码与潜空间扩散</figcaption>
-</figure>
-
 骨干是带 Full Attention 的 Transformer，采用「双流到单流」结构：视频与文本 token 先经独立 Block 学习各自的调制，再拼接后在后续 Block 中融合。
 
 <figure className="wf-recipe-media is-diagram">

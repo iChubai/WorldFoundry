@@ -11,6 +11,8 @@ Family split
 - Wan 2.2 TI2V-5B: text+image initializer, still ``standard``.
 - Wan 2.2 A14B T2V / I2V: dual low/high-noise experts and
   ``wan22-dual-expert-guidance`` (timestep-routed CFG scales).
+- Self-Forcing (Wan 2.1 T2V 1.3B DMD): causal single-expert generator on
+  ``autoregressive-window`` with distilled x0 prediction.
 
 Official model sources are pinned to immutable Hub revisions.
 """
@@ -28,6 +30,7 @@ from ..models.autoencoders.wan import (
 )
 from ..models.denoisers.wan import (
     build_fastvideo_causal_wan22_denoiser,
+    build_self_forcing_wan21_denoiser,
     build_wan21_i2v_14b_denoiser,
     build_wan21_t2v_1p3b_denoiser,
     build_wan21_t2v_14b_denoiser,
@@ -50,6 +53,7 @@ from ..models.initializers.wan import (
 )
 from ..schedulers import (
     build_fastvideo_causal_wan_self_forcing_scheduler,
+    build_wan_flow_match_euler_scheduler,
     build_wan_flow_unipc_scheduler,
 )
 from .spec import NativeDiffusionRecipe
@@ -63,6 +67,7 @@ WAN22_T2V_A14B_MODEL_ID = "wan2.2-t2v-a14b"
 WAN22_I2V_A14B_MODEL_ID = "wan2.2-i2v-a14b"
 WAN21_VACE_14B_MODEL_ID = "wan2.1-vace"
 FASTVIDEO_CAUSAL_WAN22_MODEL_ID = "fastvideo-causal-wan2.2-i2v-14b"
+SELF_FORCING_MODEL_ID = "self-forcing"
 
 WAN21_T2V_1P3B_REPO_ID = "Wan-AI/Wan2.1-T2V-1.3B"
 WAN21_T2V_14B_REPO_ID = "Wan-AI/Wan2.1-T2V-14B"
@@ -73,6 +78,7 @@ WAN22_T2V_A14B_REPO_ID = "Wan-AI/Wan2.2-T2V-A14B"
 WAN22_I2V_A14B_REPO_ID = "Wan-AI/Wan2.2-I2V-A14B"
 WAN21_VACE_14B_REPO_ID = "Wan-AI/Wan2.1-VACE-14B"
 FASTVIDEO_CAUSAL_WAN22_REPO_ID = "FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers"
+SELF_FORCING_REPO_ID = "gdhe17/Self-Forcing"
 
 WAN21_T2V_1P3B_REVISION = "37ec512624d61f7aa208f7ea8140a131f93afc9a"
 WAN21_T2V_14B_REVISION = "a064a6c71f5be440641209c07bf2a5ce7a2ff5e4"
@@ -83,6 +89,7 @@ WAN22_T2V_A14B_REVISION = "c8c270b13ee05bfa474194ac9fb07a5868a97cea"
 WAN22_I2V_A14B_REVISION = "206a9ee1b7bfaaf8f7e4d81335650533490646a3"
 WAN21_VACE_14B_REVISION = "539c162b1387eac9dc4c20bd3f74671309e76a4c"
 FASTVIDEO_CAUSAL_WAN22_REVISION = "0977572ccf137da5e577d62e3231ca840151af38"
+SELF_FORCING_REVISION = "2f8b779212da279d212c22a509b66ad6552f350e"
 
 # Architecture/training semantics were audited against the official Wan
 # source.  Model assets are independently pinned to the immutable Hub commit
@@ -619,6 +626,90 @@ def fastvideo_causal_wan22_i2v_14b_recipe() -> NativeDiffusionRecipe:
     )
 
 
+def self_forcing_wan21_t2v_1p3b_recipe() -> NativeDiffusionRecipe:
+    """Return Self-Forcing's four-step causal Wan2.1 T2V 1.3B rollout (DMD checkpoint).
+
+    The released sampler denoises three-latent-frame blocks at the unwarped
+    indices (1000, 750, 500, 250), which the runner warps onto the shift-5
+    flow calendar, and commits each clean block to the KV cache at timestep 0.
+    """
+
+    denoiser, conditioner, initializer, scheduler, codec = _keys()
+    wan = _checkpoints(
+        WAN21_T2V_1P3B_REPO_ID,
+        WAN21_T2V_1P3B_REVISION,
+        sharded_dit=False,
+        image_to_video=False,
+    )
+    checkpoints = {
+        "dit": CheckpointSpec(
+            repo_id=SELF_FORCING_REPO_ID,
+            revision=SELF_FORCING_REVISION,
+            files=("checkpoints/self_forcing_dmd.pt",),
+            metadata={"license": "Apache-2.0", "repository_revision": SELF_FORCING_REVISION},
+        ),
+        "text-encoder": wan["text-encoder"],
+        "tokenizer": wan["tokenizer"],
+        "vae": wan["vae"],
+    }
+    return NativeDiffusionRecipe(
+        model_id=SELF_FORCING_MODEL_ID,
+        aliases=(SELF_FORCING_REPO_ID, "self-forcing-dmd"),
+        components=(
+            ComponentSpec(
+                denoiser,
+                build_self_forcing_wan21_denoiser,
+                {"weights": "dit"},
+                {"block_size": 3, "cache_frames": 21, "timestep_shift": 5.0},
+            ),
+            ComponentSpec(
+                conditioner,
+                build_wan_text_conditioner,
+                {"weights": "text-encoder", "tokenizer": "tokenizer"},
+            ),
+            ComponentSpec(initializer, build_wan_t2v_latent_initializer),
+            ComponentSpec(
+                scheduler,
+                build_wan_flow_match_euler_scheduler,
+                options={"shift": 5.0},
+            ),
+            ComponentSpec(codec, build_wan_video_decoder, {"weights": "vae"}),
+        ),
+        execution=ExecutionSpec(
+            strategy="autoregressive-window",
+            bindings=dict(_execution(image_to_video=False).bindings),
+            options={
+                "prediction_mode": "distilled-x0",
+                "fixed_timesteps": (1000, 750, 500, 250),
+                "context_timestep": 0,
+            },
+        ),
+        checkpoints=checkpoints,
+        capabilities=frozenset({"text-to-video", "causal-generation", "self-forcing"}),
+        options={
+            "latent_channels": 16,
+            "spatial_compression": 8,
+            "temporal_compression": 4,
+            "default_height": 480,
+            "default_width": 832,
+            "default_num_frames": 81,
+            "default_num_inference_steps": 4,
+            "default_guidance_scale": 1.0,
+            "default_fps": 16,
+        },
+        metadata={
+            "architecture": "self-forcing-causal-wan2.1",
+            "parameter_scale": "1.3B",
+            "native_inference": True,
+            "output_layout": "BCTHW",
+            "latent_block_size": 3,
+            "cache_window": 21,
+            "repository_revision": SELF_FORCING_REVISION,
+            "upstream_source_revision": "33593df3e81fa3ec10239271dd2c100facac6de1",
+        },
+    )
+
+
 def wan22_ti2v_5b_recipe() -> NativeDiffusionRecipe:
     """Return the native Wan2.2 5B recipe with optional first-frame locking."""
 
@@ -695,6 +786,9 @@ __all__ = [
     "FASTVIDEO_CAUSAL_WAN22_MODEL_ID",
     "FASTVIDEO_CAUSAL_WAN22_REPO_ID",
     "FASTVIDEO_CAUSAL_WAN22_REVISION",
+    "SELF_FORCING_MODEL_ID",
+    "SELF_FORCING_REPO_ID",
+    "SELF_FORCING_REVISION",
     "WAN21_I2V_14B_480P_MODEL_ID",
     "WAN21_I2V_14B_480P_REPO_ID",
     "WAN21_I2V_14B_480P_REVISION",
@@ -722,6 +816,7 @@ __all__ = [
     "WAN_TOKENIZER_FILES",
     "WAN21_UPSTREAM_SOURCE_REVISION",
     "fastvideo_causal_wan22_i2v_14b_recipe",
+    "self_forcing_wan21_t2v_1p3b_recipe",
     "wan21_i2v_14b_480p_recipe",
     "wan21_i2v_14b_720p_recipe",
     "wan21_t2v_1p3b_recipe",

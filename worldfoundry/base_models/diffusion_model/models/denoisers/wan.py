@@ -22,6 +22,10 @@ from typing import Any
 
 import torch
 
+from worldfoundry.core.attention.cache.causal_cache import (
+    CausalVideoCacheGeometry,
+    allocate_causal_video_cache,
+)
 from worldfoundry.core.model_loading import hash_state_dict_keys
 
 from ...components import BuildPurpose, ComponentBuildContext, ComponentKey, ComponentKind
@@ -38,6 +42,7 @@ from ...optimizations.wan.feature_cache import (
     WanFeatureCacheConfig,
     resolve_wan_feature_cache,
 )
+from ...schedulers.wan import InferenceFlowMatchScheduler
 from ..initializers.wan.component import WAN_DENOISE_MASK_IS_ALL_ONES
 from ..networks.wan.model import RMSNorm, WanModel
 from .graph_wrapped import (
@@ -113,6 +118,27 @@ WAN22_TI2V_5B_CONFIG = {
     "num_layers": 30,
     "eps": 1e-6,
     "per_token_timestep": True,
+}
+
+# Self-Forcing's generator is the Wan2.1 T2V 1.3B geometry on the causal
+# Self-Forcing graph, with global attention (no local window or sink).
+SELF_FORCING_WAN21_T2V_1P3B_CONFIG = {
+    "model_type": "t2v",
+    "patch_size": (1, 2, 2),
+    "text_len": 512,
+    "in_dim": 16,
+    "dim": 1536,
+    "ffn_dim": 8960,
+    "freq_dim": 256,
+    "text_dim": 4096,
+    "out_dim": 16,
+    "num_heads": 12,
+    "num_layers": 30,
+    "local_attn_size": -1,
+    "sink_size": 0,
+    "qk_norm": True,
+    "cross_attn_norm": True,
+    "eps": 1e-6,
 }
 
 _WAN_DENOISER_OPTION_KEYS = frozenset(
@@ -2370,6 +2396,171 @@ def build_fastvideo_causal_wan22_denoiser(
     )
 
 
+def convert_self_forcing_generator_state_dict(
+    state_dict: Mapping[str, object],
+) -> dict[str, object]:
+    """Select the released Self-Forcing generator and strip its training wrappers.
+
+    Released checkpoints store the generator under ``generator_ema`` and/or
+    ``generator``; the EMA weights are preferred. Parameter names carry the
+    ``model.`` prefix of the official ``WanDiffusionWrapper`` and, for FSDP
+    exports, ``_fsdp_wrapped_module.`` segments.
+
+    Raises:
+        KeyError: Neither generator state dict is present.
+    """
+
+    for role in ("generator_ema", "generator"):
+        generator = state_dict.get(role)
+        if isinstance(generator, Mapping):
+            break
+    else:
+        raise KeyError("Self-Forcing checkpoint must contain a 'generator_ema' or 'generator' state dict")
+    return {
+        str(name).replace("_fsdp_wrapped_module.", "").removeprefix("model."): value
+        for name, value in generator.items()
+    }
+
+
+class SelfForcingWanDenoiser:
+    """Self-Forcing causal Wan2.1 generator with framework-owned cache state.
+
+    Each call runs the causal DiT on one latent block and returns its x0
+    prediction, converted from the flow prediction exactly as the official
+    ``WanDiffusionWrapper`` does: nearest sigma on the 1000-step training
+    calendar, float64 arithmetic, result in the network dtype. Cache commits
+    use the same call; the network appends the block keys and values to the
+    KV cache.
+    """
+
+    variant = "self-forcing-wan2.1"
+
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        *,
+        block_size: int = 3,
+        cache_frames: int = 21,
+        timestep_shift: float = 5.0,
+        compute_dtype: torch.dtype = torch.bfloat16,
+    ) -> None:
+        if min(int(block_size), int(cache_frames)) <= 0:
+            raise ValueError("Self-Forcing block_size and cache_frames must be positive")
+        if int(cache_frames) % int(block_size):
+            raise ValueError("Self-Forcing cache_frames must be divisible by block_size")
+        self.model = model
+        self.block_size = int(block_size)
+        self.cache_frames = int(cache_frames)
+        self.compute_dtype = compute_dtype
+        self.training_schedule = InferenceFlowMatchScheduler(
+            num_inference_steps=1000,
+            shift=float(timestep_shift),
+            sigma_min=0.0,
+            extra_one_step=True,
+        )
+
+    def create_kv_cache(
+        self,
+        *,
+        batch_size: int,
+        n_views: int,
+        latent_frames_per_view: int,
+        frame_sequence_length: int,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> dict[str, Any]:
+        """Allocate the official global-attention cache of ``cache_frames`` latent frames."""
+
+        if int(n_views) != 1:
+            raise ValueError("Self-Forcing supports one temporal view per rollout")
+        if int(latent_frames_per_view) > self.cache_frames:
+            raise ValueError(
+                f"Self-Forcing attends globally over at most {self.cache_frames} latent frames; "
+                f"got {latent_frames_per_view}"
+            )
+        num_heads = int(getattr(self.model, "num_heads"))
+        return allocate_causal_video_cache(
+            CausalVideoCacheGeometry(
+                batch_size=batch_size,
+                total_frames=self.cache_frames,
+                frame_tokens=frame_sequence_length,
+                frames_per_block=self.block_size,
+                num_layers=int(getattr(self.model, "num_layers")),
+                num_heads=num_heads,
+                head_dim=int(getattr(self.model, "dim")) // num_heads,
+            ),
+            device=device,
+            dtype=dtype,
+        )
+
+    def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
+        conditioning = model_input.conditioning
+        cache = conditioning.get("kv_cache")
+        if not isinstance(cache, Mapping):
+            raise TypeError("Self-Forcing requires the cache created by create_kv_cache")
+        context = conditioning.get("context")
+        if not isinstance(context, torch.Tensor):
+            raise TypeError("Self-Forcing requires tensor 'context' conditioning")
+        timestep = model_input.timestep.reshape(-1)
+        if timestep.numel() != 1:
+            raise ValueError("Self-Forcing applies one timestep to every frame of a block")
+        noisy = model_input.latents.to(dtype=self.compute_dtype)
+        batch, _, frames, height, width = noisy.shape
+        frame_timesteps = timestep.to(device=noisy.device, dtype=torch.float32).expand(batch, frames)
+        current_start = int(conditioning.get("current_start", 0))
+        flow = self.model(
+            noisy,
+            t=frame_timesteps,
+            context=context,
+            seq_len=frames * height * width // 4,
+            kv_cache=cache["kv_cache"],
+            crossattn_cache=cache["crossattn_cache"],
+            current_start=current_start,
+            cache_start=current_start,
+        )
+        if not isinstance(flow, torch.Tensor):
+            raise TypeError("Self-Forcing network must return a tensor")
+        x0 = self.training_schedule.flow_to_x0(
+            flow.transpose(1, 2).flatten(0, 1),
+            noisy.transpose(1, 2).flatten(0, 1),
+            frame_timesteps.flatten(),
+        )
+        x0 = x0.unflatten(0, (batch, frames)).transpose(1, 2)
+        return DenoiserOutput(sample=x0.to(dtype=model_input.latents.dtype))
+
+
+def build_self_forcing_wan21_denoiser(
+    context: ComponentBuildContext,
+) -> SelfForcingWanDenoiser:
+    """Load a released Self-Forcing generator checkpoint strictly onto the causal Wan graph."""
+
+    from ..networks.wan.variants.forcing.self_forcing import CausalWanModel
+
+    options = context.component_options
+    unknown = sorted(set(options) - {"block_size", "cache_frames", "timestep_shift"})
+    if unknown:
+        raise ValueError(f"unsupported Self-Forcing denoiser options: {unknown}")
+    block_size = int(options.get("block_size", 3))
+    model = NativeModuleLoader().load(
+        ModuleLoadSpec(
+            module_class=CausalWanModel,
+            config=SELF_FORCING_WAN21_T2V_1P3B_CONFIG,
+            state_dict_converter=convert_self_forcing_generator_state_dict,
+            layer_container="blocks",
+        ),
+        context.require_checkpoint(),
+        context.policy,
+    )
+    model.num_frame_per_block = block_size
+    return SelfForcingWanDenoiser(
+        model,
+        block_size=block_size,
+        cache_frames=int(options.get("cache_frames", 21)),
+        timestep_shift=float(options.get("timestep_shift", 5.0)),
+        compute_dtype=context.policy.dtype,
+    )
+
+
 def _build_wan22_dual_expert_denoiser(
     context: ComponentBuildContext,
     *,
@@ -2702,6 +2893,7 @@ __all__ = [
     "CausalWanCacheBundle",
     "CausalWanExpertCache",
     "FastVideoCausalWanDenoiser",
+    "SELF_FORCING_WAN21_T2V_1P3B_CONFIG",
     "SKYREELS_V2_DF_1P3B_CONFIG",
     "SKYREELS_V3_R2V_14B_CONFIG",
     "WAN21_I2V_14B_CONFIG",
@@ -2712,15 +2904,18 @@ __all__ = [
     "WAN22_T2V_A14B_CONFIG",
     "WAN22_TI2V_5B_CONFIG",
     "WanDenoiser",
+    "SelfForcingWanDenoiser",
     "Wan22DualExpertDenoiser",
     "WanModelStateDictConverter",
     "WAN_CIVITAI_CONFIGS_BY_HASH",
     "infer_native_wan_transformer_config",
     "build_fastvideo_causal_wan22_denoiser",
+    "build_self_forcing_wan21_denoiser",
     "build_skyreels_v2_denoiser",
     "build_skyreels_v3_denoiser",
     "build_wan21_i2v_14b_denoiser",
     "convert_diffusers_wan_transformer_state_dict",
+    "convert_self_forcing_generator_state_dict",
     "build_wan21_t2v_14b_denoiser",
     "build_wan22_t2v_a14b_denoiser",
     "build_wan22_t2v_a14b_dual_denoiser",

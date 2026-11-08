@@ -109,8 +109,8 @@ class Rasterizer:
         """
         if rasterization is None:
             raise ImportError(
-                "gsplat is required for rasterization rendering. Install it via "
-                "scripts/setup/hy_world_2p0_install.sh or avoid rendered video export."
+                "gsplat is required for rasterization rendering. Install the unified environment with "
+                "scripts/setup/unified_install.sh or avoid rendered video export."
             )
         render_colors, render_alphas, _ = rasterization(
             means=means,

@@ -23,7 +23,7 @@ def _require_plyfile():
     if PlyData is None or PlyElement is None:
         raise ImportError(
             "plyfile is required for saving point clouds and Gaussian splats. "
-            "Install it via scripts/setup/hy_world_2p0_install.sh."
+            "Install the unified environment with scripts/setup/unified_install.sh."
         )
 
 def save_camera_params(extrinsics, intrinsics, target_dir):

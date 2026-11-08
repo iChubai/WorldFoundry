@@ -322,12 +322,9 @@ def d2_extract(
 
 
 def wrbench_repo_root() -> Path:
-    """Return the WRBench repository root (directory containing pyproject.toml)."""
-    here = Path(__file__).resolve()
-    for candidate in (here, *here.parents):
-        if (candidate / "pyproject.toml").is_file():
-            return candidate
-    return here.parents[3]
+    """Return the WRBench root: the package parent, or the checkout above a ``src`` layout."""
+    package_parent = Path(__file__).resolve().parents[2]
+    return package_parent.parent if package_parent.name == "src" else package_parent
 
 
 def d3d6_env(

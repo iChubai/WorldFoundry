@@ -33,6 +33,8 @@ Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归�
 
 这些开关默认关闭。小规模 CPU/CUDA 回归验证数值输出、缓存推进、stream 顺序和清理。尚未测量它们在完整 checkpoint 上的延迟收益，也未验证完整长度的一致性；编译 wrapper 安装和侧 stream 工作入队均与运行时执行证据分别记录。
 
+Studio 实时会话中，universal 模式保留 W/S/A/D 移动与 I/K/J/L 相机按键，并增加鼠标和右摇杆相机轴；每帧的轴值与按键相机量相加，并裁剪到官方的 ±0.1。gta_drive 用 W/S 前进/后退、A/D 转向；templerun 用 W 跳跃、S 滑铲、A/D 侧移、Z/C 转向，空闲帧编码为 `nomove`。
+
 ## 在 WorldFoundry 中运行
 
 状态：**已验证 15 个 latent 帧的短流程一致性**；完整长度一致性及 benchmark 评分仍待完成。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。

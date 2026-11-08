@@ -3,7 +3,6 @@ import torch
 import torchvision.ops as ops
 
 import fvmd.utils.geom
-from fvmd.utils.basic import print_
 
 
 def matmul2(mat1, mat2):
@@ -36,7 +35,7 @@ def safe_inverse(a):  # parallel version
 
 
 def safe_inverse_single(a):
-    r, t = split_rt_single(a)
+    r, t = split_rt_single(a)  # noqa: F821 - Undefined upstream; FVMD never imports utils.geom.
     t = t.view(3, 1)
     r_transpose = r.t()
     inv = torch.cat([r_transpose, -torch.matmul(r_transpose, t)], 1)
@@ -365,10 +364,7 @@ def crop_and_resize(im, boxlist, PH, PW, boxlist_is_normalized=False):
     # output is B,N,C,PH,PW
 
     # pt wants xy xy, unnormalized
-    if boxlist_is_normalized:
-        boxlist_unnorm = unnormalize_boxlist2d(boxlist, H, W)
-    else:
-        boxlist_unnorm = boxlist
+    boxlist_unnorm = unnormalize_boxlist2d(boxlist, H, W) if boxlist_is_normalized else boxlist
 
     ymin, xmin, ymax, xmax = boxlist_unnorm.unbind(2)
     # boxlist_pt = torch.stack([boxlist_unnorm[:,1], boxlist_unnorm[:,0], boxlist_unnorm[:,3], boxlist_unnorm[:,2]], dim=1)
@@ -466,10 +462,10 @@ def convert_box2d_to_intrinsics(box2d, pix_T_cam, H, W, use_image_aspect_ratio=T
 
     # i assume we're rendering an image the same size as the original (H, W)
 
-    if not mult_padding == 1.0:
+    if mult_padding != 1.0:
         y, x = get_centroid_from_box2d(box2d)
         h, w = get_size_from_box2d(box2d)
-        box2d = get_box2d_from_centroid_and_size(y, x, h * mult_padding, w * mult_padding, clip=False)
+        box2d = get_box2d_from_centroid_and_size(y, x, h * mult_padding, w * mult_padding, clip=False)  # noqa: F821 - Undefined upstream; FVMD never imports utils.geom.
 
     if use_image_aspect_ratio:
         h, w = get_size_from_box2d(box2d)
@@ -493,7 +489,7 @@ def convert_box2d_to_intrinsics(box2d, pix_T_cam, H, W, use_image_aspect_ratio=T
             h = w * im_ratio
             # print('setting h:', w*im_ratio)
 
-        box2d = get_box2d_from_centroid_and_size(y, x, h / float(H), w / float(W), clip=False)
+        box2d = get_box2d_from_centroid_and_size(y, x, h / float(H), w / float(W), clip=False)  # noqa: F821 - Undefined upstream; FVMD never imports utils.geom.
 
     assert h > 1e-4
     assert w > 1e-4
@@ -507,7 +503,7 @@ def convert_box2d_to_intrinsics(box2d, pix_T_cam, H, W, use_image_aspect_ratio=T
     new_x0 = x0 - xmin * W
     new_y0 = y0 - ymin * H
 
-    pix_T_cam = pack_intrinsics(fx, fy, new_x0, new_y0)
+    pix_T_cam = pack_intrinsics(fx, fy, new_x0, new_y0)  # noqa: F821 - Undefined upstream; FVMD never imports utils.geom.
     # this alone will give me an image in original resolution,
     # with its topleft at the box corner
 
@@ -520,7 +516,7 @@ def convert_box2d_to_intrinsics(box2d, pix_T_cam, H, W, use_image_aspect_ratio=T
     sy = 1.0 / box_h
     sx = 1.0 / box_w
 
-    pix_T_cam = scale_intrinsics(pix_T_cam, sx, sy)
+    pix_T_cam = scale_intrinsics(pix_T_cam, sx, sy)  # noqa: F821 - Undefined upstream; FVMD never imports utils.geom.
     return pix_T_cam, box2d
 
 
@@ -556,7 +552,8 @@ def camera2pixels(xyz, pix_T_cam):
 
     fx, fy, x0, y0 = split_intrinsics(pix_T_cam)
     x, y, z = torch.unbind(xyz, dim=-1)
-    B = list(z.shape)[0]
+    shape_list = list(z.shape)
+    B = shape_list[0]
 
     fx = torch.reshape(fx, [B, 1])
     fy = torch.reshape(fy, [B, 1])

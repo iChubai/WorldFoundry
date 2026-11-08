@@ -30,7 +30,7 @@ def build_dataset(gen_path: str, gt_path: str):
         gt_dataset(VideoDataset): ground truth dataset
         gen_dataset(VideoDataset): generated dataset
     """
-    if gt_path.endswith(".npz") or gt_path.endswith(".npy"):
+    if gt_path.endswith((".npz", ".npy")):
         gt_videos = np.load(gt_path)
         gen_videos = np.load(gen_path)
         gt_dataset = VideoDatasetNP(gt_videos)

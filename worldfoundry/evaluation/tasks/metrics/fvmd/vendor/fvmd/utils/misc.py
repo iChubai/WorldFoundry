@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 import torch
 from prettytable import PrettyTable
@@ -48,16 +46,14 @@ class SimplePool:
 
         if not (version == "pt" or version == "np"):
             print("version = %s; please choose pt or np")
-            assert False  # please choose pt or np
+            # please choose pt or np
+            assert False  # noqa: B011 - Keeps the upstream -O semantics.
 
     def __len__(self):
         return len(self.items)
 
     def mean(self, min_size=1):
-        if min_size == "half":
-            pool_size_thresh = self.pool_size / 2
-        else:
-            pool_size_thresh = min_size
+        pool_size_thresh = self.pool_size / 2 if min_size == "half" else min_size
 
         if self.version == "np":
             if len(self.items) >= pool_size_thresh:

@@ -20,11 +20,7 @@ class VideoDataset(Dataset):
             image_path = os.path.join(self.imagefolder_path, img_name)
             files = os.listdir(image_path)
             files.sort()
-            files = [
-                os.path.join(image_path, f)
-                for f in files
-                if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg")
-            ]
+            files = [os.path.join(image_path, f) for f in files if f.endswith((".jpg", ".png", ".jpeg"))]
             for i in range(0, len(files) - seq_len + 1, stride):
                 self.data.append(files[i : i + seq_len])
 
@@ -42,7 +38,7 @@ class VideoDataset(Dataset):
         frames = []
         for f in files:
             image = Image.open(f)
-            if not image.mode == "RGB":
+            if image.mode != "RGB":
                 image = image.convert("RGB")
 
             image = self.transform(image)

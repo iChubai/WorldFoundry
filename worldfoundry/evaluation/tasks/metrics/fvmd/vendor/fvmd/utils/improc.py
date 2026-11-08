@@ -5,26 +5,12 @@ import torch
 import torch.nn.functional as F
 import torchvision
 from matplotlib import cm
+from skimage.color import hsv2rgb
 from sklearn.decomposition import PCA
 
 import fvmd.utils.basic
 
 EPS = 1e-6
-
-from skimage.color import (
-    hed2rgb,
-    hsv2rgb,
-    lab2rgb,
-    rgb2hed,
-    rgb2hsv,
-    rgb2lab,
-    rgb2xyz,
-    rgb2ycbcr,
-    rgb2yuv,
-    xyz2rgb,
-    ycbcr2rgb,
-    yuv2rgb,
-)
 
 
 def _convert(input_, type_):
@@ -80,9 +66,9 @@ def pca_embed(emb, keep, valid=None):
     emb = emb.permute(0, 2, 3, 1).cpu().detach().numpy()  # this is B x H x W x C
 
     if valid:
-        valid = valid.cpu().detach().numpy().reshape(H * W)
+        valid = valid.cpu().detach().numpy().reshape(H * W)  # noqa: F821 - Upstream reads H, W before assignment; FVMD never passes valid.
 
-    emb_reduced = list()
+    emb_reduced = []
 
     B, H, W, C = np.shape(emb)
     for img in emb:
@@ -92,18 +78,12 @@ def pca_embed(emb, keep, valid=None):
 
         pixels_kd = np.reshape(img, (H * W, C))
 
-        if valid:
-            pixels_kd_pca = pixels_kd[valid]
-        else:
-            pixels_kd_pca = pixels_kd
+        pixels_kd_pca = pixels_kd[valid] if valid else pixels_kd
 
         P = PCA(keep)
         P.fit(pixels_kd_pca)
 
-        if valid:
-            pixels3d = P.transform(pixels_kd) * valid
-        else:
-            pixels3d = P.transform(pixels_kd)
+        pixels3d = P.transform(pixels_kd) * valid if valid else P.transform(pixels_kd)
 
         out_img = np.reshape(pixels3d, [H, W, keep]).astype(np.float32)
         if np.isnan(out_img).any():
@@ -148,16 +128,10 @@ def reduce_emb(emb, valid=None, inbound=None, together=False):
     S, C, H, W = list(emb.size())
     keep = 3
 
-    if together:
-        reduced_emb = pca_embed_together(emb, keep)
-    else:
-        reduced_emb = pca_embed(emb, keep, valid)  # not im
+    reduced_emb = pca_embed_together(emb, keep) if together else pca_embed(emb, keep, valid)  # not im
 
     reduced_emb = fvmd.utils.basic.normalize(reduced_emb) - 0.5
-    if inbound is not None:
-        emb_inbound = emb * inbound
-    else:
-        emb_inbound = None
+    emb_inbound = emb * inbound if inbound is not None else None
 
     return reduced_emb, emb_inbound
 
@@ -213,7 +187,8 @@ def convert_occ_to_height(occ, reduce_axis=3):
         # lateral view
         values = values.view(1, 1, 1, 1, G)
     else:
-        assert False  # you have to reduce one of the spatial dims (2-4)
+        # you have to reduce one of the spatial dims (2-4)
+        assert False  # noqa: B011 - Keeps the upstream -O semantics.
     values = torch.max(occ * values, dim=reduce_axis)[0] / float(G)
     # values = values.view([B, C, D, W])
     return values
@@ -326,7 +301,8 @@ def seq2color(im, norm=True, colormap="coolwarm"):
             im1_[im_ == 1 / float(S)] = im0_[im_ == 1 / float(S)]
             im_ = np.reshape(im1_, (H, W, 3))
         else:
-            assert False  # invalid colormap
+            # invalid colormap
+            assert False  # noqa: B011 - Keeps the upstream -O semantics.
         # move channels into dim 0
         im_ = np.transpose(im_, [2, 0, 1])
         im_ = torch.from_numpy(im_).float().cuda()
@@ -512,8 +488,6 @@ class Summ_writer:
         # tensor should be in B x S x C x H x W
 
         assert tensor.dtype in {torch.uint8, torch.float32}
-        shape = list(tensor.shape)
-
         if tensor.dtype == torch.float32:
             tensor = back2color(tensor, blacken_zeros=blacken_zeros)
 
@@ -605,7 +579,7 @@ class Summ_writer:
                         cv2.putText(
                             rgb,
                             # '%d (%.2f)' % (tids[ind], scores[ind]),
-                            "%.2f" % (scores[ind]),
+                            "%.2f" % (scores[ind]),  # noqa: UP031 - The operand may be a tensor; keep printf conversion.
                             (int(xmin), int(ymin)),
                             cv2.FONT_HERSHEY_SIMPLEX,
                             0.5,  # font size
@@ -745,18 +719,13 @@ class Summ_writer:
         if self.save_this:
             if bev:
                 B, C, H, _, W = list(ims[0].shape)
-                if reduce_max:
-                    ims = [torch.max(im, dim=3)[0] for im in ims]
-                else:
-                    ims = [torch.mean(im, dim=3) for im in ims]
+                ims = [torch.max(im, dim=3)[0] for im in ims] if reduce_max else [torch.mean(im, dim=3) for im in ims]
             elif fro:
                 B, C, _, H, W = list(ims[0].shape)
-                if reduce_max:
-                    ims = [torch.max(im, dim=2)[0] for im in ims]
-                else:
-                    ims = [torch.mean(im, dim=2) for im in ims]
+                ims = [torch.max(im, dim=2)[0] for im in ims] if reduce_max else [torch.mean(im, dim=2) for im in ims]
 
-            if len(ims) != 1:  # sequence
+            # sequence
+            if len(ims) != 1:  # noqa: SIM108 - Branch comments document each case.
                 im = gif_and_tile(ims, just_gif=self.just_gif)
             else:
                 im = torch.stack(ims, dim=1)  # single frame
@@ -812,16 +781,10 @@ class Summ_writer:
         if self.save_this:
             if bev:
                 B, C, H, _, W = list(im.shape)
-                if max_along_y:
-                    im = torch.max(im, dim=3)[0]
-                else:
-                    im = torch.mean(im, dim=3)
+                im = torch.max(im, dim=3)[0] if max_along_y else torch.mean(im, dim=3)
             elif fro:
                 B, C, _, H, W = list(im.shape)
-                if max_along_y:
-                    im = torch.max(im, dim=2)[0]
-                else:
-                    im = torch.mean(im, dim=2)
+                im = torch.max(im, dim=2)[0] if max_along_y else torch.mean(im, dim=2)
             else:
                 B, C, H, W = list(im.shape)
 
@@ -853,10 +816,7 @@ class Summ_writer:
 
             if feats.ndim == 6:
                 # feats is B x S x C x D x H x W
-                if fro:
-                    reduce_dim = 3
-                else:
-                    reduce_dim = 4
+                reduce_dim = 3 if fro else 4
 
                 if valids is None:
                     feats = torch.mean(feats, dim=reduce_dim)
@@ -874,15 +834,19 @@ class Summ_writer:
                 return self.summ_oneds(name=name, ims=feats, norm=True, only_return=only_return, frame_ids=frame_ids)
 
             else:
-                __p = lambda x: fvmd.utils.basic.pack_seqdim(x, B)
-                __u = lambda x: fvmd.utils.basic.unpack_seqdim(x, B)
+
+                def __p(x):
+                    return fvmd.utils.basic.pack_seqdim(x, B)
+
+                def __u(x):
+                    return fvmd.utils.basic.unpack_seqdim(x, B)
 
                 feats_ = __p(feats)
 
                 if valids is None:
                     feats_pca_ = get_feat_pca(feats_)
                 else:
-                    valids_ = __p(valids)
+                    valids_ = __p(valids)  # noqa: F841 - pack_seqdim checks the batch size as upstream.
                     feats_pca_ = get_feat_pca(feats_, valids)
 
                 feats_pca = __u(feats_pca_)
@@ -919,13 +883,12 @@ class Summ_writer:
                 return self.summ_rgb(name, feat_pca, only_return=only_return, frame_id=frame_id)
 
     def summ_scalar(self, name, value):
-        if (not (isinstance(value, int) or isinstance(value, float) or isinstance(value, np.float32))) and (
-            "torch" in value.type()
-        ):
+        if (not (isinstance(value, (int, float, np.float32)))) and ("torch" in value.type()):
             value = value.detach().cpu().numpy()
-        if not np.isnan(value):
-            if self.log_freq == 1 or self.save_this or np.mod(self.global_step, self.scalar_freq) == 0:
-                self.writer.add_scalar(name, value, global_step=self.global_step)
+        if not np.isnan(value) and (
+            self.log_freq == 1 or self.save_this or np.mod(self.global_step, self.scalar_freq) == 0
+        ):
+            self.writer.add_scalar(name, value, global_step=self.global_step)
 
     def summ_seg(self, name, seg, only_return=False, frame_id=None, colormap="tab20", label_colors=None):
         if not self.save_this:
@@ -937,7 +900,7 @@ class Summ_writer:
             custom_label_colors = False
             # label_colors = get_n_colors(int(torch.max(seg).item()), sequential=True)
             label_colors = cm.get_cmap(colormap).colors
-            label_colors = [[int(i * 255) for i in l] for l in label_colors]
+            label_colors = [[int(i * 255) for i in label_rgb] for label_rgb in label_colors]
         else:
             custom_label_colors = True
         # label_colors = matplotlib.cm.get_cmap(colormap).colors
@@ -965,7 +928,8 @@ class Summ_writer:
         b = torch.zeros_like(seg, dtype=torch.uint8)
 
         for label in range(len(label_colors)):
-            if not custom_label_colors:  # and (N > 20):
+            # and (N > 20):
+            if not custom_label_colors:  # noqa: SIM108 - Branch comments document each case.
                 label_ = label % 20
             else:
                 label_ = label
@@ -997,10 +961,7 @@ class Summ_writer:
 
         rgb = rgb[0]  # C, H, W
         trajs = trajs[0]  # S, N, 2
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])  # S, N
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]  # S, N
         # print('trajs', trajs.shape)
         # print('valids', valids.shape)
 
@@ -1013,12 +974,6 @@ class Summ_writer:
         rgb = rgb.astype(np.uint8).copy()
 
         for i in range(N):
-            if cmap == "onediff" and i == 0:
-                cmap_ = "spring"
-            elif cmap == "onediff":
-                cmap_ = "winter"
-            else:
-                cmap_ = cmap
             traj = trajs[:, i]  # S,2
             valid = valids[:, i]  # S
 
@@ -1051,10 +1006,7 @@ class Summ_writer:
 
         rgbs = rgbs[0]  # S, C, H, W
         trajs = trajs[0]  # S, N, 2
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])  # S, N
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]  # S, N
         # print('trajs', trajs.shape)
         # print('valids', valids.shape)
 
@@ -1108,10 +1060,7 @@ class Summ_writer:
         rgbs = rgbs[0]  # S, C, H, W
         trajs = trajs[0]  # S, N, 2
         velocity = velocity[0]  # S, N, 2
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])  # S, N
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]  # S, N
 
         # print('trajs', trajs.shape)
         # print('valids', valids.shape)
@@ -1135,17 +1084,17 @@ class Summ_writer:
                 cmap_ = cmap
             traj = trajs[:, i].long().detach().cpu().numpy()  # S, 2
             vel = velocity[:, i].long().detach().cpu().numpy()  # S, 2
-            valid = valids[:, i].long().detach().cpu().numpy()  # S
+            valids[:, i].long().detach().cpu().numpy()  # S
 
             # print('traj', traj.shape)
             # print('valid', valid.shape)
 
             if vals is not None:
                 # val = vals[:,i].float().detach().cpu().numpy() # []
-                val = vals[i].float().detach().cpu().numpy()  # []
+                vals[i].float().detach().cpu().numpy()  # []
                 # print('val', val.shape)
             else:
-                val = None
+                pass
 
             for t in range(S):
                 cv2.arrowedLine(
@@ -1168,7 +1117,7 @@ class Summ_writer:
             traj = trajs[:, i]  # S,2
             # vis = visibles[:,i] # S
             vis = torch.ones_like(traj[:, 0])  # S
-            valid = valids[:, i]  # S
+            valids[:, i]  # S
             rgbs_color = self.draw_circ_on_images_py(
                 rgbs_color, traj, vis, S=0, show_dots=show_dots, cmap=cmap_, linewidth=linewidth
             )
@@ -1201,10 +1150,7 @@ class Summ_writer:
 
         rgbs = rgbs[0]  # S, C, H, W
         trajs = trajs[0]  # S, N, 2
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])  # S, N
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]  # S, N
 
         # print('trajs', trajs.shape)
         # print('valids', valids.shape)
@@ -1227,17 +1173,17 @@ class Summ_writer:
             else:
                 cmap_ = cmap
             traj = trajs[:, i].long().detach().cpu().numpy()  # S, 2
-            valid = valids[:, i].long().detach().cpu().numpy()  # S
+            valids[:, i].long().detach().cpu().numpy()  # S
 
             # print('traj', traj.shape)
             # print('valid', valid.shape)
 
             if vals is not None:
                 # val = vals[:,i].float().detach().cpu().numpy() # []
-                val = vals[i].float().detach().cpu().numpy()  # []
+                vals[i].float().detach().cpu().numpy()  # []
                 # print('val', val.shape)
             else:
-                val = None
+                pass
 
             for t in range(S):
                 # if valid[t]:
@@ -1266,7 +1212,7 @@ class Summ_writer:
             traj = trajs[:, i]  # S,2
             # vis = visibles[:,i] # S
             vis = torch.ones_like(traj[:, 0])  # S
-            valid = valids[:, i]  # S
+            valids[:, i]  # S
             rgbs_color = self.draw_circ_on_images_py(
                 rgbs_color, traj, vis, S=0, show_dots=show_dots, cmap=cmap_, linewidth=linewidth
             )
@@ -1300,10 +1246,7 @@ class Summ_writer:
         rgbs = rgbs[0]  # S, C, H, W
         trajs = trajs[0]  # S, N, 2
         visibles = visibles[0]  # S, N
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])  # S, N
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]  # S, N
         # print('trajs', trajs.shape)
         # print('valids', valids.shape)
 
@@ -1374,10 +1317,7 @@ class Summ_writer:
         rgb = rgb[0]  # S, C, H, W
         trajs = trajs[0]  # S, N, 2
 
-        if valids is None:
-            valids = torch.ones_like(trajs[:, :, 0])
-        else:
-            valids = valids[0]
+        valids = torch.ones_like(trajs[:, :, 0]) if valids is None else valids[0]
 
         rgb_color = back2color(rgb).detach().cpu().numpy()
         rgb_color = np.transpose(rgb_color, [1, 2, 0])  # put channels last
@@ -1643,7 +1583,7 @@ class Summ_writer:
         # print('grid_img', grid_img.shape)
         return self.summ_rgb(name, grid_img.byte(), frame_id=frame_id, only_return=only_return)
 
-    def summ_occ(self, name, occ, reduce_axes=[3], bev=False, fro=False, pro=False, frame_id=None, only_return=False):
+    def summ_occ(self, name, occ, reduce_axes=[3], bev=False, fro=False, pro=False, frame_id=None, only_return=False):  # noqa: B006 - Read-only default; retain the public signature.
         if self.save_this:
             B, C, D, H, W = list(occ.shape)
             if bev:
@@ -1656,7 +1596,7 @@ class Summ_writer:
                 height = convert_occ_to_height(occ, reduce_axis=reduce_axis)
                 if reduce_axis == reduce_axes[-1]:
                     return self.summ_oned(
-                        name=("%s_ax%d" % (name, reduce_axis)),
+                        name=f"{name}_ax{reduce_axis}",
                         im=height,
                         norm=False,
                         frame_id=frame_id,
@@ -1664,7 +1604,7 @@ class Summ_writer:
                     )
                 else:
                     self.summ_oned(
-                        name=("%s_ax%d" % (name, reduce_axis)),
+                        name=f"{name}_ax{reduce_axis}",
                         im=height,
                         norm=False,
                         frame_id=frame_id,
@@ -1674,7 +1614,7 @@ class Summ_writer:
 
 def erode2d(im, times=1, device="cuda"):
     weights2d = torch.ones(1, 1, 3, 3, device=device)
-    for time in range(times):
+    for _time in range(times):
         im = 1.0 - F.conv2d(1.0 - im, weights2d, padding=1).clamp(0, 1)
     return im
 
@@ -1686,6 +1626,6 @@ def dilate2d(im, times=1, device="cuda", mode="square"):
         weights2d[:, :, 0, 2] = 0.0
         weights2d[:, :, 2, 0] = 0.0
         weights2d[:, :, 2, 2] = 0.0
-    for time in range(times):
+    for _time in range(times):
         im = F.conv2d(im, weights2d, padding=1).clamp(0, 1)
     return im

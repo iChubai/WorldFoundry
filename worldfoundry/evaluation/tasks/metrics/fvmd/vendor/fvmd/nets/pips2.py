@@ -1,15 +1,10 @@
-from functools import partial
-
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch import nn
 
 import fvmd.utils.basic
 import fvmd.utils.misc
 import fvmd.utils.samp
-from fvmd.utils.basic import print_stats
 
 
 class Conv1dPad(nn.Module):
@@ -18,7 +13,7 @@ class Conv1dPad(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, kernel_size, stride, groups=1):
-        super(Conv1dPad, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -46,7 +41,7 @@ class Conv1dPad(nn.Module):
 
 class ResidualBlock1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, groups, use_norm, use_do, is_first_block=False):
-        super(ResidualBlock1d, self).__init__()
+        super().__init__()
 
         self.in_channels = in_channels
         self.kernel_size = kernel_size
@@ -128,7 +123,7 @@ def sequence_loss(flow_preds, flow_gt, vis, valids, gamma=0.8):
 
 class ResidualBlock2d(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(ResidualBlock2d, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride, padding_mode="zeros")
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1, padding_mode="zeros")
@@ -139,19 +134,19 @@ class ResidualBlock2d(nn.Module):
         if norm_fn == "group":
             self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
             self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            if not stride == 1:
+            if stride != 1:
                 self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
 
         elif norm_fn == "batch" or norm_fn == "instance":
             self.norm1 = nn.InstanceNorm2d(planes)
             self.norm2 = nn.InstanceNorm2d(planes)
-            if not stride == 1:
+            if stride != 1:
                 self.norm3 = nn.InstanceNorm2d(planes)
 
         elif norm_fn == "none":
             self.norm1 = nn.Sequential()
             self.norm2 = nn.Sequential()
-            if not stride == 1:
+            if stride != 1:
                 self.norm3 = nn.Sequential()
 
         if stride == 1:
@@ -173,7 +168,7 @@ class ResidualBlock2d(nn.Module):
 
 class BasicEncoder(nn.Module):
     def __init__(self, input_dim=3, output_dim=128, stride=8, norm_fn="batch", dropout=0.0):
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.stride = stride
         self.norm_fn = norm_fn
 
@@ -250,7 +245,7 @@ class BasicEncoder(nn.Module):
 
 class DeltaBlock(nn.Module):
     def __init__(self, latent_dim=128, hidden_dim=128, corr_levels=4, corr_radius=3):
-        super(DeltaBlock, self).__init__()
+        super().__init__()
 
         kitchen_dim = (corr_levels * (2 * corr_radius + 1) ** 2) * 3 + latent_dim + 2
 
@@ -276,10 +271,7 @@ class DeltaBlock(nn.Module):
 
         self.basicblock_list = nn.ModuleList()
         for i_block in range(self.n_block):
-            if i_block == 0:
-                is_first_block = True
-            else:
-                is_first_block = False
+            is_first_block = i_block == 0
 
             if is_first_block:
                 in_channels = base_filters
@@ -358,7 +350,7 @@ class CorrBlock:
         self.radius = radius
         self.fmaps_pyramid = []
         self.fmaps_pyramid.append(fmaps)
-        for i in range(self.num_levels - 1):
+        for _i in range(self.num_levels - 1):
             fmaps_ = fmaps.reshape(B * S, C, H, W)
             fmaps_ = F.avg_pool2d(fmaps_, 2, stride=2)
             _, _, H, W = fmaps_.shape
@@ -369,9 +361,6 @@ class CorrBlock:
         r = self.radius
         B, S, N, D = coords.shape
         assert D == 2
-
-        x0 = coords[:, 0, :, 0].round().clamp(0, self.W - 1).long()
-        y0 = coords[:, 0, :, 1].round().clamp(0, self.H - 1).long()
 
         H, W = self.H, self.W
         out_pyramid = []
@@ -409,12 +398,12 @@ class CorrBlock:
 
 class Pips(nn.Module):
     def __init__(self, stride=8):
-        super(Pips, self).__init__()
+        super().__init__()
 
         self.stride = stride
 
-        self.hidden_dim = hdim = 256
-        self.latent_dim = latent_dim = 128
+        self.hidden_dim = 256
+        self.latent_dim = 128
         self.corr_levels = 4
         self.corr_radius = 3
 
@@ -437,7 +426,7 @@ class Pips(nn.Module):
         is_train=False,
         beautify=False,
     ):
-        total_loss = torch.tensor(0.0).cuda()
+        total_loss = torch.tensor(0.0).cuda()  # noqa: F841 - The CUDA allocation runs as upstream.
 
         B, S, N, D = trajs_e0.shape
         assert D == 2
@@ -448,8 +437,6 @@ class Pips(nn.Module):
         H8 = H // self.stride
         W8 = W // self.stride
 
-        device = rgbs.device
-
         rgbs_ = rgbs.reshape(B * S, C, H, W)
         fmaps_ = self.fnet(rgbs_)
         fmaps = fmaps_.reshape(B, S, self.latent_dim, H8, W8)
@@ -458,8 +445,6 @@ class Pips(nn.Module):
             sw.summ_feats("1_model/0_fmaps", fmaps.unbind(1))
 
         coords = trajs_e0.clone() / float(self.stride)
-
-        hdim = self.hidden_dim
 
         fcorr_fn1 = CorrBlock(fmaps, num_levels=self.corr_levels, radius=self.corr_radius)
         fcorr_fn2 = CorrBlock(fmaps, num_levels=self.corr_levels, radius=self.corr_radius)
@@ -541,10 +526,7 @@ class Pips(nn.Module):
         # pause at the end, to make the summs more interpretable
         coord_predictions2.append(coords * self.stride)
 
-        if trajs_g is not None:
-            loss = sequence_loss(coord_predictions1, trajs_g, vis_g, valids, 0.8)
-        else:
-            loss = None
+        loss = sequence_loss(coord_predictions1, trajs_g, vis_g, valids, 0.8) if trajs_g is not None else None
 
         coord_predictions1.append(coords * self.stride)
         feats = (feats1, feats2, feats4)

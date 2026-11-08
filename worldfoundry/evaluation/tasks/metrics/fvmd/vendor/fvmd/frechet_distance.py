@@ -32,7 +32,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import numpy as np
@@ -84,7 +83,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-5):
     offset = np.eye(sigma1.shape[0]) * eps
     covmean, _ = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))

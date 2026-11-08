@@ -1,21 +1,16 @@
 import os
-import random
 import time
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import numpy as np
 import torch
-import torch.nn.functional as F
-from fire import Fire
 from loguru import logger
 from tensorboardX import SummaryWriter
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 import fvmd.utils.improc
 import fvmd.utils.misc
-import fvmd.utils.saverloader as saverloader
 from fvmd.nets.pips2 import Pips
-from fvmd.utils.basic import print_, print_stats
 
 try:
     from torchvision.models.utils import load_state_dict_from_url
@@ -79,8 +74,6 @@ def run_tracking(model, rgbs, N=64, iters=16):
 
     # zero-vel init
     trajs_e = xy0.unsqueeze(1).repeat(1, S, 1, 1)
-
-    iter_start_time = time.time()
 
     preds, preds_anim, _, _ = model(trajs_e, rgbs, iters=iters, feat_init=None, beautify=True)
     trajs_e = preds[-1]
@@ -148,9 +141,9 @@ def track_keypoints(
     image_size=(256, 256),  # input resolution
     shuffle=False,  # dataset shuffling
     init_dir=PIPS_WEIGHTS,
-    device_ids=[0],
+    device_ids=[0],  # noqa: B006 - Read-only default; retain the public signature.
 ):
-    device = "cuda:%d" % device_ids[0]
+    device = "cuda:%d" % device_ids[0]  # noqa: UP031 - Caller-provided device id; keep the printf integer conversion.
 
     assert B == 1  # B>1 not implemented here
     assert image_size[0] % 32 == 0
@@ -221,7 +214,7 @@ def track_keypoints(
         iter_itime = time.time() - iter_start_time
 
         logger.info(
-            "%s; step %06d/%d; rtime %.2f; itime %.2f" % (model_name, global_step, dataset_size, iter_rtime, iter_itime)
+            f"{model_name}; step {global_step:06d}/{dataset_size}; rtime {iter_rtime:.2f}; itime {iter_itime:.2f}"
         )
 
     # save velo & acc

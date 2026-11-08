@@ -1,6 +1,5 @@
 import json
 import os
-import pathlib
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
 import numpy as np
@@ -97,9 +96,9 @@ def calc_hist(vectors: np.ndarray, cell_size: int = 5, angle_bins: int = 8, cube
 def calculate_fvmd_given_paths(gen_path, gt_path):
     """Calculates the FID of two paths"""
     if not os.path.exists(gen_path):
-        raise RuntimeError("Invalid path: %s" % gen_path)
+        raise RuntimeError(f"Invalid path: {gen_path}")
     if not os.path.exists(gt_path):
-        raise RuntimeError("Invalid path: %s" % gt_path)
+        raise RuntimeError(f"Invalid path: {gt_path}")
 
     results = {}
 

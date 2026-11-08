@@ -41,9 +41,9 @@ class Vox_util:
                 print("Z, Y, X", Z, Y, X)
                 print(
                     "bounds for this iter:",
-                    "X = %.2f to %.2f" % (self.XMIN, self.XMAX),
-                    "Y = %.2f to %.2f" % (self.YMIN, self.YMAX),
-                    "Z = %.2f to %.2f" % (self.ZMIN, self.ZMAX),
+                    "X = %.2f to %.2f" % (self.XMIN, self.XMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
+                    "Y = %.2f to %.2f" % (self.YMIN, self.YMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
+                    "Z = %.2f to %.2f" % (self.ZMIN, self.ZMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
                 )
                 print("self.default_vox_size_X", self.default_vox_size_X)
                 print("self.default_vox_size_Y", self.default_vox_size_Y)
@@ -79,9 +79,9 @@ class Vox_util:
                 print("Z, Y, X", Z, Y, X)
                 print(
                     "bounds for this iter:",
-                    "X = %.2f to %.2f" % (self.XMIN, self.XMAX),
-                    "Y = %.2f to %.2f" % (self.YMIN, self.YMAX),
-                    "Z = %.2f to %.2f" % (self.ZMIN, self.ZMAX),
+                    "X = %.2f to %.2f" % (self.XMIN, self.XMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
+                    "Y = %.2f to %.2f" % (self.YMIN, self.YMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
+                    "Z = %.2f to %.2f" % (self.ZMIN, self.ZMAX),  # noqa: UP031 - Bounds may be tensors; keep printf conversion.
                 )
                 print("vox_size_X", vox_size_X)
                 print("vox_size_Y", vox_size_Y)
@@ -305,7 +305,7 @@ class Vox_util:
         B, C, H, W = list(rgb_camB.shape)
 
         if xyz_camA is None:
-            xyz_memA = utils.basic.gridcloud3d(B, Z, Y, X, norm=False, device=pixB_T_camA.device)
+            xyz_memA = utils.basic.gridcloud3d(B, Z, Y, X, norm=False, device=pixB_T_camA.device)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
             xyz_camA = self.Mem2Ref(xyz_memA, Z, Y, X, assert_cube=assert_cube)
 
         xyz_camB = fvmd.utils.geom.apply_4x4(camB_T_camA, xyz_camA)
@@ -330,10 +330,10 @@ class Vox_util:
             # handwritten version
             values = torch.zeros([B, C, Z * Y * X], dtype=torch.float32)
             for b in list(range(B)):
-                values[b] = utils.samp.bilinear_sample_single(rgb_camB[b], x_pixB[b], y_pixB[b])
+                values[b] = utils.samp.bilinear_sample_single(rgb_camB[b], x_pixB[b], y_pixB[b])  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
         else:
             # native pytorch version
-            y_pixB, x_pixB = utils.basic.normalize_grid2d(y, x, H, W)
+            y_pixB, x_pixB = utils.basic.normalize_grid2d(y, x, H, W)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
             # since we want a 3d output, we need 5d tensors
             z_pixB = torch.zeros_like(x)
             xyz_pixB = torch.stack([x_pixB, y_pixB, z_pixB], axis=2)
@@ -359,7 +359,7 @@ class Vox_util:
 
         B, C, D, H, W = list(rgb_tileB.shape)
 
-        xyz_memA = utils.basic.gridcloud3d(B, Z, Y, X, norm=False, device=pixB_T_camA.device)
+        xyz_memA = utils.basic.gridcloud3d(B, Z, Y, X, norm=False, device=pixB_T_camA.device)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
 
         xyz_camA = self.Mem2Ref(xyz_memA, Z, Y, X, assert_cube=assert_cube)
 
@@ -384,7 +384,7 @@ class Vox_util:
         z_valid = (z_camB > 0.0).bool()
         valid_mem = (x_valid & y_valid & z_valid).reshape(B, 1, Z, Y, X).float()
 
-        z_tileB, y_pixB, x_pixB = utils.basic.normalize_grid3d(z_tileB, y, x, D, H, W)
+        z_tileB, y_pixB, x_pixB = utils.basic.normalize_grid3d(z_tileB, y, x, D, H, W)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
         xyz_pixB = torch.stack([x_pixB, y_pixB, z_tileB], axis=2)
         xyz_pixB = torch.reshape(xyz_pixB, [B, Z, Y, X, 3])
         values = F.grid_sample(rgb_tileB, xyz_pixB, align_corners=False)
@@ -398,7 +398,7 @@ class Vox_util:
         # transforms them into mem coordinates, including a scale change for the lengths
         B, N, C = list(lrtlist_cam.shape)
         assert C == 19
-        mem_T_cam = self.get_mem_T_ref(B, Z, Y, X, assert_cube=assert_cube, device=lrtlist_cam.device)
+        mem_T_cam = self.get_mem_T_ref(B, Z, Y, X, assert_cube=assert_cube, device=lrtlist_cam.device)  # noqa: F841 - The call runs as upstream.
 
     def xyz2circles(self, xyz, radius, Z, Y, X, soft=True, already_mem=True, also_offset=False, grid=None):
         # xyz is B x N x 3
@@ -410,7 +410,7 @@ class Vox_util:
             xyz = self.Ref2Mem(xyz, Z, Y, X)
 
         if grid is None:
-            grid_z, grid_y, grid_x = utils.basic.meshgrid3d(B, Z, Y, X, stack=False, norm=False, device=xyz.device)
+            grid_z, grid_y, grid_x = utils.basic.meshgrid3d(B, Z, Y, X, stack=False, norm=False, device=xyz.device)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
             # note the default stack is on -1
             grid = torch.stack([grid_x, grid_y, grid_z], dim=1)
             # this is B x 3 x Z x Y x X
@@ -444,7 +444,8 @@ class Vox_util:
             else:
                 return mask
         else:
-            assert False  # something is wrong with this. come back later to debug
+            # something is wrong with this. come back later to debug
+            assert False  # noqa: B011 - Keeps the upstream -O semantics.
 
             dist_grid = torch.norm(grid - xyz, dim=2, keepdim=False)
             # this is 0 at/near the xyz, and increases by 1 for each voxel away
@@ -466,7 +467,7 @@ class Vox_util:
 
         xz = torch.stack([xyz[:, :, 0], xyz[:, :, 2]], dim=2)
 
-        grid_z, grid_x = utils.basic.meshgrid2d(B, Z, X, stack=False, norm=False, device=xyz.device)
+        grid_z, grid_x = utils.basic.meshgrid2d(B, Z, X, stack=False, norm=False, device=xyz.device)  # noqa: F821 - Undefined upstream; FVMD never imports utils.vox.
         # note the default stack is on -1
         grid = torch.stack([grid_x, grid_z], dim=1)
         # this is B x 2 x Z x X

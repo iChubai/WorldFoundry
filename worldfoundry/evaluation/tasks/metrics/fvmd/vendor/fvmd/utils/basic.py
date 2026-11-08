@@ -1,12 +1,11 @@
 import os
-from os.path import isfile
+import re
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 EPS = 1e-6
-import copy
 
 
 def sub2ind(height, width, y, x):
@@ -20,13 +19,13 @@ def ind2sub(height, width, ind):
 
 
 def get_lr_str(lr):
-    lrn = "%.1e" % lr  # e.g., 5.0e-04
+    lrn = f"{lr:.1e}"  # e.g., 5.0e-04
     lrn = lrn[0] + lrn[3:5] + lrn[-1]  # e.g., 5e-4
     return lrn
 
 
 def strnum(x):
-    s = "%g" % x
+    s = "%g" % x  # noqa: UP031 - The operand may be a tensor; keep printf conversion.
     if "." in s:
         if x < 1.0:
             s = s[s.index(".") :]
@@ -43,8 +42,7 @@ def print_stats(name, tensor):
     shape = tensor.shape
     tensor = tensor.detach().cpu().numpy()
     print(
-        "%s (%s) min = %.2f, mean = %.2f, max = %.2f"
-        % (name, tensor.dtype, np.min(tensor), np.mean(tensor), np.max(tensor)),
+        f"{name} ({tensor.dtype}) min = {np.min(tensor):.2f}, mean = {np.mean(tensor):.2f}, max = {np.max(tensor):.2f}",
         shape,
     )
 
@@ -52,8 +50,7 @@ def print_stats(name, tensor):
 def print_stats_py(name, tensor):
     shape = tensor.shape
     print(
-        "%s (%s) min = %.2f, mean = %.2f, max = %.2f"
-        % (name, tensor.dtype, np.min(tensor), np.mean(tensor), np.max(tensor)),
+        f"{name} ({tensor.dtype}) min = {np.min(tensor):.2f}, mean = {np.mean(tensor):.2f}, max = {np.max(tensor):.2f}",
         shape,
     )
 
@@ -81,7 +78,8 @@ def normalize(d):
     out = torch.zeros(d.size())
     if d.is_cuda:
         out = out.cuda()
-    B = list(d.size())[0]
+    size_list = list(d.size())
+    B = size_list[0]
     for b in list(range(B)):
         out[b] = normalize_single(d[b])
     return out
@@ -155,7 +153,8 @@ def reduce_masked_median(x, mask, keep_batch=False):
     assert x.size() == mask.size()
     device = x.device
 
-    B = list(x.shape)[0]
+    shape_list = list(x.shape)
+    B = shape_list[0]
     x = x.detach().cpu().numpy()
     mask = mask.detach().cpu().numpy()
 
@@ -191,7 +190,7 @@ def pack_seqdim(tensor, B):
     B_, S = shapelist[:2]
     assert B == B_
     otherdims = shapelist[2:]
-    tensor = torch.reshape(tensor, [B * S] + otherdims)
+    tensor = torch.reshape(tensor, [B * S, *otherdims])
     return tensor
 
 
@@ -201,7 +200,7 @@ def unpack_seqdim(tensor, B):
     assert BS % B == 0
     otherdims = shapelist[1:]
     S = int(BS / B)
-    tensor = torch.reshape(tensor, [B, S] + otherdims)
+    tensor = torch.reshape(tensor, [B, S, *otherdims])
     return tensor
 
 
@@ -222,10 +221,7 @@ def meshgrid2d(B, Y, X, stack=False, norm=False, device="cuda", on_chans=False):
     if stack:
         # note we stack in xy order
         # (see https://pytorch.org/docs/stable/nn.functional.html#torch.nn.functional.grid_sample)
-        if on_chans:
-            grid = torch.stack([grid_x, grid_y], dim=1)
-        else:
-            grid = torch.stack([grid_x, grid_y], dim=-1)
+        grid = torch.stack([grid_x, grid_y], dim=1) if on_chans else torch.stack([grid_x, grid_y], dim=-1)
         return grid
     else:
         return grid_y, grid_x
@@ -312,11 +308,8 @@ def gridcloud3d(B, Z, Y, X, norm=False, device="cuda"):
     return xyz
 
 
-import re
-
-
 def readPFM(file):
-    file = open(file, "rb")
+    file = open(file, "rb")  # noqa: SIM115 - Read through np.fromfile; upstream leaves closing to garbage collection.
 
     color = None
     width = None

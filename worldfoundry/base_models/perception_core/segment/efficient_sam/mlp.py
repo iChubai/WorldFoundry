@@ -6,7 +6,7 @@ from torch import nn
 
 
 # Lightly adapted from
-# https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py # noqa
+# https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py
 class MLPBlock(nn.Module):
     """Mlp block implementation."""
 
@@ -16,7 +16,7 @@ class MLPBlock(nn.Module):
         hidden_dim: int,
         output_dim: int,
         num_layers: int,
-        act: Type[nn.Module],
+        act: type[nn.Module],
     ) -> None:
         """Init.
 
@@ -34,7 +34,8 @@ class MLPBlock(nn.Module):
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
         self.layers = nn.ModuleList(
-            nn.Sequential(nn.Linear(n, k), act()) for n, k in zip([input_dim] + h, [hidden_dim] * num_layers)
+            nn.Sequential(nn.Linear(n, k), act())
+            for n, k in zip([input_dim] + h, [hidden_dim] * num_layers, strict=False)
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
 

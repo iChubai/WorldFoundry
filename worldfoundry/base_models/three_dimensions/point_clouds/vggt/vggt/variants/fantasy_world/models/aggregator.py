@@ -7,23 +7,23 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> models -> aggregator.py functionality."""
 
 import logging
+from typing import List, Tuple
+
 import torch
 import torch.nn as nn
-from typing import Tuple, List
+from torch.utils.checkpoint import checkpoint
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.geometry import (
     rope_params,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.variants.fantasy_world.layers.block import (
-    Block,
-    CamTokenProjector,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.rope import (
     PositionGetter,
     RotaryPositionEmbedding2D,
 )
-from torch.utils.checkpoint import checkpoint
-
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.variants.fantasy_world.layers.block import (
+    Block,
+    CamTokenProjector,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ class Aggregator(nn.Module):
 
     def forward(
         self, patch_tokens: torch.Tensor, camera_token: torch.Tensor = None, e0: torch.Tensor = None
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images (torch.Tensor): Input images with shape [B, S, 3, H, W], in range [0, 1].
@@ -306,7 +306,7 @@ class Aggregator(nn.Module):
 
     def _process_aggregator_input(
         self, patch_tokens: torch.Tensor, camera_token: torch.Tensor = None
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """Helper function to process aggregator input.
 
         Args:

@@ -1,14 +1,16 @@
 """Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> generate_video_tool -> pano_video_generation.py functionality."""
 
-import cv2
-import numpy as np
 import os
 import sys
 
+import cv2
+import numpy as np
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import uuid
+
 import lib.Equirec2Perspec as E2P
 import lib.multi_Perspec2Equirec as m_P2E
-import uuid
 from PIL import Image
 from tqdm import tqdm
 
@@ -77,5 +79,5 @@ if __name__ == "__main__":
         os.makedirs(_out_dir, exist_ok=True)
         for i, image_path in enumerate(image_paths):
             img = cv2.imread(image_path)
-            cv2.imwrite(os.path.join(_out_dir, "{}.png".format(i)), img)
+            cv2.imwrite(os.path.join(_out_dir, f"{i}.png"), img)
         generate_video(image_paths, _out_dir, gen_video=False)

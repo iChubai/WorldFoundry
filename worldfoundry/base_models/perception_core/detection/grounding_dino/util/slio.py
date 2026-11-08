@@ -12,9 +12,10 @@ from pathlib import Path
 import yaml
 
 try:
-    from yaml import CLoader as Loader, CDumper as Dumper
+    from yaml import CDumper as Dumper
+    from yaml import CLoader as Loader
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Dumper, Loader
 
 
 # ===========================
@@ -32,7 +33,6 @@ class BaseFileHandler(metaclass=ABCMeta):
         Args:
             file: The file.
         """
-        pass
 
     @abstractmethod
     def dump_to_fileobj(self, obj, file, **kwargs):
@@ -42,7 +42,6 @@ class BaseFileHandler(metaclass=ABCMeta):
             obj: The obj.
             file: The file.
         """
-        pass
 
     @abstractmethod
     def dump_to_str(self, obj, **kwargs):
@@ -51,7 +50,6 @@ class BaseFileHandler(metaclass=ABCMeta):
         Args:
             obj: The obj.
         """
-        pass
 
     def load_from_path(self, filepath, mode="r", **kwargs):
         """Load from path.

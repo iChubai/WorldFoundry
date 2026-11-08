@@ -1,11 +1,11 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import ast
+import json
 import math
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Literal, Optional, Union
 
-import json
 import torch
 from transformers.utils import is_torch_mps_available
 
@@ -38,11 +38,9 @@ class ModelArguments:
         init_strategy (Literal): Strategy to initialize all uninitialized parameters. Default is None.
     """
 
-    model: Optional[str] = None  # model id or model path
-    model_type: Optional[str] = field(
-        default=None, metadata={"help": f"model_type choices: {list(MODEL_MAPPING.keys())}"}
-    )
-    model_revision: Optional[str] = None
+    model: str | None = None  # model id or model path
+    model_type: str | None = field(default=None, metadata={"help": f"model_type choices: {list(MODEL_MAPPING.keys())}"})
+    model_revision: str | None = None
     task_type: Literal["causal_lm", "seq_cls", "embedding"] = None
 
     torch_dtype: Literal["bfloat16", "float16", "float32", None] = None
@@ -50,14 +48,14 @@ class ModelArguments:
     # None: It will be automatically selected between sdpa and eager.
     attn_impl: Literal["flash_attn", "sdpa", "eager", "flex_attention", None] = None
 
-    num_labels: Optional[int] = None
+    num_labels: int | None = None
     problem_type: Literal["regression", "single_label_classification", "multi_label_classification"] = None
     rope_scaling: Literal["linear", "dynamic", "yarn"] = None
-    device_map: Optional[Union[dict, str]] = None
-    max_memory: Optional[Union[dict, str]] = None
+    device_map: dict | str | None = None
+    max_memory: dict | str | None = None
     # When some model code needs to be downloaded from GitHub,
     # this parameter specifies the path to the locally downloaded repository.
-    local_repo_path: Optional[str] = None
+    local_repo_path: str | None = None
     init_strategy: Literal[
         "zero",
         "uniform",
@@ -70,14 +68,14 @@ class ModelArguments:
     ] = None
 
     @staticmethod
-    def parse_to_dict(value: Union[str, Dict, None], strict: bool = True) -> Union[str, Dict]:
+    def parse_to_dict(value: str | dict | None, strict: bool = True) -> str | dict:
         """Convert a JSON string or JSON file into a dict"""
         # If the value could potentially be a string, it is generally advisable to set strict to False.
         if value is None:
             value = {}
         elif isinstance(value, str):
             if os.path.exists(value):  # local path
-                with open(value, "r", encoding="utf-8") as f:
+                with open(value, encoding="utf-8") as f:
                     value = json.load(f)
             else:  # json str
                 try:
@@ -91,7 +89,7 @@ class ModelArguments:
     def _init_device_map(self):
         """Prepare device map args"""
         if self.device_map:
-            self.device_map: Union[str, Dict[str, Any], None] = self.parse_to_dict(self.device_map, strict=False)
+            self.device_map: str | dict[str, Any] | None = self.parse_to_dict(self.device_map, strict=False)
         # compat mp&ddp
         _, local_rank, _, local_world_size = get_dist_setting()
         if local_world_size > 1 and isinstance(self.device_map, dict) and local_rank > 0:
@@ -115,7 +113,7 @@ class ModelArguments:
 
     def _init_torch_dtype(self) -> None:
         """ "If torch_dtype is None, find a proper dtype by the train_type/GPU"""
-        self.torch_dtype: Optional[torch.dtype] = HfConfigFactory.to_torch_dtype(self.torch_dtype)
+        self.torch_dtype: torch.dtype | None = HfConfigFactory.to_torch_dtype(self.torch_dtype)
         self.torch_dtype: torch.dtype = self._init_model_info()
         # Mixed Precision Training
         if self.__class__.__name__ == "TrainArguments":

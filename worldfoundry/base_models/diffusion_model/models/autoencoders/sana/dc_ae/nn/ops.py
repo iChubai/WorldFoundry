@@ -34,8 +34,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..nn.act import build_act
-from ..nn.norm import build_norm
 from worldfoundry.core.nn import (
     ceil_to_divisible,
     chunked_interpolate,
@@ -46,6 +44,9 @@ from worldfoundry.core.nn import (
     val2list,
     val2tuple,
 )
+
+from ..nn.act import build_act
+from ..nn.norm import build_norm
 
 
 def resize(
@@ -71,23 +72,23 @@ def resize(
 
 
 __all__ = [
-    "ConvLayer",
-    "UpSampleLayer",
-    "ConvPixelUnshuffleDownSampleLayer",
-    "PixelUnshuffleChannelAveragingDownSampleLayer",
-    "ConvPixelShuffleUpSampleLayer",
     "ChannelDuplicatingPixelUnshuffleUpSampleLayer",
-    "LinearLayer",
-    "IdentityLayer",
-    "DSConv",
-    "MBConv",
-    "FusedMBConv",
-    "ResBlock",
-    "LiteMLA",
-    "EfficientViTBlock",
-    "ResidualBlock",
+    "ConvLayer",
+    "ConvPixelShuffleUpSampleLayer",
+    "ConvPixelUnshuffleDownSampleLayer",
     "DAGBlock",
+    "DSConv",
+    "EfficientViTBlock",
+    "FusedMBConv",
+    "IdentityLayer",
+    "LinearLayer",
+    "LiteMLA",
+    "MBConv",
     "OpSequential",
+    "PixelUnshuffleChannelAveragingDownSampleLayer",
+    "ResBlock",
+    "ResidualBlock",
+    "UpSampleLayer",
 ]
 
 
@@ -203,7 +204,7 @@ class UpSampleLayer(nn.Module):
     def __init__(
         self,
         mode="bicubic",
-        size: Optional[int | tuple[int, int] | list[int]] = None,
+        size: int | tuple[int, int] | list[int] | None = None,
         factor=2,
         align_corners=False,
     ):
@@ -485,7 +486,7 @@ class ChannelDuplicatingPixelUnshuffleUpSampleLayer(nn.Module):
         """
         if x.dim() == 5:
             B, C, T, H, W = x.shape
-            assert C == self.in_channels
+            assert self.in_channels == C
             # todo: remove T != 1
             if self.temporal_upsample and T != 1:  # video input
                 repeats = self.out_channels * self.factor**3 // self.in_channels
@@ -1008,10 +1009,10 @@ class ChannelChunkConv3d(nn.Conv3d):
             return super().forward(input)
         outputs = []
         input_shards = input.chunk(n_in_chunks, dim=1)
-        for weight, bias in zip(self.weight.chunk(n_out_chunks), self.bias.chunk(n_out_chunks)):
+        for weight, bias in zip(self.weight.chunk(n_out_chunks), self.bias.chunk(n_out_chunks), strict=False):
             weight_shards = weight.chunk(n_in_chunks, dim=1)
             o = None
-            for x, w in zip(input_shards, weight_shards):
+            for x, w in zip(input_shards, weight_shards, strict=False):
                 if o is None:
                     o = F.conv3d(x, w, bias, self.stride, self.padding, self.dilation, self.groups)
                 else:
@@ -1027,7 +1028,7 @@ class LiteMLA(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        heads: Optional[int] = None,
+        heads: int | None = None,
         heads_ratio: float = 1.0,
         dim=8,
         use_bias=False,
@@ -1229,7 +1230,7 @@ class LiteMLA(nn.Module):
         if qkv.ndim == 4:
             H, W = list(qkv.size())[-2:]
             # num_tokens = H * W
-            if H * W > self.dim:
+            if self.dim < H * W:
                 out = self.relu_linear_att(qkv).to(qkv.dtype)
             else:
                 out = self.relu_quadratic_att(qkv)
@@ -1341,10 +1342,10 @@ class ResidualBlock(nn.Module):
 
     def __init__(
         self,
-        main: Optional[nn.Module],
-        shortcut: Optional[nn.Module],
+        main: nn.Module | None,
+        shortcut: nn.Module | None,
         post_act=None,
-        pre_norm: Optional[nn.Module] = None,
+        pre_norm: nn.Module | None = None,
     ):
         """Init.
 
@@ -1402,7 +1403,7 @@ class DAGBlock(nn.Module):
         self,
         inputs: dict[str, nn.Module],
         merge: str,
-        post_input: Optional[nn.Module],
+        post_input: nn.Module | None,
         middle: nn.Module,
         outputs: dict[str, nn.Module],
     ):
@@ -1436,7 +1437,7 @@ class DAGBlock(nn.Module):
         Returns:
             The return value.
         """
-        feat = [op(feature_dict[key]) for key, op in zip(self.input_keys, self.input_ops)]
+        feat = [op(feature_dict[key]) for key, op in zip(self.input_keys, self.input_ops, strict=False)]
         if self.merge == "add":
             feat = list_sum(feat)
         elif self.merge == "cat":
@@ -1446,7 +1447,7 @@ class DAGBlock(nn.Module):
         if self.post_input is not None:
             feat = self.post_input(feat)
         feat = self.middle(feat)
-        for key, op in zip(self.output_keys, self.output_ops):
+        for key, op in zip(self.output_keys, self.output_ops, strict=False):
             feature_dict[key] = op(feat)
         return feature_dict
 
@@ -1454,7 +1455,7 @@ class DAGBlock(nn.Module):
 class OpSequential(nn.Module):
     """Op sequential implementation."""
 
-    def __init__(self, op_list: list[Optional[nn.Module]]):
+    def __init__(self, op_list: list[nn.Module | None]):
         """Init.
 
         Args:

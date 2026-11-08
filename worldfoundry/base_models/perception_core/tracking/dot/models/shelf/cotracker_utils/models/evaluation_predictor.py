@@ -4,9 +4,10 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Tuple
+
 import torch
 import torch.nn.functional as F
-from typing import Tuple
 
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.cotracker.cotracker import (
     CoTracker,
@@ -18,7 +19,7 @@ class EvaluationPredictor(torch.nn.Module):
     def __init__(
         self,
         cotracker_model: CoTracker,
-        interp_shape: Tuple[int, int] = (384, 512),
+        interp_shape: tuple[int, int] = (384, 512),
         grid_size: int = 6,
         local_grid_size: int = 6,
         single_point: bool = True,
@@ -54,7 +55,7 @@ class EvaluationPredictor(torch.nn.Module):
         if self.single_point:
             traj_e = torch.zeros((B, T, N, 2), device=device)
             vis_e = torch.zeros((B, T, N), device=device)
-            for pind in range((N)):
+            for pind in range(N):
                 query = queries[:, pind : pind + 1]
 
                 t = query[0, 0, 0].long()

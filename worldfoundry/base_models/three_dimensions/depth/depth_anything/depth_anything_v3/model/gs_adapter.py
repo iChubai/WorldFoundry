@@ -15,6 +15,7 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> gs_adapter.py functionality."""
 
 from typing import Optional
+
 import torch
 from einops import einsum, rearrange, repeat
 from torch import nn
@@ -85,7 +86,7 @@ class GaussianAdapter(nn.Module):
         raw_gaussians: torch.Tensor,  # "*#batch _"
         image_shape: tuple[int, int],
         eps: float = 1e-8,
-        gt_extrinsics: Optional[torch.Tensor] = None,  # "*#batch 4 4"
+        gt_extrinsics: torch.Tensor | None = None,  # "*#batch 4 4"
         **kwargs,
     ) -> Gaussians:
         """Forward.

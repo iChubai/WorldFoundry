@@ -10,28 +10,27 @@
 
 import ctypes
 import fnmatch
+import glob
+import hashlib
+import html
 import importlib
 import inspect
-import numpy as np
-import os
-import shutil
-import sys
-import types
 import io
+import os
 import pickle
 import re
-import requests
-import html
-import hashlib
-import glob
+import shutil
+import sys
 import tempfile
+import types
 import urllib
 import urllib.request
 import uuid
-
 from distutils.util import strtobool
-from typing import Any, List, Tuple, Union, Dict
+from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
+import requests
 
 # Util classes
 # ------------------------------------------------------------------------------------------
@@ -52,11 +51,11 @@ class EasyDict(dict):
     def __delattr__(self, name: str) -> None:
         del self[name]
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {k: (v.to_dict() if isinstance(v, EasyDict) else v) for (k, v) in self.items()}
 
 
-class Logger(object):
+class Logger:
     """Redirect stderr to stdout, optionally print stdout to a file, and optionally force flushing on both stdout and the file."""
 
     def __init__(self, file_name: str = None, file_mode: str = "w", should_flush: bool = True):
@@ -78,7 +77,7 @@ class Logger(object):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def write(self, text: Union[str, bytes]) -> None:
+    def write(self, text: str | bytes) -> None:
         """Write text to stdout (and a file) and optionally flush."""
         if isinstance(text, bytes):
             text = text.decode()
@@ -142,31 +141,31 @@ def make_cache_dir_path(*paths: str) -> str:
 # ------------------------------------------------------------------------------------------
 
 
-def format_time(seconds: Union[int, float]) -> str:
+def format_time(seconds: int | float) -> str:
     """Convert the seconds to human readable string with days, hours, minutes and seconds."""
     s = int(np.rint(seconds))
 
     if s < 60:
-        return "{0}s".format(s)
+        return f"{s}s"
     elif s < 60 * 60:
-        return "{0}m {1:02}s".format(s // 60, s % 60)
+        return f"{s // 60}m {s % 60:02}s"
     elif s < 24 * 60 * 60:
-        return "{0}h {1:02}m {2:02}s".format(s // (60 * 60), (s // 60) % 60, s % 60)
+        return f"{s // (60 * 60)}h {(s // 60) % 60:02}m {s % 60:02}s"
     else:
-        return "{0}d {1:02}h {2:02}m".format(s // (24 * 60 * 60), (s // (60 * 60)) % 24, (s // 60) % 60)
+        return f"{s // (24 * 60 * 60)}d {(s // (60 * 60)) % 24:02}h {(s // 60) % 60:02}m"
 
 
 def ask_yes_no(question: str) -> bool:
     """Ask the user the question until the user inputs a valid answer."""
     while True:
         try:
-            print("{0} [y/n]".format(question))
+            print(f"{question} [y/n]")
             return strtobool(input().lower())
         except ValueError:
             pass
 
 
-def tuple_product(t: Tuple) -> Any:
+def tuple_product(t: tuple) -> Any:
     """Calculate the product of the tuple elements."""
     result = 1
 
@@ -190,7 +189,7 @@ _str_to_ctype = {
 }
 
 
-def get_dtype_and_ctype(type_obj: Any) -> Tuple[np.dtype, Any]:
+def get_dtype_and_ctype(type_obj: Any) -> tuple[np.dtype, Any]:
     """Given a type name string (or an object having a __name__ attribute), return matching Numpy and ctypes types that have the same size in bytes."""
     type_str = None
 
@@ -203,7 +202,7 @@ def get_dtype_and_ctype(type_obj: Any) -> Tuple[np.dtype, Any]:
     else:
         raise RuntimeError("Cannot infer type name from input")
 
-    assert type_str in _str_to_ctype.keys()
+    assert type_str in _str_to_ctype
 
     my_dtype = np.dtype(type_str)
     my_ctype = _str_to_ctype[type_str]
@@ -226,7 +225,7 @@ def is_pickleable(obj: Any) -> bool:
 # ------------------------------------------------------------------------------------------
 
 
-def get_module_from_obj_name(obj_name: str) -> Tuple[types.ModuleType, str]:
+def get_module_from_obj_name(obj_name: str) -> tuple[types.ModuleType, str]:
     """Searches for the underlying module behind the name to some python object.
     Returns the module and the object name (original name with module part removed)."""
 
@@ -321,8 +320,8 @@ def get_top_level_function_name(obj: Any) -> str:
 
 
 def list_dir_recursively_with_ignore(
-    dir_path: str, ignores: List[str] = None, add_base_to_relative: bool = False
-) -> List[Tuple[str, str]]:
+    dir_path: str, ignores: list[str] = None, add_base_to_relative: bool = False
+) -> list[tuple[str, str]]:
     """List all files recursively in a given directory while ignoring given file and directory names.
     Returns list of tuples containing both absolute and relative paths."""
     assert os.path.isdir(dir_path)
@@ -350,12 +349,12 @@ def list_dir_recursively_with_ignore(
             relative_paths = [os.path.join(base_name, p) for p in relative_paths]
 
         assert len(absolute_paths) == len(relative_paths)
-        result += zip(absolute_paths, relative_paths)
+        result += zip(absolute_paths, relative_paths, strict=False)
 
     return result
 
 
-def copy_files_and_create_dirs(files: List[Tuple[str, str]]) -> None:
+def copy_files_and_create_dirs(files: list[tuple[str, str]]) -> None:
     """Takes in a list of tuples of (src, dst) paths and copies files.
     Will create all necessary directories."""
     for file in files:
@@ -374,16 +373,16 @@ def copy_files_and_create_dirs(files: List[Tuple[str, str]]) -> None:
 
 def is_url(obj: Any, allow_file_urls: bool = False) -> bool:
     """Determine whether the given object is a valid URL string."""
-    if not isinstance(obj, str) or not "://" in obj:
+    if not isinstance(obj, str) or "://" not in obj:
         return False
     if allow_file_urls and obj.startswith("file://"):
         return True
     try:
         res = requests.compat.urlparse(obj)
-        if not res.scheme or not res.netloc or not "." in res.netloc:
+        if not res.scheme or not res.netloc or "." not in res.netloc:
             return False
         res = requests.compat.urlparse(requests.compat.urljoin(obj, "/"))
-        if not res.scheme or not res.netloc or not "." in res.netloc:
+        if not res.scheme or not res.netloc or "." not in res.netloc:
             return False
     except:
         return False
@@ -450,7 +449,7 @@ def open_url(
                 with session.get(url) as res:
                     res.raise_for_status()
                     if len(res.content) == 0:
-                        raise IOError("No data received")
+                        raise OSError("No data received")
 
                     if len(res.content) < 8192:
                         content_str = res.content.decode("utf-8")
@@ -460,9 +459,9 @@ def open_url(
                             ]
                             if len(links) == 1:
                                 url = requests.compat.urljoin(url, links[0])
-                                raise IOError("Google Drive virus checker nag")
+                                raise OSError("Google Drive virus checker nag")
                         if "Google Drive - Quota exceeded" in content_str:
-                            raise IOError("Google Drive download quota exceeded -- please try again later")
+                            raise OSError("Google Drive download quota exceeded -- please try again later")
 
                     match = re.search(r'filename="([^"]*)"', res.headers.get("Content-Disposition", ""))
                     url_name = match[1] if match else url

@@ -20,7 +20,6 @@ from einops import rearrange
 
 from .config import WAN22_LATENTS_MEAN, WAN22_LATENTS_STD
 
-
 __all__ = ["Wan2_2_VAE", "get_vae2_2"]
 
 CACHE_T = 2
@@ -482,7 +481,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_down_flag = temporal_downsample[i] if i < len(temporal_downsample) else False
             downsamples.append(
                 DownResidualBlock(
@@ -599,7 +598,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_up_flag = temporal_upsample[i] if i < len(temporal_upsample) else False
             upsamples.append(
                 UpResidualBlock(

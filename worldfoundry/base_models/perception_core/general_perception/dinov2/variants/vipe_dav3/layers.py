@@ -7,7 +7,8 @@
 """DINO-style layers assembled from shared WorldFoundry neural-network primitives."""
 
 import logging
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 from torch import nn
 
@@ -31,8 +32,8 @@ class SwiGLUFFNFused(SwiGLUFFN):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -50,9 +51,9 @@ class SwiGLUFFNFused(SwiGLUFFN):
 
 
 __all__ = [
-    "SwiGLUFFN",
-    "SwiGLUFFNFused",
     "Block",
     "PositionGetter",
     "RotaryPositionEmbedding2D",
+    "SwiGLUFFN",
+    "SwiGLUFFNFused",
 ]

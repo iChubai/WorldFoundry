@@ -1,39 +1,40 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> maps.py functionality."""
 
-from typing import *
-from typing_extensions import Unpack
 import math
+from typing import *
+
 import numpy as np
 from numpy import ndarray
+from typing_extensions import Unpack
 
 from ..helpers import no_warnings, timeit
-from .utils import max_pool_2d, sliding_window, pooling, lite_sum, lite_prod, lite_dot, lite_norm
+from .mesh import remove_unused_vertices, triangulate_mesh
 from .transforms import angle_between, unproject_cv
-from .mesh import triangulate_mesh, remove_unused_vertices
+from .utils import lite_dot, lite_norm, lite_prod, lite_sum, max_pool_2d, pooling, sliding_window
 
 __all__ = [
-    "uv_map",
-    "image_uv",
-    "pixel_coord_map",
-    "screen_coord_map",
-    "build_mesh_from_map",
     "build_mesh_from_depth_map",
-    "depth_map_edge",
-    "depth_map_aliasing",
-    "normal_map_edge",
-    "point_map_to_normal_map",
-    "depth_to_points",
-    "depth_map_to_point_map",
-    "depth_map_to_normal_map",
+    "build_mesh_from_map",
     "chessboard",
-    "masked_nearest_resize",
-    "masked_area_resize",
     "colorize_depth_map",
     "colorize_normal_map",
+    "depth_map_aliasing",
+    "depth_map_edge",
+    "depth_map_to_normal_map",
+    "depth_map_to_point_map",
+    "depth_to_points",
     "flood_fill",
+    "fractal_perlin_noise_map",
+    "image_uv",
+    "masked_area_resize",
+    "masked_nearest_resize",
+    "normal_map_edge",
     "perlin_noise",
     "perlin_noise_map",
-    "fractal_perlin_noise_map",
+    "pixel_coord_map",
+    "point_map_to_normal_map",
+    "screen_coord_map",
+    "uv_map",
 ]
 
 

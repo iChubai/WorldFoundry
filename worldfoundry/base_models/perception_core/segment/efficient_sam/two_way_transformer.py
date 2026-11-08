@@ -2,8 +2,10 @@
 
 import math
 from typing import Tuple, Type
+
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
+
 from .mlp import MLPBlock
 
 
@@ -16,7 +18,7 @@ class TwoWayTransformer(nn.Module):
         embedding_dim: int,
         num_heads: int,
         mlp_dim: int,
-        activation: Type[nn.Module],
+        activation: type[nn.Module],
         normalize_before_activation: bool,
         attention_downsample_rate: int = 2,
     ) -> None:
@@ -63,7 +65,7 @@ class TwoWayTransformer(nn.Module):
         image_embedding: Tensor,
         image_pe: Tensor,
         point_embedding: Tensor,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """
         Args:
           image_embedding (torch.Tensor): image to attend to. Should be shape
@@ -113,7 +115,7 @@ class TwoWayAttentionBlock(nn.Module):
         embedding_dim: int,
         num_heads: int,
         mlp_dim: int,
-        activation: Type[nn.Module],
+        activation: type[nn.Module],
         normalize_before_activation: bool,
         attention_downsample_rate: int = 2,
         skip_first_layer_pe: bool = False,
@@ -161,7 +163,7 @@ class TwoWayAttentionBlock(nn.Module):
 
         self.skip_first_layer_pe = skip_first_layer_pe
 
-    def forward(self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor) -> Tuple[Tensor, Tensor]:
+    def forward(self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor) -> tuple[Tensor, Tensor]:
         """Forward.
 
         Args:

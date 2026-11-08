@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from worldfoundry.base_models.perception_core.optical_flow.raft.update import BasicUpdateBlock, SmallUpdateBlock
+from worldfoundry.base_models.perception_core.optical_flow.raft.corr import AlternateCorrBlock, CorrBlock
 from worldfoundry.base_models.perception_core.optical_flow.raft.extractor import BasicEncoder, SmallEncoder
-from worldfoundry.base_models.perception_core.optical_flow.raft.corr import CorrBlock, AlternateCorrBlock
+from worldfoundry.base_models.perception_core.optical_flow.raft.update import BasicUpdateBlock, SmallUpdateBlock
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import (
     bilinear_sampler,
     coords_grid,
@@ -38,15 +38,12 @@ except AttributeError:
                 Args:
                     enabled: The enabled.
                 """
-                pass
 
             def __enter__(self):
                 """Enter."""
-                pass
 
             def __exit__(self, *args):
                 """Exit."""
-                pass
 
 
 class RAFT(nn.Module):

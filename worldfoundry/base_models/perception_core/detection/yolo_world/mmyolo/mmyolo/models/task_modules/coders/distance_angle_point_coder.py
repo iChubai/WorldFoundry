@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Optional, Union
 
 import torch
 
@@ -37,7 +38,7 @@ class DistanceAnglePointCoder(MMROTATE_DistanceAnglePointCoder):
         points: torch.Tensor,
         pred_bboxes: torch.Tensor,
         stride: torch.Tensor,
-        max_shape: Optional[Union[Sequence[int], torch.Tensor, Sequence[Sequence[int]]]] = None,
+        max_shape: Sequence[int] | torch.Tensor | Sequence[Sequence[int]] | None = None,
     ) -> torch.Tensor:
         """Decode distance prediction to bounding box.
 

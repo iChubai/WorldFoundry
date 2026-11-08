@@ -3,16 +3,16 @@ import atexit
 import bisect
 import multiprocessing as mp
 from collections import deque
+
 import cv2
 import torch
-
 from detectron2.data import MetadataCatalog
 from detectron2.engine.defaults import DefaultPredictor
 from detectron2.utils.video_visualizer import VideoVisualizer
 from detectron2.utils.visualizer import ColorMode, Visualizer
 
 
-class VisualizationDemo(object):
+class VisualizationDemo:
     def __init__(self, cfg, instance_mode=ColorMode.IMAGE, parallel=False):
         """
         Args:
@@ -185,7 +185,7 @@ class AsyncPredictor:
         for gpuid in range(max(num_gpus, 1)):
             cfg = cfg.clone()
             cfg.defrost()
-            cfg.MODEL.DEVICE = "cuda:{}".format(gpuid) if num_gpus > 0 else "cpu"
+            cfg.MODEL.DEVICE = f"cuda:{gpuid}" if num_gpus > 0 else "cpu"
             self.procs.append(AsyncPredictor._PredictWorker(cfg, self.task_queue, self.result_queue))
 
         self.put_idx = 0

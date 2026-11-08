@@ -75,7 +75,7 @@ class NativeDiffusionPipeline:
         checkpoint_overrides: Mapping[str, CheckpointSpec | str] | None = None,
         component_options: Mapping[str | ComponentKey, Mapping[str, object]] | None = None,
         extensions: Iterable[DiffusionExtension] = (),
-    ) -> "NativeDiffusionPipeline":
+    ) -> NativeDiffusionPipeline:
         """Construct a built-in model id through the canonical assembler.
 
         When ``registry`` is omitted, the frozen
@@ -108,7 +108,7 @@ class NativeDiffusionPipeline:
         checkpoint_overrides: Mapping[str, CheckpointSpec | str] | None = None,
         component_options: Mapping[str | ComponentKey, Mapping[str, object]] | None = None,
         extensions: Iterable[DiffusionExtension] = (),
-    ) -> "NativeDiffusionPipeline":
+    ) -> NativeDiffusionPipeline:
         """Resolve a recipe on ``registry`` and assemble its runner."""
         return cls(
             registry.build_runner(
@@ -159,7 +159,7 @@ class NativeDiffusionPipeline:
         )
         reports: list[Mapping[str, object]] = []
         with torch.random.fork_rng(devices=devices), prepare() if callable(prepare) else nullcontext():
-            for case, group in zip(cases, groups):
+            for case, group in zip(cases, groups, strict=False):
                 request = group[0]
                 if devices:
                     torch.cuda.synchronize(device)

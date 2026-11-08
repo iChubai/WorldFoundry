@@ -1,6 +1,6 @@
 _base_ = "./rtmdet_l_fast_1xb32-100e_ionogram.py"
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_s_syncbn_fast_8xb32-300e_coco/rtmdet_s_syncbn_fast_8xb32-300e_coco_20221230_182329-0a8c901a.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_s_syncbn_fast_8xb32-300e_coco/rtmdet_s_syncbn_fast_8xb32-300e_coco_20221230_182329-0a8c901a.pth"
 
 # ======================= Modified parameters =====================
 deepen_factor = 0.33

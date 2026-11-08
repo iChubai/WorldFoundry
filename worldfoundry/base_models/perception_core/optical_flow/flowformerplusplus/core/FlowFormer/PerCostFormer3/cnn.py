@@ -1,8 +1,9 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from timm.models.layers import Mlp, DropPath, to_2tuple, trunc_normal_
-import math
+from timm.models.layers import DropPath, Mlp, to_2tuple, trunc_normal_
 
 
 class ResidualBlock(nn.Module):

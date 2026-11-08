@@ -3,4 +3,7 @@
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.filter import *
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import *
+
+# isort: split
+# Activation exports take precedence in the upstream public namespace.
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.act import *

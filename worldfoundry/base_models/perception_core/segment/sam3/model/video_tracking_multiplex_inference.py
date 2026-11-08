@@ -2,20 +2,29 @@
 
 import logging
 from collections import OrderedDict
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Iterable, Optional
+from typing import Optional
 
 import numpy as np
 import torch
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import load_video_frames
 from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import MultiplexState
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.video_tracking_multiplex import (
-    concat_points,
     NO_OBJ_SCORE,
     VideoTrackingDynamicMultiplex,
+    concat_points,
 )
+
+# isort: split
 from tqdm import tqdm
 
 
@@ -2260,12 +2269,12 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         run_mem_encoder,
         prev_sam_mask_logits=None,
         add_to_existing_state: bool = False,
-        new_obj_idxs: Optional[list[int]] = None,
-        new_obj_ids: Optional[list[int]] = None,
+        new_obj_idxs: list[int] | None = None,
+        new_obj_ids: list[int] | None = None,
         allow_new_buckets: bool = False,
         prefer_new_buckets: bool = False,
         reconditioning: bool = False,
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
     ):
         """Run tracking on a single frame based on current inputs and previous memory."""
         # Retrieve correct image features
@@ -2301,6 +2310,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                     for x, s in zip(
                         backbone_features_interactive["vision_feats"][:-1],
                         backbone_features_interactive["feat_sizes"][:-1],
+                        strict=False,
                     )
                 ]
 
@@ -2603,9 +2613,9 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         new_obj_ids = [old_obj_ids[old_idx] for old_idx in remain_old_obj_inds]
         new_obj_inds = list(range(len(new_obj_ids)))
         # build new mappings
-        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds))
-        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds))
-        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids))
+        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds, strict=False))
+        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds, strict=False))
+        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids, strict=False))
         inference_state["obj_ids"] = new_obj_ids
 
         if len(new_obj_ids) == 0:

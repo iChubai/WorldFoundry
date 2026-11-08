@@ -1,15 +1,15 @@
 """Module for base_models -> three_dimensions -> point_clouds -> flash_world -> utils.py functionality."""
 
-from io import BytesIO
+import copy
+import importlib
 import math
+from io import BytesIO
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import importlib
 from plyfile import PlyData, PlyElement
-
-import copy
 
 
 class EmbedContainer(nn.Module):
@@ -546,12 +546,12 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
         l = ["x", "y", "z"]
         # All channels except the 3 DC
         for i in range(f_dc.shape[1]):
-            l.append("f_dc_{}".format(i))
+            l.append(f"f_dc_{i}")
         l.append("opacity")
         for i in range(scales.shape[1]):
-            l.append("scale_{}".format(i))
+            l.append(f"scale_{i}")
         for i in range(rotations.shape[1]):
-            l.append("rot_{}".format(i))
+            l.append(f"rot_{i}")
 
         dtype_full = [(attribute, "f4") for attribute in l]
 

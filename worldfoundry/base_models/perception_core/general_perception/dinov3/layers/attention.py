@@ -107,7 +107,7 @@ class SelfAttention(nn.Module):
         self.proj = nn.Linear(dim, dim, bias=proj_bias, device=device)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+    def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
         """Apply rope.
 
         Args:
@@ -154,7 +154,7 @@ class SelfAttention(nn.Module):
         x = self.proj_drop(x)
         return x
 
-    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> List[Tensor]:
+    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> list[Tensor]:
         """Forward list.
 
         Args:
@@ -170,7 +170,7 @@ class SelfAttention(nn.Module):
         qkv_flat = self.qkv(x_flat)
         qkv_list = uncat_with_shapes(qkv_flat, shapes, num_tokens)
         att_out = []
-        for _, (qkv, _, rope) in enumerate(zip(qkv_list, shapes, rope_list)):
+        for _, (qkv, _, rope) in enumerate(zip(qkv_list, shapes, rope_list, strict=False)):
             att_out.append(self.compute_attention(qkv, attn_bias=attn_bias, rope=rope))
         x_flat, shapes, num_tokens = cat_keep_shapes(att_out)
         x_flat = self.proj(x_flat)

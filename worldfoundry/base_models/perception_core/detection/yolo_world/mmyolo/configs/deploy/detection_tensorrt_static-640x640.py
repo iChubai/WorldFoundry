@@ -11,4 +11,4 @@ backend_config = dict(
         )
     ],
 )
-use_efficientnms = False  # whether to replace TRTBatchedNMS plugin with EfficientNMS plugin # noqa E501
+use_efficientnms = False  # whether to replace TRTBatchedNMS plugin with EfficientNMS plugin # E501

@@ -9,6 +9,7 @@ from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -19,7 +20,7 @@ logger = get_logger()
 
 
 def get_model_tokenizer_mplug_owl2(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     local_repo_path = kwargs.get("local_repo_path")
     if not local_repo_path:
@@ -86,7 +87,7 @@ register_model(
 
 
 def get_model_tokenizer_mplug_owl3(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     get_class_from_dynamic_module("configuration_hyper_qwen2.HyperQwen2Config", model_dir)
     model_cls = get_class_from_dynamic_module("modeling_mplugowl3.mPLUGOwl3Model", model_dir)
@@ -141,7 +142,7 @@ register_model(
 
 
 def get_model_tokenizer_doc_owl2(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
     processor = model.init_processor(tokenizer, basic_image_size=504, crop_anchors="grid_12")

@@ -1,18 +1,19 @@
 # decorator
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> helpers.py functionality."""
 
+import inspect
+from functools import wraps
+from numbers import Number
+from typing import *
+
 import torch
 from torch import Tensor
-from numbers import Number
-import inspect
-from typing import *
-from functools import wraps
+
 from ..helpers import suppress_traceback
 
-
 __all__ = [
-    "toarray",
     "batched",
+    "toarray",
 ]
 
 P = ParamSpec("P")
@@ -38,7 +39,7 @@ def totensor(
             The return value.
         """
         argnames = list(inspect.signature(func).parameters.keys())
-        dtypes_dict = {**dict(zip(argnames, args_dtypes)), **kwargs_dtypes}
+        dtypes_dict = {**dict(zip(argnames, args_dtypes, strict=False)), **kwargs_dtypes}
 
         @wraps(func)
         @suppress_traceback
@@ -82,7 +83,7 @@ def batched(
             The return value.
         """
         argnames = list(inspect.signature(func).parameters.keys())
-        dims_dict = {**dict(zip(argnames, args_dims)), **kwargs_dims}
+        dims_dict = {**dict(zip(argnames, args_dims, strict=False)), **kwargs_dims}
 
         @wraps(func)
         @suppress_traceback
@@ -96,7 +97,7 @@ def batched(
             batch_shape = torch.broadcast_shapes(
                 *(
                     x.shape[: x.ndim - dim]
-                    for x, dim in zip((*args, *kwargs.values()), (*args_dim, *kwargs_dim.values()))
+                    for x, dim in zip((*args, *kwargs.values()), (*args_dim, *kwargs_dim.values()), strict=False)
                     if isinstance(x, Tensor) and dim is not None
                 )
             )
@@ -105,7 +106,7 @@ def batched(
                 torch.broadcast_to(x, (*batch_shape, *x.shape[x.ndim - dim :])).reshape((-1, *x.shape[x.ndim - dim :]))
                 if isinstance(x, Tensor) and dim is not None
                 else x
-                for x, dim in zip(args, args_dim)
+                for x, dim in zip(args, args_dim, strict=False)
             )
             kwargs = {
                 k: torch.broadcast_to(x, (*batch_shape, *x.shape[x.ndim - dim :])).reshape(

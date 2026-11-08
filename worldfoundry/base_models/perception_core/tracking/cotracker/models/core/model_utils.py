@@ -4,9 +4,10 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Optional, Tuple
+
 import torch
 import torch.nn.functional as F
-from typing import Optional, Tuple
 
 EPS = 1e-6
 
@@ -19,9 +20,9 @@ def smart_cat(tensor1, tensor2, dim):
 
 def get_points_on_a_grid(
     size: int,
-    extent: Tuple[float, ...],
-    center: Optional[Tuple[float, ...]] = None,
-    device: Optional[torch.device] = torch.device("cpu"),
+    extent: tuple[float, ...],
+    center: tuple[float, ...] | None = None,
+    device: torch.device | None = torch.device("cpu"),
 ):
     r"""Get a grid of points covering a rectangular region
 

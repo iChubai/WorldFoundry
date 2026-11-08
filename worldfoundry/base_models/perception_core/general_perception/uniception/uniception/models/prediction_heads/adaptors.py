@@ -26,9 +26,9 @@ class FlowAdaptor(UniCeptionAdaptorBase):
     def __init__(
         self,
         name: str,
-        flow_mean: Union[Tuple[float, float], List[float]],
-        flow_std: Union[Tuple[float, float], List[float]],
-        base_shape: Tuple[int, int],
+        flow_mean: tuple[float, float] | list[float],
+        flow_std: tuple[float, float] | list[float],
+        base_shape: tuple[int, int],
         scale_strategy: str,
         output_normalized_coordinate: bool = False,
         *args,
@@ -118,7 +118,7 @@ class FlowAdaptor(UniCeptionAdaptorBase):
 
         return RegressionAdaptorOutput(value=x)
 
-    def _get_xy_scale(self, output_shape: Tuple[int, int]):
+    def _get_xy_scale(self, output_shape: tuple[int, int]):
         """
         Get the scaling factor for the X and Y dimensions.
 
@@ -140,7 +140,7 @@ class FlowAdaptor(UniCeptionAdaptorBase):
             raise ValueError(f"Invalid scaling strategy: {self.scale_strategy}")
 
     @lru_cache(maxsize=10)
-    def _get_coordinate_bias(self, output_shape: Tuple[int, int], device: str):
+    def _get_coordinate_bias(self, output_shape: tuple[int, int], device: str):
         """
         Get the (X, Y) coordinate image for the given output shape.
 
@@ -1237,7 +1237,7 @@ class FlowWithConfidenceAdaptor(ValueWithConfidenceAdaptor):
         # Flow adaptor
         flow_mean: torch.Tensor,
         flow_std: torch.Tensor,
-        base_shape: Tuple[int, int],
+        base_shape: tuple[int, int],
         scale_strategy: str,
         output_normalized_coordinate: bool,
         # Confidence adaptor

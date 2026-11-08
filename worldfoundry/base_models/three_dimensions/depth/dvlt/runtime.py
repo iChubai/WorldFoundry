@@ -5,12 +5,12 @@ from __future__ import annotations
 import importlib.util
 import os
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.base_models.three_dimensions.depth.dvlt import runtime_root as dvlt_runtime_root
 from worldfoundry.core.io import jsonable, write_json
-
 
 DEFAULT_DVLT_CHECKPOINT = "nvidia/dvlt"
 DEFAULT_DVLT_IMAGE_SIZE = 504
@@ -66,7 +66,7 @@ class DVLTRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "DVLTRuntime":
+    ) -> DVLTRuntime:
         """
         Build a lazy DVLT runtime wrapper.
 
@@ -295,12 +295,12 @@ class DVLTRuntime:
         self._activate_runtime_path()
         import torch
         from accelerate import Accelerator
-        from PIL import Image
-
         from dvlt.common.constants import DataField, PredictionField
         from dvlt.common.pose import to4x4
         from dvlt.model.dvlt.model import DVLT
         from dvlt.util.preprocess import load_sequence, preprocess_images
+        from PIL import Image
+
         from worldfoundry.base_models.three_dimensions.depth.dvlt.viz.glb import pointcloud_to_glb
         from worldfoundry.base_models.three_dimensions.depth.dvlt.viz.pointcloud import (
             SPATIAL_PERCENTILE_DEFAULT,
@@ -356,7 +356,7 @@ class DVLTRuntime:
             "source_runtime": str(self.runtime_root()),
             "sequence_name": sequence_name,
             "frame_count": len(frames),
-            "point_count": int(len(pts)),
+            "point_count": len(pts),
             "actions": jsonable(list(actions)),
         }
         write_json(metadata_path, metadata)

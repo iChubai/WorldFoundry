@@ -12,4 +12,4 @@ backend_config = dict(
     ],
 )
 calib_config = dict(create_calib=True, calib_file="calib_data.h5")
-use_efficientnms = False  # whether to replace TRTBatchedNMS plugin with EfficientNMS plugin # noqa E501
+use_efficientnms = False  # whether to replace TRTBatchedNMS plugin with EfficientNMS plugin # E501

@@ -37,7 +37,7 @@ class Distribution(nn.Module):
         self,
         queries: Float[Tensor, "batch token_query dim_query"],
         keys: Float[Tensor, "batch token_key dim_key"],
-        force_last_token: Optional[Bool[Tensor, " batch"]] = None,
+        force_last_token: Bool[Tensor, " batch"] | None = None,
     ) -> Float[Tensor, "batch token_query token_key"]:
         """Forward.
 

@@ -29,11 +29,13 @@ License header above is Tencent Hunyuan; keep it intact.
 
 from dataclasses import dataclass
 from typing import Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 from transformers import SiglipImageProcessor, SiglipVisionModel
 from transformers.utils import ModelOutput
-import numpy as np
+
 from ..constants import PRECISION_TO_TYPE
 
 VISION_ENCODER_PATH = {}
@@ -122,8 +124,8 @@ class VisionEncoderModelOutput(ModelOutput):
     """
 
     last_hidden_state: torch.FloatTensor = None
-    pooler_output: Optional[torch.FloatTensor] = None
-    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+    pooler_output: torch.FloatTensor | None = None
+    hidden_states: tuple[torch.FloatTensor, ...] | None = None
 
 
 class VisionEncoder(nn.Module):
@@ -132,11 +134,11 @@ class VisionEncoder(nn.Module):
     def __init__(
         self,
         vision_encoder_type: str,
-        vision_encoder_precision: Optional[str] = None,
-        vision_encoder_path: Optional[str] = None,
-        processor_type: Optional[str] = None,
-        processor_path: Optional[str] = None,
-        output_key: Optional[str] = None,
+        vision_encoder_precision: str | None = None,
+        vision_encoder_path: str | None = None,
+        processor_type: str | None = None,
+        processor_path: str | None = None,
+        output_key: str | None = None,
         logger=None,
         device=None,
     ):

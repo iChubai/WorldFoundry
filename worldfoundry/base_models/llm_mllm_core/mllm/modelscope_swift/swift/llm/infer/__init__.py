@@ -4,21 +4,36 @@ from typing import TYPE_CHECKING
 from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
-    from .infer import infer_main, SwiftInfer
+    from .infer import SwiftInfer, infer_main
+
+    # isort: split
+    # isort: split
     from .rollout import rollout_main
-    from .deploy import deploy_main, SwiftDeploy, run_deploy
+
+    # isort: split
+    # isort: split
+    from .deploy import SwiftDeploy, deploy_main, run_deploy
+
+    # isort: split
     from .request_config import RequestConfig
+
+    # isort: split
     from .protocol import Function
+
+    # isort: split
+    # isort: split
     from .utils import prepare_model_template
+
+    # isort: split
     from .infer_engine import (
-        InferEngine,
-        VllmEngine,
-        LmdeployEngine,
-        PtEngine,
-        InferClient,
-        prepare_generation_config,
         AdapterRequest,
         BaseInferEngine,
+        InferClient,
+        InferEngine,
+        LmdeployEngine,
+        PtEngine,
+        VllmEngine,
+        prepare_generation_config,
     )
 else:
     _import_structure = {

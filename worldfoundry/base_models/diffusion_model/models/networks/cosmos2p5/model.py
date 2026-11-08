@@ -348,7 +348,7 @@ class Cosmos25Transformer3DModel(nn.Module):
         self.proj_out = nn.Linear(hidden_size, patch_volume * out_channels, bias=False)
         self.parallel_context = None
 
-    def parallelize(self, parallel) -> "Cosmos25Transformer3DModel":
+    def parallelize(self, parallel) -> Cosmos25Transformer3DModel:
         """Shard inference attention/FFN weights and optionally partition tokens.
 
         Load the original checkpoint first. This method is opt-in and requires

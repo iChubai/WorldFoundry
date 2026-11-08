@@ -14,8 +14,9 @@ from worldfoundry.core.nn.blocks.layers import (
     SwiGLUFFN,
     SwiGLUFFNFused,
 )
-from .block import NestedTensorBlock
+
 from .attention import MemEffAttention
+from .block import NestedTensorBlock
 
 __all__ = [
     "DropPath",

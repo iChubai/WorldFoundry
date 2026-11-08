@@ -11,8 +11,6 @@ from dataclasses import dataclass, replace
 
 import torch
 
-from worldfoundry.core.attention.cache.context import ContextAttentionCache
-
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import AdaLayerNormSingle
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
@@ -25,6 +23,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
     generate_freq_grid_pytorch,
     precompute_freqs_cis,
 )
+from worldfoundry.core.attention.cache.context import ContextAttentionCache
 
 
 @dataclass(frozen=True)
@@ -109,7 +108,7 @@ class BlockPerturbationsProcessor:
 class TransformerArgsPreprocessor:
     """Single-modality stem: patch proj, AdaLN, RoPE, caption proj, masks."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         patchify_proj: torch.nn.Linear,
         adaln: AdaLayerNormSingle,
@@ -244,7 +243,7 @@ class TransformerArgsPreprocessor:
     def prepare(
         self,
         modality: Modality,
-        cross_modality: Modality | None = None,  # noqa: ARG002
+        cross_modality: Modality | None = None,
     ) -> TransformerArgs:
         """Lift a :class:`Modality` into block-ready :class:`TransformerArgs`."""
         x = self.patchify_proj(modality.latent)
@@ -289,7 +288,7 @@ class TransformerArgsPreprocessor:
 class MultiModalTransformerArgsPreprocessor:
     """Joint-AV stem: single-stream prep plus A↔V RoPE and cross-attn AdaLN."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         patchify_proj: torch.nn.Linear,
         adaln: AdaLayerNormSingle,

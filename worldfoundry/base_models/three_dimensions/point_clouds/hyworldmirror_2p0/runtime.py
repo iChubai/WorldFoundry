@@ -661,7 +661,7 @@ class WorldMirrorPipeline:
         views = {"img": imgs}
         B, S, C, H, W = imgs.shape
 
-        if self.sp_size > 1 and S < self.sp_size:
+        if self.sp_size > 1 and self.sp_size > S:
             raise ValueError(
                 f"Number of input images ({S}) must be >= number of GPUs ({self.sp_size}) "
                 f"in multi-GPU mode. Please provide at least {self.sp_size} images, "

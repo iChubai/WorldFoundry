@@ -2,11 +2,11 @@
 import os.path as osp
 from typing import List, Union
 
+from mmdet.datasets.coco import CocoDataset
 from mmengine.fileio import get_local_path, join_path
 from mmengine.utils import is_abs
-from mmdet.datasets.coco import CocoDataset
-from mmyolo.registry import DATASETS
 from mmyolo.datasets.yolov5_coco import BatchShapePolicyDataset
+from mmyolo.registry import DATASETS
 
 
 @DATASETS.register_module()
@@ -15,12 +15,12 @@ class YOLOv5MixedGroundingDataset(BatchShapePolicyDataset, CocoDataset):
 
     METAINFO = {"classes": ("object",), "palette": [(220, 20, 60)]}
 
-    def load_data_list(self) -> List[dict]:
+    def load_data_list(self) -> list[dict]:
         """Load annotations from an annotation file named as ``self.ann_file``
 
         Returns:
             List[dict]: A list of annotation.
-        """  # noqa: E501
+        """
         with get_local_path(self.ann_file, backend_args=self.backend_args) as local_path:
             self.coco = self.COCOAPI(local_path)
 
@@ -44,7 +44,7 @@ class YOLOv5MixedGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         # print(len(data_list))
         return data_list
 
-    def parse_data_info(self, raw_data_info: dict) -> Union[dict, List[dict]]:
+    def parse_data_info(self, raw_data_info: dict) -> dict | list[dict]:
         """Parse raw annotation to target format.
 
         Args:
@@ -125,7 +125,7 @@ class YOLOv5MixedGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         # print(data_info['texts'])
         return data_info
 
-    def filter_data(self) -> List[dict]:
+    def filter_data(self) -> list[dict]:
         """Filter annotations according to filter_cfg.
 
         Returns:

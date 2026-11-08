@@ -4,6 +4,9 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.autoencoder.distributions import (
+    DiagonalGaussianDistribution,
+)
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.autoencoder.edm2_utils import (
     MPConv1D,
 )
@@ -13,9 +16,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mma
     ResnetBlock1D,
     Upsample1D,
     nonlinearity,
-)
-from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.autoencoder.distributions import (
-    DiagonalGaussianDistribution,
 )
 
 log = logging.getLogger()
@@ -346,7 +346,7 @@ class VAE(nn.Module):
         self,
         x: torch.Tensor,
         sample_posterior: bool = True,
-        rng: Optional[torch.Generator] = None,
+        rng: torch.Generator | None = None,
         normalize: bool = True,
         unnormalize: bool = True,
     ) -> tuple[torch.Tensor, DiagonalGaussianDistribution]:

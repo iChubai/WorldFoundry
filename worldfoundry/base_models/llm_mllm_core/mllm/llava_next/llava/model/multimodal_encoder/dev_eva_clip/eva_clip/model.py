@@ -5,8 +5,8 @@ Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (
 
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
 from functools import partial
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -17,10 +17,10 @@ try:
     from .hf_model import HFTextEncoder
 except:
     HFTextEncoder = None
+from .eva_vit_model import EVAVisionTransformer
 from .modified_resnet import ModifiedResNet
 from .timm_model import TimmModel
-from .eva_vit_model import EVAVisionTransformer
-from .transformer import LayerNorm, QuickGELU, Attention, VisionTransformer, TextTransformer
+from .transformer import Attention, LayerNorm, QuickGELU, TextTransformer, VisionTransformer
 
 try:
     from apex.normalization import FusedLayerNorm
@@ -66,16 +66,16 @@ class RMSnorm(nn.Module):
 
 @dataclass
 class CLIPVisionCfg:
-    layers: Union[Tuple[int, int, int, int], int] = 12
+    layers: tuple[int, int, int, int] | int = 12
     width: int = 768
     head_width: int = 64
     mlp_ratio: float = 4.0
     patch_size: int = 16
-    image_size: Union[Tuple[int, int], int] = 224
-    ls_init_value: Optional[float] = None  # layer scale initial value
+    image_size: tuple[int, int] | int = 224
+    ls_init_value: float | None = None  # layer scale initial value
     patch_dropout: float = 0.0  # what fraction of patches to dropout during training (0 would mean disabled and no patches dropped) - 0.5 to 0.75 recommended in the paper for optimal results
     global_average_pool: bool = False  # whether to global average pool the last embedding layer, instead of using CLS token (https://arxiv.org/abs/2205.01580)
-    drop_path_rate: Optional[float] = None  # drop path rate
+    drop_path_rate: float | None = None  # drop path rate
     timm_model_name: str = None  # a valid model name overrides layers, width, patch_size
     timm_model_pretrained: bool = False  # use (imagenet) pretrained weights for named model
     timm_pool: str = "avg"  # feature pooling for timm model ('abs_attn', 'rot_attn', 'avg', '')
@@ -101,7 +101,7 @@ class CLIPTextCfg:
     width: int = 512
     heads: int = 8
     layers: int = 12
-    ls_init_value: Optional[float] = None  # layer scale initial value
+    ls_init_value: float | None = None  # layer scale initial value
     hf_model_name: str = None
     hf_tokenizer_name: str = None
     hf_model_pretrained: bool = True
@@ -123,7 +123,7 @@ def get_cast_dtype(precision: str):
 
 
 def _build_vision_tower(
-    embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: Optional[torch.dtype] = None
+    embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: torch.dtype | None = None
 ):
     if isinstance(vision_cfg, dict):
         vision_cfg = CLIPVisionCfg(**vision_cfg)
@@ -205,7 +205,7 @@ def _build_text_tower(
     embed_dim: int,
     text_cfg: CLIPTextCfg,
     quick_gelu: bool = False,
-    cast_dtype: Optional[torch.dtype] = None,
+    cast_dtype: torch.dtype | None = None,
 ):
     if isinstance(text_cfg, dict):
         text_cfg = CLIPTextCfg(**text_cfg)
@@ -246,7 +246,7 @@ class CLIP(nn.Module):
         vision_cfg: CLIPVisionCfg,
         text_cfg: CLIPTextCfg,
         quick_gelu: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
     ):
         super().__init__()
         self.visual = _build_vision_tower(embed_dim, vision_cfg, quick_gelu, cast_dtype)
@@ -306,7 +306,7 @@ class CustomCLIP(nn.Module):
         vision_cfg: CLIPVisionCfg,
         text_cfg: CLIPTextCfg,
         quick_gelu: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
         itm_task: bool = False,
     ):
         super().__init__()
@@ -406,9 +406,7 @@ def build_model_from_openai_state_dict(
 
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
-        vision_layers = len(
-            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]
-        )
+        vision_layers = len([k for k in state_dict if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")])
         vision_patch_size = state_dict["visual.conv1.weight"].shape[-1]
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)
         image_size = vision_patch_size * grid_size
@@ -428,7 +426,7 @@ def build_model_from_openai_state_dict(
     vocab_size = state_dict["token_embedding.weight"].shape[0]
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
-    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith(f"transformer.resblocks")))
+    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")))
 
     vision_cfg = CLIPVisionCfg(
         layers=vision_layers,

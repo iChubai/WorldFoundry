@@ -1,4 +1,5 @@
 import torch
+
 from .models.stream3r import STream3R
 
 

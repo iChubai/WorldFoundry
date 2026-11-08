@@ -8,6 +8,7 @@ from numbers import Number
 from typing import Tuple, Union
 
 import numpy as np
+
 from .warnings import no_warnings
 
 
@@ -167,9 +168,9 @@ def sliding_window_1d(x: np.ndarray, window_size: int, stride: int, axis: int = 
 
 def sliding_window_nd(
     x: np.ndarray,
-    window_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    window_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Create sliding windows along multiple dimensions of the input array.
@@ -204,9 +205,9 @@ def sliding_window_nd(
 
 def sliding_window_2d(
     x: np.ndarray,
-    window_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    window_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ) -> np.ndarray:
     """
     Create 2D sliding windows over the input array.
@@ -283,10 +284,10 @@ def max_pool_1d(x: np.ndarray, kernel_size: int, stride: int, padding: int = 0, 
 
 def max_pool_nd(
     x: np.ndarray,
-    kernel_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    padding: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    kernel_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    padding: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Perform N-dimensional max pooling on the input array.
@@ -322,10 +323,10 @@ def max_pool_nd(
 
 def max_pool_2d(
     x: np.ndarray,
-    kernel_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    padding: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    kernel_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    padding: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ):
     """
     Perform 2D max pooling on the input array.

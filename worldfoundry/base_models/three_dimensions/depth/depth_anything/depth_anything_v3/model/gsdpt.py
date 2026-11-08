@@ -14,8 +14,10 @@
 
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> gsdpt.py functionality."""
 
+from collections.abc import Sequence
 from typing import Dict as TyDict
-from typing import List, Sequence
+from typing import List
+
 import torch
 import torch.nn as nn
 
@@ -99,12 +101,12 @@ class GSDPT(DPT):
     # -------------------------------------------------------------------------
     def _forward_impl(
         self,
-        feats: List[torch.Tensor],
+        feats: list[torch.Tensor],
         H: int,
         W: int,
         patch_start_idx: int,
         images: torch.Tensor,
-    ) -> TyDict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Helper function to forward impl.
 
         Args:
@@ -153,7 +155,7 @@ class GSDPT(DPT):
 
         # 5) Main head: logits -> activate_head or single channel activation
         main_logits = self.scratch.output_conv2(feat)
-        outs: TyDict[str, torch.Tensor] = {}
+        outs: dict[str, torch.Tensor] = {}
         if self.has_conf:
             pred, conf = activate_head_gs(
                 main_logits,

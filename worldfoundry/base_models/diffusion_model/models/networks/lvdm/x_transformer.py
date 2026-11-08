@@ -5,13 +5,14 @@ embeds tokens, adds positions, and runs :class:`AttentionLayers`.
 Adapted from https://github.com/lucidrains/x-transformers
 """
 
+from collections import namedtuple
 from functools import partial
 from inspect import isfunction
-from collections import namedtuple
-from einops import rearrange, repeat
+
 import torch
-from torch import nn, einsum
 import torch.nn.functional as F
+from einops import rearrange, repeat
+from torch import einsum, nn
 
 # constants
 DEFAULT_DIM_HEAD = 64
@@ -119,7 +120,7 @@ def max_neg_value(tensor):
 def pick_and_pop(keys, d):
     """Pop ``keys`` from ``d`` and return them as a new dict (x-transformers kwargs)."""
     values = list(map(lambda key: d.pop(key), keys))
-    return dict(zip(keys, values))
+    return dict(zip(keys, values, strict=False))
 
 
 def group_dict_by_key(cond, d):
@@ -539,7 +540,9 @@ class AttentionLayers(nn.Module):
 
         mems = mems.copy() if exists(mems) else [None] * self.num_attn_layers
 
-        for ind, (layer_type, (norm, block, residual_fn)) in enumerate(zip(self.layer_types, self.layers)):
+        for ind, (layer_type, (norm, block, residual_fn)) in enumerate(
+            zip(self.layer_types, self.layers, strict=False)
+        ):
             is_last = ind == (len(self.layers) - 1)
 
             if layer_type == "a":
@@ -678,7 +681,11 @@ class TransformerWrapper(nn.Module):
 
         if return_mems:
             hiddens = intermediates.hiddens
-            new_mems = list(map(lambda pair: torch.cat(pair, dim=-2), zip(mems, hiddens))) if exists(mems) else hiddens
+            new_mems = (
+                list(map(lambda pair: torch.cat(pair, dim=-2), zip(mems, hiddens, strict=False)))
+                if exists(mems)
+                else hiddens
+            )
             new_mems = list(map(lambda t: t[..., -self.max_mem_len :, :].detach(), new_mems))
             return out, new_mems
 

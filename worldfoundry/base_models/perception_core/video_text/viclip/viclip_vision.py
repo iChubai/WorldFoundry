@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-import os
 import logging
+import os
 from collections import OrderedDict
 
 import torch
-from torch import nn
+import torch.utils.checkpoint as checkpoint
 from einops import rearrange
 from timm.models.layers import DropPath
 from timm.models.registry import register_model
-
-import torch.utils.checkpoint as checkpoint
+from torch import nn
 
 logger = logging.getLogger(__name__)
 

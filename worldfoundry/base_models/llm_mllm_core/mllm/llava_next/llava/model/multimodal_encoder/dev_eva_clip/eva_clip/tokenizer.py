@@ -5,26 +5,25 @@ Copied from https://github.com/openai/CLIP. Originally MIT License, Copyright (c
 
 import gzip
 import html
+
+# https://stackoverflow.com/q/62691279
 import os
 from functools import lru_cache
-from typing import Union, List
+from typing import List, Union
 
 import ftfy
 import regex as re
 import torch
 
-# https://stackoverflow.com/q/62691279
-import os
-
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-@lru_cache()
+@lru_cache
 def default_bpe():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "bpe_simple_vocab_16e6.txt.gz")
 
 
-@lru_cache()
+@lru_cache
 def bytes_to_unicode():
     """
     Returns list of utf-8 byte and a corresponding list of unicode strings.
@@ -44,7 +43,7 @@ def bytes_to_unicode():
             cs.append(2**8 + n)
             n += 1
     cs = [chr(n) for n in cs]
-    return dict(zip(bs, cs))
+    return dict(zip(bs, cs, strict=False))
 
 
 def get_pairs(word):
@@ -71,7 +70,7 @@ def whitespace_clean(text):
     return text
 
 
-class SimpleTokenizer(object):
+class SimpleTokenizer:
     def __init__(self, bpe_path: str = default_bpe(), special_tokens=None):
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
@@ -87,9 +86,9 @@ class SimpleTokenizer(object):
         else:
             special_tokens = ["<start_of_text>", "<end_of_text>"] + special_tokens
         vocab.extend(special_tokens)
-        self.encoder = dict(zip(vocab, range(len(vocab))))
+        self.encoder = dict(zip(vocab, range(len(vocab)), strict=False))
         self.decoder = {v: k for k, v in self.encoder.items()}
-        self.bpe_ranks = dict(zip(merges, range(len(merges))))
+        self.bpe_ranks = dict(zip(merges, range(len(merges)), strict=False))
         self.cache = {t: t for t in special_tokens}
         special = "|".join(special_tokens)
         self.pat = re.compile(
@@ -157,7 +156,7 @@ class SimpleTokenizer(object):
 _tokenizer = SimpleTokenizer()
 
 
-def tokenize(texts: Union[str, List[str]], context_length: int = 77) -> torch.LongTensor:
+def tokenize(texts: str | list[str], context_length: int = 77) -> torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
 
@@ -197,7 +196,7 @@ class HFTokenizer:
 
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
-    def __call__(self, texts: Union[str, List[str]], context_length: int = 77) -> torch.Tensor:
+    def __call__(self, texts: str | list[str], context_length: int = 77) -> torch.Tensor:
         # same cleaning as for default tokenizer, except lowercasing
         # adding lower (for case-sensitive tokenizers) will make it more robust but less sensitive to nuance
         if isinstance(texts, str):

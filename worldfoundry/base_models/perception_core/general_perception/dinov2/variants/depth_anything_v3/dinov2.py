@@ -11,6 +11,7 @@
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> depth_anything_v3 -> dinov2.py functionality."""
 
 from typing import List
+
 import torch.nn as nn
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.depth_anything_v3.vision_transformer import (
@@ -27,7 +28,7 @@ class DinoV2(nn.Module):
     def __init__(
         self,
         name: str,
-        out_layers: List[int],
+        out_layers: list[int],
         alt_start: int = -1,
         qknorm_start: int = -1,
         rope_start: int = -1,

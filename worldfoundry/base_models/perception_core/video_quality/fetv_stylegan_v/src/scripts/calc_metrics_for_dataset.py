@@ -11,19 +11,17 @@
 import sys
 
 sys.path.extend([".", "src"])
+import json
 import os
-import click
+import random
 import tempfile
+
+import click
 import torch
+from metrics import metric_main, metric_utils
 from omegaconf import OmegaConf
 from src import dnnlib
-
-from metrics import metric_main
-from metrics import metric_utils
-from src.torch_utils import training_stats
-from src.torch_utils import custom_ops
-import json
-import random
+from src.torch_utils import custom_ops, training_stats
 
 # ----------------------------------------------------------------------------
 

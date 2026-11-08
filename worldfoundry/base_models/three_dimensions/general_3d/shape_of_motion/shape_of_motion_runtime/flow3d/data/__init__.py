@@ -12,7 +12,7 @@ from .iphone_dataset import (
     iPhoneDatasetKeypointView,
     iPhoneDatasetVideoView,
 )
-from .nvidia_dataset import NvidiaDataset, NvidiaDataConfig, NvidiaDatasetVideoView
+from .nvidia_dataset import NvidiaDataConfig, NvidiaDataset, NvidiaDatasetVideoView
 
 
 def get_train_val_datasets(

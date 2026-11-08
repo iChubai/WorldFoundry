@@ -5,34 +5,37 @@ packed into the UNet's extra context stream.  Sampler math is inherited
 from the original LVDM mixture of OpenAI / lucidrains / taming code.
 """
 
-from functools import partial
-from contextlib import contextmanager
-import numpy as np
-from tqdm import tqdm
-from einops import rearrange, repeat
 import logging
+from contextlib import contextmanager
+from functools import partial
+
+import numpy as np
+from einops import rearrange, repeat
+from tqdm import tqdm
 
 mainlogger = logging.getLogger("mainlogger")
 import random
+
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-from worldfoundry.core.model_loading.factory import instantiate_from_config
-from worldfoundry.core.nn.blocks.ema import LitEma
+
 from worldfoundry.base_models.diffusion_model.schedulers.lvdm.ddim_vid2world import DDIMSampler
-from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
 from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import (
     make_beta_schedule,
     rescale_zero_terminal_snr,
 )
+from worldfoundry.core.model_loading.factory import instantiate_from_config
+from worldfoundry.core.nn.blocks.ema import LitEma
 from worldfoundry.core.nn.diffusion.convolution import disabled_train
 from worldfoundry.core.nn.diffusion.utils import (
-    extract_into_tensor,
-    noise_like,
-    exists,
     default,
+    exists,
+    extract_into_tensor,
     extract_into_tensor_2d,
+    noise_like,
 )
+from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
 
 __conditioning_keys__ = {"concat": "c_concat", "crossattn": "c_crossattn", "adm": "y"}
 
@@ -251,7 +254,7 @@ class DDPM(pl.LightningModule):
         for k in keys:
             for ik in ignore_keys:
                 if k.startswith(ik):
-                    mainlogger.info("Deleting key {} from state_dict.".format(k))
+                    mainlogger.info(f"Deleting key {k} from state_dict.")
                     del sd[k]
         missing, unexpected = (
             self.load_state_dict(sd, strict=False) if not only_model else self.model.load_state_dict(sd, strict=False)
@@ -366,7 +369,7 @@ class DDPM(pl.LightningModule):
         b = shape[0]
         img = torch.randn(shape, device=device)
         intermediates = [img]
-        for i in tqdm(reversed(range(0, self.num_timesteps)), desc="Sampling t", total=self.num_timesteps):
+        for i in tqdm(reversed(range(self.num_timesteps)), desc="Sampling t", total=self.num_timesteps):
             img = self.p_sample(
                 img, torch.full((b,), i, device=device, dtype=torch.long), clip_denoised=self.clip_denoised
             )
@@ -1017,9 +1020,9 @@ class LatentDiffusion(DDPM):
             timesteps = min(timesteps, start_T)
 
         iterator = (
-            tqdm(reversed(range(0, timesteps)), desc="Sampling t", total=timesteps)
+            tqdm(reversed(range(timesteps)), desc="Sampling t", total=timesteps)
             if verbose
-            else reversed(range(0, timesteps))
+            else reversed(range(timesteps))
         )
 
         if mask is not None:

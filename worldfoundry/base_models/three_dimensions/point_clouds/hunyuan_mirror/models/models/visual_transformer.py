@@ -2,19 +2,20 @@
 
 import logging
 import random
-from typing import Tuple, List
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
-from worldfoundry.core.nn.blocks.layers import PatchEmbed, PatchEmbed_Mlp
-from ..layers.block import Block
 from worldfoundry.core.attention.rotary.rope_2d import (
     PositionGetter,
     RotaryPositionEmbedding2D,
 )
-from ..layers.vision_transformer import vit_small, vit_base, vit_large, vit_giant2
+from worldfoundry.core.nn.blocks.layers import PatchEmbed, PatchEmbed_Mlp
+
+from ..layers.block import Block
+from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class VisualGeometryTransformer(nn.Module):
         sampling_strategy="uniform",
         fixed_patch_embed=False,
         condition_strategy=["token", "pow3r", "token"],
-        intermediate_idxs: List[int] = [4, 11, 17, 23],
+        intermediate_idxs: list[int] = [4, 11, 17, 23],
     ):
         """Init.
 
@@ -297,10 +298,10 @@ class VisualGeometryTransformer(nn.Module):
     def forward(
         self,
         images: torch.Tensor,
-        priors: List | None = None,
-        cond_flags: List[int] = [0, 0, 0],
+        priors: list | None = None,
+        cond_flags: list[int] = [0, 0, 0],
         ctx_frames: int = None,
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images: Input images with shape [B, S, 3, H, W], in range [0, 1]

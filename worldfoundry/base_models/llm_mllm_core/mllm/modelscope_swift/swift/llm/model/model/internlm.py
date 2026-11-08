@@ -5,6 +5,7 @@ from typing import Any, Dict
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import LLMModelType, MLLMModelType, RMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_output_clone, patch_output_to_input_device
@@ -107,7 +108,7 @@ register_model(
 
 
 def get_model_tokenizer_xcomposer2(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     version = kwargs.pop("version", "v2")
     use_flash_attn = kwargs.pop("use_flash_attn", False)
@@ -140,7 +141,7 @@ def get_model_tokenizer_xcomposer2(
 
 
 def get_model_tokenizer_internvl(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
 

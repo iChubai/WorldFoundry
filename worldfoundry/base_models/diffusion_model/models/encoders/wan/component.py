@@ -360,12 +360,12 @@ def build_wan_image_text_conditioner(context: ComponentBuildContext) -> WanImage
 
 
 __all__ = [
-    "WanTextConditioner",
     "WanImageTextConditioner",
+    "WanTextConditioner",
     "WanUMT5PromptEncoder",
     "build_diffusers_wan_text_conditioner",
-    "build_wan_text_conditioner",
     "build_wan_image_text_conditioner",
+    "build_wan_text_conditioner",
     "convert_diffusers_umt5_encoder_state_dict",
     "convert_wan_clip_vision_state_dict",
 ]

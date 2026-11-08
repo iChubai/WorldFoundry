@@ -32,8 +32,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from ..nn.ops import IdentityLayer, ResidualBlock
 from worldfoundry.core.configuration import build_kwargs_from_config
+
+from ..nn.ops import IdentityLayer, ResidualBlock
 
 __all__ = ["apply_drop_func"]
 
@@ -45,7 +46,7 @@ class _InferenceSchedulerStub:
 Scheduler = _InferenceSchedulerStub
 
 
-def apply_drop_func(network: nn.Module, drop_config: Optional[dict[str, Any]]) -> None:
+def apply_drop_func(network: nn.Module, drop_config: dict[str, Any] | None) -> None:
     """Apply drop func.
 
     Args:
@@ -112,9 +113,9 @@ class DropPathResidualBlock(ResidualBlock):
     def __init__(
         self,
         main: nn.Module,
-        shortcut: Optional[nn.Module],
+        shortcut: nn.Module | None,
         post_act=None,
-        pre_norm: Optional[nn.Module] = None,
+        pre_norm: nn.Module | None = None,
         ######################################
         drop_prob: float = 0,
         scheduled=True,

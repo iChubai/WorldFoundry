@@ -6,6 +6,7 @@ from mmcv.cnn import ConvModule
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from ..layers import MaxPoolAndStrideConvBlock, RepVGGBlock, SPPFCSPBlock
 from .base_yolo_neck import BaseYOLONeck
 
@@ -46,8 +47,8 @@ class YOLOv7PAFPN(BaseYOLONeck):
 
     def __init__(
         self,
-        in_channels: List[int],
-        out_channels: List[int],
+        in_channels: list[int],
+        out_channels: list[int],
         block_cfg: dict = dict(
             type="ELANBlock", middle_ratio=0.5, block_ratio=0.25, num_blocks=4, num_convs_in_block=1
         ),

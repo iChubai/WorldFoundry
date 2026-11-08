@@ -4,11 +4,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
-from typing import Mapping, Optional, Tuple, Union
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Optional, Tuple, Union
 
 import torch
+from huggingface_hub import hf_hub_download
 from torch import nn
 from torchvision.transforms import (
     Compose,
@@ -22,7 +24,6 @@ from .network.decoder import MultiresConvDecoder
 from .network.encoder import DepthProEncoder
 from .network.fov import FOVNetwork
 from .network.vit_factory import VIT_CONFIG_DICT, ViTPreset, create_vit
-from huggingface_hub import hf_hub_download
 
 
 @dataclass
@@ -33,8 +34,8 @@ class DepthProConfig:
     image_encoder_preset: ViTPreset
     decoder_features: int
 
-    checkpoint_uri: Optional[str] = None
-    fov_encoder_preset: Optional[ViTPreset] = None
+    checkpoint_uri: str | None = None
+    fov_encoder_preset: ViTPreset | None = None
     use_fov_head: bool = True
 
 
@@ -56,7 +57,7 @@ DEFAULT_MONODEPTH_CONFIG_DICT = DepthProConfig(
 )
 
 
-def create_backbone_model(preset: ViTPreset) -> Tuple[nn.Module, ViTPreset]:
+def create_backbone_model(preset: ViTPreset) -> tuple[nn.Module, ViTPreset]:
     """Create and load a backbone model given a config.
 
     Args:
@@ -81,7 +82,7 @@ def create_model_and_transforms(
     config: DepthProConfig = DEFAULT_MONODEPTH_CONFIG_DICT,
     device: torch.device = torch.device("cpu"),
     precision: torch.dtype = torch.float32,
-) -> Tuple[DepthPro, Compose]:
+) -> tuple[DepthPro, Compose]:
     """Create a DepthPro model and load weights from `config.checkpoint_uri`.
 
     Args:
@@ -167,7 +168,7 @@ class DepthPro(nn.Module):
         decoder: MultiresConvDecoder,
         last_dims: tuple[int, int],
         use_fov_head: bool = True,
-        fov_encoder: Optional[nn.Module] = None,
+        fov_encoder: nn.Module | None = None,
     ):
         """Initialize DepthPro.
 
@@ -220,7 +221,7 @@ class DepthPro(nn.Module):
         """Return the internal image size of the network."""
         return self.encoder.img_size
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Decode by projection and fusion of multi-resolution encodings.
 
         Args:
@@ -233,7 +234,7 @@ class DepthPro(nn.Module):
 
         """
         _, _, H, W = x.shape
-        assert H == self.img_size and W == self.img_size
+        assert self.img_size == H and self.img_size == W
 
         encodings = self.encoder(x)
         features, features_0 = self.decoder(encodings)
@@ -249,7 +250,7 @@ class DepthPro(nn.Module):
     def infer(
         self,
         x: torch.Tensor,
-        f_px: Optional[Union[float, torch.Tensor]] = None,
+        f_px: float | torch.Tensor | None = None,
         interpolation_mode="bilinear",
     ) -> Mapping[str, torch.Tensor]:
         """Infer depth and fov for a given image.
@@ -273,7 +274,7 @@ class DepthPro(nn.Module):
         if len(x.shape) == 3:
             x = x.unsqueeze(0)
         _, _, H, W = x.shape
-        resize = H != self.img_size or W != self.img_size
+        resize = self.img_size != H or self.img_size != W
 
         if resize:
             x = nn.functional.interpolate(

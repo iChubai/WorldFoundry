@@ -3,13 +3,12 @@ Encoder class for Dense Representation Encoder
 """
 
 import math
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch
-
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 import torch.nn as nn
 from torch.nn.init import trunc_normal_
 
@@ -19,6 +18,7 @@ from uniception.models.encoders.base import (
     ViTEncoderNonImageInput,
     ViTEncoderOutput,
 )
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 def make_2tuple(x):
@@ -33,7 +33,7 @@ def make_2tuple(x):
 class ResidualBlock(nn.Module):
     "Redidual block for Dense Representation Encoder"
 
-    def __init__(self, in_channels: int, out_channels: int, act_layer: Type[nn.Module] = nn.GELU):
+    def __init__(self, in_channels: int, out_channels: int, act_layer: type[nn.Module] = nn.GELU):
         super(ResidualBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
         self.act = act_layer()
@@ -63,13 +63,13 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
         in_chans: int = 3,
         enc_embed_dim: int = 1024,
         apply_pe: bool = True,
-        input_size_for_pe: Union[int, Tuple[int, int]] = 518,
+        input_size_for_pe: int | tuple[int, int] = 518,
         patch_size: int = 14,
-        intermediate_dims: List[int] = [588, 768, 1024],
+        intermediate_dims: list[int] = [588, 768, 1024],
         data_norm_type: str = "dense_rep_encoder",
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Optional[Callable] = partial(nn.LayerNorm, eps=1e-6),
-        post_pe_norm_layer: Optional[Callable] = partial(nn.LayerNorm, eps=1e-6),
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),
+        post_pe_norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),
         interpolate_antialias: bool = False,
         interpolate_offset: float = 0.1,
         pretrained_checkpoint_path: str = None,
@@ -233,7 +233,7 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
 
         return patch_pos_embed.to(previous_dtype)
 
-    def forward(self, encoder_input: Union[ViTEncoderInput, ViTEncoderNonImageInput]) -> ViTEncoderOutput:
+    def forward(self, encoder_input: ViTEncoderInput | ViTEncoderNonImageInput) -> ViTEncoderOutput:
         """
         Dense Representation Encoder Forward Pass
 

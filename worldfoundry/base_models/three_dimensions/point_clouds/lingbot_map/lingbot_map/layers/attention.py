@@ -10,18 +10,16 @@
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> attention.py functionality."""
 
 import logging
-import os
 import math
+import os
 import warnings
-import torch
 
-from torch import Tensor
-from torch import nn
+import torch
 import torch.nn.functional as F
+from einops import rearrange
+from torch import Tensor, nn
 
 from .rope import apply_rotary_emb
-
-from einops import rearrange
 
 # FlashInfer imports (optional - for paged attention)
 try:
@@ -32,8 +30,8 @@ except ImportError:
     FLASHINFER_AVAILABLE = False
     print("flashinfer not available")
 
-from typing_extensions import List
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 

@@ -57,29 +57,29 @@ register_template(
 class GLM4TemplateMeta(GLMTemplateMeta):
     prefix: Prompt = field(default_factory=list)
     prompt: Prompt = field(default_factory=lambda: ["<|user|>\n{{QUERY}}<|assistant|>\n"])
-    chat_sep: Optional[Prompt] = field(default_factory=list)
+    chat_sep: Prompt | None = field(default_factory=list)
     suffix: Prompt = field(default_factory=lambda: ["<|user|>"])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: ["<|system|>\n{{SYSTEM}}"])
+    system_prefix: Prompt | None = field(default_factory=lambda: ["<|system|>\n{{SYSTEM}}"])
 
     agent_template: str = "glm4"
-    stop_words: List[Word] = field(default_factory=lambda: ["<|endoftext|>", "<|user|>", "<|observation|>"])
+    stop_words: list[Word] = field(default_factory=lambda: ["<|endoftext|>", "<|user|>", "<|observation|>"])
 
 
 @dataclass
 class GLM4_0414TemplateMeta(GLM4TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: ["[gMASK]<sop>"])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: ["[gMASK]<sop><|system|>\n{{SYSTEM}}"])
+    system_prefix: Prompt | None = field(default_factory=lambda: ["[gMASK]<sop><|system|>\n{{SYSTEM}}"])
     agent_template: str = "glm4_0414"
 
 
 class GLM4VTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return [[-100]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
         labels = encoded["labels"]
@@ -94,14 +94,14 @@ class GLM4VTemplate(Template):
                 labels = labels[:idx] + [-100] * len(placeholder_id) + labels[idx + 1 :]
             messages = inputs.messages
             messages[0]["image"] = image
-            inputs2: Dict[str, Any] = self.processor.apply_chat_template(messages, return_dict=True)
+            inputs2: dict[str, Any] = self.processor.apply_chat_template(messages, return_dict=True)
             encoded["images"] = inputs2["images"]
         encoded["input_ids"] = input_ids
         encoded["labels"] = labels
         encoded["position_ids"] = list(range(len(input_ids)))
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = [b["images"] for b in batch if "images" in b]
         if images:
@@ -178,10 +178,10 @@ class CogTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         return []
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         model = self.model
         image = inputs.images or []
@@ -205,7 +205,7 @@ class CogTemplate(Template):
                 ]
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         keys = ["images", "cross_images"]
         for key in keys:
@@ -241,7 +241,7 @@ register_template(
 class CogVLMTemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: [["bos_token_id"]])
     prompt: Prompt = field(default_factory=lambda: ["Question: {{QUERY}} Answer:"])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["\n"])
 
 
 register_template(CogVLMTemplateMeta(MLLMTemplateType.cogvlm, template_cls=CogTemplate))
@@ -252,7 +252,7 @@ register_template(CogVLMTemplateMeta(MLLMTemplateType.cogvlm2, template_cls=CogT
 class Cog2VideoTemplate(CogTemplate):
     use_model = True
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         model = self.model
         encoded = super(CogTemplate, self)._encode(inputs)
         videos_path = inputs.videos or []
@@ -291,11 +291,11 @@ class GLMEdgeVTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return ["<|begin_of_image|>" * 578]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         if images:

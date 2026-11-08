@@ -8,6 +8,7 @@ from torch import Tensor
 
 from mmyolo.models.losses import bbox_overlaps
 from mmyolo.registry import TASK_UTILS
+
 from .utils import select_candidates_in_gts, select_highest_overlaps, yolov6_iou_calculator
 
 
@@ -145,7 +146,7 @@ class BatchTaskAlignedAssigner(nn.Module):
         pad_bbox_flag: Tensor,
         batch_size: int,
         num_gt: int,
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Get possible mask.
 
         Args:
@@ -198,7 +199,7 @@ class BatchTaskAlignedAssigner(nn.Module):
         gt_bboxes: Tensor,
         batch_size: int,
         num_gt: int,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Compute alignment metric between all bbox and gt.
 
         Args:
@@ -236,7 +237,7 @@ class BatchTaskAlignedAssigner(nn.Module):
         return alignment_metrics, overlaps
 
     def select_topk_candidates(
-        self, alignment_gt_metrics: Tensor, using_largest_topk: bool = True, topk_mask: Optional[Tensor] = None
+        self, alignment_gt_metrics: Tensor, using_largest_topk: bool = True, topk_mask: Tensor | None = None
     ) -> Tensor:
         """Compute alignment metric between all bbox and gt.
 
@@ -268,7 +269,7 @@ class BatchTaskAlignedAssigner(nn.Module):
         fg_mask_pre_prior: Tensor,
         batch_size: int,
         num_gt: int,
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Get assigner info.
 
         Args:

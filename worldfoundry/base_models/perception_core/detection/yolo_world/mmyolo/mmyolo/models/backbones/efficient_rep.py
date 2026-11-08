@@ -8,6 +8,7 @@ from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.models.layers.yolo_bricks import CSPSPPFBottleneck, SPPFBottleneck
 from mmyolo.registry import MODELS
+
 from ..layers import BepC3StageBlock, RepStageBlock
 from ..utils import make_round
 from .base_backbone import BaseBackbone
@@ -65,11 +66,11 @@ class YOLOv6EfficientRep(BaseBackbone):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         use_cspsppf: bool = False,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
@@ -221,12 +222,12 @@ class YOLOv6CSPBep(YOLOv6EfficientRep):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
         hidden_ratio: float = 0.5,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         use_cspsppf: bool = False,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),

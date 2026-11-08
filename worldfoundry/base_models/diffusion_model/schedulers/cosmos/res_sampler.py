@@ -23,7 +23,8 @@ Most of sampling algorihtm, Runge-Kutta, Multi-step, etc, can be impl in this fr
 """
 
 import math
-from typing import Any, Callable, List, Literal, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import attrs
 import torch
@@ -80,7 +81,7 @@ class SamplerConfig:
 
 
 def get_rev_ts(
-    t_min: float, t_max: float, num_steps: int, ts_order: Union[int, float], is_forward: bool = False
+    t_min: float, t_max: float, num_steps: int, ts_order: int | float, is_forward: bool = False
 ) -> torch.Tensor:
     """
     Generate a sequence of reverse time steps.
@@ -119,7 +120,7 @@ def get_rev_ts(
 class Sampler(torch.nn.Module):
     """Sampler implementation."""
 
-    def __init__(self, cfg: Optional[SamplerConfig] = None):
+    def __init__(self, cfg: SamplerConfig | None = None):
         """Init.
 
         Args:
@@ -200,8 +201,8 @@ class Sampler(torch.nn.Module):
         self,
         denoiser_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         noisy_input_B_StateShape: torch.Tensor,
-        sampler_cfg: Optional[SamplerConfig] = None,
-        callback_fns: Optional[List[Callable]] = None,
+        sampler_cfg: SamplerConfig | None = None,
+        callback_fns: list[Callable] | None = None,
     ) -> torch.Tensor:
         """
         Internal implementation of the forward pass.
@@ -258,7 +259,7 @@ def differential_equation_solver(
     x0_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     sigmas_L: torch.Tensor,
     solver_cfg: SolverConfig,
-    callback_fns: Optional[List[Callable]] = None,
+    callback_fns: list[Callable] | None = None,
 ) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Creates a differential equation solver function.
@@ -294,8 +295,8 @@ def differential_equation_solver(
         ones_B = torch.ones(input_xT_B_StateShape.size(0), device=input_xT_B_StateShape.device, dtype=torch.float64)
 
         def step_fn(
-            i_th: int, state: Tuple[torch.Tensor, Optional[List[torch.Tensor]]]
-        ) -> Tuple[torch.Tensor, Optional[List[torch.Tensor]]]:
+            i_th: int, state: tuple[torch.Tensor, list[torch.Tensor] | None]
+        ) -> tuple[torch.Tensor, list[torch.Tensor] | None]:
             """Step fn.
 
             Args:

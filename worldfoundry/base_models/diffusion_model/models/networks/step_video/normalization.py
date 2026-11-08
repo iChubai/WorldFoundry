@@ -5,10 +5,11 @@ Used by the DiT stem: RMSNorm on Q/K, Fourier timestep features, and
 broadcast over ``B S C`` tokens.
 """
 
-from typing import Any, Dict, Optional, Union, Tuple
+import math
+from typing import Any, Dict, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-import math
 
 
 class RMSNorm(nn.Module):
@@ -166,7 +167,7 @@ class TimestepEmbedding(nn.Module):
         time_embed_dim: int,
         act_fn: str = "silu",
         out_dim: int = None,
-        post_act_fn: Optional[str] = None,
+        post_act_fn: str | None = None,
         cond_proj_dim=None,
         sample_proj_bias=True,
     ):
@@ -292,8 +293,8 @@ class AdaLayerNormSingle(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Return ``(6*C modulation, raw timestep embedding)`` for the DiT blocks."""
         embedded_timestep = self.emb(timestep * self.time_step_rescale, **added_cond_kwargs)
 

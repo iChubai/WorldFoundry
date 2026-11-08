@@ -7,11 +7,21 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from torch import nn
+
+# isort: split
 from ..med import XBertEncoder
 
+# isort: split
+
+# isort: split
 from ..vit import VisionTransformerEncoder
 
 

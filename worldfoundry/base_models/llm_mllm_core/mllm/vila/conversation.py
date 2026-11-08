@@ -35,8 +35,8 @@ class Conversation:
     """A class that keeps all conversation history."""
 
     system: str
-    roles: List[str]
-    messages: List[List[str]]
+    roles: list[str]
+    messages: list[list[str]]
     sep_style: SeparatorStyle = SeparatorStyle.AUTO
     sep: str = "###"
     sep2: str = None

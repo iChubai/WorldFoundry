@@ -5,10 +5,13 @@ Memory adapters attach outside this file.  No VACE or linear attn.
 """
 
 import math
+
 import torch
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from einops import repeat
+
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .attention import flash_attention
 
 __all__ = ["WanModel"]
@@ -609,7 +612,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -690,7 +693,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -741,10 +744,10 @@ class WanModel(nn.Module, NativeConfigMixin):
         """
         c = self.out_dim if c is None else c
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

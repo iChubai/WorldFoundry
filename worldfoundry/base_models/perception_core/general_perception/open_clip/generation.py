@@ -4,7 +4,8 @@ This module requires ``transformers`` and is imported lazily by model
 ``generate()`` methods — ``import open_clip`` does not require transformers.
 """
 
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -119,7 +120,7 @@ class MultimodalGenerationWrapper(nn.Module, GenerationMixin):
     def forward(
         self,
         input_ids: torch.Tensor,
-        image_embs: Optional[torch.Tensor] = None,
+        image_embs: torch.Tensor | None = None,
         **kwargs,  # absorb cache_position, attention_mask, etc.
     ) -> CausalLMOutputWithPast:
         """Forward.

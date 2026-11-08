@@ -16,14 +16,14 @@
 """TAPIR models definition."""
 
 import functools
-from typing import Any, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any, List, NamedTuple, Optional, Tuple
 
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
-from . import nets
-from . import utils
+from . import nets, utils
 
 
 class FeatureGrids(NamedTuple):
@@ -41,7 +41,7 @@ class FeatureGrids(NamedTuple):
 
     lowres: Sequence[torch.Tensor]
     hires: Sequence[torch.Tensor]
-    resolutions: Sequence[Tuple[int, int]]
+    resolutions: Sequence[tuple[int, int]]
 
 
 class QueryFeatures(NamedTuple):
@@ -63,7 +63,7 @@ class QueryFeatures(NamedTuple):
 
     lowres: Sequence[torch.Tensor]
     hires: Sequence[torch.Tensor]
-    resolutions: Sequence[Tuple[int, int]]
+    resolutions: Sequence[tuple[int, int]]
 
 
 class TAPIR(nn.Module):
@@ -80,7 +80,7 @@ class TAPIR(nn.Module):
         patch_size: int = 7,
         softmax_temperature: float = 20.0,
         parallelize_query_extraction: bool = False,
-        initial_resolution: Tuple[int, int] = (256, 256),
+        initial_resolution: tuple[int, int] = (256, 256),
         blocks_per_group: Sequence[int] = (2, 2, 2, 2),
         feature_extractor_chunk_size: int = 10,
         extra_convs: bool = True,
@@ -137,9 +137,9 @@ class TAPIR(nn.Module):
         video: torch.Tensor,
         query_points: torch.Tensor,
         is_training: bool = False,
-        query_chunk_size: Optional[int] = 512,
+        query_chunk_size: int | None = 512,
         get_query_feats: bool = False,
-        refinement_resolutions: Optional[List[Tuple[int, int]]] = None,
+        refinement_resolutions: list[tuple[int, int]] | None = None,
         cache_features: bool = False,
     ) -> Mapping[str, torch.Tensor]:
         """Runs a forward pass of the model.
@@ -218,8 +218,8 @@ class TAPIR(nn.Module):
         video: torch.Tensor,
         is_training: bool,
         query_points: torch.Tensor,
-        feature_grids: Optional[FeatureGrids] = None,
-        refinement_resolutions: Optional[List[Tuple[int, int]]] = None,
+        feature_grids: FeatureGrids | None = None,
+        refinement_resolutions: list[tuple[int, int]] | None = None,
     ) -> QueryFeatures:
         """Computes query features, which can be used for estimate_trajectories.
 
@@ -287,7 +287,7 @@ class TAPIR(nn.Module):
         self,
         video: torch.Tensor,
         is_training: bool,
-        refinement_resolutions: Optional[List[Tuple[int, int]]] = None,
+        refinement_resolutions: list[tuple[int, int]] | None = None,
     ) -> FeatureGrids:
         """Computes feature grids.
 
@@ -379,12 +379,12 @@ class TAPIR(nn.Module):
 
     def estimate_trajectories(
         self,
-        video_size: Tuple[int, int],
+        video_size: tuple[int, int],
         is_training: bool,
         feature_grids: FeatureGrids,
         query_features: QueryFeatures,
-        query_points_in_video: Optional[torch.Tensor],
-        query_chunk_size: Optional[int] = None,
+        query_points_in_video: torch.Tensor | None,
+        query_chunk_size: int | None = None,
     ) -> Mapping[str, Any]:
         """Estimates trajectories given features for a video and query features.
 
@@ -543,7 +543,7 @@ class TAPIR(nn.Module):
         resized_h, resized_w = resize_hw
         corrs_pyr = []
         assert len(target_feature) == len(pyramid)
-        for pyridx, (query, grid) in enumerate(zip(target_feature, pyramid)):
+        for pyridx, (query, grid) in enumerate(zip(target_feature, pyramid, strict=False)):
             # note: interp needs [y,x]
             coords = utils.convert_grid_coordinates(pos_guess, (orig_w, orig_h), grid.shape[-2:-4:-1])
             coords = torch.flip(coords, dims=(-1,))
@@ -613,9 +613,9 @@ class TAPIR(nn.Module):
         self,
         interp_feature: torch.Tensor,
         feature_grid: torch.Tensor,
-        query_points: Optional[torch.Tensor],
+        query_points: torch.Tensor | None,
         im_shp=None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Converts features into tracks by computing a cost volume.
 
         The computed cost volume will have shape

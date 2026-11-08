@@ -15,11 +15,15 @@ from torch.nn import functional as F
 
 from ...common.registry import registry
 from ..base_model import all_gather_with_grad, concat_all_gather
+
+# isort: split
 from .blip2 import (
     Blip2Base,
     compute_sim_matrix,
     disabled_train,
 )
+
+# isort: split
 from ..blip_models.blip_outputs import BlipOutput, BlipOutputFeatures
 
 

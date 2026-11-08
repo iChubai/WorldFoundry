@@ -77,9 +77,9 @@ def run_inference(cfg_dict: DictConfig) -> None:
 
         scene = batch["scene"][0]
         scene_dir = cfg.output_path / scene
-        for index, image in zip(target["index"][0], color[0]):
+        for index, image in zip(target["index"][0], color[0], strict=False):
             save_image(image, scene_dir / "color" / f"{int(index):06d}.png")
-        for index, image in zip(context["index"][0], context["image"][0]):
+        for index, image in zip(context["index"][0], context["image"][0], strict=False):
             save_image(image, scene_dir / "context" / f"{int(index):06d}.png")
         if gaussians.scales is not None and gaussians.rotations is not None:
             export_ply(

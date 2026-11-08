@@ -13,11 +13,12 @@ try:
 except ImportError:
     flash_attn_varlen_func = None
 
+from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import camera_features
 from worldfoundry.core.attention import apply_nd_rotary_embedding as apply_rotary_emb
-from worldfoundry.core.attention.sequence.sequence_metadata import get_cu_seqlens
 from worldfoundry.core.attention.parallel.sequence_parallel_attention import (
     parallel_attention,
 )
+from worldfoundry.core.attention.sequence.sequence_metadata import get_cu_seqlens
 from worldfoundry.core.distributed.sequence_parallel.runtime import (
     all_gather,
     get_sequence_parallel_state,
@@ -52,8 +53,6 @@ from worldfoundry.core.nn import (
     normalization_layer as get_norm_layer,
 )
 
-from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import camera_features
-
 from ..layers.token_refiner import SingleTokenRefiner
 from .cameranet import CameraNet
 from .patch import PatchEmbed
@@ -73,8 +72,8 @@ class DoubleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -131,13 +130,13 @@ class DoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
         freqs_cis: tuple = None,
         use_sage: bool = True,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         img_mod1_shift, img_mod1_scale, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate = self.img_mod(
             vec
         ).chunk(6, dim=-1)
@@ -253,8 +252,8 @@ class SingleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qk_scale: float = None,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -296,11 +295,11 @@ class SingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         use_sage: bool = True,
     ) -> torch.Tensor:
         mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
@@ -404,14 +403,14 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
         num_heads: int = 24,
         depth_double_blocks: int = 19,
         depth_single_blocks: int = 38,
-        rope_dim_list: List[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         guidance_embed: bool = False,  # For modulation.
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        multitask_mask_training_type: Optional[str] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        multitask_mask_training_type: str | None = None,
         camera_in_channels: int = 6,
         camera_down_coef: int = 8,
     ):
@@ -542,15 +541,15 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
         t: torch.Tensor,  # Should be in range(0, 1000).
         text_states: torch.Tensor = None,
         text_mask: torch.Tensor = None,  # Now we don't use it.
-        text_states_2: Optional[torch.Tensor] = None,  # Text embedding for modulation.
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        text_states_2: torch.Tensor | None = None,  # Text embedding for modulation.
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
         return_dict: bool = True,
         is_cache: bool = False,
         cam_latents=None,
         use_sage: bool = False,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         out = {}
         img = x
         txt = text_states

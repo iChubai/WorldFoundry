@@ -37,10 +37,14 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks i
     PatchEmbedMS3D,
     T2IFinalLayer,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_multi_scale_video import (
     SanaMSVideo,
     SanaVideoMSBlock,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.capabilities import is_xformers_available
 from worldfoundry.base_models.diffusion_model.models.networks.sana.selection import (
     resolve_attention_block,
@@ -53,7 +57,7 @@ if _xformers_available:
     import xformers.ops
 
 
-def get_softmax_layer_indices(depth: int, softmax_ratio: float = 0.25) -> List[int]:
+def get_softmax_layer_indices(depth: int, softmax_ratio: float = 0.25) -> list[int]:
     """
     Calculate which layer indices should use softmax attention.
 
@@ -189,7 +193,7 @@ class SanaMSVideoV2V(SanaMSVideo):
         pack_latents=False,
         additional_inchannels=0,
         softmax_ratio: float = 0.0,
-        softmax_layer_indices: Optional[List[int]] = None,
+        softmax_layer_indices: list[int] | None = None,
         softmax_attn_type="GDNSoftmaxAttention",
         **kwargs,
     ):
@@ -452,7 +456,7 @@ class SanaMSVideoV2V(SanaMSVideo):
 
         if self.use_flex_attention:
             block_mask = self.create_flexattention_chunkcausal_mask(
-                x, (self.f, self.h, self.w), kwargs.get("chunk_index", None)
+                x, (self.f, self.h, self.w), kwargs.get("chunk_index")
             )
         else:
             block_mask = None

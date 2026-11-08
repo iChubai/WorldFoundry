@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 import torch
 from transformers import PreTrainedTokenizerBase, StoppingCriteria
 
-Prompt = List[Union[str, List[int], List[str]]]
-Word = Union[str, List[int]]
+Prompt = list[str | list[int] | list[str]]
+Word = Union[str, list[int]]
 Context = Word
 
 
@@ -21,7 +21,7 @@ class StopWordsCriteria(StoppingCriteria):
     Like suffixes and chat seps in the template.
     """
 
-    def __init__(self, tokenizer: PreTrainedTokenizerBase, stop_words: List[Word], **tokenizer_kwargs) -> None:
+    def __init__(self, tokenizer: PreTrainedTokenizerBase, stop_words: list[Word], **tokenizer_kwargs) -> None:
         self.tokenizer = tokenizer
         self.stop_words = stop_words
         self.tokenizer_kwargs = tokenizer_kwargs
@@ -41,11 +41,8 @@ class StopWordsCriteria(StoppingCriteria):
                 continue
             is_finished = False
             for stop_word in self.stop_words:
-                if (
-                    isinstance(stop_word, str)
-                    and stop_word in text
-                    or isinstance(stop_word, list)
-                    and input_ids[i][-len(stop_word) :].tolist() == stop_word
+                if (isinstance(stop_word, str) and stop_word in text) or (
+                    isinstance(stop_word, list) and input_ids[i][-len(stop_word) :].tolist() == stop_word
                 ):
                     is_finished = True
                     break
@@ -53,7 +50,7 @@ class StopWordsCriteria(StoppingCriteria):
         return self.is_done
 
 
-def fetch_one(element: Union[Tuple, List, Set, Dict, Any], item_type: Optional[Type] = None) -> Any:
+def fetch_one(element: tuple | list | set | dict | Any, item_type: type | None = None) -> Any:
     if isinstance(element, (tuple, set, list)):
         for ele in element:
             out = fetch_one(ele)
@@ -65,7 +62,7 @@ def fetch_one(element: Union[Tuple, List, Set, Dict, Any], item_type: Optional[T
         return element
 
 
-def findall(token_list: List[int], sub_token_list: Union[int, List[int]]) -> List[int]:
+def findall(token_list: list[int], sub_token_list: int | list[int]) -> list[int]:
     """Find the index of a token in the token_list."""
     if isinstance(sub_token_list, int):
         sub_token_list = [sub_token_list]
@@ -82,8 +79,8 @@ def findall(token_list: List[int], sub_token_list: Union[int, List[int]]) -> Lis
 
 
 def align_image_inputs(
-    input_ids: List[int], labels: List[int], new_input_ids, image_token: int
-) -> Tuple[List[int], List[int]]:
+    input_ids: list[int], labels: list[int], new_input_ids, image_token: int
+) -> tuple[list[int], list[int]]:
     if isinstance(new_input_ids, torch.Tensor):
         new_input_ids = new_input_ids.tolist()
 
@@ -119,7 +116,7 @@ def align_image_inputs(
     return input_ids, labels
 
 
-def _split_str_by_regex(text: str, regex_delimiters: List[str]) -> List[str]:
+def _split_str_by_regex(text: str, regex_delimiters: list[str]) -> list[str]:
     combined_pattern = "|".join(f"({pattern})" for pattern in regex_delimiters)
     parts = re.split(combined_pattern, text, flags=re.DOTALL)
     parts = [part for part in parts if part is not None]
@@ -132,7 +129,7 @@ def _split_str_by_regex(text: str, regex_delimiters: List[str]) -> List[str]:
     return parts
 
 
-def split_str_parts_by(text: str, delimiters: List[str], regex_mode: bool = False) -> List[Dict[str, str]]:
+def split_str_parts_by(text: str, delimiters: list[str], regex_mode: bool = False) -> list[dict[str, str]]:
     """Split the text field into parts.
 
     Args:
@@ -151,13 +148,13 @@ def split_str_parts_by(text: str, delimiters: List[str], regex_mode: bool = Fals
     if regex_mode:
         parts = [part for part in parts if part]
         for part in parts:
-            for delimiter, delimiter_origin in zip(delimiters, delimiters_origin):
+            for delimiter, delimiter_origin in zip(delimiters, delimiters_origin, strict=False):
                 if re.match(delimiter, part, re.DOTALL):
                     break
             else:
                 delimiter_origin = ""
             res.append({"key": delimiter_origin, "content": part})
     else:
-        for key, content in zip(parts[::2], parts[1::2]):
+        for key, content in zip(parts[::2], parts[1::2], strict=False):
             res.append({"key": key, "content": content})
     return res

@@ -26,6 +26,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     is_master,
     read_from_jsonl,
 )
+
 from .infer_engine import AdapterRequest, PtEngine
 from .protocol import RequestConfig
 from .utils import InferCliState
@@ -37,7 +38,7 @@ class SwiftInfer(SwiftPipeline):
     args_class = InferArguments
     args: args_class
 
-    def __init__(self, args: Union[List[str], InferArguments, None] = None) -> None:
+    def __init__(self, args: list[str] | InferArguments | None = None) -> None:
         super().__init__(args)
         args = self.args
         if args.merge_lora:
@@ -100,7 +101,7 @@ class SwiftInfer(SwiftPipeline):
             kwargs.update(args.get_lmdeploy_engine_kwargs())
         return infer_engine_cls(**kwargs)
 
-    def run(self) -> List[Dict[str, Any]]:
+    def run(self) -> list[dict[str, Any]]:
         args = self.args
         self.jsonl_writer = JsonlWriter(args.result_path) if args.result_path else None
         if args.eval_human:
@@ -111,7 +112,7 @@ class SwiftInfer(SwiftPipeline):
             logger.info(f"The inference results have been saved to result_path: `{args.result_path}`.")
         return result
 
-    def infer_single(self, infer_request: Union[InferRequest, Dict[str, Any]], request_config: RequestConfig) -> str:
+    def infer_single(self, infer_request: InferRequest | dict[str, Any], request_config: RequestConfig) -> str:
         res_or_gen = self.infer(
             [infer_request], request_config, template=self.template, use_tqdm=False, **self.infer_kwargs
         )[0]
@@ -128,7 +129,7 @@ class SwiftInfer(SwiftPipeline):
         print("-" * 50)
         return response
 
-    def infer_cli(self) -> List[Dict[str, Any]]:
+    def infer_cli(self) -> list[dict[str, Any]]:
         args = self.args
         template = self.template
         request_config = args.get_request_config()
@@ -205,14 +206,14 @@ class SwiftInfer(SwiftPipeline):
             labels.append(data["labels"])
         if args.metric == "acc":
             mean_metric = MeanMetric()
-            for pred, label in zip(preds, labels):
+            for pred, label in zip(preds, labels, strict=False):
                 mean_metric.update(pred == label)
             res = {"acc": mean_metric.compute()["value"]}
         elif args.metric == "rouge":
             res = compute_rouge_bleu(preds, labels)
         logger.info(res)
 
-    def infer_dataset(self) -> List[Dict[str, Any]]:
+    def infer_dataset(self) -> list[dict[str, Any]]:
         args = self.args
         request_config = args.get_request_config()
         logger.info(f"request_config: {request_config}")
@@ -282,7 +283,7 @@ class SwiftInfer(SwiftPipeline):
 
         resp_list = self.infer(val_dataset, request_config, template=self.template, use_tqdm=True, **self.infer_kwargs)
         if not (args.infer_backend == "vllm" and rank >= 0 and args.rank % args.tensor_parallel_size != 0):
-            for data, resp, labels in zip(val_dataset, resp_list, labels_list):
+            for data, resp, labels in zip(val_dataset, resp_list, labels_list, strict=False):
                 response = resp.choices[0].message.content
                 data["messages"].append({"role": "assistant", "content": response})
                 data = {"response": response, "labels": labels, "logprobs": resp.choices[0].logprobs, **data}
@@ -292,5 +293,5 @@ class SwiftInfer(SwiftPipeline):
         return result_list
 
 
-def infer_main(args: Union[List[str], InferArguments, None] = None):
+def infer_main(args: list[str] | InferArguments | None = None):
     return SwiftInfer(args).main()

@@ -5,100 +5,113 @@ from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
     # Recommend using `xxx_main`
+    from .argument import BaseArguments, DeployArguments, InferArguments
     from .infer import (
-        VllmEngine,
-        RequestConfig,
+        AdapterRequest,
+        BaseInferEngine,
+        InferClient,
+        InferEngine,
         LmdeployEngine,
         PtEngine,
-        InferEngine,
-        infer_main,
+        RequestConfig,
+        VllmEngine,
         deploy_main,
-        InferClient,
-        run_deploy,
-        AdapterRequest,
+        infer_main,
         prepare_model_template,
-        BaseInferEngine,
+        run_deploy,
     )
-    from .argument import InferArguments, DeployArguments, BaseArguments
     from .template import (
         TEMPLATE_MAPPING,
+        InferRequest,
+        MaxLengthError,
         Template,
-        Word,
-        get_template,
-        TemplateType,
-        register_template,
         TemplateInputs,
         TemplateMeta,
-        get_template_meta,
-        InferRequest,
-        load_image,
-        MaxLengthError,
-        load_file,
+        TemplateType,
+        Word,
         draw_bbox,
+        get_template,
+        get_template_meta,
+        load_file,
+        load_image,
+        register_template,
     )
+
+    # isort: split
     from .model import (
-        register_model,
-        MODEL_MAPPING,
-        ModelType,
-        get_model_tokenizer,
-        safe_snapshot_download,
-        HfConfigFactory,
-        ModelInfo,
-        ModelMeta,
-        ModelKeys,
-        register_model_arch,
-        MultiModelKeys,
-        ModelArch,
-        get_model_arch,
         MODEL_ARCH_MAPPING,
+        MODEL_MAPPING,
+        HfConfigFactory,
+        Model,
+        ModelArch,
+        ModelGroup,
+        ModelInfo,
+        ModelKeys,
+        ModelMeta,
+        ModelType,
+        MultiModelKeys,
+        get_llm_model,
+        get_matched_model_meta,
+        get_model_arch,
         get_model_info_meta,
         get_model_name,
-        ModelGroup,
-        Model,
-        get_model_tokenizer_with_flash_attn,
+        get_model_tokenizer,
         get_model_tokenizer_multimodal,
-        load_by_unsloth,
+        get_model_tokenizer_with_flash_attn,
         git_clone_github,
-        get_matched_model_meta,
-        get_llm_model,
+        load_by_unsloth,
+        register_model,
+        register_model_arch,
+        safe_snapshot_download,
     )
+
+    # isort: split
+    # isort: split
     from .dataset import (
-        AlpacaPreprocessor,
-        ResponsePreprocessor,
-        MessagesPreprocessor,
-        AutoPreprocessor,
         DATASET_MAPPING,
+        DATASET_TYPE,
+        AlpacaPreprocessor,
+        AutoPreprocessor,
+        DatasetMeta,
+        EncodePreprocessor,
+        HfDataset,
+        LazyLLMDataset,
         MediaResource,
+        MessagesPreprocessor,
+        ResponsePreprocessor,
+        RowPreprocessor,
+        SubsetDataset,
+        load_dataset,
         register_dataset,
         register_dataset_info,
-        EncodePreprocessor,
-        LazyLLMDataset,
-        load_dataset,
-        DATASET_TYPE,
         sample_dataset,
-        RowPreprocessor,
-        DatasetMeta,
-        HfDataset,
-        SubsetDataset,
     )
+
+    # isort: split
+    # isort: split
     from .utils import (
-        deep_getattr,
-        to_float_dtype,
-        to_device,
         History,
         Messages,
-        history_to_messages,
-        messages_to_history,
         Processor,
-        save_checkpoint,
         ProcessorMixin,
-        get_temporary_cache_files_directory,
-        get_cache_dir,
-        is_moe_model,
+        deep_getattr,
         dynamic_gradient_checkpointing,
+        get_cache_dir,
+        get_temporary_cache_files_directory,
+        history_to_messages,
+        is_moe_model,
+        messages_to_history,
+        save_checkpoint,
+        to_device,
+        to_float_dtype,
     )
+
+    # isort: split
+    # isort: split
     from .base import SwiftPipeline
-    from .data_loader import DataLoaderDispatcher, DataLoaderShard, BatchSamplerShard
+
+    # isort: split
+    from .data_loader import BatchSamplerShard, DataLoaderDispatcher, DataLoaderShard
 else:
     _import_structure = {
         "infer": [

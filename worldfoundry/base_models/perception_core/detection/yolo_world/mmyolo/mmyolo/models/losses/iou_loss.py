@@ -187,10 +187,10 @@ class IoULoss(nn.Module):
         self,
         pred: torch.Tensor,
         target: torch.Tensor,
-        weight: Optional[torch.Tensor] = None,
-        avg_factor: Optional[float] = None,
-        reduction_override: Optional[Union[str, bool]] = None,
-    ) -> Tuple[Union[torch.Tensor, torch.Tensor], torch.Tensor]:
+        weight: torch.Tensor | None = None,
+        avg_factor: float | None = None,
+        reduction_override: str | bool | None = None,
+    ) -> tuple[torch.Tensor | torch.Tensor, torch.Tensor]:
         """Forward function.
 
         Args:

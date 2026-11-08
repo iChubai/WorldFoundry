@@ -25,6 +25,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_node_setting,
     set_device,
 )
+
 from ..protocol import RequestConfig
 
 
@@ -97,7 +98,7 @@ class InferStreamer(InferTools):
             self.print_idx += len(printable_text)
         return printable_text
 
-    def get_printable_text(self, raw_tokens: List[int], is_finished: bool) -> str:
+    def get_printable_text(self, raw_tokens: list[int], is_finished: bool) -> str:
         raw_tokens = raw_tokens[self.cache_idx :]
         if self.first_token:
             raw_tokens = []
@@ -147,14 +148,14 @@ def _set_generation_config_default_value(
         new_v = getattr(generation_config, k, None)
         if k in ["max_length"]:
             continue
-        if k in ["no_repeat_ngram_size"] or v is not None and new_v is None:
+        if k in ["no_repeat_ngram_size"] or (v is not None and new_v is None):
             setattr(generation_config, k, v)
     return generation_config
 
 
 def prepare_generation_config(
-    model_generation_config: Optional[GenerationConfig], request_config: RequestConfig, tokenizer
-) -> Optional[GenerationConfig]:
+    model_generation_config: GenerationConfig | None, request_config: RequestConfig, tokenizer
+) -> GenerationConfig | None:
     if model_generation_config is None or request_config is None:
         return model_generation_config
     kwargs = {"max_new_tokens": request_config.max_tokens}
@@ -404,21 +405,23 @@ def patch_vllm_memory_leak():
         return
 
     def patch_vllm_abort_seq_group():
+        from collections.abc import Iterable
+        from typing import Dict
+
         from vllm.core.scheduler import Scheduler
-        from typing import Iterable, Dict
-        from vllm.sequence import SequenceGroupBase, SequenceGroup, SequenceStatus
+        from vllm.sequence import SequenceGroup, SequenceGroupBase, SequenceStatus
 
         def new_abort_seq_group(
             self,
-            request_id: Union[str, Iterable[str]],
-            seq_id_to_seq_group: Optional[Dict[str, SequenceGroupBase]] = None,
+            request_id: str | Iterable[str],
+            seq_id_to_seq_group: dict[str, SequenceGroupBase] | None = None,
         ) -> None:
             if isinstance(request_id, str):
                 request_id = (request_id,)
             request_ids = set(request_id)
             seq_id_to_seq_group = seq_id_to_seq_group or {}
             for state_queue in [self.waiting, self.running, self.swapped]:
-                aborted_groups: List[SequenceGroup] = []
+                aborted_groups: list[SequenceGroup] = []
                 for seq_group in state_queue:
                     # When n>1, seq_group.request_id looks like
                     # foo_parallel_sample_0, while request_ids is just foo, and we
@@ -465,7 +468,7 @@ def patch_vllm_memory_leak():
         LLMEngine._old_abort_request = origin_method
         LLMEngine.abort_request = new_abort_request
 
-        def new_step(self) -> List[Union[RequestOutput, PoolingRequestOutput]]:
+        def new_step(self) -> list[RequestOutput | PoolingRequestOutput]:
             if self.parallel_config.pipeline_parallel_size > 1:
                 raise NotImplementedError(
                     "Pipeline parallelism is only supported through AsyncLLMEngine "

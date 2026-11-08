@@ -1,9 +1,8 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
 from dataclasses import dataclass, field, fields
 from typing import Any, Dict, List, Literal, Optional, Union
-
-import json
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.hub import get_hub
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import (
@@ -27,6 +26,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     set_device,
     use_hf_hub,
 )
+
 from .data_args import DataArguments
 from .generation_args import GenerationArguments
 from .model_args import ModelArguments
@@ -54,8 +54,8 @@ def get_supported_tuners():
 
 @dataclass
 class CompatArguments:
-    ckpt_dir: Optional[str] = None
-    lora_modules: List[str] = field(default_factory=list)
+    ckpt_dir: str | None = None
+    lora_modules: list[str] = field(default_factory=list)
 
     def _handle_ckpt_dir(self: "BaseArguments"):
         assert os.path.isdir(self.ckpt_dir), f"self.ckpt_dir: {self.ckpt_dir}"
@@ -102,34 +102,34 @@ class BaseArguments(
 
     tuner_backend: Literal["peft", "unsloth"] = "peft"
     train_type: str = field(default="lora", metadata={"help": f"train_type choices: {list(get_supported_tuners())}"})
-    adapters: List[str] = field(default_factory=list)
-    external_plugins: List[str] = field(default_factory=list)
+    adapters: list[str] = field(default_factory=list)
+    external_plugins: list[str] = field(default_factory=list)
 
     seed: int = 42
-    model_kwargs: Optional[Union[dict, str]] = None
+    model_kwargs: dict | str | None = None
     load_args: bool = True
     load_data_args: bool = False
     # dataset
     packing: bool = False
-    packing_cache: Optional[str] = None
-    custom_register_path: List[str] = field(default_factory=list)  # .py
+    packing_cache: str | None = None
+    custom_register_path: list[str] = field(default_factory=list)  # .py
     # hub
     use_hf: bool = False
     # None: use env var `MODELSCOPE_API_TOKEN`
-    hub_token: Optional[str] = field(
+    hub_token: str | None = field(
         default=None, metadata={"help": "SDK token can be found in https://modelscope.cn/my/myaccesstoken"}
     )
     # dist
     ddp_timeout: int = 18000000
-    ddp_backend: Optional[str] = None
+    ddp_backend: str | None = None
 
     # extra
     ignore_args_error: bool = False  # True: notebook compatibility
     use_swift_lora: bool = (
-        False  # True for using tuner_backend == swift, don't specify this unless you know what you are doing # noqa
+        False  # True for using tuner_backend == swift, don't specify this unless you know what you are doing
     )
 
-    def _prepare_training_args(self, training_args: Dict[str, Any]) -> None:
+    def _prepare_training_args(self, training_args: dict[str, Any]) -> None:
         pass
 
     def _init_custom_register(self) -> None:
@@ -213,7 +213,7 @@ class BaseArguments(
 
     def _init_model_kwargs(self):
         """Prepare model kwargs and set them to the env"""
-        self.model_kwargs: Dict[str, Any] = self.parse_to_dict(self.model_kwargs)
+        self.model_kwargs: dict[str, Any] = self.parse_to_dict(self.model_kwargs)
         for k, v in self.model_kwargs.items():
             k = k.upper()
             os.environ[k] = str(v)
@@ -252,7 +252,7 @@ class BaseArguments(
     def load_args_from_ckpt(self) -> None:
         args_path = os.path.join(self.ckpt_dir, "args.json")
         assert os.path.exists(args_path), f"args_path: {args_path}"
-        with open(args_path, "r", encoding="utf-8") as f:
+        with open(args_path, encoding="utf-8") as f:
             old_args = json.load(f)
         force_load_keys = [
             # base_args
@@ -292,10 +292,10 @@ class BaseArguments(
         for key, old_value in old_args.items():
             if old_value is None:
                 continue
-            if key in force_load_keys or self.load_data_args and key in data_keys:
+            if key in force_load_keys or (self.load_data_args and key in data_keys):
                 setattr(self, key, old_value)
             value = getattr(self, key, None)
-            if key in load_keys and (value is None or isinstance(value, (list, tuple)) and len(value) == 0):
+            if key in load_keys and (value is None or (isinstance(value, (list, tuple)) and len(value) == 0)):
                 setattr(self, key, old_value)
         logger.info(f"Successfully loaded {args_path}.")
 
@@ -312,7 +312,7 @@ class BaseArguments(
         if is_dist():
             set_device()
 
-    def get_template(self, processor: Optional["Processor"], template_type: Optional[str] = None) -> "Template":
+    def get_template(self, processor: Optional["Processor"], template_type: str | None = None) -> "Template":
         template_kwargs = self.get_template_kwargs()
         template_type = template_type or self.template
         template = get_template(template_type, processor, **template_kwargs)

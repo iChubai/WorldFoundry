@@ -8,7 +8,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from .act_ckpt_utils import activation_ckpt_wrapper
 from .model_misc import get_activation_fn, get_clones, get_valid_ratio
@@ -87,12 +87,12 @@ class TransformerEncoderLayer(nn.Module):
         self,
         tgt: Tensor,
         memory: Tensor,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
         **kwargs,
     ) -> Tensor:
         """
@@ -143,12 +143,12 @@ class TransformerEncoderLayer(nn.Module):
         tgt: Tensor,
         memory: Tensor,
         dac: bool = False,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
         # attn_bias: Optional[Tensor] = None,
         # **kwargs,
     ) -> Tensor:
@@ -205,12 +205,12 @@ class TransformerEncoderLayer(nn.Module):
         tgt: Tensor,
         memory: Tensor,
         dac: bool = False,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
         # attn_bias: Optional[Tensor] = None,
         # **kwds: Any,
     ) -> torch.Tensor:
@@ -347,7 +347,7 @@ class TransformerEncoder(nn.Module):
         lvl_pos_embed_flatten = []
         spatial_shapes = []
         has_mask = masks is not None and masks[0] is not None
-        for lvl, (src, mask, pos_embed) in enumerate(zip(srcs, masks, pos_embeds)):
+        for lvl, (src, mask, pos_embed) in enumerate(zip(srcs, masks, pos_embeds, strict=False)):
             bs, c, h, w = src.shape
             spatial_shape = (h, w)
             spatial_shapes.append(spatial_shape)
@@ -393,13 +393,13 @@ class TransformerEncoder(nn.Module):
 
     def forward(
         self,
-        src: List[Tensor],
-        src_key_padding_masks: Optional[List[Tensor]] = None,
-        pos: Optional[List[Tensor]] = None,
-        prompt: Optional[Tensor] = None,
-        prompt_key_padding_mask: Optional[Tensor] = None,
-        encoder_extra_kwargs: Optional[Dict] = None,
-    ) -> Tuple[Tensor, Optional[Tensor], Tensor, Tensor, Tensor, Tensor]:
+        src: list[Tensor],
+        src_key_padding_masks: list[Tensor] | None = None,
+        pos: list[Tensor] | None = None,
+        prompt: Tensor | None = None,
+        prompt_key_padding_mask: Tensor | None = None,
+        encoder_extra_kwargs: dict | None = None,
+    ) -> tuple[Tensor, Tensor | None, Tensor, Tensor, Tensor, Tensor]:
         """
         Process multi-level features through the transformer encoder.
 
@@ -494,7 +494,7 @@ class TransformerEncoderFusion(TransformerEncoder):
         num_feature_levels: int,
         add_pooled_text_to_img_feat: bool = True,
         pool_text_with_mask: bool = False,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         **kwargs,
     ):
         """Init.
@@ -536,14 +536,14 @@ class TransformerEncoderFusion(TransformerEncoder):
 
     def forward(
         self,
-        src: List[Tensor],
+        src: list[Tensor],
         prompt: Tensor,
-        src_key_padding_mask: Optional[List[Tensor]] = None,
-        src_pos: Optional[List[Tensor]] = None,
-        prompt_key_padding_mask: Optional[Tensor] = None,
-        prompt_pos: Optional[Tensor] = None,
-        feat_sizes: Optional[List[int]] = None,
-        encoder_extra_kwargs: Optional[Dict] = None,
+        src_key_padding_mask: list[Tensor] | None = None,
+        src_pos: list[Tensor] | None = None,
+        prompt_key_padding_mask: Tensor | None = None,
+        prompt_pos: Tensor | None = None,
+        feat_sizes: list[int] | None = None,
+        encoder_extra_kwargs: dict | None = None,
     ):
         """Forward.
 

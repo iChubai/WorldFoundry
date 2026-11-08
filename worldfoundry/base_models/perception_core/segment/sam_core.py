@@ -72,7 +72,7 @@ class Sam(nn.Module):
         image_embeddings = self.image_encoder(input_images)
 
         outputs = []
-        for image_record, curr_embedding in zip(batched_input, image_embeddings):
+        for image_record, curr_embedding in zip(batched_input, image_embeddings, strict=False):
             points = (
                 (image_record["point_coords"], image_record["point_labels"]) if "point_coords" in image_record else None
             )

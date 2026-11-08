@@ -17,8 +17,9 @@ except ModuleNotFoundError:
     # compatibility for older timm versions
     from timm.models.layers import DropPath
 
-from .model_misc import get_clones
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d
+
+from .model_misc import get_clones
 
 
 class SimpleMaskDownSampler(nn.Module):
@@ -153,7 +154,7 @@ class CXBlock(nn.Module):
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.gamma = (
-            nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             if layer_scale_init_value > 0
             else None
         )
@@ -249,7 +250,7 @@ class SimpleMaskEncoder(nn.Module):
         pix_feat: torch.Tensor,
         masks: torch.Tensor,
         skip_mask_sigmoid: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:

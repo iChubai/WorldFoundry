@@ -1,8 +1,8 @@
 """Module for base_models -> perception_core -> optical_flow -> raft -> utils -> utils.py functionality."""
 
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
 from scipy import interpolate
 
 

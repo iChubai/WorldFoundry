@@ -23,7 +23,7 @@ def use_torchacc() -> bool:
     return strtobool(os.getenv("USE_TORCHACC", "0"))
 
 
-def get_dist_setting() -> Tuple[int, int, int, int]:
+def get_dist_setting() -> tuple[int, int, int, int]:
     """return rank, local_rank, world_size, local_world_size"""
     rank = int(os.getenv("RANK", -1))
     local_rank = int(os.getenv("LOCAL_RANK", -1))
@@ -102,5 +102,5 @@ def is_pai_training_job() -> bool:
     return "PAI_TRAINING_JOB_ID" in os.environ
 
 
-def get_pai_tensorboard_dir() -> Optional[str]:
+def get_pai_tensorboard_dir() -> str | None:
     return os.environ.get("PAI_OUTPUT_TENSORBOARD")

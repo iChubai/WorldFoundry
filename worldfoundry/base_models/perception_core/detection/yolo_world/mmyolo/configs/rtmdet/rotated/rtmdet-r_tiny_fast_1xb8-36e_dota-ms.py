@@ -1,7 +1,7 @@
 _base_ = "./rtmdet-r_l_syncbn_fast_2xb4-36e_dota-ms.py"
 
 checkpoint = (
-    "https://download.openmmlab.com/mmdetection/v3.0/rtmdet/cspnext_rsb_pretrain/cspnext-tiny_imagenet_600e.pth"  # noqa
+    "https://download.openmmlab.com/mmdetection/v3.0/rtmdet/cspnext_rsb_pretrain/cspnext-tiny_imagenet_600e.pth"
 )
 
 # ========================modified parameters======================

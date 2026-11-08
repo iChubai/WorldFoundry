@@ -8,9 +8,11 @@ import torch
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.core.model_utils import (
-    smart_cat,
     get_points_on_a_grid,
+    smart_cat,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.build_cotracker import (
     build_cotracker,
 )

@@ -46,7 +46,7 @@ REGISTERED_ACT_DICT: dict[str, type] = {
 }
 
 
-def build_act(name: str, **kwargs) -> Optional[nn.Module]:
+def build_act(name: str, **kwargs) -> nn.Module | None:
     """Build act.
 
     Args:

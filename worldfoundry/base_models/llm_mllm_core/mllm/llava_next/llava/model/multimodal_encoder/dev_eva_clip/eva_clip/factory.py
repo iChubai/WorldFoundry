@@ -45,7 +45,7 @@ def _rescan_model_configs():
                 config_files.extend(config_path.glob(f"*{ext}"))
 
     for cf in config_files:
-        with open(cf, "r", encoding="utf8") as f:
+        with open(cf, encoding="utf8") as f:
             model_cfg = json.load(f)
             if all(a in model_cfg for a in ("embed_dim", "vision_cfg", "text_cfg")):
                 _MODEL_CONFIGS[cf.stem] = model_cfg
@@ -350,19 +350,19 @@ def load_pretrained_checkpoint(
 
 def create_model(
     model_name: str,
-    pretrained: Optional[str] = None,
+    pretrained: str | None = None,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     jit: bool = False,
     force_quick_gelu: bool = False,
     force_custom_clip: bool = False,
-    force_patch_dropout: Optional[float] = None,
+    force_patch_dropout: float | None = None,
     pretrained_image: str = "",
     pretrained_text: str = "",
     pretrained_hf: bool = True,
     pretrained_visual_model: str = None,
     pretrained_text_model: str = None,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
     skip_list: list = [],
 ):
     model_name = model_name.replace("/", "-")  # for callers using old naming with / in ViT names
@@ -507,21 +507,21 @@ def create_model(
 
 def create_model_and_transforms(
     model_name: str,
-    pretrained: Optional[str] = None,
+    pretrained: str | None = None,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     jit: bool = False,
     force_quick_gelu: bool = False,
     force_custom_clip: bool = False,
-    force_patch_dropout: Optional[float] = None,
+    force_patch_dropout: float | None = None,
     pretrained_image: str = "",
     pretrained_text: str = "",
     pretrained_hf: bool = True,
     pretrained_visual_model: str = None,
     pretrained_text_model: str = None,
-    image_mean: Optional[Tuple[float, ...]] = None,
-    image_std: Optional[Tuple[float, ...]] = None,
-    cache_dir: Optional[str] = None,
+    image_mean: tuple[float, ...] | None = None,
+    image_std: tuple[float, ...] | None = None,
+    cache_dir: str | None = None,
     skip_list: list = [],
 ):
     model = create_model(
@@ -554,15 +554,15 @@ def create_model_from_pretrained(
     model_name: str,
     pretrained: str,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     jit: bool = False,
     force_quick_gelu: bool = False,
     force_custom_clip: bool = False,
-    force_patch_dropout: Optional[float] = None,
+    force_patch_dropout: float | None = None,
     return_transform: bool = True,
-    image_mean: Optional[Tuple[float, ...]] = None,
-    image_std: Optional[Tuple[float, ...]] = None,
-    cache_dir: Optional[str] = None,
+    image_mean: tuple[float, ...] | None = None,
+    image_std: tuple[float, ...] | None = None,
+    cache_dir: str | None = None,
     is_frozen: bool = False,
 ):
     if not is_pretrained_cfg(model_name, pretrained) and not os.path.exists(pretrained):

@@ -39,7 +39,7 @@ def default_bpe():
     )
 
 
-@lru_cache()
+@lru_cache
 def bytes_to_unicode():
     """
     Returns list of utf-8 byte and a corresponding list of unicode strings.
@@ -59,7 +59,7 @@ def bytes_to_unicode():
             cs.append(2**8 + n)
             n += 1
     cs = [chr(n) for n in cs]
-    return dict(zip(bs, cs))
+    return dict(zip(bs, cs, strict=False))
 
 
 def get_pairs(word):
@@ -86,7 +86,7 @@ def whitespace_clean(text):
     return text
 
 
-class SimpleTokenizer(object):
+class SimpleTokenizer:
     def __init__(self, bpe_path: str | None = None):
         if bpe_path is None or not os.path.exists(bpe_path):
             bpe_path = default_bpe()
@@ -100,9 +100,9 @@ class SimpleTokenizer(object):
         for merge in merges:
             vocab.append("".join(merge))
         vocab.extend(["<|startoftext|>", "<|endoftext|>"])
-        self.encoder = dict(zip(vocab, range(len(vocab))))
+        self.encoder = dict(zip(vocab, range(len(vocab)), strict=False))
         self.decoder = {v: k for k, v in self.encoder.items()}
-        self.bpe_ranks = dict(zip(merges, range(len(merges))))
+        self.bpe_ranks = dict(zip(merges, range(len(merges)), strict=False))
         self.cache = {"<|startoftext|>": "<|startoftext|>", "<|endoftext|>": "<|endoftext|>"}
         self.pat = re.compile(
             r"""<\|startoftext\|>|<\|endoftext\|>|'s|'t|'re|'ve|'m|'ll|'d|[\p{L}]+|[\p{N}]|[^\s\p{L}\p{N}]+""",

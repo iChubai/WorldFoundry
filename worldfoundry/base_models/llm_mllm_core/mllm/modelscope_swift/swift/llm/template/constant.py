@@ -185,7 +185,7 @@ class MLLMTemplateType:
 
 class TemplateType(LLMTemplateType, MLLMTemplateType, RMTemplateType):
     @classmethod
-    def get_template_name_list(cls) -> List[str]:
+    def get_template_name_list(cls) -> list[str]:
         res = []
         for k in cls.__dict__.keys():
             if k.startswith("__"):

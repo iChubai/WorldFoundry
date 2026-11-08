@@ -7,6 +7,7 @@ from typing import Any, Dict
 from transformers import AutoConfig
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..register import (
@@ -21,9 +22,9 @@ from ..utils import ModelInfo, git_clone_github, safe_snapshot_download
 
 
 def get_model_tokenizer_llava_llama(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
-    from transformers import LlavaForConditionalGeneration, LlavaConfig
+    from transformers import LlavaConfig, LlavaForConditionalGeneration
 
     kwargs["model_config"] = LlavaConfig.from_pretrained(model_dir)
     kwargs["automodel_class"] = kwargs["automodel_class"] or LlavaForConditionalGeneration
@@ -317,7 +318,7 @@ register_model(
 
 
 def get_model_tokenizer_llava(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     llm_model_type = kwargs.pop("llm_model_type")
     local_repo_path = kwargs.get("local_repo_path")

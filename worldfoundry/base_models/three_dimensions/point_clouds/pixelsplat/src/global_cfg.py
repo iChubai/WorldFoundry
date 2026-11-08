@@ -4,7 +4,7 @@ from typing import Optional
 
 from omegaconf import DictConfig
 
-cfg: Optional[DictConfig] = None
+cfg: DictConfig | None = None
 
 
 def get_cfg() -> DictConfig:

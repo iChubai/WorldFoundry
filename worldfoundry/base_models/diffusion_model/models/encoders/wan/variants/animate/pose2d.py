@@ -14,9 +14,10 @@ evaluation math.
 """
 
 import warnings
+from typing import List
+
 import cv2
 import numpy as np
-from typing import List
 from PIL import Image
 
 
@@ -58,7 +59,7 @@ def read_img(image, convert="RGB", check_exist=False):
             if convert:
                 img = img.convert(convert)
         except:
-            raise IOError("File error: ", image)
+            raise OSError("File error: ", image)
         return np.asarray(img)
     else:
         if isinstance(image, np.ndarray):
@@ -267,7 +268,7 @@ class AAPoseMeta:
         self.kps_rhand_p = np.array(meta["keypoints_right_hand"])[:, 2]
 
     @staticmethod
-    def load_from_kp2ds(kp2ds: List[np.ndarray], width: int, height: int):
+    def load_from_kp2ds(kp2ds: list[np.ndarray], width: int, height: int):
         """input 133x3 numpy keypoints and output AAPoseMeta
 
         Args:
@@ -328,7 +329,6 @@ class AAPoseMeta:
 
     def save_json(self):
         """Save json."""
-        pass
 
     def draw_aapose(self, img, threshold=0.5, stick_width_norm=200, draw_hand=True, draw_head=True):
         """Draw aapose.

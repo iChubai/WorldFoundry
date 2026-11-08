@@ -15,18 +15,14 @@ import numpy as np
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
+    SimpleAdapter,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
-from worldfoundry.core.distributed.sequence_parallel.runtime import (
-    get_sequence_parallel_rank,
-    get_sequence_parallel_world_size,
-    get_sp_group,
-)
-from worldfoundry.core.attention.sequence.varlen import attention
 from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import camera_features
 from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import (
     StaticConditionCache,
@@ -34,9 +30,13 @@ from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv impo
 )
 from worldfoundry.base_models.diffusion_model.optimizations.wan.cfg_skip import cfg_skip
 from worldfoundry.base_models.diffusion_model.optimizations.wan.teacache import TeaCache
-from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
-    SimpleAdapter,
+from worldfoundry.core.attention.sequence.varlen import attention
+from worldfoundry.core.distributed.sequence_parallel.runtime import (
+    get_sequence_parallel_rank,
+    get_sequence_parallel_world_size,
+    get_sp_group,
 )
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 
 def sinusoidal_embedding_1d(dim, position):
@@ -89,13 +89,13 @@ def rope_params(max_seq_len, dim, theta=10000):
 # Modified from https://github.com/thu-ml/RIFLEx/blob/main/riflex_utils.py
 @amp.autocast(enabled=False)
 def get_1d_rotary_pos_embed_riflex(
-    pos: Union[np.ndarray, int],
+    pos: np.ndarray | int,
     dim: int,
     theta: float = 10000.0,
     use_real=False,
-    k: Optional[int] = None,
-    L_test: Optional[int] = None,
-    L_test_scale: Optional[int] = None,
+    k: int | None = None,
+    L_test: int | None = None,
+    L_test_scale: int | None = None,
 ):
     """
     RIFLEx: Precompute the frequency tensor for complex exponentials (cis) with given dimensions.
@@ -885,7 +885,7 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
 
         # Concatenate condition video to input (for I2V)
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # Patch embedding: convert video to sequence of patches
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -893,7 +893,7 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
         # Add control adapter features (for camera control)
         if self.control_adapter is not None and y_camera is not None:
             y_camera = camera_features(self.control_adapter, y_camera)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
 
         # Get grid_sizes
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
@@ -906,7 +906,7 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
             full_ref = self.ref_conv(full_ref).flatten(2).transpose(1, 2)
             grid_sizes = torch.stack([torch.tensor([u[0] + 1, u[1], u[2]]) for u in grid_sizes]).to(grid_sizes.device)
             seq_len += full_ref.size(1)
-            x = [torch.concat([_full_ref.unsqueeze(0), u], dim=1) for _full_ref, u in zip(full_ref, x)]
+            x = [torch.concat([_full_ref.unsqueeze(0), u], dim=1) for _full_ref, u in zip(full_ref, x, strict=False)]
             if t.dim() != 1 and t.size(1) < seq_len:
                 pad_size = seq_len - t.size(1)
                 last_elements = t[:, -1].unsqueeze(1)
@@ -921,7 +921,10 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
                 grid_sizes.device
             )
             seq_len += subject_ref.size(1)
-            x = [torch.concat([u, _subject_ref.unsqueeze(0)], dim=1) for _subject_ref, u in zip(subject_ref, x)]
+            x = [
+                torch.concat([u, _subject_ref.unsqueeze(0)], dim=1)
+                for _subject_ref, u in zip(subject_ref, x, strict=False)
+            ]
             if t.dim() != 1 and t.size(1) < seq_len:
                 pad_size = seq_len - t.size(1)
                 last_elements = t[:, -1].unsqueeze(1)

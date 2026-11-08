@@ -19,7 +19,7 @@ class GmeQwen2VL:
     def __init__(
         self,
         model_name: str = "gme-Qwen2-VL-7B-Instruct",
-        model_path: Optional[str] = None,
+        model_path: str | None = None,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         min_image_tokens=256,
         max_image_tokens=1280,
@@ -52,16 +52,16 @@ class GmeQwen2VL:
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        pixel_values: torch.Tensor | None = None,
         # pixel_values_videos: Optional[torch.FloatTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
+        image_grid_thw: torch.LongTensor | None = None,
         # video_grid_thw: Optional[torch.LongTensor] = None,
-        pooling_mask: Optional[torch.LongTensor] = None,
+        pooling_mask: torch.LongTensor | None = None,
         **kwargs,
     ) -> torch.Tensor:
         if inputs_embeds is None:
@@ -113,7 +113,7 @@ class GmeQwen2VL:
         self.base.to(self.device)
         # Inputs must be batched
         input_texts, input_images = [], []
-        for t, i in zip(texts, images):
+        for t, i in zip(texts, images, strict=False):
             if not is_query or instruction is None:
                 instruction = self.defualt_instruction
             input_str = ""
@@ -144,11 +144,11 @@ class GmeQwen2VL:
     def encode(self, sentences: list[str], *, prompt_name=None, **kwargs):
         return self.get_fused_embeddings(texts=sentences, prompt_name=prompt_name, **kwargs)
 
-    def encode_queries(self, queries: List[str], **kwargs):
+    def encode_queries(self, queries: list[str], **kwargs):
         embeddings = self.encode(queries, **kwargs)
         return embeddings
 
-    def encode_corpus(self, corpus: List[Dict[str, str]], **kwargs):
+    def encode_corpus(self, corpus: list[dict[str, str]], **kwargs):
         if type(corpus) is dict:
             sentences = [
                 (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
@@ -210,7 +210,7 @@ class GmeQwen2VL:
             miniters=10,
             desc="encode",
         )
-        for n, img_batch in zip(range(0, n_batch * batch_size, batch_size), image_loader):
+        for n, img_batch in zip(range(0, n_batch * batch_size, batch_size), image_loader, strict=False):
             text_batch = none_batch if texts is None else texts[n : n + batch_size]
             img_batch = none_batch if img_batch is None else img_batch
             embeddings = self.embed(texts=text_batch, images=img_batch, **kwargs)

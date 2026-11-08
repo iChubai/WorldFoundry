@@ -4,6 +4,7 @@ from typing import Optional
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import safe_snapshot_download
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import find_free_port, get_logger
+
 from .infer_args import InferArguments
 
 logger = get_logger()
@@ -30,12 +31,12 @@ class DeployArguments(InferArguments):
 
     host: str = "0.0.0.0"
     port: int = 8000
-    api_key: Optional[str] = None
-    ssl_keyfile: Optional[str] = None
-    ssl_certfile: Optional[str] = None
+    api_key: str | None = None
+    ssl_keyfile: str | None = None
+    ssl_certfile: str | None = None
 
     owned_by: str = "swift"
-    served_model_name: Optional[str] = None
+    served_model_name: str | None = None
     verbose: bool = True  # Whether to log request_info
     log_interval: int = 20  # Interval for printing global statistics
 

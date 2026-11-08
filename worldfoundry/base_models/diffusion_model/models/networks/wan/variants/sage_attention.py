@@ -8,9 +8,10 @@ The import is currently disabled so the default path stays flash / SDPA;
 No action, camera, VACE, causal, or TeaCache logic lives here.
 """
 
-import torch
-from typing import Optional
 import os
+from typing import Optional
+
+import torch
 
 SAGEATTN_AVAILABLE = False
 # try:

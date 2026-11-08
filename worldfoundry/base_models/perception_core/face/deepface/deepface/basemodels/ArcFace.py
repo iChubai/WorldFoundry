@@ -1,6 +1,8 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 # pylint: disable=unsubscriptable-object
@@ -11,33 +13,33 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
-    from keras.engine import training
     import keras
+    from keras.engine import training
     from keras.layers import (
-        ZeroPadding2D,
-        Input,
-        Conv2D,
-        BatchNormalization,
-        PReLU,
         Add,
+        BatchNormalization,
+        Conv2D,
+        Dense,
         Dropout,
         Flatten,
-        Dense,
+        Input,
+        PReLU,
+        ZeroPadding2D,
     )
 else:
-    from tensorflow.python.keras.engine import training
     from tensorflow import keras
     from tensorflow.keras.layers import (
-        ZeroPadding2D,
-        Input,
-        Conv2D,
-        BatchNormalization,
-        PReLU,
         Add,
+        BatchNormalization,
+        Conv2D,
+        Dense,
         Dropout,
         Flatten,
-        Dense,
+        Input,
+        PReLU,
+        ZeroPadding2D,
     )
+    from tensorflow.python.keras.engine import training
 # --------------------------------
 
 

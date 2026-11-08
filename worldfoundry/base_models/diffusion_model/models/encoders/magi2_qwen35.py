@@ -311,7 +311,7 @@ class Magi2Qwen35TextEncoder(nn.Module):
         self.text_model.requires_grad_(False)
 
     @classmethod
-    def from_config(cls, config: Magi2Qwen35Config) -> "Magi2Qwen35TextEncoder":
+    def from_config(cls, config: Magi2Qwen35Config) -> Magi2Qwen35TextEncoder:
         """Build the encoder from a :class:`Magi2Qwen35Config`."""
         return cls(
             model_path=config.model_path,
@@ -329,7 +329,7 @@ class Magi2Qwen35TextEncoder(nn.Module):
         precision: torch.dtype = torch.bfloat16,
         max_length: int = 7000,
         skip_layer: int = 0,
-    ) -> "Magi2Qwen35TextEncoder":
+    ) -> Magi2Qwen35TextEncoder:
         """Thin alias for the constructor, mirroring repo encoder conventions."""
         return cls(
             model_path,
@@ -357,7 +357,7 @@ class Magi2Qwen35TextEncoder(nn.Module):
             pass
         return prompt
 
-    def get_target_token_indices(self, prompt: str, target_str: Optional[str]) -> Optional[list[int]]:
+    def get_target_token_indices(self, prompt: str, target_str: str | None) -> list[int] | None:
         if not target_str:
             return None
         prompt = self._normalize_prompt(prompt)

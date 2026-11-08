@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
 
-__all__ = ["LayerNorm2d", "build_norm", "get_norm_name", "reset_bn", "remove_bn", "set_norm_eps"]
+__all__ = ["LayerNorm2d", "build_norm", "get_norm_name", "remove_bn", "reset_bn", "set_norm_eps"]
 
 
 class LayerNorm2d(nn.LayerNorm):

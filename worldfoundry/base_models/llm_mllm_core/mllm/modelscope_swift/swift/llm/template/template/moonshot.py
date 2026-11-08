@@ -18,9 +18,9 @@ class MoonlightTemplateMeta(TemplateMeta):
             "<|im_user|>user<|im_middle|>{{QUERY}}<|im_end|><|im_assistant|>assistant<|im_middle|>"
         ]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|im_end|>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|im_end|>"])
     suffix: Prompt = field(default_factory=lambda: ["<|im_end|>"])
-    system_prefix: Optional[Prompt] = field(
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<|im_system|>system<|im_middle|>{{SYSTEM}}<|im_end|>"]
     )
     default_system: str = "You are a helpful assistant"
@@ -34,11 +34,11 @@ class KimiVLTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return ["<|media_start|>image<|media_content|><|media_pad|><|media_end|>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
         labels = encoded["labels"]
@@ -60,7 +60,7 @@ class KimiVLTemplate(Template):
             encoded.update(image_inputs)
         return encoded
 
-    def _data_collator_mm_data(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _data_collator_mm_data(self, batch: list[dict[str, Any]]) -> dict[str, Any]:
         res = super()._data_collator_mm_data(batch)
         image_grid_hws = self.concat_tensor(batch, "image_grid_hws", 0)
         if image_grid_hws is not None:

@@ -144,7 +144,7 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         preserve_rotary_precision: bool = False,
         low_cpu_mem_usage: bool = False,
         **hf_config_kwargs: Any,
-    ) -> "MiniMaxH3Qwen3VLEncoder":
+    ) -> MiniMaxH3Qwen3VLEncoder:
         """Build the encoder from an HF checkpoint directory.
 
         Loads the HF ``Qwen3VLConfig`` from ``model_path`` (so the real token
@@ -380,8 +380,8 @@ def _iter_checkpoint_weights(
 EntryClass = MiniMaxH3Qwen3VLEncoder
 
 __all__ = [
-    "MINIMAX_H3_QWEN3VL_SELECTED_LM_LAYER",
     "MINIMAX_H3_QWEN3VL_HIDDEN_DIM",
+    "MINIMAX_H3_QWEN3VL_SELECTED_LM_LAYER",
     "MiniMaxH3Qwen3VLConfig",
     "MiniMaxH3Qwen3VLEncoder",
 ]

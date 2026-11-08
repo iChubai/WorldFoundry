@@ -8,9 +8,14 @@ Adds camera + geometric control hints.  No action, causal, or linear attn.
 """
 
 import math
+
 import torch
 import torch.nn.functional as F
+
+# isort: split
 from ..model import DiTBlock
+
+# isort: split
 from worldfoundry.core.model_loading import hash_state_dict_keys
 from worldfoundry.core.nn import zero_module
 

@@ -1,6 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import asyncio
 import inspect
+import json
 import multiprocessing
 import time
 from contextlib import contextmanager
@@ -9,7 +10,6 @@ from http import HTTPStatus
 from threading import Thread
 from typing import List, Optional, Union
 
-import json
 import uvicorn
 from aiohttp import ClientConnectorError
 from fastapi import FastAPI, Request
@@ -19,6 +19,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer.protocol import MultiModalRequestMixin
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import InferStats
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import JsonlWriter, get_logger
+
 from .infer import SwiftInfer
 from .infer_engine import InferClient
 from .protocol import ChatCompletionRequest, CompletionRequest, Model, ModelList
@@ -35,7 +36,7 @@ class SwiftDeploy(SwiftInfer):
         self.app.post("/v1/chat/completions")(self.create_chat_completion)
         self.app.post("/v1/completions")(self.create_completion)
 
-    def __init__(self, args: Union[List[str], DeployArguments, None] = None) -> None:
+    def __init__(self, args: list[str] | DeployArguments | None = None) -> None:
         super().__init__(args)
 
         self.infer_engine.strict = True
@@ -78,13 +79,13 @@ class SwiftDeploy(SwiftInfer):
         data = [Model(id=model_id, owned_by=self.args.owned_by) for model_id in model_list]
         return ModelList(data=data)
 
-    async def _check_model(self, request: ChatCompletionRequest) -> Optional[str]:
+    async def _check_model(self, request: ChatCompletionRequest) -> str | None:
         available_models = await self.get_available_models()
         model_list = [model.id for model in available_models.data]
         if request.model not in model_list:
             return f"`{request.model}` is not in the model_list: `{model_list}`."
 
-    def _check_api_key(self, raw_request: Request) -> Optional[str]:
+    def _check_api_key(self, raw_request: Request) -> str | None:
         api_key = self.args.api_key
         if api_key is None:
             return
@@ -105,7 +106,7 @@ class SwiftDeploy(SwiftInfer):
             )
 
     @staticmethod
-    def create_error_response(status_code: Union[int, str, HTTPStatus], message: str) -> JSONResponse:
+    def create_error_response(status_code: int | str | HTTPStatus, message: str) -> JSONResponse:
         status_code = int(status_code)
         return JSONResponse({"message": message, "object": "error"}, status_code)
 
@@ -144,7 +145,7 @@ class SwiftDeploy(SwiftInfer):
             return
         for key, val in asdict(request_config).items():
             default_val = getattr(default_request_config, key)
-            if default_val is not None and (val is None or isinstance(val, (list, tuple)) and len(val) == 0):
+            if default_val is not None and (val is None or (isinstance(val, (list, tuple)) and len(val) == 0)):
                 setattr(request_config, key, default_val)
 
     async def create_chat_completion(
@@ -207,7 +208,7 @@ class SwiftDeploy(SwiftInfer):
         )
 
 
-def deploy_main(args: Union[List[str], DeployArguments, None] = None) -> None:
+def deploy_main(args: list[str] | DeployArguments | None = None) -> None:
     SwiftDeploy(args).main()
 
 

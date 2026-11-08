@@ -1,13 +1,16 @@
 import os
 import sys
 
+# isort: split
 from .grit_src.image_dense_captions import (
-    image_caption_api,
-    init_demo,
     dense_pred_to_caption,
     dense_pred_to_caption_only_name,
     dense_pred_to_caption_tuple,
+    image_caption_api,
+    init_demo,
 )
+
+# isort: split
 from detectron2.data.detection_utils import read_image
 
 

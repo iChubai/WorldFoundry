@@ -33,12 +33,19 @@ from torch.distributed._composable.fsdp import fully_shard
 from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
 
 from worldfoundry.core.attention.backends.native import NativeAttention
+
+# isort: split
 from worldfoundry.core.attention.rotary.rope_kernel import apply_rotary_pos_emb
-from worldfoundry.core.distributed.runtime import torch_process_group as distributed
+
+# isort: split
 from worldfoundry.core.distributed.model_parallel.context import cat_outputs_cp
+from worldfoundry.core.distributed.runtime import torch_process_group as distributed
 from worldfoundry.core.distributed.runtime.logging import log
+
+# isort: split
 from worldfoundry.core.kernels import layer_norm_scale_shift, qk_rmsnorm_rope, residual_gate_add
-from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.encoders.structured_conditioning import DataType
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.action_encoder import (
     MultiAgentActionControlModule,
@@ -46,6 +53,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.action
     RMS_norm,
     build_multi_agent_action_control,
 )
+from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.dit import (
     Attention,
     FinalLayer,
@@ -57,6 +67,8 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.dit im
     Timesteps,
     VideoRopePosition3DEmb,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.flex_attention import flex_attention_cp
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import precompute_freqs_cis_4d
 

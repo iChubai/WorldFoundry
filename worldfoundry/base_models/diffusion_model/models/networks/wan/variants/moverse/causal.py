@@ -4,25 +4,27 @@ Causal self-attention + KV cache for MoVerse.  Dual-stream MMDiT
 inference is :mod:`.mmdit`.
 """
 
+import math
+
+import torch
+import torch.nn as nn
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    MLPProj,
+    WanRMSNorm,
+    rope_params,
+    sinusoidal_embedding_1d,
 )
 from worldfoundry.core.attention.sequence.varlen import (
     attention,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
-    WanRMSNorm,
-    rope_params,
-    MLPProj,
-    sinusoidal_embedding_1d,
-)
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-import torch.nn as nn
-import torch
-import math
 
-from .normalization import WanLayerNorm
 from .attention import WAN_CROSSATTENTION_CLASSES
+from .normalization import WanLayerNorm
 
 
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0, compute_dtype=torch.float64):
@@ -904,7 +906,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -969,7 +971,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def forward(self, *args, **kwargs):
-        if kwargs.get("kv_cache", None) is None:
+        if kwargs.get("kv_cache") is None:
             raise ValueError("CausalWanModel inference requires a KV cache")
         return self._forward_inference(*args, **kwargs)
 

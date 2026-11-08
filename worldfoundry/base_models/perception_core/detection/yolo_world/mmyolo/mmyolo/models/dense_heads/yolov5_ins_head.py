@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import mmcv
 import torch
@@ -17,6 +18,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS
+
 from ..utils import make_divisible
 from .yolov5_head import YOLOv5Head, YOLOv5HeadModule
 
@@ -110,7 +112,7 @@ class YOLOv5InsHeadModule(YOLOv5HeadModule):
             act_cfg=self.act_cfg,
         )
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -125,7 +127,7 @@ class YOLOv5InsHeadModule(YOLOv5HeadModule):
         mask_protos = self.proto_pred(x[0])
         return cls_scores, bbox_preds, objectnesses, coeff_preds, mask_protos
 
-    def forward_single(self, x: Tensor, convs_pred: nn.Module) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+    def forward_single(self, x: Tensor, convs_pred: nn.Module) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         """Forward feature of a single scale level."""
 
         pred_map = convs_pred(x)
@@ -163,7 +165,7 @@ class YOLOv5InsHead(YOLOv5Head):
         self.loss_mask: nn.Module = MODELS.build(loss_mask)
         self.loss_mask_weight = loss_mask_weight
 
-    def loss(self, x: Tuple[Tensor], batch_data_samples: Union[list, dict]) -> dict:
+    def loss(self, x: tuple[Tensor], batch_data_samples: list | dict) -> dict:
         """Perform forward propagation and loss calculation of the detection
         head on the features of the upstream network.
 
@@ -405,16 +407,16 @@ class YOLOv5InsHead(YOLOv5Head):
 
     def predict_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        objectnesses: Optional[List[Tensor]] = None,
-        coeff_preds: Optional[List[Tensor]] = None,
-        proto_preds: Optional[Tensor] = None,
-        batch_img_metas: Optional[List[dict]] = None,
-        cfg: Optional[ConfigDict] = None,
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        objectnesses: list[Tensor] | None = None,
+        coeff_preds: list[Tensor] | None = None,
+        proto_preds: Tensor | None = None,
+        batch_img_metas: list[dict] | None = None,
+        cfg: ConfigDict | None = None,
         rescale: bool = True,
         with_nms: bool = True,
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Transform a batch of output features extracted from the head into
         bbox results.
         Note: When score_factors is not None, the cls_scores are
@@ -482,7 +484,7 @@ class YOLOv5InsHead(YOLOv5Head):
 
         mlvl_strides = [
             flatten_priors.new_full((featmap_size.numel() * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         flatten_stride = torch.cat(mlvl_strides)
 
@@ -516,6 +518,7 @@ class YOLOv5InsHead(YOLOv5Head):
             flatten_coeff_preds,
             proto_preds,
             batch_img_metas,
+            strict=False,
         ):
             ori_shape = img_meta["ori_shape"]
             batch_input_shape = img_meta["batch_input_shape"]
@@ -625,7 +628,7 @@ class YOLOv5InsHead(YOLOv5Head):
         mask_proto: Tensor,
         mask_coeff_pred: Tensor,
         bboxes: Tensor,
-        shape: Tuple[int, int],
+        shape: tuple[int, int],
         upsample: bool = False,
     ) -> Tensor:
         """Generate mask logits results.

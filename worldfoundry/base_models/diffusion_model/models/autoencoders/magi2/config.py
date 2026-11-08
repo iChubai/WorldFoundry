@@ -12,13 +12,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-
 # ---------------------------------------------------------------------------
 #  Wan2.2 (z_dim=48) video latent normalization statistics
 #  Source: <SG>/model/vae2_2.py (Wan2_2_VAE.mean/std) and turbo_vaed.py.
 # ---------------------------------------------------------------------------
 
-WAN22_LATENTS_MEAN: List[float] = [
+WAN22_LATENTS_MEAN: list[float] = [
     -0.2289,
     -0.0052,
     -0.1323,
@@ -69,7 +68,7 @@ WAN22_LATENTS_MEAN: List[float] = [
     -0.0667,
 ]
 
-WAN22_LATENTS_STD: List[float] = [
+WAN22_LATENTS_STD: list[float] = [
     0.4765,
     1.0364,
     0.4514,
@@ -131,12 +130,12 @@ class VideoVAEConfig:
 
     z_dim: int = 48
     c_dim: int = 160  # encoder base channel width (`dim`)
-    dim_mult: Tuple[int, ...] = (1, 2, 4, 4)
+    dim_mult: tuple[int, ...] = (1, 2, 4, 4)
     num_res_blocks: int = 2
-    temporal_downsample: Tuple[bool, ...] = (False, True, True)
+    temporal_downsample: tuple[bool, ...] = (False, True, True)
     dropout: float = 0.0
-    latents_mean: List[float] = field(default_factory=lambda: list(WAN22_LATENTS_MEAN))
-    latents_std: List[float] = field(default_factory=lambda: list(WAN22_LATENTS_STD))
+    latents_mean: list[float] = field(default_factory=lambda: list(WAN22_LATENTS_MEAN))
+    latents_std: list[float] = field(default_factory=lambda: list(WAN22_LATENTS_STD))
 
 
 @dataclass
@@ -152,24 +151,24 @@ class TurboDecoderConfig:
     # patch_size=4); the shipped config uses the values below (48-dim Wan2.2 latent and
     # the patch_size==2 that TurboVAEDDecoder3d asserts). Kept here as the working values.
     latent_channels: int = 48
-    decoder_block_out_channels: Tuple[int, ...] = (128, 256, 512, 512)
-    decoder_layers_per_block: Tuple[int, ...] = (4, 3, 3, 3, 4)
-    decoder_spatio_temporal_scaling: Tuple[bool, ...] = (True, True, True, False)
+    decoder_block_out_channels: tuple[int, ...] = (128, 256, 512, 512)
+    decoder_layers_per_block: tuple[int, ...] = (4, 3, 3, 3, 4)
+    decoder_spatio_temporal_scaling: tuple[bool, ...] = (True, True, True, False)
     patch_size: int = 2
     patch_size_t: int = 1
     resnet_norm_eps: float = 1e-6
     scaling_factor: float = 1.0
     decoder_causal: bool = False
-    decoder_is_dw_conv: Tuple[bool, ...] = (False, False, False, False, False)
+    decoder_is_dw_conv: tuple[bool, ...] = (False, False, False, False, False)
     decoder_dw_kernel_size: int = 3
-    decoder_spatio_only: Tuple[bool, ...] = (False, False, False, False)
+    decoder_spatio_only: tuple[bool, ...] = (False, False, False, False)
     first_chunk_size: int = 3
     step_size: int = 5
     spatial_compression_ratio: int = 16
     temporal_compression_ratio: int = 4
     use_unpatchify: bool = False
-    latents_mean: List[float] = field(default_factory=lambda: list(WAN22_LATENTS_MEAN))
-    latents_std: List[float] = field(default_factory=lambda: list(WAN22_LATENTS_STD))
+    latents_mean: list[float] = field(default_factory=lambda: list(WAN22_LATENTS_MEAN))
+    latents_std: list[float] = field(default_factory=lambda: list(WAN22_LATENTS_STD))
 
 
 @dataclass
@@ -187,7 +186,7 @@ class AudioVAEConfig:
     sample_rate: int = 44100
     io_channels: int = 2
     channels: int = 128
-    c_mults: Tuple[int, ...] = (1, 2, 4, 8, 16)
-    strides: Tuple[int, ...] = (2, 4, 4, 8, 8)
+    c_mults: tuple[int, ...] = (1, 2, 4, 8, 16)
+    strides: tuple[int, ...] = (2, 4, 4, 8, 8)
     use_snake: bool = True
     final_tanh: bool = False

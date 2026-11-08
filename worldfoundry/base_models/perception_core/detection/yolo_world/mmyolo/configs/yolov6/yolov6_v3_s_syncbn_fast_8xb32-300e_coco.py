@@ -115,7 +115,7 @@ model = dict(
 )
 
 # The training pipeline of YOLOv6 is basically the same as YOLOv5.
-# The difference is that Mosaic and RandomAffine will be closed in the last 15 epochs. # noqa
+# The difference is that Mosaic and RandomAffine will be closed in the last 15 epochs.
 pre_transform = [
     dict(type="LoadImageFromFile", backend_args=_base_.backend_args),
     dict(type="LoadAnnotations", with_bbox=True),
@@ -207,7 +207,7 @@ val_dataloader = dict(
 
 test_dataloader = val_dataloader
 
-# Optimizer and learning rate scheduler of YOLOv6 are basically the same as YOLOv5. # noqa
+# Optimizer and learning rate scheduler of YOLOv6 are basically the same as YOLOv5.
 # The difference is that the scheduler_type of YOLOv6 is cosine.
 optim_wrapper = dict(
     type="OptimWrapper",

@@ -2,8 +2,8 @@
 
 import itertools
 from typing import TYPE_CHECKING
-from ..helpers import lazy_import_all_from
 
+from ..helpers import lazy_import_all_from
 
 module_members = {}
 
@@ -14,8 +14,8 @@ __all__ = list(itertools.chain(*module_members.values()))
 
 
 if TYPE_CHECKING:
-    from .utils import *
-    from .transforms import *
-    from .mesh import *
     from .maps import *
+    from .mesh import *
     from .rasterization import *
+    from .transforms import *
+    from .utils import *

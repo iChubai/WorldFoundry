@@ -23,9 +23,11 @@ per-frame tokens and unpatchifies to ``B F C H W``.
 
 from types import SimpleNamespace
 from typing import Dict, Optional
+
 import torch
-from torch import nn
 from einops import rearrange, repeat
+from torch import nn
+
 from .blocks import PatchEmbed, StepVideoTransformerBlock
 from .normalization import AdaLayerNormSingle, PixArtAlphaTextProjection
 
@@ -40,16 +42,16 @@ class StepVideoModel(nn.Module):
         num_attention_heads: int = 48,
         attention_head_dim: int = 128,
         in_channels: int = 64,
-        out_channels: Optional[int] = 64,
+        out_channels: int | None = 64,
         num_layers: int = 48,
         dropout: float = 0.0,
         patch_size: int = 1,
         norm_type: str = "ada_norm_single",
         norm_elementwise_affine: bool = False,
         norm_eps: float = 1e-6,
-        use_additional_conditions: Optional[bool] = False,
-        caption_channels: Optional[int] | list | tuple = [6144, 1024],
-        attention_type: Optional[str] = "torch",
+        use_additional_conditions: bool | None = False,
+        caption_channels: int | None | list | tuple = [6144, 1024],
+        attention_type: str | None = "torch",
     ):
         super().__init__()
 
@@ -146,11 +148,11 @@ class StepVideoModel(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_hidden_states_2: Optional[torch.Tensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
-        added_cond_kwargs: Dict[str, torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        encoder_hidden_states_2: torch.Tensor | None = None,
+        timestep: torch.LongTensor | None = None,
+        added_cond_kwargs: dict[str, torch.Tensor] = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         fps: torch.Tensor = None,
         return_dict: bool = True,
     ):

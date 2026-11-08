@@ -28,7 +28,7 @@ class DinoV2(nn.Module):
     def __init__(
         self,
         name: str,
-        out_layers: List[int],
+        out_layers: list[int],
         alt_start: int = -1,
         qknorm_start: int = -1,
         rope_start: int = -1,

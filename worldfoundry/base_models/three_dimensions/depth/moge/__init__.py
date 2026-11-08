@@ -3,9 +3,9 @@
 from importlib import import_module
 
 __all__ = [
-    "MogeModel",
     "MoGeModelV1",
     "MoGeModelV2",
+    "MogeModel",
     "model",
     "utils",
 ]

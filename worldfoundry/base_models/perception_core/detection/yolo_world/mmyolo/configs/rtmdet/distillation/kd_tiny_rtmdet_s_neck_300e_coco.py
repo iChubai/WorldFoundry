@@ -1,6 +1,6 @@
 _base_ = "../rtmdet_tiny_syncbn_fast_8xb32-300e_coco.py"
 
-teacher_ckpt = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_s_syncbn_fast_8xb32-300e_coco/rtmdet_s_syncbn_fast_8xb32-300e_coco_20221230_182329-0a8c901a.pth"  # noqa: E501
+teacher_ckpt = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_s_syncbn_fast_8xb32-300e_coco/rtmdet_s_syncbn_fast_8xb32-300e_coco_20221230_182329-0a8c901a.pth"
 
 norm_cfg = dict(type="BN", affine=False, track_running_stats=False)
 

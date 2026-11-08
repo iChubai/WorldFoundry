@@ -90,9 +90,9 @@ class ConvHead(nn.Module):
         self,
         num_features: int,
         dim_in: int,
-        dim_out: List[int],
+        dim_out: list[int],
         dim_proj: int = 512,
-        dim_upsample: List[int] = [256, 128, 128],
+        dim_upsample: list[int] = [256, 128, 128],
         dim_times_res_block_hidden: int = 1,
         num_res_blocks: int = 1,
         res_block_norm: Literal["group_norm", "layer_norm"] = "group_norm",
@@ -119,7 +119,7 @@ class ConvHead(nn.Module):
                         for _ in range(num_res_blocks)
                     ),
                 )
-                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample)
+                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)
             ]
         )
 

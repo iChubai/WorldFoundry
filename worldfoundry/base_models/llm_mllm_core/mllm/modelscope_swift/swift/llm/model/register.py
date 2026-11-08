@@ -2,10 +2,11 @@
 import os
 import platform
 import re
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from functools import partial
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import transformers
@@ -40,6 +41,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     patch_getattr,
     use_torchacc,
 )
+
 from .constant import ModelType
 from .patcher import (
     patch_automodel,
@@ -50,28 +52,28 @@ from .patcher import (
 )
 from .utils import AttnImpl, HfConfigFactory, InitModelStrategy, ModelInfo, safe_snapshot_download
 
-GetModelTokenizerFunction = Callable[..., Tuple[Optional[PreTrainedModel], PreTrainedTokenizerBase]]
+GetModelTokenizerFunction = Callable[..., tuple[PreTrainedModel | None, PreTrainedTokenizerBase]]
 logger = get_logger()
 
 
 @dataclass
 class Model:
-    ms_model_id: Optional[str] = None
-    hf_model_id: Optional[str] = None
-    model_path: Optional[str] = None
+    ms_model_id: str | None = None
+    hf_model_id: str | None = None
+    model_path: str | None = None
 
-    ms_revision: Optional[str] = None
-    hf_revision: Optional[str] = None
+    ms_revision: str | None = None
+    hf_revision: str | None = None
 
 
 @dataclass
 class ModelGroup:
-    models: List[Model]
+    models: list[Model]
 
     # Higher priority. If set to None, the attributes of the ModelMeta will be used.
-    ignore_patterns: Optional[List[str]] = None
-    requires: Optional[List[str]] = None
-    tags: List[str] = field(default_factory=list)
+    ignore_patterns: list[str] | None = None
+    requires: list[str] | None = None
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         assert isinstance(self.models, (tuple, list)), f"self.models: {self.models}"
@@ -79,28 +81,28 @@ class ModelGroup:
 
 @dataclass
 class ModelMeta:
-    model_type: Optional[str]
+    model_type: str | None
     # Used to list the model_ids from modelscope/huggingface,
     # which participate in the automatic inference of the model_type.
-    model_groups: List[ModelGroup]
-    template: Optional[str]
+    model_groups: list[ModelGroup]
+    template: str | None
     get_function: GetModelTokenizerFunction
 
-    model_arch: Optional[str] = None
-    architectures: List[str] = field(default_factory=list)
+    model_arch: str | None = None
+    architectures: list[str] = field(default_factory=list)
     # Additional files that need to be saved for full parameter training/merge-lora.
-    additional_saved_files: List[str] = field(default_factory=list)
-    torch_dtype: Optional[torch.dtype] = None
+    additional_saved_files: list[str] = field(default_factory=list)
+    torch_dtype: torch.dtype | None = None
 
     is_multimodal: bool = False
     is_reward: bool = False
-    task_type: Optional[str] = None
+    task_type: str | None = None
 
     # File patterns to ignore when downloading the model.
-    ignore_patterns: Optional[List[str]] = None
+    ignore_patterns: list[str] | None = None
     # Usually specifies the version limits of transformers.
-    requires: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    requires: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.template is None:
@@ -108,7 +110,7 @@ class ModelMeta:
         if not isinstance(self.model_groups, (list, tuple)):
             self.model_groups = [self.model_groups]
 
-    def get_matched_model_group(self, model_name: str) -> Optional[ModelGroup]:
+    def get_matched_model_group(self, model_name: str) -> ModelGroup | None:
         for model_group in self.model_groups:
             for model in model_group.models:
                 for key in ["ms_model_id", "hf_model_id", "model_path"]:
@@ -133,7 +135,7 @@ class ModelMeta:
             logger.warning(f"Please install the package: `pip install {requires} -U`.")
 
 
-MODEL_MAPPING: Dict[str, ModelMeta] = {}
+MODEL_MAPPING: dict[str, ModelMeta] = {}
 
 
 def register_model(model_meta: ModelMeta, *, exist_ok: bool = False) -> None:
@@ -165,7 +167,7 @@ def load_by_unsloth(args):
     else:
         from unsloth import FastLanguageModel as UnslothModel
     model, processor = UnslothModel.from_pretrained(
-        model_name=args.adapters and args.adapters[0] or args.model_dir,
+        model_name=(args.adapters and args.adapters[0]) or args.model_dir,
         dtype=args.torch_dtype,
         max_seq_length=args.max_length,
         full_finetuning=args.quant_bits is None,
@@ -190,8 +192,8 @@ def _patch_awq_compat(model_info):
 
     try:
         # compat transformers>=4.50 (autoawq)
-        from transformers.quantizers.quantizer_awq import AwqQuantizer
         from transformers.integrations import get_keys_to_not_convert
+        from transformers.quantizers.quantizer_awq import AwqQuantizer
 
         _process_model_before_weight_loading = AwqQuantizer._process_model_before_weight_loading
 
@@ -211,7 +213,7 @@ def _patch_awq_compat(model_info):
 def get_model_tokenizer_from_local(
     model_dir: str,
     model_info: ModelInfo,
-    model_kwargs: Dict[str, Any],
+    model_kwargs: dict[str, Any],
     load_model: bool = True,
     *,
     tokenizer=None,
@@ -297,7 +299,7 @@ def get_model_tokenizer_from_local(
 
 
 def get_model_tokenizer_with_flash_attn(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model_config = kwargs.get("model_config")
     if model_config is None:
@@ -349,7 +351,7 @@ def get_default_device_map():
         return "cpu"
 
 
-def get_default_torch_dtype(torch_dtype: Optional[torch.dtype]):
+def get_default_torch_dtype(torch_dtype: torch.dtype | None):
     # torch_dtype: torch_dtype in config.json
     if torch_dtype is not None:
         return torch_dtype
@@ -371,7 +373,7 @@ def get_default_torch_dtype(torch_dtype: Optional[torch.dtype]):
         return torch.float32
 
 
-def get_model_name(model_id_or_path: str) -> Optional[str]:
+def get_model_name(model_id_or_path: str) -> str | None:
     assert isinstance(model_id_or_path, str), f"model_id_or_path: {model_id_or_path}"
     # compat hf hub
     model_id_or_path = model_id_or_path.rstrip("/")
@@ -387,7 +389,7 @@ def get_model_name(model_id_or_path: str) -> Optional[str]:
     return model_name
 
 
-def get_all_models() -> List[str]:
+def get_all_models() -> list[str]:
     use_hf = strtobool(os.environ.get("USE_HF", "False"))
     models = []
     for model_type in ModelType.get_model_name_list():
@@ -404,7 +406,7 @@ def get_all_models() -> List[str]:
     return models
 
 
-def get_matched_model_meta(model_id_or_path: str) -> Optional[ModelMeta]:
+def get_matched_model_meta(model_id_or_path: str) -> ModelMeta | None:
     model_name = get_model_name(model_id_or_path).lower()
     for model_type, model_meta in MODEL_MAPPING.items():
         model_group = ModelMeta.get_matched_model_group(model_meta, model_name)
@@ -429,7 +431,7 @@ def _get_arch_mapping():
     return res
 
 
-def get_matched_model_types(architectures: Optional[List[str]]) -> List[str]:
+def get_matched_model_types(architectures: list[str] | None) -> list[str]:
     """Get possible model_type."""
     architectures = architectures or ["null"]
     if architectures:
@@ -447,7 +449,7 @@ def _read_args_json_model_type(model_dir):
     return args.model_type
 
 
-def _get_model_info(model_dir: str, model_type: Optional[str], quantization_config) -> ModelInfo:
+def _get_model_info(model_dir: str, model_type: str | None, quantization_config) -> ModelInfo:
     try:
         config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     except Exception:
@@ -487,20 +489,20 @@ def _get_model_info(model_dir: str, model_type: Optional[str], quantization_conf
 
 def get_model_info_meta(
     model_id_or_path: str,
-    torch_dtype: Optional[torch.dtype] = None,
+    torch_dtype: torch.dtype | None = None,
     *,
     # hub
-    use_hf: Optional[bool] = None,
-    hub_token: Optional[str] = None,
-    revision: Optional[str] = None,
+    use_hf: bool | None = None,
+    hub_token: str | None = None,
+    revision: str | None = None,
     download_model: bool = False,
     # model kwargs
-    model_type: Optional[str] = None,
+    model_type: str | None = None,
     quantization_config=None,
     task_type=None,
     num_labels=None,
     **kwargs,
-) -> Tuple[ModelInfo, ModelMeta]:
+) -> tuple[ModelInfo, ModelMeta]:
     model_meta = get_matched_model_meta(model_id_or_path)
     model_dir = safe_snapshot_download(
         model_id_or_path,
@@ -546,27 +548,27 @@ def get_model_info_meta(
 
 def get_model_tokenizer(
     model_id_or_path: str,
-    torch_dtype: Optional[torch.dtype] = None,
-    device_map: Union[str, Dict[str, Any], None] = None,
+    torch_dtype: torch.dtype | None = None,
+    device_map: str | dict[str, Any] | None = None,
     *,
     load_model: bool = True,
     # hub
-    use_hf: Optional[bool] = None,
-    hub_token: Optional[str] = None,
-    revision: Optional[str] = None,
-    download_model: Optional[bool] = None,
+    use_hf: bool | None = None,
+    hub_token: str | None = None,
+    revision: str | None = None,
+    download_model: bool | None = None,
     # model kwargs
-    model_type: Optional[str] = None,
+    model_type: str | None = None,
     quantization_config=None,
-    max_memory: Union[str, Dict[str, Any]] = None,
+    max_memory: str | dict[str, Any] = None,
     attn_impl: Literal["flash_attn", "sdpa", "eager", None] = None,
-    rope_scaling: Optional[Dict[str, Any]] = None,
+    rope_scaling: dict[str, Any] | None = None,
     automodel_class=None,
     task_type: Literal["causal_lm", "seq_cls"] = None,
-    num_labels: Optional[int] = None,
-    model_kwargs: Optional[Dict[str, Any]] = None,
+    num_labels: int | None = None,
+    model_kwargs: dict[str, Any] | None = None,
     **kwargs,
-) -> Tuple[Optional[PreTrainedModel], PreTrainedTokenizerBase]:
+) -> tuple[PreTrainedModel | None, PreTrainedTokenizerBase]:
     """
     model_id_or_path: The path to the model or the model_id from modelscope/huggingface (controlled by `use_hf`).
     torch_dtype: If you pass `None`, it will retrieve the torch_dtype from the config.json file.

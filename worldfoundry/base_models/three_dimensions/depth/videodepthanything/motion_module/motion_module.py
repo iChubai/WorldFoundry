@@ -232,7 +232,7 @@ class TemporalTransformerBlock(nn.Module):
             attention_mask: The attention mask.
             video_length: The video length.
         """
-        for attention_block, norm in zip(self.attention_blocks, self.norms):
+        for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
                 attention_block(

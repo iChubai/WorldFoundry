@@ -18,6 +18,7 @@ from typing import List, Optional
 
 import psutil
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_base_predictor import Sam3BasePredictor
 

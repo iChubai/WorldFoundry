@@ -13,21 +13,21 @@
 #    limitations under the License.
 
 
+import ast
+import base64
+import math
 from abc import ABC, abstractmethod
+from io import BytesIO
 
 import torch
 import torch.nn as nn
 from PIL import Image
-from io import BytesIO
-import base64
-import torch
-import math
-import ast
 
-from .multimodal_encoder.builder import build_vision_tower
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.vqascore_models._shared.multimodal_projector import (
     build_vision_projector,
 )
+
+from .multimodal_encoder.builder import build_vision_tower
 
 # Model Constants
 IGNORE_INDEX = -100
@@ -343,9 +343,13 @@ class LlavaMetaForCausalLM(ABC):
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
         input_ids = [
-            cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)
+            cur_input_ids[cur_attention_mask]
+            for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask, strict=False)
         ]
-        labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
+        labels = [
+            cur_labels[cur_attention_mask]
+            for cur_labels, cur_attention_mask in zip(labels, attention_mask, strict=False)
+        ]
 
         new_input_embeds = []
         new_labels = []
@@ -417,7 +421,7 @@ class LlavaMetaForCausalLM(ABC):
         attention_mask = torch.zeros((batch_size, max_len), dtype=attention_mask.dtype, device=attention_mask.device)
         position_ids = torch.zeros((batch_size, max_len), dtype=position_ids.dtype, device=position_ids.device)
 
-        for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels)):
+        for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels, strict=False)):
             cur_len = cur_new_embed.shape[0]
             if getattr(self.config, "tokenizer_padding_side", "right") == "left":
                 new_input_embeds_padded.append(

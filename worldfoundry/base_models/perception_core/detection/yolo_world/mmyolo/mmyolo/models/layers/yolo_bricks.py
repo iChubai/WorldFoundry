@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -59,7 +60,7 @@ class SPPFBottleneck(BaseModule):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_sizes: Union[int, Sequence[int]] = 5,
+        kernel_sizes: int | Sequence[int] = 5,
         use_conv_first: bool = True,
         mid_channels_scale: float = 0.5,
         conv_cfg: ConfigType = None,
@@ -140,12 +141,12 @@ class RepVGGBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int]] = 3,
-        stride: Union[int, Tuple[int]] = 1,
-        padding: Union[int, Tuple[int]] = 1,
-        dilation: Union[int, Tuple[int]] = 1,
-        groups: Optional[int] = 1,
-        padding_mode: Optional[str] = "zeros",
+        kernel_size: int | tuple[int] = 3,
+        stride: int | tuple[int] = 1,
+        padding: int | tuple[int] = 1,
+        dilation: int | tuple[int] = 1,
+        groups: int | None = 1,
+        padding_mode: str | None = "zeros",
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="ReLU", inplace=True),
         use_se: bool = False,
@@ -274,7 +275,7 @@ class RepVGGBlock(nn.Module):
         else:
             return torch.nn.functional.pad(kernel1x1, [1, 1, 1, 1])
 
-    def _fuse_bn_tensor(self, branch: nn.Module) -> Tuple[np.ndarray, Tensor]:
+    def _fuse_bn_tensor(self, branch: nn.Module) -> tuple[np.ndarray, Tensor]:
         """Derives the equivalent kernel and bias of a specific branch layer.
 
         Args:
@@ -809,7 +810,7 @@ class TinyDownSampleBlock(BaseModule):
         in_channels: int,
         out_channels: int,
         middle_ratio: float = 1.0,
-        kernel_sizes: Union[int, Sequence[int]] = 3,
+        kernel_sizes: int | Sequence[int] = 3,
         conv_cfg: OptConfigType = None,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="LeakyReLU", negative_slope=0.1),
@@ -887,7 +888,7 @@ class SPPFCSPBlock(BaseModule):
         in_channels: int,
         out_channels: int,
         expand_ratio: float = 0.5,
-        kernel_sizes: Union[int, Sequence[int]] = 5,
+        kernel_sizes: int | Sequence[int] = 5,
         is_tiny_version: bool = False,
         conv_cfg: OptConfigType = None,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
@@ -1453,7 +1454,7 @@ class BiFusion(nn.Module):
             act_cfg=act_cfg,
         )
 
-    def forward(self, x: List[torch.Tensor]) -> Tensor:
+    def forward(self, x: list[torch.Tensor]) -> Tensor:
         """Forward process
         Args:
             x (List[torch.Tensor]): The tensor list of length 3.
@@ -1496,7 +1497,7 @@ class CSPSPPFBottleneck(BaseModule):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_sizes: Union[int, Sequence[int]] = 5,
+        kernel_sizes: int | Sequence[int] = 5,
         use_conv_first: bool = True,
         mid_channels_scale: float = 0.5,
         conv_cfg: ConfigType = None,

@@ -1,7 +1,8 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> tensor_dataclass.py functionality."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 import torch
 from typing_extensions import Self

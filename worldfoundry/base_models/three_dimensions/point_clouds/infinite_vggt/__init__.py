@@ -2,9 +2,9 @@
 # Reuse load_fn and pose_enc from base_models vggt to avoid duplication
 """Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> __init__.py functionality."""
 
-from .models.streamvggt import StreamVGGT, StreamVGGTOutput
 from .....base_models.three_dimensions.point_clouds.vggt.vggt.utils.load_fn import load_and_preprocess_images
 from .....base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
+from .models.streamvggt import StreamVGGT, StreamVGGTOutput
 
 __all__ = [
     "StreamVGGT",

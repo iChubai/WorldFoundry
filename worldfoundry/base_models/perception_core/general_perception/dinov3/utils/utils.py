@@ -7,17 +7,19 @@
 
 import logging
 import random
-from typing import Callable, List, Tuple
+from collections.abc import Callable
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from torch import Tensor, nn
+
 from worldfoundry.core.nn.blocks.module_utils import named_apply
 
 logger = logging.getLogger("dinov3")
 
 
-def cat_keep_shapes(x_list: List[Tensor]) -> Tuple[Tensor, List[Tuple[int]], List[int]]:
+def cat_keep_shapes(x_list: list[Tensor]) -> tuple[Tensor, list[tuple[int]], list[int]]:
     """Cat keep shapes.
 
     Args:
@@ -32,7 +34,7 @@ def cat_keep_shapes(x_list: List[Tensor]) -> Tuple[Tensor, List[Tuple[int]], Lis
     return flattened, shapes, num_tokens
 
 
-def uncat_with_shapes(flattened: Tensor, shapes: List[Tuple[int]], num_tokens: List[int]) -> List[Tensor]:
+def uncat_with_shapes(flattened: Tensor, shapes: list[tuple[int]], num_tokens: list[int]) -> list[Tensor]:
     """Uncat with shapes.
 
     Args:
@@ -45,7 +47,7 @@ def uncat_with_shapes(flattened: Tensor, shapes: List[Tuple[int]], num_tokens: L
     """
     outputs_splitted = torch.split_with_sizes(flattened, num_tokens, dim=0)
     shapes_adjusted = [shape[:-1] + torch.Size([flattened.shape[-1]]) for shape in shapes]
-    outputs_reshaped = [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted)]
+    outputs_reshaped = [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted, strict=False)]
     return outputs_reshaped
 
 

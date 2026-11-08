@@ -13,25 +13,26 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import torch
 import torch.nn.functional as torchF
+from torch import Tensor, nn
+from torchvision.ops.roi_align import RoIAlign
+
 from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
     apply_rotary_enc,
     apply_rotary_enc_real,
     compute_axial_cis,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import RoPEAttention
-from torch import nn, Tensor
-from torchvision.ops.roi_align import RoIAlign
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 from .act_ckpt_utils import activation_ckpt_wrapper
 from .box_ops import box_cxcywh_to_xyxy
 from .model_misc import (
+    MLP,
     gen_sineembed_for_position,
     get_activation_fn,
     get_clones,
     inverse_sigmoid,
-    MLP,
 )
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -110,22 +111,22 @@ class TransformerDecoderLayer(nn.Module):
     def forward(
         self,
         # for tgt
-        tgt: Optional[Tensor],  # nq, bs, d_model
-        tgt_query_pos: Optional[Tensor] = None,  # pos for query. MLP(Sine(pos))
-        tgt_query_sine_embed: Optional[Tensor] = None,  # pos for query. Sine(pos)
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        tgt_reference_points: Optional[Tensor] = None,  # nq, bs, 4
-        memory_text: Optional[Tensor] = None,  # num_token, bs, d_model
-        text_attention_mask: Optional[Tensor] = None,  # bs, num_token
+        tgt: Tensor | None,  # nq, bs, d_model
+        tgt_query_pos: Tensor | None = None,  # pos for query. MLP(Sine(pos))
+        tgt_query_sine_embed: Tensor | None = None,  # pos for query. Sine(pos)
+        tgt_key_padding_mask: Tensor | None = None,
+        tgt_reference_points: Tensor | None = None,  # nq, bs, 4
+        memory_text: Tensor | None = None,  # num_token, bs, d_model
+        text_attention_mask: Tensor | None = None,  # bs, num_token
         # for memory
-        memory: Optional[Tensor] = None,  # hw, bs, d_model
-        memory_key_padding_mask: Optional[Tensor] = None,
-        memory_level_start_index: Optional[Tensor] = None,  # num_levels
-        memory_spatial_shapes: Optional[Tensor] = None,  # bs, num_levels, 2
-        memory_pos: Optional[Tensor] = None,  # pos for memory
+        memory: Tensor | None = None,  # hw, bs, d_model
+        memory_key_padding_mask: Tensor | None = None,
+        memory_level_start_index: Tensor | None = None,  # num_levels
+        memory_spatial_shapes: Tensor | None = None,  # bs, num_levels, 2
+        memory_pos: Tensor | None = None,  # pos for memory
         # sa
-        self_attn_mask: Optional[Tensor] = None,  # mask used for self-attention
-        cross_attn_mask: Optional[Tensor] = None,  # mask used for cross-attention
+        self_attn_mask: Tensor | None = None,  # mask used for self-attention
+        cross_attn_mask: Tensor | None = None,  # mask used for cross-attention
         # dac
         dac=False,
         dac_use_selfatt_ln=True,
@@ -237,8 +238,8 @@ class TransformerDecoder(nn.Module):
         use_normed_output_consistently: bool = True,
         separate_box_head_instance: bool = False,
         separate_norm_instance: bool = False,
-        resolution: Optional[int] = None,
-        stride: Optional[int] = None,
+        resolution: int | None = None,
+        stride: int | None = None,
     ):
         """Init.
 
@@ -458,23 +459,23 @@ class TransformerDecoder(nn.Module):
         self,
         tgt,
         memory,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        reference_boxes: Optional[Tensor] = None,  # num_queries, bs, 4
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        reference_boxes: Tensor | None = None,  # num_queries, bs, 4
         # for memory
-        level_start_index: Optional[Tensor] = None,  # num_levels
-        spatial_shapes: Optional[Tensor] = None,  # bs, num_levels, 2
-        valid_ratios: Optional[Tensor] = None,
+        level_start_index: Tensor | None = None,  # num_levels
+        spatial_shapes: Tensor | None = None,  # bs, num_levels, 2
+        valid_ratios: Tensor | None = None,
         # for text
-        memory_text: Optional[Tensor] = None,
-        text_attention_mask: Optional[Tensor] = None,
+        memory_text: Tensor | None = None,
+        text_attention_mask: Tensor | None = None,
         # if `apply_dac` is None, it will default to `self.dac`
-        apply_dac: Optional[bool] = None,
+        apply_dac: bool | None = None,
         is_instance_prompt=False,
-        decoder_extra_kwargs: Optional[Dict] = None,
+        decoder_extra_kwargs: dict | None = None,
         # ROI memory bank
         obj_roi_memory_feat=None,
         obj_roi_memory_mask=None,
@@ -656,7 +657,7 @@ class TransformerEncoderCrossAttention(nn.Module):
         batch_first: bool = False,  # Do layers expect batch first input?
         # which layers to exclude cross attention? default: None, means all
         # layers use cross attention
-        remove_cross_attention_layers: Optional[list] = None,
+        remove_cross_attention_layers: list | None = None,
     ):
         """Init.
 
@@ -701,13 +702,13 @@ class TransformerEncoderCrossAttention(nn.Module):
         self,
         src,  # self-attention inputs
         prompt,  # cross-attention inputs
-        src_mask: Optional[Tensor] = None,  # att.mask for self-attention inputs
-        prompt_mask: Optional[Tensor] = None,  # att.mask for cross-attention inputs
-        src_key_padding_mask: Optional[Tensor] = None,
-        prompt_key_padding_mask: Optional[Tensor] = None,
-        src_pos: Optional[Tensor] = None,  # pos_enc for self-attention inputs
-        prompt_pos: Optional[Tensor] = None,  # pos_enc for cross-attention inputs
-        feat_sizes: Optional[list] = None,
+        src_mask: Tensor | None = None,  # att.mask for self-attention inputs
+        prompt_mask: Tensor | None = None,  # att.mask for cross-attention inputs
+        src_key_padding_mask: Tensor | None = None,
+        prompt_key_padding_mask: Tensor | None = None,
+        src_pos: Tensor | None = None,  # pos_enc for self-attention inputs
+        prompt_pos: Tensor | None = None,  # pos_enc for cross-attention inputs
+        feat_sizes: list | None = None,
         num_obj_ptr_tokens: int = 0,  # number of object pointer *tokens*
     ):
         """Forward.
@@ -841,12 +842,12 @@ class TransformerDecoderLayerv1(nn.Module):
         self,
         tgt,
         memory,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
         **kwargs,
     ):
         """Forward post.
@@ -896,13 +897,13 @@ class TransformerDecoderLayerv1(nn.Module):
         tgt,
         memory,
         dac: bool = False,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        attn_bias: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        attn_bias: Tensor | None = None,
         **kwargs,
     ):
         """Forward pre.
@@ -957,13 +958,13 @@ class TransformerDecoderLayerv1(nn.Module):
         tgt,
         memory,
         dac: bool = False,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        attn_bias: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        attn_bias: Tensor | None = None,
         **kwds: Any,
     ) -> torch.Tensor:
         """Forward.
@@ -1059,13 +1060,13 @@ class TransformerDecoderLayerv2(TransformerDecoderLayerv1):
         tgt,
         memory,
         dac: bool,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        attn_bias: Optional[Tensor] = None,
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        attn_bias: Tensor | None = None,
         num_k_exclude_rope: int = 0,
     ):
         """Forward pre.
@@ -1122,13 +1123,13 @@ def functional_attention(
     dropout: float,
     num_heads: int,
     num_k_exclude_rope: int = 0,
-    freqs_cis: Optional[Tensor] = None,
-    freqs_cis_real: Optional[Tensor] = None,
-    freqs_cis_imag: Optional[Tensor] = None,
+    freqs_cis: Tensor | None = None,
+    freqs_cis_real: Tensor | None = None,
+    freqs_cis_imag: Tensor | None = None,
     use_fa3: bool = False,
     use_rope_real: bool = False,
     rope_k_repeat: bool,
-) -> Union[Tensor, tuple[Tensor, Tensor]]:
+) -> Tensor | tuple[Tensor, Tensor]:
     """Functional attention.
 
     Args:
@@ -1236,7 +1237,7 @@ class SimpleRoPEAttention(nn.Module):
         k: Tensor,
         v: Tensor,
         num_k_exclude_rope: int = 0,
-    ) -> Union[Tensor, tuple[Tensor, Tensor]]:
+    ) -> Tensor | tuple[Tensor, Tensor]:
         """Forward.
 
         Args:
@@ -1404,10 +1405,10 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         tgt,
         memory_image,
         memory,
-        image_pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
-        memory_image_pos: Optional[Tensor] = None,
-        memory_pos: Optional[Tensor] = None,
+        image_pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
+        memory_image_pos: Tensor | None = None,
+        memory_pos: Tensor | None = None,
         num_k_exclude_rope: int = 0,
     ):
         """Forward pre."""
@@ -1499,10 +1500,10 @@ class TransformerEncoderDecoupledCrossAttention(nn.Module):
         src: Tensor,  # self-attention inputs; object features
         memory_image: Tensor,  # cross-attention inputs; image features
         memory: Tensor,  # cross-attention inputs; object features
-        image_pos: Optional[Tensor] = None,  # pos_enc for self-attention inputs
-        src_pos: Optional[Tensor] = None,  # pos_enc for self-attention inputs
-        memory_image_pos: Optional[Tensor] = None,  # pos_enc for cross-attention inputs
-        memory_pos: Optional[Tensor] = None,  # pos_enc for cross-attention inputs
+        image_pos: Tensor | None = None,  # pos_enc for self-attention inputs
+        src_pos: Tensor | None = None,  # pos_enc for self-attention inputs
+        memory_image_pos: Tensor | None = None,  # pos_enc for cross-attention inputs
+        memory_pos: Tensor | None = None,  # pos_enc for cross-attention inputs
         num_obj_ptr_tokens: int = 0,  # number of object pointer *tokens*
     ):
         """Forward.

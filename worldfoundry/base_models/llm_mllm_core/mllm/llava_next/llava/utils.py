@@ -3,8 +3,8 @@ import logging
 import logging.handlers
 import os
 import sys
-import numpy as np
 
+import numpy as np
 import requests
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import LOGDIR
@@ -127,7 +127,7 @@ def build_logger(logger_name, logger_filename):
     return logger
 
 
-class StreamToLogger(object):
+class StreamToLogger:
     """
     Fake file-like stream object that redirects writes to a logger instance.
     """
@@ -167,8 +167,8 @@ def disable_torch_init():
     """
     import torch
 
-    setattr(torch.nn.Linear, "reset_parameters", lambda self: None)
-    setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
+    torch.nn.Linear.reset_parameters = lambda self: None
+    torch.nn.LayerNorm.reset_parameters = lambda self: None
 
 
 def violates_moderation(text):

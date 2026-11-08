@@ -1,13 +1,13 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> naflex_config.py functionality."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence, Tuple, Union
+from typing import Optional, Tuple, Union
+
+PatchSize = Union[int, tuple[int, int]]
 
 
-PatchSize = Union[int, Tuple[int, int]]
-
-
-def to_2tuple(value: PatchSize) -> Tuple[int, int]:
+def to_2tuple(value: PatchSize) -> tuple[int, int]:
     """To 2tuple.
 
     Args:
@@ -27,26 +27,26 @@ def to_2tuple(value: PatchSize) -> Tuple[int, int]:
 class NaFlexDataConfig:
     """Na flex data config implementation."""
 
-    train_patch_sizes: Tuple[Tuple[int, int], ...] = ((16, 16),)
-    train_patch_size_probs: Optional[Tuple[float, ...]] = None
-    train_seq_lens: Tuple[int, ...] = (128, 256, 576, 784, 1024)
-    train_num_image_tokens: Optional[int] = None
+    train_patch_sizes: tuple[tuple[int, int], ...] = ((16, 16),)
+    train_patch_size_probs: tuple[float, ...] | None = None
+    train_seq_lens: tuple[int, ...] = (128, 256, 576, 784, 1024)
+    train_num_image_tokens: int | None = None
     max_tokens_per_batch: int = 4096 * 4
     batch_divisor: int = 8
-    eval_patch_size: Tuple[int, int] = (16, 16)
+    eval_patch_size: tuple[int, int] = (16, 16)
     eval_seq_len: int = 1024
 
     @classmethod
     def resolve(
         cls,
-        patch_sizes: Optional[Sequence[PatchSize]] = None,
-        patch_size_probs: Optional[Sequence[float]] = None,
-        seq_lens: Optional[Sequence[int]] = None,
-        train_num_image_tokens: Optional[int] = None,
+        patch_sizes: Sequence[PatchSize] | None = None,
+        patch_size_probs: Sequence[float] | None = None,
+        seq_lens: Sequence[int] | None = None,
+        train_num_image_tokens: int | None = None,
         max_tokens_per_batch: int = 4096 * 4,
         batch_divisor: int = 8,
-        eval_patch_size: Optional[PatchSize] = None,
-        eval_seq_len: Optional[int] = None,
+        eval_patch_size: PatchSize | None = None,
+        eval_seq_len: int | None = None,
     ) -> "NaFlexDataConfig":
         """Resolve.
 
@@ -129,7 +129,7 @@ class NaFlexDataConfig:
         return len(self.train_patch_sizes) > 1
 
     @property
-    def eval_config(self) -> Tuple[Tuple[int, int], int]:
+    def eval_config(self) -> tuple[tuple[int, int], int]:
         """Eval config.
 
         Returns:

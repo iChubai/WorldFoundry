@@ -4,11 +4,12 @@ import inspect
 import math
 import os
 import re
+from collections.abc import Callable
 from contextlib import contextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import asdict
 from functools import partial, wraps
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -27,6 +28,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_logger,
     use_torchacc,
 )
+
 from ..utils import Processor, ProcessorMixin
 from .template_inputs import InferRequest, StdTemplateInputs, TemplateInputs
 from .utils import Context, ContextType, StopWordsCriteria, fetch_one, findall, split_str_parts_by
@@ -59,14 +61,14 @@ class Template(ProcessorMixin):
 
     def __init__(
         self,
-        processor: Optional[Processor],
+        processor: Processor | None,
         template_meta: "TemplateMeta",
-        default_system: Optional[str] = None,
-        max_length: Optional[int] = None,
+        default_system: str | None = None,
+        max_length: int | None = None,
         *,
         truncation_strategy: Literal["raise", "left", "right"] = "raise",
-        max_pixels: Optional[int] = None,
-        agent_template: Optional[str] = None,
+        max_pixels: int | None = None,
+        agent_template: str | None = None,
         norm_bbox: Literal["norm1000", "none", None] = None,
         use_chat_template: bool = True,
         # only for train
@@ -75,7 +77,7 @@ class Template(ProcessorMixin):
         loss_scale: str = "default",
         sequence_parallel_size: int = 1,
         # infer/deploy
-        response_prefix: Optional[str] = None,
+        response_prefix: str | None = None,
         template_backend: Literal["swift", "jinja"] = "swift",
     ) -> None:
         """
@@ -88,6 +90,8 @@ class Template(ProcessorMixin):
         loss_scale: The loss scale function to use
         """
         from .template_meta import TemplateMeta
+
+        # isort: split
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import (
             agent_templates,
             loss_scale_map,
@@ -155,9 +159,9 @@ class Template(ProcessorMixin):
         self.model_meta = processor.model_meta
         if self.max_length is None:
             self.max_length = self.model_info.max_model_len
-        logger.info(f"default_system: {repr(self.template_meta.default_system)}")
+        logger.info(f"default_system: {self.template_meta.default_system!r}")
         logger.info(f"max_length: {self.max_length}")
-        logger.info(f"response_prefix: {repr(self.template_meta.response_prefix)}")
+        logger.info(f"response_prefix: {self.template_meta.response_prefix!r}")
         logger.info(f"agent_template: {self._agent_template}")
         logger.info(f"norm_bbox: {self.norm_bbox}")
         tokenizer = self.tokenizer
@@ -202,12 +206,12 @@ class Template(ProcessorMixin):
         bbox_type = objects.pop("bbox_type", None) or "real"
         image_id_list = objects.pop("image_id", None) or []
         image_id_list += [0] * (len(bbox_list) - len(image_id_list))
-        for bbox, image_id in zip(bbox_list, image_id_list):
+        for bbox, image_id in zip(bbox_list, image_id_list, strict=False):
             if bbox_type == "norm1":
                 width, height = 1, 1
             else:
                 width, height = width_list[image_id], height_list[image_id]
-            for i, (x, y) in enumerate(zip(bbox[::2], bbox[1::2])):
+            for i, (x, y) in enumerate(zip(bbox[::2], bbox[1::2], strict=False)):
                 if self.norm_bbox == "norm1000":
                     norm_width, norm_height = 1000, 1000
                 elif self.norm_bbox == "none":
@@ -312,11 +316,11 @@ class Template(ProcessorMixin):
 
     @staticmethod
     def _extend_tokens(
-        input_ids: List[int],
-        labels: Optional[List[int]],
-        replace_idx_list: List[int],
-        get_new_tokens: Callable[[int], List[int]],
-    ) -> Tuple[List[int], Optional[List[int]]]:
+        input_ids: list[int],
+        labels: list[int] | None,
+        replace_idx_list: list[int],
+        get_new_tokens: Callable[[int], list[int]],
+    ) -> tuple[list[int], list[int] | None]:
         added_tokens_len = 0
         for i, idx in enumerate(replace_idx_list):
             new_tokens = get_new_tokens(i)
@@ -337,7 +341,7 @@ class Template(ProcessorMixin):
         else:
             return model
 
-    def _rlhf_encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _rlhf_encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         chosen_inputs, rejected_inputs = inputs, deepcopy(inputs)
         assert chosen_inputs.rejected_response is not None, f"inputs: {inputs}"
         rejected_inputs.messages[-1]["content"] = chosen_inputs.rejected_response
@@ -351,13 +355,13 @@ class Template(ProcessorMixin):
                 encoded[f"{prefix}_{k}"] = v
         return encoded
 
-    def _kto_encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _kto_encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         label, inputs.label = inputs.label, None
         encoded = self._rlhf_encode(inputs)
         encoded["label"] = bool(label)
         return encoded
 
-    def _embedding_encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _embedding_encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         _encoded = {}
         labels = []
 
@@ -409,7 +413,7 @@ class Template(ProcessorMixin):
         _encoded["labels"] = labels
         return _encoded
 
-    def _seq_cls_encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _seq_cls_encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = self._encode_truncated(inputs)
         encoded.pop("labels", None)
         if inputs.label is not None:
@@ -422,8 +426,8 @@ class Template(ProcessorMixin):
 
     @torch.inference_mode()
     def encode(
-        self, inputs: Union[TemplateInputs, Dict[str, Any], InferRequest], return_template_inputs: bool = False
-    ) -> Dict[str, Any]:
+        self, inputs: TemplateInputs | dict[str, Any] | InferRequest, return_template_inputs: bool = False
+    ) -> dict[str, Any]:
         """The entrance method of Template!
 
         Returns:
@@ -463,7 +467,7 @@ class Template(ProcessorMixin):
             encoded["template_inputs"] = inputs
         return encoded
 
-    def packing_row(self, row: List[Tuple[Dict[str, Any], int]]) -> Dict[str, Any]:
+    def packing_row(self, row: list[tuple[dict[str, Any], int]]) -> dict[str, Any]:
         packed = {}
         keys = set()
         for r in row:
@@ -477,11 +481,11 @@ class Template(ProcessorMixin):
         packed.update(self._data_collator_mm_data([r[0] for r in row]))
         return packed
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         return inputs
 
     @staticmethod
-    def _skip_stop_tokens(generate_ids: List[int], stop_tokens: List[int], is_finished: bool) -> List[int]:
+    def _skip_stop_tokens(generate_ids: list[int], stop_tokens: list[int], is_finished: bool) -> list[int]:
         len_tokens = len(stop_tokens)
         if is_finished and generate_ids[-len_tokens:] == stop_tokens:
             return generate_ids[:-len_tokens]
@@ -545,7 +549,7 @@ class Template(ProcessorMixin):
         return preds, logprobs
 
     def decode(
-        self, generate_ids: List[int], *, is_finished: bool = True, tokenizer_kwargs=None, first_token=True, **kwargs
+        self, generate_ids: list[int], *, is_finished: bool = True, tokenizer_kwargs=None, first_token=True, **kwargs
     ) -> Any:
         tokenizer_kwargs = tokenizer_kwargs or {}
         response = self._skip_stop_decode(generate_ids, is_finished, **tokenizer_kwargs)
@@ -563,7 +567,7 @@ class Template(ProcessorMixin):
             kwargs["use_model_defaults"] = False
         return model.generate(*args, **kwargs)
 
-    def _skip_stop_decode(self, generate_ids: List[int], is_finished: bool, **decode_kwargs) -> Any:
+    def _skip_stop_decode(self, generate_ids: list[int], is_finished: bool, **decode_kwargs) -> Any:
         # Do not print template_meta.suffix[-1] and eos_token.
         # However, other stop_words will be printed.
         tokenizer = self.tokenizer
@@ -580,7 +584,7 @@ class Template(ProcessorMixin):
             decode_kwargs["spaces_between_special_tokens"] = False
         return tokenizer.decode(generate_ids, **decode_kwargs)
 
-    def prepare_generate_kwargs(self, generate_kwargs: Dict[str, Any], *, model=None) -> Dict[str, Any]:
+    def prepare_generate_kwargs(self, generate_kwargs: dict[str, Any], *, model=None) -> dict[str, Any]:
         generation_config = generate_kwargs["generation_config"]
         stop_words = getattr(generation_config, "stop_words", None) or self.template_meta.stop_words
         generate_kwargs["stopping_criteria"] = StoppingCriteriaList([StopWordsCriteria(self.tokenizer, stop_words)])
@@ -600,13 +604,13 @@ class Template(ProcessorMixin):
 
     @staticmethod
     def _concat_context_list(
-        context_list: List[Context],
-        res_context_list: List[Context],  # inplace
-        res_context_type: List[ContextType],  # inplace
-        system: Optional[str] = None,
-        query: Optional[str] = None,
-        response: Optional[str] = None,
-        round0: Optional[int] = None,
+        context_list: list[Context],
+        res_context_list: list[Context],  # inplace
+        res_context_type: list[ContextType],  # inplace
+        system: str | None = None,
+        query: str | None = None,
+        response: str | None = None,
+        round0: int | None = None,
     ) -> None:
         """Concat context list and replace placeholder"""
         round1 = None
@@ -615,14 +619,14 @@ class Template(ProcessorMixin):
             round0 = str(round0)
         for context in context_list:
             if isinstance(context, str):
-                if "{{RESPONSE}}" == context:
+                if context == "{{RESPONSE}}":
                     assert response is not None
                     res_context_list.append(response)
                     res_context_type.append(ContextType.RESPONSE)
                     continue
                 old_str_list = ["{{SYSTEM}}", "{{QUERY}}", "{{ROUND0}}", "{{ROUND1}}"]
                 new_str_list = [system, query, round0, round1]
-                for old_str, new_str in zip(old_str_list, new_str_list):
+                for old_str, new_str in zip(old_str_list, new_str_list, strict=False):
                     if new_str is not None and old_str in context:
                         assert isinstance(new_str, str), f"new_str: {new_str}"
                         context = context.replace(old_str, new_str)
@@ -632,17 +636,17 @@ class Template(ProcessorMixin):
             res_context_type.append(ContextType.OTHER)
 
     def _simplify_context_list(
-        self, context_list: List[Context], loss_scale_list: List[float], inputs: StdTemplateInputs
-    ) -> Tuple[List[Context], List[float]]:
+        self, context_list: list[Context], loss_scale_list: list[float], inputs: StdTemplateInputs
+    ) -> tuple[list[Context], list[float]]:
         """Merge anything in the context to simplify the inputs"""
         context_list, loss_scale_list = self._split_special_tokens(context_list, loss_scale_list)
         context_list, loss_scale_list = self._pre_tokenize(context_list, loss_scale_list, inputs)
 
-        res: List[Context] = []  # result of context_list
-        res_loss_scale: List[float] = []  # result of loss_scale_list
-        temp: List[str] = []
+        res: list[Context] = []  # result of context_list
+        res_loss_scale: list[float] = []  # result of loss_scale_list
+        temp: list[str] = []
         temp_loss_scale = 0.0
-        for i, (context, loss_scale) in enumerate(zip(context_list, loss_scale_list)):
+        for i, (context, loss_scale) in enumerate(zip(context_list, loss_scale_list, strict=False)):
             if isinstance(context, str) and (loss_scale == temp_loss_scale):
                 temp.append(context)
             else:
@@ -664,12 +668,12 @@ class Template(ProcessorMixin):
 
     @staticmethod
     def _split_special_tokens(
-        context_list: List[Context], loss_scale_list: List[float]
-    ) -> Tuple[List[Context], List[float]]:
+        context_list: list[Context], loss_scale_list: list[float]
+    ) -> tuple[list[Context], list[float]]:
         """Split special tokens, for example `<image>`, `<video>`, this will help the replace_tag operation"""
-        res: List[Context] = []
-        loss_scale_res: List[float] = []
-        for context, loss_scale in zip(context_list, loss_scale_list):
+        res: list[Context] = []
+        loss_scale_res: list[float] = []
+        for context, loss_scale in zip(context_list, loss_scale_list, strict=False):
             contexts = []
             if isinstance(fetch_one(context), str):
                 for d in split_str_parts_by(context, Template.special_tokens):
@@ -689,7 +693,7 @@ class Template(ProcessorMixin):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         """Override this function to do your own replace operation.
 
         This method is used to replace standard tags like `<image>` to some tokens that the model needs.
@@ -711,7 +715,7 @@ class Template(ProcessorMixin):
         elif media_type == "audio":
             return self.audio_placeholder
 
-    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> list[Context]:
         """Replace objects referenced by the bbox to contents or input_ids. This is useful in the grounding task.
         Override this function to do your own replace operation.
 
@@ -725,7 +729,7 @@ class Template(ProcessorMixin):
         """
         return [ref]
 
-    def replace_cot_process(self, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_cot_process(self, inputs: StdTemplateInputs) -> list[Context]:
         """Replace the cot process label for PRM training or inference.
         Override this function to do your own replace operation.
 
@@ -738,13 +742,13 @@ class Template(ProcessorMixin):
         return [self.cot_process_placeholder]
 
     @staticmethod
-    def _get_bbox_str(bbox: List[int]) -> str:
+    def _get_bbox_str(bbox: list[int]) -> str:
         point = []
-        for x, y in zip(bbox[::2], bbox[1::2]):
+        for x, y in zip(bbox[::2], bbox[1::2], strict=False):
             point.append(f"({x},{y})")
         return ",".join(point)
 
-    def replace_bbox(self, bbox: List[int], index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_bbox(self, bbox: list[int], index: int, inputs: StdTemplateInputs) -> list[Context]:
         """Replace bbox pointing to the objects to contents or input_ids. This is useful in the grounding task.
         Override this function to do your own replace operation.
 
@@ -759,15 +763,15 @@ class Template(ProcessorMixin):
         return [f"[{self._get_bbox_str(bbox)}]"]
 
     def _pre_tokenize_images(
-        self, context_list: List[Context], loss_scale_list: List[float], inputs: StdTemplateInputs
-    ) -> Tuple[List[Context], List[float]]:
+        self, context_list: list[Context], loss_scale_list: list[float], inputs: StdTemplateInputs
+    ) -> tuple[list[Context], list[float]]:
         # https://github.com/modelscope/ms-swift/issues/3407
         # Fix the bounding box position offset issue in the Qwen2.5-VL grounding task.
-        res: List[Context] = []
-        res_loss_scale: List[float] = []
+        res: list[Context] = []
+        res_loss_scale: list[float] = []
         inputs.image_idx = 0
 
-        for context, loss_scale in zip(context_list, loss_scale_list):
+        for context, loss_scale in zip(context_list, loss_scale_list, strict=False):
             if context == "<image>" and inputs.is_multimodal and inputs.image_idx < len(inputs.images):
                 c_list = self.replace_tag("image", inputs.image_idx, inputs)
                 inputs.image_idx += 1
@@ -779,8 +783,8 @@ class Template(ProcessorMixin):
         return res, res_loss_scale
 
     def _pre_tokenize(
-        self, context_list: List[Context], loss_scale_list: List[float], inputs: StdTemplateInputs
-    ) -> Tuple[List[Context], List[float]]:
+        self, context_list: list[Context], loss_scale_list: list[float], inputs: StdTemplateInputs
+    ) -> tuple[list[Context], list[float]]:
         """This method happens before tokenization, replace standard tags to the contents or input_ids needed by
         the model.
 
@@ -794,14 +798,14 @@ class Template(ProcessorMixin):
         if inputs.images and inputs.objects:
             self.normalize_bbox(inputs)
         # replace tag/object/box
-        res: List[Context] = []  # result of context_list
-        res_loss_scale: List[float] = []  # result of loss_scale_list
+        res: list[Context] = []  # result of context_list
+        res_loss_scale: list[float] = []  # result of loss_scale_list
 
         # reset
         for k in ["video", "audio", "object", "box"]:
             setattr(inputs, f"{k}_idx", 0)
 
-        for context, loss_scale in zip(context_list, loss_scale_list):
+        for context, loss_scale in zip(context_list, loss_scale_list, strict=False):
             for k in ["video", "audio"]:
                 if (
                     context == f"<{k}>"
@@ -859,12 +863,12 @@ class Template(ProcessorMixin):
                     )
 
     def _encode_context_list(
-        self, context_list: List[Context], loss_scale_list: Optional[List[float]] = None
-    ) -> Tuple[List[int], List[int], List[float], Dict[str, Any]]:
+        self, context_list: list[Context], loss_scale_list: list[float] | None = None
+    ) -> tuple[list[int], list[int], list[float], dict[str, Any]]:
         """return: input_ids, labels, tokenizer_kwargs"""
-        input_ids: List[int] = []
-        labels: List[int] = []
-        loss_scale: List[float] = []
+        input_ids: list[int] = []
+        labels: list[int] = []
+        loss_scale: list[float] = []
         tokenizer_kwargs = {}
         if loss_scale_list is None:
             loss_scale_list = [0.0] * len(context_list)
@@ -872,7 +876,7 @@ class Template(ProcessorMixin):
             ignore_loss_scale = False
         else:
             ignore_loss_scale = all(loss_scale in {0, 1} for loss_scale in loss_scale_list)
-        for i, (context, loss_weight) in enumerate(zip(context_list, loss_scale_list)):
+        for i, (context, loss_weight) in enumerate(zip(context_list, loss_scale_list, strict=False)):
             if isinstance(context, str):
                 # tokenizer_kwargs is the returned tokenizer_kwargs,
                 # while curr_tokenizer_kwargs is the tokenizer_kwargs for the current context.
@@ -892,7 +896,7 @@ class Template(ProcessorMixin):
 
     @staticmethod
     def _add_dynamic_eos(
-        input_ids: List[int], labels: List[int], loss_scale: Optional[List[int]], suffix_tokens_id: List[int]
+        input_ids: list[int], labels: list[int], loss_scale: list[int] | None, suffix_tokens_id: list[int]
     ) -> None:
         suffix_len = len(suffix_tokens_id)
         start = 0
@@ -930,7 +934,7 @@ class Template(ProcessorMixin):
         answer_len = 1 if self.is_training else 0
         return [text], [1.0], answer_len
 
-    def _get_system(self, inputs) -> Optional[str]:
+    def _get_system(self, inputs) -> str | None:
         template_meta = self.template_meta
         system = inputs.system
         tools = inputs.tools
@@ -959,7 +963,7 @@ class Template(ProcessorMixin):
                 )
                 messages[i_start : i + 1] = [{"role": "tool", "content": tool_content}]
                 i = i_start + 1
-            elif pre_role == "assistant" and role == "assistant" or pre_role == "user" and role == "user":
+            elif (pre_role == "assistant" and role == "assistant") or (pre_role == "user" and role == "user"):
                 # Consecutive messages from the assistant/user role need to be merged to prevent errors.
                 pre_message["content"] = pre_content + content
                 messages.pop(i)
@@ -979,8 +983,8 @@ class Template(ProcessorMixin):
             )
             inputs.messages = inputs.messages[-2:]
 
-        res_context_list: List[Context] = []
-        res_context_types: List[ContextType] = []
+        res_context_list: list[Context] = []
+        res_context_types: list[ContextType] = []
         sep_token = None
         if template_meta.auto_add_bos:
             all_tokens = self.tokenizer.encode("a")
@@ -997,7 +1001,9 @@ class Template(ProcessorMixin):
         self._concat_context_list(prefix, res_context_list, res_context_types, system=system)
 
         n_round = len(inputs.messages) // 2
-        for i, (query_message, response_message) in enumerate(zip(inputs.messages[::2], inputs.messages[1::2])):
+        for i, (query_message, response_message) in enumerate(
+            zip(inputs.messages[::2], inputs.messages[1::2], strict=False)
+        ):
             query_role, query = query_message["role"], query_message["content"]
             response_role, response = response_message["role"], response_message["content"]
             # TODO: Optimize the Template mechanism.
@@ -1100,7 +1106,7 @@ class Template(ProcessorMixin):
         encoded["loss_scale"] = loss_scale
         return encoded
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         template_backend = self.template_backend
         if (
             self.template_meta.template_type == "dummy"
@@ -1118,7 +1124,9 @@ class Template(ProcessorMixin):
             # tokenizer_kwargs: use prompt (qwen-audio)
             total_len = len(res_context_list)
             for key, _slice in zip(
-                ["prompt", "answer"], [slice(0, total_len - answer_len), slice(total_len - answer_len, total_len)]
+                ["prompt", "answer"],
+                [slice(0, total_len - answer_len), slice(total_len - answer_len, total_len)],
+                strict=False,
             ):
                 context_list, loss_scale = self._simplify_context_list(
                     res_context_list[_slice], loss_scale_list[_slice], inputs
@@ -1154,7 +1162,7 @@ class Template(ProcessorMixin):
                     encoded[k] = None
         return encoded
 
-    def _handle_megatron_cp(self, encoded: Dict[str, Any]) -> None:
+    def _handle_megatron_cp(self, encoded: dict[str, Any]) -> None:
         cp_size = self.sequence_parallel_size
         if cp_size == 1:
             return
@@ -1176,7 +1184,7 @@ class Template(ProcessorMixin):
             self.print_inputs({k: v.tolist()})
 
     @staticmethod
-    def _split_list(inputs: List[int], x: int) -> List[List[int]]:
+    def _split_list(inputs: list[int], x: int) -> list[list[int]]:
         idxs = findall(inputs, x)
         idxs.append(len(inputs))
         res = []
@@ -1186,7 +1194,7 @@ class Template(ProcessorMixin):
             lo = idx + 1
         return res
 
-    def replace_video2image(self, load_video_func, inputs, replace_tag: Callable) -> List[Context]:
+    def replace_video2image(self, load_video_func, inputs, replace_tag: Callable) -> list[Context]:
         context_list = []
         if self.mode in {"vllm", "lmdeploy"}:
             video = inputs.videos.pop(inputs.video_idx)
@@ -1202,8 +1210,8 @@ class Template(ProcessorMixin):
         return context_list
 
     def get_generate_ids(
-        self, generate_ids: Union[torch.Tensor, List[int]], num_prompt_tokens: int
-    ) -> Union[torch.Tensor, List[int]]:
+        self, generate_ids: torch.Tensor | list[int], num_prompt_tokens: int
+    ) -> torch.Tensor | list[int]:
         if self.skip_prompt:
             generate_ids = generate_ids[..., num_prompt_tokens:]
         return generate_ids
@@ -1238,7 +1246,7 @@ class Template(ProcessorMixin):
     def set_mode(self, mode: Literal["vllm", "lmdeploy", "pt", "seq_cls", "train", "rlhf", "kto"]) -> None:
         self.mode = mode
 
-    def register_post_encode_hook(self, models: List[nn.Module]) -> None:
+    def register_post_encode_hook(self, models: list[nn.Module]) -> None:
         """This function is important for multi-modal training, as it registers the post_encode method
         as a forward hook, converting input_ids into inputs_embeds.
         """
@@ -1278,7 +1286,7 @@ class Template(ProcessorMixin):
         self._deepspeed_initialize = None
         return models
 
-    def data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         if self.mode == "rlhf":
             return self._rlhf_data_collator(batch, padding_to=padding_to)
         elif self.mode == "kto":
@@ -1291,7 +1299,7 @@ class Template(ProcessorMixin):
             return self._embedding_data_collator(batch, padding_to=padding_to)
 
     @staticmethod
-    def _fetch_inputs_startswith(batch: List[Dict[str, Any]], prefix: str) -> List[Dict[str, Any]]:
+    def _fetch_inputs_startswith(batch: list[dict[str, Any]], prefix: str) -> list[dict[str, Any]]:
         new_batch = []
         for inputs in batch:
             new_inputs = {}
@@ -1302,7 +1310,7 @@ class Template(ProcessorMixin):
         return new_batch
 
     @staticmethod
-    def fetch_inputs(batch: List[Dict[str, Any]], keys: Optional[List[str]] = None) -> Dict[str, Any]:
+    def fetch_inputs(batch: list[dict[str, Any]], keys: list[str] | None = None) -> dict[str, Any]:
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import RowPreprocessor
 
         keys = keys or []
@@ -1310,7 +1318,7 @@ class Template(ProcessorMixin):
         return {k: rows[k] for k in keys if rows.get(k) is not None}
 
     @staticmethod
-    def gather_list(batch: List[Dict[str, Any]], attr_name: str) -> Optional[List[Any]]:
+    def gather_list(batch: list[dict[str, Any]], attr_name: str) -> list[Any] | None:
         # List[Tensor] ->  List[Tensor]
         res = []
         for b in batch:
@@ -1319,7 +1327,7 @@ class Template(ProcessorMixin):
         return res
 
     @staticmethod
-    def concat_tensor(batch: List[Dict[str, Any]], attr_name: str, dim: int) -> Optional[torch.Tensor]:
+    def concat_tensor(batch: list[dict[str, Any]], attr_name: str, dim: int) -> torch.Tensor | None:
         res = []
         for b in batch:
             if b.get(attr_name) is not None:
@@ -1328,18 +1336,18 @@ class Template(ProcessorMixin):
 
     def _rlhf_data_collator(
         self,
-        batch: List[Dict[str, Any]],
+        batch: list[dict[str, Any]],
         *,
         chosen_prefix: str = "chosen_",
         rejected_prefix: str = "rejected_",
-        padding_to: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        padding_to: int | None = None,
+    ) -> dict[str, Any]:
         new_batch = []
         for prefix in [chosen_prefix, rejected_prefix]:
             new_batch += self._fetch_inputs_startswith(batch, prefix)
         return self._data_collator(new_batch, padding_to=padding_to)
 
-    def _kto_data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _kto_data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         new_batch = self._fetch_inputs_startswith(batch, "chosen_")
         kl_batch = self._fetch_inputs_startswith(batch, "rejected_")
 
@@ -1354,9 +1362,7 @@ class Template(ProcessorMixin):
             res["label"] = label
         return res
 
-    def _embedding_data_collator(
-        self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def _embedding_data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         labels = []
         new_batch = []
         for b in batch:
@@ -1364,7 +1370,7 @@ class Template(ProcessorMixin):
             max_neg = max([int(re.findall(r"negative(-?\d+)", key)[0]) for key in keys]) if keys else None
             indexes = ["anchor_", "positive_"]
             if max_neg is not None:
-                for i in range(0, max_neg + 1):
+                for i in range(max_neg + 1):
                     indexes.append(f"negative{i}_")
             for prefix in indexes:
                 new_batch += self._fetch_inputs_startswith([b], prefix)
@@ -1374,9 +1380,7 @@ class Template(ProcessorMixin):
             res["labels"] = torch.tensor(labels, dtype=torch.float32)
         return res
 
-    def _seq_cls_data_collator(
-        self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def _seq_cls_data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         labels = [b.pop("labels") for b in batch if b.get("labels") is not None]
         res = self._data_collator(batch, padding_to=padding_to)
         if labels:
@@ -1393,11 +1397,11 @@ class Template(ProcessorMixin):
             res["labels"] = labels
         return res
 
-    def _data_flatten(self, batch: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _data_flatten(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         new_batch = [(row, len(row["input_ids"])) for row in batch]
         return [self.packing_row(new_batch)]
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         """
         Args:
             batch(`List[Dict[str, Any]]`): The input data in batch
@@ -1452,7 +1456,7 @@ class Template(ProcessorMixin):
             for i, val in enumerate(res[key]):
                 if isinstance(val, (list, tuple)):
                     val = torch.tensor(val)
-                elif key == "inputs_embeds" and val.ndim == 3 or key != "inputs_embeds" and val.ndim == 2:
+                elif (key == "inputs_embeds" and val.ndim == 3) or (key != "inputs_embeds" and val.ndim == 2):
                     val = val[0]
                 res[key][i] = val
             if not seq_lens:
@@ -1471,7 +1475,7 @@ class Template(ProcessorMixin):
                 position_ids += list(range(cp_size * 2)) * (padding_len // (cp_size * 2))
                 res["position_ids"][0] = torch.tensor(position_ids)
 
-        for key, pad_value in zip(keys, pad_values):
+        for key, pad_value in zip(keys, pad_values, strict=False):
             if key not in res:
                 continue
             if self.use_megatron and key == "position_ids" and self.sequence_parallel_size > 1:
@@ -1491,7 +1495,7 @@ class Template(ProcessorMixin):
 
         return res
 
-    def _data_collator_mm_data(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _data_collator_mm_data(self, batch: list[dict[str, Any]]) -> dict[str, Any]:
         # multimodal
         res = {}
         pixel_values = [b["pixel_values"] for b in batch if b.get("pixel_values") is not None]
@@ -1546,7 +1550,7 @@ class Template(ProcessorMixin):
                 res[key] = value
         return res
 
-    def print_inputs(self, inputs: Dict[str, Any], tokenizer_kwargs: Optional[Dict[str, Any]] = None) -> None:
+    def print_inputs(self, inputs: dict[str, Any], tokenizer_kwargs: dict[str, Any] | None = None) -> None:
         if tokenizer_kwargs is None:
             tokenizer_kwargs = {}
         for key in [
@@ -1590,7 +1594,7 @@ class Template(ProcessorMixin):
         inputs["input_ids"] = new_input_ids
         inputs["multimodal"] = images
 
-    async def prepare_lmdeploy_turbomind_inputs(self, inputs: Dict[str, Any]) -> None:
+    async def prepare_lmdeploy_turbomind_inputs(self, inputs: dict[str, Any]) -> None:
         images = inputs.pop("images", None) or []
         if len(images) == 0:
             return
@@ -1614,7 +1618,7 @@ class Template(ProcessorMixin):
         inputs["input_embedding_ranges"] = ranges
         inputs["input_ids"] = new_input_ids
 
-    def _pad_sequence(self, sequences: List[torch.Tensor], padding_value: float = 0.0) -> torch.Tensor:
+    def _pad_sequence(self, sequences: list[torch.Tensor], padding_value: float = 0.0) -> torch.Tensor:
         """Pad sequence by some side
 
         Args:
@@ -1640,7 +1644,7 @@ class Template(ProcessorMixin):
 
         return torch.stack(padded_sequences)
 
-    def safe_decode(self, input_ids: List[int], **tokenizer_kwargs) -> str:
+    def safe_decode(self, input_ids: list[int], **tokenizer_kwargs) -> str:
         if isinstance(self, Template):
             tokenizer = self.tokenizer
             placeholder_tokens = self.placeholder_tokens

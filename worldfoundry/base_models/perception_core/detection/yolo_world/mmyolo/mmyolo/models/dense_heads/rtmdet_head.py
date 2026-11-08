@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Sequence, Tuple
+from collections.abc import Sequence
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
@@ -11,6 +12,7 @@ from mmengine.model import BaseModule, bias_init_with_prob, constant_init, norma
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from ..utils import gt_instances_preprocess
 from .yolov5_head import YOLOv5Head
 
@@ -152,11 +154,11 @@ class RTMDetSepBNHeadModule(BaseModule):
             if is_norm(m):
                 constant_init(m, 1)
         bias_cls = bias_init_with_prob(0.01)
-        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg):
+        for rtm_cls, rtm_reg in zip(self.rtm_cls, self.rtm_reg, strict=False):
             normal_init(rtm_cls, std=0.01, bias=bias_cls)
             normal_init(rtm_reg, std=0.01)
 
-    def forward(self, feats: Tuple[Tensor, ...]) -> tuple:
+    def forward(self, feats: tuple[Tensor, ...]) -> tuple:
         """Forward features from the upstream network.
 
         Args:
@@ -258,7 +260,7 @@ class RTMDetHead(YOLOv5Head):
             self.featmap_sizes_train = None
             self.flatten_priors_train = None
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -272,10 +274,10 @@ class RTMDetHead(YOLOv5Head):
 
     def loss_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
         batch_gt_instances: InstanceList,
-        batch_img_metas: List[dict],
+        batch_img_metas: list[dict],
         batch_gt_instances_ignore: OptInstanceList = None,
     ) -> dict:
         """Compute losses of the head.

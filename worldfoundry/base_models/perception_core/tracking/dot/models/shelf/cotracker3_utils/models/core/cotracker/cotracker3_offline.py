@@ -7,6 +7,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from .cotracker3_online import CoTrackerThreeBase, posenc
 
 torch.manual_seed(0)
@@ -78,7 +79,7 @@ class CoTrackerThreeOffline(CoTrackerThreeBase):
         H4, W4 = H // self.stride, W // self.stride
         # Compute convolutional features for the video or for the current chunk in case of online mode
 
-        if T > fmaps_chunk_size:
+        if fmaps_chunk_size < T:
             fmaps = []
             for t in range(0, T, fmaps_chunk_size):
                 video_chunk = video[:, t : t + fmaps_chunk_size]

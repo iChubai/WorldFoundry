@@ -11,13 +11,13 @@ consumed by the original Hunyuan denoiser.  I2V extras are
 Template / precision constants: :mod:`.constants`.
 """
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, Tuple
-from copy import deepcopy
 
 import torch
 import torch.nn as nn
-from transformers import CLIPTextModel, CLIPTokenizer, AutoTokenizer, AutoModel
+from transformers import AutoModel, AutoTokenizer, CLIPTextModel, CLIPTokenizer
 from transformers.utils import ModelOutput
 
 from .constants import PRECISION_TO_TYPE
@@ -61,7 +61,7 @@ def load_text_encoder(
         device: The device.
     """
     if text_encoder_path is None:
-        raise ValueError(f"`text_encoder_path` not exists")
+        raise ValueError("`text_encoder_path` not exists")
     if logger is not None:
         logger.info(f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}")
 
@@ -99,7 +99,7 @@ def load_tokenizer(tokenizer_type, tokenizer_path=None, padding_side="right", lo
         logger: The logger.
     """
     if tokenizer_path is None:
-        raise ValueError(f"`tokenizer_path` not exists")
+        raise ValueError("`tokenizer_path` not exists")
     if logger is not None:
         logger.info(f"Loading tokenizer ({tokenizer_type}) from: {tokenizer_path}")
 
@@ -132,9 +132,9 @@ class TextEncoderModelOutput(ModelOutput):
     """
 
     hidden_state: torch.FloatTensor = None
-    attention_mask: Optional[torch.LongTensor] = None
-    hidden_states_list: Optional[Tuple[torch.FloatTensor, ...]] = None
-    text_outputs: Optional[list] = None
+    attention_mask: torch.LongTensor | None = None
+    hidden_states_list: tuple[torch.FloatTensor, ...] | None = None
+    text_outputs: list | None = None
 
 
 class TextEncoder(nn.Module):
@@ -144,16 +144,16 @@ class TextEncoder(nn.Module):
         self,
         text_encoder_type: str,
         max_length: int,
-        text_encoder_precision: Optional[str] = None,
-        text_encoder_path: Optional[str] = None,
-        tokenizer_type: Optional[str] = None,
-        tokenizer_path: Optional[str] = None,
-        output_key: Optional[str] = None,
+        text_encoder_precision: str | None = None,
+        text_encoder_path: str | None = None,
+        tokenizer_type: str | None = None,
+        tokenizer_path: str | None = None,
+        output_key: str | None = None,
         use_attention_mask: bool = True,
-        input_max_length: Optional[int] = None,
-        prompt_template: Optional[dict] = None,
-        prompt_template_video: Optional[dict] = None,
-        hidden_state_skip_layer: Optional[int] = None,
+        input_max_length: int | None = None,
+        prompt_template: dict | None = None,
+        prompt_template_video: dict | None = None,
+        hidden_state_skip_layer: int | None = None,
         apply_final_norm: bool = False,
         reproduce: bool = False,
         logger=None,

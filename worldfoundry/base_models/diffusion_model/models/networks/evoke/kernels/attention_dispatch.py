@@ -23,7 +23,9 @@ def create_navit_attention_masks(
         f"warp_len_list len {len(_wl)} != original_context_length_list len {len(original_context_length_list)}"
     )
     # Self-attn KV span per stage = noise + shared_history + warp_s.
-    _self_kv = [length + history_context_length + w for length, w in zip(original_context_length_list, _wl)]
+    _self_kv = [
+        length + history_context_length + w for length, w in zip(original_context_length_list, _wl, strict=False)
+    ]
 
     # Build navit_hidden_attention_mask.
     if restrict_self_attn:

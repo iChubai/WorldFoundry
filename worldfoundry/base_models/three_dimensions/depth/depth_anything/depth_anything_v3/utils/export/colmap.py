@@ -15,18 +15,17 @@
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> export -> colmap.py functionality."""
 
 import os
-import pycolmap
+
 import cv2 as cv
 import numpy as np
-
+import pycolmap
 from PIL import Image
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
-
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.export_glb import (
     _depths_to_world_points_with_colors,
 )
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
 
 
 def export_to_colmap(

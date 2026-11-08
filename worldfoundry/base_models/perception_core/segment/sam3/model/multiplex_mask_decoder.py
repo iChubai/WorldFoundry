@@ -10,9 +10,10 @@
 from typing import List, Optional, Type
 
 import torch
-from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 from torch import nn
 from torch.nn import functional as F
+
+from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 
 
 class MultiplexMaskDecoder(nn.Module):
@@ -25,7 +26,7 @@ class MultiplexMaskDecoder(nn.Module):
         transformer: nn.Module,
         multiplex_count: int,
         num_multimask_outputs: int = 3,
-        activation: Type[nn.Module] = nn.GELU,
+        activation: type[nn.Module] = nn.GELU,
         iou_head_depth: int = 3,
         iou_head_hidden_dim: int = 256,
         use_high_res_features: bool = False,
@@ -138,8 +139,8 @@ class MultiplexMaskDecoder(nn.Module):
         image_embeddings: torch.Tensor,
         image_pe: torch.Tensor,
         multimask_output: bool,
-        high_res_features: Optional[List[torch.Tensor]] = None,
-        extra_per_object_embeddings: Optional[torch.Tensor] = None,
+        high_res_features: list[torch.Tensor] | None = None,
+        extra_per_object_embeddings: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
         """
         Predict masks given image and prompt embeddings.
@@ -226,8 +227,8 @@ class MultiplexMaskDecoder(nn.Module):
         self,
         image_embeddings: torch.Tensor,
         image_pe: torch.Tensor,
-        high_res_features: Optional[List[torch.Tensor]] = None,
-        extra_per_object_embeddings: Optional[torch.Tensor] = None,  # num_buckets, multiplex_count, C
+        high_res_features: list[torch.Tensor] | None = None,
+        extra_per_object_embeddings: torch.Tensor | None = None,  # num_buckets, multiplex_count, C
     ) -> dict[str, torch.Tensor]:
         """Predicts masks. See 'forward' for more details."""
         # Concatenate output tokens
@@ -297,7 +298,7 @@ class MultiplexMaskDecoder(nn.Module):
         if self.num_multimask_outputs == 0:
             hyper_in = self.output_hypernetworks_mlp(mask_tokens_out[:, :, 0, :]).unsqueeze(2)  # [B, M, 1, C]
         else:
-            hyper_in_list: List[torch.Tensor] = []
+            hyper_in_list: list[torch.Tensor] = []
             for i in range(self.num_mask_output_per_object):
                 if self.decode_mask_with_shared_tokens:
                     hyper_in_list.append(self.output_hypernetworks_mlps[i](mask_tokens_out[:, :, 0, :]))
@@ -400,4 +401,4 @@ class MultiplexMaskDecoder(nn.Module):
 
 
 # Lightly adapted from
-# https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py # noqa
+# https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py

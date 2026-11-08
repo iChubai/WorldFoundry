@@ -5,10 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 from typing import Tuple, Union
+
 import torch
 
 
-def get_2d_sincos_pos_embed(embed_dim: int, grid_size: Union[int, Tuple[int, int]]) -> torch.Tensor:
+def get_2d_sincos_pos_embed(embed_dim: int, grid_size: int | tuple[int, int]) -> torch.Tensor:
     """
     This function initializes a grid and generates a 2D positional embedding using sine and cosine functions.
     It is a wrapper of get_2d_sincos_pos_embed_from_grid.

@@ -2,7 +2,7 @@
 # License text: THIRD-PARTY-NOTICES, BigVGAN Snake LICENSE_2.
 
 import torch
-from torch import nn, sin, pow
+from torch import nn, pow, sin
 from torch.nn import Parameter
 
 

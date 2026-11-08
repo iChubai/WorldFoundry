@@ -2,7 +2,8 @@
 import collections
 import copy
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Optional, Tuple, Union
 
 import mmcv
 import numpy as np
@@ -44,7 +45,7 @@ class BaseMixImageTransform(BaseTransform, metaclass=ABCMeta):
 
     def __init__(
         self,
-        pre_transform: Optional[Sequence[str]] = None,
+        pre_transform: Sequence[str] | None = None,
         prob: float = 1.0,
         use_cached: bool = False,
         max_cached_images: int = 40,
@@ -65,7 +66,7 @@ class BaseMixImageTransform(BaseTransform, metaclass=ABCMeta):
             self.pre_transform = Compose(pre_transform)
 
     @abstractmethod
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> Union[list, int]:
+    def get_indexes(self, dataset: BaseDataset | list) -> list | int:
         """Call function to collect indexes.
 
         Args:
@@ -74,7 +75,6 @@ class BaseMixImageTransform(BaseTransform, metaclass=ABCMeta):
         Returns:
             list or int: indexes.
         """
-        pass
 
     @abstractmethod
     def mix_img_transform(self, results: dict) -> dict:
@@ -86,7 +86,6 @@ class BaseMixImageTransform(BaseTransform, metaclass=ABCMeta):
         Returns:
             results (dict): Updated result dict.
         """
-        pass
 
     @autocast_box_type()
     def transform(self, results: dict) -> dict:
@@ -259,8 +258,8 @@ class Mosaic(BaseMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
-        center_ratio_range: Tuple[float, float] = (0.5, 1.5),
+        img_scale: tuple[int, int] = (640, 640),
+        center_ratio_range: tuple[float, float] = (0.5, 1.5),
         bbox_clip_border: bool = True,
         pad_val: float = 114.0,
         pre_transform: Sequence[dict] = None,
@@ -289,7 +288,7 @@ class Mosaic(BaseMixImageTransform):
         self.bbox_clip_border = bbox_clip_border
         self.pad_val = pad_val
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> list:
+    def get_indexes(self, dataset: BaseDataset | list) -> list:
         """Call function to collect indexes.
 
         Args:
@@ -423,7 +422,7 @@ class Mosaic(BaseMixImageTransform):
 
     def _mosaic_combine(
         self, loc: str, center_position_xy: Sequence[float], img_shape_wh: Sequence[int]
-    ) -> Tuple[Tuple[int], Tuple[int]]:
+    ) -> tuple[tuple[int], tuple[int]]:
         """Calculate global coordinate of mosaic image and local coordinate of
         cropped sub-image.
 
@@ -574,9 +573,9 @@ class Mosaic9(BaseMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
+        img_scale: tuple[int, int] = (640, 640),
         bbox_clip_border: bool = True,
-        pad_val: Union[float, int] = 114.0,
+        pad_val: float | int = 114.0,
         pre_transform: Sequence[dict] = None,
         prob: float = 1.0,
         use_cached: bool = False,
@@ -607,7 +606,7 @@ class Mosaic9(BaseMixImageTransform):
         self._center_img_shape = [0, 0]
         self._previous_img_shape = [0, 0]
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> list:
+    def get_indexes(self, dataset: BaseDataset | list) -> list:
         """Call function to collect indexes.
 
         Args:
@@ -697,7 +696,7 @@ class Mosaic9(BaseMixImageTransform):
         results["gt_ignore_flags"] = mosaic_ignore_flags
         return results
 
-    def _mosaic_combine(self, loc: str, img_shape_hw: Tuple[int, int]) -> Tuple[int, ...]:
+    def _mosaic_combine(self, loc: str, img_shape_hw: tuple[int, int]) -> tuple[int, ...]:
         """Calculate global coordinate of mosaic image.
 
         Args:
@@ -871,7 +870,7 @@ class YOLOv5MixUp(BaseMixImageTransform):
         self.alpha = alpha
         self.beta = beta
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> int:
+    def get_indexes(self, dataset: BaseDataset | list) -> int:
         """Call function to collect indexes.
 
         Args:
@@ -1000,8 +999,8 @@ class YOLOXMixUp(BaseMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
-        ratio_range: Tuple[float, float] = (0.5, 1.5),
+        img_scale: tuple[int, int] = (640, 640),
+        ratio_range: tuple[float, float] = (0.5, 1.5),
         flip_ratio: float = 0.5,
         pad_val: float = 114.0,
         bbox_clip_border: bool = True,
@@ -1029,7 +1028,7 @@ class YOLOXMixUp(BaseMixImageTransform):
         self.pad_val = pad_val
         self.bbox_clip_border = bbox_clip_border
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> int:
+    def get_indexes(self, dataset: BaseDataset | list) -> int:
         """Call function to collect indexes.
 
         Args:

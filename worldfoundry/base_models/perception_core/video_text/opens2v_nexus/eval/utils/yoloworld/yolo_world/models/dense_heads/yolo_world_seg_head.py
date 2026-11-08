@@ -1,32 +1,32 @@
 # Copyright (c) Lin Song. All rights reserved.
 import math
-from typing import List, Optional, Tuple, Union, Sequence
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
-from torch.nn.modules.batchnorm import _BatchNorm
-
 from mmcv.cnn import ConvModule
-from mmengine.config import ConfigDict
-from mmengine.dist import get_dist_info
-from mmengine.structures import InstanceData
+from mmdet.models.utils import multi_apply, unpack_gt_instances
 from mmdet.structures import SampleList
 from mmdet.utils import (
     ConfigType,
+    InstanceList,
     OptConfigType,
     OptInstanceList,
     OptMultiConfig,
-    InstanceList,
 )
-from mmdet.models.utils import multi_apply, unpack_gt_instances
+from mmengine.config import ConfigDict
+from mmengine.dist import get_dist_info
+from mmengine.structures import InstanceData
 from mmyolo.models.dense_heads import YOLOv8HeadModule
+from mmyolo.models.dense_heads.yolov5_ins_head import ProtoModule, YOLOv5InsHead
 from mmyolo.models.utils import gt_instances_preprocess
 from mmyolo.registry import MODELS, TASK_UTILS
-from mmyolo.models.dense_heads.yolov5_ins_head import ProtoModule, YOLOv5InsHead
+from torch import Tensor
+from torch.nn.modules.batchnorm import _BatchNorm
 
-from .yolo_world_head import ContrastiveHead, BNContrastiveHead
+from .yolo_world_head import BNContrastiveHead, ContrastiveHead
 
 
 @MODELS.register_module()
@@ -53,7 +53,9 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
     def init_weights(self, prior_prob=0.01):
         """Initialize the weight and bias of PPYOLOE head."""
         super().init_weights()
-        for cls_pred, cls_contrast, stride in zip(self.cls_preds, self.cls_contrasts, self.featmap_strides):
+        for cls_pred, cls_contrast, stride in zip(
+            self.cls_preds, self.cls_contrasts, self.featmap_strides, strict=False
+        ):
             cls_pred[-1].bias.data[:] = 0.0  # reset bias
             if hasattr(cls_contrast, "bias"):
                 nn.init.constant_(
@@ -198,7 +200,7 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
         if self.freeze_bbox or self.freeze_all:
             self._freeze_all()
 
-    def forward(self, img_feats: Tuple[Tensor], txt_feats: Tensor) -> Tuple[List]:
+    def forward(self, img_feats: tuple[Tensor], txt_feats: Tensor) -> tuple[list]:
         """Forward features from the upstream network."""
         assert len(img_feats) == self.num_levels
         txt_feats = [txt_feats for _ in range(self.num_levels)]
@@ -225,7 +227,7 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
         reg_pred: nn.ModuleList,
         cls_contrast: nn.ModuleList,
         seg_pred: nn.ModuleList,
-    ) -> Tuple:
+    ) -> tuple:
         """Forward feature of a single scale level."""
         b, _, h, w = img_feat.shape
         cls_embed = cls_pred(img_feat)
@@ -311,9 +313,9 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
     def loss(
         self,
-        img_feats: Tuple[Tensor],
+        img_feats: tuple[Tensor],
         txt_feats: Tensor,
-        batch_data_samples: Union[list, dict],
+        batch_data_samples: list | dict,
     ) -> dict:
         """Perform forward propagation and loss calculation of the detection
         head on the features of the upstream network."""
@@ -331,11 +333,11 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
     def loss_and_predict(
         self,
-        img_feats: Tuple[Tensor],
+        img_feats: tuple[Tensor],
         txt_feats: Tensor,
         batch_data_samples: SampleList,
-        proposal_cfg: Optional[ConfigDict] = None,
-    ) -> Tuple[dict, InstanceList]:
+        proposal_cfg: ConfigDict | None = None,
+    ) -> tuple[dict, InstanceList]:
         """Perform forward propagation of the head, then calculate loss and
         predictions from the features and data samples.
         """
@@ -354,13 +356,13 @@ class YOLOWorldSegHead(YOLOv5InsHead):
         predictions = self.predict_by_feat(*outs, batch_img_metas=batch_img_metas, cfg=proposal_cfg)
         return losses, predictions
 
-    def forward(self, img_feats: Tuple[Tensor], txt_feats: Tensor) -> Tuple[List]:
+    def forward(self, img_feats: tuple[Tensor], txt_feats: Tensor) -> tuple[list]:
         """Forward features from the upstream network."""
         return self.head_module(img_feats, txt_feats)
 
     def predict(
         self,
-        img_feats: Tuple[Tensor],
+        img_feats: tuple[Tensor],
         txt_feats: Tensor,
         batch_data_samples: SampleList,
         rescale: bool = False,

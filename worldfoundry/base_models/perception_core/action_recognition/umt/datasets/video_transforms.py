@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 import math
-import numpy as np
+import numbers
 import random
+
+import numpy as np
+import PIL
 import torch
+import torchvision
 import torchvision.transforms.functional as F
 from PIL import Image
 from torchvision import transforms
 
+from worldfoundry.base_models.perception_core.action_recognition.umt import functional as FF
+
 from .rand_augment import rand_augment_transform
 from .random_erasing import RandomErasing
-
-import numbers
-import PIL
-import torchvision
-
-from worldfoundry.base_models.perception_core.action_recognition.umt import functional as FF
 
 _pil_interpolation_to_str = {
     Image.NEAREST: "PIL.Image.NEAREST",
@@ -163,7 +163,7 @@ def horizontal_flip(prob, images, boxes=None):
         flipped_boxes = boxes.copy()
 
     if np.random.uniform() < prob:
-        images = images.flip((-1))
+        images = images.flip(-1)
 
         if len(images.shape) == 3:
             width = images.shape[2]
@@ -315,7 +315,7 @@ def color_jitter(images, img_brightness=0, img_contrast=0, img_saturation=0):
 
     if len(jitter) > 0:
         order = np.random.permutation(np.arange(len(jitter)))
-        for idx in range(0, len(jitter)):
+        for idx in range(len(jitter)):
             if jitter[order[idx]] == "brightness":
                 images = brightness_jitter(img_brightness, images)
             elif jitter[order[idx]] == "contrast":
@@ -744,10 +744,10 @@ class RandomResizedCropAndInterpolation:
             interpolate_str = " ".join([_pil_interpolation_to_str[x] for x in self.interpolation])
         else:
             interpolate_str = _pil_interpolation_to_str[self.interpolation]
-        format_string = self.__class__.__name__ + "(size={0}".format(self.size)
-        format_string += ", scale={0}".format(tuple(round(s, 4) for s in self.scale))
-        format_string += ", ratio={0}".format(tuple(round(r, 4) for r in self.ratio))
-        format_string += ", interpolation={0})".format(interpolate_str)
+        format_string = self.__class__.__name__ + f"(size={self.size}"
+        format_string += f", scale={tuple(round(s, 4) for s in self.scale)}"
+        format_string += f", ratio={tuple(round(r, 4) for r in self.ratio)}"
+        format_string += f", interpolation={interpolate_str})"
         return format_string
 
 
@@ -850,7 +850,7 @@ def transforms_imagenet_train(
 ############################################################################################################
 
 
-class Compose(object):
+class Compose:
     """Composes several transforms
     Args:
     transforms (list of ``Transform`` objects): list of transforms
@@ -866,7 +866,7 @@ class Compose(object):
         return clip
 
 
-class RandomHorizontalFlip(object):
+class RandomHorizontalFlip:
     """Horizontally flip the list of given images randomly
     with a probability 0.5
     """
@@ -885,11 +885,11 @@ class RandomHorizontalFlip(object):
             elif isinstance(clip[0], PIL.Image.Image):
                 return [img.transpose(PIL.Image.FLIP_LEFT_RIGHT) for img in clip]
             else:
-                raise TypeError("Expected numpy.ndarray or PIL.Image" + " but got list of {0}".format(type(clip[0])))
+                raise TypeError("Expected numpy.ndarray or PIL.Image" + f" but got list of {type(clip[0])}")
         return clip
 
 
-class RandomResize(object):
+class RandomResize:
     """Resizes a list of (H x W x C) numpy.ndarray to the final size
     The larger the original image is, the more times it takes to
     interpolate
@@ -918,7 +918,7 @@ class RandomResize(object):
         return resized
 
 
-class Resize(object):
+class Resize:
     """Resizes a list of (H x W x C) numpy.ndarray to the final size
     The larger the original image is, the more times it takes to
     interpolate
@@ -937,7 +937,7 @@ class Resize(object):
         return resized
 
 
-class RandomCrop(object):
+class RandomCrop:
     """Extract random crop at the same location for a list of images
     Args:
     size (sequence or int): Desired output size for the
@@ -964,12 +964,12 @@ class RandomCrop(object):
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:
-            raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+            raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
         if w > im_w or h > im_h:
             error_msg = (
                 "Initial image size should be larger then "
-                "cropped size but got cropped sizes : ({w}, {h}) while "
-                "initial image is ({im_w}, {im_h})".format(im_w=im_w, im_h=im_h, w=w, h=h)
+                f"cropped size but got cropped sizes : ({w}, {h}) while "
+                f"initial image is ({im_w}, {im_h})"
             )
             raise ValueError(error_msg)
 
@@ -980,7 +980,7 @@ class RandomCrop(object):
         return cropped
 
 
-class ThreeCrop(object):
+class ThreeCrop:
     """Extract random crop at the same location for a list of images
     Args:
     size (sequence or int): Desired output size for the
@@ -1007,7 +1007,7 @@ class ThreeCrop(object):
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:
-            raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+            raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
         if w != im_w and h != im_h:
             clip = FF.resize_clip(clip, self.size, interpolation="bilinear")
             im_h, im_w, im_c = clip[0].shape
@@ -1026,7 +1026,7 @@ class ThreeCrop(object):
         return cropped
 
 
-class RandomRotation(object):
+class RandomRotation:
     """Rotate entire clip randomly by a random angle within
     given bounds
     Args:
@@ -1062,12 +1062,12 @@ class RandomRotation(object):
         elif isinstance(clip[0], PIL.Image.Image):
             rotated = [img.rotate(angle) for img in clip]
         else:
-            raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+            raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
 
         return rotated
 
 
-class CenterCrop(object):
+class CenterCrop:
     """Extract center crop at the same location for a list of images
     Args:
     size (sequence or int): Desired output size for the
@@ -1094,12 +1094,12 @@ class CenterCrop(object):
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:
-            raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+            raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
         if w > im_w or h > im_h:
             error_msg = (
                 "Initial image size should be larger then "
-                "cropped size but got cropped sizes : ({w}, {h}) while "
-                "initial image is ({im_w}, {im_h})".format(im_w=im_w, im_h=im_h, w=w, h=h)
+                f"cropped size but got cropped sizes : ({w}, {h}) while "
+                f"initial image is ({im_w}, {im_h})"
             )
             raise ValueError(error_msg)
 
@@ -1110,7 +1110,7 @@ class CenterCrop(object):
         return cropped
 
 
-class ColorJitter(object):
+class ColorJitter:
     """Randomly change the brightness, contrast and saturation and hue of the clip
     Args:
     brightness (float): How much to jitter brightness. brightness_factor
@@ -1185,11 +1185,11 @@ class ColorJitter(object):
                 jittered_clip.append(jittered_img)
 
         else:
-            raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+            raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
         return jittered_clip
 
 
-class Normalize(object):
+class Normalize:
     """Normalize a clip with mean and standard deviation.
     Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
     will normalize each channel of the input ``torch.*Tensor`` i.e.
@@ -1215,4 +1215,4 @@ class Normalize(object):
         return FF.normalize(clip, self.mean, self.std)
 
     def __repr__(self):
-        return self.__class__.__name__ + "(mean={0}, std={1})".format(self.mean, self.std)
+        return self.__class__.__name__ + f"(mean={self.mean}, std={self.std})"

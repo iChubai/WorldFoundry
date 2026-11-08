@@ -28,6 +28,7 @@ License header above is Tencent Hunyuan; keep it intact.
 """
 
 import json
+
 import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, T5ForConditionalGeneration
@@ -124,9 +125,9 @@ def add_special_token(
         font_ann_path (str): Path to font annotation JSON.
         multilingual (bool): Whether to use multilingual font tokens.
     """
-    with open(font_ann_path, "r") as f:
+    with open(font_ann_path) as f:
         idx_font_dict = json.load(f)
-    with open(color_ann_path, "r") as f:
+    with open(color_ann_path) as f:
         idx_color_dict = json.load(f)
 
     if multilingual:

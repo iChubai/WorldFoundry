@@ -19,7 +19,6 @@ import mmcv
 from mmcv.transforms import Compose
 from mmdet.apis import inference_detector, init_detector
 from mmengine.utils import track_iter_progress
-
 from mmyolo.registry import VISUALIZERS
 
 

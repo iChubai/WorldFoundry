@@ -1,12 +1,12 @@
 import geom.projective_ops as pops
 import lietorch
-from lietorch import SE3
 import matplotlib.pyplot as plt
-from modules.corr import AltCorrBlock, CorrBlock
 import numpy as np
 import torch
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_mean
+from lietorch import SE3
+from modules.corr import AltCorrBlock, CorrBlock
 
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_mean
 
 MASK_TYPE = 2  # 1: GT, 2: Our pred
 DAMPING_FACTOR = 1.0
@@ -59,11 +59,11 @@ class FactorGraph:
 
         keep = torch.zeros(ii.shape[0], dtype=torch.bool, device=ii.device)
         eset = set(
-            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj)]
-            + [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac)]
+            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj, strict=False)]
+            + [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac, strict=False)]
         )
 
-        for k, (i, j) in enumerate(zip(ii, jj)):
+        for k, (i, j) in enumerate(zip(ii, jj, strict=False)):
             keep[k] = (i.item(), j.item()) not in eset
 
         return ii[keep], jj[keep]
@@ -78,7 +78,7 @@ class FactorGraph:
 
         w = torch.mean(self.weight, dim=[0, 2, 3, 4]).cpu().numpy()
         w = w[ix]
-        for e in zip(ii, jj, w):
+        for e in zip(ii, jj, w, strict=False):
             print(e)
         print()
 
@@ -359,7 +359,7 @@ class FactorGraph:
         errors = []
 
         for step in range(steps):
-            print("Global BA Iteration #{}".format(step + 1))
+            print(f"Global BA Iteration #{step + 1}")
             with torch.cuda.amp.autocast(enabled=False):
                 coords1, mask = self.video.reproject(self.ii, self.jj)
                 motn = torch.cat([coords1 - self.coords0, self.target - coords1], dim=-1)
@@ -500,7 +500,7 @@ class FactorGraph:
 
         ii1 = torch.cat([self.ii, self.ii_bad, self.ii_inac], 0)
         jj1 = torch.cat([self.jj, self.jj_bad, self.jj_inac], 0)
-        for i, j in zip(ii1.cpu().numpy(), jj1.cpu().numpy()):
+        for i, j in zip(ii1.cpu().numpy(), jj1.cpu().numpy(), strict=False):
             for di in range(-nms, nms + 1):
                 for dj in range(-nms, nms + 1):
                     if abs(di) + abs(dj) <= max(min(abs(i - j) - 2, nms), 0):

@@ -1,10 +1,10 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import ast
+import json
 import re
 from functools import partial
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import json
 import numpy as np
 
 from ...template import split_str_parts_by
@@ -39,7 +39,7 @@ register_dataset(
 
 
 class LongAlpacaPreprocessor(AlpacaPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         response = row["response"]
         prefix_prompt = "Answer: "
         if response and response.startswith(prefix_prompt):
@@ -59,8 +59,8 @@ register_dataset(
 
 
 class RuozhibaPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        title = row["title"] if row.get("title", None) is not None else row["content"]
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
+        title = row["title"] if row.get("title") is not None else row["content"]
         abs = row["abs"] if "abs" in row else None
         if abs and abs != title:
             title = title + "，" + abs
@@ -99,11 +99,11 @@ register_dataset(
 )
 
 
-def _repair_ms_bench(messages: str) -> Optional[List[Dict[str, str]]]:
+def _repair_ms_bench(messages: str) -> list[dict[str, str]] | None:
     if isinstance(messages, str):
         messages = ast.literal_eval(messages)
     default_system = "You are a helpful assistant."
-    messages: List[Dict[str, str]]
+    messages: list[dict[str, str]]
     if messages[0]["from"] == "system" and messages[0]["value"] == default_system:
         messages.pop(0)
     # skip MOSS
@@ -123,7 +123,7 @@ register_dataset(
 )
 
 
-def _repair_agent_messages(messages: List[Dict[str, str]], use_mini: bool) -> Optional[List[Dict[str, str]]]:
+def _repair_agent_messages(messages: list[dict[str, str]], use_mini: bool) -> list[dict[str, str]] | None:
     if use_mini:
         pattern = r'\d\. {"plugin_name": "(.+?)"'
         if messages[0]["from"] != "system":
@@ -198,7 +198,7 @@ class FireflyPreprocessor(ResponsePreprocessor):
         "NER",
     }
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if row["kind"] not in FireflyPreprocessor._firefly_kind_list:
             return
         return super().preprocess(row)
@@ -250,7 +250,7 @@ register_dataset(
 
 
 class SyntheticText2SqlPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         sql_prompt = row["sql_prompt"]
         sql_context = row["sql_context"]
         sql = row["sql"]
@@ -270,7 +270,7 @@ register_dataset(
 )
 
 
-def _repair_toolbench(conversations: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def _repair_toolbench(conversations: list[dict[str, str]]) -> list[dict[str, str]]:
     assert len(conversations) == 2
     if conversations[1]["from"] in {"caller", "conclusion"}:
         conversations[1]["from"] = "assistant"
@@ -289,7 +289,7 @@ register_dataset(
 
 
 class BlossomMathPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         output, answer = row["output"], row["answer"]
         return super().preprocess({"query": row["query"], "response": f"{output}\n\nAnswer: {answer}"})
 
@@ -314,7 +314,7 @@ register_dataset(
 
 
 class TigerBotLawPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         prompt = """{type}
 {title}
 """
@@ -346,7 +346,7 @@ register_dataset(
 
 
 class LeetcodePythonPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         code_with_problem = row["code_with_problem"]
         idx = code_with_problem.find("```python")
         problem = code_with_problem[:idx]
@@ -367,7 +367,7 @@ register_dataset(
 
 
 class StsbPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row = {
             "query": row["sentence1"],
             "response": row["sentence2"],
@@ -382,7 +382,7 @@ Sentence 1: {text1}
 Sentence 2: {text2}
 Similarity score: """
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         return super().preprocess(
             {
                 "query": self.prompt.format(text1=row["sentence1"], text2=row["sentence2"]),
@@ -392,7 +392,7 @@ Similarity score: """
 
 
 class StsbRegressionPreprocessor(StsbGeneratePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         return super(StsbGeneratePreprocessor, self).preprocess(
             {"query": self.prompt.format(text1=row["sentence1"], text2=row["sentence2"]), "label": row["score"]}
         )
@@ -412,7 +412,7 @@ register_dataset(
 )
 
 
-def _repair_conversations_agent_instruct(s: str) -> List[Dict[str, Any]]:
+def _repair_conversations_agent_instruct(s: str) -> list[dict[str, Any]]:
     s = s.replace("}\n {", "},\n {")
     if isinstance(s, str):
         s = ast.literal_eval(s)
@@ -430,7 +430,7 @@ register_dataset(
 
 
 class MultiRoleAgentPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         conv = row["conversations"]
         res_prompt = "\n\n【注意事项】\n1. 这是聊天室，不要发送私信给任何人\n2. 仅代表你个人说话,不要扮演其他人，只根据对话历史进行回复\n3. 长话短说，不要说太多话，不要超过50字 "
         history_prompt = "\n\n【chat history】"
@@ -493,7 +493,7 @@ register_dataset(
 
 
 class CoundownTaskPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         numbers = row["nums"]
         target = row.pop("response", None)
         query = (
@@ -545,7 +545,7 @@ class HC3ClsPreprocessor(HC3Preprocessor):
 
 
 hc3_subset_names = ["baike", "open_qa", "nlpcc_dbqa", "finance", "medicine", "law", "psychology"]
-hc3_subsets: List[SubsetDataset] = []
+hc3_subsets: list[SubsetDataset] = []
 for hc3_subset_name in hc3_subset_names:
     hc3_subsets.append(
         SubsetDataset(
@@ -572,7 +572,7 @@ register_dataset(
 )
 
 hc3_subset_names = ["finance", "medicine"]
-hc3_subsets: List[SubsetDataset] = []
+hc3_subsets: list[SubsetDataset] = []
 for hc3_subset_name in hc3_subset_names:
     hc3_subsets.append(
         SubsetDataset(
@@ -601,7 +601,7 @@ register_dataset(
 
 
 class DureaderPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         prompt = """Task: Question Generation
 Context: {context}
 Answer: {answer}
@@ -629,12 +629,12 @@ class HHRLHFPreprocessor(RowPreprocessor):
     @staticmethod
     def _to_messages(data):
         messages = []
-        for query, response in zip(data[::2], data[1::2]):
+        for query, response in zip(data[::2], data[1::2], strict=False):
             messages.append({"role": "user", "content": query})
             messages.append({"role": "assistant", "content": response})
         return messages
 
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         chosen = row["chosen"].strip()
         rejected = row["rejected"].strip()
         parts_chosen = [s.strip() for s in re.split("\n\nHuman:|\n\nAssistant:|\n\nHum:", chosen)]
@@ -662,7 +662,7 @@ register_dataset(
 
 
 class XlamFunctionCallingPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         messages = [{"role": "user", "content": row["query"]}]
         response = row["answers"]
         response = json.loads(response)
@@ -671,7 +671,7 @@ class XlamFunctionCallingPreprocessor(RowPreprocessor):
 
 
 class XlamFunctionCallingGRPOPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         query = row["query"]
         answers = row["response"]
         if isinstance(answers, str):
@@ -698,7 +698,7 @@ register_dataset(
 
 
 class HHRLHFCNPreprocessor(MessagesPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["messages"].append(row.pop("chosen"))
         row["rejected_response"] = row["rejected"]["text"]
         return super().preprocess(row)
@@ -715,7 +715,7 @@ register_dataset(
 )
 
 
-def repair_conversations(s: Union[str, Any]) -> Any:
+def repair_conversations(s: str | Any) -> Any:
     if isinstance(s, str):
         s = s.replace("}\n {", "},{")
         s = s.replace("}\n{", "},{")
@@ -766,7 +766,7 @@ register_dataset(
 
 
 class GuanacoPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         instruction = row["instruction"]
         input = row["input"]
         output = row["output"]
@@ -811,7 +811,7 @@ register_dataset(
 
 
 class FunctionCallChatmlPreprocessor(MessagesPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         res = super().preprocess(row)
 
         if res["function_description"]:
@@ -833,7 +833,7 @@ register_dataset(
 
 
 class Dolly15kPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         instruction = row["instruction"]
         context = row["context"]
         response = row["response"]
@@ -859,7 +859,7 @@ register_dataset(
 
 
 class OrpoDPOMix40kPreprocessor(MessagesPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if row["source"] == "toxic-dpo-v0.2":
             return
         return super().preprocess(row)
@@ -887,15 +887,15 @@ class SelfCognitionPreprocessor(ResponsePreprocessor):
     def __init__(self, *args, query_suffix: str = "", response_prefix: str = "", **kwargs):
         self.query_suffix = query_suffix
         self.response_prefix = response_prefix
-        self.name: Optional[Tuple[str, str]] = None
-        self.author: Optional[Tuple[str, str]] = None
+        self.name: tuple[str, str] | None = None
+        self.author: tuple[str, str] | None = None
         super().__init__(*args, **kwargs)
 
     def set_name_author(self, name, author):
         self.name = name
         self.author = author
 
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         for key in ["name", "author"]:
             val = getattr(self, key)
             if val is None:

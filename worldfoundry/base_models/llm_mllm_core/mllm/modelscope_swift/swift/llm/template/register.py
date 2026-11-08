@@ -7,7 +7,7 @@ from ..utils import Processor
 from .base import Template
 from .template_meta import TemplateMeta
 
-TEMPLATE_MAPPING: Dict[str, TemplateMeta] = {}
+TEMPLATE_MAPPING: dict[str, TemplateMeta] = {}
 _TEMPLATES_IMPORTED = False
 
 
@@ -30,12 +30,12 @@ def register_template(template_meta: TemplateMeta, *, exist_ok: bool = False) ->
 def get_template(
     template_type: str,
     processor: Processor,
-    default_system: Optional[str] = None,
-    max_length: Optional[int] = None,
+    default_system: str | None = None,
+    max_length: int | None = None,
     *,
     truncation_strategy: Literal["raise", "left", "right"] = "raise",
-    max_pixels: Optional[int] = None,  # h * w
-    agent_template: Optional[str] = None,
+    max_pixels: int | None = None,  # h * w
+    agent_template: str | None = None,
     norm_bbox: Literal["norm1000", "none", None] = None,
     use_chat_template: bool = True,
     # train
@@ -44,7 +44,7 @@ def get_template(
     loss_scale: str = "default",
     sequence_parallel_size: int = 1,
     # infer/deploy
-    response_prefix: Optional[str] = None,
+    response_prefix: str | None = None,
     template_backend: Literal["swift", "jinja"] = "swift",
 ) -> "Template":
     _ensure_templates_registered()

@@ -17,6 +17,7 @@
 import math
 from math import isqrt
 from typing import Literal, Optional
+
 import torch
 from einops import rearrange, repeat
 from tqdm import tqdm
@@ -51,7 +52,7 @@ def render_3dgs(
     intrinsics: torch.Tensor,  # "batch_views 3 3", normalized
     image_shape: tuple[int, int],
     gaussian: Gaussians,
-    background_color: Optional[torch.Tensor] = None,  # "batch_views 3"
+    background_color: torch.Tensor | None = None,  # "batch_views 3"
     use_sh: bool = True,
     num_view: int = 1,
     color_mode: Literal["RGB+D", "RGB+ED"] = "RGB+D",
@@ -178,7 +179,7 @@ def run_renderer_in_chunk_w_trj_mode(
     extrinsics: torch.Tensor,  # world2cam, "batch view 4 4" | "batch view 3 4"
     intrinsics: torch.Tensor,  # unnormed intrinsics, "batch view 3 3"
     image_shape: tuple[int, int],
-    chunk_size: Optional[int] = 8,
+    chunk_size: int | None = 8,
     trj_mode: Literal[
         "original",
         "smooth",
@@ -189,8 +190,8 @@ def run_renderer_in_chunk_w_trj_mode(
         "extend",
         "wobble_inter",
     ] = "smooth",
-    input_shape: Optional[tuple[int, int]] = None,
-    enable_tqdm: Optional[bool] = False,
+    input_shape: tuple[int, int] | None = None,
+    enable_tqdm: bool | None = False,
     **kwargs,
 ) -> tuple[
     torch.Tensor,  # color, "batch view 3 height width"

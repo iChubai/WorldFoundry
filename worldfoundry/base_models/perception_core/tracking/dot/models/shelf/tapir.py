@@ -1,6 +1,6 @@
-from torch import nn
 import torch.nn.functional as F
 from einops import rearrange
+from torch import nn
 
 from .tapir_utils.tapir_model import TAPIR
 

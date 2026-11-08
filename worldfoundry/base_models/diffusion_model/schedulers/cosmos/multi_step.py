@@ -25,7 +25,8 @@ methods live in :mod:`.runge_kutta`; this file is the multistep
 registry only.
 """
 
-from typing import Callable, List, Tuple
+from collections.abc import Callable
+from typing import List, Tuple
 
 import torch
 
@@ -37,7 +38,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.cosmos.runge_kutta impo
 
 def order2_fn(
     x_s: torch.Tensor, s: torch.Tensor, t: torch.Tensor, x0_s: torch.Tensor, x0_preds: torch.Tensor
-) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+) -> tuple[torch.Tensor, list[torch.Tensor]]:
     """
     impl the second order multistep method in https://arxiv.org/pdf/2308.02157
     Adams Bashforth approach!

@@ -8,7 +8,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 
 
 class BatchSamplerShard:
-    def __init__(self, total_samples: int, batch_size: int, shuffle: bool, drop_last: bool, data_seed: Optional[int]):
+    def __init__(self, total_samples: int, batch_size: int, shuffle: bool, drop_last: bool, data_seed: int | None):
         self.total_samples = total_samples // self.world_size
         self.batch_size = batch_size
         self.shuffle = shuffle

@@ -1,16 +1,17 @@
-import os
-import json
 import argparse
+import json
+import os
+
 import cv2
+import decord
 import numpy as np
 import torch
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 from PIL import Image
 from torchvision import transforms
-from utils.curricularface import get_model
-import decord
 from tqdm import tqdm
+from utils.curricularface import get_model
 
 
 def load_image(image):
@@ -155,7 +156,7 @@ def process_video_files(
     device="cuda",
     num_frames=32,
 ):
-    with open(input_json_file, "r") as f:
+    with open(input_json_file) as f:
         json_data = json.load(f)
     video_files = [f for f in os.listdir(input_video_folder) if f.endswith(".mp4")]
 

@@ -1,16 +1,16 @@
+import csv
+import json
+import math
+import os
+import os.path as osp
+import pickle
+import random
+
+import cv2
 import numpy as np
 import torch
-import torch.utils.data as data
 import torch.nn.functional as F
-
-import csv
-import os
-import cv2
-import math
-import random
-import json
-import pickle
-import os.path as osp
+import torch.utils.data as data
 
 from .augmentation import RGBDAugmentor
 from .rgbd_utils import *
@@ -35,7 +35,7 @@ class RGBDDataset(data.Dataset):
         if not os.path.isdir(osp.join(cur_path, "cache")):
             os.mkdir(osp.join(cur_path, "cache"))
 
-        cache_path = osp.join(cur_path, "cache", "{}.pickle".format(self.name))
+        cache_path = osp.join(cur_path, "cache", f"{self.name}.pickle")
 
         if osp.isfile(cache_path):
             scene_info = pickle.load(open(cache_path, "rb"))[0]
@@ -56,7 +56,7 @@ class RGBDDataset(data.Dataset):
                     if len(graph[i][0]) > self.n_frames:
                         self.dataset_index.append((scene, i))
             else:
-                print("Reserving {} for validation".format(scene))
+                print(f"Reserving {scene} for validation")
 
     @staticmethod
     def image_read(image_file):

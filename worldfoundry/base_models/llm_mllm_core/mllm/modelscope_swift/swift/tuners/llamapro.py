@@ -12,6 +12,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
     ModelKeys,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.logger import get_logger
+
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -41,7 +42,7 @@ class LLaMAProConfig(SwiftConfig):
 
     num_new_blocks: int = None
 
-    num_groups: Optional[int] = None
+    num_groups: int | None = None
 
     def __post_init__(self):
         from .mapping import SwiftTuners
@@ -162,7 +163,7 @@ class LLaMAPro(SwiftAdapter):
                 try:
                     getattr(module, attention).layer_idx = idx
                 except AttributeError:
-                    getattr(module, "cross_attn").layer_idx = idx
+                    module.cross_attn.layer_idx = idx
         elif model_type in ("chatglm", "glm4"):
             for idx, module in enumerate(module_list):
                 getattr(module, attention).layer_number = idx
@@ -197,7 +198,7 @@ class LLaMAPro(SwiftAdapter):
     def search_correct_model_type(cls, module: nn.Module):
         for arch_name, arch_type in MODEL_ARCH_MAPPING.items():
             arch_type: ModelKeys
-            if getattr(arch_type, "module_list") is None:
+            if arch_type.module_list is None:
                 # Need to be a LLM arch
                 continue
 

@@ -15,7 +15,7 @@ from PIL import Image
 from . import image_transforms as IT
 
 
-class Resize(object):
+class Resize:
     """Rescale the image in a sample to a given size.
 
     Args:
@@ -150,7 +150,7 @@ class Resize(object):
         return sample
 
 
-class BalancedRandomCrop(object):
+class BalancedRandomCrop:
     """Crop randomly the image in a sample.
 
     Args:
@@ -272,7 +272,7 @@ class BalancedRandomCrop(object):
         return sample
 
 
-class RandomScale(object):
+class RandomScale:
     """Randomly resize the image and the ground truth to specified scales.
     Args:
         scales (list): the list of scales
@@ -331,7 +331,7 @@ class RandomScale(object):
         return sample
 
 
-class RandomScaleV2(object):
+class RandomScaleV2:
     """Randomly resize the image and the ground truth to specified scales.
     Args:
         scales (list): the list of scales
@@ -438,7 +438,7 @@ class RandomScaleV2(object):
         return h, w
 
 
-class RestrictSize(object):
+class RestrictSize:
     """Randomly resize the image and the ground truth to specified scales.
     Args:
         scales (list): the list of scales
@@ -509,7 +509,7 @@ class RestrictSize(object):
         return sample
 
 
-class RandomHorizontalFlip(object):
+class RandomHorizontalFlip:
     """Horizontally flip the given image and ground truth randomly with a probability of 0.5."""
 
     def __init__(self, prob):
@@ -544,7 +544,7 @@ class RandomHorizontalFlip(object):
         return sample
 
 
-class RandomVerticalFlip(object):
+class RandomVerticalFlip:
     """Vertically flip the given image and ground truth randomly with a probability of 0.5."""
 
     def __init__(self, prob=0.3):
@@ -579,7 +579,7 @@ class RandomVerticalFlip(object):
         return sample
 
 
-class RandomGaussianBlur(object):
+class RandomGaussianBlur:
     """Random gaussian blur implementation."""
 
     def __init__(self, prob=0.3, sigma=[0.1, 2.0]):
@@ -653,7 +653,7 @@ class RandomColorJitter(RandomGaussianBlur):
         self.aug = TF.RandomApply([TF.ColorJitter(brightness, contrast, saturation, hue)], p=prob)
 
 
-class SubtractMeanImage(object):
+class SubtractMeanImage:
     """Subtract mean image implementation."""
 
     def __init__(self, mean, change_channels=False):
@@ -684,7 +684,7 @@ class SubtractMeanImage(object):
         return "SubtractMeanImage" + str(self.mean)
 
 
-class ToTensor(object):
+class ToTensor:
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
@@ -728,7 +728,7 @@ class ToTensor(object):
         return sample
 
 
-class MultiRestrictSize(object):
+class MultiRestrictSize:
     """Multi restrict size implementation."""
 
     def __init__(
@@ -838,7 +838,7 @@ class MultiRestrictSize(object):
         return samples
 
 
-class MultiToTensor(object):
+class MultiToTensor:
     """Multi to tensor implementation."""
 
     def __call__(self, samples):

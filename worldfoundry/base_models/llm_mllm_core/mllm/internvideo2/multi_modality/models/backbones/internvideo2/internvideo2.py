@@ -1,21 +1,21 @@
-import math
 import logging
+import math
+from functools import partial
+
 import torch
 import torch.nn.functional as F
+import torch.utils.checkpoint as checkpoint
+from einops import rearrange
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from torch import nn
 
-import torch.utils.checkpoint as checkpoint
-from functools import partial
-from einops import rearrange
-
+from .flash_attention_class import FlashAttention
 from .pos_embed import (
-    get_3d_sincos_pos_embed,
-    get_2d_sincos_pos_embed,
     get_1d_sincos_pos_embed,
+    get_2d_sincos_pos_embed,
+    get_3d_sincos_pos_embed,
     interpolate_pos_embed_internvideo2,
 )
-from .flash_attention_class import FlashAttention
 
 logger = logging.getLogger(__name__)
 
@@ -888,9 +888,9 @@ def pretrain_internvideo2_6b_patch14_224(config):
 
 if __name__ == "__main__":
     import time
-    from fvcore.nn import FlopCountAnalysis
-    from fvcore.nn import flop_count_table
+
     import numpy as np
+    from fvcore.nn import FlopCountAnalysis, flop_count_table
 
     seed = 4217
     np.random.seed(seed)

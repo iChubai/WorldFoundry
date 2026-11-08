@@ -4,27 +4,28 @@ Realtime streaming DiT.  Attention may dispatch to :mod:`.krea_sage`.
 Adds causal attention and optional linear/Sage kernels.
 """
 
+import copy
 import functools
-from .krea_attention import attention
 import math
+import time
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
+from .krea_attention import attention
 from .krea_model import (
+    WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
+    WanLayerNorm,
     WanRMSNorm,
     rope_apply,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
-    MLPProj,
     sinusoidal_embedding_1d,
 )
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import torch.nn as nn
-import torch
-import math
-import torch.distributed as dist
-import time
-import copy
 
 flex_attention = torch.compile(flex_attention, dynamic=False, mode="max-autotune-no-cudagraphs")
 
@@ -808,7 +809,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         noisy_image_end_list = noisy_image_start_list + attention_block_size
 
         # attention for noisy frames
-        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list)):
+        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list, strict=False)):
             # attend to noisy tokens within the same block
             noise_noise_starts[start:end] = start
             noise_noise_ends[start:end] = end
@@ -988,7 +989,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1143,7 +1144,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                     )
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1260,10 +1261,10 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

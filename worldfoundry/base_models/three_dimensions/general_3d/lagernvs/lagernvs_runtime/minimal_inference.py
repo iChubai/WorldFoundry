@@ -32,8 +32,8 @@ use run_eval.py with ground truth camera poses instead.
 """
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 _THIS_FILE = Path(__file__).resolve()
 for _path in (

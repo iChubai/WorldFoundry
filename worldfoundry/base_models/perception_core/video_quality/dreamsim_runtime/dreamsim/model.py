@@ -1,20 +1,19 @@
 import json
-
-import torch
-import torch.nn.functional as F
-from torch import nn
-from torchvision import transforms
-import os
-
-from .constants import *
-from .feature_extraction.extractor import ViTExtractor
-import yaml
-import peft
-from peft import PeftModel, LoraConfig, get_peft_model
-from .config import dreamsim_args, dreamsim_weights
 import os
 import zipfile
+
+import peft
+import torch
+import torch.nn.functional as F
+import yaml
 from packaging import version
+from peft import LoraConfig, PeftModel, get_peft_model
+from torch import nn
+from torchvision import transforms
+
+from .config import dreamsim_args, dreamsim_weights
+from .constants import *
+from .feature_extraction.extractor import ViTExtractor
 
 peft_version = version.parse(peft.__version__)
 min_version = version.parse("0.2.0")
@@ -73,7 +72,7 @@ class PerceptualModel(torch.nn.Module):
         self.embed_size = 0
         self.hidden_size = hidden_size
         self.baseline = baseline
-        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list):
+        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
             self.extractor_list.append(ViTExtractor(model_type, stride, load_dir, device=device))
             extract_fn, num_feats = self._get_extract_fn(model_type, feat_type)
             self.extract_feats_list.append(extract_fn)
@@ -139,7 +138,7 @@ class PerceptualModel(torch.nn.Module):
     def _validate_args(self):
         assert len(self.model_list) == len(self.feat_type_list) == len(self.stride_list)
 
-        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list):
+        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
             if feat_type == "cls_patch" and "dino" not in model_type:
                 raise ValueError(f"cls_patch only available for dino_vitb16 and dinov2_vitb14, not {model_type}")
             if feat_type == "embedding" and ("dino" in model_type or "mae" in model_type):
@@ -189,9 +188,7 @@ class PerceptualModel(torch.nn.Module):
     def _get_mean(self, model_type):
         if "dino" in model_type or "synclr" in model_type:
             return IMAGENET_DEFAULT_MEAN
-        elif "open_clip" in model_type:
-            return OPENAI_CLIP_MEAN
-        elif "clip" in model_type:
+        elif "open_clip" in model_type or "clip" in model_type:
             return OPENAI_CLIP_MEAN
         elif "mae" in model_type:
             return IMAGENET_DEFAULT_MEAN
@@ -199,9 +196,7 @@ class PerceptualModel(torch.nn.Module):
     def _get_std(self, model_type):
         if "dino" in model_type or "synclr" in model_type:
             return IMAGENET_DEFAULT_STD
-        elif "open_clip" in model_type:
-            return OPENAI_CLIP_STD
-        elif "clip" in model_type:
+        elif "open_clip" in model_type or "clip" in model_type:
             return OPENAI_CLIP_STD
         elif "mae" in model_type:
             return IMAGENET_DEFAULT_STD
@@ -309,7 +304,7 @@ def dreamsim(
     else:
         tag = f"{model_list[0]}_single_"
 
-    with open(os.path.join(cache_dir, f"{tag}lora", "adapter_config.json"), "r") as f:
+    with open(os.path.join(cache_dir, f"{tag}lora", "adapter_config.json")) as f:
         adapter_config = json.load(f)
     lora_keys = ["r", "lora_alpha", "lora_dropout", "bias", "target_modules"]
     lora_config = LoraConfig(**{k: adapter_config[k] for k in lora_keys})

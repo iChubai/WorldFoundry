@@ -1,21 +1,21 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-import numpy as np
 import json
 import math
-import torch
-from torch import nn
-from torch.autograd.function import Function
 from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
+import torch
 from detectron2.layers import ShapeSpec
-from detectron2.structures import Boxes, Instances, pairwise_iou
-from detectron2.utils.events import get_event_storage
-
 from detectron2.modeling.box_regression import Box2BoxTransform
+from detectron2.modeling.roi_heads.box_head import build_box_head
+from detectron2.modeling.roi_heads.cascade_rcnn import CascadeROIHeads
 from detectron2.modeling.roi_heads.fast_rcnn import fast_rcnn_inference
 from detectron2.modeling.roi_heads.roi_heads import ROI_HEADS_REGISTRY, StandardROIHeads
-from detectron2.modeling.roi_heads.cascade_rcnn import CascadeROIHeads
-from detectron2.modeling.roi_heads.box_head import build_box_head
+from detectron2.structures import Boxes, Instances, pairwise_iou
+from detectron2.utils.events import get_event_storage
+from torch import nn
+from torch.autograd.function import Function
+
 from .custom_fast_rcnn import CustomFastRCNNOutputLayers
 
 
@@ -76,7 +76,7 @@ class CustomCascadeROIHeads(CascadeROIHeads):
         del ret["box_predictors"]
         cascade_bbox_reg_weights = cfg.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS
         box_predictors = []
-        for box_head, bbox_reg_weights in zip(ret["box_heads"], cascade_bbox_reg_weights):
+        for box_head, bbox_reg_weights in zip(ret["box_heads"], cascade_bbox_reg_weights, strict=False):
             box_predictors.append(
                 CustomFastRCNNOutputLayers(
                     cfg, box_head.output_shape, box2box_transform=Box2BoxTransform(weights=bbox_reg_weights)
@@ -119,20 +119,20 @@ class CustomCascadeROIHeads(CascadeROIHeads):
             losses = {}
             storage = get_event_storage()
             for stage, (predictor, predictions, proposals) in enumerate(head_outputs):
-                with storage.name_scope("stage{}".format(stage)):
+                with storage.name_scope(f"stage{stage}"):
                     stage_losses = predictor.losses(predictions, proposals)
-                losses.update({k + "_stage{}".format(stage): v for k, v in stage_losses.items()})
+                losses.update({k + f"_stage{stage}": v for k, v in stage_losses.items()})
             return losses
         else:
             # Each is a list[Tensor] of length #image. Each tensor is Ri x (K+1)
             scores_per_stage = [h[0].predict_probs(h[1], h[2]) for h in head_outputs]
             scores = [
                 sum(list(scores_per_image)) * (1.0 / self.num_cascade_stages)
-                for scores_per_image in zip(*scores_per_stage)
+                for scores_per_image in zip(*scores_per_stage, strict=False)
             ]
 
             if self.mult_proposal_score:
-                scores = [(s * ps[:, None]) ** 0.5 for s, ps in zip(scores, proposal_scores)]
+                scores = [(s * ps[:, None]) ** 0.5 for s, ps in zip(scores, proposal_scores, strict=False)]
 
             predictor, predictions, proposals = head_outputs[-1]
             boxes = predictor.predict_boxes(predictions, proposals)

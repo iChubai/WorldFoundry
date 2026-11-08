@@ -1,8 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
 from collections import defaultdict
+from collections.abc import Callable, Sequence
 from copy import deepcopy
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 from mmdet.structures.bbox.transforms import get_box_tensor
@@ -19,7 +20,7 @@ def make_round(x: float, deepen_factor: float = 1.0) -> int:
     return max(round(x * deepen_factor), 1) if x > 1 else x
 
 
-def gt_instances_preprocess(batch_gt_instances: Union[Tensor, Sequence], batch_size: int) -> Tensor:
+def gt_instances_preprocess(batch_gt_instances: Tensor | Sequence, batch_size: int) -> Tensor:
     """Split batch_gt_instances with batch size.
 
     From [all_gt_bboxes, box_dim+2] to [batch_size, number_gt, box_dim+1].
@@ -112,7 +113,7 @@ class OutputSaveObjectWrapper:
             self.log[attr].append(orig_attr)
             return orig_attr
 
-        def hooked(*args: Tuple, **kwargs: Dict) -> Any:
+        def hooked(*args: tuple, **kwargs: dict) -> Any:
             """The hooked function that logs the return value of the original
             function."""
             result = orig_attr(*args, **kwargs)
@@ -145,7 +146,7 @@ class OutputSaveFunctionWrapper:
             original function is used.
     """
 
-    def __init__(self, func: Callable, spec: Optional[Dict]) -> None:
+    def __init__(self, func: Callable, spec: dict | None) -> None:
         """Initializes the OutputSaveFunctionWrapper instance."""
         assert callable(func)
         self.log = []

@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from numpy.typing import NDArray
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.edt import edt_triton
 
 

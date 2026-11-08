@@ -2,13 +2,12 @@
 
 import cv2
 import torch
+from torchvision.transforms import Compose
 
 from .dpt_depth import DPTDepthModel
 from .midas_net import MidasNet
 from .midas_net_custom import MidasNet_small
 from .transforms import NormalizeImage, PrepareForNet, Resize
-
-from torchvision.transforms import Compose
 
 default_models = {
     "dpt_beit_large_512": "weights/dpt_beit_large_512.pt",
@@ -200,8 +199,8 @@ def load_model(device, model_path, model_type="dpt_large_384", optimize=True, he
         print(f"model_type '{model_type}' not implemented, use: --model_type large")
         assert False
 
-    if not "openvino" in model_type:
-        print("Model loaded, number of parameters = {:.0f}M".format(sum(p.numel() for p in model.parameters()) / 1e6))
+    if "openvino" not in model_type:
+        print(f"Model loaded, number of parameters = {sum(p.numel() for p in model.parameters()) / 1e6:.0f}M")
     else:
         print("Model loaded, optimized with OpenVINO")
 
@@ -227,18 +226,18 @@ def load_model(device, model_path, model_type="dpt_large_384", optimize=True, he
         ]
     )
 
-    if not "openvino" in model_type:
+    if "openvino" not in model_type:
         model.eval()
 
     if optimize and (device == torch.device("cuda")):
-        if not "openvino" in model_type:
+        if "openvino" not in model_type:
             model = model.to(memory_format=torch.channels_last)
             model = model.half()
         else:
             print("Error: OpenVINO models are already optimized. No optimization to half-float possible.")
             exit()
 
-    if not "openvino" in model_type:
+    if "openvino" not in model_type:
         model.to(device)
 
     return model, transform, net_w, net_h

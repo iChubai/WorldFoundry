@@ -11,4 +11,5 @@ from worldfoundry.base_models.perception_core.segment.sam_v1.modeling.image_enco
 from worldfoundry.base_models.perception_core.segment.sam_v1.modeling.mask_decoder import MaskDecoder
 from worldfoundry.base_models.perception_core.segment.sam_v1.modeling.prompt_encoder import PromptEncoder
 from worldfoundry.base_models.perception_core.segment.sam_v1.modeling.transformer import TwoWayTransformer
+
 from .tiny_vit_sam import TinyViT

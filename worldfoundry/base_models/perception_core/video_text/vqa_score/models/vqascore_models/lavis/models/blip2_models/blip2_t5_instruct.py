@@ -5,10 +5,10 @@ SPDX-License-Identifier: BSD-3-Clause
 For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-import logging
-import string
-import random
 import copy
+import logging
+import random
+import string
 
 import torch
 import torch.nn as nn
@@ -16,8 +16,15 @@ from torch.cuda.amp import autocast as autocast
 from transformers import T5TokenizerFast
 
 from ...common.registry import registry
+
+# isort: split
 from .blip2 import Blip2Base, disabled_train
+
+# isort: split
+# isort: split
 from .modeling_t5 import T5Config, T5ForConditionalGeneration
+
+# isort: split
 from transformers.modeling_outputs import BaseModelOutput
 
 

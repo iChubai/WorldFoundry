@@ -3,13 +3,13 @@ from typing import List
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 import torch.nn.functional as F
 from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule, Linear
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig
 from mmengine.model import BaseModule
-from mmyolo.registry import MODELS
 from mmyolo.models.layers import CSPLayerWithTwoConv
+from mmyolo.registry import MODELS
+from torch import Tensor
 
 
 @MODELS.register_module()
@@ -231,7 +231,7 @@ class RepConvMaxSigmoidAttnBlock(BaseModule):
         embed = self.embed_conv(x) if self.embed_conv is not None else x
         embed = list(embed.split(self.split_channels, 1))
         # Bx(MxN)xHxW (H*c=C, H: heads)
-        attn_weight = torch.cat([conv(x) for conv, x in zip(self.guide_convs, embed)], dim=1)
+        attn_weight = torch.cat([conv(x) for conv, x in zip(self.guide_convs, embed, strict=False)], dim=1)
         # BxMxNxHxW
         attn_weight = attn_weight.view(B, self.num_heads, -1, H, W)
         # attn_weight = torch.stack(
@@ -428,7 +428,7 @@ class RepConvMaxSigmoidCSPLayerWithTwoConv(CSPLayerWithTwoConv):
 class ImagePoolingAttentionModule(nn.Module):
     def __init__(
         self,
-        image_channels: List[int],
+        image_channels: list[int],
         text_channels: int,
         embed_channels: int,
         with_scale: bool = False,
@@ -466,7 +466,7 @@ class ImagePoolingAttentionModule(nn.Module):
         num_patches = self.pool_size**2
         mlvl_image_features = [
             pool(proj(x)).view(B, -1, num_patches)
-            for (x, proj, pool) in zip(image_features, self.projections, self.image_pools)
+            for (x, proj, pool) in zip(image_features, self.projections, self.image_pools, strict=False)
         ]
         mlvl_image_features = torch.cat(mlvl_image_features, dim=-1).transpose(1, 2)
         q = self.query(text_features)

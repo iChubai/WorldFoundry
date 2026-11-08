@@ -15,10 +15,10 @@ class MolmoTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         return []
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         # image
         images_inputs = self.processor.process(images=inputs.images or None, text="")
@@ -44,7 +44,7 @@ class MolmoTemplate(Template):
         }
         return model.generate_from_batch(batch, generation_config, **kwargs)
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         # prepare batchfy inputs
         keys = ["images", "image_input_idx", "image_masks"]

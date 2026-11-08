@@ -30,7 +30,7 @@ class HubOperation:
         yield
 
     @classmethod
-    def try_login(cls, token: Optional[str] = None) -> bool:
+    def try_login(cls, token: str | None = None) -> bool:
         """Try to login to the hub
 
         Args:
@@ -42,7 +42,7 @@ class HubOperation:
         raise NotImplementedError
 
     @classmethod
-    def create_model_repo(cls, repo_id: str, token: Optional[str] = None, private: bool = False):
+    def create_model_repo(cls, repo_id: str, token: str | None = None, private: bool = False):
         """Create a model repo on the hub
 
         Args:
@@ -56,14 +56,14 @@ class HubOperation:
     def push_to_hub(
         cls,
         repo_id: str,
-        folder_path: Union[str, Path],
-        path_in_repo: Optional[str] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
-        token: Union[str, bool, None] = None,
+        folder_path: str | Path,
+        path_in_repo: str | None = None,
+        commit_message: str | None = None,
+        commit_description: str | None = None,
+        token: str | bool | None = None,
         private: bool = False,
-        revision: Optional[str] = "master",
-        ignore_patterns: Optional[Union[List[str], str]] = None,
+        revision: str | None = "master",
+        ignore_patterns: list[str] | str | None = None,
         **kwargs,
     ):
         """Push a model-like folder to the hub
@@ -83,7 +83,7 @@ class HubOperation:
 
     @classmethod
     def load_dataset(
-        cls, dataset_id: str, subset_name: str, split: str, streaming: bool = False, revision: Optional[str] = None
+        cls, dataset_id: str, subset_name: str, split: str, streaming: bool = False, revision: str | None = None
     ):
         """Load a dataset from the repo
 
@@ -102,10 +102,10 @@ class HubOperation:
     @classmethod
     def download_model(
         cls,
-        model_id_or_path: Optional[str] = None,
-        revision: Optional[str] = None,
+        model_id_or_path: str | None = None,
+        revision: str | None = None,
         download_model: bool = True,
-        ignore_patterns: Optional[List[str]] = None,
+        ignore_patterns: list[str] | None = None,
         **kwargs,
     ):
         """Download model from the hub
@@ -128,7 +128,7 @@ class MSHub(HubOperation):
     ms_token = None
 
     @staticmethod
-    def create_repo(repo_id: str, *, token: Union[str, bool, None] = None, private: bool = False, **kwargs) -> RepoUrl:
+    def create_repo(repo_id: str, *, token: str | bool | None = None, private: bool = False, **kwargs) -> RepoUrl:
         """
         Create a new repository on the hub.
 
@@ -152,13 +152,13 @@ class MSHub(HubOperation):
         self,
         *,
         repo_id: str,
-        folder_path: Union[str, Path],
-        path_in_repo: Optional[str] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
-        token: Union[str, bool, None] = None,
-        revision: Optional[str] = "master",
-        ignore_patterns: Optional[Union[List[str], str]] = None,
+        folder_path: str | Path,
+        path_in_repo: str | None = None,
+        commit_message: str | None = None,
+        commit_description: str | None = None,
+        token: str | bool | None = None,
+        revision: str | None = "master",
+        ignore_patterns: list[str] | str | None = None,
         **kwargs,
     ):
         from modelscope.utils.repo_utils import CommitInfo
@@ -202,7 +202,7 @@ class MSHub(HubOperation):
             trainer.upload_folder = trainer_upload_folder
 
     @classmethod
-    def try_login(cls, token: Optional[str] = None) -> bool:
+    def try_login(cls, token: str | None = None) -> bool:
         from modelscope import HubApi
 
         if token is None:
@@ -214,7 +214,7 @@ class MSHub(HubOperation):
         return False
 
     @classmethod
-    def create_model_repo(cls, repo_id: str, token: Optional[str] = None, private: bool = False) -> str:
+    def create_model_repo(cls, repo_id: str, token: str | None = None, private: bool = False) -> str:
         from modelscope import HubApi
         from modelscope.hub.api import ModelScopeConfig
         from modelscope.hub.constants import ModelVisibility
@@ -261,14 +261,14 @@ class MSHub(HubOperation):
     def push_to_hub(
         cls,
         repo_id: str,
-        folder_path: Union[str, Path],
-        path_in_repo: Optional[str] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
-        token: Union[str, bool, None] = None,
+        folder_path: str | Path,
+        path_in_repo: str | None = None,
+        commit_message: str | None = None,
+        commit_description: str | None = None,
+        token: str | bool | None = None,
         private: bool = False,
-        revision: Optional[str] = "master",
-        ignore_patterns: Optional[Union[List[str], str]] = None,
+        revision: str | None = "master",
+        ignore_patterns: list[str] | str | None = None,
         **kwargs,
     ):
         cls.create_model_repo(repo_id, token, private)
@@ -307,9 +307,9 @@ class MSHub(HubOperation):
         subset_name: str,
         split: str,
         streaming: bool = False,
-        revision: Optional[str] = None,
+        revision: str | None = None,
         download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists",
-        token: Optional[str] = None,
+        token: str | None = None,
         **kwargs,
     ):
         from modelscope import MsDataset
@@ -330,10 +330,10 @@ class MSHub(HubOperation):
     @classmethod
     def download_model(
         cls,
-        model_id_or_path: Optional[str] = None,
-        revision: Optional[str] = None,
-        ignore_patterns: Optional[List[str]] = None,
-        token: Optional[str] = None,
+        model_id_or_path: str | None = None,
+        revision: str | None = None,
+        ignore_patterns: list[str] | None = None,
+        token: str | None = None,
         **kwargs,
     ):
         cls.try_login(token)
@@ -346,7 +346,7 @@ class MSHub(HubOperation):
 
     @staticmethod
     def add_patterns_to_file(
-        repo, file_name: str, patterns: List[str], commit_message: Optional[str] = None, ignore_push_error=False
+        repo, file_name: str, patterns: list[str], commit_message: str | None = None, ignore_push_error=False
     ) -> None:
         if isinstance(patterns, str):
             patterns = [patterns]
@@ -357,7 +357,7 @@ class MSHub(HubOperation):
         repo_dir = repo.model_dir
         file_path = os.path.join(repo_dir, file_name)
         if os.path.exists(file_path):
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 current_content = f.read()
         else:
             current_content = ""
@@ -383,11 +383,11 @@ class MSHub(HubOperation):
                 raise e
 
     @staticmethod
-    def add_patterns_to_gitignore(repo, patterns: List[str], commit_message: Optional[str] = None) -> None:
+    def add_patterns_to_gitignore(repo, patterns: list[str], commit_message: str | None = None) -> None:
         MSHub.add_patterns_to_file(repo, ".gitignore", patterns, commit_message, ignore_push_error=True)
 
     @staticmethod
-    def add_patterns_to_gitattributes(repo, patterns: List[str], commit_message: Optional[str] = None) -> None:
+    def add_patterns_to_gitattributes(repo, patterns: list[str], commit_message: str | None = None) -> None:
         new_patterns = []
         suffix = "filter=lfs diff=lfs merge=lfs -text"
         for pattern in patterns:
@@ -402,25 +402,25 @@ class MSHub(HubOperation):
 
 class HFHub(HubOperation):
     @classmethod
-    def try_login(cls, token: Optional[str] = None) -> bool:
+    def try_login(cls, token: str | None = None) -> bool:
         pass
 
     @classmethod
-    def create_model_repo(cls, repo_id: str, token: Optional[str] = None, private: bool = False) -> str:
+    def create_model_repo(cls, repo_id: str, token: str | None = None, private: bool = False) -> str:
         return api.create_repo(repo_id, token=token, private=private)
 
     @classmethod
     def push_to_hub(
         cls,
         repo_id: str,
-        folder_path: Union[str, Path],
-        path_in_repo: Optional[str] = None,
-        commit_message: Optional[str] = None,
-        commit_description: Optional[str] = None,
-        token: Union[str, bool, None] = None,
+        folder_path: str | Path,
+        path_in_repo: str | None = None,
+        commit_message: str | None = None,
+        commit_description: str | None = None,
+        token: str | bool | None = None,
         private: bool = False,
-        revision: Optional[str] = "master",
-        ignore_patterns: Optional[Union[List[str], str]] = None,
+        revision: str | None = "master",
+        ignore_patterns: list[str] | str | None = None,
         **kwargs,
     ):
         cls.create_model_repo(repo_id, token, private)
@@ -445,9 +445,9 @@ class HFHub(HubOperation):
         subset_name: str,
         split: str,
         streaming: bool = False,
-        revision: Optional[str] = None,
+        revision: str | None = None,
         download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists",
-        num_proc: Optional[int] = None,
+        num_proc: int | None = None,
         **kwargs,
     ):
         from datasets import load_dataset
@@ -467,9 +467,9 @@ class HFHub(HubOperation):
     @classmethod
     def download_model(
         cls,
-        model_id_or_path: Optional[str] = None,
-        revision: Optional[str] = None,
-        ignore_patterns: Optional[List[str]] = None,
+        model_id_or_path: str | None = None,
+        revision: str | None = None,
+        ignore_patterns: list[str] | None = None,
         **kwargs,
     ):
         if revision is None or revision == "master":
@@ -487,7 +487,7 @@ class HFHub(HubOperation):
         )
 
 
-def get_hub(use_hf: Optional[bool] = None):
+def get_hub(use_hf: bool | None = None):
     if use_hf is None:
         use_hf = True if use_hf_hub() else False
     return {True: HFHub, False: MSHub}[use_hf]

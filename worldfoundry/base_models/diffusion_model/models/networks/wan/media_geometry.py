@@ -27,7 +27,7 @@ import imageio
 import torch
 import torchvision
 
-__all__ = ["save_video", "save_image"]
+__all__ = ["save_image", "save_video"]
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ def masks_like(tensor, zero=False, generator=None, p=0.2, current_latent_num=Non
 
     if zero:
         if generator is not None:
-            for u, v in zip(out1, out2):
+            for u, v in zip(out1, out2, strict=False):
                 random_num = torch.rand(1, generator=generator, device=generator.device).item()
                 if random_num < p:
                     u_target = u[:, :-current_latent_num] if current_latent_num else u[:, 0]
@@ -191,7 +191,7 @@ def masks_like(tensor, zero=False, generator=None, p=0.2, current_latent_num=Non
                     )
                     v_target[:] = torch.zeros_like(v_target)
         else:
-            for u, v in zip(out1, out2):
+            for u, v in zip(out1, out2, strict=False):
                 if current_latent_num:
                     u[:, :-current_latent_num] = torch.zeros_like(u[:, :-current_latent_num])
                     v[:, :-current_latent_num] = torch.zeros_like(v[:, :-current_latent_num])

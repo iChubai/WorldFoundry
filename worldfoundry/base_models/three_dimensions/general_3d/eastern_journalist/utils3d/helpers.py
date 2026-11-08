@@ -1,14 +1,13 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> helpers.py functionality."""
 
-from functools import wraps
-import warnings
-from typing import *
-from itertools import chain
-from functools import partial
-from pathlib import Path
-from contextlib import contextmanager
 import importlib
 import time
+import warnings
+from contextlib import contextmanager
+from functools import partial, wraps
+from itertools import chain
+from pathlib import Path
+from typing import *
 
 
 def suppress_traceback(fn):
@@ -179,8 +178,6 @@ def _write_all_members(meta_filepath: Path, all_members: Sequence[str]) -> dict:
 
 class LazyImportWarning(UserWarning):
     """Lazy import warning implementation."""
-
-    pass
 
 
 def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:

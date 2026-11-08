@@ -1,6 +1,6 @@
 _base_ = ["./yolox-pose_m_8xb32-300e-rtmdet-hyp_coco.py"]
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_l_fast_8xb8-300e_coco/yolox_l_fast_8xb8-300e_coco_20230213_160715-c731eb1c.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_l_fast_8xb8-300e_coco/yolox_l_fast_8xb8-300e_coco_20230213_160715-c731eb1c.pth"
 
 # ========================modified parameters======================
 deepen_factor = 1.0

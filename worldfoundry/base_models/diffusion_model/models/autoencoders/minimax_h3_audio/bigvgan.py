@@ -150,7 +150,7 @@ class AMPBlock1(torch.nn.Module):
 
     def forward(self, x):
         activation_iter = iter(self.activations)
-        for c1, c2 in zip(self.convs1, self.convs2):
+        for c1, c2 in zip(self.convs1, self.convs2, strict=False):
             a1 = next(activation_iter)
             a2 = next(activation_iter)
             xt = a1(x)
@@ -188,7 +188,7 @@ class BigVGAN(torch.nn.Module):
 
         # Transposed conv-based upsamplers. does not apply anti-aliasing
         self.ups = nn.ModuleList()
-        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes)):
+        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_kernel_sizes, strict=False)):
             self.ups.append(
                 nn.ModuleList(
                     [
@@ -209,7 +209,7 @@ class BigVGAN(torch.nn.Module):
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
-            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes, strict=False)):
                 self.resblocks.append(resblock_class(h, ch, k, d, activation=h.activation))
 
         # Post-conv

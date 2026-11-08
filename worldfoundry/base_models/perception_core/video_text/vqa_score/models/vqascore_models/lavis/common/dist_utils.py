@@ -9,9 +9,9 @@ import datetime
 import functools
 import os
 
+import timm.models as timm_hub
 import torch
 import torch.distributed as dist
-import timm.models as timm_hub
 
 
 def setup_for_distributed(is_master):
@@ -72,7 +72,7 @@ def init_distributed_mode(args):
     torch.cuda.set_device(args.gpu)
     args.dist_backend = "nccl"
     print(
-        "| distributed init (rank {}, world {}): {}".format(args.rank, args.world_size, args.dist_url),
+        f"| distributed init (rank {args.rank}, world {args.world_size}): {args.dist_url}",
         flush=True,
     )
     torch.distributed.init_process_group(

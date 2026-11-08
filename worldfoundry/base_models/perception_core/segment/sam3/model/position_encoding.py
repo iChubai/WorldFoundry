@@ -22,8 +22,8 @@ class PositionEmbeddingSine(nn.Module):
         num_pos_feats,
         temperature: int = 10000,
         normalize: bool = True,
-        scale: Optional[float] = None,
-        precompute_resolution: Optional[int] = None,
+        scale: float | None = None,
+        precompute_resolution: int | None = None,
     ):
         """Init.
 

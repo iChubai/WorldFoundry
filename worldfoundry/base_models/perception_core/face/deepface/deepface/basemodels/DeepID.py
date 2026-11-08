@@ -1,34 +1,36 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
-    from keras.models import Model
     from keras.layers import (
-        Conv2D,
         Activation,
-        Input,
         Add,
-        MaxPooling2D,
-        Flatten,
+        Conv2D,
         Dense,
         Dropout,
+        Flatten,
+        Input,
+        MaxPooling2D,
     )
+    from keras.models import Model
 else:
-    from tensorflow.keras.models import Model
     from tensorflow.keras.layers import (
-        Conv2D,
         Activation,
-        Input,
         Add,
-        MaxPooling2D,
-        Flatten,
+        Conv2D,
         Dense,
         Dropout,
+        Flatten,
+        Input,
+        MaxPooling2D,
     )
+    from tensorflow.keras.models import Model
 
 # pylint: disable=line-too-long
 

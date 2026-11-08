@@ -4,13 +4,15 @@
 Large CNN file: header only."""
 
 import math
-import torch
+
 import numpy as np
+import torch
 import torch.nn as nn
 from einops import rearrange
+
+from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import LinearAttention
 from worldfoundry.core.model_loading.factory import instantiate_from_config
 from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
-from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import LinearAttention
 
 
 def nonlinearity(x):
@@ -576,7 +578,7 @@ class Decoder(nn.Module):
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
-        print("AE working on z of shape {} = {} dimensions.".format(self.z_shape, np.prod(self.z_shape)))
+        print(f"AE working on z of shape {self.z_shape} = {np.prod(self.z_shape)} dimensions.")
 
         # z to block_in
         self.conv_in = torch.nn.Conv2d(z_channels, block_in, kernel_size=3, stride=1, padding=1)
@@ -1123,7 +1125,7 @@ class FirstStagePostProcessor(nn.Module):
         z = self.proj(z)
         z = nonlinearity(z)
 
-        for submodel, downmodel in zip(self.model, self.downsampler):
+        for submodel, downmodel in zip(self.model, self.downsampler, strict=False):
             z = submodel(z, temb=None)
             z = downmodel(z)
 

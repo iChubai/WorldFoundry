@@ -286,7 +286,7 @@ class Image2PanoramaDemo:
         if self.args.cache:
             helper = DeepCacheHelper(
                 self.pipe.transformer,
-                no_cache_steps=list(range(0, 10)) + list(range(10, 40, 3)) + list(range(40, 50)),
+                no_cache_steps=list(range(10)) + list(range(10, 40, 3)) + list(range(40, 50)),
                 no_cache_block_id={"single": [38]},
             )
             helper.start_timestep = 0

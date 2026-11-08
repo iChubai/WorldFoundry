@@ -1,6 +1,8 @@
-import os
 import bz2
+import os
+
 import gdown
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 

@@ -13,7 +13,7 @@ train_num_workers = 4
 val_batch_size_per_gpu = 1
 val_num_workers = 2
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_tiny_syncbn_fast_8xb32-300e_coco/rtmdet_tiny_syncbn_fast_8xb32-300e_coco_20230102_140117-dbb1dc83.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_tiny_syncbn_fast_8xb32-300e_coco/rtmdet_tiny_syncbn_fast_8xb32-300e_coco_20230102_140117-dbb1dc83.pth"
 
 model = dict(
     backbone=dict(frozen_stages=4),
@@ -62,4 +62,4 @@ default_hooks = dict(
     checkpoint=dict(interval=10, max_keep_ckpts=2, save_best="auto"), logger=dict(type="LoggerHook", interval=5)
 )
 train_cfg = dict(max_epochs=max_epochs, val_interval=10)
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')]) # noqa
+# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])

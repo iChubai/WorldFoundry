@@ -1,26 +1,25 @@
-import math
-import json
 import copy
-from typing import List, Dict
+import json
+import math
+from typing import Dict, List
+
 import numpy as np
 import torch
+from detectron2.config import configurable
+from detectron2.layers import ShapeSpec, cat
+from detectron2.modeling import detector_postprocess
+from detectron2.modeling.proposal_generator.build import PROPOSAL_GENERATOR_REGISTRY
+from detectron2.structures import Boxes, Instances
+from detectron2.utils.comm import get_world_size
 from torch import nn
 from torch.nn import functional as F
 
-from detectron2.modeling.proposal_generator.build import PROPOSAL_GENERATOR_REGISTRY
-from detectron2.layers import ShapeSpec, cat
-from detectron2.structures import Instances, Boxes
-from detectron2.modeling import detector_postprocess
-from detectron2.utils.comm import get_world_size
-from detectron2.config import configurable
-
-from ..layers.heatmap_focal_loss import heatmap_focal_loss_jit
-from ..layers.heatmap_focal_loss import binary_heatmap_focal_loss
+from ..debug import debug_test, debug_train
+from ..layers.heatmap_focal_loss import binary_heatmap_focal_loss, heatmap_focal_loss_jit
 from ..layers.iou_loss import IOULoss
 from ..layers.ml_nms import ml_nms
-from ..debug import debug_train, debug_test
-from .utils import reduce_sum, _transpose
 from .centernet_head import CenterNetHead
+from .utils import _transpose, reduce_sum
 
 __all__ = ["CenterNet"]
 
@@ -615,7 +614,7 @@ class CenterNet(nn.Module):
                     is_proposal=is_proposal,
                 )
             )
-        boxlists = list(zip(*sampled_boxes))
+        boxlists = list(zip(*sampled_boxes, strict=False))
         boxlists = [Instances.cat(boxlist) for boxlist in boxlists]
         boxlists = self.nms_and_topK(boxlists, nms=not self.not_nms)
         return boxlists
@@ -726,7 +725,7 @@ class CenterNet(nn.Module):
         c33_reg_loss.view(N * L, K)[level_masks.view(N * L), 4] = 0  # real center
         c33_reg_loss = c33_reg_loss.view(N, L * K)
         if N == 0:
-            loss_thresh = c33_reg_loss.new_ones((N)).float()
+            loss_thresh = c33_reg_loss.new_ones(N).float()
         else:
             loss_thresh = torch.kthvalue(c33_reg_loss, self.more_pos_topk, dim=1)[0]  # N
         loss_thresh[loss_thresh > self.more_pos_thresh] = self.more_pos_thresh  # N
@@ -829,7 +828,7 @@ class CenterNet(nn.Module):
             c33_regs = torch.cat(c33_regs, dim=0)
             c33_masks = torch.cat(c33_masks, dim=0)
         else:
-            labels = shapes_per_level.new_zeros((0)).long()
+            labels = shapes_per_level.new_zeros(0).long()
             level_masks = shapes_per_level.new_zeros((0, L)).bool()
             c33_inds = shapes_per_level.new_zeros((0, L, K)).long()
             c33_regs = shapes_per_level.new_zeros((0, L, K, 4)).float()

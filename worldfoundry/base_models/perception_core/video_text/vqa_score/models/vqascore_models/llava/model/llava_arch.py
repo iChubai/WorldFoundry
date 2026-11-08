@@ -18,10 +18,11 @@ from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 
-from .multimodal_encoder.builder import build_vision_tower
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.vqascore_models._shared.multimodal_projector import (
     build_vision_projector,
 )
+
+from .multimodal_encoder.builder import build_vision_tower
 
 IMAGE_TOKEN_INDEX = -200
 IGNORE_INDEX = -100
@@ -201,7 +202,7 @@ class LlavaMetaForCausalLM(ABC):
             if attention_mask is not None:
                 new_attention_mask = []
                 for cur_attention_mask, cur_new_labels, cur_new_labels_align in zip(
-                    attention_mask, _new_labels, new_labels
+                    attention_mask, _new_labels, new_labels, strict=False
                 ):
                     new_attn_mask_pad_left = torch.full(
                         (cur_new_labels.shape[0] - labels.shape[1],),

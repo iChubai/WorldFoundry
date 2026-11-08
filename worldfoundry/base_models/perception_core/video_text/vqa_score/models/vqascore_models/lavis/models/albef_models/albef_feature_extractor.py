@@ -9,12 +9,26 @@ import warnings
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from ...common.utils import get_abs_path
+
+# isort: split
 from ...models.albef_models import AlbefBase
+
+# isort: split
+# isort: split
 from ...models.albef_models.albef_outputs import AlbefOutputFeatures
+
+# isort: split
+# isort: split
 from ...models.med import BertForMaskedLM
+
+# isort: split
+# isort: split
 from ...models.vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 from transformers import BertConfig
 
@@ -112,7 +126,7 @@ class AlbefFeatureExtractor(AlbefBase):
                 "multimodal",
                 "image",
                 "text",
-            ], "mode must be one of [multimodal, image, text], but got {}".format(m)
+            ], f"mode must be one of [multimodal, image, text], but got {m}"
 
         # initalize output
         image_embeds, text_embeds, multimodal_embeds = None, None, None

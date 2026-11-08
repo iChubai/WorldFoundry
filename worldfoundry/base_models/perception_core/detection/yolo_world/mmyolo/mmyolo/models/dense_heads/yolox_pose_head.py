@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections import defaultdict
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -13,6 +14,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS
+
 from ..utils import OutputSaveFunctionWrapper, OutputSaveObjectWrapper
 from .yolox_head import YOLOXHead, YOLOXHeadModule
 
@@ -56,7 +58,7 @@ class YOLOXPoseHeadModule(YOLOXHeadModule):
         for conv_vis in self.multi_level_conv_vis:
             conv_vis.bias.data.fill_(bias_init)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network."""
         offsets_pred, vis_pred = [], []
         for i in range(len(x)):
@@ -77,7 +79,7 @@ class YOLOXPoseHead(YOLOXHead):
 
     def __init__(
         self,
-        loss_pose: Optional[ConfigType] = None,
+        loss_pose: ConfigType | None = None,
         *args,
         **kwargs,
     ):
@@ -100,7 +102,7 @@ class YOLOXPoseHead(YOLOXHead):
         self.sampler.clear()
         self._log.clear()
 
-    def loss(self, x: Tuple[Tensor], batch_data_samples: Union[list, dict]) -> dict:
+    def loss(self, x: tuple[Tensor], batch_data_samples: list | dict) -> dict:
         if isinstance(batch_data_samples, list):
             losses = super().loss(x, batch_data_samples)
         else:
@@ -206,7 +208,7 @@ class YOLOXPoseHead(YOLOXHead):
         objectness: Tensor,
         gt_instances: InstanceData,
         img_meta: dict,
-        gt_instances_ignore: Optional[InstanceData] = None,
+        gt_instances_ignore: InstanceData | None = None,
     ) -> tuple:
         """Calculates targets for a single image, and saves them to the log.
 
@@ -232,16 +234,16 @@ class YOLOXPoseHead(YOLOXHead):
 
     def predict_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        objectnesses: Optional[List[Tensor]] = None,
-        kpt_preds: Optional[List[Tensor]] = None,
-        vis_preds: Optional[List[Tensor]] = None,
-        batch_img_metas: Optional[List[dict]] = None,
-        cfg: Optional[ConfigDict] = None,
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        objectnesses: list[Tensor] | None = None,
+        kpt_preds: list[Tensor] | None = None,
+        vis_preds: list[Tensor] | None = None,
+        batch_img_metas: list[dict] | None = None,
+        cfg: ConfigDict | None = None,
         rescale: bool = True,
         with_nms: bool = True,
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Transform a batch of output features extracted by the head into bbox
         and keypoint results.
 
@@ -269,7 +271,7 @@ class YOLOXPoseHead(YOLOXHead):
         priors = torch.cat(self.mlvl_priors)
         strides = [
             priors.new_full((featmap_size.numel() * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         strides = torch.cat(strides)
         kpt_preds = torch.cat(
@@ -285,7 +287,7 @@ class YOLOXPoseHead(YOLOXHead):
         # select keypoints predictions according to bbox scores and nms result
         keep_indices_nms_idx = 0
         for pred_instances, kpts, kpts_vis, img_meta, keep_idxs in zip(
-            results_list, flatten_decoded_kpts, vis_preds, batch_img_metas, keep_indices_topk
+            results_list, flatten_decoded_kpts, vis_preds, batch_img_metas, keep_indices_topk, strict=False
         ):
             pred_instances.bbox_scores = pred_instances.scores
 
@@ -315,9 +317,7 @@ class YOLOXPoseHead(YOLOXHead):
         results_list = [r.numpy() for r in results_list]
         return results_list
 
-    def decode_pose(
-        self, grids: torch.Tensor, offsets: torch.Tensor, strides: Union[torch.Tensor, int]
-    ) -> torch.Tensor:
+    def decode_pose(self, grids: torch.Tensor, offsets: torch.Tensor, strides: torch.Tensor | int) -> torch.Tensor:
         """Decode regression offsets to keypoints.
 
         Args:
@@ -341,7 +341,7 @@ class YOLOXPoseHead(YOLOXHead):
     @staticmethod
     def gt_kps_instances_preprocess(
         batch_gt_instances: Tensor, batch_gt_keypoints, batch_gt_keypoints_visible, batch_size: int
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Split batch_gt_instances with batch size.
 
         Args:
@@ -368,5 +368,5 @@ class YOLOXPoseHead(YOLOXHead):
         return batch_instance_list
 
     @staticmethod
-    def gt_instances_preprocess(batch_gt_instances: List[InstanceData], *args, **kwargs) -> List[InstanceData]:
+    def gt_instances_preprocess(batch_gt_instances: list[InstanceData], *args, **kwargs) -> list[InstanceData]:
         return batch_gt_instances

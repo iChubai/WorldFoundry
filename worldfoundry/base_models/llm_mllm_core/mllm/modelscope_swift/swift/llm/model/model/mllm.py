@@ -10,6 +10,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.mode
     get_model_tokenizer_qwen2_vl,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_output_clone, patch_output_normalizer
@@ -83,7 +84,7 @@ register_model(
 
 
 def get_model_tokenizer_molmoe(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, processor = get_model_tokenizer_multimodal(model_dir, model_info, model_kwargs, load_model, **kwargs)
 
@@ -124,7 +125,7 @@ register_model(
 
 
 def get_model_tokenizer_molmo(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model_cls = get_class_from_dynamic_module("modeling_molmo.MolmoForCausalLM", model_dir)
     model_cls._no_split_modules = ["MolmoSequentialBlock"]

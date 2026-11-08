@@ -621,9 +621,9 @@ class ConvGRU(nn.Module):
         x = torch.cat(x_list, dim=1)
         hx = torch.cat([h, x], dim=1)
 
-        z = torch.sigmoid((self.convz(hx) + cz))
-        r = torch.sigmoid((self.convr(hx) + cr))
-        q = torch.tanh((self.convq(torch.cat([r * h, x], dim=1)) + cq))
+        z = torch.sigmoid(self.convz(hx) + cz)
+        r = torch.sigmoid(self.convr(hx) + cr)
+        q = torch.tanh(self.convq(torch.cat([r * h, x], dim=1)) + cq)
 
         # z = torch.sigmoid((self.convz(hx) + cz).float())
         # r = torch.sigmoid((self.convr(hx) + cr).float())
@@ -1603,7 +1603,7 @@ class RAFTDepthNormalDPT5(nn.Module):
         # Rather than running the GRU's conv layers on the context features multiple times, we do it once at the beginning
         inp_list = [
             list(conv(i).split(split_size=conv.out_channels // 3, dim=1))
-            for i, conv in zip(inp_list, self.context_zqr_convs)
+            for i, conv in zip(inp_list, self.context_zqr_convs, strict=False)
         ]
 
         coords0, coords1 = self.initialize_flow(net_list[0])

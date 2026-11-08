@@ -9,12 +9,13 @@ Adds action conditioning.  No VACE, camera ControlNet, or linear attn.
 
 import math
 import re
-import torch
 import time
+
+import torch
 import torch.nn as nn
 import torch.nn.functional as torch_F
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from einops import rearrange
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_attention_22 import flash_attention
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_conditioning_22 import ActionModule
 from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import (
@@ -23,6 +24,7 @@ from worldfoundry.base_models.diffusion_model.optimizations.camera_condition imp
     embed_wan_camera_condition,
     prepare_action22_camera_condition,
 )
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 # --- Int8 Quantization Support ---
 _CACHED_TRITON_KERNELS = None
@@ -755,7 +757,7 @@ class WanAttentionBlock(nn.Module):
                 x = x + self.cross_attn(self.norm3(x), context, context_lens, fa_version=fa_version)
 
             if self.action_model is not None:
-                from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size, get_rank, gather_forward
+                from worldfoundry.core.distributed.sequence_parallel.ops import gather_forward, get_rank, get_world_size
 
                 dtype = self.ffn[0].weight.dtype
 
@@ -1134,7 +1136,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
 
@@ -1239,10 +1241,10 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

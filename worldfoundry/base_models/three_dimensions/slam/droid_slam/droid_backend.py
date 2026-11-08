@@ -1,10 +1,10 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_backend.py functionality."""
 
-import torch
 import lietorch
 import numpy as np
-
+import torch
 from lietorch import SE3
+
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
 
 

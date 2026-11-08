@@ -6,7 +6,7 @@ data_root = "./data/cat/"
 
 work_dir = "./work_dirs/yolov5_s-v61_syncbn_fast_1xb32-100e_cat"
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"
 
 train_batch_size_per_gpu = 32
 train_num_workers = 4

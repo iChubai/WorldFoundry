@@ -1,11 +1,12 @@
+import random
 import re
 import sys
-import torch
-import random
+
 import numpy as np
-from PIL import ImageFile
+import torch
 import torch.nn.functional as F
 from imageio import imread, imwrite
+from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -109,13 +110,7 @@ def read(file):
         return readFloat(file)
     elif file.endswith(".flo"):
         return readFlow(file)
-    elif file.endswith(".ppm"):
-        return readImage(file)
-    elif file.endswith(".pgm"):
-        return readImage(file)
-    elif file.endswith(".png"):
-        return readImage(file)
-    elif file.endswith(".jpg"):
+    elif file.endswith(".ppm") or file.endswith(".pgm") or file.endswith(".png") or file.endswith(".jpg"):
         return readImage(file)
     elif file.endswith(".pfm"):
         return readPFM(file)[0]
@@ -128,13 +123,7 @@ def write(file, data):
         return writeFloat(file, data)
     elif file.endswith(".flo"):
         return writeFlow(file, data)
-    elif file.endswith(".ppm"):
-        return writeImage(file, data)
-    elif file.endswith(".pgm"):
-        return writeImage(file, data)
-    elif file.endswith(".png"):
-        return writeImage(file, data)
-    elif file.endswith(".jpg"):
+    elif file.endswith(".ppm") or file.endswith(".pgm") or file.endswith(".png") or file.endswith(".jpg"):
         return writeImage(file, data)
     elif file.endswith(".pfm"):
         return writePFM(file, data)
@@ -192,20 +181,20 @@ def writePFM(file, image, scale=1):
 
     if len(image.shape) == 3 and image.shape[2] == 3:
         color = True
-    elif len(image.shape) == 2 or len(image.shape) == 3 and image.shape[2] == 1:
+    elif len(image.shape) == 2 or (len(image.shape) == 3 and image.shape[2] == 1):
         color = False
     else:
         raise Exception("Image must have H x W x 3, H x W x 1 or H x W dimensions.")
 
-    file.write("PF\n" if color else "Pf\n".encode())
-    file.write("%d %d\n".encode() % (image.shape[1], image.shape[0]))
+    file.write("PF\n" if color else b"Pf\n")
+    file.write(b"%d %d\n" % (image.shape[1], image.shape[0]))
 
     endian = image.dtype.byteorder
 
-    if endian == "<" or endian == "=" and sys.byteorder == "little":
+    if endian == "<" or (endian == "=" and sys.byteorder == "little"):
         scale = -scale
 
-    file.write("%f\n".encode() % scale)
+    file.write(b"%f\n" % scale)
 
     image.tofile(file)
 
@@ -246,7 +235,7 @@ def writeImage(name, data):
 
 def writeFlow(name, flow):
     f = open(name, "wb")
-    f.write("PIEH".encode("utf-8"))
+    f.write(b"PIEH")
     np.array([flow.shape[1], flow.shape[0]], dtype=np.int32).tofile(f)
     flow = flow.astype(np.float32)
     flow.tofile(f)
@@ -262,7 +251,7 @@ def readFloat(name):
 
     dims = []
     count = 1
-    for i in range(0, dim):
+    for i in range(dim):
         d = int(f.readline())
         dims.append(d)
         count *= d

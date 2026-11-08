@@ -74,4 +74,3 @@ class Decoder(nn.Module, ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass

@@ -7,6 +7,7 @@ from PIL import Image
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType, RMTemplateType
 from ..register import TemplateMeta, register_template
@@ -48,13 +49,13 @@ class InternLMXComposer2Template(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "video":
             inputs.images.insert(inputs.image_idx, inputs.videos[index])
             inputs.image_idx += 1
         return self.image_placeholder
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         model = self.model
         encoded = super()._encode(inputs)
         images = inputs.images or []
@@ -86,7 +87,7 @@ class InternLMXComposer2Template(Template):
         encoded["images"] = images
         return encoded
 
-    def _post_encode(self, model, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model, inputs: dict[str, Any]) -> dict[str, Any]:
         batch_size = len(inputs["input_ids"])
         res = []
         im_mask = []
@@ -138,7 +139,7 @@ class InternLMXComposer2Template(Template):
         res["im_mask"] = self._pad_sequence(im_mask, 0)
         return res
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         res["length"] = [len(b["input_ids"]) for b in batch]
         res.update(self.fetch_inputs(batch, ["images"]))
@@ -151,12 +152,12 @@ class Xcomposer2TemplateMeta(TemplateMeta):
     prompt: Prompt = field(
         default_factory=lambda: ["[UNUSED_TOKEN_146]user\n{{QUERY}}[UNUSED_TOKEN_145]\n[UNUSED_TOKEN_146]assistant\n"]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["[UNUSED_TOKEN_145]\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["[UNUSED_TOKEN_145]\n"])
     suffix: Prompt = field(default_factory=lambda: ["[UNUSED_TOKEN_145]"])
-    system_prefix: Optional[Prompt] = field(
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<s>[UNUSED_TOKEN_146]system\n{{SYSTEM}}[UNUSED_TOKEN_145]\n"]
     )
-    stop_words: List[Word] = field(default_factory=lambda: ["<|im_end|>"])
+    stop_words: list[Word] = field(default_factory=lambda: ["<|im_end|>"])
 
 
 register_template(

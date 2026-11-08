@@ -131,7 +131,7 @@ def vk_mm_relu_bwd_kernel(
         + offs_c[None, :] * stride_grad_k_c
     )  # n, C
 
-    for n in range(0, tl.cdiv(N, BLOCK_SIZE_N)):
+    for n in range(tl.cdiv(N, BLOCK_SIZE_N)):
         n_mask = offs_n < N - n * BLOCK_SIZE_N
         nc_mask = n_mask[:, None] & c_mask[None, :]
 

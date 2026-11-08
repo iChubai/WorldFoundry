@@ -5,7 +5,8 @@
 """Module for base_models -> perception_core -> segment -> sam3 -> model -> text_encoder_ve.py functionality."""
 
 from collections import OrderedDict
-from typing import Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -22,7 +23,7 @@ class ResidualAttentionBlock(nn.Module):
         d_model: int,
         n_head: int,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         act_layer: Callable[[], nn.Module] = nn.GELU,
         norm_layer: Callable[[int], nn.Module] = nn.LayerNorm,
     ):
@@ -62,9 +63,9 @@ class ResidualAttentionBlock(nn.Module):
     def attention(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Attention.
 
@@ -89,9 +90,9 @@ class ResidualAttentionBlock(nn.Module):
     def forward(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -120,10 +121,10 @@ class Transformer(nn.Module):
         layers: int,
         heads: int,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         act_layer: Callable[[], nn.Module] = nn.GELU,
         norm_layer: Callable[[int], nn.Module] = nn.LayerNorm,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
         """Init.
@@ -165,7 +166,7 @@ class Transformer(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -188,8 +189,8 @@ class Transformer(nn.Module):
 
 
 def text_global_pool(
-    x: torch.Tensor, text: Optional[torch.Tensor] = None, pool_type: str = "argmax"
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    x: torch.Tensor, text: torch.Tensor | None = None, pool_type: str = "argmax"
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Text global pool.
 
     Args:
@@ -224,7 +225,7 @@ class TextTransformer(nn.Module):
         heads: int = 8,
         layers: int = 12,
         mlp_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         output_dim: int = 512,
         no_causal_mask: bool = False,
         pool_type: str = "none",  # no pooling
@@ -233,7 +234,7 @@ class TextTransformer(nn.Module):
         norm_layer: Callable = nn.LayerNorm,
         output_tokens: bool = False,
         use_ln_post: bool = True,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
         """Init.
@@ -303,7 +304,7 @@ class TextTransformer(nn.Module):
         mask.triu_(1)  # zero out the lower diagonal
         return mask
 
-    def forward(self, text: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def forward(self, text: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:
@@ -347,7 +348,7 @@ class VETextEncoder(nn.Module):
         context_length: int = 32,
         vocab_size: int = 49408,
         use_ln_post: bool = True,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_act_checkpoint: bool = True,
     ):
         """Init.
@@ -385,10 +386,10 @@ class VETextEncoder(nn.Module):
 
     def forward(
         self,
-        text: Union[List[str], Tuple[torch.Tensor, torch.Tensor, dict]],
-        input_boxes: Optional[List] = None,
+        text: list[str] | tuple[torch.Tensor, torch.Tensor, dict],
+        input_boxes: list | None = None,
         device: torch.device = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:

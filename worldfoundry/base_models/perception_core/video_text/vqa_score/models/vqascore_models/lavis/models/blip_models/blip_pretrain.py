@@ -9,17 +9,29 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from ..base_model import MomentumDistilationMixin, SharedQueueMixin
 from . import tie_encoder_decoder_weights
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import (
+    BlipIntermediateOutput,
     BlipOutput,
     BlipSimilarity,
-    BlipIntermediateOutput,
 )
+
+# isort: split
 from ..med import XBertEncoder, XBertLMHeadDecoder
+
+# isort: split
+# isort: split
 from ..vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 
 

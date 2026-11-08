@@ -23,13 +23,14 @@ import pandas as pd
 import yaml
 from iopath.common.download import download
 from iopath.common.file_io import file_lock, g_pathmgr
-from .registry import registry
 from torch.utils.model_zoo import tqdm
 from torchvision.datasets.utils import (
     check_integrity,
     download_file_from_google_drive,
     extract_archive,
 )
+
+from .registry import registry
 
 
 def now():
@@ -52,7 +53,7 @@ def get_abs_path(rel_path):
 
 
 def load_json(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         return json.load(f)
 
 
@@ -135,7 +136,7 @@ def download_google_drive_url(url: str, output_path: str, output_file_name: str)
                         progress_bar.update(len(block))
 
 
-def _get_google_drive_file_id(url: str) -> Optional[str]:
+def _get_google_drive_file_id(url: str) -> str | None:
     parts = urlparse(url)
 
     if re.match(r"(drive|docs)[.]google[.]com", parts.netloc) is None:
@@ -162,8 +163,8 @@ def _urlretrieve(url: str, filename: str, chunk_size: int = 1024) -> None:
 def download_url(
     url: str,
     root: str,
-    filename: Optional[str] = None,
-    md5: Optional[str] = None,
+    filename: str | None = None,
+    md5: str | None = None,
 ) -> None:
     """Download a file from a url and place it in root.
     Args:
@@ -197,7 +198,7 @@ def download_url(
     try:
         print("Downloading " + url + " to " + fpath)
         _urlretrieve(url, fpath)
-    except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
+    except (OSError, urllib.error.URLError) as e:  # type: ignore[attr-defined]
         if url[:5] == "https":
             url = url.replace("https:", "http:")
             print("Failed download. Trying https -> http instead. Downloading " + url + " to " + fpath)
@@ -213,9 +214,9 @@ def download_url(
 def download_and_extract_archive(
     url: str,
     download_root: str,
-    extract_root: Optional[str] = None,
-    filename: Optional[str] = None,
-    md5: Optional[str] = None,
+    extract_root: str | None = None,
+    filename: str | None = None,
+    md5: str | None = None,
     remove_finished: bool = False,
 ) -> None:
     download_root = os.path.expanduser(download_root)
@@ -227,7 +228,7 @@ def download_and_extract_archive(
     download_url(url, download_root, filename, md5)
 
     archive = os.path.join(download_root, filename)
-    print("Extracting {} to {}".format(archive, extract_root))
+    print(f"Extracting {archive} to {extract_root}")
     extract_archive(archive, extract_root, remove_finished)
 
 

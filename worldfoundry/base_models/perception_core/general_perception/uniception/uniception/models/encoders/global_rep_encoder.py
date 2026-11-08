@@ -2,15 +2,15 @@
 Encoder class for Global Representation Encoder
 """
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, Type, Union
+from typing import List, Optional, Type, Union
 
 import torch
-
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 import torch.nn as nn
 
 from uniception.models.encoders.base import EncoderGlobalRepInput, EncoderGlobalRepOutput
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 class GlobalRepresentationEncoder(nn.Module):
@@ -21,10 +21,10 @@ class GlobalRepresentationEncoder(nn.Module):
         name: str,
         in_chans: int = 3,
         enc_embed_dim: int = 1024,
-        intermediate_dims: List[int] = [128, 256, 512],
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Union[Type[nn.Module], Callable[..., nn.Module]] = partial(nn.LayerNorm, eps=1e-6),
-        pretrained_checkpoint_path: Optional[str] = None,
+        intermediate_dims: list[int] = [128, 256, 512],
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,
     ):

@@ -4,15 +4,15 @@
 Include all available vision encoder configurations.
 """
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-
 from functools import partial
-from typing import Callable, Optional, Sequence, Tuple, List
+from typing import List, Optional, Tuple
 
 from huggingface_hub import hf_hub_download
 
 
-def fetch_pe_checkpoint(name: str, path: Optional[str] = None):
+def fetch_pe_checkpoint(name: str, path: str | None = None):
     path = path or f"hf://facebook/{name}:{name}.pt"
 
     if path.startswith("hf://"):
@@ -34,7 +34,7 @@ class PEConfig:
     layers: int
     heads: int
     mlp_ratio: float
-    output_dim: Optional[int]
+    output_dim: int | None
 
     ls_init_value: float = None
     drop_path: float = 0.0

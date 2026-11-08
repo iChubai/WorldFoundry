@@ -1,20 +1,19 @@
-import os
-import re
+import argparse
 import csv
 import json
-import argparse
+import os
+import re
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
 import torch
-from tqdm import tqdm
-
-from peft import LoraConfig, get_peft_model
-from transformers.models.llama.tokenization_llama import LlamaTokenizer
 from mplug_owl_video.modeling_mplug_owl import MplugOwlForConditionalGeneration
 from mplug_owl_video.processing_mplug_owl import MplugOwlImageProcessor, MplugOwlProcessor
+from peft import LoraConfig, get_peft_model
 from template import *
+from tqdm import tqdm
+from transformers.models.llama.tokenization_llama import LlamaTokenizer
 
 parser = argparse.ArgumentParser()
 

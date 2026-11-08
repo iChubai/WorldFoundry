@@ -1,16 +1,16 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> factor_graph.py functionality."""
 
-import torch
-import lietorch
-import numpy as np
-
-import matplotlib.pyplot as plt
-from lietorch import SE3
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import CorrBlock, AltCorrBlock
-import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
-
-from cuda_timer import CudaTimer
 from functools import partial
+
+import lietorch
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from cuda_timer import CudaTimer
+from lietorch import SE3
+
+import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import AltCorrBlock, CorrBlock
 
 if torch.__version__.startswith("2"):
     autocast = partial(torch.autocast, device_type="cuda")
@@ -90,7 +90,7 @@ class FactorGraph:
 
         w = torch.mean(self.weight, dim=[0, 2, 3, 4]).cpu().numpy()
         w = w[ix]
-        for e in zip(ii, jj, w):
+        for e in zip(ii, jj, w, strict=False):
             print(e)
         print()
 
@@ -367,7 +367,7 @@ class FactorGraph:
 
         ii1 = torch.cat([self.ii, self.ii_bad, self.ii_inac], 0)
         jj1 = torch.cat([self.jj, self.jj_bad, self.jj_inac], 0)
-        for i, j in zip(ii1.cpu().numpy(), jj1.cpu().numpy()):
+        for i, j in zip(ii1.cpu().numpy(), jj1.cpu().numpy(), strict=False):
             for di in range(-nms, nms + 1):
                 for dj in range(-nms, nms + 1):
                     if abs(di) + abs(dj) <= max(min(abs(i - j) - 2, nms), 0):

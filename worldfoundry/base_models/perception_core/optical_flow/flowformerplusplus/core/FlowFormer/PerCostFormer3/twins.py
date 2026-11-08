@@ -12,19 +12,19 @@ Code/weights from https://github.com/Meituan-AutoML/Twins, original copyright/li
 # --------------------------------------------------------
 import math
 from copy import deepcopy
+from functools import partial
 from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from timm.models.layers import Mlp, DropPath, to_2tuple, trunc_normal_
+from timm.models.layers import DropPath, Mlp, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 from timm.models.vision_transformer import Attention
-from .attention import MultiHeadAttention, LinearPositionEmbeddingSine
-from ...utils.utils import coords_grid, bilinear_sampler, upflow8
+
+from ...utils.utils import bilinear_sampler, coords_grid, upflow8
+from .attention import LinearPositionEmbeddingSine, MultiHeadAttention
 
 
 def _cfg(url="", **kwargs):
@@ -65,7 +65,7 @@ default_cfgs = {
     ),
 }
 
-Size_ = Tuple[int, int]
+Size_ = tuple[int, int]
 
 
 class GroupAttnRPEContext(nn.Module):
@@ -987,7 +987,7 @@ class PatchEmbed(nn.Module):
         self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.norm = nn.LayerNorm(embed_dim)
 
-    def forward(self, x) -> Tuple[torch.Tensor, Size_]:
+    def forward(self, x) -> tuple[torch.Tensor, Size_]:
         B, C, H, W = x.shape
 
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -1104,7 +1104,7 @@ class Twins(nn.Module):
     def forward_features(self, x):
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.patch_embeds, self.pos_drops, self.blocks, self.pos_block)
+            zip(self.patch_embeds, self.pos_drops, self.blocks, self.pos_block, strict=False)
         ):
             x, size = embed(x)
             x = drop(x)

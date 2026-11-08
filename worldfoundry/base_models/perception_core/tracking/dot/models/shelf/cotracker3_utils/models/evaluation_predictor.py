@@ -4,29 +4,34 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import torch
-import torch.nn.functional as F
 from typing import Tuple
 
+import torch
+import torch.nn.functional as F
+
+# isort: split
 from .core.cotracker.cotracker3_offline import CoTrackerThreeOffline
-from .core.model_utils import (
-    get_points_on_a_grid,
-    get_uniformly_sampled_pts,
-    get_sift_sampled_pts,
-)
-import numpy as np
+
+# isort: split
 import sys
 
+import numpy as np
 from torchvision.transforms import Compose
 from tqdm import tqdm
-from .core.model_utils import bilinear_sampler
+
+from .core.model_utils import (
+    bilinear_sampler,
+    get_points_on_a_grid,
+    get_sift_sampled_pts,
+    get_uniformly_sampled_pts,
+)
 
 
 class EvaluationPredictor(torch.nn.Module):
     def __init__(
         self,
         cotracker_model: CoTrackerThreeOffline,
-        interp_shape: Tuple[int, int] = (384, 512),
+        interp_shape: tuple[int, int] = (384, 512),
         grid_size: int = 5,
         local_grid_size: int = 8,
         single_point: bool = True,
@@ -70,7 +75,7 @@ class EvaluationPredictor(torch.nn.Module):
             vis_e = torch.zeros((B, T, N), device=device)
             conf_e = torch.zeros((B, T, N), device=device)
 
-            for pind in range((N)):
+            for pind in range(N):
                 query = queries[:, pind : pind + 1]
                 t = query[0, 0, 0].long()
                 start_ind = 0

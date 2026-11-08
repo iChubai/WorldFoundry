@@ -15,10 +15,12 @@
 
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> xformers.py functionality."""
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -26,7 +28,7 @@ def memory_efficient_attention(
     query: torch.Tensor,
     key: torch.Tensor,
     value: torch.Tensor,
-    attn_bias: Optional[torch.Tensor] = None,
+    attn_bias: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Memory efficient attention.
 
@@ -53,7 +55,7 @@ def scaled_index_add(
     input: torch.Tensor,  # [B, M, D]
     index: torch.Tensor,  # [Bi] - int64
     source: torch.Tensor,  # [Bi, M, D]
-    scaling: Optional[torch.Tensor] = None,  # [D]
+    scaling: torch.Tensor | None = None,  # [D]
     alpha: float = 1.0,
 ) -> torch.Tensor:
     """Scaled index add.
@@ -83,4 +85,4 @@ def index_select_cat(sources: Sequence[torch.Tensor], indices: Sequence[torch.Te
     Returns:
         The return value.
     """
-    return torch.cat([s[i.long()].flatten() for s, i in zip(sources, indices)], dim=0)
+    return torch.cat([s[i.long()].flatten() for s, i in zip(sources, indices, strict=False)], dim=0)

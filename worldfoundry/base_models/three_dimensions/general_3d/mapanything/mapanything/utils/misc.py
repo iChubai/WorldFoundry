@@ -47,7 +47,6 @@ class StreamToLogger:
         Flush method to comply with file-like object interface.
         This method is required but does nothing in this implementation.
         """
-        pass
 
 
 def seed_everything(seed: int = 42):

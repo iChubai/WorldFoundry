@@ -102,10 +102,10 @@ class ModelKeys:
 
 @dataclass
 class MultiModelKeys(ModelKeys):
-    language_model: Union[str, List[str]] = field(default_factory=list)
-    aligner: Union[str, List[str]] = field(default_factory=list)
-    vision_tower: Union[str, List[str]] = field(default_factory=list)
-    generator: Union[str, List[str]] = field(default_factory=list)
+    language_model: str | list[str] = field(default_factory=list)
+    aligner: str | list[str] = field(default_factory=list)
+    vision_tower: str | list[str] = field(default_factory=list)
+    generator: str | list[str] = field(default_factory=list)
 
     def __post_init__(self):
         for key in ["language_model", "aligner", "vision_tower", "generator"]:
@@ -608,5 +608,5 @@ register_model_arch(
 )
 
 
-def get_model_arch(arch_name: Optional[str]) -> Optional[MultiModelKeys]:
+def get_model_arch(arch_name: str | None) -> MultiModelKeys | None:
     return MODEL_ARCH_MAPPING.get(arch_name)

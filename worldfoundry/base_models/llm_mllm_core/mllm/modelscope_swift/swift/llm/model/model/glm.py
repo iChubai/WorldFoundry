@@ -14,6 +14,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_dist_setting,
     get_logger,
 )
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_output_to_input_device
@@ -23,14 +24,14 @@ from ..utils import AttnImpl, ModelInfo, safe_snapshot_download
 logger = get_logger()
 
 
-def remove_property(tokenizer_cls: Type[PreTrainedTokenizerBase], tokenizer_config: Dict[str, Any]) -> None:
+def remove_property(tokenizer_cls: type[PreTrainedTokenizerBase], tokenizer_config: dict[str, Any]) -> None:
     for k, v in tokenizer_cls.__dict__.items():
         if k.endswith("_token") and isinstance(v, property) and k in tokenizer_config:
             setattr(tokenizer_cls, k, tokenizer_config[k])
 
 
 def get_model_tokenizer_chatglm(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     if model_kwargs.get("quantization_config") is not None:
         model_kwargs["quantization_config"].llm_int8_skip_modules = ["output_layer"]
@@ -38,7 +39,7 @@ def get_model_tokenizer_chatglm(
     if version.parse(transformers.__version__) >= version.parse("4.34"):
         tokenizer_config = get_tokenizer_config(model_dir)
         class_ref = tokenizer_config["auto_map"]["AutoTokenizer"][0]
-        tokenizer_cls: Type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
+        tokenizer_cls: type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
         tokenizer_cls._auto_class = "AutoTokenizer"
         remove_property(tokenizer_cls, tokenizer_config)
         kwargs["tokenizer"] = tokenizer_cls.from_pretrained(model_dir, trust_remote_code=True)
@@ -104,7 +105,7 @@ register_model(
 
 
 def get_model_tokenizer_glm4(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model_config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     AttnImpl.update_attn_impl(model_config, kwargs.get("attn_impl"))
@@ -220,7 +221,7 @@ register_model(
 
 
 def get_model_tokenizer_glm4v(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_glm4(model_dir, model_info, model_kwargs, load_model, **kwargs)
     # fix merge-lora
@@ -265,7 +266,7 @@ register_model(
 
 
 def get_model_tokenizer_cogvlm(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     tokenizer_dir = safe_snapshot_download("AI-ModelScope/vicuna-7b-v1.5", download_model=False, check_local=True)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir, trust_remote_code=True)

@@ -11,6 +11,7 @@ from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.mod
     get_points_on_a_grid,
     smart_cat,
 )
+
 from .models.build_cotracker import build_cotracker
 
 

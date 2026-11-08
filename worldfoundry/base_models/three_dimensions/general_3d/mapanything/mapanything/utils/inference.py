@@ -11,7 +11,6 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-
 from mapanything.utils.geometry import (
     depth_edge,
     get_rays_in_camera_frame,
@@ -47,8 +46,8 @@ CONFLICTING_KEYS = [
 
 
 def validate_input_views_for_inference(
-    views: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    views: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """
     Strict validation and preprocessing of input views.
 
@@ -117,8 +116,8 @@ def validate_input_views_for_inference(
 
 
 def preprocess_input_views_for_inference(
-    views: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    views: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """
     Pre-process input views to match the expected internal input format.
 
@@ -207,8 +206,8 @@ def preprocess_input_views_for_inference(
 
 
 def postprocess_model_outputs_for_inference(
-    raw_outputs: List[Dict[str, torch.Tensor]],
-    input_views: List[Dict[str, Any]],
+    raw_outputs: list[dict[str, torch.Tensor]],
+    input_views: list[dict[str, Any]],
     apply_mask: bool = True,
     mask_edges: bool = True,
     edge_normal_threshold: float = 5.0,
@@ -218,7 +217,7 @@ def postprocess_model_outputs_for_inference(
     use_multiview_confidence: bool = False,
     multiview_conf_depth_abs_thresh: float = 0.02,
     multiview_conf_depth_rel_thresh: float = 0.02,
-) -> List[Dict[str, torch.Tensor]]:
+) -> list[dict[str, torch.Tensor]]:
     """
     Post-process raw model outputs by copying raw outputs and adding essential derived fields.
 
@@ -257,7 +256,7 @@ def postprocess_model_outputs_for_inference(
     processed_outputs = []
 
     # First loop: Compute derived fields (steps 1-4) for all views
-    for raw_output, original_view in zip(raw_outputs, input_views):
+    for raw_output, original_view in zip(raw_outputs, input_views, strict=False):
         # Start by copying all raw outputs
         processed_output = dict(raw_output)
 

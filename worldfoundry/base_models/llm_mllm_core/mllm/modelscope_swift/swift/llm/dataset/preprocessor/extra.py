@@ -9,7 +9,7 @@ from .core import ResponsePreprocessor
 class GroundingMixin:
     """This class offers prompts to the grounding task"""
 
-    task_type: Optional[str] = None
+    task_type: str | None = None
 
     _grounding_language_mixin = [0.8, 0.2]
     _grounding_prompts = {
@@ -69,13 +69,13 @@ class GroundingMixin:
 
 class TextGenerationPreprocessor(ResponsePreprocessor):
     def __init__(
-        self, *, prompt: str, query_tag: str = "{{QUERY}}", columns: Optional[Dict[str, str]] = None, **kwargs
+        self, *, prompt: str, query_tag: str = "{{QUERY}}", columns: dict[str, str] | None = None, **kwargs
     ) -> None:
         self.query_tag = query_tag
         self.prompt = prompt
         super().__init__(columns=columns, **kwargs)
 
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = self.prompt.replace(self.query_tag, row["query"])
         return super().preprocess(row)
 
@@ -83,11 +83,11 @@ class TextGenerationPreprocessor(ResponsePreprocessor):
 class ClsGenerationPreprocessor(ResponsePreprocessor):
     def __init__(
         self,
-        labels: List[str],
+        labels: list[str],
         *,
         task: str,
         is_pair_seq: bool = False,
-        columns: Optional[Dict[str, str]] = None,
+        columns: dict[str, str] | None = None,
         **kwargs,
     ) -> None:
         self.labels = labels
@@ -109,7 +109,7 @@ Category: {category}
 Output:"""
         super().__init__(columns=columns, **kwargs)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         label = row.pop(self.label_key, None)
         if label is None:
             return

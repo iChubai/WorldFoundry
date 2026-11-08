@@ -61,7 +61,7 @@ class YOLOv7OptimWrapperConstructor:
         >>> optim_wrapper = optim_wrapper_builder(model)
     """
 
-    def __init__(self, optim_wrapper_cfg: dict, paramwise_cfg: Optional[dict] = None):
+    def __init__(self, optim_wrapper_cfg: dict, paramwise_cfg: dict | None = None):
         if paramwise_cfg is None:
             paramwise_cfg = {"base_total_batch_size": 64}
         assert "base_total_batch_size" in paramwise_cfg

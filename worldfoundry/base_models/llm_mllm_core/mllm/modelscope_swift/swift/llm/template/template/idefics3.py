@@ -11,7 +11,7 @@ from ..utils import align_image_inputs
 class Idefics3Template(Template):
     placeholder_tokens = ["<image>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images or []
         processor = self.processor

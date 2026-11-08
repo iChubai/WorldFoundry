@@ -10,10 +10,9 @@ import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 
-
-from .blocks import EfficientUpdateFormer, CorrBlock
-from .utils import sample_features4d, get_2d_embedding, get_2d_sincos_pos_embed
+from .blocks import CorrBlock, EfficientUpdateFormer
 from .modules import Mlp
+from .utils import get_2d_embedding, get_2d_sincos_pos_embed, sample_features4d
 
 
 class BaseTrackerPredictor(nn.Module):

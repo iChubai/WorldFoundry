@@ -5,14 +5,14 @@
 # Original file was released under [ Apache-2.0 license], with the full license text available at [https://github.com/guoyww/AnimateDiff?tab=Apache-2.0-1-ov-file#readme].
 """Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> motion_module -> motion_module.py functionality."""
 
+import math
+
 import torch
 import torch.nn.functional as F
+from einops import rearrange, repeat
 from torch import nn
 
 from .attention import CrossAttention, FeedForward, apply_rotary_emb, precompute_freqs_cis
-
-from einops import rearrange, repeat
-import math
 
 try:
     import xformers
@@ -230,7 +230,7 @@ class TemporalTransformerBlock(nn.Module):
             attention_mask: The attention mask.
             video_length: The video length.
         """
-        for attention_block, norm in zip(self.attention_blocks, self.norms):
+        for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
                 attention_block(

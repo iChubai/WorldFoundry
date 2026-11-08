@@ -12,9 +12,10 @@ This is a weight-compatible wrapper, not a ConditionEncoder
 by itself.
 """
 
-from transformers import LlamaModel, LlamaConfig, DynamicCache, LlavaForConditionalGeneration
 from copy import deepcopy
+
 import torch
+from transformers import DynamicCache, LlamaConfig, LlamaModel, LlavaForConditionalGeneration
 
 
 class HunyuanVideoLLMEncoder(LlamaModel):

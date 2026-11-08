@@ -371,7 +371,7 @@ def _grouped_mh_moe_fwd(
         hidden = swiglu7_split(gate, up, out_dtype=W_down.dtype)
         projected = torch.bmm(hidden, W_down.index_select(0, expert_ids))
 
-        for local_idx, ((expert, start, stop), rows) in enumerate(zip(group, row_sets)):
+        for local_idx, ((expert, start, stop), rows) in enumerate(zip(group, row_sets, strict=False)):
             count = stop - start
             contribution = projected[local_idx, :count].to(_FP32)
             contribution.mul_(probs[start:stop].to(_FP32).unsqueeze(-1))
@@ -452,7 +452,7 @@ def attention_with_sink(
         # for exact sink correction; public SDPA returns only the output.
         out = torch.empty_like(q)
         bounds = cu_seqlens.tolist()
-        for start, stop in zip(bounds[:-1], bounds[1:]):
+        for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
             if stop <= start:
                 continue
             attended, lse, *_ = torch.ops.aten._scaled_dot_product_flash_attention(
@@ -470,7 +470,7 @@ def attention_with_sink(
 
     out = torch.empty_like(q, dtype=_FP32)
     bounds = cu_seqlens.tolist()
-    for start, stop in zip(bounds[:-1], bounds[1:]):
+    for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
         length = int(stop) - int(start)
         if length <= 0:
             continue

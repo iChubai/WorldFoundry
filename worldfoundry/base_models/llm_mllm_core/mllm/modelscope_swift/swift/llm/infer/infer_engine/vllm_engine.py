@@ -2,9 +2,10 @@
 import asyncio
 import inspect
 import os
+from collections.abc import AsyncIterator, Iterator
 from contextlib import nullcontext
 from copy import deepcopy
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import torch
 from packaging import version
@@ -25,6 +26,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_seed,
     is_dist,
 )
+
 from ..protocol import (
     ChatCompletionResponse,
     ChatCompletionResponseChoice,
@@ -44,7 +46,7 @@ try:
     os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
     os.environ["VLLM_ENGINE_ITERATION_TIMEOUT_S"] = "3600"
     import vllm
-    from vllm import AsyncEngineArgs, AsyncLLMEngine, SamplingParams, EngineArgs, LLMEngine
+    from vllm import AsyncEngineArgs, AsyncLLMEngine, EngineArgs, LLMEngine, SamplingParams
 except Exception:
     raise
 
@@ -56,34 +58,34 @@ class VllmEngine(InferEngine):
     def __init__(
         self,
         model_id_or_path: str,
-        torch_dtype: Optional[torch.dtype] = None,
+        torch_dtype: torch.dtype | None = None,
         *,
         use_async_engine: bool = False,
-        model_type: Optional[str] = None,
-        use_hf: Optional[bool] = None,
-        hub_token: Optional[str] = None,
-        revision: Optional[str] = None,
+        model_type: str | None = None,
+        use_hf: bool | None = None,
+        hub_token: str | None = None,
+        revision: str | None = None,
         # engine_kwargs
         gpu_memory_utilization: float = 0.9,
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
-        max_model_len: Optional[int] = None,
+        max_model_len: int | None = None,
         max_num_seqs: int = 256,
         disable_custom_all_reduce: bool = True,
         enforce_eager: bool = False,
-        limit_mm_per_prompt: Optional[Dict[str, Any]] = None,
+        limit_mm_per_prompt: dict[str, Any] | None = None,
         device: str = "auto",
-        seed: Optional[int] = None,
+        seed: int | None = None,
         # lora
         enable_lora: bool = False,
         max_loras: int = 1,
         max_lora_rank: int = 16,
         enable_prefix_caching: bool = False,
         enable_sleep_mode: bool = False,
-        distributed_executor_backend: Optional[str] = None,
-        quantization: Optional[str] = None,
-        engine_kwargs: Optional[Dict[str, Any]] = None,
-        template: Optional[Template] = None,
+        distributed_executor_backend: str | None = None,
+        quantization: str | None = None,
+        engine_kwargs: dict[str, Any] | None = None,
+        template: Template | None = None,
     ) -> None:
         if engine_kwargs is None:
             engine_kwargs = {}
@@ -142,17 +144,17 @@ class VllmEngine(InferEngine):
         gpu_memory_utilization: float = 0.9,
         tensor_parallel_size: int = 1,
         pipeline_parallel_size: int = 1,
-        max_model_len: Optional[int] = None,
+        max_model_len: int | None = None,
         max_num_seqs: int = 256,
         disable_custom_all_reduce: bool = True,
         enforce_eager: bool = False,
-        limit_mm_per_prompt: Optional[Dict[str, Any]] = None,
+        limit_mm_per_prompt: dict[str, Any] | None = None,
         device: str = "auto",
         enable_lora: bool = False,
         max_loras: int = 1,
         max_lora_rank: int = 16,
         enable_prefix_caching: bool = False,
-        distributed_executor_backend: Optional[str] = None,
+        distributed_executor_backend: str | None = None,
         enable_sleep_mode: bool = False,
         **engine_kwargs,
     ) -> None:
@@ -258,10 +260,10 @@ class VllmEngine(InferEngine):
 
     def _add_request(
         self,
-        inputs: Dict[str, Any],
+        inputs: dict[str, Any],
         generation_config: SamplingParams,
         request_id: str,
-        adapter_request: Optional[AdapterRequest] = None,
+        adapter_request: AdapterRequest | None = None,
     ):
         kwargs = {}
         if self.enable_lora and adapter_request:
@@ -303,8 +305,8 @@ class VllmEngine(InferEngine):
                 return self.engine.add_request(request_id, None, generation_config, input_ids, **kwargs)
 
     def _get_logprobs(
-        self, logprobs_list: Optional[List[Dict[int, float]]], token_ids: List[int], top_logprobs: Optional[int] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, logprobs_list: list[dict[int, float]] | None, token_ids: list[int], top_logprobs: int | None = None
+    ) -> dict[str, Any] | None:
         if logprobs_list is None or len(token_ids) == 0:
             return None
         if len(token_ids) > 0:
@@ -352,7 +354,7 @@ class VllmEngine(InferEngine):
         return self.engine.model_executor
 
     async def _infer_stream_async(
-        self, template: Template, inputs: Dict[str, Any], generation_config: SamplingParams, **kwargs
+        self, template: Template, inputs: dict[str, Any], generation_config: SamplingParams, **kwargs
     ) -> AsyncIterator[ChatCompletionStreamResponse]:
         request_id = random_uuid()
         result_generator = self._add_request(inputs, generation_config, request_id, **kwargs)
@@ -368,7 +370,7 @@ class VllmEngine(InferEngine):
 
     def _create_chat_completion_stream_response(
         self, result, template, generation_config, request_id, infer_streamers, token_idxs
-    ) -> Optional[ChatCompletionStreamResponse]:
+    ) -> ChatCompletionStreamResponse | None:
         is_diff = False
         is_finished = False
         for output in result.outputs:
@@ -424,9 +426,9 @@ class VllmEngine(InferEngine):
     async def _infer_full_async(
         self,
         template: Template,
-        inputs: Dict[str, Any],
+        inputs: dict[str, Any],
         generation_config: SamplingParams,
-        adapter_request: Optional[AdapterRequest] = None,
+        adapter_request: AdapterRequest | None = None,
     ) -> ChatCompletionResponse:
         request_id = random_uuid()
         result_generator = self._add_request(inputs, generation_config, request_id, adapter_request=adapter_request)
@@ -442,14 +444,14 @@ class VllmEngine(InferEngine):
 
     def infer(
         self,
-        infer_requests: List[InferRequest],
-        request_config: Optional[RequestConfig] = None,
-        metrics: Optional[List[Metric]] = None,
+        infer_requests: list[InferRequest],
+        request_config: RequestConfig | None = None,
+        metrics: list[Metric] | None = None,
         *,
-        template: Optional[Template] = None,
-        use_tqdm: Optional[bool] = None,
-        adapter_request: Optional[AdapterRequest] = None,
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+        template: Template | None = None,
+        use_tqdm: bool | None = None,
+        adapter_request: AdapterRequest | None = None,
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         if self.use_async_engine:
             return super().infer(
                 infer_requests,
@@ -518,7 +520,7 @@ class VllmEngine(InferEngine):
                 outputs = [outputs[request_id] for request_id in request_id_list]
                 res = [
                     self._create_chat_completion_response(result, template, generation_config, request_id)
-                    for request_id, result in zip(request_id_list, outputs)
+                    for request_id, result in zip(request_id_list, outputs, strict=False)
                 ]
                 self._update_metrics(res, metrics)
                 return res
@@ -526,12 +528,12 @@ class VllmEngine(InferEngine):
     async def infer_async(
         self,
         infer_request: InferRequest,
-        request_config: Optional[RequestConfig] = None,
+        request_config: RequestConfig | None = None,
         *,
-        template: Optional[Template] = None,
-        adapter_request: Optional[AdapterRequest] = None,
+        template: Template | None = None,
+        adapter_request: AdapterRequest | None = None,
         pre_infer_hook=None,
-    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
+    ) -> ChatCompletionResponse | AsyncIterator[ChatCompletionStreamResponse]:
         if not self.use_async_engine:
             raise ValueError("If you want to use `infer_async`, you need to pass `use_async_engine` as True.")
         request_config = deepcopy(request_config or RequestConfig())

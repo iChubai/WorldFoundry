@@ -2,8 +2,9 @@
 
 import torch
 import torch.nn as nn
-from worldfoundry.core.nn import RMSNorm
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
+from worldfoundry.core.nn import RMSNorm
 
 
 class BlockWiseControlBlock(torch.nn.Module):
@@ -101,7 +102,6 @@ class QwenImageBlockWiseControlNetStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_civitai(self, state_dict):
         """From civitai.

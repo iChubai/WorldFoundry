@@ -1,11 +1,16 @@
-from typing import List
-import torch
 import copy
 import os
+from typing import List
+
+import torch
 from torchvision import transforms
 
 from .vqa_model import VQAScoreModel
+
+# isort: split
 from .lavis.models import load_model
+
+# isort: split
 from ...constants import HF_CACHE_DIR
 
 default_question_template = 'Question: Does this figure show "{}"? Please answer yes or no.'
@@ -48,7 +53,7 @@ class InstructBLIPModel(VQAScoreModel):
             ]
         )
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         if any(path.startswith(("http://", "https://")) for path in image):
             raise NotImplementedError(
@@ -64,8 +69,8 @@ class InstructBLIPModel(VQAScoreModel):
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         question_template: str = default_question_template,
         answer_template: str = default_answer_template,
     ) -> torch.Tensor:
@@ -144,7 +149,7 @@ class InstructBLIPModel(VQAScoreModel):
 
     @torch.no_grad()
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
-    def generate(self, images: List[str], texts: List[str], max_length: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], max_length: int = 256) -> list[str]:
         """Forward pass of the model to generate text responses for n (image, text) pairs"""
         assert len(images) == len(texts), "Number of images and texts must match"
         questions = texts

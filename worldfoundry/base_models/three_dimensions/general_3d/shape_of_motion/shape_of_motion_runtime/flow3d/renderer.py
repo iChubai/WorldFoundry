@@ -15,8 +15,6 @@ except ModuleNotFoundError:
     class CameraState:  # type: ignore[no-redef]
         """Camera state implementation."""
 
-        pass
-
 
 try:
     from flow3d.vis.viewer import DynamicViewer

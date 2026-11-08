@@ -101,7 +101,7 @@ def sample_box_points(
     noise_bound: int = 20,  # SAM default
     top_left_label: int = 2,
     bottom_right_label: int = 3,
-) -> Tuple[np.array, np.array]:
+) -> tuple[np.array, np.array]:
     """
     Sample a noised version of the top left and bottom right corners of a given `bbox`
 

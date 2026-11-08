@@ -4,32 +4,34 @@ Streaming variant of :mod:`.model`.  Adds causal attention and cache
 hooks.  No VACE or linear attn.
 """
 
+import copy
+import math
+import random
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
+from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
+    SimpleAdapter,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import (
     attention,
 )
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .model import (
+    WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
+    WanLayerNorm,
     WanRMSNorm,
     rope_apply,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
-    MLPProj,
     sinusoidal_embedding_1d,
-)
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import torch.nn as nn
-import torch
-import math
-import copy
-import random
-import torch.distributed as dist
-from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
-    SimpleAdapter,
 )
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
@@ -725,7 +727,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             alpha = 0.3
             render_channels = 16
             new_x = []
-            for u, v in zip(x, y):
+            for u, v in zip(x, y, strict=False):
                 v_channels = v.shape[0]
                 if v_channels == render_channels:
                     new_x.append(torch.cat([u, v], dim=0))
@@ -751,7 +753,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         # add control adapter
         if self.control_adapter is not None and y_camera is not None:
             y_camera = self.control_adapter(y_camera)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
 
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -861,7 +863,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             alpha = 0.3
             render_channels = 16
             new_x = []
-            for u, v in zip(x, y):
+            for u, v in zip(x, y, strict=False):
                 v_channels = v.shape[0]
                 if v_channels == render_channels:
                     new_x.append(torch.cat([u, v], dim=0))
@@ -887,7 +889,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         # add control adapter
         if self.control_adapter is not None and y_camera is not None:
             y_camera = self.control_adapter(y_camera)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
 
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -934,6 +936,6 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def forward(self, *args, **kwargs):
-        if kwargs.get("kv_cache", None) is not None:
+        if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         return self._forward_full(*args, **kwargs)

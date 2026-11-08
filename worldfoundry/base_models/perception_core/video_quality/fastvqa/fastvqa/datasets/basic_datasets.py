@@ -1,13 +1,13 @@
-import decord
-from decord import VideoReader
-from decord import cpu, gpu
 import os.path as osp
-import numpy as np
-import torch, torchvision
-from tqdm import tqdm
-import cv2
-
 import random
+
+import cv2
+import decord
+import numpy as np
+import torch
+import torchvision
+from decord import VideoReader, cpu, gpu
+from tqdm import tqdm
 
 random.seed(42)
 
@@ -249,7 +249,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -386,7 +386,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -501,7 +501,7 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -606,7 +606,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.image_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -690,7 +690,7 @@ class ResizedImageDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.image_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split

@@ -6,8 +6,8 @@ import os.path as osp
 from dataclasses import dataclass
 from glob import glob
 from itertools import product
-from typing import Literal
 from pathlib import Path
+from typing import Literal
 
 import imageio.v3 as iio
 import numpy as np
@@ -16,10 +16,9 @@ import torch
 import torch.nn.functional as F
 import tyro
 from loguru import logger as guru
+from scipy.spatial.transform import Rotation
 from torch.utils.data import Dataset
 from tqdm import tqdm
-
-from scipy.spatial.transform import Rotation
 
 from flow3d.data.base_dataset import BaseDataset
 from flow3d.data.colmap import get_colmap_camera_params
@@ -31,6 +30,7 @@ from flow3d.data.utils import (
     parse_tapir_track_info,
 )
 from flow3d.transforms import rt_to_mat4
+
 # hold
 
 

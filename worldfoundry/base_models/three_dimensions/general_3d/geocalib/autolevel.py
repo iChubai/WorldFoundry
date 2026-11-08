@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .modules import ConvModule, LightHamHead, MSCAN
+from .modules import MSCAN, ConvModule, LightHamHead
 
 
 def _build_rotation(pitch_deg: torch.Tensor, roll_deg: torch.Tensor) -> torch.Tensor:
@@ -102,7 +102,7 @@ class LowLevelEncoder(nn.Module):
         self.conv1 = ConvModule(3, 64, kernel_size=3, padding=1)
         self.conv2 = ConvModule(64, 64, kernel_size=3, padding=1)
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         image = data["image"]
         if image.shape[-1] % 32 or image.shape[-2] % 32:
             raise ValueError("AutoLevel input dimensions must be divisible by 32")
@@ -136,7 +136,7 @@ class FlowDecoder(nn.Module):
 
     def forward(
         self,
-        features: Dict[str, torch.Tensor],
+        features: dict[str, torch.Tensor],
         ray_pe: torch.Tensor,
     ) -> torch.Tensor:
         head = self.ham_head
@@ -283,7 +283,7 @@ class RigidFilter(nn.Module):
         grid_x: torch.Tensor,
         grid_y: torch.Tensor,
         damping: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         from torch.func import jacrev, vmap
 
         grid_x_flat, grid_y_flat = grid_x.flatten(), grid_y.flatten()
@@ -337,7 +337,7 @@ class RigidFilter(nn.Module):
         dense_grid: torch.Tensor,
         height: int,
         width: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         device, dtype = dense_grid.device, dense_grid.dtype
         aspect = width / float(height)
         fit_width = self.fit_res if aspect >= 1.0 else max(int(self.fit_res * aspect), 1)
@@ -368,7 +368,7 @@ class FlowEstimator(nn.Module):
         self.rigid_filter = RigidFilter(**(rigid_filter_cfg or {}))
         self.requires_grad_(False)
 
-    def forward(self, image: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, image: torch.Tensor) -> dict[str, torch.Tensor]:
         batch_size, _, height, width = image.shape
         high_level = self.backbone({"image": image})["features"]
         low_level = self.ll_enc({"image": image})["features"]

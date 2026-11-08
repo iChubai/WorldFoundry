@@ -19,8 +19,9 @@ a ``model_forward`` with the contract documented on :class:`Magi2PreviewSampler`
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional, Tuple
+from typing import Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -28,7 +29,7 @@ import torch.nn.functional as F
 # The model callable receives the batched (cond, uncond) inputs and the current
 # (already /1000-normalized) timestep, and returns a (video, audio) velocity
 # tuple, each a batch-of-2 tensor ordered [cond, uncond].
-ModelForward = Callable[..., Tuple[torch.Tensor, torch.Tensor]]
+ModelForward = Callable[..., tuple[torch.Tensor, torch.Tensor]]
 
 
 DEFAULT_NEGATIVE_PROMPT = (
@@ -82,7 +83,7 @@ class Magi2SamplingConfig:
     num_inference_steps: int = 100
     shift: float = 7.0
     z_dim: int = 48
-    vae_stride: Tuple[int, int, int] = (8, 16, 16)
+    vae_stride: tuple[int, int, int] = (8, 16, 16)
     video_txt_guidance_scale: float = 5.0
     audio_txt_guidance_scale: float = 7.0
     use_cfg_trick: bool = False
@@ -97,7 +98,7 @@ class Magi2SamplingConfig:
     cfg_rescale: float = 0.0
     # Refiner stage.
     magi2_refiner_num_inference_steps: int = 5
-    magi2_refiner_vae_stride: Tuple[int, int, int] = (4, 16, 16)
+    magi2_refiner_vae_stride: tuple[int, int, int] = (4, 16, 16)
     magi2_refiner_noise_value: int = 220
     magi2_refiner_video_txt_guidance_scale: float = 2.0
 
@@ -165,7 +166,7 @@ class Magi2PreviewSampler:
         self.device = device
         self.dtype = dtype
 
-    def forward(self, model_input: dict) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, model_input: dict) -> tuple[torch.Tensor, torch.Tensor]:
         """One injected-model call; returns batched ``(video, audio)`` velocities."""
 
         return self.model_forward(**model_input)
@@ -181,13 +182,13 @@ class Magi2PreviewSampler:
         video_scheduler,
         audio_scheduler,
         cfg_config: CFGConfig,
-        ref_audio_feat: Optional[torch.Tensor] = None,
-        ref_video_feat: Optional[torch.Tensor] = None,
-        ref_image_feat: Optional[torch.Tensor] = None,
-        ref_image_feat_len: Optional[torch.Tensor] = None,
-        ref_image_special_token_embedding: Optional[torch.Tensor] = None,
+        ref_audio_feat: torch.Tensor | None = None,
+        ref_video_feat: torch.Tensor | None = None,
+        ref_image_feat: torch.Tensor | None = None,
+        ref_image_feat_len: torch.Tensor | None = None,
+        ref_image_special_token_embedding: torch.Tensor | None = None,
         progress: bool = True,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Run the preview flow-matching loop with per-step CFG.
 
         ``video_t_list`` is the scheduler's discrete timesteps.  Each step
@@ -201,7 +202,7 @@ class Magi2PreviewSampler:
         latent = latent.clone()
         audio_latent = audio_latent.clone()
 
-        iterator = zip(video_t_list, video_cfgs, audio_cfgs)
+        iterator = zip(video_t_list, video_cfgs, audio_cfgs, strict=False)
         if progress:
             try:
                 from tqdm import tqdm
@@ -246,13 +247,13 @@ class Magi2PreviewSampler:
         audio_latent: torch.Tensor,
         txt_feat: torch.Tensor,
         null_txt_feat: torch.Tensor,
-        ref_audio_feat: Optional[torch.Tensor] = None,
-        ref_video_feat: Optional[torch.Tensor] = None,
-        ref_image_feat: Optional[torch.Tensor] = None,
-        ref_image_feat_len: Optional[torch.Tensor] = None,
-        ref_image_special_token_embedding: Optional[torch.Tensor] = None,
+        ref_audio_feat: torch.Tensor | None = None,
+        ref_video_feat: torch.Tensor | None = None,
+        ref_image_feat: torch.Tensor | None = None,
+        ref_image_feat_len: torch.Tensor | None = None,
+        ref_image_special_token_embedding: torch.Tensor | None = None,
         t: torch.Tensor | None = None,
-        cfg_config: Optional[CFGConfig] = None,
+        cfg_config: CFGConfig | None = None,
     ) -> dict:
         """Build the batch-of-2 (cond, uncond) kwargs for ``model_forward``.
 
@@ -338,11 +339,11 @@ class Magi2PreviewSampler:
 
     @staticmethod
     def _prepare_ref_image_cfg(
-        ref_image_feat: Optional[torch.Tensor],
-        ref_image_feat_len: Optional[torch.Tensor],
-        ref_image_special_token_embedding: Optional[torch.Tensor],
-        cfg_config: Optional[CFGConfig],
-    ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        ref_image_feat: torch.Tensor | None,
+        ref_image_feat_len: torch.Tensor | None,
+        ref_image_special_token_embedding: torch.Tensor | None,
+        cfg_config: CFGConfig | None,
+    ) -> tuple[torch.Tensor | None, torch.Tensor | None, torch.Tensor | None]:
         """Duplicate the image conditioning along the cond/uncond batch axis.
 
         By default the unconditional half sees a zeroed image so CFG steers both
@@ -427,11 +428,11 @@ class Magi2PreviewSampler:
     @classmethod
     def _apply_skimmed_cfg_linear(
         cls,
-        x_orig: Optional[torch.Tensor],
+        x_orig: torch.Tensor | None,
         cond: torch.Tensor,
         uncond: torch.Tensor,
         guidance_scale: torch.Tensor | float,
-        cfg_config: Optional[CFGConfig],
+        cfg_config: CFGConfig | None,
     ) -> torch.Tensor:
         if (
             cfg_config is None
@@ -468,7 +469,7 @@ class Magi2PreviewSampler:
         return tuple(range(2, tensor.ndim))
 
     @classmethod
-    def _apply_cfg_rescale(cls, pos: torch.Tensor, cfg: torch.Tensor, cfg_config: Optional[CFGConfig]) -> torch.Tensor:
+    def _apply_cfg_rescale(cls, pos: torch.Tensor, cfg: torch.Tensor, cfg_config: CFGConfig | None) -> torch.Tensor:
         if cfg_config is None or cfg_config.cfg_rescale <= 0 or cfg.numel() == 0:
             return cfg
 
@@ -486,9 +487,9 @@ class Magi2PreviewSampler:
         model_output: tuple[torch.Tensor, torch.Tensor],
         video_txt_guidance_scale: torch.Tensor,
         audio_txt_guidance_scale: torch.Tensor,
-        cfg_config: Optional[CFGConfig] = None,
-        latent: Optional[torch.Tensor] = None,
-        audio_latent: Optional[torch.Tensor] = None,
+        cfg_config: CFGConfig | None = None,
+        latent: torch.Tensor | None = None,
+        audio_latent: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor | None, torch.Tensor | None]:
         """Combine cond/uncond velocities with optional skim + CFG-rescale."""
 
@@ -531,7 +532,7 @@ class Magi2PreviewSampler:
         video_scheduler,
         audio_scheduler,
         t: torch.Tensor,
-        cfg_config: Optional[CFGConfig] = None,
+        cfg_config: CFGConfig | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
         """Apply CFG and take one UniPC step on video and audio latents."""
 

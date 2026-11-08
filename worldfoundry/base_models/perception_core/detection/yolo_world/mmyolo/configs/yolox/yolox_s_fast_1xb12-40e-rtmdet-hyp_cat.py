@@ -11,7 +11,7 @@ max_epochs = 40
 train_batch_size_per_gpu = 12
 train_num_workers = 4
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco_20230210_134645-3a8dfbd7.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco_20230210_134645-3a8dfbd7.pth"
 
 model = dict(backbone=dict(frozen_stages=4), bbox_head=dict(head_module=dict(num_classes=num_classes)))
 
@@ -71,4 +71,4 @@ default_hooks = dict(
     checkpoint=dict(interval=10, max_keep_ckpts=2, save_best="auto"), logger=dict(type="LoggerHook", interval=5)
 )
 train_cfg = dict(max_epochs=max_epochs, val_interval=10)
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')]) # noqa
+# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])

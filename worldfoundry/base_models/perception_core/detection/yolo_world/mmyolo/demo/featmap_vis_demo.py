@@ -1,14 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 import mmcv
 from mmdet.apis import inference_detector, init_detector
 from mmengine import Config, DictAction
 from mmengine.registry import init_default_scope
 from mmengine.utils import ProgressBar
-
 from mmyolo.registry import VISUALIZERS
 from mmyolo.utils.misc import auto_arrange_images, get_file_list
 
@@ -178,6 +177,6 @@ def main():
 
 
 # Please refer to the usage tutorial:
-# https://github.com/open-mmlab/mmyolo/blob/main/docs/zh_cn/user_guides/visualization.md # noqa
+# https://github.com/open-mmlab/mmyolo/blob/main/docs/zh_cn/user_guides/visualization.md
 if __name__ == "__main__":
     main()

@@ -81,8 +81,8 @@ class MMDoubleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         """Separate AdaLN/QKV/FFN for video and text; attention is joint."""
         factory_kwargs = {"device": device, "dtype": dtype}
@@ -154,7 +154,7 @@ class MMDoubleStreamBlock(nn.Module):
         attn_param=None,
         is_flash=False,
         block_idx=None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Dual-stream block: separate AdaLN/QKV, joint attention, separate FFN.
 
         ``img`` / ``txt`` are ``B S C``; RoPE is applied to the video stream only.
@@ -250,8 +250,8 @@ class MMSingleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qk_scale: float = None,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -298,7 +298,7 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         text_mask=None,
         attn_param=None,
         is_flash=False,
@@ -683,14 +683,14 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         vision_states: torch.Tensor = None,
         output_features=False,
         output_features_stride=8,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         return_dict: bool = False,
         guidance=None,
         mask_type="t2v",
         extra_kwargs=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         """Denoise ``B C T H W`` latents through double- then single-stream blocks.
 
         Optional ``vision_states`` / ByT5 glyph tokens are projected into the

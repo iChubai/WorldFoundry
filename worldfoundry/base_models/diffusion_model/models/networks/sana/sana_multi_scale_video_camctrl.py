@@ -361,18 +361,18 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
 
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.scale_shift_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
-        self.block_hook: Optional[BlockHook] = None
+        self.block_hook: BlockHook | None = None
 
     @staticmethod
     def _build_frame_token_mask(
-        frame_valid_mask: Optional[torch.Tensor],
+        frame_valid_mask: torch.Tensor | None,
         *,
         B: int,
         T: int,
         N: int,
         device: torch.device,
         dtype: torch.dtype,
-    ) -> Optional[torch.Tensor]:
+    ) -> torch.Tensor | None:
         """Convert frame-valid mask to token mask shaped ``(B, N, 1)``."""
         if frame_valid_mask is None:
             return None
@@ -413,7 +413,7 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         """
         B, N, C = x.shape
         num_frames = t.shape[2]
-        frame_valid_mask = kwargs.get("frame_valid_mask", None)
+        frame_valid_mask = kwargs.get("frame_valid_mask")
         frame_token_mask = self._build_frame_token_mask(
             frame_valid_mask,
             B=B,
@@ -434,17 +434,17 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
             "HW": THW,
             "rotary_emb": rotary_emb,
             "block_mask": block_mask,
-            "camera_conditions": kwargs.get("camera_conditions", None),
-            "prope_fns": kwargs.get("prope_fns", None),
-            "camera_embedding": kwargs.get("camera_embedding", None),
+            "camera_conditions": kwargs.get("camera_conditions"),
+            "prope_fns": kwargs.get("prope_fns"),
+            "camera_embedding": kwargs.get("camera_embedding"),
             "frame_valid_mask": frame_valid_mask,
         }
-        cam_branch_drop_prob = kwargs.get("cam_branch_drop_prob", None)
+        cam_branch_drop_prob = kwargs.get("cam_branch_drop_prob")
         if cam_branch_drop_prob is not None:
             self_attn_kwargs["cam_branch_drop_prob"] = cam_branch_drop_prob
         if chunk_index is not None:
             self_attn_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        if kwargs.get("chunk_index_global", None) is not None:
+        if kwargs.get("chunk_index_global") is not None:
             self_attn_kwargs["chunk_index_global"] = kwargs.get("chunk_index_global")
         chunk_split_strategy = kwargs.get("chunk_split_strategy", getattr(self, "chunk_split_strategy", "uniform"))
         if chunk_split_strategy is not None:
@@ -467,13 +467,13 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         if frame_token_mask is not None:
             x = x * frame_token_mask
 
-        delta_pose_emb = kwargs.get("delta_pose_emb", None)
+        delta_pose_emb = kwargs.get("delta_pose_emb")
         if delta_pose_emb is not None and hasattr(self, "delta_pose_proj"):
             S = N // num_frames
             dpe = delta_pose_emb.unsqueeze(2).expand(-1, -1, S, -1).reshape(B, N, C)
             x = x + self.delta_pose_proj(dpe)
 
-        plucker_emb = kwargs.get("plucker_emb", None)
+        plucker_emb = kwargs.get("plucker_emb")
         if plucker_emb is not None and hasattr(self, "plucker_proj"):
             x = x + self.plucker_proj(plucker_emb)
 
@@ -483,7 +483,7 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
                 x = x * frame_token_mask
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
         if frame_token_mask is not None:
@@ -495,7 +495,7 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         }
         if chunk_index is not None:
             mlp_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        if kwargs.get("chunk_index_global", None) is not None:
+        if kwargs.get("chunk_index_global") is not None:
             mlp_kwargs["chunk_index_global"] = kwargs.get("chunk_index_global")
         if chunk_split_strategy is not None:
             mlp_kwargs["chunk_split_strategy"] = chunk_split_strategy
@@ -551,7 +551,7 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
             "x_ffn": None,
         }
         B, N, C = x.shape
-        frame_valid_mask = kwargs.get("frame_valid_mask", None)
+        frame_valid_mask = kwargs.get("frame_valid_mask")
         frame_token_mask = (
             self._build_frame_token_mask(
                 frame_valid_mask,
@@ -576,16 +576,16 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
             "HW": THW,
             "rotary_emb": rotary_emb,
             "block_mask": block_mask,
-            "camera_conditions": kwargs.get("camera_conditions", None),
-            "prope_fns": kwargs.get("prope_fns", None),
+            "camera_conditions": kwargs.get("camera_conditions"),
+            "prope_fns": kwargs.get("prope_fns"),
             "frame_valid_mask": frame_valid_mask,
         }
-        cam_branch_drop_prob = kwargs.get("cam_branch_drop_prob", None)
+        cam_branch_drop_prob = kwargs.get("cam_branch_drop_prob")
         if cam_branch_drop_prob is not None:
             self_attn_kwargs["cam_branch_drop_prob"] = cam_branch_drop_prob
         if chunk_index is not None:
             self_attn_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        if kwargs.get("chunk_index_global", None) is not None:
+        if kwargs.get("chunk_index_global") is not None:
             self_attn_kwargs["chunk_index_global"] = kwargs.get("chunk_index_global")
         chunk_split_strategy = kwargs.get("chunk_split_strategy", getattr(self, "chunk_split_strategy", "uniform"))
         if chunk_split_strategy is not None:
@@ -610,19 +610,19 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         if frame_token_mask is not None:
             x = x * frame_token_mask
 
-        delta_pose_emb = kwargs.get("delta_pose_emb", None)
+        delta_pose_emb = kwargs.get("delta_pose_emb")
         if delta_pose_emb is not None and hasattr(self, "delta_pose_proj"):
             T_dp = delta_pose_emb.shape[1]
             S_dp = N // T_dp
             dpe = delta_pose_emb.unsqueeze(2).expand(-1, -1, S_dp, -1).reshape(B, N, C)
             x = x + self.delta_pose_proj(dpe)
 
-        plucker_emb = kwargs.get("plucker_emb", None)
+        plucker_emb = kwargs.get("plucker_emb")
         if plucker_emb is not None and hasattr(self, "plucker_proj"):
             x = x + self.plucker_proj(plucker_emb)
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
         if frame_token_mask is not None:
@@ -636,7 +636,7 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         }
         if chunk_index is not None:
             mlp_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        if kwargs.get("chunk_index_global", None) is not None:
+        if kwargs.get("chunk_index_global") is not None:
             mlp_kwargs["chunk_index_global"] = kwargs.get("chunk_index_global")
         if chunk_split_strategy is not None:
             mlp_kwargs["chunk_split_strategy"] = chunk_split_strategy
@@ -1105,7 +1105,7 @@ class SanaMSVideoCamCtrl(Sana):
         if self.save_block_output:
             self.inference_timestep = int(timestep[0].item())
 
-        cam_embeds = kwargs.get("camera_conditions", None)
+        cam_embeds = kwargs.get("camera_conditions")
         cam_branch_drop_prob = kwargs.get("cam_branch_drop_prob", 0.0)
         if cam_embeds is not None and cam_branch_drop_prob:
             # Keep drop-path semantics consistent: when camera branch is dropped,
@@ -1136,7 +1136,7 @@ class SanaMSVideoCamCtrl(Sana):
             # Both surviving camctrl variants are UCPE-style: build raymats + 3-channel
             # absmap (up_map + lat_map) from the raw (B,F,20) camera conditions.
             raw_cam_conditions = cam_embeds
-            cam_pos_embeds = kwargs.get("cam_pos_embeds", None)
+            cam_pos_embeds = kwargs.get("cam_pos_embeds")
             if cam_pos_embeds is not None and "absmap" in cam_pos_embeds:
                 cam_embeds = cam_pos_embeds["absmap"]
                 if "P" in cam_pos_embeds:
@@ -1165,7 +1165,7 @@ class SanaMSVideoCamCtrl(Sana):
             plucker_input = kwargs["chunk_plucker"].to(self.dtype)
             kwargs["plucker_emb"] = self.plucker_embedder(plucker_input)
 
-        image_pos_embed = kwargs.get("pos_embeds", None)
+        image_pos_embed = kwargs.get("pos_embeds")
         if self.use_pe and image_pos_embed is None:
             if self.pos_embed_type == "sincos":
                 if self.pos_embed_ms is None or self.pos_embed_ms.shape[1:] != x.shape[1:]:
@@ -1285,7 +1285,7 @@ class SanaMSVideoCamCtrl(Sana):
             else:
                 head_dim = self.linear_head_dim
 
-            cam_pos_embeds = kwargs.get("cam_pos_embeds", None)
+            cam_pos_embeds = kwargs.get("cam_pos_embeds")
             if cam_pos_embeds is not None:
                 for k, v in cam_pos_embeds.items():
                     if isinstance(v, torch.Tensor):
@@ -1497,7 +1497,7 @@ class SanaMSVideoCamCtrl(Sana):
 
     def load_diagonal_mask(self, *args, **kwargs):
         """Load diagonal mask."""
-        path = kwargs.get("path", None)
+        path = kwargs.get("path")
         if path is None:
             self.diagonal_mask = self.prepare_flexattention(*args, **kwargs)
         else:
@@ -1618,13 +1618,7 @@ class SanaMSVideoCamCtrl(Sana):
                     new_param[2 * new_hidden_size : 2 * new_hidden_size + old_hidden_size] = checkpoint_param[
                         2 * old_hidden_size :
                     ]
-                elif "q_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "q_norm.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.bias" in key:
+                elif "q_norm.weight" in key or "q_norm.bias" in key or "k_norm.weight" in key or "k_norm.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "cross_attn.q_linear.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1646,11 +1640,11 @@ class SanaMSVideoCamCtrl(Sana):
                     new_param[:, :old_hidden_size] = checkpoint_param
                 elif "final_layer.linear.weight" in key:
                     new_param[:, : checkpoint_param.shape[1]] = checkpoint_param
-                elif "final_layer.linear.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.bias" in key:
+                elif (
+                    "final_layer.linear.bias" in key
+                    or "t_embedder.mlp.0.weight" in key
+                    or "t_embedder.mlp.0.bias" in key
+                ):
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "t_embedder.mlp.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1680,9 +1674,7 @@ class SanaMSVideoCamCtrl(Sana):
                         ]
                 elif "t_block.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.bias" in key:
+                elif "y_embedder.y_proj.fc1.weight" in key or "y_embedder.y_proj.fc1.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "y_embedder.y_proj.fc2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param

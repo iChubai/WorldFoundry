@@ -9,9 +9,10 @@ import numpy as np
 from mmengine.config import Config
 from mmengine.registry import init_default_scope
 from mmengine.utils import ProgressBar
+from mmyolo.registry import DATASETS
 from prettytable import PrettyTable
 
-from mmyolo.registry import DATASETS
+# isort: split
 from mmyolo.utils.misc import show_data_classes
 
 
@@ -230,7 +231,7 @@ def show_bbox_area(out_dir, fig_set, area_rule, class_name, bbox_area_num):
     for i in range(len(area_rule) - 1):
         area_num = [bbox_area_num[idx][i] for idx in range(len(class_name))]
         plt.bar(positions + width * i, area_num, width, label=labels[i], color=colors[i])
-        for idx, (x, y) in enumerate(zip(positions.tolist(), area_num)):
+        for idx, (x, y) in enumerate(zip(positions.tolist(), area_num, strict=False)):
             plt.text(x + width * i, y, y, ha="center", fontsize=fig_set["fontsize"] - 1)
 
     # Draw titles, labels and so on
@@ -270,7 +271,7 @@ def show_class_list(classes, class_num):
         col_num = int(len(classes) / 25) + 1
         class_nums = class_num.tolist()
         class_name_list = list(classes)
-        for i in range(0, (col_num * 25) - len(classes)):
+        for i in range((col_num * 25) - len(classes)):
             class_name_list.append("")
             class_nums.append("")
         for i in range(0, len(class_name_list), 25):
@@ -398,7 +399,7 @@ def main():
     # Get the width, height and area of bbox corresponding to each category
     print("\nRead bbox information in each class:")
     progress_bar_classes = ProgressBar(len(classes))
-    for idx, (classes, classes_idx) in enumerate(zip(classes, classes_idx)):
+    for idx, (classes, classes_idx) in enumerate(zip(classes, classes_idx, strict=False)):
         bbox = np.array(class_bbox[idx])
         bbox_area_nums = np.zeros((len(area_rule) - 1,), dtype=np.int64)
         if len(bbox) > 0:

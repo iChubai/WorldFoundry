@@ -1,10 +1,10 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
 from queue import Queue
 from threading import Thread
 from typing import Any, Dict, List, Literal, Union
 
-import json
 import requests
 import torch.distributed as dist
 from accelerate.utils import gather_object
@@ -27,16 +27,16 @@ def download_ms_file(url: str, local_path: str, cookies=None) -> None:
             f.write(data)
 
 
-def read_from_jsonl(fpath: str, encoding: str = "utf-8") -> List[Any]:
-    res: List[Any] = []
-    with open(fpath, "r", encoding=encoding) as f:
+def read_from_jsonl(fpath: str, encoding: str = "utf-8") -> list[Any]:
+    res: list[Any] = []
+    with open(fpath, encoding=encoding) as f:
         for line in f:
             res.append(json.loads(line))
     return res
 
 
-def write_to_jsonl(fpath: str, obj_list: List[Any], encoding: str = "utf-8") -> None:
-    res: List[str] = []
+def write_to_jsonl(fpath: str, obj_list: list[Any], encoding: str = "utf-8") -> None:
+    res: list[str] = []
     for obj in obj_list:
         res.append(json.dumps(obj, ensure_ascii=False))
     with open(fpath, "w", encoding=encoding) as f:
@@ -58,7 +58,7 @@ class JsonlWriter:
             item = self._queue.get()
             self._append(**item)
 
-    def _append(self, obj: Union[Dict, List[Dict]], gather_obj: bool = False):
+    def _append(self, obj: dict | list[dict], gather_obj: bool = False):
         if isinstance(obj, (list, tuple)) and all(isinstance(item, dict) for item in obj):
             obj_list = obj
         else:
@@ -72,7 +72,7 @@ class JsonlWriter:
             obj_list[i] = json.dumps(_obj, ensure_ascii=False) + "\n"
         self._write_buffer("".join(obj_list))
 
-    def append(self, obj: Union[Dict, List[Dict]], gather_obj: bool = False):
+    def append(self, obj: dict | list[dict], gather_obj: bool = False):
         if self.enable_async:
             if self._thread is None:
                 self._thread = Thread(target=self._append_worker, daemon=True)
@@ -95,7 +95,7 @@ class JsonlWriter:
             logger.error(f"Cannot write content to jsonl file. text: {text}")
 
 
-def append_to_jsonl(fpath: str, obj: Union[Dict, List[Dict]], *, encoding: str = "utf-8", strict: bool = True) -> None:
+def append_to_jsonl(fpath: str, obj: dict | list[dict], *, encoding: str = "utf-8", strict: bool = True) -> None:
     jsonl_writer = JsonlWriter(fpath, encoding=encoding, strict=strict)
     jsonl_writer.append(obj)
 

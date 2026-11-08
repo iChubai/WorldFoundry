@@ -1,8 +1,10 @@
 import os
 import time
+
+import cv2
 import numpy as np
 import pandas as pd
-import cv2
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface import DeepFace
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 

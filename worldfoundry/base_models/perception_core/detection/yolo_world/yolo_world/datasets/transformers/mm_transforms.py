@@ -13,7 +13,7 @@ class RandomLoadText:
         self,
         text_path: str = None,
         prompt_format: str = "{}",
-        num_neg_samples: Tuple[int, int] = (80, 80),
+        num_neg_samples: tuple[int, int] = (80, 80),
         max_num_samples: int = 80,
         padding_to_max: bool = False,
         padding_value: str = "",
@@ -24,7 +24,7 @@ class RandomLoadText:
         self.padding_to_max = padding_to_max
         self.padding_value = padding_value
         if text_path is not None:
-            with open(text_path, "r") as f:
+            with open(text_path) as f:
                 self.class_texts = json.load(f)
 
     def __call__(self, results: dict) -> dict:
@@ -99,7 +99,7 @@ class LoadText:
         self.prompt_format = prompt_format
         self.multi_prompt_flag = multi_prompt_flag
         if text_path is not None:
-            with open(text_path, "r") as f:
+            with open(text_path) as f:
                 self.class_texts = json.load(f)
 
     def __call__(self, results: dict) -> dict:

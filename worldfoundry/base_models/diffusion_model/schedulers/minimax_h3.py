@@ -210,7 +210,7 @@ def minimax_h3_sigma_schedule(knots: Sequence[float], *, shift_scale: float) -> 
         raise ValueError("MiniMax H3 knots must start at 1.0 and end at 0.0")
     if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in values):
         raise ValueError("MiniMax H3 knots must be finite values in [0, 1]")
-    if any(left <= right for left, right in zip(values, values[1:])):
+    if any(left <= right for left, right in zip(values, values[1:], strict=False)):
         raise ValueError("MiniMax H3 knots must be strictly decreasing")
     if not math.isfinite(float(shift_scale)) or shift_scale <= 0.0:
         raise ValueError("MiniMax H3 shift_scale must be finite and positive")

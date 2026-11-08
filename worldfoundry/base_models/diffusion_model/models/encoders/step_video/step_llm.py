@@ -22,20 +22,21 @@ states), not UMT5.  Optional FlashAttention: :mod:`.flash_attention`.
 Paired with Hunyuan CLIP in :class:`~.component.StepVideoPromptConditioner`.
 """
 
+import json
 import os
 from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .flash_attention import FlashSelfAttention
-from .tokenizer import LLaMaEmbedding, Wrapped_StepChatTokenizer
-from ...networks.step_video.normalization import RMSNorm
+from einops import rearrange
 from safetensors.torch import load_file
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
-from einops import rearrange
-import json
+
+from ...networks.step_video.normalization import RMSNorm
+from .flash_attention import FlashSelfAttention
+from .tokenizer import LLaMaEmbedding, Wrapped_StepChatTokenizer
 
 
 def safediv(n, d):
@@ -91,9 +92,9 @@ class MultiQueryAttention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        mask: Optional[torch.Tensor],
-        cu_seqlens: Optional[torch.Tensor],
-        max_seq_len: Optional[torch.Tensor],
+        mask: torch.Tensor | None,
+        cu_seqlens: torch.Tensor | None,
+        max_seq_len: torch.Tensor | None,
     ):
         """Forward.
 
@@ -246,9 +247,9 @@ class TransformerBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        mask: Optional[torch.Tensor],
-        cu_seqlens: Optional[torch.Tensor],
-        max_seq_len: Optional[torch.Tensor],
+        mask: torch.Tensor | None,
+        cu_seqlens: torch.Tensor | None,
+        max_seq_len: torch.Tensor | None,
     ):
         """Forward.
 

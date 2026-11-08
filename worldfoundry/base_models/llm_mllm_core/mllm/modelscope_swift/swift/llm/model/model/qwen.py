@@ -14,6 +14,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_env_args,
     get_logger,
 )
+
 from ..constant import LLMModelType, MLLMModelType, RMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_fixed_device, patch_get_input_embeddings, patch_output_clone, patch_output_to_input_device
@@ -35,7 +36,7 @@ dtype_mapping = {torch.float16: "fp16", torch.bfloat16: "bf16", torch.float32: "
 def get_model_tokenizer_qwen(
     model_dir: str,
     model_info: ModelInfo,
-    model_kwargs: Dict[str, Any],
+    model_kwargs: dict[str, Any],
     load_model: bool = True,
     model_config=None,
     **kwargs,
@@ -150,11 +151,11 @@ def fix_qwen_inplace_bug(model) -> None:
 
 
 def get_model_tokenizer_qwen_audio(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     tokenizer_config = get_tokenizer_config(model_dir)
     class_ref = tokenizer_config["auto_map"]["AutoTokenizer"][0]
-    tokenizer_cls: Type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
+    tokenizer_cls: type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
     tokenizer_cls._auto_class = "AutoTokenizer"
     tokenizer_cls.AUDIO_ST = ()  # fix no attr `self.AUDIO_ST` bug
     if not hasattr(tokenizer_cls, "_old_decode"):
@@ -192,9 +193,9 @@ register_model(
 def _qwen_vl_visual_block_forward(
     self,
     q_x: torch.Tensor,
-    k_x: Optional[torch.Tensor] = None,
-    v_x: Optional[torch.Tensor] = None,
-    attn_mask: Optional[torch.Tensor] = None,
+    k_x: torch.Tensor | None = None,
+    v_x: torch.Tensor | None = None,
+    attn_mask: torch.Tensor | None = None,
 ):
     k_x = self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
     v_x = self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
@@ -206,7 +207,7 @@ def _qwen_vl_visual_block_forward(
 
 
 def get_model_tokenizer_qwen_vl(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     if model_kwargs.get("quantization_config") is not None and isinstance(
         model_kwargs["quantization_config"], BitsAndBytesConfig
@@ -223,7 +224,7 @@ def get_model_tokenizer_qwen_vl(
 
     tokenizer_config = get_tokenizer_config(model_dir)
     class_ref = tokenizer_config["auto_map"]["AutoTokenizer"][0]
-    tokenizer_cls: Type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
+    tokenizer_cls: type[PreTrainedTokenizerBase] = get_class_from_dynamic_module(class_ref, model_dir)
     tokenizer_cls._auto_class = "AutoTokenizer"
     tokenizer_cls.IMAGE_ST = ()  # fix no attr `self.IMAGE_ST` bug
     if not hasattr(tokenizer_cls, "_old_decode"):
@@ -805,8 +806,8 @@ register_model(
 
 
 def get_model_tokenizer_qwen2_5_omni(model_dir, *args, **kwargs):
-    from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor, Qwen2_5OmniConfig
     from qwen_omni_utils import vision_process
+    from transformers import Qwen2_5OmniConfig, Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
 
     kwargs["automodel_class"] = kwargs["automodel_class"] or Qwen2_5OmniForConditionalGeneration
     processor = Qwen2_5OmniProcessor.from_pretrained(model_dir, trust_remote_code=True)
@@ -936,7 +937,7 @@ def get_model_tokenizer_ovis(*args, **kwargs):
 
         def update(
             self, key_states: torch.Tensor, value_states: torch.Tensor, layer_idx: int, *args, **kwargs
-        ) -> Tuple[torch.Tensor]:
+        ) -> tuple[torch.Tensor]:
             self.key_cache[layer_idx] = self.key_cache[layer_idx].to(key_states.device)
             self.value_cache[layer_idx] = self.value_cache[layer_idx].to(value_states.device)
             return self._update_origin(key_states, value_states, layer_idx, *args, **kwargs)

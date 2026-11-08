@@ -1,7 +1,9 @@
-import os
 import bz2
+import os
+
 import gdown
 import numpy as np
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 # pylint: disable=too-few-public-methods

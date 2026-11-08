@@ -24,7 +24,7 @@ tta_model = None
 tta_pipeline = None
 
 # -----train val related-----
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_s_syncbn_fast_8xb32-400e_coco/yolov6_s_syncbn_fast_8xb32-400e_coco_20221102_203035-932e1d91.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_s_syncbn_fast_8xb32-400e_coco/yolov6_s_syncbn_fast_8xb32-400e_coco_20221102_203035-932e1d91.pth"
 #  base_lr_default * (your_bs 32 / default_bs (8 x 32))
 base_lr = _base_.base_lr * train_batch_size_per_gpu / (8 * 32)
 max_epochs = 100

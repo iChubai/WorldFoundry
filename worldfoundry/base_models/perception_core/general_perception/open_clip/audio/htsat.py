@@ -7,23 +7,21 @@
 
 """Module for base_models -> perception_core -> general_perception -> open_clip -> audio -> htsat.py functionality."""
 
+import collections.abc
+import math
+import random
+import warnings
+from itertools import repeat
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from itertools import repeat
-import collections.abc
-import math
-import warnings
-
-from torch.nn.init import _calculate_fan_in_and_fan_out
 import torch.utils.checkpoint as checkpoint
-
-import random
-
-from torchlibrosa.stft import Spectrogram, LogmelFilterBank
+from torch.nn.init import _calculate_fan_in_and_fan_out
 from torchlibrosa.augmentation import SpecAugmentation
+from torchlibrosa.stft import LogmelFilterBank, Spectrogram
 
-from .fusion import iAFF, AFF, DAF
+from .fusion import AFF, DAF, iAFF
 
 
 def do_mixup(x, mixup_lambda):
@@ -200,7 +198,7 @@ class PatchEmbed(nn.Module):
 
             # global processing
             B, C, H, W = global_x.shape
-            assert H == self.img_size[0] and W == self.img_size[1], (
+            assert self.img_size[0] == H and self.img_size[1] == W, (
                 f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
             )
             global_x = self.proj(global_x)
@@ -233,7 +231,7 @@ class PatchEmbed(nn.Module):
             x = global_x
         else:
             B, C, H, W = x.shape
-            assert H == self.img_size[0] and W == self.img_size[1], (
+            assert self.img_size[0] == H and self.img_size[1] == W, (
                 f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
             )
             x = self.proj(x)
@@ -635,7 +633,7 @@ class SwinTransformerBlock(nn.Module):
             mask_windows = window_partition(img_mask, self.window_size)  # nW, window_size, window_size, 1
             mask_windows = mask_windows.view(-1, self.window_size * self.window_size)
             attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
-            attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
+            attn_mask = attn_mask.masked_fill(attn_mask != 0, (-100.0)).masked_fill(attn_mask == 0, 0.0)
         else:
             attn_mask = None
 
@@ -1205,11 +1203,11 @@ class HTSATEncoder(nn.Module):
         B, C, T, F = x.shape
         target_T = int(self.spec_size * self.freq_ratio)
         target_F = self.spec_size // self.freq_ratio
-        assert T <= target_T and F <= target_F, "the wav size should less than or equal to the swin input size"
+        assert target_T >= T and target_F >= F, "the wav size should less than or equal to the swin input size"
         # to avoid bicubic zero error
-        if T < target_T:
+        if target_T > T:
             x = nn.functional.interpolate(x, (target_T, x.shape[3]), mode="bicubic", align_corners=True)
-        if F < target_F:
+        if target_F > F:
             x = nn.functional.interpolate(x, (x.shape[2], target_F), mode="bicubic", align_corners=True)
         x = x.permute(0, 1, 3, 2).contiguous()
         x = x.reshape(x.shape[0], x.shape[1], x.shape[2], self.freq_ratio, x.shape[3] // self.freq_ratio)
@@ -1229,11 +1227,11 @@ class HTSATEncoder(nn.Module):
         B, C, T, F = x.shape
         target_T = int(self.spec_size * self.freq_ratio)
         target_F = self.spec_size // self.freq_ratio
-        assert T <= target_T and F <= target_F, "the wav size should less than or equal to the swin input size"
+        assert target_T >= T and target_F >= F, "the wav size should less than or equal to the swin input size"
         # to avoid bicubic zero error
-        if T < target_T:
+        if target_T > T:
             x = nn.functional.interpolate(x, (target_T, x.shape[3]), mode="bicubic", align_corners=True)
-        if F < target_F:
+        if target_F > F:
             x = nn.functional.interpolate(x, (x.shape[2], target_F), mode="bicubic", align_corners=True)
         x = x.permute(0, 1, 3, 2).contiguous()  # B C F T
         x = x[:, :, :, cur_pos : cur_pos + self.spec_size]

@@ -1,8 +1,9 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> zero_shot_classifier.py functionality."""
 
+from collections.abc import Callable, Sequence
 from functools import partial
 from itertools import islice
-from typing import Callable, List, Optional, Sequence, Union
+from typing import List, Optional, Union
 
 import torch
 
@@ -23,9 +24,9 @@ def build_zero_shot_classifier(
     model,
     tokenizer,
     classnames: Sequence[str],
-    templates: Sequence[Union[Callable, str]],
-    num_classes_per_batch: Optional[int] = 10,
-    device: Union[str, torch.device] = "cpu",
+    templates: Sequence[Callable | str],
+    num_classes_per_batch: int | None = 10,
+    device: str | torch.device = "cpu",
     use_tqdm: bool = False,
 ):
     """Build zero-shot classifier weights by iterating over class names in batches
@@ -85,8 +86,8 @@ def build_zero_shot_classifier_legacy(
     model,
     tokenizer,
     classnames: Sequence[str],
-    templates: Sequence[Union[Callable, str]],
-    device: Union[str, torch.device] = "cpu",
+    templates: Sequence[Callable | str],
+    device: str | torch.device = "cpu",
     use_tqdm: bool = False,
 ):
     """Build zero-shot classifier weights by iterating over class names 1 by 1

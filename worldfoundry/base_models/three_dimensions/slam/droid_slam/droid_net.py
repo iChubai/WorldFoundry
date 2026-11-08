@@ -1,26 +1,24 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_net.py functionality."""
 
+from collections import OrderedDict
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from collections import OrderedDict
-
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.extractor import BasicEncoder
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import CorrBlock
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.gru import ConvGRU
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.clipping import GradientClip
-
 from lietorch import SE3
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.ba import BA
+from torch_scatter import scatter_mean
 
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.ba import BA
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.graph_utils import (
     graph_to_edge_list,
     keyframe_indicies,
 )
-
-from torch_scatter import scatter_mean
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.clipping import GradientClip
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import CorrBlock
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.extractor import BasicEncoder
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.gru import ConvGRU
 
 
 def cvx_upsample(data, mask):

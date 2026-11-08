@@ -11,19 +11,21 @@
 
 import logging
 import os
-from typing import Callable, List, Any, Tuple, Dict
 import warnings
+from collections.abc import Callable
+from typing import Any, Dict, List, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
-from .attention import Attention, MemEffAttention, CrossAttentionRope, MemEffCrossAttentionRope, FlashAttentionRope
 from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
+
+from .attention import Attention, CrossAttentionRope, FlashAttentionRope, MemEffAttention, MemEffCrossAttentionRope
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
     if XFORMERS_ENABLED:
-        from xformers.ops import fmha, scaled_index_add, index_select_cat
+        from xformers.ops import fmha, index_select_cat, scaled_index_add
 
         XFORMERS_AVAILABLE = True
         # warnings.warn("xFormers is available (Block)")
@@ -35,7 +37,7 @@ except ImportError:
     # warnings.warn("xFormers is not available (Block)")
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 class BlockRope(nn.Module):

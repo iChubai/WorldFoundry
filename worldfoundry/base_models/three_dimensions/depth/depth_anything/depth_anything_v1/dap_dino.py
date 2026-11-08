@@ -80,5 +80,5 @@ class DINOv3Adapter(nn.Module):
             class_tokens.append(class_token)
 
         if return_class_token:
-            return tuple(zip(patch_maps, class_tokens))
+            return tuple(zip(patch_maps, class_tokens, strict=False))
         return tuple(patch_maps)

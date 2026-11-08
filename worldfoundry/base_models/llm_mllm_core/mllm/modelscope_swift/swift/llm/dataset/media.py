@@ -42,8 +42,8 @@ class MediaResource:
 
     @staticmethod
     def download(
-        media_type_or_url: Union[str, List[str]],
-        local_alias: Optional[str] = None,
+        media_type_or_url: str | list[str],
+        local_alias: str | None = None,
         file_type: Literal["compressed", "file", "sharded"] = "compressed",
     ):
         """Download and extract a resource from a http link.
@@ -86,8 +86,8 @@ class MediaResource:
 
     @staticmethod
     def _safe_download(
-        media_type: Union[str, List[str]],
-        media_name: Optional[str] = None,
+        media_type: str | list[str],
+        media_name: str | None = None,
         file_type: Literal["compressed", "file", "sharded"] = "compressed",
     ):
         media_name = media_name or media_type
@@ -95,7 +95,7 @@ class MediaResource:
         if isinstance(media_type, str) and media_type in MediaResource.media_type_urls:
             media_type = MediaResource.get_url(media_type)
 
-        from datasets.download.download_manager import DownloadManager, DownloadConfig
+        from datasets.download.download_manager import DownloadConfig, DownloadManager
 
         final_folder = os.path.join(MediaResource.cache_dir, media_name)
 

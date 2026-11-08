@@ -6,9 +6,10 @@
 
 """Module for base_models -> three_dimensions -> general_3d -> lagernvs -> lagernvs_runtime -> models -> encoder_decoder.py functionality."""
 
-import einops
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import einops
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,7 +25,6 @@ for _path in (
         sys.path.insert(0, _path_str)
 
 from vggt.models.vggt import VGGT
-
 
 # Main model file
 # Consists of

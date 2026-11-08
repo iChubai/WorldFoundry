@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from threading import RLock
-from typing import Sequence
 
 import hydra
 from hydra.core.global_hydra import GlobalHydra

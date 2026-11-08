@@ -44,7 +44,11 @@ from .components.frontend import SLAMFrontend
 from .components.inner_filler import FilledReturn, InnerFiller
 from .components.motion_filter import MotionFilter
 from .components.sparse_tracks import build_sparse_tracks
+
+# isort: split
 from .interface import SLAMOutput
+
+# isort: split
 from .constants import SLAM_PER_VIDEO_COMPONENTS
 from .networks.droid_net import DroidNet
 
@@ -247,7 +251,7 @@ class SLAMSystem:
             filled_return: The filled return.
         """
         trajectory = filled_return.poses.inv()
-        for frame_idx, frame_data_list in enumerate(zip(*video_streams)):
+        for frame_idx, frame_data_list in enumerate(zip(*video_streams, strict=False)):
             pose_mat = trajectory[frame_idx].matrix().cpu().numpy()
             rr.set_time("frame", sequence=frame_idx)
             for view_idx in range(len(frame_data_list)):
@@ -312,7 +316,8 @@ class SLAMSystem:
         assert len(video_streams) > 0
         resizers = [StandardResizeStreamProcessor() for _ in video_streams]
         video_streams = [
-            ProcessedVideoStream(video_stream, [resizer]) for video_stream, resizer in zip(video_streams, resizers)
+            ProcessedVideoStream(video_stream, [resizer])
+            for video_stream, resizer in zip(video_streams, resizers, strict=False)
         ]
 
         frame_size = video_streams[0].frame_size()
@@ -346,7 +351,7 @@ class SLAMSystem:
         frame_data_list: list[VideoFrame]
         frame_idx: int = 0
         for frame_idx, frame_data_list in pbar(
-            enumerate(zip(*video_streams)), desc="SLAM Pass (1/2)", total=total_n_frames
+            enumerate(zip(*video_streams, strict=False)), desc="SLAM Pass (1/2)", total=total_n_frames
         ):
             images, buffer_masks = self._precompute_features(frame_data_list)
 
@@ -382,7 +387,7 @@ class SLAMSystem:
         # Infill poses and attributes for non-keyframe frames.
         self.inner_filler.set_start_idx(self.buffer.n_frames)
         for frame_idx, frame_data_list in pbar(
-            enumerate(zip(*video_streams)), desc="SLAM Pass (2/2)", total=total_n_frames
+            enumerate(zip(*video_streams, strict=False)), desc="SLAM Pass (2/2)", total=total_n_frames
         ):
             images, buffer_masks = self._precompute_features(frame_data_list)
             self._add_keyframe(frame_idx, images, buffer_masks, frame_data_list, phase=2)

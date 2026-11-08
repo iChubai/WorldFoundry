@@ -24,6 +24,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     safe_ddp_context,
     use_hf_hub,
 )
+
 from .preprocessor import RowPreprocessor
 from .register import DATASET_MAPPING, DATASET_TYPE, DatasetMeta, SubsetDataset
 from .utils import sample_dataset
@@ -36,9 +37,9 @@ _dataset_meta_mapping = None
 @dataclass
 class DatasetSyntax:
     dataset: str
-    subsets: List[str] = field(default_factory=list)
-    dataset_sample: Optional[int] = None
-    use_hf: Optional[bool] = None
+    subsets: list[str] = field(default_factory=list)
+    dataset_sample: int | None = None
+    use_hf: bool | None = None
 
     def __post_init__(self):
         if os.path.isfile(self.dataset):
@@ -54,7 +55,7 @@ class DatasetSyntax:
     @staticmethod
     def _safe_split(
         s: str, sep: str, use_0: bool, split_mode: Literal["left", "right"] = "left"
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """
         use_0: When the length of the part is 1, is it considered as part0 or part1.
         split_mode: use split or rsplit
@@ -111,7 +112,7 @@ class DatasetSyntax:
         return dataset_meta or self._get_matched_dataset_meta(dataset_meta_mapping) or DatasetMeta()
 
     @staticmethod
-    def _get_dataset_meta_mapping() -> Dict[Tuple[str, str], DatasetMeta]:
+    def _get_dataset_meta_mapping() -> dict[tuple[str, str], DatasetMeta]:
         global _dataset_meta_mapping
         if _dataset_meta_mapping is not None:
             return _dataset_meta_mapping
@@ -151,7 +152,7 @@ class DatasetSyntax:
 
 class DatasetLoader:
     @staticmethod
-    def download_ms_dataset(ms_dataset_id: str, files: List[str], force_download: bool = False) -> str:
+    def download_ms_dataset(ms_dataset_id: str, files: list[str], force_download: bool = False) -> str:
         """Download dataset from repo manually
         Args:
             ms_dataset_id: The dataset id of ModelScope
@@ -181,7 +182,7 @@ class DatasetLoader:
         return local_dir
 
     @staticmethod
-    def _concat_datasets(datasets: List[HfDataset]) -> Optional[HfDataset]:
+    def _concat_datasets(datasets: list[HfDataset]) -> HfDataset | None:
         if len(datasets) == 0:
             return
         if len(datasets) == 1:
@@ -205,7 +206,7 @@ class DatasetLoader:
         load_from_cache_file: bool = True,
         strict: bool = False,
         streaming: bool = False,
-        columns: Optional[Dict[str, str]] = None,
+        columns: dict[str, str] | None = None,
         remove_unused_columns: bool = True,
     ) -> HfDataset:
         ext = os.path.splitext(dataset_path)[1].lstrip(".")
@@ -231,12 +232,12 @@ class DatasetLoader:
         num_proc: int = 1,
         load_from_cache_file: bool = True,
         streaming: bool = False,
-        use_hf: Optional[bool] = None,
-        hub_token: Optional[str] = None,
+        use_hf: bool | None = None,
+        hub_token: str | None = None,
         strict: bool = False,
-        revision: Optional[str] = None,
+        revision: str | None = None,
         download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists",
-        columns: Optional[Dict[str, str]] = None,
+        columns: dict[str, str] | None = None,
         remove_unused_columns: bool = True,
     ) -> HfDataset:
         datasets = []
@@ -304,7 +305,7 @@ class DatasetLoader:
         return DatasetLoader._concat_datasets(datasets)
 
     @staticmethod
-    def _select_subsets(subsets: List[str], dataset_meta: DatasetMeta) -> List[SubsetDataset]:
+    def _select_subsets(subsets: list[str], dataset_meta: DatasetMeta) -> list[SubsetDataset]:
         subset_mapping = {subset.name: subset for subset in dataset_meta.subsets}
         subset_names = list(subset_mapping.keys())
         if not subsets:
@@ -334,12 +335,12 @@ class DatasetLoader:
     def post_process(
         train_dataset: DATASET_TYPE,
         *,
-        dataset_sample: Optional[int] = None,
+        dataset_sample: int | None = None,
         split_dataset_ratio: float = 0.0,
         streaming: bool = False,
         shuffle: bool = True,
-        random_state: Optional[np.random.RandomState] = None,
-    ) -> Tuple[DATASET_TYPE, Optional[DATASET_TYPE]]:
+        random_state: np.random.RandomState | None = None,
+    ) -> tuple[DATASET_TYPE, DATASET_TYPE | None]:
         """Split into train/val datasets and perform dataset sampling."""
         assert dataset_sample is None or dataset_sample > 0
         assert 0 <= split_dataset_ratio <= 1
@@ -387,17 +388,17 @@ class DatasetLoader:
 
     @staticmethod
     def load(
-        dataset_syntax: Optional[DatasetSyntax] = None,
-        dataset_meta: Optional[DatasetMeta] = None,
+        dataset_syntax: DatasetSyntax | None = None,
+        dataset_meta: DatasetMeta | None = None,
         *,
         num_proc: int = 1,
         load_from_cache_file: bool = True,
         streaming: bool = False,
-        use_hf: Optional[bool] = None,
-        hub_token: Optional[str] = None,
+        use_hf: bool | None = None,
+        hub_token: str | None = None,
         strict: bool = False,
         download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists",
-        columns: Optional[Dict[str, str]] = None,
+        columns: dict[str, str] | None = None,
         remove_unused_columns: bool = True,
     ) -> HfDataset:
         if dataset_syntax.dataset_type == "path":
@@ -412,7 +413,7 @@ class DatasetLoader:
                 remove_unused_columns=remove_unused_columns,
             )
         else:
-            subsets: List[SubsetDataset] = DatasetLoader._select_subsets(dataset_syntax.subsets, dataset_meta)
+            subsets: list[SubsetDataset] = DatasetLoader._select_subsets(dataset_syntax.subsets, dataset_meta)
             revision = dataset_meta.hf_revision if use_hf else dataset_meta.ms_revision
             datasets = []
             for subset in subsets:
@@ -436,11 +437,11 @@ class DatasetLoader:
 
 
 def init_self_cognition_preprocessor(
-    dataset_meta: Optional[DatasetMeta],
-    model_name: Union[Tuple[str, str], List[str], None] = None,
-    model_author: Union[Tuple[str, str], List[str], None] = None,
+    dataset_meta: DatasetMeta | None,
+    model_name: tuple[str, str] | list[str] | None = None,
+    model_author: tuple[str, str] | list[str] | None = None,
 ) -> None:
-    if dataset_meta is None or model_name is None and model_author is None:
+    if dataset_meta is None or (model_name is None and model_author is None):
         return
     kwargs = {}
     # zh, en
@@ -466,27 +467,27 @@ def init_self_cognition_preprocessor(
 
 
 def load_dataset(
-    datasets: Union[List[str], str],
+    datasets: list[str] | str,
     *,
     split_dataset_ratio: float = 0.0,
-    seed: Union[int, np.random.RandomState, None] = 42,
+    seed: int | np.random.RandomState | None = 42,
     num_proc: int = 1,
     load_from_cache_file: bool = True,
     shuffle: bool = False,
     streaming: bool = False,
-    interleave_prob: Optional[List[float]] = None,
+    interleave_prob: list[float] | None = None,
     stopping_strategy: Literal["first_exhausted", "all_exhausted"] = "first_exhausted",
     shuffle_buffer_size: int = 1000,
-    use_hf: Optional[bool] = None,
-    hub_token: Optional[str] = None,
+    use_hf: bool | None = None,
+    hub_token: str | None = None,
     strict: bool = False,
     download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists",
-    columns: Optional[Dict[str, str]] = None,  # columns_mapping
+    columns: dict[str, str] | None = None,  # columns_mapping
     remove_unused_columns: bool = True,
     # self-cognition
-    model_name: Union[Tuple[str, str], List[str], None] = None,  # zh, en
-    model_author: Union[Tuple[str, str], List[str], None] = None,
-) -> Tuple[DATASET_TYPE, Optional[DATASET_TYPE]]:
+    model_name: tuple[str, str] | list[str] | None = None,  # zh, en
+    model_author: tuple[str, str] | list[str] | None = None,
+) -> tuple[DATASET_TYPE, DATASET_TYPE | None]:
     """The interface to load any registered dataset
 
     Args:

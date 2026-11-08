@@ -1,8 +1,10 @@
 import os
+
 import cv2
 import gdown
-from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import FaceDetector
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
+from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import FaceDetector
 
 
 def build_model():

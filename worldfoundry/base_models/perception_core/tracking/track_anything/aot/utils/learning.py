@@ -100,11 +100,10 @@ def get_trainable_params(
                 wd = exclusive_wd_dict[exclusive_key]
                 break
         if len(value.shape) == 1:  # normalization layers
-            if "bias" in key:  # bias requires no weight decay
-                wd = 0.0
-            elif not use_frozen_bn:  # if not use frozen BN, apply zero weight decay
-                wd = 0.0
-            elif "encoder." not in key:  # if use frozen BN, apply weight decay to all frozen BNs in the encoder
+            # bias requires no weight decay
+            # if not use frozen BN, apply zero weight decay
+            # if use frozen BN, apply weight decay to all frozen BNs in the encoder
+            if "bias" in key or not use_frozen_bn or "encoder." not in key:
                 wd = 0.0
         else:
             for no_wd_key in no_wd_keys:
@@ -113,7 +112,7 @@ def get_trainable_params(
                     break
         params += [{"params": [value], "lr": base_lr, "weight_decay": wd, "name": key}]
 
-    print("Total Param: {:.2f}M".format(total_param / 1e6))
+    print(f"Total Param: {total_param / 1e6:.2f}M")
     return params
 
 
@@ -140,4 +139,4 @@ def calculate_params(state_dict):
             continue
         memo.add(value)
         total_param += value.numel()
-    print("Total Param: {:.2f}M".format(total_param / 1e6))
+    print(f"Total Param: {total_param / 1e6:.2f}M")

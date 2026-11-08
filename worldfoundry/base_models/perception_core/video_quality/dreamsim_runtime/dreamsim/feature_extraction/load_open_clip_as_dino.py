@@ -1,7 +1,9 @@
-import torch
-from .vision_transformer import vit_base, VisionTransformer
-import open_clip
 import os
+
+import open_clip
+import torch
+
+from .vision_transformer import VisionTransformer, vit_base
 
 
 def load_open_clip_as_dino(patch_size, load_dir="./models", l14=False):
@@ -69,7 +71,7 @@ def _sanity_check(patch_size, l14=False):
 
     ve = dino_vit(x) @ proj
 
-    for i, (c, v) in enumerate(zip(cpre, vpre)):
+    for i, (c, v) in enumerate(zip(cpre, vpre, strict=False)):
         delta = (c - v).abs()
         assert torch.isclose(c, v).all(), f"layer {i}:\ndelta={delta}\n{torch.isclose(c, v)}"
         print(f"{i}: {delta.abs().max()}")

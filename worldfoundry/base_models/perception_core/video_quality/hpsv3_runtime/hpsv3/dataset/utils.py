@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
-
 ## This file is modified from https://github.com/kq-chen/qwen-vl-utils/blob/main/src/qwen_vl_utils/vision_process.py
 import base64
 import logging
@@ -13,6 +11,7 @@ import warnings
 from functools import lru_cache
 from io import BytesIO
 
+import numpy as np
 import requests
 import torch
 import torchvision
@@ -20,7 +19,6 @@ from packaging import version
 from PIL import Image
 from torchvision import io, transforms
 from torchvision.transforms import InterpolationMode
-
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +86,7 @@ def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACT
     else:
         image = ele["image_url"]
     image_obj = None
-    if isinstance(image, Image.Image):
-        image_obj = image
-    elif isinstance(image, torch.Tensor):
+    if isinstance(image, Image.Image) or isinstance(image, torch.Tensor):
         image_obj = image
     elif image.startswith("http://") or image.startswith("https://"):
         image_obj = Image.open(requests.get(image, stream=True).raw)
@@ -215,7 +211,7 @@ def smart_nframes(
         nframes = round_by_factor(nframes, FRAME_FACTOR)
     if nframes > total_frames:
         nframes = total_frames
-    if not (FRAME_FACTOR <= nframes and nframes <= total_frames):
+    if not (nframes >= FRAME_FACTOR and nframes <= total_frames):
         raise ValueError(f"nframes should in interval [{FRAME_FACTOR}, {total_frames}], but got {nframes}.")
     return nframes
 
@@ -244,7 +240,7 @@ def _read_video_torchvision(
     video, audio, info = io.read_video(
         video_path,
         start_pts=ele.get("video_start", 0.0),
-        end_pts=ele.get("video_end", None),
+        end_pts=ele.get("video_end"),
         pts_unit="sec",
         output_format="TCHW",
     )

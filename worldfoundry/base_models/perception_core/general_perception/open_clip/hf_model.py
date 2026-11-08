@@ -11,24 +11,20 @@ from torch import TensorType
 
 try:
     import transformers
-    from transformers import AutoModel, AutoTokenizer, AutoConfig, PretrainedConfig
+    from transformers import AutoConfig, AutoModel, AutoTokenizer, PretrainedConfig
     from transformers.modeling_outputs import (
         BaseModelOutput,
         BaseModelOutputWithPooling,
         BaseModelOutputWithPoolingAndCrossAttentions,
     )
-except ImportError as e:
+except ImportError:
     transformers = None
 
     class BaseModelOutput:
         """Base model output implementation."""
 
-        pass
-
     class PretrainedConfig:
         """Pretrained config implementation."""
-
-        pass
 
 
 from .hf_configs import arch_dict
@@ -269,4 +265,3 @@ class HFTextEncoder(nn.Module):
 
     def init_parameters(self):
         """Init parameters."""
-        pass

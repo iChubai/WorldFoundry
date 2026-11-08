@@ -1,11 +1,12 @@
 import math
 from typing import List
+
 import torch
+from detectron2.config import configurable
+from detectron2.layers import ShapeSpec, get_norm
 from torch import nn
 from torch.nn import functional as F
 
-from detectron2.layers import ShapeSpec, get_norm
-from detectron2.config import configurable
 from ..layers.deform_conv import DFConv2d
 
 __all__ = ["CenterNetHead"]
@@ -78,7 +79,7 @@ class CenterNetHead(nn.Module):
                 elif norm != "":
                     tower.append(get_norm(norm, channel))
                 tower.append(nn.ReLU())
-            self.add_module("{}_tower".format(head), nn.Sequential(*tower))
+            self.add_module(f"{head}_tower", nn.Sequential(*tower))
 
         self.bbox_pred = nn.Conv2d(in_channels, 4, kernel_size=self.out_kernel, stride=1, padding=self.out_kernel // 2)
 

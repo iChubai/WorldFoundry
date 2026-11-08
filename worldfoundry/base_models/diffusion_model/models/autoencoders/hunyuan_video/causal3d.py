@@ -5,8 +5,8 @@ Composes :mod:`.original_encoder` and :mod:`.original_decoder`. Public ``encode`
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 import torch
 from torch import nn
@@ -106,7 +106,7 @@ class HunyuanVideoCausal3DAutoencoder(nn.Module):
             return json.load(handle)
 
     @classmethod
-    def from_config(cls, config: Mapping[str, object], **overrides: object) -> "HunyuanVideoCausal3DAutoencoder":
+    def from_config(cls, config: Mapping[str, object], **overrides: object) -> HunyuanVideoCausal3DAutoencoder:
         values = {key: value for key, value in dict(config).items() if not key.startswith("_")}
         values.update(overrides)
         return cls(**values)

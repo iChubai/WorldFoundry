@@ -1,26 +1,27 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> webzipfile.py functionality."""
 
-from typing import *
 import io
 import os
+import struct
+from typing import *
 from zipfile import (
-    ZipInfo,
-    BadZipFile,
-    ZipFile,
-    ZipExtFile,
-    sizeFileHeader,
-    structFileHeader,
-    stringFileHeader,
-    _FH_SIGNATURE,
-    _FH_FILENAME_LENGTH,
     _FH_EXTRA_FIELD_LENGTH,
+    _FH_FILENAME_LENGTH,
     _FH_GENERAL_PURPOSE_FLAG_BITS,
+    _FH_SIGNATURE,
     _MASK_COMPRESSED_PATCH,
+    _MASK_ENCRYPTED,
     _MASK_STRONG_ENCRYPTION,
     _MASK_UTF_FILENAME,
-    _MASK_ENCRYPTED,
+    BadZipFile,
+    ZipExtFile,
+    ZipFile,
+    ZipInfo,
+    sizeFileHeader,
+    stringFileHeader,
+    structFileHeader,
 )
-import struct
+
 from requests import Session
 
 from .webfile import WebFile

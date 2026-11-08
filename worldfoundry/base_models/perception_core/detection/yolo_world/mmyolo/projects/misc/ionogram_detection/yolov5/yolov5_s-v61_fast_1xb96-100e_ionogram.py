@@ -28,7 +28,7 @@ anchors = [[[8, 6], [24, 4], [19, 9]], [[22, 19], [17, 49], [29, 45]], [[44, 66]
 # base_lr_default * (your_bs / default_bs (8x16)) for SGD
 base_lr = _base_.base_lr * train_batch_size_per_gpu / (8 * 16)
 max_epochs = 100
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"
 
 # default_hooks
 save_epoch_intervals = 10

@@ -486,7 +486,7 @@ class BasicLayer(nn.Module):
         mask_windows = window_partition(img_mask, self.window_size)  # nW, window_size, window_size, 1
         mask_windows = mask_windows.view(-1, self.window_size * self.window_size)
         attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
-        attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
+        attn_mask = attn_mask.masked_fill(attn_mask != 0, (-100.0)).masked_fill(attn_mask == 0, 0.0)
 
         for blk in self.blocks:
             blk.H, blk.W = H, W
@@ -721,7 +721,7 @@ class SwinTransformer(nn.Module):
 
         if self.frozen_stages >= 2:
             self.pos_drop.eval()
-            for i in range(0, self.frozen_stages - 1):
+            for i in range(self.frozen_stages - 1):
                 m = self.layers[i]
                 m.eval()
                 for param in m.parameters():

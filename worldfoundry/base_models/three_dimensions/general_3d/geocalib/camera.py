@@ -15,7 +15,6 @@ from .gravity import Gravity
 from .misc import TensorWrapper, autocast
 from .utils import deg2rad, focal2fov, fov2focal, rad2rotmat
 
-# flake8: noqa: E741
 # mypy: ignore-errors
 
 
@@ -45,7 +44,7 @@ class BaseCamera(TensorWrapper):
         super().__init__(data)
 
     @classmethod
-    def from_dict(cls, param_dict: Dict[str, torch.Tensor]) -> "BaseCamera":
+    def from_dict(cls, param_dict: dict[str, torch.Tensor]) -> "BaseCamera":
         """Create a Camera object from a dictionary of parameters.
 
         Args:
@@ -145,7 +144,7 @@ class BaseCamera(TensorWrapper):
         dist = self.dist if hasattr(self, "dist") else self.new_zeros(self.f.shape)
         return self.__class__(torch.cat([self.size, f, self.c, dist], -1))
 
-    def scale(self, scales: Union[float, int, Tuple[Union[float, int]]]):
+    def scale(self, scales: float | int | tuple[float | int]):
         """Update the self parameters after resizing an image."""
         scales = (scales, scales) if isinstance(scales, (int, float)) else scales
         s = scales if isinstance(scales, torch.Tensor) else self.new_tensor(scales)
@@ -153,7 +152,7 @@ class BaseCamera(TensorWrapper):
         dist = self.dist if hasattr(self, "dist") else self.new_zeros(self.f.shape)
         return self.__class__(torch.cat([self.size * s, self.f * s, self.c * s, dist], -1))
 
-    def crop(self, pad: Tuple[float]):
+    def crop(self, pad: tuple[float]):
         """Update the self parameters after cropping an image."""
         pad = pad if isinstance(pad, torch.Tensor) else self.new_tensor(pad)
         size = self.size + pad.to(self.size)
@@ -170,7 +169,7 @@ class BaseCamera(TensorWrapper):
         return torch.all((p2d >= 0) & (p2d <= (size - 1)), -1)
 
     @autocast
-    def project(self, p3d: torch.Tensor) -> Tuple[torch.Tensor]:
+    def project(self, p3d: torch.Tensor) -> tuple[torch.Tensor]:
         """Project 3D points into the self plane and check for visibility."""
         z = p3d[..., -1]
         valid = z > self.eps
@@ -187,13 +186,13 @@ class BaseCamera(TensorWrapper):
         J = J.reshape(p3d.shape[:-1] + (2, 3))
         return J  # N x 2 x 3
 
-    def undo_scale_crop(self, data: Dict[str, torch.Tensor]):
+    def undo_scale_crop(self, data: dict[str, torch.Tensor]):
         """Undo transforms done during scaling and cropping."""
         camera = self.crop(-data["crop_pad"]) if "crop_pad" in data else self
         return camera.scale(1.0 / data["scales"])
 
     @abstractmethod
-    def distort(self, pts: torch.Tensor, return_scale: bool = False) -> Tuple[torch.Tensor]:
+    def distort(self, pts: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates and check for validity of the distortion model."""
         raise NotImplementedError("distort() must be implemented.")
 
@@ -228,7 +227,7 @@ class BaseCamera(TensorWrapper):
             raise NotImplementedError(f"Jacobian not implemented for wrt={wrt}")
 
     @abstractmethod
-    def undistort(self, pts: torch.Tensor) -> Tuple[torch.Tensor]:
+    def undistort(self, pts: torch.Tensor) -> tuple[torch.Tensor]:
         """Undistort normalized 2D coordinates and check for validity of the distortion model."""
         raise NotImplementedError("undistort() must be implemented.")
 
@@ -345,7 +344,7 @@ class BaseCamera(TensorWrapper):
         return F.normalize(p3d, dim=-1)
 
     @autocast
-    def world2image(self, p3d: torch.Tensor) -> Tuple[torch.Tensor]:
+    def world2image(self, p3d: torch.Tensor) -> tuple[torch.Tensor]:
         """Transform 3D points into 2D pixel coordinates."""
         p2d, visible = self.project(p3d)
         p2d, mask = self.distort(p2d)
@@ -366,7 +365,7 @@ class BaseCamera(TensorWrapper):
         return J, valid
 
     @autocast
-    def image2world(self, p2d: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def image2world(self, p2d: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Transform point in the image plane to 3D world coordinates."""
         p2d = self.normalize(p2d)
         p2d, valid = self.undistort(p2d)
@@ -375,7 +374,7 @@ class BaseCamera(TensorWrapper):
         return p3d, valid
 
     @autocast
-    def J_image2world(self, p2d: torch.Tensor, wrt: str = "f") -> Tuple[torch.Tensor, torch.Tensor]:
+    def J_image2world(self, p2d: torch.Tensor, wrt: str = "f") -> tuple[torch.Tensor, torch.Tensor]:
         """Jacobian of the image2world function."""
         if wrt == "dist":
             p2d_norm = self.normalize(p2d)
@@ -412,7 +411,7 @@ class BaseCamera(TensorWrapper):
         pano_img: torch.Tensor,
         gravity: Gravity,
         yaws: torch.Tensor = 0.0,
-        resize_factor: Optional[torch.Tensor] = None,
+        resize_factor: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Render an image from a panorama.
 
@@ -516,7 +515,7 @@ class Pinhole(BaseCamera):
     Use this model for undistorted images.
     """
 
-    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> Tuple[torch.Tensor]:
+    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates."""
         if return_scale:
             return p2d.new_ones(p2d.shape[:-1] + (1,))
@@ -530,7 +529,7 @@ class Pinhole(BaseCamera):
 
         raise ValueError(f"Unknown wrt: {wrt}")
 
-    def undistort(self, pts: torch.Tensor) -> Tuple[torch.Tensor]:
+    def undistort(self, pts: torch.Tensor) -> tuple[torch.Tensor]:
         """Undistort normalized 2D coordinates."""
         return pts, pts.new_ones((pts.shape[0], 1)).bool()
 
@@ -569,7 +568,7 @@ class SimpleRadial(BaseCamera):
         """Distortion parameters, with shape (...)."""
         return self._data[..., 6]
 
-    def update_dist(self, delta: torch.Tensor, dist_range: Tuple[float, float] = (-0.7, 0.7)):
+    def update_dist(self, delta: torch.Tensor, dist_range: tuple[float, float] = (-0.7, 0.7)):
         """Update the self parameters after changing the k1 distortion parameter."""
         delta_dist = self.new_ones(self.dist.shape) * delta
         dist = (self.dist + delta_dist).clamp(*dist_range)
@@ -581,7 +580,7 @@ class SimpleRadial(BaseCamera):
         """Check if the distorted points are valid."""
         return p2d.new_ones(p2d.shape[:-1]).bool()
 
-    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> Tuple[torch.Tensor]:
+    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates and check for validity of the distortion model."""
         r2 = torch.sum(p2d**2, -1, keepdim=True)
         radial = 1 + self.k1[..., None, None] * r2
@@ -601,7 +600,7 @@ class SimpleRadial(BaseCamera):
             return super().J_distort(p2d, wrt)
 
     @autocast
-    def undistort(self, p2d: torch.Tensor) -> Tuple[torch.Tensor]:
+    def undistort(self, p2d: torch.Tensor) -> tuple[torch.Tensor]:
         """Undistort normalized 2D coordinates and check for validity of the distortion model."""
         b1 = -self.k1[..., None, None]
         r2 = torch.sum(p2d**2, -1, keepdim=True)
@@ -653,7 +652,7 @@ class SimpleDivisional(BaseCamera):
         """Distortion parameters, with shape (...)."""
         return self._data[..., 6]
 
-    def update_dist(self, delta: torch.Tensor, dist_range: Tuple[float, float] = (-3.0, 3.0)):
+    def update_dist(self, delta: torch.Tensor, dist_range: tuple[float, float] = (-3.0, 3.0)):
         """Update the self parameters after changing the k1 distortion parameter."""
         delta_dist = self.new_ones(self.dist.shape) * delta
         dist = (self.dist + delta_dist).clamp(*dist_range)
@@ -665,7 +664,7 @@ class SimpleDivisional(BaseCamera):
         """Check if the distorted points are valid."""
         return p2d.new_ones(p2d.shape[:-1]).bool()
 
-    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> Tuple[torch.Tensor]:
+    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates and check for validity of the distortion model."""
         r2 = torch.sum(p2d**2, -1, keepdim=True)
         radial = 1 - torch.sqrt((1 - 4 * self.k1[..., None, None] * r2).clamp(min=0))
@@ -699,7 +698,7 @@ class SimpleDivisional(BaseCamera):
             return super().J_distort(p2d, wrt)
 
     @autocast
-    def undistort(self, p2d: torch.Tensor) -> Tuple[torch.Tensor]:
+    def undistort(self, p2d: torch.Tensor) -> tuple[torch.Tensor]:
         """Undistort normalized 2D coordinates and check for validity of the distortion model."""
         r2 = torch.sum(p2d**2, -1, keepdim=True)
         denom = 1 + self.k1[..., None, None] * r2
@@ -862,7 +861,7 @@ class SimpleMei(BaseCamera):
         """Distortion parameters, with shape (...)."""
         return self._data[..., 6]
 
-    def update_dist(self, delta: torch.Tensor, dist_range: Tuple[float, float] = (-10.0, 10.0)):
+    def update_dist(self, delta: torch.Tensor, dist_range: tuple[float, float] = (-10.0, 10.0)):
         """Update the self parameters after changing the k1 distortion parameter."""
         delta_dist = self.new_ones(self.dist.shape) * delta
         dist = (self.dist + delta_dist).clamp(*dist_range)
@@ -873,7 +872,7 @@ class SimpleMei(BaseCamera):
         data = torch.cat([self.size, self.f, self.c, dist], -1)
         return self.__class__(data)
 
-    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> Tuple[torch.Tensor]:
+    def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates and check for validity of the distortion model."""
         k1 = self.k1[..., None, None] if len(p2d.shape) != 1 else self.k1
 
@@ -903,7 +902,7 @@ class SimpleMei(BaseCamera):
             return super().J_distort(p2d, wrt)
 
     @autocast
-    def undistort(self, p2d: torch.Tensor) -> Tuple[torch.Tensor]:
+    def undistort(self, p2d: torch.Tensor) -> tuple[torch.Tensor]:
         """Undistort normalized 2D coordinates and check for validity of the distortion model."""
         r2 = torch.sum(p2d**2, -1, keepdim=True)
         k1 = self.k1[..., None, None]

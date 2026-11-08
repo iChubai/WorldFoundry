@@ -14,18 +14,18 @@
 
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> pipeline_qwen_pano.py functionality."""
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-
 from diffusers.pipelines.qwenimage.pipeline_qwenimage_edit_plus import (
-    QwenImageEditPlusPipeline,
     PipelineImageInput,
+    QwenImageEditPlusPipeline,
     QwenImagePipelineOutput,
+    calculate_dimensions,
     calculate_shift,
     retrieve_timesteps,
-    calculate_dimensions,
 )
 from diffusers.utils import is_torch_xla_available, logging
 
@@ -60,27 +60,27 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        image: Optional[PipelineImageInput] = None,
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Union[str, List[str]] = None,
+        image: PipelineImageInput | None = None,
+        prompt: str | list[str] = None,
+        negative_prompt: str | list[str] = None,
         true_cfg_scale: float = 4.0,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
+        height: int | None = None,
+        width: int | None = None,
         num_inference_steps: int = 50,
-        sigmas: Optional[List[float]] = None,
-        guidance_scale: Optional[float] = None,
+        sigmas: list[float] | None = None,
+        guidance_scale: float | None = None,
         num_images_per_prompt: int = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        prompt_embeds_mask: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds_mask: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        prompt_embeds_mask: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds_mask: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        attention_kwargs: dict[str, Any] | None = None,
+        callback_on_step_end: Callable[[int, int, dict], None] | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
     ):
         """Call.

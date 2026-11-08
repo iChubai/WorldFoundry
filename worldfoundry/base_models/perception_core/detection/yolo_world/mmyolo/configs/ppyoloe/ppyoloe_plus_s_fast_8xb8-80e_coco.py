@@ -19,7 +19,7 @@ val_num_workers = 2
 # The pretrained model is geted and converted from official PPYOLOE.
 # https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.5/configs/ppyoloe/README.md
 load_from = (
-    "https://download.openmmlab.com/mmyolo/v0/ppyoloe/ppyoloe_pretrain/ppyoloe_plus_s_obj365_pretrained-bcfe8478.pth"  # noqa
+    "https://download.openmmlab.com/mmyolo/v0/ppyoloe/ppyoloe_pretrain/ppyoloe_plus_s_obj365_pretrained-bcfe8478.pth"
 )
 
 # persistent_workers must be False if num_workers is 0.

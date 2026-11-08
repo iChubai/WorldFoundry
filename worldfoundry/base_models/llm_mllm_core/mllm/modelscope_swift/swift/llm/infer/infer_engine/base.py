@@ -1,9 +1,11 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from abc import ABC, abstractmethod
-from typing import AsyncIterator, Iterator, List, Optional, Union
+from collections.abc import AsyncIterator, Iterator
+from typing import List, Optional, Union
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferRequest
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
+
 from ..protocol import ChatCompletionResponse, ChatCompletionStreamResponse, RequestConfig
 
 
@@ -11,13 +13,13 @@ class BaseInferEngine(ABC):
     @abstractmethod
     def infer(
         self,
-        infer_requests: List[InferRequest],
-        request_config: Optional[RequestConfig] = None,
-        metrics: Optional[List[Metric]] = None,
+        infer_requests: list[InferRequest],
+        request_config: RequestConfig | None = None,
+        metrics: list[Metric] | None = None,
         *,
-        use_tqdm: Optional[bool] = None,
+        use_tqdm: bool | None = None,
         **kwargs,
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         """
         This method performs inference on a list of inference requests.
 
@@ -35,12 +37,11 @@ class BaseInferEngine(ABC):
             List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
                 The result of the inference.
         """
-        pass
 
     @abstractmethod
     async def infer_async(
-        self, infer_request: InferRequest, request_config: Optional[RequestConfig] = None, **kwargs
-    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
+        self, infer_request: InferRequest, request_config: RequestConfig | None = None, **kwargs
+    ) -> ChatCompletionResponse | AsyncIterator[ChatCompletionStreamResponse]:
         """
         This method performs asynchronous inference on a single inference request.
 
@@ -56,4 +57,3 @@ class BaseInferEngine(ABC):
             Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]: The result of
                 the asynchronous inference.
         """
-        pass

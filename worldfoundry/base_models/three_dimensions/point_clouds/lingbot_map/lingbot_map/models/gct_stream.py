@@ -10,14 +10,15 @@ Provides streaming inference functionality:
 
 import logging
 import os
+from typing import Any, Dict, List, Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional, Dict, Any, List
 from tqdm.auto import tqdm
 
+from ..aggregator.stream import AggregatorStream
 from ..heads.camera_head import CameraCausalHead
 from .gct_base import GCTBase
-from ..aggregator.stream import AggregatorStream
 
 logger = logging.getLogger(__name__)
 
@@ -263,8 +264,8 @@ class GCTStream(GCTBase):
     def _aggregate_features(
         self,
         images: torch.Tensor,
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
         **kwargs,
     ) -> tuple:
@@ -329,7 +330,7 @@ class GCTStream(GCTBase):
             for cache_dict in self.camera_head.kv_cache:
                 cache_dict["_skip_append"] = skip
 
-    def get_kv_cache_info(self) -> Dict[str, Any]:
+    def get_kv_cache_info(self) -> dict[str, Any]:
         """
         Get information about current KV cache state.
 
@@ -359,10 +360,10 @@ class GCTStream(GCTBase):
     def inference_streaming(
         self,
         images: torch.Tensor,
-        num_scale_frames: Optional[int] = None,
+        num_scale_frames: int | None = None,
         keyframe_interval: int = 1,
-        output_device: Optional[torch.device] = None,
-    ) -> Dict[str, torch.Tensor]:
+        output_device: torch.device | None = None,
+    ) -> dict[str, torch.Tensor]:
         """
         Streaming inference: process scale frames first, then frame-by-frame.
 

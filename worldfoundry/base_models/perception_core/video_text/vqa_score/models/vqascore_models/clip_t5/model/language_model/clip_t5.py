@@ -13,20 +13,18 @@
 #    limitations under the License.
 
 
-from typing import List, Optional, Tuple, Union
 from dataclasses import dataclass, field
+from typing import List, Optional, Tuple, Union
 
 import torch
-
-from transformers import AutoConfig, AutoModelForSeq2SeqLM
-
+from transformers import AutoConfig, AutoModelForSeq2SeqLM, T5Config, T5ForConditionalGeneration
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
-from ..multimodal_encoder.builder import build_vision_tower
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.vqascore_models._shared.multimodal_projector import (
     build_vision_projector,
 )
-from transformers import T5Config, T5ForConditionalGeneration
+
+from ..multimodal_encoder.builder import build_vision_tower
 
 IMAGE_TOKEN_INDEX = -200
 
@@ -34,11 +32,11 @@ IMAGE_TOKEN_INDEX = -200
 @dataclass
 class ModelArguments:
     tune_mm_mlp_adapter: bool = field(default=False)
-    vision_tower: Optional[str] = field(default="openai/clip-vit-large-patch14-336")
-    mm_vision_select_layer: Optional[int] = field(default=-2)  # default to the second last layer in llava1.5
-    pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
-    mm_projector_type: Optional[str] = field(default="mlp2x_gelu")
-    mm_vision_select_feature: Optional[str] = field(default="patch")
+    vision_tower: str | None = field(default="openai/clip-vit-large-patch14-336")
+    mm_vision_select_layer: int | None = field(default=-2)  # default to the second last layer in llava1.5
+    pretrain_mm_mlp_adapter: str | None = field(default=None)
+    mm_projector_type: str | None = field(default="mlp2x_gelu")
+    mm_vision_select_feature: str | None = field(default="patch")
 
 
 class CLIPT5Config(T5Config):
@@ -127,7 +125,9 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
 
             if attention_mask is not None:
                 new_attention_mask = []
-                for cur_attention_mask, _input_embeds_length in zip(attention_mask, _input_embeds_lengths):
+                for cur_attention_mask, _input_embeds_length in zip(
+                    attention_mask, _input_embeds_lengths, strict=False
+                ):
                     new_attn_mask_pad_left = torch.full(
                         (_input_embeds_length - input_ids.shape[1],),
                         True,
@@ -210,18 +210,18 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        decoder_attention_mask: Optional[torch.Tensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
-        return_dict: Optional[bool] = None,
+        attention_mask: torch.Tensor | None = None,
+        decoder_attention_mask: torch.Tensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        images: torch.FloatTensor | None = None,
+        return_dict: bool | None = None,
         **kwargs,
-    ) -> Union[Tuple[torch.FloatTensor], Seq2SeqLMOutput]:
+    ) -> tuple[torch.FloatTensor] | Seq2SeqLMOutput:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -255,9 +255,9 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
     @torch.no_grad()
     def generate(
         self,
-        inputs: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        images: Optional[torch.Tensor] = None,
+        inputs: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        images: torch.Tensor | None = None,
         **kwargs,
     ):
         assert images is not None, "images must be provided"

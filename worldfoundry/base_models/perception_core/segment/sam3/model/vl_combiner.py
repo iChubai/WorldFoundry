@@ -9,6 +9,7 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
+
 from worldfoundry.core.attention import attention_backend_context
 
 from .act_ckpt_utils import activation_ckpt_wrapper
@@ -48,9 +49,9 @@ class SAM3VLBackbone(nn.Module):
     def forward(
         self,
         samples: torch.Tensor,
-        captions: List[str],
-        input_boxes: Optional[torch.Tensor] = None,
-        additional_text: Optional[List[str]] = None,
+        captions: list[str],
+        input_boxes: torch.Tensor | None = None,
+        additional_text: list[str] | None = None,
     ):
         """Forward pass of the backbone combiner.
 
@@ -308,7 +309,7 @@ class VisionOnly(nn.Module):
         eval_cast_to_cpu=False,
         scalp=0,
         compile_mode: str = None,
-        compile_extra_args: Optional[dict] = None,
+        compile_extra_args: dict | None = None,
     ):
         """Init.
 
@@ -401,7 +402,7 @@ class TriHeadVisionOnly(VisionOnly):
         eval_cast_to_cpu=False,
         scalp=0,
         compile_mode: str = None,
-        compile_extra_args: Optional[dict] = None,
+        compile_extra_args: dict | None = None,
     ):
         """Init.
 

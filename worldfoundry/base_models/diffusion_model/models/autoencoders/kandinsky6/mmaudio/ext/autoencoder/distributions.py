@@ -1,6 +1,7 @@
 from typing import Optional
-import torch
+
 import numpy as np
+import torch
 
 
 class DiagonalGaussianDistribution:
@@ -14,7 +15,7 @@ class DiagonalGaussianDistribution:
         if self.deterministic:
             self.var = self.std = torch.zeros_like(self.mean).to(device=self.parameters.device)
 
-    def sample(self, rng: Optional[torch.Generator] = None):
+    def sample(self, rng: torch.Generator | None = None):
         r = torch.empty_like(self.mean).normal_(generator=rng)
         x = self.mean + self.std * r
 

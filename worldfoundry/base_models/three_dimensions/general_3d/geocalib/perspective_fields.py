@@ -16,8 +16,6 @@ from .camera import BaseCamera
 from .gravity import Gravity
 from .misc import J_up_projection, J_vecnorm, SphericalManifold
 
-# flake8: noqa: E266
-
 
 def get_horizon_line(camera: BaseCamera, gravity: Gravity, relative: bool = True) -> torch.Tensor:
     """Get the horizon line from the camera parameters.
@@ -287,7 +285,7 @@ def get_perspective_field(
     gravity: Gravity,
     use_up: bool = True,
     use_latitude: bool = True,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Get the perspective field from the camera parameters.
 
     Args:
@@ -334,7 +332,7 @@ def J_perspective_field(
     use_latitude: bool = True,
     spherical: bool = False,
     log_focal: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Get the jacobian of the perspective field.
 
     Args:

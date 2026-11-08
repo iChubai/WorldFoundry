@@ -21,7 +21,7 @@ class GSFeatHead(_BaseDPTHead):
         dim_in: int,
         patch_size: int = 14,
         features: int = 256,
-        out_channels: List[int] = [256, 512, 1024, 1024],
+        out_channels: list[int] = [256, 512, 1024, 1024],
         pos_embed: bool = True,
         down_ratio: int = 1,
         gradient_checkpoint: bool = False,
@@ -58,7 +58,7 @@ class GSFeatHead(_BaseDPTHead):
 
     def forward(
         self,
-        token_list: List[torch.Tensor],
+        token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frames_chunk_size: int = 8,
@@ -90,7 +90,7 @@ class GSFeatHead(_BaseDPTHead):
 
     def _forward_impl(
         self,
-        token_list: List[torch.Tensor],
+        token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frame_start: int = None,

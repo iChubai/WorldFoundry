@@ -1,11 +1,10 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> swin_common.py functionality."""
 
-import torch
-
-import torch.nn as nn
 import numpy as np
+import torch
+import torch.nn as nn
 
-from .utils import activations, forward_default, get_activation, Transpose
+from .utils import Transpose, activations, forward_default, get_activation
 
 
 def forward_swin(pretrained, x):

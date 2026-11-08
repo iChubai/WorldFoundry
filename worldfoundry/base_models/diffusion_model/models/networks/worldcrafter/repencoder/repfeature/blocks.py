@@ -6,10 +6,9 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from .attention import Attention
-
-
 from worldfoundry.core.nn.blocks.layers import Mlp as _SharedMlp
+
+from .attention import Attention
 
 
 def Mlp(width: int = 768, ratio: int = 4):

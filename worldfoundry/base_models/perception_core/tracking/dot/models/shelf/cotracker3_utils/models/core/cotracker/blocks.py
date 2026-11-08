@@ -4,14 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import collections
+from collections.abc import Callable
+from functools import partial
+from itertools import repeat
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-from typing import Callable
-import collections
 from torch import Tensor
-from itertools import repeat
 
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.core.model_utils import (
     bilinear_sampler,

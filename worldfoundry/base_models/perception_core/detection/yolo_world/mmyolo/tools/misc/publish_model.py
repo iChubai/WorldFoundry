@@ -25,13 +25,12 @@ def process_checkpoint(in_file, out_file):
         del checkpoint["ema_state_dict"]
 
     for key in list(checkpoint["state_dict"]):
-        if key.startswith("data_preprocessor"):
-            checkpoint["state_dict"].pop(key)
-        elif "priors_base_sizes" in key:
-            checkpoint["state_dict"].pop(key)
-        elif "grid_offset" in key:
-            checkpoint["state_dict"].pop(key)
-        elif "prior_inds" in key:
+        if (
+            key.startswith("data_preprocessor")
+            or "priors_base_sizes" in key
+            or "grid_offset" in key
+            or "prior_inds" in key
+        ):
             checkpoint["state_dict"].pop(key)
 
     if torch.__version__ >= "1.6":

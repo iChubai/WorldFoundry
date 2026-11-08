@@ -16,13 +16,12 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> rope.py functionality."""
 
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Tuple
-
-from typing import List, Optional, Tuple, Union
 
 
 class PositionGetter:
@@ -38,7 +37,7 @@ class PositionGetter:
 
     def __init__(self):
         """Initializes the position generator with an empty cache."""
-        self.position_cache: Dict[Tuple[int, int], torch.Tensor] = {}
+        self.position_cache: dict[tuple[int, int], torch.Tensor] = {}
 
     def __call__(self, batch_size: int, height: int, width: int, device: torch.device) -> torch.Tensor:
         """Generates spatial positions for a batch of patches.
@@ -85,11 +84,11 @@ class RotaryPositionEmbedding2D(nn.Module):
         super().__init__()
         self.base_frequency = frequency
         self.scaling_factor = scaling_factor
-        self.frequency_cache: Dict[Tuple, Tuple[torch.Tensor, torch.Tensor]] = {}
+        self.frequency_cache: dict[tuple, tuple[torch.Tensor, torch.Tensor]] = {}
 
     def _compute_frequency_components(
         self, dim: int, seq_len: int, device: torch.device, dtype: torch.dtype
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Computes frequency components for rotary embeddings.
 
         Args:
@@ -202,7 +201,7 @@ class RotaryPositionEmbedding2D(nn.Module):
 
 def get_1d_rotary_pos_embed(
     dim: int,
-    pos: Union[np.ndarray, int],
+    pos: np.ndarray | int,
     theta: float = 10000.0,
     use_real=False,
     linear_factor=1.0,
@@ -295,10 +294,10 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         max_seq_len: int = 1024,
         theta: float = 10000.0,
-        fhw_dim: Optional[Tuple[int, int, int]] = [20, 22, 22],
+        fhw_dim: tuple[int, int, int] | None = [20, 22, 22],
     ):
         """Init.
 
@@ -345,7 +344,7 @@ class WanRotaryPosEmbed(nn.Module):
         self.freqs = torch.cat(freqs, dim=1)
 
     def forward(
-        self, ppf, pph, ppw, patch_start_idx, device: torch.device, f_start: int = 0, f_end: Optional[int] = None
+        self, ppf, pph, ppw, patch_start_idx, device: torch.device, f_start: int = 0, f_end: int | None = None
     ) -> torch.Tensor:
         """
         前向传播：为3D输入（视频帧+patch）生成旋转位置编码

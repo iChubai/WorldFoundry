@@ -4,9 +4,10 @@ Video utilities for visualization.
 """
 
 import os
+import subprocess
+
 import cv2
 import numpy as np
-import subprocess
 from PIL import Image
 
 
@@ -65,7 +66,7 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
                     return extracted_frame_paths
 
         except Exception as error:
-            print(f"PIL GIF extraction error: {str(error)}, falling back to OpenCV")
+            print(f"PIL GIF extraction error: {error!s}, falling back to OpenCV")
 
     # For WebM files, use FFmpeg directly for more stable processing
     if input_video_path.lower().endswith(".webm"):
@@ -103,7 +104,7 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
 
             print("FFmpeg extraction failed, falling back to OpenCV")
         except Exception as error:
-            print(f"FFmpeg extraction error: {str(error)}, falling back to OpenCV")
+            print(f"FFmpeg extraction error: {error!s}, falling back to OpenCV")
 
     # Standard OpenCV method for non-WebM files or as fallback
     try:
@@ -134,7 +135,7 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
                         cv2.imwrite(frame_output_path, cv2.cvtColor(rgb_converted_frame, cv2.COLOR_RGB2BGR))
                         extracted_frame_paths.append(frame_output_path)
                 except Exception as error:
-                    print(f"Warning: Failed to process frame {processed_frame_count}: {str(error)}")
+                    print(f"Warning: Failed to process frame {processed_frame_count}: {error!s}")
 
             processed_frame_count += 1
 
@@ -146,6 +147,6 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
         print(f"Extracted {len(extracted_frame_paths)} frames from video using OpenCV")
 
     except Exception as error:
-        print(f"Error extracting frames: {str(error)}")
+        print(f"Error extracting frames: {error!s}")
 
     return extracted_frame_paths

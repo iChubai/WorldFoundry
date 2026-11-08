@@ -21,17 +21,17 @@ from typing import Any, Dict, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
-from diffusers.utils import USE_PEFT_BACKEND, logging, scale_lora_layers, unscale_lora_layers
-from diffusers.utils.torch_utils import maybe_allow_in_graph
 from diffusers.models.attention import FeedForward
 from diffusers.models.attention_processor import Attention
 from diffusers.models.cache_utils import CacheMixin
 from diffusers.models.embeddings import PixArtAlphaTextProjection, TimestepEmbedding, Timesteps, get_1d_rotary_pos_embed
 from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
+from diffusers.utils import USE_PEFT_BACKEND, logging, scale_lora_layers, unscale_lora_layers
+from diffusers.utils.torch_utils import maybe_allow_in_graph
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 _disable_sageattention = os.getenv("WORLDFOUNDRY_DISABLE_SAGEATTENTION", "").strip().lower() in {
@@ -47,7 +47,7 @@ try:
     from sageattention import sageattn
 
     print("SageAttention is available")
-except ImportError as exc:
+except ImportError:
     sageattn = None
     if _disable_sageattention:
         print("SageAttention disabled by WORLDFOUNDRY_DISABLE_SAGEATTENTION")
@@ -93,9 +93,9 @@ class WanAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Call.
 
@@ -258,8 +258,8 @@ class WanTimeTextImageEmbedding(nn.Module):
         time_freq_dim: int,
         time_proj_dim: int,
         text_embed_dim: int,
-        image_embed_dim: Optional[int] = None,
-        pos_embed_seq_len: Optional[int] = None,
+        image_embed_dim: int | None = None,
+        pos_embed_seq_len: int | None = None,
     ):
         """Init.
 
@@ -287,8 +287,8 @@ class WanTimeTextImageEmbedding(nn.Module):
         self,
         timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
-        timestep_seq_len: Optional[int] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
+        timestep_seq_len: int | None = None,
     ):
         """Forward.
 
@@ -321,7 +321,7 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         max_seq_len: int,
         theta: float = 10000.0,
     ):
@@ -409,7 +409,7 @@ class WanTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        added_kv_proj_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
     ):
         """Init.
 
@@ -571,7 +571,7 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int] = (1, 2, 2),
+        patch_size: tuple[int] = (1, 2, 2),
         num_attention_heads: int = 40,
         attention_head_dim: int = 128,
         in_channels: int = 16,
@@ -581,12 +581,12 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = "rms_norm_across_heads",
+        qk_norm: str | None = "rms_norm_across_heads",
         eps: float = 1e-6,
-        image_dim: Optional[int] = None,
-        added_kv_proj_dim: Optional[int] = None,
+        image_dim: int | None = None,
+        added_kv_proj_dim: int | None = None,
         rope_max_seq_len: int = 1024,
-        pos_embed_seq_len: Optional[int] = None,
+        pos_embed_seq_len: int | None = None,
     ) -> None:
         """Init.
 
@@ -653,10 +653,10 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
         hidden_states: torch.Tensor,
         timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        attention_kwargs: dict[str, Any] | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         """Forward.
 
         Args:

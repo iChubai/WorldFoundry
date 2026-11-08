@@ -1,7 +1,7 @@
 import torch
 
 
-class LoadTextTokens(object):
+class LoadTextTokens:
     def __init__(self, tokenizer, max_text_len=40, padding="do_not_pad"):
         self.tokenizer = tokenizer
         self.max_text_len = max_text_len
@@ -56,7 +56,7 @@ class LoadTextTokens(object):
                 max_shape = tuple(shape.max(dim=0)[0].tolist())
                 batch2 = []
                 for b in batch:
-                    if any(c < m for c, m in zip(b.shape, max_shape)):
+                    if any(c < m for c, m in zip(b.shape, max_shape, strict=False)):
                         b2 = torch.zeros(max_shape, dtype=b.dtype, device=b.device)
                         if b.dim() == 1:
                             b2[: b.shape[0]] = b

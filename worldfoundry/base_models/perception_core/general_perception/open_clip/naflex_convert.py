@@ -6,7 +6,6 @@ from typing import Any, Dict, Tuple
 import torch
 from torch import nn
 
-
 _NAFLEX_TIMM_CONVERT_MODULES = ("eva", "vision_transformer")
 _NAFLEX_NATIVE_TIMM_MODEL_NAME = "vit_base_patch16_clip_224"
 
@@ -34,7 +33,7 @@ def _is_naflex_timm_model_name(model_name: str) -> bool:
     return model_name.startswith("naflexvit")
 
 
-def _is_timm_model_in_modules(model_name: str, module_names: Tuple[str, ...]) -> bool:
+def _is_timm_model_in_modules(model_name: str, module_names: tuple[str, ...]) -> bool:
     """Helper function to is timm model in modules.
 
     Args:
@@ -63,7 +62,7 @@ def _can_convert_timm_model_to_naflex(model_name: str) -> bool:
     return _is_naflex_timm_model_name(model_name) or _is_timm_model_in_modules(model_name, _NAFLEX_TIMM_CONVERT_MODULES)
 
 
-def _is_standard_native_vit_cfg(vision_cfg: Dict[str, Any]) -> bool:
+def _is_standard_native_vit_cfg(vision_cfg: dict[str, Any]) -> bool:
     """Helper function to is standard native vit cfg.
 
     Args:
@@ -100,7 +99,7 @@ def _is_standard_native_vit_cfg(vision_cfg: Dict[str, Any]) -> bool:
     return True
 
 
-def _force_naflex_native_vit_vision(vision_cfg: Dict[str, Any], quick_gelu: bool = False) -> None:
+def _force_naflex_native_vit_vision(vision_cfg: dict[str, Any], quick_gelu: bool = False) -> None:
     """Helper function to force naflex native vit vision.
 
     Args:
@@ -146,6 +145,7 @@ def _force_naflex_native_vit_vision(vision_cfg: Dict[str, Any], quick_gelu: bool
                 for s, p in zip(
                     _to_2tuple(image_size),
                     _to_2tuple(patch_size),
+                    strict=False,
                 )
             ),
             "pre_norm": True,
@@ -157,7 +157,7 @@ def _force_naflex_native_vit_vision(vision_cfg: Dict[str, Any], quick_gelu: bool
             "act_layer": "quick_gelu" if quick_gelu else None,
         }
     )
-    if vision_cfg.get("ls_init_value", None) is not None:
+    if vision_cfg.get("ls_init_value") is not None:
         timm_model_kwargs["init_values"] = vision_cfg["ls_init_value"]
     vision_cfg.update(
         {
@@ -171,7 +171,7 @@ def _force_naflex_native_vit_vision(vision_cfg: Dict[str, Any], quick_gelu: bool
     )
 
 
-def _force_naflex_timm_vision(vision_cfg: Dict[str, Any]) -> None:
+def _force_naflex_timm_vision(vision_cfg: dict[str, Any]) -> None:
     """Helper function to force naflex timm vision.
 
     Args:
@@ -197,7 +197,7 @@ def _force_naflex_timm_vision(vision_cfg: Dict[str, Any]) -> None:
     vision_cfg["timm_model_kwargs"] = timm_model_kwargs
 
 
-def apply_naflex_vision_config(model_cfg: Dict[str, Any]) -> None:
+def apply_naflex_vision_config(model_cfg: dict[str, Any]) -> None:
     """Apply naflex vision config.
 
     Args:
@@ -230,8 +230,8 @@ def _reshape_native_pos_embed_for_naflex(pos_embed: torch.Tensor) -> torch.Tenso
 
 
 def _convert_naflex_native_vit_state_dict(
-    state_dict: Dict[str, torch.Tensor],
-) -> Dict[str, torch.Tensor]:
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
     """Helper function to convert naflex native vit state dict.
 
     Args:
@@ -298,8 +298,8 @@ def _convert_naflex_native_vit_state_dict(
 
 def _convert_naflex_timm_state_dict(
     model: nn.Module,
-    state_dict: Dict[str, torch.Tensor],
-) -> Dict[str, torch.Tensor]:
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
     """Helper function to convert naflex timm state dict.
 
     Args:
@@ -335,8 +335,8 @@ def _convert_naflex_timm_state_dict(
 
 def convert_naflex_state_dict(
     model: nn.Module,
-    state_dict: Dict[str, torch.Tensor],
-) -> Dict[str, torch.Tensor]:
+    state_dict: dict[str, torch.Tensor],
+) -> dict[str, torch.Tensor]:
     """Convert naflex state dict.
 
     Args:

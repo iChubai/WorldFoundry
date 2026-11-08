@@ -7,8 +7,9 @@ graph.  Kernel adapter only.
 import torch
 
 try:
-    import flash_attn_interface
     import os
+
+    import flash_attn_interface
 
     # Centralized control for Flash Attention version
     # WAN_FA_VERSION: "2" or "3". Defaults to "3" if available.
@@ -29,11 +30,12 @@ except (ImportError, ModuleNotFoundError):
     FLASH_ATTN_2_AVAILABLE = False
 
 import warnings
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = [
-    "flash_attention",
     "attention",
+    "flash_attention",
 ]
 
 
@@ -101,15 +103,15 @@ def flash_attention(
         q = half(q.flatten(0, 1))
         q_lens = torch.tensor([lq] * b, dtype=torch.int32).to(device=q.device, non_blocking=True)
     else:
-        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens)]))
+        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens, strict=False)]))
 
     if k_lens is None:
         k = half(k.flatten(0, 1))
         v = half(v.flatten(0, 1))
         k_lens = torch.tensor([lk] * b, dtype=torch.int32).to(device=k.device, non_blocking=True)
     else:
-        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens)]))
-        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens)]))
+        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens, strict=False)]))
+        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens, strict=False)]))
 
     q = q.to(v.dtype)
     k = k.to(v.dtype)

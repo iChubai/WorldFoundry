@@ -33,6 +33,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.to
     _sync_max_memory,
     get_device_count,
 )
+
 from .model_arch import get_model_arch
 from .utils import HfConfigFactory, get_llm_model
 
@@ -150,7 +151,7 @@ def patch_device_map():
 def patch_ignore_check_imports():
     import transformers.dynamic_module_utils as td
 
-    def _check_imports(filename) -> List[str]:
+    def _check_imports(filename) -> list[str]:
         return td.get_relative_imports(filename)
 
     _old_check_imports = td.check_imports
@@ -315,8 +316,8 @@ def patch_mp_ddp():
 
         @wraps(infer_auto_device_map)
         def _infer_auto_device_map_patch(
-            model: nn.Module, max_memory: Optional[Dict[Union[int, str], Union[int, str]]] = None, **kwargs
-        ) -> Dict[str, Union[int, str, torch.device]]:
+            model: nn.Module, max_memory: dict[int | str, int | str] | None = None, **kwargs
+        ) -> dict[str, int | str | torch.device]:
             """The auxiliary function for supports MP + DDP. Monkey Patching.
             add feat in accelerate to support MP + DDP"""
             verbose = kwargs.pop("verbose", False)

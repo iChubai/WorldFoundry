@@ -10,10 +10,8 @@ from functools import lru_cache
 from typing import Optional, Tuple
 
 import regex as re
-
 from transformers.tokenization_utils import AddedToken, PreTrainedTokenizer
 from transformers.utils import logging
-
 
 logger = logging.get_logger(__name__)
 
@@ -28,7 +26,7 @@ MAX_MODEL_INPUT_SIZES = {"qwen/qwen-tokenizer": 32768}
 PRETOKENIZE_REGEX = r"""(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"""
 
 
-@lru_cache()
+@lru_cache
 # Copied from transformers.models.gpt2.tokenization_gpt2.bytes_to_unicode
 def bytes_to_unicode():
     """
@@ -49,7 +47,7 @@ def bytes_to_unicode():
             cs.append(2**8 + n)
             n += 1
     cs = [chr(n) for n in cs]
-    return dict(zip(bs, cs))
+    return dict(zip(bs, cs, strict=False))
 
 
 # Copied from transformers.models.gpt2.tokenization_gpt2.get_pairs
@@ -182,7 +180,7 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
                 if (i == 0 and line.startswith("#version:")) or not line:
                     continue
                 bpe_merges.append(tuple(line.split()))
-        self.bpe_ranks = dict(zip(bpe_merges, range(len(bpe_merges))))
+        self.bpe_ranks = dict(zip(bpe_merges, range(len(bpe_merges)), strict=False))
         # NOTE: the cache can grow without bound and will get really large for long running processes
         # (esp. for texts of language that do not use space between word, e.g. Chinese); technically
         # not a memory leak but appears as one.
@@ -301,7 +299,7 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
         self,
         token_ids,
         skip_special_tokens: bool = False,
-        clean_up_tokenization_spaces: Optional[bool] = False,
+        clean_up_tokenization_spaces: bool | None = False,
         spaces_between_special_tokens: bool = False,
         **kwargs,
     ) -> str:
@@ -327,7 +325,7 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
         )
 
     # Copied from transformers.models.gpt2.tokenization_gpt2.GPT2Tokenizer.save_vocabulary
-    def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
+    def save_vocabulary(self, save_directory: str, filename_prefix: str | None = None) -> tuple[str]:
         """Save vocabulary.
 
         Args:

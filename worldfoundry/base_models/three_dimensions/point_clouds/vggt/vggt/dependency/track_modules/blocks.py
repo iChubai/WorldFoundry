@@ -10,18 +10,18 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> blocks.py functionality."""
 
+import collections
+from collections.abc import Callable
+from functools import partial
+from itertools import repeat
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-from typing import Callable
-import collections
 from torch import Tensor
-from itertools import repeat
 
+from .modules import AttnBlock, CrossAttnBlock, Mlp, ResidualBlock
 from .utils import bilinear_sampler
-
-from .modules import Mlp, AttnBlock, CrossAttnBlock, ResidualBlock
 
 
 class BasicEncoder(nn.Module):

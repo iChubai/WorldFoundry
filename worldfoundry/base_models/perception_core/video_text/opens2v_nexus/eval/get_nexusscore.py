@@ -1,9 +1,9 @@
 import argparse
-import os.path as osp
-from tqdm import tqdm
-
-import os
 import json
+import os
+import os.path as osp
+
+import decord
 import numpy as np
 import supervision as sv
 import torch
@@ -14,6 +14,7 @@ from mmengine.runner.amp import autocast
 from mmyolo.registry import RUNNERS
 from PIL import Image
 from torchvision.ops import nms
+from tqdm import tqdm
 from transformers import (
     AutoProcessor,
     AutoTokenizer,
@@ -21,7 +22,6 @@ from transformers import (
     CLIPVisionModelWithProjection,
 )
 from utils.gme.gme_model import GmeQwen2VL
-import decord
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -277,7 +277,7 @@ def main():
     yolo_vision_model, yolo_processor, runner, txt_feats = load_model_and_config(args, yolo_clip_model_path, device)
     gme = GmeQwen2VL(gme_model_path, attn_model="flash_attention_2", device=device)
 
-    with open(input_json_file, "r") as f:
+    with open(input_json_file) as f:
         json_data = json.load(f)
 
     video_files = [f for f in os.listdir(input_video_folder) if f.endswith(".mp4")]
@@ -305,7 +305,7 @@ def main():
 
             for frame in frames:
                 frame_flag = True
-                for prompt_image_path, image_label in zip(prompt_image_paths, image_labels):
+                for prompt_image_path, image_label in zip(prompt_image_paths, image_labels, strict=False):
                     if "face" in prefix and (image_label == "Man" or image_label == "Woman"):
                         continue
 
@@ -354,7 +354,9 @@ def main():
             gme_text_score = (e_query * e_local_image_corpus).sum(-1)
 
             retrieval_score_list = []
-            for bbox_conf, text_conf, nexus_score in zip(all_yolo_world_conf, gme_text_score, gme_image_score):
+            for bbox_conf, text_conf, nexus_score in zip(
+                all_yolo_world_conf, gme_text_score, gme_image_score, strict=False
+            ):
                 if bbox_conf > 0.6 and text_conf > 0.30 and nexus_score != 0:
                     retrieval_score_list.append(nexus_score)
 

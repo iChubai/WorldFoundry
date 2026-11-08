@@ -4,13 +4,17 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import torch
-import torch.nn.functional as F
 from typing import Tuple
 
+import torch
+import torch.nn.functional as F
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker2_utils.models.core.cotracker.cotracker import (
     CoTracker2,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.model_utils import get_points_on_a_grid
 
 
@@ -18,7 +22,7 @@ class EvaluationPredictor(torch.nn.Module):
     def __init__(
         self,
         cotracker_model: CoTracker2,
-        interp_shape: Tuple[int, int] = (384, 512),
+        interp_shape: tuple[int, int] = (384, 512),
         grid_size: int = 5,
         local_grid_size: int = 8,
         single_point: bool = True,
@@ -53,7 +57,7 @@ class EvaluationPredictor(torch.nn.Module):
         if self.single_point:
             traj_e = torch.zeros((B, T, N, 2), device=device)
             vis_e = torch.zeros((B, T, N), device=device)
-            for pind in range((N)):
+            for pind in range(N):
                 query = queries[:, pind : pind + 1]
 
                 t = query[0, 0, 0].long()

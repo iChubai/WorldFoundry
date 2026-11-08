@@ -10,9 +10,9 @@ from inspect import isfunction
 
 import torch
 import torch as th
-from torch import nn, einsum
 import torch.nn.functional as F
 from einops import rearrange, repeat
+from torch import einsum, nn
 
 try:
     import xformers
@@ -22,8 +22,8 @@ try:
 except:
     XFORMERS_IS_AVAILBLE = False
 
-from worldfoundry.core.nn.diffusion.utils import checkpoint, exists, uniq, default, max_neg_value, init_
-from worldfoundry.core.nn.diffusion.convolution import conv_nd, zero_module, normalization
+from worldfoundry.core.nn.diffusion.convolution import conv_nd, normalization, zero_module
+from worldfoundry.core.nn.diffusion.utils import checkpoint, default, exists, init_, max_neg_value, uniq
 
 
 class GEGLU(nn.Module):
@@ -1091,7 +1091,7 @@ class QKVAttention(nn.Module):
 
         if use_tempoal_causal_attn:
             # weight = torch.tril(weight)
-            assert mask is None, f"Not implemented for merging two masks!"
+            assert mask is None, "Not implemented for merging two masks!"
             mask = torch.tril(torch.ones(weight.shape))
         else:
             if mask is not None:  # only keep upper-left matrix

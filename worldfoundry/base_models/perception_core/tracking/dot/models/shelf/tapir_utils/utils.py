@@ -15,12 +15,13 @@
 
 """Pytorch model utilities."""
 
-from typing import Any, Sequence, Union
-from einshape.src import abstract_ops
-from einshape.src import backend
+from collections.abc import Sequence
+from typing import Any, Union
+
 import numpy as np
 import torch
 import torch.nn.functional as F
+from einshape.src import abstract_ops, backend
 
 
 def bilinear(x: torch.Tensor, resolution: tuple[int, int]) -> torch.Tensor:
@@ -179,7 +180,7 @@ def heatmaps_to_points(
 
 def is_same_res(r1, r2):
     """Test if two image resolutions are the same."""
-    return all([x == y for x, y in zip(r1, r2)])
+    return all([x == y for x, y in zip(r1, r2, strict=False)])
 
 
 def convert_grid_coordinates(
@@ -229,7 +230,7 @@ class _JaxBackend(backend.Backend[torch.Tensor]):
         return x.expand(shape)
 
 
-def einshape(equation: str, value: Union[torch.Tensor, Any], **index_sizes: int) -> torch.Tensor:
+def einshape(equation: str, value: torch.Tensor | Any, **index_sizes: int) -> torch.Tensor:
     """Reshapes `value` according to the given Shape Equation.
 
     Args:
@@ -263,7 +264,7 @@ def generate_default_resolutions(full_size, train_size, num_levels=None):
     Returns:
       A list of resolutions.
     """
-    if all([x == y for x, y in zip(train_size, full_size)]):
+    if all([x == y for x, y in zip(train_size, full_size, strict=False)]):
         return [train_size]
 
     if num_levels is None:

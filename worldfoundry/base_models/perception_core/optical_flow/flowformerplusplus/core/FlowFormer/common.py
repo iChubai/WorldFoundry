@@ -1,15 +1,14 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange
+from einops.layers.torch import Rearrange
+from loguru import logger
 from torch import einsum
 
-from einops.layers.torch import Rearrange
-from einops import rearrange
-
 from ..utils.utils import bilinear_sampler, coords_grid, indexing
-from loguru import logger
-
-import math
 
 
 def nerf_encoding(x, L=6, NORMALIZE_FACOR=1 / 300):
@@ -417,7 +416,6 @@ class MultiHeadAttention(nn.Module):
                 rpe_bias_weight = einsum("bhid, hjd -> bhij", Q, rpe_bias) * self.scale  # (b hw) heads 1 pointnum
                 dots = dots + rpe_bias_weight
             elif self.rpe == "implicit":
-                pass
                 rpe_bias_weight = einsum("bhid, bhjd -> bhij", Q, rpe_bias) * self.scale  # (b hw) heads 1 pointnum
                 dots = dots + rpe_bias_weight
             elif self.rpe == "head-wise" or self.rpe == "token-wise":

@@ -7,14 +7,24 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from ..base_model import tile
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import (
-    BlipOutput,
     BlipIntermediateOutput,
+    BlipOutput,
 )
+
+# isort: split
 from ..med import XBertEncoder, XBertLMHeadDecoder
+
+# isort: split
+# isort: split
 from ..vit import VisionTransformerEncoder
 
 
@@ -204,7 +214,7 @@ class BlipVQA(BlipBase):
         assert inference_method in [
             "rank",
             "generate",
-        ], "Inference method must be one of 'rank' or 'generate', got {}.".format(inference_method)
+        ], f"Inference method must be one of 'rank' or 'generate', got {inference_method}."
 
         if isinstance(samples["text_input"], str):
             samples["text_input"] = [samples["text_input"]]

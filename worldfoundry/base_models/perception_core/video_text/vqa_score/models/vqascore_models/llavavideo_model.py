@@ -1,30 +1,31 @@
-import torch
-import cv2
-import numpy as np
-from PIL import Image
-from typing import List, Union
 import copy
-from decord import VideoReader, cpu
-import requests
 import sys
 import warnings
+from typing import List, Union
 
+import cv2
+import numpy as np
+import requests
+import torch
+from decord import VideoReader, cpu
+from PIL import Image
 
-from .vqa_model import VQAScoreModel
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
+    DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
+    IGNORE_INDEX,
+    IMAGE_TOKEN_INDEX,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
     get_model_name_from_path,
     process_images,
     tokenizer_image_token,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_IM_START_TOKEN,
-    DEFAULT_IM_END_TOKEN,
-    IGNORE_INDEX,
-)
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates, SeparatorStyle
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+
+from .vqa_model import VQAScoreModel
 
 warnings.filterwarnings("ignore")
 LLAVA_VIDEO_MODELS = {
@@ -93,8 +94,8 @@ class LLaVAVideoModel(VQAScoreModel):
 
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         num_frames: int = 16,
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
         answer_template: str = "Yes",
@@ -102,7 +103,7 @@ class LLaVAVideoModel(VQAScoreModel):
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         lm_probs = []
-        for path, text in zip(images, texts):
+        for path, text in zip(images, texts, strict=False):
             if not path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
                 print(f"This model supports only video inference. {path} is invalid")
                 lm_probs.append(0.0)
@@ -144,15 +145,15 @@ class LLaVAVideoModel(VQAScoreModel):
 
     def generate(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         num_frames: int = 4,
         max_new_tokens: int = 256,
-    ) -> List[str]:
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         generated_outputs = []
-        for path, text in zip(images, texts):
+        for path, text in zip(images, texts, strict=False):
             if not path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
                 print(f"This model supports only video inference. {path} is invalid")
                 generated_outputs.append("")

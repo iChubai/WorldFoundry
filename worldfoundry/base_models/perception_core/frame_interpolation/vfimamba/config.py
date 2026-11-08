@@ -1,8 +1,8 @@
 from functools import partial
+
 import torch.nn as nn
 
-from .model import mamba_estimation
-from .model import mamba_extractor
+from .model import mamba_estimation, mamba_extractor
 
 LOG = "VFIMamba_S"
 LOCAL = 2

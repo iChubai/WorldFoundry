@@ -1,13 +1,14 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 from dataclasses import dataclass
 from types import MethodType
 from typing import List, Literal, Optional
 
-import json
 import torch
 from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger, patch_getattr
+
 from .utils import SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -31,9 +32,9 @@ class ReftConfig(SwiftConfig):
         args (`Optional[str]`): Other reft_args in json-string format
     """
 
-    model_type: Optional[str] = None
-    layer_key: Optional[str] = None
-    layers: Optional[List[int]] = None
+    model_type: str | None = None
+    layer_key: str | None = None
+    layers: list[int] | None = None
     r: int = 4
     intervention_type: Literal[
         "NoreftIntervention",
@@ -43,7 +44,7 @@ class ReftConfig(SwiftConfig):
         "DireftIntervention",
         "NodireftIntervention",
     ] = "LoreftIntervention"
-    args: Optional[str] = None
+    args: str | None = None
 
     def __post_init__(self):
         from .mapping import SwiftTuners
@@ -66,16 +67,16 @@ class Reft(SwiftAdapter):
             raise ImportError("Please install pyreft before using ReFT: `pip install pyreft`")
 
         import pyreft
-        from pyreft import ReftModel
-        from pyreft.interventions import LowRankRotateLayer
         from pyreft import (
-            NoreftIntervention,
-            LoreftIntervention,
             ConsreftIntervention,
-            LobireftIntervention,
             DireftIntervention,
+            LobireftIntervention,
+            LoreftIntervention,
             NodireftIntervention,
+            NoreftIntervention,
+            ReftModel,
         )
+        from pyreft.interventions import LowRankRotateLayer
 
         intervention_mapping = {
             "NoreftIntervention": NoreftIntervention,

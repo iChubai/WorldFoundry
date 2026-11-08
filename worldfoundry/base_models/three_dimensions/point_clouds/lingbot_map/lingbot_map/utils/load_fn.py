@@ -8,11 +8,11 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
+import numpy as np
 import torch
 from PIL import Image, ImageOps
 from torchvision import transforms as TF
 from tqdm.auto import tqdm
-import numpy as np
 
 
 def load_and_preprocess_images_square(image_path_list, target_size=1024):

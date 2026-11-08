@@ -1,22 +1,28 @@
 import torch
 import torch.nn as nn
-from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.raft import (
-    coords_grid,
-    BasicUpdateBlock,
-    BidirCorrBlock,
-)
+
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.feat_enc import (
     BasicEncoder,
 )
+from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.raft import (
+    BasicUpdateBlock,
+    BidirCorrBlock,
+    coords_grid,
+)
+
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.ifrnet import (
-    resize,
     Encoder,
     InitDecoder,
     IntermediateDecoder,
+    resize,
 )
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.multi_flow import (
-    multi_flow_combine,
     MultiFlowDecoder,
+    multi_flow_combine,
 )
 
 

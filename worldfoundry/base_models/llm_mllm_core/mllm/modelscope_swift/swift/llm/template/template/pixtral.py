@@ -12,7 +12,7 @@ class PixtralTemplate(Template):
     image_placeholder = ["[IMG]"]
     placeholder_tokens = ["[IMG]"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         processor = self.processor
         images = inputs.images
@@ -34,14 +34,14 @@ class PixtralTemplate(Template):
                 replace_tokens += [processor.image_token * num_width_tokens + processor.image_end_token]
                 # Flatten list
                 replace_str = "".join(replace_tokens)
-                img_tokens: List[int] = self.processor.encode(replace_str, add_special_tokens=False)
+                img_tokens: list[int] = self.processor.encode(replace_str, add_special_tokens=False)
                 return img_tokens
 
             encoded["input_ids"], encoded["labels"] = self._extend_tokens(input_ids, labels, idx_list, _get_new_tokens)
 
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         pixel_values = self.gather_list(batch, "pixel_values")
         res = super()._data_collator(batch, padding_to=padding_to)
         if pixel_values:

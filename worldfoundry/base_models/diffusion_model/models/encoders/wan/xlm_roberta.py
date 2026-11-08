@@ -14,6 +14,7 @@ Wan CLIP family only.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = ["XLMRoberta", "xlm_roberta_large"]

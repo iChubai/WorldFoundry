@@ -230,7 +230,7 @@ class MLLMModelType:
 
 class ModelType(LLMModelType, MLLMModelType, BertModelType, RMModelType):
     @classmethod
-    def get_model_name_list(cls) -> List[str]:
+    def get_model_name_list(cls) -> list[str]:
         def _get_model_name_list(cls):
             res = []
             for k in cls.__dict__:

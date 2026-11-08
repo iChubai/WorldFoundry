@@ -67,12 +67,12 @@ class LMTransformerArgs(BaseTransformerArgs):
     vocab_size: int = -1
     weight_tying: bool = False
 
-    sliding_window: Optional[int] = None
+    sliding_window: int | None = None
 
-    freeze_language_model: Optional[bool] = False
-    freeze_vision_model: Optional[bool] = False
+    freeze_language_model: bool | None = False
+    freeze_vision_model: bool | None = False
 
-    vision_model: Optional[Dict[str, Any]] = None
+    vision_model: dict[str, Any] | None = None
 
     mlp_init: InitArgs = field(default_factory=InitArgs)
     pooling_ratio: int = 1
@@ -130,15 +130,15 @@ class LMTransformer(BaseTransformer):
     def forward(
         self,
         token_values: torch.Tensor,
-        target: Optional[torch.Tensor] = None,
-        tok_idx: Optional[torch.Tensor] = None,
-        mask: Optional[Union[BlockMask, AttentionBias, torch.Tensor, str]] = None,
-        images: Optional[torch.Tensor] = None,
-        image_pos_index: Optional[torch.Tensor] = None,
-        loss_mask: Optional[torch.Tensor] = None,
-        aspect_ratios: Optional[torch.Tensor] = None,
-        num_chunks: List[int] = [1],
-        media_type: List[str] = ["multi_image"],
+        target: torch.Tensor | None = None,
+        tok_idx: torch.Tensor | None = None,
+        mask: BlockMask | AttentionBias | torch.Tensor | str | None = None,
+        images: torch.Tensor | None = None,
+        image_pos_index: torch.Tensor | None = None,
+        loss_mask: torch.Tensor | None = None,
+        aspect_ratios: torch.Tensor | None = None,
+        num_chunks: list[int] = [1],
+        media_type: list[str] = ["multi_image"],
         attn_impl: str = "sdpa",
     ):
         _, seqlen = token_values.shape
@@ -193,17 +193,17 @@ class LMTransformer(BaseTransformer):
     def stitch_images_into_text(
         self,
         h_tok: torch.Tensor,
-        h_img: List[torch.Tensor],
+        h_img: list[torch.Tensor],
         image_pos_index: torch.Tensor,
-        num_chunks: List[int],
-        media_type: List[str],
+        num_chunks: list[int],
+        media_type: list[str],
     ):
         # Generate cumulative indices for each sample
         cumulative_indices = list(itertools.accumulate(num_chunks, initial=0))
         # Get indices for non-text samples
         non_text_indices = [
             idx
-            for start, end, m_type in zip(cumulative_indices[:-1], cumulative_indices[1:], media_type)
+            for start, end, m_type in zip(cumulative_indices[:-1], cumulative_indices[1:], media_type, strict=False)
             if m_type != "text"
             for idx in range(start, end)
         ]
@@ -222,7 +222,7 @@ def get_no_recompute_ops():
 
 # Optional and only used for fully shard options (fsdp) is choose. Highly recommanded for large models
 def build_fsdp_grouping_plan(model_args: LMTransformerArgs):
-    group_plan: Tuple[int, bool] = []
+    group_plan: tuple[int, bool] = []
 
     # Grouping and output seperately
     group_plan.append(("tok_embeddings", False))

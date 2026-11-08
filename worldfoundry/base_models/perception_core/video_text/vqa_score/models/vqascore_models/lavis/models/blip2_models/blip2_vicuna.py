@@ -4,13 +4,12 @@ Requires Transformer 4.28 and above, implementation may change according the Lla
 
 import logging
 import string
-from packaging import version
 
 import torch
-from torch.cuda.amp import autocast as autocast
 import torch.nn as nn
-
 import transformers
+from packaging import version
+from torch.cuda.amp import autocast as autocast
 
 from ...common.registry import registry
 from .blip2 import Blip2Base, disabled_train
@@ -53,6 +52,7 @@ class Blip2Vicuna(Blip2Base):
         transformers_version = version.parse(transformers.__version__)
         assert transformers_version >= version.parse("4.28"), "BLIP-2 Vicuna requires transformers>=4.28"
         from transformers import LlamaTokenizer
+
         from .modeling_llama import LlamaForCausalLM
 
         self.tokenizer = self.init_tokenizer(truncation_side="left")

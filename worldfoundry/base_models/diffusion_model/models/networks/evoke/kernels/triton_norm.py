@@ -1,12 +1,10 @@
 import torch
 import triton
 import triton.language as tl
-
 from diffusers.models.normalization import FP32LayerNorm, LayerNorm, RMSNorm
 
 from .fp32_rmsnorm import FP32RMSNorm
 from .utils import calculate_settings, torch_gpu_device
-
 
 # Patch model norms with Triton flash implementations.
 

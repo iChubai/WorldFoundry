@@ -8,6 +8,7 @@ import warnings
 from typing import List, Optional, Tuple, Union
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
@@ -22,8 +23,6 @@ from .configuration_mpt import MPTConfig
 from .custom_embedding import SharedEmbedding
 from .norm import NORM_CLASS_REGISTRY
 from .param_init_fns import MODEL_INIT_REGISTRY, generic_param_init_fn_
-
-import torch.distributed as dist
 
 try:
     from .flash_attn_triton import flash_attn_func
@@ -109,9 +108,9 @@ class MPTModel(MPTPreTrainedModel):
         self,
         device,
         dtype,
-        attention_mask: Optional[torch.ByteTensor] = None,
-        prefix_mask: Optional[torch.ByteTensor] = None,
-        sequence_id: Optional[torch.LongTensor] = None,
+        attention_mask: torch.ByteTensor | None = None,
+        prefix_mask: torch.ByteTensor | None = None,
+        sequence_id: torch.LongTensor | None = None,
     ):
         if not self._attn_bias_initialized:
             if self.attn_bias_shape:
@@ -190,15 +189,15 @@ class MPTModel(MPTPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor,
-        past_key_values: Optional[List[Tuple[torch.FloatTensor]]] = None,
-        attention_mask: Optional[torch.ByteTensor] = None,
-        prefix_mask: Optional[torch.ByteTensor] = None,
-        sequence_id: Optional[torch.LongTensor] = None,
-        return_dict: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        use_cache: Optional[bool] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
+        past_key_values: list[tuple[torch.FloatTensor]] | None = None,
+        attention_mask: torch.ByteTensor | None = None,
+        prefix_mask: torch.ByteTensor | None = None,
+        sequence_id: torch.LongTensor | None = None,
+        return_dict: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        use_cache: bool | None = None,
+        inputs_embeds: torch.Tensor | None = None,
     ):
         return_dict = return_dict if return_dict is not None else self.config.return_dict
         use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -244,7 +243,7 @@ class MPTModel(MPTPreTrainedModel):
 
         S = input_ids.size(1)
 
-        assert S <= self.config.max_seq_len, (
+        assert self.config.max_seq_len >= S, (
             f"Cannot forward input with seq_len={S}, this model only supports seq_len<={self.config.max_seq_len}"
         )
 
@@ -256,7 +255,7 @@ class MPTModel(MPTPreTrainedModel):
             if past_key_values is not None:
                 if len(past_key_values) != self.config.n_layers:
                     raise ValueError(
-                        f"past_key_values must provide a past_key_value for each attention "
+                        "past_key_values must provide a past_key_value for each attention "
                         + f"layer in the network ({len(past_key_values)=}; {self.config.n_layers=})."
                     )
                 # For attn_impl: triton and flash the past key tensor spec is (batch, seq, dim).
@@ -417,16 +416,16 @@ class MPTForCausalLM(MPTPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor,
-        past_key_values: Optional[List[Tuple[torch.FloatTensor]]] = None,
-        attention_mask: Optional[torch.ByteTensor] = None,
-        prefix_mask: Optional[torch.ByteTensor] = None,
-        sequence_id: Optional[torch.LongTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        return_dict: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        use_cache: Optional[bool] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
+        past_key_values: list[tuple[torch.FloatTensor]] | None = None,
+        attention_mask: torch.ByteTensor | None = None,
+        prefix_mask: torch.ByteTensor | None = None,
+        sequence_id: torch.LongTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        return_dict: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        use_cache: bool | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
     ):
         return_dict = return_dict if return_dict is not None else self.config.return_dict
         use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -536,5 +535,5 @@ class MPTForCausalLM(MPTPreTrainedModel):
         """
         reordered_past = []
         for layer_past in past_key_values:
-            reordered_past += [tuple((past_state.index_select(0, beam_idx) for past_state in layer_past))]
+            reordered_past += [tuple(past_state.index_select(0, beam_idx) for past_state in layer_past)]
         return reordered_past

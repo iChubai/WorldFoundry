@@ -6,8 +6,8 @@
 
 # Modified from PyTorch3D, https://github.com/facebookresearch/pytorch3d
 
-import torch
 import numpy as np
+import torch
 import torch.nn.functional as F
 
 

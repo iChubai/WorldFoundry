@@ -2001,9 +2001,9 @@ class FastVideoCausalWanDenoiser:
 
     @staticmethod
     def _model_geometry(model: torch.nn.Module) -> tuple[int, int, int]:
-        layers = int(getattr(model, "num_layers"))
-        heads = int(getattr(model, "num_heads"))
-        dim = int(getattr(model, "dim"))
+        layers = int(model.num_layers)
+        heads = int(model.num_heads)
+        dim = int(model.dim)
         if min(layers, heads, dim) <= 0 or dim % heads:
             raise ValueError("CausalWan expert exposes invalid layer/head geometry")
         return layers, heads, dim // heads
@@ -2574,32 +2574,32 @@ def _build_wan_denoiser(
 
 
 __all__ = [
-    "CausalWanCacheBundle",
-    "CausalWanExpertCache",
-    "FastVideoCausalWanDenoiser",
     "SKYREELS_V2_DF_1P3B_CONFIG",
     "SKYREELS_V3_R2V_14B_CONFIG",
     "WAN21_I2V_14B_CONFIG",
-    "WAN21_VAE_I2V_1P3B_CONFIG",
-    "WAN22_I2V_A14B_CONFIG",
     "WAN21_T2V_1P3B_CONFIG",
     "WAN21_T2V_14B_CONFIG",
+    "WAN21_VAE_I2V_1P3B_CONFIG",
+    "WAN22_I2V_A14B_CONFIG",
     "WAN22_T2V_A14B_CONFIG",
     "WAN22_TI2V_5B_CONFIG",
-    "WanDenoiser",
-    "Wan22DualExpertDenoiser",
-    "WanModelStateDictConverter",
     "WAN_CIVITAI_CONFIGS_BY_HASH",
-    "infer_native_wan_transformer_config",
+    "CausalWanCacheBundle",
+    "CausalWanExpertCache",
+    "FastVideoCausalWanDenoiser",
+    "Wan22DualExpertDenoiser",
+    "WanDenoiser",
+    "WanModelStateDictConverter",
     "build_fastvideo_causal_wan22_denoiser",
     "build_skyreels_v2_denoiser",
     "build_skyreels_v3_denoiser",
     "build_wan21_i2v_14b_denoiser",
-    "convert_diffusers_wan_transformer_state_dict",
+    "build_wan21_t2v_1p3b_denoiser",
     "build_wan21_t2v_14b_denoiser",
+    "build_wan22_i2v_a14b_dual_denoiser",
     "build_wan22_t2v_a14b_denoiser",
     "build_wan22_t2v_a14b_dual_denoiser",
-    "build_wan22_i2v_a14b_dual_denoiser",
-    "build_wan21_t2v_1p3b_denoiser",
     "build_wan22_ti2v_5b_denoiser",
+    "convert_diffusers_wan_transformer_state_dict",
+    "infer_native_wan_transformer_config",
 ]

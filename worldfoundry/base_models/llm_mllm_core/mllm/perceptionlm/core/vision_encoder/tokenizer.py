@@ -8,8 +8,9 @@ import html
 import os
 import random
 import string
+from collections.abc import Callable
 from functools import lru_cache, partial
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 import ftfy
 import regex as re
@@ -21,12 +22,12 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 DEFAULT_CONTEXT_LENGTH = 77  # default context length for OpenAI CLIP
 
 
-@lru_cache()
+@lru_cache
 def default_bpe():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "bpe_simple_vocab_16e6.txt.gz")
 
 
-@lru_cache()
+@lru_cache
 def bytes_to_unicode():
     """
     Returns list of utf-8 byte and a corresponding list of unicode strings.
@@ -46,7 +47,7 @@ def bytes_to_unicode():
             cs.append(2**8 + n)
             n += 1
     cs = [chr(n) for n in cs]
-    return dict(zip(bs, cs))
+    return dict(zip(bs, cs, strict=False))
 
 
 def get_pairs(word):
@@ -123,12 +124,12 @@ def canonicalize_text(text, *, keep_punctuation_exact_string=None):
     return text.strip()
 
 
-class SimpleTokenizer(object):
+class SimpleTokenizer:
     def __init__(
         self,
         bpe_path: str = default_bpe(),
-        additional_special_tokens: Optional[List[str]] = None,
-        context_length: Optional[int] = DEFAULT_CONTEXT_LENGTH,
+        additional_special_tokens: list[str] | None = None,
+        context_length: int | None = DEFAULT_CONTEXT_LENGTH,
         clean: str = "lower",
         reduction_mask: str = "",
     ):
@@ -145,9 +146,9 @@ class SimpleTokenizer(object):
         if additional_special_tokens:
             special_tokens += additional_special_tokens
         vocab.extend(special_tokens)
-        self.encoder = dict(zip(vocab, range(len(vocab))))
+        self.encoder = dict(zip(vocab, range(len(vocab)), strict=False))
         self.decoder = {v: k for k, v in self.encoder.items()}
-        self.bpe_ranks = dict(zip(merges, range(len(merges))))
+        self.bpe_ranks = dict(zip(merges, range(len(merges)), strict=False))
         self.cache = {t: t for t in special_tokens}
         special = "|".join(special_tokens)
         self.pat = re.compile(
@@ -216,7 +217,7 @@ class SimpleTokenizer(object):
         text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
         return text
 
-    def __call__(self, texts: Union[str, List[str]], context_length: Optional[int] = None) -> torch.LongTensor:
+    def __call__(self, texts: str | list[str], context_length: int | None = None) -> torch.LongTensor:
         """Returns the tokenized representation of given input string(s)
 
         Parameters
@@ -259,7 +260,7 @@ class SimpleTokenizer(object):
 
 
 def random_mask_tokenize(
-    texts: Union[str, List[str]],
+    texts: str | list[str],
     context_length: int,
     sot_token_id: int,
     eot_token_id: int,
@@ -288,7 +289,7 @@ def random_mask_tokenize(
 
 
 def simple_mask_tokenize(
-    texts: Union[str, List[str]],
+    texts: str | list[str],
     context_length: int,
     sot_token_id: int,
     eot_token_id: int,

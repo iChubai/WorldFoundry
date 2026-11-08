@@ -8,7 +8,7 @@ from projects.assigner_visualization.dense_heads import RTMHeadAssigner, YOLOv7H
 
 @MODELS.register_module()
 class YOLODetectorAssigner(YOLODetector):
-    def assign(self, data: dict) -> Union[dict, list]:
+    def assign(self, data: dict) -> dict | list:
         """Calculate assigning results from a batch of inputs and data
         samples.This function is provided to the `assigner_visualization.py`
         script.

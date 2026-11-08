@@ -17,9 +17,10 @@
 
 import copy
 import logging
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable, Iterator, Protocol, cast
+from typing import Any, Protocol, cast
 
 import numpy as np
 import torch
@@ -318,7 +319,7 @@ class VideoFrame:
         sky_mask = torch.zeros(self.size(), dtype=torch.bool, device=self.device)
         if self.instance is not None and self.instance_phrases is not None:
             for instance_id, phrase in self.instance_phrases.items():
-                if self.SKY_PROMPT == phrase:
+                if phrase == self.SKY_PROMPT:
                     sky_mask |= self.instance == instance_id
         return sky_mask
 

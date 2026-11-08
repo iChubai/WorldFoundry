@@ -2,13 +2,13 @@
 
 import re
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
-from typing import Dict, Mapping, MutableMapping, Union
+from typing import Dict, Union
 
 import torch
 
 from worldfoundry.core.model_loading import load_torch_state_dict
-
 
 _BLOCK_RE = re.compile(r"audio_model\.audio_encoder\.layers\.(\d+)\.blocks\.(\d+)\.(.+)")
 _QKV_RE = re.compile(
@@ -16,7 +16,7 @@ _QKV_RE = re.compile(
 )
 
 
-def _load_checkpoint(path: Union[str, Path]) -> Mapping[str, torch.Tensor]:
+def _load_checkpoint(path: str | Path) -> Mapping[str, torch.Tensor]:
     """Helper function to load checkpoint.
 
     Args:
@@ -36,7 +36,7 @@ def _load_checkpoint(path: Union[str, Path]) -> Mapping[str, torch.Tensor]:
     return checkpoint
 
 
-def _strip_module_prefix(state_dict: Mapping[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+def _strip_module_prefix(state_dict: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
     """Helper function to strip module prefix.
 
     Args:
@@ -153,6 +153,6 @@ def convert_hf_clap_state_dict(state_dict: Mapping[str, torch.Tensor]) -> Ordere
     return output
 
 
-def load_hf_clap_state_dict(path: Union[str, Path]) -> OrderedDict[str, torch.Tensor]:
+def load_hf_clap_state_dict(path: str | Path) -> OrderedDict[str, torch.Tensor]:
     """Load and convert a Transformers CLAP checkpoint from disk."""
     return convert_hf_clap_state_dict(_load_checkpoint(path))

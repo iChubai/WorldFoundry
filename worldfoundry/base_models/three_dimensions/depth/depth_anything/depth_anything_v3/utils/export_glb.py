@@ -17,12 +17,12 @@
 from __future__ import annotations
 
 import os
+
 import numpy as np
 import trimesh
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
-
 from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import export_to_depth_vis
 
 
@@ -431,7 +431,7 @@ def _camera_frustum_lines(K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, sc
         segs.append(np.stack([Cw, plane_w[k]], 0))
     # rectangle edges
     order = [0, 1, 2, 3, 0]
-    for a, b in zip(order[:-1], order[1:]):
+    for a, b in zip(order[:-1], order[1:], strict=False):
         segs.append(np.stack([plane_w[a], plane_w[b]], 0))
 
     return np.stack(segs, 0)  # (8,2,3)

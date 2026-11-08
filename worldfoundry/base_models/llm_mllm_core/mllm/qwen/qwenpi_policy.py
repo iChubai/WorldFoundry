@@ -4,8 +4,9 @@ import json
 import os
 import time
 from collections import deque
+from collections.abc import Callable, Sequence
 from glob import glob
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import torch
@@ -64,7 +65,10 @@ class AdaptiveEnsembler:
             curr_act_preds = np.stack(self.action_history)
         else:
             curr_act_preds = np.stack(
-                [pred_actions[i] for (i, pred_actions) in zip(range(num_actions - 1, -1, -1), self.action_history)]
+                [
+                    pred_actions[i]
+                    for (i, pred_actions) in zip(range(num_actions - 1, -1, -1), self.action_history, strict=False)
+                ]
             )
 
         # calculate cosine similarity between the current prediction and all previous predictions
@@ -85,7 +89,7 @@ class AdaptiveEnsembler:
         return cur_action
 
 
-def center_crop_image(image: Union[np.ndarray, Image.Image]) -> Image.Image:
+def center_crop_image(image: np.ndarray | Image.Image) -> Image.Image:
     """Center crop image.
 
     Args:
@@ -240,9 +244,9 @@ class PolicyPreprocessMixin:
             lang_tokens (torch.Tensor): (*b, l) language tokens
             lang_masks (torch.Tensor): (*b, l) masks for language tokens, True if token is present, False if missing
         """
-        lang_tokens = observation.get("lang_tokens", None)
-        lang_masks = observation.get("lang_masks", None)
-        prompt = observation.get("prompt", None)
+        lang_tokens = observation.get("lang_tokens")
+        lang_masks = observation.get("lang_masks")
+        prompt = observation.get("prompt")
 
         # either provide `prompt` or (`lang_tokens`, `lang_masks`)
         if prompt is None and (lang_tokens is None or lang_masks is None):
@@ -295,13 +299,13 @@ class PolicyPreprocessMixin:
 class QwenPI0InferencePolicy(PolicyPreprocessMixin, QwenPI0Policy):
     """Qwen inference policy implementation."""
 
-    pass  # Only combine necessary functions
+    # Only combine necessary functions
 
 
 class PI0InfernecePolicy(PolicyPreprocessMixin, PI0Policy):
     """Infernece policy implementation."""
 
-    pass  # Only combine necessary functions
+    # Only combine necessary functions
 
 
 def merge_qwen_config(policy_config, qwen_config):
@@ -485,7 +489,7 @@ class QwenPiServer:
         # (If trained with image augmentations) Center crop image and then resize back up to original size.
         # IMPORTANT: Let's say crop scale == 0.9. To get the new height and width (post-crop), multiply
         #            the original height and width by sqrt(0.9) -- not 0.9!
-        if "reset" in observation and observation["reset"]:
+        if observation.get("reset"):
             self.reset()
             return dict(action=None)
 

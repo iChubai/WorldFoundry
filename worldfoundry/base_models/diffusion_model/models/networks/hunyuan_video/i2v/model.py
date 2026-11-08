@@ -67,8 +67,8 @@ class MMDoubleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -143,15 +143,15 @@ class MMDoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
         freqs_cis: tuple = None,
         condition_type: str = None,
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Joint-attend video ``img`` and text ``txt`` (both ``B S C``); return the pair."""
         if condition_type == "token_replace":
             img_mod1, token_replace_img_mod1 = self.img_mod(vec, secondary_value=token_replace_vec)
@@ -314,8 +314,8 @@ class MMSingleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qk_scale: float = None,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -363,11 +363,11 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        cu_seqlens_q: Optional[torch.Tensor] = None,
-        cu_seqlens_kv: Optional[torch.Tensor] = None,
-        max_seqlen_q: Optional[int] = None,
-        max_seqlen_kv: Optional[int] = None,
-        freqs_cis: Tuple[torch.Tensor, torch.Tensor] = None,
+        cu_seqlens_q: torch.Tensor | None = None,
+        cu_seqlens_kv: torch.Tensor | None = None,
+        max_seqlen_q: int | None = None,
+        max_seqlen_kv: int | None = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
         condition_type: str = None,
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
@@ -517,15 +517,15 @@ class HYVideoDiffusionTransformer(nn.Module):
         mlp_act_type: str = "gelu_tanh",
         mm_double_blocks_depth: int = 20,
         mm_single_blocks_depth: int = 40,
-        rope_dim_list: List[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         guidance_embed: bool = False,  # For modulation.
         text_projection: str = "single_refiner",
         use_attention_mask: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -652,12 +652,12 @@ class HYVideoDiffusionTransformer(nn.Module):
         t: torch.Tensor,  # Should be in range(0, 1000).
         text_states: torch.Tensor = None,
         text_mask: torch.Tensor = None,  # Now we don't use it.
-        text_states_2: Optional[torch.Tensor] = None,  # Text embedding for modulation.
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        text_states_2: torch.Tensor | None = None,  # Text embedding for modulation.
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
         return_dict: bool = True,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         """Patch-embed ``x`` as ``B C T H W``, run dual- then single-stream blocks, unpatchify."""
         out = {}
         img = x

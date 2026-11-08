@@ -3,8 +3,8 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import torch
-from torchvision.utils import make_grid
 from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 from worldfoundry.base_models.perception_core.tracking.dot.utils.plot import to_rgb
 

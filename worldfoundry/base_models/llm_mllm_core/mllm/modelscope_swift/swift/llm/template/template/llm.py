@@ -205,9 +205,9 @@ register_template(
 class TeleChatTemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=list)
     prompt: Prompt = field(default_factory=lambda: [["user_token_id"], "{{QUERY}}", ["bot_token_id"]])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: [["eos_token_id"]])
+    chat_sep: Prompt | None = field(default_factory=lambda: [["eos_token_id"]])
     suffix: Prompt = field(default_factory=lambda: [["eos_token_id"]])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: ["<_system>{{SYSTEM}}\n"])
+    system_prefix: Prompt | None = field(default_factory=lambda: ["<_system>{{SYSTEM}}\n"])
     auto_add_bos: bool = True
 
 

@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> modules -> utils.py functionality."""
 
-import torch
 import numpy as np
+import torch
 from einops import rearrange
 
 
@@ -98,8 +98,8 @@ def x_2d_coords(h, w, device):
         device: The device.
     """
     x_2d = torch.zeros((h, w, 2), device=device)
-    for y in range(0, h):
+    for y in range(h):
         x_2d[y, :, 1] = y
-    for x in range(0, w):
+    for x in range(w):
         x_2d[:, x, 0] = x
     return x_2d

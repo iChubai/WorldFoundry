@@ -10,7 +10,8 @@
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> vipe_dav3 -> vision_transformer.py functionality."""
 
 import math
-from typing import Callable, List, Sequence, Tuple, Union
+from collections.abc import Callable, Sequence
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -19,10 +20,10 @@ import torch.utils.checkpoint
 from einops import rearrange
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
-
-from .layers import Block, PositionGetter, RotaryPositionEmbedding2D
 from worldfoundry.core.nn.blocks.layers import Mlp, PatchEmbed, SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply
+
+from .layers import Block, PositionGetter, RotaryPositionEmbedding2D
 
 # logger = logging.getLogger("dinov2")
 
@@ -323,7 +324,7 @@ class DinoVisionTransformer(nn.Module):
                 g_pos = pos_nodiff
                 l_pos = pos
             if self.alt_start != -1 and i == self.alt_start:
-                if kwargs.get("cam_token", None) is not None:
+                if kwargs.get("cam_token") is not None:
                     logger.info("Using camera conditions provided by the user")
                     cam_token = kwargs.get("cam_token")
                 else:
@@ -333,7 +334,7 @@ class DinoVisionTransformer(nn.Module):
                 x[:, :, 0] = cam_token
 
             if self.alt_start != -1 and i >= self.alt_start and i % 2 == 1:
-                x = self.process_attention(x, blk, "global", pos=g_pos, attn_mask=kwargs.get("attn_mask", None))
+                x = self.process_attention(x, blk, "global", pos=g_pos, attn_mask=kwargs.get("attn_mask"))
             else:
                 x = self.process_attention(x, blk, "local", pos=l_pos)
                 local_x = x
@@ -378,10 +379,10 @@ class DinoVisionTransformer(nn.Module):
     def get_intermediate_layers(
         self,
         x: torch.Tensor,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
-        export_feat_layers: List[int] = [],
+        n: int | Sequence = 1,  # Layers or n last layers to take
+        export_feat_layers: list[int] = [],
         **kwargs,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         """Get intermediate layers.
 
         Args:
@@ -411,7 +412,7 @@ class DinoVisionTransformer(nn.Module):
         aux_outputs = [self.norm(out) for out in aux_outputs]
         outputs = [out[..., 1 + self.num_register_tokens :, :] for out in outputs]
         aux_outputs = [out[..., 1 + self.num_register_tokens :, :] for out in aux_outputs]
-        return tuple(zip(outputs, camera_tokens)), aux_outputs
+        return tuple(zip(outputs, camera_tokens, strict=False)), aux_outputs
 
 
 def vit_small(patch_size=16, num_register_tokens=0, depth=12, **kwargs):

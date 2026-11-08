@@ -12,10 +12,9 @@ from mmengine import ProgressBar
 from mmengine.config import Config, DictAction
 from mmengine.dataset import COLLATE_FUNCTIONS
 from mmengine.runner.checkpoint import load_checkpoint
-from numpy import random
-
 from mmyolo.registry import DATASETS, MODELS
 from mmyolo.utils import register_all_modules
+from numpy import random
 from projects.assigner_visualization.dense_heads import (
     RTMHeadAssigner,
     YOLOv5HeadAssigner,

@@ -36,14 +36,14 @@ class PostProcessResult:
     depth: np.ndarray  # (H,W) float32, same resolution as pano_bgr
     ply_xyz: np.ndarray  # (N,3) float32  OpenCV coords
     ply_rgb: np.ndarray  # (N,3) uint8
-    condition_images: List[np.ndarray]  # list of (cH,cW,3) uint8 RGB
-    transforms: Dict  # {"frames": [...]}
+    condition_images: list[np.ndarray]  # list of (cH,cW,3) uint8 RGB
+    transforms: dict  # {"frames": [...]}
 
 
 # ====================== helpers ==============================================
 
 
-def fit_within(w: int, h: int, max_w: int, max_h: int) -> Tuple[int, int]:
+def fit_within(w: int, h: int, max_w: int, max_h: int) -> tuple[int, int]:
     sw = max_w / max(1, w)
     sh = max_h / max(1, h)
     s = min(1.0, sw, sh)
@@ -125,7 +125,7 @@ def prepare_depth(
 def compute_ply_arrays(
     pano_bgr_u8: np.ndarray,
     depth: np.ndarray,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Return (xyz, rgb) arrays in OpenCV coords, same as _write_ply_opencv."""
     H, W = depth.shape
     assert pano_bgr_u8.shape[:2] == (H, W)
@@ -195,7 +195,7 @@ def write_ply(
 # ====================== Condition generation =================================
 
 
-def _views_yaw_pitch() -> List[Tuple[float, float]]:
+def _views_yaw_pitch() -> list[tuple[float, float]]:
     yaws = [
         0.0,
         math.pi / 4,
@@ -207,7 +207,7 @@ def _views_yaw_pitch() -> List[Tuple[float, float]]:
         -math.pi / 4,
     ]
     pitches = [0.0, math.pi / 4, -math.pi / 4, math.pi / 6, -math.pi / 6]
-    views: List[Tuple[float, float]] = []
+    views: list[tuple[float, float]] = []
     for pitch in pitches:
         for yaw in yaws:
             views.append((yaw, pitch))
@@ -287,7 +287,7 @@ def _generate_condition_image(
     return samp.reshape(H, W, 3)
 
 
-def _c2w_opencv_rows(yaw: float, pitch: float) -> List[List[float]]:
+def _c2w_opencv_rows(yaw: float, pitch: float) -> list[list[float]]:
     r, u, f = _basis_from_yaw_pitch(yaw, pitch)
     z = (-f).astype(np.float32)
     M = np.eye(4, dtype=np.float32)
@@ -301,8 +301,8 @@ def generate_conditions(
     pano_bgr_u8: np.ndarray,
     intr: Intrinsics,
     *,
-    save_dir: Optional[Path] = None,
-) -> Tuple[List[np.ndarray], Dict]:
+    save_dir: Path | None = None,
+) -> tuple[list[np.ndarray], dict]:
     """Generate condition images and transforms dict.
 
     Returns (condition_images_rgb, transforms_dict).
@@ -310,8 +310,8 @@ def generate_conditions(
     """
     pano_rgb = pano_bgr_u8[:, :, ::-1].copy()
     views = _views_yaw_pitch()
-    frames: List[Dict] = []
-    images: List[np.ndarray] = []
+    frames: list[dict] = []
+    images: list[np.ndarray] = []
 
     if save_dir is not None:
         cond_dir = save_dir / "conditions"
@@ -372,7 +372,7 @@ def postprocess_panorama(
     cond_size: int = 504,
     cond_fx: float = 320.0,
     cond_fy: float = 320.0,
-    save_dir: Optional[Path] = None,
+    save_dir: Path | None = None,
 ) -> PostProcessResult:
     """Full post-processing: panorama + depth -> PLY arrays + conditions.
 

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -12,6 +13,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS
+
 from ..layers.yolo_bricks import PPYOLOESELayer
 from ..utils import gt_instances_preprocess
 from .yolov6_head import YOLOv6Head
@@ -46,7 +48,7 @@ class PPYOLOEHeadModule(BaseModule):
     def __init__(
         self,
         num_classes: int,
-        in_channels: Union[int, Sequence],
+        in_channels: int | Sequence,
         widen_factor: float = 1.0,
         num_base_priors: int = 1,
         featmap_strides: Sequence[int] = (8, 16, 32),
@@ -102,7 +104,7 @@ class PPYOLOEHeadModule(BaseModule):
         proj = torch.arange(self.reg_max + 1, dtype=torch.float)
         self.register_buffer("proj", proj, persistent=False)
 
-    def forward(self, x: Tuple[Tensor]) -> Tensor:
+    def forward(self, x: tuple[Tensor]) -> Tensor:
         """Forward features from the upstream network.
 
         Args:

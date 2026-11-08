@@ -1,14 +1,15 @@
-import torch
-import numpy as np
-from PIL import Image
 from typing import List, Union
-from transformers import AutoModel, AutoTokenizer
-import torchvision.transforms as T
-from torchvision.transforms.functional import InterpolationMode
-from decord import VideoReader, cpu
 
-from .vqa_model import VQAScoreModel
+import numpy as np
+import torch
+import torchvision.transforms as T
+from decord import VideoReader, cpu
+from PIL import Image
+from torchvision.transforms.functional import InterpolationMode
+from transformers import AutoModel, AutoTokenizer
+
 from .fastchat_utils import get_conv_template
+from .vqa_model import VQAScoreModel
 
 INTERNVL2_MODELS = {
     # InternVL2 Models
@@ -406,7 +407,7 @@ class InternVL2Model(VQAScoreModel):
         pixel_values = torch.cat(pixel_values_list)
         return pixel_values, num_patches_list
 
-    def load_images(self, paths: List[str], num_frames: int = 16) -> List[Union[torch.Tensor, List[torch.Tensor]]]:
+    def load_images(self, paths: list[str], num_frames: int = 16) -> list[torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         num_patches_list = []
         for path in paths:
@@ -426,8 +427,8 @@ class InternVL2Model(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         num_frames: int = 16,
         question_template: str = 'Does this figure show "{}"? Please answer Yes or No.',
         answer_template: str = "Yes",
@@ -439,7 +440,9 @@ class InternVL2Model(VQAScoreModel):
         processed_data, num_patches_list = self.load_images(paths, num_frames)
 
         lm_probs = []
-        for data, question, num_patches, answer in zip(processed_data, questions, num_patches_list, answers):
+        for data, question, num_patches, answer in zip(
+            processed_data, questions, num_patches_list, answers, strict=False
+        ):
             if isinstance(num_patches, list):  # Video
                 video_prefix = "".join([f"Frame{i + 1}: <image>\n" for i in range(len(num_patches))])
                 prompt = video_prefix + question
@@ -522,7 +525,7 @@ class InternVL2Model(VQAScoreModel):
         return torch.tensor(lm_probs)
 
     def generate(
-        self, images: List[str], texts: List[str], num_frames: int = 16, max_new_tokens: int = 256
+        self, images: list[str], texts: list[str], num_frames: int = 16, max_new_tokens: int = 256
     ) -> torch.Tensor:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
@@ -530,7 +533,7 @@ class InternVL2Model(VQAScoreModel):
         processed_data, num_patches_list = self.load_images(images, num_frames)
 
         gen_outputs = []
-        for data, question, num_patches in zip(processed_data, questions, num_patches_list):
+        for data, question, num_patches in zip(processed_data, questions, num_patches_list, strict=False):
             if isinstance(num_patches, list):  # Video
                 video_prefix = "".join([f"Frame{i + 1}: <image>\n" for i in range(len(num_patches))])
                 prompt = video_prefix + question

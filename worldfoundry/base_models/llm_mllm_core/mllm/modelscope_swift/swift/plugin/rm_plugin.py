@@ -66,7 +66,7 @@ class GenRMPlugin(DefaultRMPlugin):
 
             For example:
             Reward: 0.85
-        """)  # noqa
+        """)
 
     def __call__(self, inputs):
         """
@@ -91,7 +91,7 @@ class GenRMPlugin(DefaultRMPlugin):
         rewards = self.compute_rewards(results)
         return torch.tensor(rewards, dtype=torch.float32)
 
-    def prepare_rm_inputs(self, inputs: List[Dict]) -> List[Dict]:
+    def prepare_rm_inputs(self, inputs: list[dict]) -> list[dict]:
         """
         Prepare inputs for the reward model by converting messages into queries.
 
@@ -195,7 +195,7 @@ class GenRMPlugin(DefaultRMPlugin):
 
         return query
 
-    def compute_rewards(self, results: List[ChatCompletionResponse]) -> List[float]:
+    def compute_rewards(self, results: list[ChatCompletionResponse]) -> list[float]:
         """
         Compute average reward scores from the reward model's outputs.
 

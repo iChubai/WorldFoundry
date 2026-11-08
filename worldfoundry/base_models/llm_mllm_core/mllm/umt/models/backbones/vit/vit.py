@@ -1,11 +1,11 @@
 import logging
+from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-from functools import partial
-
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
     def extra_repr(self) -> str:
-        return "p={}".format(self.drop_prob)
+        return f"p={self.drop_prob}"
 
 
 class Mlp(nn.Module):
@@ -138,8 +138,8 @@ class Block(nn.Module):
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
         if init_values > 0:
-            self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-            self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+            self.gamma_1 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
+            self.gamma_2 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
         else:
             self.gamma_1, self.gamma_2 = None, None
 
@@ -178,7 +178,7 @@ class PatchEmbed(nn.Module):
     def forward(self, x, **kwargs):
         B, C, T, H, W = x.shape
         # FIXME look at relaxing size constraints
-        assert H == self.img_size[0] and W == self.img_size[1], (
+        assert self.img_size[0] == H and self.img_size[1] == W, (
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -195,7 +195,7 @@ def get_sinusoid_encoding_table(n_position, d_hid, ckpt_num_frame=-1, cur_frame=
         return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
 
     if ckpt_num_frame != -1 and ckpt_num_frame != cur_frame:
-        logger.info(f"Interpolate position embedding")
+        logger.info("Interpolate position embedding")
         logger.info(f"Testing frame: {cur_frame}")
         logger.info(f"Checkpoint frame: {ckpt_num_frame}")
 

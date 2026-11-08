@@ -36,7 +36,7 @@ def xy_grid(
         def ones(*a):
             return torch.ones(*a, device=device)
 
-    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin)]
+    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
         grid = grid + (ones((H, W)),)

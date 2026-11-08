@@ -110,7 +110,7 @@ def run_tracking(frames_dir, mono_root, metric_root, scene_name, output_path, *,
         backend_radius=2,
         backend_nms=3,
     )
-    print("Running evaluation on {}".format(args.datapath))
+    print(f"Running evaluation on {args.datapath}")
     print(args)
 
     scene_name = args.scene_name.split("/")[-1]
@@ -131,7 +131,7 @@ def run_tracking(frames_dir, mono_root, metric_root, scene_name, output_path, *,
     shifts = []
     mono_disp_list = []
     fovs = []
-    for t, (mono_disp_file, metric_depth_file) in enumerate(zip(mono_disp_paths, metric_depth_paths)):
+    for t, (mono_disp_file, metric_depth_file) in enumerate(zip(mono_disp_paths, metric_depth_paths, strict=False)):
         da_disp = np.float32(np.load(mono_disp_file))  # / 300.0
         with np.load(metric_depth_file) as uni_data:
             metric_depth = uni_data["depth"]

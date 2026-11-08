@@ -1,6 +1,7 @@
+import math
+
 import torch
 import torch.nn as nn
-import math
 from timm.models.layers import trunc_normal_
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

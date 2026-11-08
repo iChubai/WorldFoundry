@@ -1,9 +1,11 @@
 import os
-import gdown
+
 import cv2
+import gdown
 import pandas as pd
-from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import OpenCvWrapper
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
+from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import OpenCvWrapper
 
 # pylint: disable=line-too-long
 

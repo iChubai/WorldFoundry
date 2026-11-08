@@ -1,14 +1,13 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> io -> obj.py functionality."""
 
+import os
 from io import TextIOWrapper
-from typing import *
 from itertools import chain, repeat
 from pathlib import Path
-import os
+from typing import *
 
 import numpy as np
 from numpy import ndarray
-
 
 __all__ = [
     "read_obj",
@@ -101,7 +100,7 @@ def read_obj(
     if hasattr(file, "read"):
         lines = file.read().splitlines()
     else:
-        with open(file, "r", encoding=encoding) as fp:
+        with open(file, encoding=encoding) as fp:
             lines = fp.read().splitlines()
     mtllib = []
     v, vt, vn = [], [], []  # Vertex coordinates, Vertex texture coordinate, Vertex normal
@@ -364,6 +363,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
                     f if f is not None else repeat(None),
                     ft if ft is not None else repeat(None),
                     fn if fn is not None else repeat(None),
+                    strict=False,
                 )
             ):
                 if f_i is not None and ft_i is None and fn_i is None:
@@ -377,6 +377,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
                                 f_i if f_i is not None else repeat(""),
                                 ft_i if ft_i is not None else repeat(""),
                                 fn_i if fn_i is not None else repeat(""),
+                                strict=False,
                             )
                         ),
                     )
@@ -392,7 +393,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
                 lt_data, l_offsets = lt
                 lt = np.split(lt_data, l_offsets[1:-1])
             for i, (l_i, lt_i) in enumerate(
-                zip(l if l is not None else repeat(None), lt if lt is not None else repeat(None))
+                zip(l if l is not None else repeat(None), lt if lt is not None else repeat(None), strict=False)
             ):
                 if l_i is not None and lt_i is None:
                     print("l", " ".join(f"{l_ij + 1}" for l_ij in l_i), file=fp)
@@ -402,7 +403,9 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
                         " ".join(
                             f"{l_ij + 1}/{lt_ij + 1}"
                             for l_ij, lt_ij in zip(
-                                l_i if l_i is not None else repeat(""), lt_i if lt_i is not None else repeat("")
+                                l_i if l_i is not None else repeat(""),
+                                lt_i if lt_i is not None else repeat(""),
+                                strict=False,
                             )
                         ),
                     )
@@ -412,7 +415,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
             p = obj.get("p", None)
             pt = obj.get("pt", None)
             for i, (p_i, pt_i) in enumerate(
-                zip(p if p is not None else repeat(None), pt if pt is not None else repeat(None))
+                zip(p if p is not None else repeat(None), pt if pt is not None else repeat(None), strict=False)
             ):
                 if p_i is not None and pt_i is None:
                     print("p", f"{p_i + 1}", file=fp)

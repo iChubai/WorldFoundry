@@ -13,26 +13,40 @@ import logging
 import os
 import warnings
 
-from torch import Tensor
-from torch import nn
 import torch
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from torch import Tensor, nn
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
     Attention as Attention,
-    MemEffAttention as MemEffAttention,
-    FlashAttention as FlashAttention,
-    CrossAttentionRope as CrossAttentionRope,
-    MemEffCrossAttentionRope as MemEffCrossAttentionRope,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
     AttentionRope as AttentionRope,
-    get_attn_score as get_attn_score,
-    PRopeFlashAttention as PRopeFlashAttention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    CrossAttentionRope as CrossAttentionRope,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    FlashAttention as FlashAttention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
     FlashCrossAttentionRope as FlashCrossAttentionRope,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    MemEffAttention as MemEffAttention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    MemEffCrossAttentionRope as MemEffCrossAttentionRope,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    PRopeFlashAttention as PRopeFlashAttention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.attention import (
+    get_attn_score as get_attn_score,
+)
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
-    from torch.nn.attention.flex_attention import flex_attention, create_block_mask
+    from torch.nn.attention.flex_attention import create_block_mask, flex_attention
 
     FLEX_ATTENTION_AVAILABLE = True
 except ImportError:

@@ -22,7 +22,7 @@ def normalize_poses(extrinsics, padding=0.1, return_stats=False):
     # Check input validity and handle NaN/Inf values
     for i in range(B):
         if torch.isnan(extrinsics[i]).any() or torch.isinf(extrinsics[i]).any():
-            print(f"Warning: dataset sample has NaN/Inf in extrinsics")
+            print("Warning: dataset sample has NaN/Inf in extrinsics")
             extrinsics[i] = torch.nan_to_num(extrinsics[i], nan=0.0, posinf=1e6, neginf=-1e6)
 
     normalized_extrinsics = extrinsics.clone()

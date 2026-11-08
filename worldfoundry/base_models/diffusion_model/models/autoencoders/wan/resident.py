@@ -8,8 +8,8 @@ camera-21 CNN from a ``.pth`` path and applies official mean/std scale.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import torch
 from torch import nn

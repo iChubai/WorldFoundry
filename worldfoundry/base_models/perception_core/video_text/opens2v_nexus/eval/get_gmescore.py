@@ -1,12 +1,12 @@
-import os
-import json
-import numpy as np
-from PIL import Image
 import argparse
-from utils.gme.gme_model import GmeQwen2VL
-from tqdm import tqdm
+import json
+import os
 
 import decord
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
+from utils.gme.gme_model import GmeQwen2VL
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -71,7 +71,7 @@ def main():
         print("continue")
         return
 
-    with open(input_json_file, "r") as f:
+    with open(input_json_file) as f:
         prompts = json.load(f)
     gme = GmeQwen2VL(model_path, attn_model="flash_attention_2", device=device)
 

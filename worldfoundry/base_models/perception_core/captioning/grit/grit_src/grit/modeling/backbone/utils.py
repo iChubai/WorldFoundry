@@ -1,16 +1,17 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # This code is from https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/backbone/utils.py
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 __all__ = [
-    "window_partition",
-    "window_unpartition",
+    "PatchEmbed",
     "add_decomposed_rel_pos",
     "get_abs_pos",
-    "PatchEmbed",
+    "window_partition",
+    "window_unpartition",
 ]
 
 

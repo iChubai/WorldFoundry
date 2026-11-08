@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io import write_json
 from worldfoundry.core.io.paths import hfd_root_path
@@ -75,7 +76,7 @@ class Splatt3RRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "Splatt3RRuntime":
+    ) -> Splatt3RRuntime:
         """
         Build a lazy Splatt3R runtime.
 

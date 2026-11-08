@@ -9,6 +9,7 @@ import torch.nn.functional as F
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import to_device, to_float_dtype
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args, is_deepspeed_enabled
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
 from ..register import register_template
@@ -22,20 +23,20 @@ from .utils import DEFAULT_SYSTEM, ChatmlTemplateMeta
 
 @dataclass
 class QwenTemplateMeta(ChatmlTemplateMeta):
-    default_system: Optional[str] = DEFAULT_SYSTEM
+    default_system: str | None = DEFAULT_SYSTEM
     auto_add_bos: bool = False
-    stop_words: List[Word] = field(default_factory=lambda: ["<|endoftext|>"])
+    stop_words: list[Word] = field(default_factory=lambda: ["<|endoftext|>"])
     agent_template: str = "hermes"
 
 
 @dataclass
 class Qwen2_5TemplateMeta(QwenTemplateMeta):
-    default_system: Optional[str] = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
+    default_system: str | None = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 
 
 @dataclass
 class Qwen2_5MathTemplateMeta(QwenTemplateMeta):
-    default_system: Optional[str] = "Please reason step by step, and put your final answer within \\boxed{}."
+    default_system: str | None = "Please reason step by step, and put your final answer within \\boxed{}."
 
 
 qwq_preview_system = (
@@ -112,7 +113,7 @@ class QwenVLTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         if self.mode == "lmdeploy":
             return [f"Picture {index + 1}: ", [-100], "\n"]
@@ -124,10 +125,10 @@ class QwenVLTemplate(Template):
                 assert isinstance(image, str)
                 return [f"Picture {index + 1}: <img>{image}</img>\n"]
 
-    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<ref>{ref}</ref>"]
 
-    def replace_bbox(self, bbox: List[int], index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_bbox(self, bbox: list[int], index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<box>{self._get_bbox_str(bbox)}</box>"]
 
 
@@ -137,7 +138,7 @@ register_template(QwenTemplateMeta(MLLMTemplateType.qwen_vl, template_cls=QwenVL
 class QwenAudioTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "audio"
         audios = inputs.audios
         audio = audios[index]
@@ -148,7 +149,7 @@ class QwenAudioTemplate(Template):
         audio_info = self.processor.process_audio(context)
         return super()._tokenize(context, audio_info=audio_info)
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         text = "".join([f"<audio>{audio}</audio>" for audio in inputs.audios])
         audio_info = self.processor.process_audio(text)
@@ -158,7 +159,7 @@ class QwenAudioTemplate(Template):
             encoded["tokenizer_kwargs"] = tokenizer_kwargs
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         if batch[0].get("audio_info") is not None:
             res["audio_info"] = [b["audio_info"] for b in batch]
@@ -171,14 +172,14 @@ register_template(QwenTemplateMeta(MLLMTemplateType.qwen_audio, template_cls=Qwe
 class Qwen2AudioTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "audio"
         if not self.use_chat_template:
             return ["<|audio_bos|><|AUDIO|><|audio_eos|>\n"]
         else:
             return [f"Audio {index + 1}: <|audio_bos|><|AUDIO|><|audio_eos|>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         if inputs.audios:
             sampling_rate = get_env_args("sampling_rate", int, self.processor.feature_extractor.sampling_rate)
@@ -190,7 +191,7 @@ class Qwen2AudioTemplate(Template):
             encoded.update(audio_inputs)
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         input_features = [b["input_features"] for b in batch if b.get("input_features") is not None]
         feature_attention_mask = [
@@ -214,7 +215,7 @@ class Qwen2VLTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         from qwen_vl_utils import fetch_image, fetch_video
 
         assert media_type in {"image", "video"}
@@ -234,13 +235,13 @@ class Qwen2VLTemplate(Template):
             inputs.videos[index] = video
             return ["<|vision_start|><|video_pad|><|vision_end|>"]
 
-    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<|object_ref_start|>{ref}<|object_ref_end|>"]
 
-    def replace_bbox(self, bbox: List[int], index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_bbox(self, bbox: list[int], index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<|box_start|>{self._get_bbox_str(bbox)}<|box_end|>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         processor = self.processor
         input_ids = encoded["input_ids"]
@@ -296,7 +297,7 @@ class Qwen2VLTemplate(Template):
         inputs["position_ids"] = inputs.pop("real_position_ids")
         return self._patch_flash_attention_forward(modeling_module, position_ids)
 
-    def _post_encode(self, model, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model, inputs: dict[str, Any]) -> dict[str, Any]:
         if not self.is_training:
             return inputs
         input_ids = inputs["input_ids"]
@@ -340,7 +341,7 @@ class Qwen2VLTemplate(Template):
 
         return {"inputs_embeds": inputs_embeds}
 
-    def _data_collator_mm_data(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _data_collator_mm_data(self, batch: list[dict[str, Any]]) -> dict[str, Any]:
         res = super()._data_collator_mm_data(batch)
         second_per_grid_ts = self.gather_list(batch, "second_per_grid_ts")
         if second_per_grid_ts:
@@ -351,7 +352,7 @@ class Qwen2VLTemplate(Template):
                 res[f"{media_type}_grid_thw"] = grid_thw
         return res
 
-    def packing_row(self, row: List[Tuple[Dict[str, Any], int]]) -> Dict[str, Any]:
+    def packing_row(self, row: list[tuple[dict[str, Any], int]]) -> dict[str, Any]:
         position_ids = []
         for r in row:
             r = r[0].copy()
@@ -361,7 +362,7 @@ class Qwen2VLTemplate(Template):
         packed["real_position_ids"] = torch.concat(position_ids, dim=-1)
         return packed
 
-    def _get_position_ids(self, inputs: Dict[str, Any]):
+    def _get_position_ids(self, inputs: dict[str, Any]):
         # fix https://github.com/huggingface/transformers/pull/33487
         kwargs = {}
         if self.version == "v2_5":
@@ -380,7 +381,7 @@ class Qwen2VLTemplate(Template):
         )
         return position_ids.contiguous()
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         if self._packing:
             res["real_position_ids"] = self.concat_tensor(batch, "real_position_ids", -1)
@@ -435,7 +436,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         from qwen_omni_utils import fetch_image, fetch_video
 
         if media_type == "image":
@@ -461,7 +462,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
                 return ["<|vision_bos|><|audio_bos|><|VIDEO|><|audio_eos|><|vision_eos|>"]
             return ["<|vision_bos|><|VIDEO|><|vision_eos|>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = Template._encode(self, inputs)
         processor = self.processor
         video_audios_mask = []
@@ -558,10 +559,10 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
         encoded.update(media_inputs)
         return encoded
 
-    def _post_encode(self, model, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model, inputs: dict[str, Any]) -> dict[str, Any]:
         return Template._post_encode(self, model, inputs)
 
-    def _get_position_ids(self, inputs: Dict[str, Any]):
+    def _get_position_ids(self, inputs: dict[str, Any]):
         feature_attention_mask = inputs.get("feature_attention_mask")
         if feature_attention_mask is not None:
             audio_feature_lengths = torch.sum(feature_attention_mask, dim=1)
@@ -583,7 +584,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
         )
         return position_ids.contiguous()
 
-    def _data_collator_mm_data(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _data_collator_mm_data(self, batch: list[dict[str, Any]]) -> dict[str, Any]:
         res = super()._data_collator_mm_data(batch)
         video_second_per_grid = self.gather_list(batch, "video_second_per_grid")
         if video_second_per_grid:
@@ -612,11 +613,11 @@ class Ovis1_6Template(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return [[-200], "\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         input_ids = encoded["input_ids"]
@@ -643,7 +644,7 @@ class Ovis1_6Template(Template):
         encoded["pixel_values"] = [pixel_values]
         return encoded
 
-    def _post_encode(self, model, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model, inputs: dict[str, Any]) -> dict[str, Any]:
         padding_side = self.padding_side if self.is_training else "left"
         if self.max_length is not None:
             model.config.multimodal_max_length = self.max_length
@@ -662,7 +663,7 @@ class Ovis1_6Template(Template):
             labels = None
         return {"inputs_embeds": inputs_embeds, "labels": labels, "attention_mask": attention_mask}
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         pixel_values = self.gather_list(batch, "pixel_values")
         res = super()._data_collator(batch, padding_to=padding_to)
         res["pixel_values"] = pixel_values
@@ -696,7 +697,7 @@ class Ovis2Template(Ovis1_6Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return [[-200], "\n"]
         elif media_type == "video":
@@ -715,7 +716,7 @@ register_template(
 
 @dataclass
 class MarcoO1TemplateMeta(QwenTemplateMeta):
-    default_system: Optional[str] = """
+    default_system: str | None = """
 你是一个经过良好训练的AI助手，你的名字是Marco-o1.由阿里国际数字商业集团的AI Business创造.
         \n## 重要！！！！！
 当你回答问题时，你的思考应该在<Thought>内完成，<Output>内输出你的结果。

@@ -9,14 +9,23 @@ import os
 
 import torch
 import torch.nn.functional as F
+
 from ...common.dist_utils import download_cached_file
 from ...common.registry import registry
 from ...common.utils import get_abs_path, is_url
 from ..base_model import MomentumDistilationMixin
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import BlipIntermediateOutput, BlipOutput
 from .nlvr_encoder import BertModel
+
+# isort: split
 from ..vit import VisionTransformerEncoder, interpolate_pos_embed
+
+# isort: split
 from torch import nn
 from transformers import BertConfig
 
@@ -135,7 +144,7 @@ class BlipNLVR(BlipBase, MomentumDistilationMixin):
 
         num_classes = cfg.get("num_classes", 3)
 
-        assert num_classes > 1, "Invalid number of classes provided, found {}".format(num_classes)
+        assert num_classes > 1, f"Invalid number of classes provided, found {num_classes}"
 
         model = cls(
             image_encoder=image_encoder,

@@ -3,17 +3,18 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> models -> vggt.py functionality."""
 
 import torch
+import torch.cuda.amp as amp
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin  # used for model hub
-import torch.cuda.amp as amp
 
-from ..models.aggregator import Aggregator
-from ..heads.camera_head import CameraHead
-from ..heads.dpt_head import DPTHead_3D_Causal
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.track_head import TrackHead
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.geometry import (
     sinusoidal_embedding_1d,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.track_head import TrackHead
+
+from ..heads.camera_head import CameraHead
+from ..heads.dpt_head import DPTHead_3D_Causal
+from ..models.aggregator import Aggregator
 
 
 class VGGT(nn.Module, PyTorchModelHubMixin):

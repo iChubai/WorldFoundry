@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from .med import BertConfig, BertModel
+import torch
+import torch.nn.functional as F
+from torch import nn
 from transformers import BertTokenizer
 
-import torch
-from torch import nn
-import torch.nn.functional as F
+from .med import BertConfig, BertModel
 
+# isort: split
 from .blip import create_vit, init_tokenizer, load_checkpoint
 
 _DEFAULT_MED_CONFIG = Path(__file__).resolve().parents[1] / "configs" / "med_config.json"
@@ -237,14 +238,14 @@ class BLIP_Retrieval(nn.Module):
     @torch.no_grad()
     def copy_params(self):
         for model_pair in self.model_pairs:
-            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters()):
+            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters(), strict=False):
                 param_m.data.copy_(param.data)  # initialize
                 param_m.requires_grad = False  # not update by gradient
 
     @torch.no_grad()
     def _momentum_update(self):
         for model_pair in self.model_pairs:
-            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters()):
+            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters(), strict=False):
                 param_m.data = param_m.data * self.momentum + param.data * (1.0 - self.momentum)
 
     @torch.no_grad()

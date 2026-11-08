@@ -8,10 +8,14 @@ import torch
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.model_utils import (
-    smart_cat,
     get_points_on_a_grid,
+    smart_cat,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.build_cotracker import build_cotracker
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker.paths import checkpoint_path
 
 

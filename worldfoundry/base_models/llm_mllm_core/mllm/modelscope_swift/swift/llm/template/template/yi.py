@@ -29,7 +29,7 @@ class YiVLTemplate(Template):
     image_placeholder = [[-200], "\n"]
     use_model = True
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         model = self.model
         from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import expand2square
@@ -47,7 +47,7 @@ class YiVLTemplate(Template):
             encoded["images"] = image_tensor.to(model.dtype)
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = [b["images"] for b in batch if "images" in b]
         if images:

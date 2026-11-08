@@ -11,7 +11,6 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 
 from .dap_dino import DINOv3Adapter
 
-
 _MODEL_CONFIGS = {
     "vits": {"features": 64, "out_channels": [48, 96, 192, 384]},
     "vitb": {"features": 128, "out_channels": [96, 192, 384, 768]},

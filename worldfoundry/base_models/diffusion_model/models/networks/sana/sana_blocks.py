@@ -314,7 +314,7 @@ class LiteLA(Attention_):
         self,
         in_dim: int,
         out_dim: int,
-        heads: Optional[int] = None,
+        heads: int | None = None,
         heads_ratio: float = 1.0,
         dim=32,
         eps=1e-15,
@@ -449,7 +449,7 @@ class LiteLAReLURope(Attention_):
         self,
         in_dim: int,
         out_dim: int,
-        heads: Optional[int] = None,
+        heads: int | None = None,
         heads_ratio: float = 1.0,
         dim=32,
         eps=1e-15,
@@ -565,7 +565,7 @@ class ChunkCausalAttention(LiteLAReLURope):
         self,
         in_dim: int,
         out_dim: int,
-        heads: Optional[int] = None,
+        heads: int | None = None,
         heads_ratio: float = 1.0,
         dim=32,
         eps=1e-15,
@@ -589,7 +589,7 @@ class ChunkCausalAttention(LiteLAReLURope):
         super().__init__(in_dim, out_dim, heads, heads_ratio, dim, eps, use_bias, qk_norm, norm_eps)
 
     def forward(
-        self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, chunk_index: List[int] = [0]
+        self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, chunk_index: list[int] = [0]
     ) -> torch.Tensor:
         """Forward.
 
@@ -680,7 +680,9 @@ class ChunkCausalAttention(LiteLAReLURope):
         q_list = [_q.reshape(B, h, h_d, -1) for _q in q_list]
         k_list = [_k.reshape(B, h, h_d, -1) for _k in k_list]
         out_list = []
-        for _q_rotated, _k_rotated, _v, _q, _k in zip(q_rotated_list, k_rotated_list, v_list, q_list, k_list):
+        for _q_rotated, _k_rotated, _v, _q, _k in zip(
+            q_rotated_list, k_rotated_list, v_list, q_list, k_list, strict=False
+        ):
             _vk = torch.matmul(_v, _k_rotated.transpose(-1, -2))
             cumsum_vk += _vk
             cumsum_k_sum += _k.sum(dim=-1, keepdim=True).transpose(-2, -1)
@@ -1547,7 +1549,7 @@ class CaptionEmbedder(nn.Module):
         num_layers = len(self.custom_gemma_layers)
         text_encoder = AutoModelForCausalLM.from_pretrained(model_name).get_decoder()
         pretrained_layers = text_encoder.layers[-num_layers:]
-        for custom_layer, pretrained_layer in zip(self.custom_gemma_layers, pretrained_layers):
+        for custom_layer, pretrained_layer in zip(self.custom_gemma_layers, pretrained_layers, strict=False):
             info = custom_layer.load_state_dict(pretrained_layer.state_dict(), strict=False)
             print(f"**** {info} ****")
         print(f"**** Initialized {num_layers} Gemma layers from pretrained model: {model_name} ****")
@@ -1724,8 +1726,8 @@ class PatchEmbed(nn.Module):
             x: The x.
         """
         B, C, H, W = x.shape
-        assert H == self.img_size[0], f"Input image height ({H}) doesn't match model ({self.img_size[0]})."
-        assert W == self.img_size[1], f"Input image width ({W}) doesn't match model ({self.img_size[1]})."
+        assert self.img_size[0] == H, f"Input image height ({H}) doesn't match model ({self.img_size[0]})."
+        assert self.img_size[1] == W, f"Input image width ({W}) doesn't match model ({self.img_size[1]})."
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
@@ -1843,7 +1845,7 @@ class RopePosEmbed(nn.Module):
     """Rope pos embed implementation."""
 
     # modified from https://github.com/black-forest-labs/flux/blob/c00d7c60b085fce8058b9df845e036090873f2ce/src/flux/modules/layers.py#L11
-    def __init__(self, theta: int, axes_dim: List[int]):
+    def __init__(self, theta: int, axes_dim: list[int]):
         """Init.
 
         Args:
@@ -1925,10 +1927,10 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         max_seq_len: int,
         theta: float = 10000.0,
-        fhw_dim: Optional[Tuple[int, int, int]] = None,
+        fhw_dim: tuple[int, int, int] | None = None,
     ):
         """Init.
 
@@ -2027,7 +2029,7 @@ class WanRotaryTemporalPosEmbed(nn.Module):
     """Wan rotary temporal pos embed implementation."""
 
     def __init__(
-        self, attention_head_dim: int, patch_size: Tuple[int, int, int], max_seq_len: int, theta: float = 10000.0
+        self, attention_head_dim: int, patch_size: tuple[int, int, int], max_seq_len: int, theta: float = 10000.0
     ):
         """Init.
 
@@ -2080,7 +2082,7 @@ class WanRotaryTemporalPosEmbed(nn.Module):
 
 def get_1d_rotary_pos_embed(
     dim: int,
-    pos: Union[np.ndarray, int],
+    pos: np.ndarray | int,
     theta: float = 10000.0,
     use_real=False,
     linear_factor=1.0,
@@ -2146,10 +2148,10 @@ def get_1d_rotary_pos_embed(
 
 def apply_rotary_emb(
     x: torch.Tensor,
-    freqs_cis: Union[torch.Tensor, Tuple[torch.Tensor]],
+    freqs_cis: torch.Tensor | tuple[torch.Tensor],
     use_real: bool = True,
     use_real_unbind_dim: int = -1,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Apply rotary embeddings to input tensors using the given frequency tensor. This function applies rotary embeddings
     to the given query or key 'x' tensors using the provided frequency tensor 'freqs_cis'. The input tensors are
@@ -2420,7 +2422,7 @@ class ChunkedLiteLAReLURope(LiteLAReLURope):
         B, N, C = x.shape
 
         # if token number is not large, use original method
-        if N <= self.chunk_size:
+        if self.chunk_size >= N:
             return super().forward(x, mask=mask, HW=HW, rotary_emb=rotary_emb, block_mask=block_mask, **kwargs)
 
         # chunked computation

@@ -1,15 +1,13 @@
 import random
 from typing import Dict, Optional, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 from omegaconf import DictConfig
-
-from src.torch_utils import persistence
-from src.torch_utils.ops import bias_act, upfirdn2d, conv2d_resample
-from src.torch_utils import misc
+from src.torch_utils import misc, persistence
+from src.torch_utils.ops import bias_act, conv2d_resample, upfirdn2d
 
 # ----------------------------------------------------------------------------
 
@@ -237,7 +235,7 @@ class GenInput(nn.Module):
             raise NotImplementedError(f"Unkown input type: {self.cfg.input.type}")
 
     def forward(
-        self, batch_size: int, motion_v: Optional[torch.Tensor] = None, dtype=None, memory_format=None
+        self, batch_size: int, motion_v: torch.Tensor | None = None, dtype=None, memory_format=None
     ) -> torch.Tensor:
         if self.cfg.input.type == "const":
             x = self.input.to(dtype=dtype, memory_format=memory_format)
@@ -420,7 +418,7 @@ class EqLRConv1d(nn.Module):
 # ----------------------------------------------------------------------------
 
 
-def sample_frames(cfg: Dict, total_video_len: int, **kwargs) -> np.ndarray:
+def sample_frames(cfg: dict, total_video_len: int, **kwargs) -> np.ndarray:
     if cfg["type"] == "random":
         return random_frame_sampling(cfg, total_video_len, **kwargs)
     elif cfg["type"] == "uniform":
@@ -432,7 +430,7 @@ def sample_frames(cfg: Dict, total_video_len: int, **kwargs) -> np.ndarray:
 # ----------------------------------------------------------------------------
 
 
-def random_frame_sampling(cfg: Dict, total_video_len: int, use_fractional_t: bool = False) -> np.ndarray:
+def random_frame_sampling(cfg: dict, total_video_len: int, use_fractional_t: bool = False) -> np.ndarray:
     min_time_diff = cfg["num_frames_per_video"] - 1
     max_time_diff = min(total_video_len - 1, cfg.get("max_dist", float("inf")))
 
@@ -462,7 +460,7 @@ def random_frame_sampling(cfg: Dict, total_video_len: int, use_fractional_t: boo
 # ----------------------------------------------------------------------------
 
 
-def uniform_frame_sampling(cfg: Dict, total_video_len: int, use_fractional_t: bool = False) -> np.ndarray:
+def uniform_frame_sampling(cfg: dict, total_video_len: int, use_fractional_t: bool = False) -> np.ndarray:
     # Step 1: Select the distance between frames
     if type(cfg.get("dists_between_frames")) in (list, tuple):
         valid_dists = [d for d in cfg["dists_between_frames"] if d <= ["max_dist_between_frames"]]
@@ -488,7 +486,7 @@ def uniform_frame_sampling(cfg: Dict, total_video_len: int, use_fractional_t: bo
 # ----------------------------------------------------------------------------
 
 
-def construct_log_spaced_freqs(max_num_frames: int, skip_small_t_freqs: int = 0) -> Tuple[int, torch.Tensor]:
+def construct_log_spaced_freqs(max_num_frames: int, skip_small_t_freqs: int = 0) -> tuple[int, torch.Tensor]:
     time_resolution = 2 ** np.ceil(np.log2(max_num_frames))
     num_fourier_feats = np.ceil(np.log2(time_resolution)).astype(int)
     powers = torch.tensor([2]).repeat(num_fourier_feats).pow(torch.arange(num_fourier_feats))  # [num_fourier_feats]

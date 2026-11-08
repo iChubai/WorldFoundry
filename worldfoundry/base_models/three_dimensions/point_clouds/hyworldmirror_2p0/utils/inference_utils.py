@@ -25,17 +25,18 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils
     depth_edge,
     normals_edge,
 )
+from worldfoundry.core.media.artifacts import download_file_from_url, segment_sky
+
 from ..models.utils.geometry import depth_to_world_coords_points
 from .save_utils import (
-    save_depth_png,
-    save_depth_npy,
-    save_normal_png,
-    save_gs_ply,
-    save_points_ply,
     save_camera_params,
+    save_depth_npy,
+    save_depth_png,
+    save_gs_ply,
+    save_normal_png,
+    save_points_ply,
 )
 from .video_utils import video_to_image_frames, video_to_image_frames_new
-from worldfoundry.core.media.artifacts import download_file_from_url, segment_sky
 
 _IO_WORKERS = 8
 
@@ -220,7 +221,7 @@ def compute_preprocessing_transform(img_paths, target_size, patch_size=14):
 
 def load_prior_camera(prior_cam_path, img_paths, preprocess_transform=None):
     """Load camera priors from JSON. Returns (extrinsics [1,N,4,4], intrinsics [1,N,3,3])."""
-    with open(prior_cam_path, "r") as f:
+    with open(prior_cam_path) as f:
         cam_data = json.load(f)
 
     stem_to_idx = {Path(p).stem: i for i, p in enumerate(img_paths)}

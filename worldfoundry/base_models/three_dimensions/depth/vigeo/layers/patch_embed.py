@@ -8,9 +8,10 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
 
+from collections.abc import Callable
+
 import torch.nn as nn
 from torch import Tensor
-from typing import Callable
 
 
 def make_2tuple(x):

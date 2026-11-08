@@ -1,14 +1,16 @@
+import time
+from functools import partial, reduce
+
 import torch
 import torch.nn as nn
-import time
 from torch.nn.functional import adaptive_avg_pool3d
-from functools import partial, reduce
-from .swin_backbone import SwinTransformer3D as VideoBackbone
-from .swin_backbone import swin_3d_tiny, swin_3d_small
-from .conv_backbone import convnext_3d_tiny, convnext_3d_small
-from .xclip_backbone import build_x_clip_model
+
+from .conv_backbone import convnext_3d_small, convnext_3d_tiny
+from .head import IQAHead, VARHead, VQAHead
 from .swin_backbone import SwinTransformer2D as ImageBackbone
-from .head import VQAHead, IQAHead, VARHead
+from .swin_backbone import SwinTransformer3D as VideoBackbone
+from .swin_backbone import swin_3d_small, swin_3d_tiny
+from .xclip_backbone import build_x_clip_model
 
 
 class BaseEvaluator(nn.Module):
@@ -118,7 +120,7 @@ class DiViDeAddEvaluator(nn.Module):
                     if hasattr(self, key.split("_")[0] + "_head"):
                         scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                     else:
-                        scores += [getattr(self, "vqa_head")(feat)]
+                        scores += [self.vqa_head(feat)]
                     if return_pooled_feats:
                         feats[key] = feat.mean((-3, -2, -1))
                 if reduce_scores:
@@ -143,7 +145,7 @@ class DiViDeAddEvaluator(nn.Module):
                 if hasattr(self, key.split("_")[0] + "_head"):
                     scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                 else:
-                    scores += [getattr(self, "vqa_head")(feat)]
+                    scores += [self.vqa_head(feat)]
                 if return_pooled_feats:
                     feats[key] = feat.mean((-3, -2, -1))
             if reduce_scores:

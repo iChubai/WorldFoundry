@@ -1,11 +1,14 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_dit.py functionality."""
 
-import torch, math
+import math
+from typing import List, Optional, Tuple, Union
+
+import torch
 import torch.nn as nn
-from typing import Tuple, Optional, Union, List
 from einops import rearrange
-from worldfoundry.core.nn import AdaLayerNorm, ProjectedTimestepEmbedding, RMSNorm
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn import AdaLayerNorm, ProjectedTimestepEmbedding, RMSNorm
 
 try:
     import flash_attn_interface
@@ -94,7 +97,7 @@ class ApproximateGELU(nn.Module):
         return x * torch.sigmoid(1.702 * x)
 
 
-def apply_rotary_emb_qwen(x: torch.Tensor, freqs_cis: Union[torch.Tensor, Tuple[torch.Tensor]]):
+def apply_rotary_emb_qwen(x: torch.Tensor, freqs_cis: torch.Tensor | tuple[torch.Tensor]):
     """Apply rotary emb qwen.
 
     Args:
@@ -315,7 +318,7 @@ class QwenFeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Optional[int] = None,
+        dim_out: int | None = None,
         dropout: float = 0.0,
     ):
         """Init.
@@ -387,10 +390,10 @@ class QwenDoubleStreamAttention(nn.Module):
         self,
         image: torch.FloatTensor,
         text: torch.FloatTensor,
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
+        attention_mask: torch.FloatTensor | None = None,
         enable_fp8_attention: bool = False,
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    ) -> tuple[torch.FloatTensor, torch.FloatTensor]:
         """Forward.
 
         Args:
@@ -508,10 +511,10 @@ class QwenImageTransformerBlock(nn.Module):
         image: torch.Tensor,
         text: torch.Tensor,
         temb: torch.Tensor,
-        image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
+        attention_mask: torch.Tensor | None = None,
         enable_fp8_attention=False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:
@@ -752,7 +755,6 @@ class QwenImageDiTStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_civitai(self, state_dict):
         """From civitai.

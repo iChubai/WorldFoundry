@@ -22,8 +22,8 @@ import collections
 import os
 import struct
 import sys
-import numpy as np
 
+import numpy as np
 
 CameraModel = collections.namedtuple("CameraModel", ["model_id", "model_name", "num_params"])
 Camera = collections.namedtuple("Camera", ["id", "model", "width", "height", "params"])
@@ -71,7 +71,7 @@ def read_next_bytes(fid, num_bytes, format_char_sequence, endian_character="<"):
 def read_cameras_text(path):
     """Read cameras from a text model file."""
     cameras = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -116,7 +116,7 @@ def read_cameras_binary(path_to_model_file):
 def read_images_text(path):
     """Read images from a text model file."""
     images = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -183,7 +183,7 @@ def read_images_binary(path_to_model_file):
 def read_points3D_text(path):
     """Read points3D from a text model file."""
     points3D = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:

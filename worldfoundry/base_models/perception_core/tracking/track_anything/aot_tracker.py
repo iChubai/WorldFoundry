@@ -18,7 +18,7 @@ from .aot.transforms import video_transforms as tr
 from .aot.utils.checkpoint import load_network
 
 
-class AOTTracker(object):
+class AOTTracker:
     """Aot tracker implementation."""
 
     def __init__(self, cfg, gpu_id=0):
@@ -174,7 +174,9 @@ class AOTTrackerInferEngine(AOTInferEngine):
 
         separated_masks, separated_obj_nums = self.separate_mask(mask, obj_nums)
         img_embs = None
-        for aot_engine, separated_mask, separated_obj_num in zip(self.aot_engines, separated_masks, separated_obj_nums):
+        for aot_engine, separated_mask, separated_obj_num in zip(
+            self.aot_engines, separated_masks, separated_obj_nums, strict=False
+        ):
             if aot_engine.obj_nums is None or aot_engine.obj_nums[0] < separated_obj_num:
                 aot_engine.add_reference_frame(
                     img,
@@ -234,7 +236,9 @@ class DeAOTTrackerInferEngine(DeAOTInferEngine):
 
         separated_masks, separated_obj_nums = self.separate_mask(mask, obj_nums)
         img_embs = None
-        for aot_engine, separated_mask, separated_obj_num in zip(self.aot_engines, separated_masks, separated_obj_nums):
+        for aot_engine, separated_mask, separated_obj_num in zip(
+            self.aot_engines, separated_masks, separated_obj_nums, strict=False
+        ):
             if aot_engine.obj_nums is None or aot_engine.obj_nums[0] < separated_obj_num:
                 aot_engine.add_reference_frame(
                     img,

@@ -76,7 +76,7 @@ def load_network_and_optimizer_v2(net, opt, pretrained_dir, gpu, scaler=None):
     pretrained_opt_dict = {"state": {}, "param_groups": []}
     for idx in range(len(pretrained["optimizer"]["param_groups"])):
         param_group = pretrained["optimizer"]["param_groups"][idx]
-        if param_group["name"] in all_params.keys():
+        if param_group["name"] in all_params:
             pretrained_opt_dict["state"][all_params[param_group["name"]]] = pretrained["optimizer"]["state"][
                 param_group["params"][0]
             ]
@@ -168,7 +168,7 @@ def save_network(net, opt, step, save_path, max_keep=8, backup_dir="./saved_mode
         all_step = list(np.sort(all_step))[:-max_keep]
         for step in all_step:
             ckpt_path = os.path.join(save_path, "save_step_%s.pth" % (step))
-            os.system("rm {}".format(ckpt_path))
+            os.system(f"rm {ckpt_path}")
 
 
 def cp_ckpt(remote_dir="data_wd/youtube_vos_jobs/result", curr_dir="backup"):
@@ -194,9 +194,9 @@ def cp_ckpt(remote_dir="data_wd/youtube_vos_jobs/result", curr_dir="backup"):
                     curr_ckpt_path = os.path.join(final_dir, ckpt)
                     remote_ckpt_path = os.path.join(remote_dir, exp, stage, final, ckpt)
                     if os.path.exists(remote_ckpt_path):
-                        os.system("rm {}".format(remote_ckpt_path))
+                        os.system(f"rm {remote_ckpt_path}")
                     try:
                         shutil.copy(curr_ckpt_path, remote_ckpt_path)
-                        print("Copy {} to {}.".format(curr_ckpt_path, remote_ckpt_path))
+                        print(f"Copy {curr_ckpt_path} to {remote_ckpt_path}.")
                     except OSError:
                         return

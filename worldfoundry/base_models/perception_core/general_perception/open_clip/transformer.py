@@ -1,17 +1,19 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> transformer.py functionality."""
 
-from collections import OrderedDict
 import math
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
+from collections import OrderedDict
+from collections.abc import Callable, Sequence
+from typing import Dict, List, Optional, Tuple, Type, Union
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.checkpoint import checkpoint
 
-from .utils import to_2tuple, feature_take_indices
-from .pos_embed import get_2d_sincos_pos_embed
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+
+from .pos_embed import get_2d_sincos_pos_embed
+from .utils import feature_take_indices, to_2tuple
 
 
 class LayerNormFp32(nn.LayerNorm):
@@ -137,15 +139,15 @@ class Attention(nn.Module):
         self,
         dim: int,
         num_heads: int = 8,
-        kdim: Optional[int] = None,
-        vdim: Optional[int] = None,
+        kdim: int | None = None,
+        vdim: int | None = None,
         qkv_bias: bool = True,
         qk_norm: bool = False,
         scaled_cosine: bool = False,
         scale_heads: bool = False,
         inner_norm: bool = False,
         logit_scale_max: float = math.log(1.0 / 0.01),
-        norm_layer: Type[nn.Module] = LayerNormFp32,
+        norm_layer: type[nn.Module] = LayerNormFp32,
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         use_sdpa: bool = True,
@@ -250,9 +252,9 @@ class Attention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ):
         """Forward.
 
@@ -444,9 +446,9 @@ class ResidualAttentionBlock(nn.Module):
     def attention(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ):
         """Attention.
 
@@ -464,9 +466,9 @@ class ResidualAttentionBlock(nn.Module):
     def forward(
         self,
         q_x: torch.Tensor,
-        k_x: Optional[torch.Tensor] = None,
-        v_x: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        k_x: torch.Tensor | None = None,
+        v_x: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ):
         """Forward.
 
@@ -492,8 +494,8 @@ class CustomResidualAttentionBlock(nn.Module):
         n_head: int,
         mlp_ratio: float = 4.0,
         ls_init_value: float = None,
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Type[nn.Module] = LayerNorm,
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = LayerNorm,
         qk_norm: bool = False,
         scale_cosine_attn: bool = False,
         scale_heads: bool = False,
@@ -559,7 +561,7 @@ class CustomResidualAttentionBlock(nn.Module):
             return self.mlp.c_fc.int8_original_dtype
         return self.mlp.c_fc.weight.dtype
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         """Forward.
 
         Args:
@@ -581,9 +583,9 @@ class CustomTransformer(nn.Module):
         heads: int,
         mlp_ratio: float = 4.0,
         ls_init_value: float = None,
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Type[nn.Module] = LayerNorm,
-        block_types: Union[str, List[str]] = "CustomResidualAttentionBlock",
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = LayerNorm,
+        block_types: str | list[str] = "CustomResidualAttentionBlock",
     ):
         """Init.
 
@@ -637,8 +639,8 @@ class CustomTransformer(nn.Module):
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        indices: Optional[Union[int, List[int]]] = None,
+        attn_mask: torch.Tensor | None = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
     ):
         """Forward intermediates.
@@ -664,7 +666,7 @@ class CustomTransformer(nn.Module):
 
         return x, intermediates
 
-    def prune_intermediate_layers(self, indices: Union[int, List[int]] = 1):
+    def prune_intermediate_layers(self, indices: int | list[int] = 1):
         """Prune layers not required for specified intermediates."""
         take_indices, max_index = feature_take_indices(len(self.resblocks), indices)
         self.resblocks = self.resblocks[: max_index + 1]  # truncate blocks
@@ -685,7 +687,7 @@ class CustomTransformer(nn.Module):
         else:
             self.grad_checkpointing = enable
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         """Forward.
 
         Args:
@@ -712,9 +714,9 @@ class Transformer(nn.Module):
         heads: int,
         mlp_ratio: float = 4.0,
         ls_init_value: float = None,
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Type[nn.Module] = LayerNorm,
-        block_type: Optional[str] = None,
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = LayerNorm,
+        block_type: str | None = None,
         qk_norm: bool = False,
         scaled_cosine_attn: bool = False,
         scale_heads: bool = False,
@@ -813,8 +815,8 @@ class Transformer(nn.Module):
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        indices: Optional[Union[int, List[int]]] = None,
+        attn_mask: torch.Tensor | None = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
     ):
         """Forward intermediates.
@@ -840,13 +842,13 @@ class Transformer(nn.Module):
 
         return x, intermediates
 
-    def prune_intermediate_layers(self, indices: Union[int, List[int]] = 1):
+    def prune_intermediate_layers(self, indices: int | list[int] = 1):
         """Prune layers not required for specified intermediates."""
         take_indices, max_index = feature_take_indices(len(self.resblocks), indices)
         self.resblocks = self.resblocks[: max_index + 1]  # truncate blocks
         return take_indices
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         """Forward.
 
         Args:
@@ -897,7 +899,7 @@ class VisionTransformer(nn.Module):
         act_layer: Callable = nn.GELU,
         norm_layer: Callable = LayerNorm,
         output_tokens: bool = False,
-        block_type: Optional[str] = None,
+        block_type: str | None = None,
         qk_norm: bool = False,
         scaled_cosine_attn: bool = False,
         scale_heads: bool = False,
@@ -1096,7 +1098,6 @@ class VisionTransformer(nn.Module):
         #
         # if self.text_projection is not None:
         #     nn.init.normal_(self.text_projection, std=self.scale)
-        pass
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
         """Set grad checkpointing.
@@ -1113,7 +1114,7 @@ class VisionTransformer(nn.Module):
         no_wd = {"positional_embedding", "class_embedding"}
         return no_wd
 
-    def _global_pool(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _global_pool(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Helper function to global pool.
 
         Args:
@@ -1156,7 +1157,7 @@ class VisionTransformer(nn.Module):
         x = self.ln_pre(x)
         return x
 
-    def _pool(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _pool(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Helper function to pool.
 
         Args:
@@ -1192,13 +1193,13 @@ class VisionTransformer(nn.Module):
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        indices: Optional[Union[int, List[int]]] = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize_intermediates: bool = False,
         intermediates_only: bool = False,
         output_fmt: str = "NCHW",
         output_extra_tokens: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -1258,7 +1259,7 @@ class VisionTransformer(nn.Module):
 
     def prune_intermediate_layers(
         self,
-        indices: Union[int, List[int]] = 1,
+        indices: int | list[int] = 1,
         prune_norm: bool = False,
         prune_head: bool = True,
     ):
@@ -1291,9 +1292,9 @@ class VisionTransformer(nn.Module):
 
 def text_global_pool(
     x: torch.Tensor,
-    text: Optional[torch.Tensor] = None,
+    text: torch.Tensor | None = None,
     pool_type: str = "argmax",
-    eos_token_id: Optional[int] = None,
+    eos_token_id: int | None = None,
 ) -> torch.Tensor:
     """Text global pool.
 
@@ -1338,7 +1339,7 @@ class TextTransformer(nn.Module):
         layers: int = 12,
         mlp_ratio: float = 4.0,
         ls_init_value: float = None,
-        output_dim: Optional[int] = 512,
+        output_dim: int | None = 512,
         embed_cls: bool = False,
         no_causal_mask: bool = False,
         use_pad_mask: bool = False,
@@ -1348,10 +1349,10 @@ class TextTransformer(nn.Module):
         pool_type: str = "argmax",
         proj_type: str = "linear",
         proj_bias: bool = False,
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Type[nn.Module] = LayerNorm,
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = LayerNorm,
         output_tokens: bool = False,
-        block_type: Optional[str] = None,
+        block_type: str | None = None,
         qk_norm: bool = False,
         scaled_cosine_attn: bool = False,
         scale_heads: bool = False,
@@ -1529,7 +1530,7 @@ class TextTransformer(nn.Module):
         additive = additive.repeat_interleave(self.heads, 0)  # [B*H, Q, K]
         return additive
 
-    def _embeds(self, text) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    def _embeds(self, text) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Helper function to embeds.
 
         Args:
@@ -1565,13 +1566,13 @@ class TextTransformer(nn.Module):
     def forward_intermediates(
         self,
         text: torch.Tensor,
-        indices: Optional[Union[int, List[int]]] = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize_intermediates: bool = False,
         intermediates_only: bool = False,
         output_fmt: str = "NLC",
         output_extra_tokens: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -1634,7 +1635,7 @@ class TextTransformer(nn.Module):
 
     def prune_intermediate_layers(
         self,
-        indices: Union[int, List[int]] = 1,
+        indices: int | list[int] = 1,
         prune_norm: bool = False,
         prune_head: bool = True,
     ):
@@ -1690,8 +1691,8 @@ class MultimodalTransformer(Transformer):
         context_length: int = 77,
         mlp_ratio: float = 4.0,
         ls_init_value: float = None,
-        act_layer: Type[nn.Module] = nn.GELU,
-        norm_layer: Type[nn.Module] = LayerNorm,
+        act_layer: type[nn.Module] = nn.GELU,
+        norm_layer: type[nn.Module] = LayerNorm,
         output_dim: int = 512,
     ):
         """Init.
@@ -1768,8 +1769,8 @@ class MultimodalTransformer(Transformer):
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
-        indices: Optional[Union[int, List[int]]] = None,
+        attn_mask: torch.Tensor | None = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
     ):
         """Forward intermediates.
@@ -1796,7 +1797,7 @@ class MultimodalTransformer(Transformer):
         # can be cached once.
         seq_len = text_embs.shape[1]
 
-        for resblock, cross_attn in zip(self.resblocks, self.cross_attn):
+        for resblock, cross_attn in zip(self.resblocks, self.cross_attn, strict=False):
             if self.grad_checkpointing:
                 # TODO: handle kwargs https://github.com/pytorch/pytorch/issues/79887#issuecomment-1161758372
                 text_embs = checkpoint(

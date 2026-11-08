@@ -16,7 +16,6 @@ import einops as ein
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from mapanything.utils.misc import invalid_to_zeros
 from mapanything.utils.warnings import no_warnings
 
@@ -907,7 +906,7 @@ def xy_grid(
         def ones(*a):
             return torch.ones(*a, device=device)
 
-    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin)]
+    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
         grid = grid + (ones((H, W)),)
@@ -1078,15 +1077,15 @@ def relative_pose_transformation(trans_01, trans_02):
         >>> trans_12 = relative_pose_transformation(trans_01, trans_02)  # 4x4
     """
     if not torch.is_tensor(trans_01):
-        raise TypeError("Input trans_01 type is not a torch.Tensor. Got {}".format(type(trans_01)))
+        raise TypeError(f"Input trans_01 type is not a torch.Tensor. Got {type(trans_01)}")
     if not torch.is_tensor(trans_02):
-        raise TypeError("Input trans_02 type is not a torch.Tensor. Got {}".format(type(trans_02)))
+        raise TypeError(f"Input trans_02 type is not a torch.Tensor. Got {type(trans_02)}")
     if trans_01.dim() not in (2, 3) and trans_01.shape[-2:] == (4, 4):
-        raise ValueError("Input must be a of the shape Nx4x4 or 4x4. Got {}".format(trans_01.shape))
+        raise ValueError(f"Input must be a of the shape Nx4x4 or 4x4. Got {trans_01.shape}")
     if trans_02.dim() not in (2, 3) and trans_02.shape[-2:] == (4, 4):
-        raise ValueError("Input must be a of the shape Nx4x4 or 4x4. Got {}".format(trans_02.shape))
+        raise ValueError(f"Input must be a of the shape Nx4x4 or 4x4. Got {trans_02.shape}")
     if not trans_01.dim() == trans_02.dim():
-        raise ValueError("Input number of dims must match. Got {} and {}".format(trans_01.dim(), trans_02.dim()))
+        raise ValueError(f"Input number of dims must match. Got {trans_01.dim()} and {trans_02.dim()}")
 
     # Convert to Nx4x4 if inputs are 4x4
     squeeze_batch_dim = False
@@ -1728,9 +1727,9 @@ def sliding_window_1d(x: np.ndarray, window_size: int, stride: int, axis: int = 
 
 def sliding_window_nd(
     x: np.ndarray,
-    window_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    window_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Create sliding windows along multiple dimensions of the input array.
@@ -1765,9 +1764,9 @@ def sliding_window_nd(
 
 def sliding_window_2d(
     x: np.ndarray,
-    window_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    window_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ) -> np.ndarray:
     """
     Create 2D sliding windows over the input array.
@@ -1844,10 +1843,10 @@ def max_pool_1d(x: np.ndarray, kernel_size: int, stride: int, padding: int = 0, 
 
 def max_pool_nd(
     x: np.ndarray,
-    kernel_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    padding: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    kernel_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    padding: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Perform N-dimensional max pooling on the input array.
@@ -1883,10 +1882,10 @@ def max_pool_nd(
 
 def max_pool_2d(
     x: np.ndarray,
-    kernel_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    padding: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    kernel_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    padding: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ):
     """
     Perform 2D max pooling on the input array.

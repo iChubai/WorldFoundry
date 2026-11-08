@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Dict, Optional
 
 import torch
 from mmdeploy.codebase.base import CODEBASE, MMCodebase
@@ -20,8 +21,8 @@ class MMYOLO(MMCodebase):
     @classmethod
     def register_deploy_modules(cls):
         """register all rewriters for mmdet."""
-        import mmdeploy.codebase.mmdet.models  # noqa: F401
-        import mmdeploy.codebase.mmdet.ops  # noqa: F401
+        import mmdeploy.codebase.mmdet.models
+        import mmdeploy.codebase.mmdet.ops
         import mmdeploy.codebase.mmdet.structures  # noqa: F401
 
     @classmethod
@@ -81,7 +82,7 @@ class YOLOObjectDetection(ObjectDetection):
         Returns:
             Visualizer: A visualizer instance.
         """
-        from mmdet.visualization import DetLocalVisualizer  # noqa: F401,F403
+        from mmdet.visualization import DetLocalVisualizer  # noqa: F401
 
         metainfo = _get_dataset_metainfo(self.model_cfg)
         visualizer = super().get_visualizer(name, save_dir)
@@ -90,7 +91,7 @@ class YOLOObjectDetection(ObjectDetection):
         return visualizer
 
     def build_pytorch_model(
-        self, model_checkpoint: Optional[str] = None, cfg_options: Optional[Dict] = None, **kwargs
+        self, model_checkpoint: str | None = None, cfg_options: dict | None = None, **kwargs
     ) -> torch.nn.Module:
         """Initialize torch model.
 

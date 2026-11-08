@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypedDict
 
 import numpy as np
 from torch import Tensor
-from typing import TypedDict
 
 
 class TextEmbeds(TypedDict):

@@ -11,8 +11,7 @@ from typing import Any, List, Tuple, Type
 
 import torch
 import torch.nn.functional as F
-
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from .efficient_sam_decoder import MaskDecoder, PromptEncoder
 from .efficient_sam_encoder import ImageEncoderViT
@@ -31,8 +30,8 @@ class EfficientSam(nn.Module):
         prompt_encoder: PromptEncoder,
         decoder_max_num_input_points: int,
         mask_decoder: MaskDecoder,
-        pixel_mean: List[float] = [0.485, 0.456, 0.406],
-        pixel_std: List[float] = [0.229, 0.224, 0.225],
+        pixel_mean: list[float] = [0.485, 0.456, 0.406],
+        pixel_std: list[float] = [0.229, 0.224, 0.225],
     ) -> None:
         """
         SAM predicts object masks from an image and input prompts.
@@ -65,7 +64,7 @@ class EfficientSam(nn.Module):
         input_w: int,
         output_h: int = -1,
         output_w: int = -1,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Predicts masks given image embeddings and prompts. This only runs the decoder.
 
@@ -182,7 +181,7 @@ class EfficientSam(nn.Module):
         batched_points: torch.Tensor,
         batched_point_labels: torch.Tensor,
         scale_to_original_image_size: bool = True,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Predicts masks end-to-end from provided images and prompts.
         If prompts are not known in advance, using SamPredictor is

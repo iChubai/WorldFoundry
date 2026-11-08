@@ -12,8 +12,8 @@ Compatibility wrapper only.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import torch
 from torch import nn
@@ -73,7 +73,7 @@ class WanTextEncoder(nn.Module):
         ids, mask = ids.to(self.device), mask.to(self.device)
         lengths = mask.gt(0).sum(dim=1).long()
         context = self.text_encoder(ids, mask)
-        for embedding, length in zip(context, lengths):
+        for embedding, length in zip(context, lengths, strict=False):
             embedding[length:] = 0.0
         return {"prompt_embeds": context}
 

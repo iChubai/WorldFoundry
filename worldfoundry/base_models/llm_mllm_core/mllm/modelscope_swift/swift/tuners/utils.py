@@ -2,6 +2,7 @@
 # Copyright 2023-present the HuggingFace Inc. team.
 
 import hashlib
+import json
 import os
 import shutil
 import tempfile
@@ -10,15 +11,13 @@ from dataclasses import asdict, dataclass, field
 from types import FunctionType
 from typing import Dict, Optional, Union
 
-import json
 import numpy as np
 import torch
 from modelscope import snapshot_download
 from modelscope.hub.utils.utils import get_cache_dir
 from packaging import version
-from peft.utils import CONFIG_NAME
+from peft.utils import CONFIG_NAME, _get_submodules
 from peft.utils import ModulesToSaveWrapper as _ModulesToSaveWrapper
-from peft.utils import _get_submodules
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import MODEL_ARCH_MAPPING, ModelKeys
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import gc_collect
@@ -32,7 +31,7 @@ logger = get_logger()
 class SwiftConfig:
     swift_type: str = field(default=None)
 
-    model_key_mapping: Optional[Union[dict, ModelKeys]] = field(default=None)
+    model_key_mapping: dict | ModelKeys | None = field(default=None)
 
     @property
     def __dict__(self):
@@ -104,7 +103,7 @@ class SwiftConfig:
             path_json_file (`str`):
                 The path to the json file.
         """
-        with open(path_json_file, "r", encoding="utf-8") as file:
+        with open(path_json_file, encoding="utf-8") as file:
             json_object = json.load(file)
 
         return json_object
@@ -155,7 +154,7 @@ class ActivationMixin:
 
     def __init__(self, module_key):
         self.module_key = module_key
-        self._thread_inf: Dict[int, Dict[str, bool]] = {}
+        self._thread_inf: dict[int, dict[str, bool]] = {}
         self._unique_thread = bool(int(os.environ.get(ActivationMixin.USE_UNIQUE_THREAD, "1")))
         if not self._unique_thread and not ActivationMixin.REMINEDED:
             ActivationMixin.REMINEDED = True
@@ -348,7 +347,7 @@ class SwiftAdapter:
         return model_key_mapping
 
     @staticmethod
-    def state_dict_load_hook(model: torch.nn.Module, state_dict: Dict[str, torch.Tensor]):
+    def state_dict_load_hook(model: torch.nn.Module, state_dict: dict[str, torch.Tensor]):
         pass
 
     @staticmethod

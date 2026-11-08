@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Mapping
 
 import torch
 from einops import rearrange

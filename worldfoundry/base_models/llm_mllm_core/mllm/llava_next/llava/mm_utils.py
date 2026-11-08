@@ -1,11 +1,13 @@
-from PIL import Image
-from io import BytesIO
+import ast
 import base64
 import math
-import ast
 import re
+from io import BytesIO
+
 import torch
+from PIL import Image
 from transformers import StoppingCriteria
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import IMAGE_TOKEN_INDEX
 
 
@@ -264,7 +266,7 @@ def process_anyres_image(image, processor, grid_pinpoints):
     if isinstance(grid_pinpoints, str) and "x" in grid_pinpoints:
         try:
             patch_size = processor.size[0]
-        except Exception as e:
+        except Exception:
             patch_size = processor.size["shortest_edge"]
         assert patch_size in [224, 336, 384, 448, 512], "patch_size should be in [224, 336, 384, 448, 512]"
         # Use regex to extract the range from the input string
@@ -354,7 +356,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
     prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split("<image>")]
 
     def insert_separator(X, sep):
-        return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+        return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
     input_ids = []
     offset = 0

@@ -6,7 +6,7 @@ def check_math_result_and_give_tips(inputs):
     prompt = "But wait... It seems I made a mistake,"
     contents = [input["messages"][-1]["content"] for input in inputs]
     rewards = acc(contents, [input["solution"] for input in inputs])
-    for reward, input in zip(rewards, inputs):
+    for reward, input in zip(rewards, inputs, strict=False):
         content = input["messages"][-1]["content"]
         if reward < 1 and prompt not in content:
             if "<answer>" in content:
@@ -28,7 +28,7 @@ def check_math_result_and_give_tips_multi_turn(inputs):
     prompt = "The answer is not correct, It seems You made a mistake, you need to recheck very carefully."
     contents = [input["messages"][-1]["content"] for input in inputs]
     rewards = acc(contents, [input["solution"] for input in inputs])
-    for reward, input in zip(rewards, inputs):
+    for reward, input in zip(rewards, inputs, strict=False):
         content = input["messages"][-2]["content"]
         if reward < 1 and prompt not in content:
             input["messages"].append({"role": "user", "content": prompt})

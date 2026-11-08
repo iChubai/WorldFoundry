@@ -18,9 +18,10 @@
 import logging
 import tempfile
 import zipfile
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, cast
+from typing import cast
 
 import cv2
 import imageio

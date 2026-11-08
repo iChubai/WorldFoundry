@@ -15,7 +15,8 @@
 
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> block.py functionality."""
 
-from typing import Callable
+from collections.abc import Callable
+
 from torch import Tensor, nn
 
 from .attention import Attention, LayerScale, Mlp

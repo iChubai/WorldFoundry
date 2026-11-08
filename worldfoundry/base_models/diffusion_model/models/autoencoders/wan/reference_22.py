@@ -22,8 +22,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-from worldfoundry.core.model_loading import load_torch_state_dict
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.model_loading import load_torch_state_dict
 
 __all__ = [
     "WAN_2P2_VAE_MEAN",
@@ -779,7 +779,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -917,7 +917,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(
@@ -1247,7 +1247,7 @@ def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
 class WanVAEConfig:
     """Wan vae config implementation."""
 
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
 
 
 class Wan2_2_VAE:

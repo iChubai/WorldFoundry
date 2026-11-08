@@ -1,7 +1,8 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 import torch
@@ -27,7 +28,7 @@ class LossType:
 LOSS_MAPPING = {}
 
 
-def register_loss_func(loss_type: str, loss_func: Optional[Callable] = None):
+def register_loss_func(loss_type: str, loss_func: Callable | None = None):
     loss_info = {}
 
     if loss_func is not None:
@@ -134,14 +135,14 @@ def contrastive_loss(outputs, labels, loss_scale=None, num_items_in_batch=None) 
 
 
 def calculate_paired_metrics(embeddings, labels):
-    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
     from scipy.stats import pearsonr, spearmanr
+    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
 
     embeddings1, embeddings2 = _parse_pair_sentence(embeddings)
     cosine_scores = 1 - (paired_cosine_distances(embeddings1, embeddings2))
     manhattan_distances = -paired_manhattan_distances(embeddings1, embeddings2)
     euclidean_distances = -paired_euclidean_distances(embeddings1, embeddings2)
-    dot_products = [np.dot(emb1, emb2) for emb1, emb2 in zip(embeddings1, embeddings2)]
+    dot_products = [np.dot(emb1, emb2) for emb1, emb2 in zip(embeddings1, embeddings2, strict=False)]
 
     eval_pearson_cosine, _ = pearsonr(labels, cosine_scores)
     eval_spearman_cosine, _ = spearmanr(labels, cosine_scores)
@@ -168,8 +169,8 @@ def calculate_paired_metrics(embeddings, labels):
 
 
 def calculate_infonce_metrics(embeddings, labels):
-    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
     from scipy.stats import pearsonr, spearmanr
+    from sklearn.metrics.pairwise import paired_cosine_distances, paired_euclidean_distances, paired_manhattan_distances
 
     hard_negatives = os.environ.get("INFONCE_HARD_NEGATIVES", None)
     use_batch = strtobool(os.environ.get("INFONCE_USE_BATCH", "True"))
@@ -447,7 +448,7 @@ def channel_loss_func(outputs, labels, num_items_in_batch=None, sample_channels=
     )
 
 
-def get_loss_func(loss_type: Optional[str]) -> Optional[Callable]:
+def get_loss_func(loss_type: str | None) -> Callable | None:
     if loss_type is None:
         return None
     return LOSS_MAPPING[loss_type]["loss_func"]

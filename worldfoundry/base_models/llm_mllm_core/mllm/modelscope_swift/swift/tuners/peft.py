@@ -1,12 +1,12 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 # Copyright 2023-present the HuggingFace Inc. team.
+import json
 import os.path
 from dataclasses import asdict, dataclass, field
 from functools import partial, reduce
 from types import MethodType
 from typing import Dict, Optional
 
-import json
 import peft
 import torch
 import torch.nn
@@ -61,11 +61,11 @@ dispatchers = []
 
 @dataclass
 class LoraConfig(peft.LoraConfig):
-    lora_dtype: Optional[str] = field(
+    lora_dtype: str | None = field(
         default=None, metadata={"help": "The lora dtype, default None means following the original layer's dtype"}
     )
 
-    lorap_lr_ratio: Optional[float] = field(default=None, metadata={"help": "The lr ratio of lora_B in lora+"})
+    lorap_lr_ratio: float | None = field(default=None, metadata={"help": "The lr ratio of lora_B in lora+"})
 
     lorap_emb_lr: float = field(default=1e-6, metadata={"help": "The lr for embedding in lora+"})
 
@@ -87,7 +87,7 @@ class LoraConfig(peft.LoraConfig):
             json.dump(additional_args, f)
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: str, subfolder: Optional[str] = None, **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path: str, subfolder: str | None = None, **kwargs):
         if hasattr(PeftConfigMixin, "from_pretrained_origin"):
             self = PeftConfigMixin.from_pretrained_origin(pretrained_model_name_or_path, subfolder, **kwargs)
         else:
@@ -97,9 +97,7 @@ class LoraConfig(peft.LoraConfig):
             self = LoraConfig(**self.to_dict())
 
         if os.path.isfile(os.path.join(pretrained_model_name_or_path, "additional_config.json")):
-            with open(
-                os.path.join(pretrained_model_name_or_path, "additional_config.json"), "r", encoding="utf-8"
-            ) as f:
+            with open(os.path.join(pretrained_model_name_or_path, "additional_config.json"), encoding="utf-8") as f:
                 _json = json.load(f)
                 for key, value in _json.items():
                     setattr(self, key, value)
@@ -326,7 +324,7 @@ def hot_patch_peft_module():
         BoneModel._create_and_replace = _create_and_replace_hook
 
     # Support type conversion
-    def __new_init__(self, model: torch.nn.Module, config: Dict[str, LoraConfig], adapter_name: str):
+    def __new_init__(self, model: torch.nn.Module, config: dict[str, LoraConfig], adapter_name: str):
         self.__init_origin__(model, config, adapter_name)
         active_adapters = self.active_adapter
         if isinstance(active_adapters, str):
@@ -376,7 +374,7 @@ def get_wrapped_class(module_class):
 
     class PeftWrapper(module_class):
         @classmethod
-        def from_pretrained(cls, model, model_id, *args, revision: Optional[str] = None, **kwargs):
+        def from_pretrained(cls, model, model_id, *args, revision: str | None = None, **kwargs):
             if not os.path.exists(model_id):
                 model_id = snapshot_download(model_id, revision=revision)
             return module_class.from_pretrained(model, model_id, *args, **kwargs)

@@ -1,15 +1,17 @@
-from collections import OrderedDict
-from itertools import repeat
 import collections.abc
 import math
+from collections import OrderedDict
+from itertools import repeat
 
 import torch
 import torch.nn.functional as F
+from fairscale.nn.checkpoint.checkpoint_activations import checkpoint_wrapper
 from torch import nn
 
-from fairscale.nn.checkpoint.checkpoint_activations import checkpoint_wrapper
-
+# isort: split
 from ..models.eva_vit import convert_weights_to_fp16
+
+# isort: split
 from ..common.dist_utils import download_cached_file
 
 

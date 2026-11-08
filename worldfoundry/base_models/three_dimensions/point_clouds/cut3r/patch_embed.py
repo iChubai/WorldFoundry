@@ -8,7 +8,7 @@
 
 import torch
 
-from .blocks import PatchEmbed  # noqa
+from .blocks import PatchEmbed
 
 
 def get_patch_embed(patch_embed_cls, img_size, patch_size, enc_embed_dim, in_chans=3):

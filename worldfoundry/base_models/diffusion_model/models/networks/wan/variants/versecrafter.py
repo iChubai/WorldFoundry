@@ -10,6 +10,10 @@ Adds geometry/VACE-like hints and TeaCache.  No action or linear attn.
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
+
+from worldfoundry.base_models.diffusion_model.optimizations.wan.cfg_skip import (
+    cfg_skip,
+)
 from worldfoundry.core.model_loading.model_configuration import register_to_config
 
 from .video_x_fun.transformer import (
@@ -18,9 +22,6 @@ from .video_x_fun.transformer import (
     prepare_sequence_tensors,
     process_teacache_skip_logic,
     sinusoidal_embedding_1d,
-)
-from worldfoundry.base_models.diffusion_model.optimizations.wan.cfg_skip import (
-    cfg_skip,
 )
 
 

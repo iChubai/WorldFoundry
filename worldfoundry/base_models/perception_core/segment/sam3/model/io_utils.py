@@ -10,7 +10,7 @@ import queue
 import re
 import time
 import types
-from threading import Condition, get_ident, Lock, Thread
+from threading import Condition, Lock, Thread, get_ident
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -18,8 +18,9 @@ import torch
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
 from PIL import Image
-from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from tqdm import tqdm
+
+from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -31,7 +32,7 @@ VIDEO_EXTS = [".mp4", ".mov", ".avi", ".mkv", ".webm"]
 
 
 def load_resource_as_video_frames(
-    resource_path: Union[str, list],
+    resource_path: str | list,
     image_size: int,
     offload_video_to_cpu: bool,
     img_mean: tuple[float, float, float] = (0.5, 0.5, 0.5),
@@ -446,7 +447,7 @@ class TorchCodecDecoder:
 
     def __init__(
         self,
-        source: Union[str, bytes],
+        source: str | bytes,
         dimension_order: str = "NCHW",
         device: str = "cpu",
         num_threads: int = 1,
@@ -561,9 +562,9 @@ class FIFOLock:
 
     def __exit__(
         self,
-        t: Optional[type[BaseException]],
-        v: Optional[BaseException],
-        tb: Optional[types.TracebackType],
+        t: type[BaseException] | None,
+        v: BaseException | None,
+        tb: types.TracebackType | None,
     ) -> None:
         """Exit.
 
@@ -591,10 +592,10 @@ class AsyncVideoFileLoaderWithTorchCodec:
         video_path: str,
         image_size: int,
         offload_video_to_cpu: bool,
-        img_mean: Union[tuple[float, float, float], torch.Tensor],
-        img_std: Union[tuple[float, float, float], torch.Tensor],
+        img_mean: tuple[float, float, float] | torch.Tensor,
+        img_std: tuple[float, float, float] | torch.Tensor,
         gpu_acceleration: bool = True,
-        gpu_device: Optional[torch.device] = None,
+        gpu_device: torch.device | None = None,
         use_rand_seek_in_loading: bool = False,
     ) -> None:
         """Init.

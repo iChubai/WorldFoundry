@@ -4,7 +4,8 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Tuple, List
+from typing import List, Tuple
+
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin  # used for model hub
@@ -48,8 +49,8 @@ class STream3R(nn.Module, PyTorchModelHubMixin):
         self,
         images: torch.Tensor,
         mode: str = "causal",
-        aggregator_kv_cache_list: List[List[torch.Tensor]] = None,
-        camera_head_kv_cache_list: List[List[List[torch.Tensor]]] = None,
+        aggregator_kv_cache_list: list[list[torch.Tensor]] = None,
+        camera_head_kv_cache_list: list[list[list[torch.Tensor]]] = None,
     ):
         """
         Forward pass of the STream3R model.

@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 # Modified by Jialian Wu from https://github.com/facebookresearch/detectron2/blob/main/detectron2/utils/visualizer.py
 import torch
-
 from detectron2.engine.defaults import DefaultPredictor
 from detectron2.utils.visualizer import ColorMode, Visualizer
 
@@ -91,7 +90,7 @@ class Visualizer_GRiT(Visualizer):
         return self.output
 
 
-class VisualizationDemo(object):
+class VisualizationDemo:
     def __init__(self, cfg, instance_mode=ColorMode.IMAGE):
         self.cpu_device = torch.device("cpu")
         self.instance_mode = instance_mode

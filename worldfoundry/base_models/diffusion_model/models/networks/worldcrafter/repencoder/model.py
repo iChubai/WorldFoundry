@@ -93,7 +93,7 @@ class RepEncoder(nn.Module):
         compute_dtype: str | torch.dtype = torch.bfloat16,
         target_microbatch: int = 4,
         near_zero_baseline_m: float = DEFAULT_NEAR_ZERO_BASELINE_M,
-    ) -> "RepEncoder":
+    ) -> RepEncoder:
         model_path, config, manifest = read_checkpoint_metadata(path)
         model = cls(
             config,

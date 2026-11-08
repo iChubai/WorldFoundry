@@ -11,32 +11,46 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.segment.sam3 import perflib
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from worldfoundry.base_models.perception_core.segment.sam3.model.act_ckpt_utils import clone_output_wrapper
 from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import box_xywh_to_cxcywh, box_xyxy_to_xywh
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
     BatchedDatapoint,
-    convert_my_tensors,
     FindStage,
+    convert_my_tensors,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import Prompt
 from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import (
     IMAGE_EXTS,
     load_resource_as_video_frames,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base import (
     MaskletConfirmationStatus,
     Sam3VideoBase,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.utils.misc import copy_data_to_device
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.compile import compile_wrapper, shape_logging_wrapper
+
+# isort: split
+from torchvision.ops import masks_to_boxes
+from tqdm.auto import tqdm
+
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
     masks_to_boxes as perf_masks_to_boxes,
 )
-from torchvision.ops import masks_to_boxes
-from tqdm.auto import tqdm
 
 logger = get_logger(__name__)
 
@@ -349,7 +363,7 @@ class Sam3VideoInference(Sam3VideoBase):
                     num_frames = inference_state["num_frames"]
                     unconfirmed_status_frame_idx = max(0, min(unconfirmed_status_frame_idx, num_frames - 1))
 
-                    unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx, None)
+                    unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx)
                     postprocessed_out = self._postprocess_output(
                         inference_state,
                         yield_out,
@@ -790,7 +804,7 @@ class Sam3VideoInference(Sam3VideoBase):
                 "obj_ids_per_gpu": [np.arange(num_objects)],
                 "obj_ids_all_gpu": np.arange(num_objects),  # Same as 1 GPU
                 "num_obj_per_gpu": [num_objects],
-                "obj_id_to_score": {i: 1.0 for i in range(num_objects)},
+                "obj_id_to_score": dict.fromkeys(range(num_objects), 1.0),
                 "max_obj_id": num_objects,
                 "rank0_metadata": {
                     "masklet_confirmation": {
@@ -924,7 +938,7 @@ class Sam3VideoInference(Sam3VideoBase):
         tracking_res = defaultdict(dict)  # frame_idx --> {obj_id: mask}
         scores_labels = defaultdict(tuple)  # obj_id --> (score, text_prompt_id)
         inference_state = self.init_state(resource_path=input.raw_images)
-        for prompt_id, prompt in zip(text_prompt_ids, text_prompt_list):
+        for prompt_id, prompt in zip(text_prompt_ids, text_prompt_list, strict=False):
             self.add_prompt(inference_state, frame_idx=0, text_str=prompt)
             start_obj_id = max(scores_labels.keys(), default=-1) + 1  # prev max + 1
 
@@ -937,7 +951,7 @@ class Sam3VideoInference(Sam3VideoBase):
                 reverse=False,
             ):
                 current_frame_res = tracking_res[frame_idx]
-                for obj_id, mask in zip(out["out_obj_ids"], out["out_binary_masks"]):
+                for obj_id, mask in zip(out["out_obj_ids"], out["out_binary_masks"], strict=False):
                     mask_tensor = torch.tensor(mask[None], dtype=torch.bool)
                     current_frame_res[obj_id + start_obj_id] = mask_tensor
                 obj_ids_this_prompt.update(current_frame_res.keys())
@@ -1120,7 +1134,7 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
                         obj_rank = self._get_gpu_id_by_obj_id(inference_state, obj_id)
                         if self.rank == obj_rank:
                             # This GPU has the object, broadcast its data
-                            data_to_broadcast = local_obj_data.get(obj_id, None)
+                            data_to_broadcast = local_obj_data.get(obj_id)
                             data_list = [(data_to_broadcast[0].cpu(), data_to_broadcast[1].cpu())]
                             self.broadcast_python_obj_cpu(data_list, src=obj_rank)
                             if data_to_broadcast is not None:

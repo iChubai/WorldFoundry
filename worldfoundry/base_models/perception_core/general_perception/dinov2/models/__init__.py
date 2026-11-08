@@ -9,7 +9,6 @@ import logging
 
 from . import vision_transformer as vits
 
-
 logger = logging.getLogger("dinov2")
 
 

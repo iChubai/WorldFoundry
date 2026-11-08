@@ -1,8 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import re
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
-
-import json
 
 from .base import BaseAgentTemplate
 
@@ -27,7 +26,7 @@ class GLM4AgentTemplate(BaseAgentTemplate):
         name, arguments = matches[0]
         return Function(name=name, arguments=arguments)
 
-    def get_toolcall(self, response: str) -> List["Function"]:
+    def get_toolcall(self, response: str) -> list["Function"]:
         toolcall_list = response.split("<|assistant|>")
         functions = []
         for toolcall in toolcall_list:
@@ -39,7 +38,7 @@ class GLM4AgentTemplate(BaseAgentTemplate):
             return super().get_toolcall(response)
         return functions
 
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_descs = []
         for tool in tools:
             tool = self.unwrap_tool(tool)
@@ -48,7 +47,7 @@ class GLM4AgentTemplate(BaseAgentTemplate):
                 f"## {name}\n\n{json.dumps(tool, ensure_ascii=False, indent=4)}\n"
                 "在调用上述函数时，请使用 Json 格式表示调用的参数。"
             )
-        glm4_system = "你是一个名为 GLM-4 的人工智能助手。你是基于智谱AI训练的语言模型 GLM-4 模型开发的，你的任务是针对用户的问题和要求提供适当的答复和支持。\n\n"  # noqa
+        glm4_system = "你是一个名为 GLM-4 的人工智能助手。你是基于智谱AI训练的语言模型 GLM-4 模型开发的，你的任务是针对用户的问题和要求提供适当的答复和支持。\n\n"
         return (
             ("" if self.is_glm4_0414 else glm4_system)
             + """# 可用工具
@@ -61,7 +60,7 @@ class GLM4AgentTemplate(BaseAgentTemplate):
         self,
         assistant_content: str,
         tool_messages,
-    ) -> Tuple[str, "Prompt"]:
+    ) -> tuple[str, "Prompt"]:
         with_action = self.keyword.action in assistant_content and self.keyword.action_input in assistant_content
         if with_action:
             return super()._format_tool_responses(assistant_content, tool_messages)

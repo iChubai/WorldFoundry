@@ -23,7 +23,11 @@ from pathlib import Path
 import torch
 from omegaconf import DictConfig
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.slam.system import SLAMOutput, SLAMSystem
+
+# isort: split
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.adaptive_models import AdaptiveDepthModels
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import (
     AssignAttributesProcessor,
     FrameAttribute,
@@ -37,7 +41,6 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras imp
 from worldfoundry.studio.visualization.plugins.scene3d.projection import save_projection_video
 
 from . import AnnotationPipelineOutput, Pipeline
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.adaptive_models import AdaptiveDepthModels
 from .processors import (
     AdaptiveDepthProcessor,
     GeoCalibIntrinsicsProcessor,
@@ -193,7 +196,7 @@ class DefaultAnnotationPipeline(Pipeline):
         ]
 
         # Dumping artifacts for all views in the streams
-        for output_stream, artifact_path in zip(output_streams, artifact_paths):
+        for output_stream, artifact_path in zip(output_streams, artifact_paths, strict=False):
             artifact_path.meta_info_path.parent.mkdir(exist_ok=True, parents=True)
             if self.out_cfg.save_artifacts:
                 logger.info(f"Saving artifacts to {artifact_path}")

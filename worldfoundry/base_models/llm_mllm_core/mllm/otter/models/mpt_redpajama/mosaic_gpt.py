@@ -16,11 +16,12 @@ import torch.nn.functional as F
 from transformers import AutoTokenizer, PreTrainedModel
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from .attention import attn_bias as module_attn_bias, attn_bias_shape as module_attn_bias_shape
-from .gpt_blocks import GPTBlock
+from .attention import attn_bias as module_attn_bias
+from .attention import attn_bias_shape as module_attn_bias_shape
 from .configuration_mosaic_gpt import MosaicGPTConfig
-from .param_init_fns import MODEL_INIT_REGISTRY
+from .gpt_blocks import GPTBlock
 from .low_precision_layernorm import LPLayerNorm
+from .param_init_fns import MODEL_INIT_REGISTRY
 
 
 class MosaicGPT(PreTrainedModel):
@@ -112,9 +113,9 @@ class MosaicGPT(PreTrainedModel):
         self,
         device,
         dtype,
-        attention_mask: Optional[torch.ByteTensor] = None,
-        prefix_mask: Optional[torch.ByteTensor] = None,
-        sequence_id: Optional[torch.LongTensor] = None,
+        attention_mask: torch.ByteTensor | None = None,
+        prefix_mask: torch.ByteTensor | None = None,
+        sequence_id: torch.LongTensor | None = None,
     ):
         if not self._attn_bias_initialized:
             if self.attn_bias_shape:
@@ -216,15 +217,15 @@ class MosaicGPT(PreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor,
-        past_key_values: Optional[List[Tuple[torch.FloatTensor]]] = None,
-        attention_mask: Optional[torch.ByteTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        prefix_mask: Optional[torch.ByteTensor] = None,
-        sequence_id: Optional[torch.LongTensor] = None,
-        return_dict: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        use_cache: Optional[bool] = None,
+        past_key_values: list[tuple[torch.FloatTensor]] | None = None,
+        attention_mask: torch.ByteTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        prefix_mask: torch.ByteTensor | None = None,
+        sequence_id: torch.LongTensor | None = None,
+        return_dict: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        use_cache: bool | None = None,
     ):
         return_dict = return_dict if return_dict is not None else self.config.return_dict
         use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -258,7 +259,7 @@ class MosaicGPT(PreTrainedModel):
 
         S = input_ids.size(1)
 
-        assert S <= self.config.max_seq_len, (
+        assert self.config.max_seq_len >= S, (
             f"Cannot forward input with seq_len={S}, this model only supports seq_len<={self.config.max_seq_len}"
         )
 
@@ -270,7 +271,7 @@ class MosaicGPT(PreTrainedModel):
             if past_key_values is not None:
                 if len(past_key_values) != self.config.n_layers:
                     raise ValueError(
-                        f"past_key_values must provide a past_key_value for each attention "
+                        "past_key_values must provide a past_key_value for each attention "
                         + f"layer in the network ({len(past_key_values)=}; {self.config.n_layers=})."
                     )
                 # get the key tensor whose spec should be (batch, seq, dim), and

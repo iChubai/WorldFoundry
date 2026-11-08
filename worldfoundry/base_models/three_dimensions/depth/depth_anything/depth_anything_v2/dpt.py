@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import DINOv2
+
 from .util.blocks import FeatureFusionBlock, _make_scratch
 
 

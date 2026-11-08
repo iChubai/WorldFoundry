@@ -7,8 +7,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .utils import freeze_batch_norm_2d, feature_take_indices
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+
+from .utils import feature_take_indices, freeze_batch_norm_2d
 
 
 class Bottleneck(nn.Module):
@@ -130,7 +131,7 @@ class ModifiedResNet(nn.Module):
 
     def __init__(
         self,
-        layers: List[int],
+        layers: list[int],
         output_dim: int,
         heads: int,
         image_size: int = 224,
@@ -224,7 +225,6 @@ class ModifiedResNet(nn.Module):
             impl: The impl.
         """
         # FIXME support for non-transformer
-        pass
 
     def stem(self, x):
         """Stem.
@@ -241,13 +241,13 @@ class ModifiedResNet(nn.Module):
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        indices: Optional[Union[int, List[int]]] = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize_intermediates: bool = False,
         intermediates_only: bool = False,
         output_fmt: str = "NCHW",
         output_extra_tokens: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:

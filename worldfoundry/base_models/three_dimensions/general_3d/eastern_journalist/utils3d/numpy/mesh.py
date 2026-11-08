@@ -1,37 +1,38 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> mesh.py functionality."""
 
-import numpy as np
-from numpy import ndarray
-import scipy.sparse as sp
-from scipy.sparse import csr_array
 from typing import *
 
-from .transforms import unproject_cv, angle_between
-from .utils import lookup, segment_roll, csr_matrix_from_dense_indices
+import numpy as np
+import scipy.sparse as sp
+from numpy import ndarray
+from scipy.sparse import csr_array
+
+from .transforms import angle_between, unproject_cv
+from .utils import csr_matrix_from_dense_indices, lookup, segment_roll
 
 __all__ = [
-    "triangulate_mesh",
     "compute_face_corner_angles",
     "compute_face_corner_normals",
     "compute_face_corner_tangents",
     "compute_face_normals",
     "compute_face_tangents",
     "compute_vertex_normals",
-    "remove_corrupted_faces",
-    "merge_duplicate_vertices",
-    "remove_unused_vertices",
-    "subdivide_mesh",
-    "mesh_edges",
-    "mesh_half_edges",
-    "mesh_connected_components",
-    "graph_connected_components",
-    "mesh_adjacency_graph",
-    "flatten_mesh_indices",
+    "create_camera_frustum_mesh",
     "create_cube_mesh",
     "create_icosahedron_mesh",
     "create_square_mesh",
-    "create_camera_frustum_mesh",
+    "flatten_mesh_indices",
+    "graph_connected_components",
+    "merge_duplicate_vertices",
     "merge_meshes",
+    "mesh_adjacency_graph",
+    "mesh_connected_components",
+    "mesh_edges",
+    "mesh_half_edges",
+    "remove_corrupted_faces",
+    "remove_unused_vertices",
+    "subdivide_mesh",
+    "triangulate_mesh",
     # 'calc_quad_candidates',
     # 'calc_quad_distortion',
     # 'calc_quad_direction',
@@ -383,7 +384,7 @@ def flatten_mesh_indices(*args: ndarray) -> Tuple[ndarray, ...]:
     T, P = args[0].shape
     assert all(arg.shape[0] == T and arg.shape[1] == P for arg in args[::2]), "The faces must have the same shape."
     attr_flat = []
-    for faces_, attr_ in zip(args[::2], args[1::2]):
+    for faces_, attr_ in zip(args[::2], args[1::2], strict=False):
         attr_flat_ = attr_[faces_].reshape(-1, *attr_.shape[1:])
         attr_flat.append(attr_flat_)
     faces_flat = np.arange(T * P, dtype=np.int32).reshape(T, P)
@@ -542,7 +543,7 @@ def merge_meshes(meshes: List[Tuple[ndarray, ...]]) -> Tuple[ndarray, ...]:
     for f, *attrs in meshes:
         faces_merged.append(f + vertex_offset)
         vertex_offset += len(attrs[0])
-        for attr_merged, attr in zip(attrs_merged, attrs):
+        for attr_merged, attr in zip(attrs_merged, attrs, strict=False):
             attr_merged.append(attr)
     faces_merged = np.concatenate(faces_merged, axis=0)
     attrs_merged = [np.concatenate(attr_list, axis=0) for attr_list in attrs_merged]

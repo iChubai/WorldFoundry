@@ -138,7 +138,7 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
         context: dict,
         global_step: int,
         deterministic: bool = False,
-        visualization_dump: Optional[dict] = None,
+        visualization_dump: dict | None = None,
     ) -> Gaussians:
         """Forward.
 

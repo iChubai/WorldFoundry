@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.layer import BasicBlock, conv1x1, conv3x3
 
 
@@ -69,7 +70,7 @@ class ResNetFPN(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
         if self.init_weight and not getattr(args, "skip_pretrained_init", False):
-            from torchvision.models import resnet18, ResNet18_Weights, resnet34, ResNet34_Weights
+            from torchvision.models import ResNet18_Weights, ResNet34_Weights, resnet18, resnet34
 
             if args.pretrain == "resnet18":
                 pretrained_dict = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).state_dict()

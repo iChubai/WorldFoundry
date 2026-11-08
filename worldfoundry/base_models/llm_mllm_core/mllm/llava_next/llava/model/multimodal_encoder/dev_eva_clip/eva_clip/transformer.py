@@ -1,8 +1,10 @@
-import os
 import logging
-from collections import OrderedDict
 import math
-from typing import Callable, Optional, Sequence
+import os
+from collections import OrderedDict
+from collections.abc import Callable, Sequence
+from typing import Optional
+
 import numpy as np
 import torch
 from torch import nn
@@ -125,7 +127,7 @@ def _in_projection_packed(
     k: torch.Tensor,
     v: torch.Tensor,
     w: torch.Tensor,
-    b: Optional[torch.Tensor] = None,
+    b: torch.Tensor | None = None,
 ):
     """
     https://github.com/pytorch/pytorch/blob/db2a237763eb8693a20788be94f8c192e762baa8/torch/nn/functional.py#L4726
@@ -197,7 +199,7 @@ class Attention(nn.Module):
         self.xattn_drop = attn_drop
         self.rope = rope
 
-    def forward(self, x, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, attn_mask: torch.Tensor | None = None):
         L, N, C = x.shape
         q, k, v = F.linear(x, self.in_proj_weight, self.in_proj_bias).chunk(3, dim=-1)
         if self.xattn:
@@ -292,7 +294,7 @@ class CustomAttention(nn.Module):
         self.xattn_drop = attn_drop
 
     def forward(
-        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attn_mask: Optional[torch.Tensor] = None
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attn_mask: torch.Tensor | None = None
     ):
         q, k, v = _in_projection_packed(query, key, value, self.in_proj_weight, self.in_proj_bias)
         N_q, B_q, C_q = q.shape
@@ -399,7 +401,7 @@ class CustomResidualAttentionBlock(nn.Module):
 
         self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
 
-    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, attn_mask: torch.Tensor | None = None):
         q = q + self.ls_1(self.ln_attn(self.attn(self.ln_1(q), self.ln_1_k(k), self.ln_1_v(v), attn_mask=attn_mask)))
         q = q + self.ls_2(self.mlp(self.ln_2(q)))
         return q
@@ -452,7 +454,7 @@ class CustomTransformer(nn.Module):
         return self.resblocks[0].mlp.c_fc.weight.dtype
 
     def forward(
-        self, q: torch.Tensor, k: torch.Tensor = None, v: torch.Tensor = None, attn_mask: Optional[torch.Tensor] = None
+        self, q: torch.Tensor, k: torch.Tensor = None, v: torch.Tensor = None, attn_mask: torch.Tensor | None = None
     ):
         if k is None and v is None:
             k = v = q
@@ -499,13 +501,13 @@ class ResidualAttentionBlock(nn.Module):
         self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
         self.xattn = xattn
 
-    def attention(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def attention(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         attn_mask = attn_mask.to(x.dtype) if attn_mask is not None else None
         if self.xattn:
             return self.attn(x, attn_mask=attn_mask)
         return self.attn(x, x, x, need_weights=False, attn_mask=attn_mask)[0]
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         x = x + self.ls_1(self.attention(self.ln_1(x), attn_mask=attn_mask))
         x = x + self.ls_2(self.mlp(self.ln_2(x)))
         return x
@@ -546,7 +548,7 @@ class Transformer(nn.Module):
     def get_cast_dtype(self) -> torch.dtype:
         return self.resblocks[0].mlp.c_fc.weight.dtype
 
-    def forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, attn_mask: torch.Tensor | None = None):
         for r in self.resblocks:
             if self.grad_checkpointing and not torch.jit.is_scripting():
                 x = checkpoint(r, x, attn_mask)

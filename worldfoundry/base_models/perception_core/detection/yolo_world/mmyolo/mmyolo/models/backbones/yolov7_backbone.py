@@ -7,6 +7,7 @@ from mmdet.models.backbones.csp_darknet import Focus
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from ..layers import MaxPoolAndStrideConvBlock
 from .base_backbone import BaseBackbone
 
@@ -115,9 +116,9 @@ class YOLOv7Backbone(BaseBackbone):
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="SiLU", inplace=True),
         norm_eval: bool = False,
@@ -233,7 +234,7 @@ class YOLOv7Backbone(BaseBackbone):
             stage.insert(0, downsample_layer)
         return stage
 
-    def _build_downsample_layer(self, stage_idx: int, in_channels: int, out_channels: int) -> Optional[nn.Module]:
+    def _build_downsample_layer(self, stage_idx: int, in_channels: int, out_channels: int) -> nn.Module | None:
         """Build a downsample layer pre stage."""
         if self.arch in ["E", "D", "E2E"]:
             downsample_layer = MaxPoolAndStrideConvBlock(

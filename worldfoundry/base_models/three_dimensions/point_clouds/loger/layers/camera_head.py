@@ -1,8 +1,9 @@
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> layers -> camera_head.py functionality."""
 
+from copy import deepcopy
+
 import torch
 import torch.nn as nn
-from copy import deepcopy
 import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.camera_head import ResConvBlock

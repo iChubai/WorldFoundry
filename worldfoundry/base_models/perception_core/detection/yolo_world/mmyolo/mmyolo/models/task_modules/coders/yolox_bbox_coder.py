@@ -17,9 +17,8 @@ class YOLOXBBoxCoder(BaseBBoxCoder):
 
     def encode(self, **kwargs):
         """Encode deltas between bboxes and ground truth boxes."""
-        pass
 
-    def decode(self, priors: torch.Tensor, pred_bboxes: torch.Tensor, stride: Union[torch.Tensor, int]) -> torch.Tensor:
+    def decode(self, priors: torch.Tensor, pred_bboxes: torch.Tensor, stride: torch.Tensor | int) -> torch.Tensor:
         """Decode regression results (delta_x, delta_x, w, h) to bboxes (tl_x,
         tl_y, br_x, br_y).
 

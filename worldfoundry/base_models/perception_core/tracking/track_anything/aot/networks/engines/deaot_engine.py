@@ -3,7 +3,6 @@
 import numpy as np
 
 from ...utils.image import one_hot_mask
-
 from ..layers.basic import seq_to_2d
 from .aot_engine import AOTEngine, AOTInferEngine
 
@@ -127,7 +126,9 @@ class DeAOTInferEngine(AOTInferEngine):
 
         separated_masks, separated_obj_nums = self.separate_mask(mask, obj_nums)
         img_embs = None
-        for aot_engine, separated_mask, separated_obj_num in zip(self.aot_engines, separated_masks, separated_obj_nums):
+        for aot_engine, separated_mask, separated_obj_num in zip(
+            self.aot_engines, separated_masks, separated_obj_nums, strict=False
+        ):
             if aot_engine.obj_nums is None or aot_engine.obj_nums[0] < separated_obj_num:
                 aot_engine.add_reference_frame(
                     img, separated_mask, obj_nums=[separated_obj_num], frame_step=frame_step, img_embs=img_embs

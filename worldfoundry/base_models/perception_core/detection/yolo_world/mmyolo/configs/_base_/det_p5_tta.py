@@ -14,13 +14,13 @@ img_scales = [(640, 640), (320, 320), (960, 960)]
 
 #                                LoadImageFromFile
 #                     /                 |                     \
-# (RatioResize,LetterResize) (RatioResize,LetterResize) (RatioResize,LetterResize) # noqa
+# (RatioResize,LetterResize) (RatioResize,LetterResize) (RatioResize,LetterResize)
 #        /      \                    /      \                    /        \
-#  RandomFlip RandomFlip      RandomFlip RandomFlip        RandomFlip RandomFlip # noqa
+#  RandomFlip RandomFlip      RandomFlip RandomFlip        RandomFlip RandomFlip
 #      |          |                |         |                  |         |
 #  LoadAnn    LoadAnn           LoadAnn    LoadAnn           LoadAnn    LoadAnn
 #      |          |                |         |                  |         |
-#  PackDetIn  PackDetIn         PackDetIn  PackDetIn        PackDetIn  PackDetIn # noqa
+#  PackDetIn  PackDetIn         PackDetIn  PackDetIn        PackDetIn  PackDetIn
 
 _multiscale_resize_transforms = [
     dict(

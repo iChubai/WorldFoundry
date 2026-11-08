@@ -8,7 +8,8 @@ Adds camera / IRG fusion.  No VACE trunk, causal cache, or linear attn.
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -641,7 +642,7 @@ class FantasyWorldFusionModel(nn.Module):
                 )
             prediction_features.extend(
                 torch.cat((frame_value, global_value), dim=-1)
-                for frame_value, global_value in zip(frame_features, global_features)
+                for frame_value, global_value in zip(frame_features, global_features, strict=False)
             )
 
         output = dit.unpatchify(dit.head(x, time_embedding), grid_size)

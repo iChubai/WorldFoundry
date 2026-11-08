@@ -5,7 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
-from .rotation import quat_to_mat, mat_to_quat
+
+from .rotation import mat_to_quat, quat_to_mat
 
 
 def extri_intri_to_pose_encoding(

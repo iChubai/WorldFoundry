@@ -5,15 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+from typing import List, Tuple
+
 import torch
 import torch.nn as nn
-from typing import Tuple, List
 from torch.utils.checkpoint import checkpoint
 
 from ..layers import PatchEmbed
 from ..layers.block import Block
-from ..layers.rope import RotaryPositionEmbedding2D, PositionGetter
-from ..layers.vision_transformer import vit_small, vit_base, vit_large, vit_giant2
+from ..layers.rope import PositionGetter, RotaryPositionEmbedding2D
+from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +185,8 @@ class STreamAggregator(nn.Module):
         return mask
 
     def forward(
-        self, images: torch.Tensor, mode: str = "causal", kv_cache_list: List[List[torch.Tensor]] = None
-    ) -> Tuple[List[torch.Tensor], int]:
+        self, images: torch.Tensor, mode: str = "causal", kv_cache_list: list[list[torch.Tensor]] = None
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images (torch.Tensor): Input images with shape [B, S, 3, H, W], in range [0, 1].

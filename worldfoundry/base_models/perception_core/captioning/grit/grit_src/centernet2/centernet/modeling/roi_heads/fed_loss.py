@@ -1,11 +1,12 @@
-import torch
 import json
+
 import numpy as np
+import torch
 from torch.nn import functional as F
 
 
 def load_class_freq(path="datasets/lvis/lvis_v1_train_cat_info.json", freq_weight=0.5):
-    cat_info = json.load(open(path, "r"))
+    cat_info = json.load(open(path))
     cat_info = torch.tensor([c["image_count"] for c in sorted(cat_info, key=lambda x: x["id"])])
     freq_weight = cat_info.float() ** freq_weight
     return freq_weight

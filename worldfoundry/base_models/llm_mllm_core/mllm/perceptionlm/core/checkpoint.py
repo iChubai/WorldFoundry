@@ -25,7 +25,7 @@ def get_consolidated_ckpt_path(ckpt_dir: Path, mp_rank: int = 0, mp_size: int = 
 def load_consolidated_checkpoint(
     model: nn.Module,
     consolidated_path: str,
-    vision_model_path: Optional[str] = None,
+    vision_model_path: str | None = None,
 ) -> None:
     ckpt_path = Path(consolidated_path)
     cp_file = get_consolidated_ckpt_path(ckpt_path, mp_rank=0, mp_size=1)

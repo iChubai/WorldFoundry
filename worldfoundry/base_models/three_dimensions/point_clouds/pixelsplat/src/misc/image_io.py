@@ -47,7 +47,7 @@ def prep_image(image: FloatImage) -> UInt8[np.ndarray, "height width channel"]:
 
 def save_image(
     image: FloatImage,
-    path: Union[Path, str],
+    path: Path | str,
 ) -> None:
     """Save an image. Assumed to be in range 0-1."""
 
@@ -60,7 +60,7 @@ def save_image(
 
 
 def load_image(
-    path: Union[Path, str],
+    path: Path | str,
 ) -> Float[Tensor, "3 height width"]:
     """Load image.
 

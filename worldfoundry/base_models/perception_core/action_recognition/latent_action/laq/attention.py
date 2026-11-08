@@ -43,7 +43,7 @@ class PEG(nn.Module):
         self.causal = causal
         self.dsconv = nn.Conv3d(dim, dim, 3, groups=dim)
 
-    def forward(self, x: Tensor, shape: Tuple[int, int, int, int] | None = None) -> Tensor:
+    def forward(self, x: Tensor, shape: tuple[int, int, int, int] | None = None) -> Tensor:
         needs_shape = x.ndim == 3
         if needs_shape and shape is None:
             raise ValueError("Flattened PEG input requires its video shape")
@@ -175,7 +175,7 @@ class Transformer(nn.Module):
     def forward(
         self,
         x: Tensor,
-        video_shape: Tuple[int, int, int, int] | None = None,
+        video_shape: tuple[int, int, int, int] | None = None,
         attn_bias: Tensor | None = None,
         **_: object,
     ) -> Tensor:

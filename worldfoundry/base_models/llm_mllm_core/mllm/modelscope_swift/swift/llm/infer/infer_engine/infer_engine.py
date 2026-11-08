@@ -3,9 +3,10 @@
 import asyncio
 import concurrent.futures
 import os
+from collections.abc import Iterator
 from queue import Queue
 from threading import Thread
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from tqdm import tqdm
 
@@ -18,6 +19,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.temp
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.utils import get_ckpt_dir
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..protocol import (
     ChatCompletionMessageToolCall,
     ChatCompletionResponse,
@@ -55,8 +57,8 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
 
         self._adapters_pool = {}
 
-    def _get_stop_words(self, stop_words: List[Union[str, List[int], None]]) -> List[str]:
-        stop: List[str] = []
+    def _get_stop_words(self, stop_words: list[str | list[int] | None]) -> list[str]:
+        stop: list[str] = []
         for stop_word in stop_words:
             if stop_word is None:
                 continue
@@ -98,8 +100,8 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
         return await asyncio.gather(*tasks)
 
     def _batch_infer_stream(
-        self, tasks, stream: bool = True, use_tqdm: bool = True, metrics: Optional[List[Metric]] = None
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+        self, tasks, stream: bool = True, use_tqdm: bool = True, metrics: list[Metric] | None = None
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         prog_bar = tqdm(total=len(tasks), dynamic_ncols=True, disable=not use_tqdm)
         if stream:
             return [self.async_iter_to_iter(task, prog_bar, metrics) for task in tasks]
@@ -136,7 +138,7 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
         )
 
     @staticmethod
-    def _update_metrics(result, metrics: Optional[List[Metric]] = None):
+    def _update_metrics(result, metrics: list[Metric] | None = None):
         if metrics is None:
             return result
         result_origin = result
@@ -151,13 +153,13 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
 
     def infer(
         self,
-        infer_requests: List[InferRequest],
-        request_config: Optional[RequestConfig] = None,
-        metrics: Optional[List[Metric]] = None,
+        infer_requests: list[InferRequest],
+        request_config: RequestConfig | None = None,
+        metrics: list[Metric] | None = None,
         *,
-        use_tqdm: Optional[bool] = None,
+        use_tqdm: bool | None = None,
         **kwargs,
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         if request_config is None:
             request_config = RequestConfig()
         tasks = [self.infer_async(infer_request, request_config, **kwargs) for infer_request in infer_requests]
@@ -166,7 +168,7 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
         return self._batch_infer_stream(tasks, request_config.stream, use_tqdm, metrics)
 
     @staticmethod
-    def _get_toolcall(response: str, template: Template) -> Optional[List[ChatCompletionMessageToolCall]]:
+    def _get_toolcall(response: str, template: Template) -> list[ChatCompletionMessageToolCall] | None:
         try:
             functions = template.agent_template.get_toolcall(response)
         except Exception:
@@ -175,7 +177,7 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
             return [ChatCompletionMessageToolCall(function=function) for function in functions]
 
     @staticmethod
-    def _get_num_tokens(inputs: Dict[str, Any]) -> int:
+    def _get_num_tokens(inputs: dict[str, Any]) -> int:
         if "input_ids" in inputs:  # 1d or 2d
             input_ids = inputs["input_ids"]
             if isinstance(input_ids, list):
@@ -186,7 +188,7 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
             return inputs["inputs_embeds"].shape[-2]
         raise ValueError(f"Unable to retrieve input_ids and inputs_embeds. inputs: {inputs}")
 
-    def set_default_max_tokens(self, request_config: RequestConfig, inputs: Dict[str, Any]) -> None:
+    def set_default_max_tokens(self, request_config: RequestConfig, inputs: dict[str, Any]) -> None:
         max_model_len = self.max_model_len
         if isinstance(inputs, dict):
             inputs = [inputs]
@@ -211,14 +213,14 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
             request_config.max_tokens = max_max_tokens
 
     def _get_logprobs(
-        self, logprobs_list: Optional[List[Dict[int, float]]], token_ids: List[int], top_logprobs: Optional[int] = None
-    ) -> Optional[Dict[str, Any]]:
+        self, logprobs_list: list[dict[int, float]] | None, token_ids: list[int], top_logprobs: int | None = None
+    ) -> dict[str, Any] | None:
         if logprobs_list is None or len(token_ids) == 0:
             return None
         if len(token_ids) > 0:
             logprobs_list = logprobs_list[-len(token_ids) :]
         res = []
-        for logprobs, token_id in zip(logprobs_list, token_ids):
+        for logprobs, token_id in zip(logprobs_list, token_ids, strict=False):
             token = self.tokenizer.decode(token_id)
             _res = {"token": token, "logprob": logprobs[token_id], "bytes": list(token.encode("utf8"))}
             if top_logprobs is not None:
@@ -268,7 +270,7 @@ class InferEngine(BaseInferEngine, ProcessorMixin):
         return InferEngine.thread_run(asyncio.run, args=(coro,))
 
     @staticmethod
-    def _batch_encode(infer_requests: List[InferRequest], template: Template, strict: bool):
+    def _batch_encode(infer_requests: list[InferRequest], template: Template, strict: bool):
         max_workers = max(min(32, os.cpu_count(), len(infer_requests)), 1)
         error_list = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:

@@ -33,12 +33,10 @@ import logging
 from typing import Optional
 
 import numpy as np
-
 from dvlt.common.constants import DataField, PredictionField
 from dvlt.common.geometry import depth_to_world_coords_points
 from dvlt.common.pose import to4x4
 from dvlt.util.skyseg import apply_sky_segmentation
-
 
 logger = logging.getLogger(__name__)
 
@@ -50,16 +48,16 @@ SPATIAL_PERCENTILE_DEFAULT: float = 100.0
 
 __all__ = [
     "SPATIAL_PERCENTILE_DEFAULT",
-    "zero_depths_on_pad",
-    "filter_spatial_outliers",
     "build_pointcloud",
     "build_pointcloud_with_frame_ids",
+    "filter_spatial_outliers",
+    "zero_depths_on_pad",
 ]
 
 
 def zero_depths_on_pad(depths_np: np.ndarray, batch: dict) -> np.ndarray:
     """Set depth to 0 on synthetic pad pixels so depth overlays stay off black bars."""
-    pad_ok = batch.get("gradio_valid_pixels", None)
+    pad_ok = batch.get("gradio_valid_pixels")
     if pad_ok is None:
         return depths_np
     m = pad_ok[0].detach().cpu().numpy()
@@ -73,7 +71,7 @@ def filter_spatial_outliers(
     colors_np: np.ndarray,
     spatial_percentile: float,
     *,
-    extras: Optional[list[np.ndarray]] = None,
+    extras: list[np.ndarray] | None = None,
 ) -> tuple[np.ndarray, np.ndarray, list[np.ndarray]]:
     """Drop the farthest points from the cloud median (by L2 distance).
 
@@ -104,7 +102,7 @@ def _build_pointcloud_core(
     spatial_percentile: float,
     *,
     track_frame_ids: bool,
-) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
     """Internal: full pipeline with optional per-point source-frame tracking."""
     depths = predictions[PredictionField.DEPTHS][0]  # (S, H, W)
     cameras = predictions[PredictionField.CAMERAS][0]
@@ -127,11 +125,11 @@ def _build_pointcloud_core(
     colors_np = colors.reshape(-1, 3)
     mask_np = valid_mask.detach().cpu().numpy().reshape(-1)
 
-    frame_ids_np: Optional[np.ndarray] = None
+    frame_ids_np: np.ndarray | None = None
     if track_frame_ids:
         frame_ids_np = np.repeat(np.arange(S, dtype=np.int32), H * W)
 
-    pad_ok = batch.get("gradio_valid_pixels", None)
+    pad_ok = batch.get("gradio_valid_pixels")
     if pad_ok is not None:
         mask_np = mask_np & pad_ok[0].detach().cpu().numpy().reshape(-1)
 
@@ -141,7 +139,7 @@ def _build_pointcloud_core(
             images.detach().float().cpu(),
         )
         mask_np = mask_np & (sky_conf.reshape(-1) > 0.5)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         logger.warning(f"Sky segmentation failed ({e}), skipping.")
 
     pts_np = pts_np[mask_np]
@@ -231,5 +229,5 @@ def build_pointcloud_with_frame_ids(
         spatial_percentile,
         track_frame_ids=True,
     )
-    assert frame_ids is not None  # noqa: S101 — paired with track_frame_ids
+    assert frame_ids is not None  # paired with track_frame_ids
     return pts, colors, frame_ids

@@ -39,8 +39,8 @@ class IndividualTokenRefinerBlock(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -118,8 +118,8 @@ class IndividualTokenRefiner(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -144,7 +144,7 @@ class IndividualTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         c: torch.LongTensor,
-        mask: Optional[torch.Tensor] = None,
+        mask: torch.Tensor | None = None,
     ):
         """Apply the stack; ``mask`` is ``B L`` (1=keep) expanded to pairwise attn."""
         self_attn_mask = None
@@ -184,8 +184,8 @@ class SingleTokenRefiner(nn.Module):
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
         attn_mode: str = "torch",
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -217,7 +217,7 @@ class SingleTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.LongTensor,
-        mask: Optional[torch.LongTensor] = None,
+        mask: torch.LongTensor | None = None,
     ):
         """Project ``B L C_text`` and refine; ``t`` is the diffusion timestep."""
         timestep_aware_representations = self.t_embedder(t)

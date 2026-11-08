@@ -1,21 +1,43 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 if tf_version == 1:
-    from keras.models import Model
-    from keras.layers import Conv2D, ZeroPadding2D, Input, concatenate
-    from keras.layers import Dense, Activation, Lambda, Flatten, BatchNormalization
-    from keras.layers import MaxPooling2D, AveragePooling2D
     from keras import backend as K
+    from keras.layers import (
+        Activation,
+        AveragePooling2D,
+        BatchNormalization,
+        Conv2D,
+        Dense,
+        Flatten,
+        Input,
+        Lambda,
+        MaxPooling2D,
+        ZeroPadding2D,
+        concatenate,
+    )
+    from keras.models import Model
 else:
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Conv2D, ZeroPadding2D, Input, concatenate
-    from tensorflow.keras.layers import Dense, Activation, Lambda, Flatten, BatchNormalization
-    from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
     from tensorflow.keras import backend as K
+    from tensorflow.keras.layers import (
+        Activation,
+        AveragePooling2D,
+        BatchNormalization,
+        Conv2D,
+        Dense,
+        Flatten,
+        Input,
+        Lambda,
+        MaxPooling2D,
+        ZeroPadding2D,
+        concatenate,
+    )
+    from tensorflow.keras.models import Model
 
 # pylint: disable=unnecessary-lambda
 

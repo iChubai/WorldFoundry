@@ -52,7 +52,7 @@ from ..nn.ops import (
     ResidualBlock,
 )
 
-__all__ = ["DCAE", "dc_vae_f32", "dc_ae_f32c32", "dc_ae_f64c128", "dc_ae_f128c512"]
+__all__ = ["DCAE", "dc_ae_f32c32", "dc_ae_f64c128", "dc_ae_f128c512", "dc_vae_f32"]
 
 
 @dataclass
@@ -68,10 +68,10 @@ class EncoderConfig:
     act: str = "silu"
     downsample_block_type: str = "ConvPixelUnshuffle"
     downsample_match_channel: bool = True
-    downsample_shortcut: Optional[str] = "averaging"
-    out_norm: Optional[str] = None
-    out_act: Optional[str] = None
-    out_shortcut: Optional[str] = "averaging"
+    downsample_shortcut: str | None = "averaging"
+    out_norm: str | None = None
+    out_act: str | None = None
+    out_shortcut: str | None = "averaging"
     double_latent: bool = False
     temporal_downsample: tuple[bool, ...] = ()
 
@@ -82,7 +82,7 @@ class DecoderConfig:
 
     in_channels: int = MISSING
     latent_channels: int = MISSING
-    in_shortcut: Optional[str] = "duplicating"
+    in_shortcut: str | None = "duplicating"
     width_list: tuple[int, ...] = (128, 256, 512, 512, 1024, 1024)
     depth_list: tuple[int, ...] = (2, 2, 2, 2, 2, 2)
     block_type: Any = "ResBlock"
@@ -107,7 +107,7 @@ class DCVAEConfig:
     temporal_tile_size: int = 32
     tile_overlap_factor: float = 0.25
     time_compression_ratio: int = 1
-    spatial_compression_ratio: Optional[int] = None
+    spatial_compression_ratio: int | None = None
 
 
 @dataclass
@@ -124,18 +124,18 @@ class DCAEConfig:
     )
     use_quant_conv: bool = False
 
-    pretrained_path: Optional[str] = None
+    pretrained_path: str | None = None
     pretrained_source: str = "dc-ae"
 
-    scaling_factor: Optional[float] = None
+    scaling_factor: float | None = None
     # cache_dir
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
     # video
-    video: Optional[DCVAEConfig] = None
+    video: DCVAEConfig | None = None
 
 
 def build_block(
-    block_type: str, in_channels: int, out_channels: int, norm: Optional[str], act: Optional[str], is_video: bool
+    block_type: str, in_channels: int, out_channels: int, norm: str | None, act: str | None, is_video: bool
 ) -> nn.Module:
     """Build block.
 
@@ -215,7 +215,7 @@ def build_downsample_block(
     block_type: str,
     in_channels: int,
     out_channels: int,
-    shortcut: Optional[str],
+    shortcut: str | None,
     is_video: bool,
     temporal_downsample: bool = False,
 ) -> nn.Module:
@@ -265,7 +265,7 @@ def build_upsample_block(
     block_type: str,
     in_channels: int,
     out_channels: int,
-    shortcut: Optional[str],
+    shortcut: str | None,
     is_video: bool,
     temporal_upsample: bool = False,
 ) -> nn.Module:
@@ -348,9 +348,9 @@ def build_encoder_project_in_block(
 def build_encoder_project_out_block(
     in_channels: int,
     out_channels: int,
-    norm: Optional[str],
-    act: Optional[str],
-    shortcut: Optional[str],
+    norm: str | None,
+    act: str | None,
+    shortcut: str | None,
     is_video: bool,
 ):
     """Build encoder project out block.
@@ -391,7 +391,7 @@ def build_encoder_project_out_block(
     return block
 
 
-def build_decoder_project_in_block(in_channels: int, out_channels: int, shortcut: Optional[str], is_video: bool):
+def build_decoder_project_in_block(in_channels: int, out_channels: int, shortcut: str | None, is_video: bool):
     """Build decoder project in block.
 
     Args:
@@ -427,8 +427,8 @@ def build_decoder_project_out_block(
     out_channels: int,
     factor: int,
     upsample_block_type: str,
-    norm: Optional[str],
-    act: Optional[str],
+    norm: str | None,
+    act: str | None,
     is_video: bool,
 ):
     """Build decoder project out block.
@@ -501,7 +501,7 @@ class Encoder(nn.Module):
         )
 
         self.stages: list[OpSequential] = []
-        for stage_id, (width, depth) in enumerate(zip(cfg.width_list, cfg.depth_list)):
+        for stage_id, (width, depth) in enumerate(zip(cfg.width_list, cfg.depth_list, strict=False)):
             block_type = cfg.block_type[stage_id] if isinstance(cfg.block_type, list) else cfg.block_type
             stage = build_stage_main(
                 width=width,
@@ -583,7 +583,7 @@ class Decoder(nn.Module):
         )
 
         self.stages: list[OpSequential] = []
-        for stage_id, (width, depth) in reversed(list(enumerate(zip(cfg.width_list, cfg.depth_list)))):
+        for stage_id, (width, depth) in reversed(list(enumerate(zip(cfg.width_list, cfg.depth_list, strict=False)))):
             stage = []
             if stage_id < num_stages - 1 and depth > 0:
                 upsample_block = build_upsample_block(
@@ -1109,7 +1109,7 @@ def dc_ae_f32c32(name: str, pretrained_path: str) -> DCAEConfig:
     return cfg
 
 
-def dc_ae_f64c128(name: str, pretrained_path: Optional[str] = None) -> DCAEConfig:
+def dc_ae_f64c128(name: str, pretrained_path: str | None = None) -> DCAEConfig:
     """Dc ae f64c128.
 
     Args:
@@ -1136,7 +1136,7 @@ def dc_ae_f64c128(name: str, pretrained_path: Optional[str] = None) -> DCAEConfi
     return cfg
 
 
-def dc_ae_f128c512(name: str, pretrained_path: Optional[str] = None) -> DCAEConfig:
+def dc_ae_f128c512(name: str, pretrained_path: str | None = None) -> DCAEConfig:
     """Dc ae f128c512.
 
     Args:

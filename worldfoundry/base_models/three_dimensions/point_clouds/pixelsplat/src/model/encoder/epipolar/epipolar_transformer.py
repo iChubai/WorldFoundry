@@ -39,9 +39,9 @@ class EpipolarTransformer(nn.Module):
     epipolar_sampler: EpipolarSampler
     depth_encoding: nn.Sequential
     transformer: Transformer
-    downscaler: Optional[nn.Conv2d]
-    upscaler: Optional[nn.ConvTranspose2d]
-    upscale_refinement: Optional[nn.Sequential]
+    downscaler: nn.Conv2d | None
+    upscaler: nn.ConvTranspose2d | None
+    upscale_refinement: nn.Sequential | None
 
     def __init__(
         self,

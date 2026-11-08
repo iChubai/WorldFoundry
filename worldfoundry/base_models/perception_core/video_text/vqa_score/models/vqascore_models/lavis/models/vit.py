@@ -9,17 +9,16 @@ https://github.com/rwightman/pytorch-image-models/tree/master/timm
 """
 
 import math
+from functools import partial
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-
-from timm.models.vision_transformer import _cfg, PatchEmbed
-from timm.models import register_model
-from timm.layers import trunc_normal_, DropPath
-from timm.models import named_apply, adapt_input_conv
-
 from fairscale.nn.checkpoint.checkpoint_activations import checkpoint_wrapper
+from timm.layers import DropPath, trunc_normal_
+from timm.models import adapt_input_conv, named_apply, register_model
+from timm.models.vision_transformer import PatchEmbed, _cfg
+
 from ..models.base_model import BaseEncoder
 
 

@@ -13,18 +13,16 @@ from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracke
     CorrBlock,
     UpdateFormer,
 )
-
-from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.model_utils import (
-    meshgrid2d,
-    bilinear_sample2d,
-    smart_cat,
-)
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.embeddings import (
-    get_2d_embedding,
     get_1d_sincos_pos_embed_from_grid,
+    get_2d_embedding,
     get_2d_sincos_pos_embed,
 )
-
+from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.model_utils import (
+    bilinear_sample2d,
+    meshgrid2d,
+    smart_cat,
+)
 
 torch.manual_seed(0)
 

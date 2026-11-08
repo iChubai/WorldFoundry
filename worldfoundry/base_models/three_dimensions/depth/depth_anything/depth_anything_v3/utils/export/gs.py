@@ -16,6 +16,7 @@
 
 import os
 from typing import Literal, Optional
+
 import moviepy.editor as mpy
 import torch
 
@@ -42,7 +43,7 @@ VIDEO_QUALITY_MAP = {
 def export_to_gs_ply(
     prediction: Prediction,
     export_dir: str,
-    gs_views_interval: Optional[int] = 1,  # export GS every N views, useful for extremely dense inputs
+    gs_views_interval: int | None = 1,  # export GS every N views, useful for extremely dense inputs
 ):
     """Export to gs ply.
 
@@ -75,10 +76,10 @@ def export_to_gs_ply(
 def export_to_gs_video(
     prediction: Prediction,
     export_dir: str,
-    extrinsics: Optional[torch.Tensor] = None,  # render views' world2cam, "b v 4 4"
-    intrinsics: Optional[torch.Tensor] = None,  # render views' unnormed intrinsics, "b v 3 3"
-    out_image_hw: Optional[tuple[int, int]] = None,  # render views' resolution, (h, w)
-    chunk_size: Optional[int] = 4,
+    extrinsics: torch.Tensor | None = None,  # render views' world2cam, "b v 4 4"
+    intrinsics: torch.Tensor | None = None,  # render views' unnormed intrinsics, "b v 3 3"
+    out_image_hw: tuple[int, int] | None = None,  # render views' resolution, (h, w)
+    chunk_size: int | None = 4,
     trj_mode: Literal[
         "original",
         "smooth",
@@ -90,9 +91,9 @@ def export_to_gs_video(
         "wobble_inter",
     ] = "extend",
     color_mode: Literal["RGB+D", "RGB+ED"] = "RGB+ED",
-    vis_depth: Optional[Literal["hcat", "vcat"]] = "hcat",
-    enable_tqdm: Optional[bool] = True,
-    output_name: Optional[str] = None,
+    vis_depth: Literal["hcat", "vcat"] | None = "hcat",
+    enable_tqdm: bool | None = True,
+    output_name: str | None = None,
     video_quality: Literal["low", "medium", "high"] = "high",
 ) -> None:
     """Export to gs video.
@@ -167,7 +168,7 @@ def export_to_gs_video(
         if vis_depth is not None:
             depth_i = vis_depth_map_tensor(depth[0])
             cat_fn = hcat if vis_depth == "hcat" else vcat
-            video_i = torch.stack([cat_fn(c, d) for c, d in zip(video_i, depth_i)])
+            video_i = torch.stack([cat_fn(c, d) for c, d in zip(video_i, depth_i, strict=False)])
         frames = list(
             (video_i.clamp(0, 1) * 255).byte().permute(0, 2, 3, 1).cpu().numpy()
         )  # T x H x W x C, uint8, numpy()

@@ -14,7 +14,6 @@ from mmengine.dataset import Compose
 from mmengine.registry import init_default_scope
 from mmengine.utils import ProgressBar
 from mmengine.visualization import Visualizer
-
 from mmyolo.registry import DATASETS, VISUALIZERS
 
 
@@ -73,7 +72,7 @@ def parse_args():
     return args
 
 
-def _get_adaptive_scale(img_shape: Tuple[int, int], min_scale: float = 0.3, max_scale: float = 3.0) -> float:
+def _get_adaptive_scale(img_shape: tuple[int, int], min_scale: float = 0.3, max_scale: float = 3.0) -> float:
     """Get adaptive scale according to image shape.
 
     The target scale depends on the the short edge length of the image. If the
@@ -205,7 +204,7 @@ def main():
     display_number = min(args.show_number, len(dataset))
 
     progress_bar = ProgressBar(display_number)
-    for i, item in zip(range(display_number), dataset):
+    for i, item in zip(range(display_number), dataset, strict=False):
         image_i = []
         result_i = [result["dataset_sample"] for result in intermediate_imgs]
         for k, datasample in enumerate(result_i):

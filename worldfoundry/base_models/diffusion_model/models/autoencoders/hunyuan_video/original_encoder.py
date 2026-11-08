@@ -13,11 +13,12 @@ Sibling of :mod:`.original_decoder`.  State-dict conversion lives
 on :class:`HunyuanVideoVAEEncoderStateDictConverter`.
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
-import numpy as np
+
 from .original_decoder import CausalConv3d, ResnetBlockCausal3D, UNetMidBlockCausal3D
 
 
@@ -426,7 +427,6 @@ class HunyuanVideoVAEEncoderStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_diffusers(self, state_dict):
         """From diffusers.

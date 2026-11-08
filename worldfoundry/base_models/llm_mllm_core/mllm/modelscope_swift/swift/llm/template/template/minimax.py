@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..base import Template
 from ..constant import LLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -21,9 +22,9 @@ class MinimaxTemplateMeta(TemplateMeta):
             "<beginning_of_sentence>ai name=assistant\n"
         ]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<end_of_sentence>\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<end_of_sentence>\n"])
     suffix: Prompt = field(default_factory=lambda: ["<end_of_sentence>"])
-    system_prefix: Optional[Prompt] = field(
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<beginning_of_sentence>system ai_setting=assistant\n{{SYSTEM}}<end_of_sentence>\n"]
     )
 
@@ -37,7 +38,7 @@ class MinimaxVLTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return self.image_placeholder * inputs.all_image_tokens[index]
 
@@ -51,7 +52,7 @@ class MinimaxVLTemplate(Template):
             return all_image_tokens
 
         if self.processor.process_image_mode == "anyres":
-            for pixel_value, image_size in zip(pixel_values, image_sizes):
+            for pixel_value, image_size in zip(pixel_values, image_sizes, strict=False):
                 height, width = image_size
                 num_image_tokens = self.processor.get_num_token(
                     height, width, self.processor.grid_pinpoints, self.processor.patch_size
@@ -92,7 +93,7 @@ class MinimaxVLTemplate(Template):
                 )
         return all_image_tokens
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         output_kwargs = self.processor._merge_kwargs(
             self.processor.MiniMaxVL01ProcessorKwargs,
             tokenizer_init_kwargs=self.tokenizer.init_kwargs,
@@ -109,7 +110,7 @@ class MinimaxVLTemplate(Template):
             encoded[key] = image_inputs[key]
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         pixel_values = self.gather_list(batch, "pixel_values")
         image_sizes = self.gather_list(batch, "image_sizes")
         res = super()._data_collator(batch, padding_to=padding_to)

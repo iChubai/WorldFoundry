@@ -1,19 +1,15 @@
 """Module for base_models -> three_dimensions -> point_clouds -> flash_world -> reconstruction_model.py functionality."""
 
+import math
+
+import einops
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import math
-import numpy as np
-
-from .utils import zero_init, EMANorm, create_rays
-
-import einops
-
 from .render import gaussian_render
-
-from .utils import quaternion_to_matrix
+from .utils import EMANorm, create_rays, quaternion_to_matrix, zero_init
 
 
 def inverse_sigmoid(x):
@@ -38,15 +34,15 @@ def inverse_softplus(x, beta=1):
     if type(x) == torch.Tensor:
         return (torch.exp(beta * x) - 1).log() / beta
     else:
-        return math.log((math.exp(beta * x) - 1)) / beta
+        return math.log(math.exp(beta * x) - 1) / beta
 
 
 import copy
-
 import math
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 
 from .autoencoder_kl_wan import WanCausalConv3d, WanRMS_norm, unpatchify
 

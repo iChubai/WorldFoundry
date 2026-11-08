@@ -10,14 +10,16 @@ or linear-attention processors live here.
 """
 
 import math
+
 import numpy as np
 import torch
 import torch.amp as amp
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from einops import repeat, rearrange
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_conditioning_21 import ActionModule
+from einops import rearrange, repeat
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_attention_21 import flash_attention
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_conditioning_21 import ActionModule
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 DISABLE_COMPILE = False  # get os env
 __all__ = ["WanModel"]
@@ -826,7 +828,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         bs = x.shape[0]
         x = x.view(bs, *grid_sizes, *self.patch_size, c)
         x = torch.einsum("bfhwpqrc->bcfphqwr", x)
-        x = x.reshape(bs, c, *[i * j for i, j in zip(grid_sizes, self.patch_size)])
+        x = x.reshape(bs, c, *[i * j for i, j in zip(grid_sizes, self.patch_size, strict=False)])
         return x
 
     def init_weights(self):

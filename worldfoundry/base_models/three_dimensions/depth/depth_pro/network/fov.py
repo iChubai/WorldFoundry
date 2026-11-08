@@ -14,7 +14,7 @@ class FOVNetwork(nn.Module):
     def __init__(
         self,
         num_features: int,
-        fov_encoder: Optional[nn.Module] = None,
+        fov_encoder: nn.Module | None = None,
     ):
         """Initialize the Field of View estimation block.
 

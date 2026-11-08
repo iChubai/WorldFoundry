@@ -1,9 +1,10 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> run_video.py functionality."""
 
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Annotated, Callable
+from typing import Annotated
 
 import imageio.v3 as iio
 import numpy as np
@@ -11,9 +12,6 @@ import torch
 import torch.nn.functional as F
 import tyro
 import yaml
-from loguru import logger as guru
-from tqdm import tqdm
-
 from flow3d.data import DavisDataConfig, get_train_val_datasets, iPhoneDataConfig
 from flow3d.renderer import Renderer
 from flow3d.trajectories import (
@@ -25,6 +23,8 @@ from flow3d.trajectories import (
     get_wander_w2cs,
 )
 from flow3d.vis.utils import make_video_divisble
+from loguru import logger as guru
+from tqdm import tqdm
 
 torch.set_float32_matmul_precision("high")
 
@@ -256,7 +256,7 @@ def main(cfg: VideoConfig):
         )
         avg_c2w = torch.linalg.inv(avg_w2c).cpu().numpy()
         server.scene.add_camera_frustum(
-            f"/ref_camera",
+            "/ref_camera",
             np.pi / 4,
             1.0,
             0.02,
@@ -274,7 +274,7 @@ def main(cfg: VideoConfig):
     # assert len(w2cs) == len(ts)
 
     video = []
-    for w2c, t in zip(tqdm(w2cs), ts):
+    for w2c, t in zip(tqdm(w2cs), ts, strict=False):
         with torch.inference_mode():
             img = renderer.model.render(int(t.item()), w2c[None], K[None], img_wh)["img"][0]
         img = (img.cpu().numpy() * 255.0).astype(np.uint8)

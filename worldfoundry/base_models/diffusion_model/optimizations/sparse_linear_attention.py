@@ -838,9 +838,9 @@ class FastVideoSLAAdapter(nn.Module):
         self._attempts = 0
         self._calls = 0
         self._errors = 0
-        self._layer_attempts = {index: 0 for index in self._layer_specs}
-        self._layer_calls = {index: 0 for index in self._layer_specs}
-        self._layer_errors = {index: 0 for index in self._layer_specs}
+        self._layer_attempts = dict.fromkeys(self._layer_specs, 0)
+        self._layer_calls = dict.fromkeys(self._layer_specs, 0)
+        self._layer_errors = dict.fromkeys(self._layer_specs, 0)
         super().train(False)
 
     def _apply(self, fn: Callable[[torch.Tensor], torch.Tensor]) -> FastVideoSLAAdapter:
@@ -1087,6 +1087,7 @@ def fastvideo_sla_checkpoint_key_patterns() -> dict[str, str]:
 
 
 __all__ = [
+    "PINNED_FASTVIDEO_COMMIT",
     "FastVideoSLAAdapter",
     "FastVideoSLAConfig",
     "FastVideoSLAContractError",
@@ -1097,7 +1098,6 @@ __all__ = [
     "FastVideoSLAResult",
     "FastVideoSLASourceIdentity",
     "FastVideoSLAUnavailableError",
-    "PINNED_FASTVIDEO_COMMIT",
     "fastvideo_sla_checkpoint_key_patterns",
     "fastvideo_sla_runtime_expectation",
     "resolve_fastvideo_sla_projection_weights",

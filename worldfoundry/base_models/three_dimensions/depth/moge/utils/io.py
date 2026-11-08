@@ -3,17 +3,17 @@
 import os
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-from typing import IO
-import zipfile
-import json
 import io
-from typing import *
-from pathlib import Path
+import json
 import re
-from PIL import Image, PngImagePlugin
+import zipfile
+from pathlib import Path
+from typing import *
+from typing import IO
 
-import numpy as np
 import cv2
+import numpy as np
+from PIL import Image, PngImagePlugin
 
 from .tools import timeit
 

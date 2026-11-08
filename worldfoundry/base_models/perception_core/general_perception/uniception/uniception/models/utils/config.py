@@ -7,7 +7,7 @@ import warnings
 
 import torch
 
-__all__ = ["use_fused_attn", "set_fused_attn"]
+__all__ = ["set_fused_attn", "use_fused_attn"]
 
 # Use torch.scaled_dot_product_attention where possible
 _HAS_FUSED_ATTN = hasattr(torch.nn.functional, "scaled_dot_product_attention")

@@ -12,12 +12,12 @@ Sibling of :mod:`.original_encoder`.  The runner adapter lives in
 :mod:`.component`; residual / upsample blocks here are graph math.
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
-import numpy as np
-from einops import repeat
+from einops import rearrange, repeat
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -322,7 +322,7 @@ class UNetMidBlockCausal3D(nn.Module):
             hidden_states: The hidden states.
         """
         hidden_states = self.resnets[0](hidden_states)
-        for attn, resnet in zip(self.attentions, self.resnets[1:]):
+        for attn, resnet in zip(self.attentions, self.resnets[1:], strict=False):
             B, C, T, H, W = hidden_states.shape
             hidden_states = rearrange(hidden_states, "b c f h w -> b (f h w) c")
             attn_mask = prepare_causal_attention_mask(T, H * W, hidden_states.dtype, hidden_states.device, batch_size=B)
@@ -714,7 +714,6 @@ class HunyuanVideoVAEDecoderStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_diffusers(self, state_dict):
         """From diffusers.

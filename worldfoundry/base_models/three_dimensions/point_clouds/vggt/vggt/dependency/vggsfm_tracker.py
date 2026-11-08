@@ -7,21 +7,21 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> vggsfm_tracker.py functionality."""
 
+from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-from torch import nn, einsum
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange, Reduce
-
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
+from torch import einsum, nn
 
-from .track_modules.track_refine import refine_track
-from .track_modules.blocks import BasicEncoder, ShallowEncoder
 from .track_modules.base_track_predictor import BaseTrackerPredictor
+from .track_modules.blocks import BasicEncoder, ShallowEncoder
+from .track_modules.track_refine import refine_track
 
 
 class TrackerPredictor(nn.Module):

@@ -14,11 +14,12 @@
 """Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> dpt_temporal.py functionality."""
 
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
+from easydict import EasyDict
+
 from .dpt import DPTHead
 from .motion_module.motion_module import TemporalModule
-from easydict import EasyDict
 
 
 class DPTHeadTemporal(DPTHead):

@@ -7,14 +7,16 @@ raw waveforms and outputs projected sequence embeddings.
 
 import logging
 import os
-from functools import lru_cache
-from typing import Iterable, List, Optional, Tuple, Union
+from collections.abc import Iterable
+from functools import cache, lru_cache
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from torch import Tensor, nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 SDPA_AVAILABLE = True
@@ -55,7 +57,7 @@ def get_T_after_cnn(L_in, dilation=1):
 # ---------------------------------------------------------------------------
 
 
-@lru_cache(maxsize=None)
+@cache
 def mel_filters(device, n_mels: int = N_MELS) -> torch.Tensor:
     """Load the mel filterbank matrix for projecting STFT into a Mel spectrogram.
 
@@ -68,10 +70,10 @@ def mel_filters(device, n_mels: int = N_MELS) -> torch.Tensor:
 
 
 def log_mel_spectrogram(
-    audio: Union[np.ndarray, torch.Tensor],
+    audio: np.ndarray | torch.Tensor,
     n_mels: int = N_MELS,
     padding: int = 0,
-    device: Optional[Union[str, torch.device]] = None,
+    device: str | torch.device | None = None,
 ) -> torch.Tensor:
     """Compute the log-Mel spectrogram of a waveform.
 
@@ -151,7 +153,7 @@ class Linear(nn.Linear):
 class Conv1d(nn.Conv1d):
     """Conv d implementation."""
 
-    def _conv_forward(self, x: Tensor, weight: Tensor, bias: Optional[Tensor]) -> Tensor:
+    def _conv_forward(self, x: Tensor, weight: Tensor, bias: Tensor | None) -> Tensor:
         """Helper function to conv forward.
 
         Args:
@@ -205,9 +207,9 @@ class MultiHeadAttention(nn.Module):
     def forward(
         self,
         x: Tensor,
-        xa: Optional[Tensor] = None,
-        mask: Optional[Tensor] = None,
-        kv_cache: Optional[dict] = None,
+        xa: Tensor | None = None,
+        mask: Tensor | None = None,
+        kv_cache: dict | None = None,
     ):
         """Forward.
 
@@ -232,8 +234,8 @@ class MultiHeadAttention(nn.Module):
         q: Tensor,
         k: Tensor,
         v: Tensor,
-        mask: Optional[Tensor] = None,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        mask: Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Qkv attention.
 
         Args:
@@ -297,9 +299,9 @@ class ResidualAttentionBlock(nn.Module):
     def forward(
         self,
         x: Tensor,
-        xa: Optional[Tensor] = None,
-        mask: Optional[Tensor] = None,
-        kv_cache: Optional[dict] = None,
+        xa: Tensor | None = None,
+        mask: Tensor | None = None,
+        kv_cache: dict | None = None,
     ):
         """Forward.
 

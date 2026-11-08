@@ -6,7 +6,8 @@
 # References:
 # https://github.com/isl-org/DPT
 # https://github.com/EPFL-VILAB/MultiMAE/blob/main/multimae/output_adapters.py
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from collections.abc import Iterable
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -342,14 +343,14 @@ class DPTOutputAdapter(nn.Module):
         self,
         num_channels: int = 1,
         stride_level: int = 1,
-        patch_size: Union[int, Tuple[int, int]] = 16,
+        patch_size: int | tuple[int, int] = 16,
         main_tasks: Iterable[str] = ("rgb",),
-        hooks: List[int] = [2, 5, 8, 11],
-        layer_dims: List[int] = [96, 192, 384, 768],
+        hooks: list[int] = [2, 5, 8, 11],
+        layer_dims: list[int] = [96, 192, 384, 768],
         feature_dim: int = 256,
         last_dim: int = 32,
         use_bn: bool = False,
-        dim_tokens_enc: Optional[int] = None,
+        dim_tokens_enc: int | None = None,
         head_type: str = "regression",
         output_width_ratio=1,
         nonlinearity="relu",
@@ -495,7 +496,7 @@ class DPTOutputAdapter(nn.Module):
         x = torch.cat(x, dim=-1)
         return x
 
-    def forward(self, encoder_tokens: List[torch.Tensor], image_size):
+    def forward(self, encoder_tokens: list[torch.Tensor], image_size):
         # input_info: Dict):
         assert self.dim_tokens_enc is not None, "Need to call init(dim_tokens_enc) function first"
         H, W = image_size

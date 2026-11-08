@@ -8,8 +8,8 @@ Projection and reuse follow the denoiser's placement and autocast policy.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import torch
 from einops import rearrange

@@ -6,18 +6,19 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import os
-import time
-import hashlib
-import pickle
 import copy
+import hashlib
+import os
+import pickle
+import random
+import time
 import uuid
 from urllib.parse import urlparse
+
 import numpy as np
 import torch
 from src import dnnlib
 from src.dataset_support.dataset import video_to_image_dataset_kwargs
-import random
 
 # ----------------------------------------------------------------------------
 

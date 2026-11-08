@@ -10,20 +10,21 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+import os
+from urllib.parse import urlparse
+
+import torch
+import torch.nn.functional as F
+from timm.models.hub import download_cached_file
+from torch import nn
+from transformers import BertTokenizer
+
 from worldfoundry.base_models.perception_core.captioning.tag2text.vit import (
     VisionTransformer,
     interpolate_pos_embed,
 )
-from .med import BertConfig, BertModel, BertLMHeadModel
-from transformers import BertTokenizer
 
-import torch
-from torch import nn
-import torch.nn.functional as F
-
-import os
-from urllib.parse import urlparse
-from timm.models.hub import download_cached_file
+from .med import BertConfig, BertLMHeadModel, BertModel
 
 
 class BLIP_Base(nn.Module):

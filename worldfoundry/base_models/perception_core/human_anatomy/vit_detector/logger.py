@@ -6,14 +6,15 @@
 # Modified by Zhenda Xie
 # --------------------------------------------------------
 
+import functools
+import logging
 import os
 import sys
-import logging
-import functools
+
 from termcolor import colored
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def create_logger(output_dir, dist_rank=0, name=""):
     # create logger
     logger = logging.getLogger(name)

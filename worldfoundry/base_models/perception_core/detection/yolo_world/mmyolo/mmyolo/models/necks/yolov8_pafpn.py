@@ -5,6 +5,7 @@ import torch.nn as nn
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from .. import CSPLayerWithTwoConv
 from ..utils import make_divisible, make_round
 from .yolov5_pafpn import YOLOv5PAFPN
@@ -33,8 +34,8 @@ class YOLOv8PAFPN(YOLOv5PAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
-        out_channels: Union[List[int], int],
+        in_channels: list[int],
+        out_channels: list[int] | int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,

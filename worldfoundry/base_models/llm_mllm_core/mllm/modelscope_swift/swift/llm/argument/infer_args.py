@@ -11,6 +11,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     init_process_group,
     is_dist,
 )
+
 from .base_args import BaseArguments, to_abspath
 from .base_args.model_args import ModelArguments
 from .merge_args import MergeArguments
@@ -33,7 +34,7 @@ class LmdeployArguments:
 
     # lmdeploy
     tp: int = 1
-    session_len: Optional[int] = None
+    session_len: int | None = None
     cache_max_entry_count: float = 0.8
     quant_policy: int = 0  # e.g. 4, 8
     vision_batch_size: int = 1  # max_batch_size in VisionConfig
@@ -74,14 +75,14 @@ class VllmArguments:
     tensor_parallel_size: int = 1
     pipeline_parallel_size: int = 1
     max_num_seqs: int = 256
-    max_model_len: Optional[int] = None
+    max_model_len: int | None = None
     disable_custom_all_reduce: bool = True
     enforce_eager: bool = False
-    limit_mm_per_prompt: Optional[Union[dict, str]] = None  # '{"image": 5, "video": 2}'
+    limit_mm_per_prompt: dict | str | None = None  # '{"image": 5, "video": 2}'
     vllm_max_lora_rank: int = 16
     enable_prefix_caching: bool = False
     use_async_engine: bool = False
-    vllm_quantization: Optional[str] = None
+    vllm_quantization: str | None = None
     # rollout
     data_parallel_size: int = 1
     log_level: Literal["critical", "error", "warning", "info", "debug", "trace"] = "info"
@@ -129,14 +130,14 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
 
     infer_backend: Literal["vllm", "pt", "lmdeploy"] = "pt"
 
-    result_path: Optional[str] = None
+    result_path: str | None = None
     write_batch_size: int = 1000
     metric: Literal["acc", "rouge"] = None
     # for pt engine
     max_batch_size: int = 1
 
     # only for inference
-    val_dataset_sample: Optional[int] = None
+    val_dataset_sample: int | None = None
 
     def _get_result_path(self, folder_name: str) -> str:
         result_dir = self.ckpt_dir or f"result/{self.model_suffix}"
@@ -154,7 +155,7 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
         logger.info(f"args.result_path: {self.result_path}")
 
     def _init_stream(self):
-        self.eval_human = not (self.dataset and self.split_dataset_ratio > 0 or self.val_dataset)
+        self.eval_human = not ((self.dataset and self.split_dataset_ratio > 0) or self.val_dataset)
 
         if self.stream and self.num_beams != 1:
             self.stream = False

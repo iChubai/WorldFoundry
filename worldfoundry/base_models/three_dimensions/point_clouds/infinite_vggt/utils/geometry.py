@@ -7,9 +7,10 @@
 """Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> utils -> geometry.py functionality."""
 
 import os
-import torch
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
+import torch
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 

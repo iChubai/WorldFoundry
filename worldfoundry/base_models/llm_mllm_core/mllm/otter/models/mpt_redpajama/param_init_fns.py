@@ -17,7 +17,7 @@ def torch_default_param_init_fn_(
 ):
     del kwargs  # unused, just to capture any extra args from the config
     if verbose > 1:
-        warnings.warn(f"Initializing network using module's reset_parameters attribute")
+        warnings.warn("Initializing network using module's reset_parameters attribute")
 
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()  # type: ignore
@@ -34,11 +34,11 @@ def fused_init_helper_(module: nn.Module, init_fn_):
     _fused = getattr(module, "_fused", None)
 
     if _fused is None:
-        raise RuntimeError(f"Internal logic error")
+        raise RuntimeError("Internal logic error")
 
     dim, splits = _fused
     splits = (0, *splits, module.weight.size(dim))  # type: ignore
-    for s, e in zip(splits[:-1], splits[1:]):
+    for s, e in zip(splits[:-1], splits[1:], strict=False):
         slice_indices = [slice(None)] * module.weight.ndim  # type: ignore
         slice_indices[dim] = slice(s, e)
         init_fn_(module.weight[slice_indices])  # type: ignore
@@ -48,16 +48,16 @@ def generic_param_init_fn_(
     module: nn.Module,
     init_fn_,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     verbose: int = 0,
     **kwargs,
 ):
     del kwargs  # unused, just to capture any extra args from the config
     if verbose > 1:
-        warnings.warn(f"If model has bias parameters they are initialized to 0.")
+        warnings.warn("If model has bias parameters they are initialized to 0.")
 
     # enable user to divide _is_residual weights by
     # a value which defaults to math.sqrt(2 * cfg.n_layers)
@@ -82,7 +82,7 @@ def generic_param_init_fn_(
         if verbose > 1:
             warnings.warn(
                 f"Initializing _is_residual layers then dividing them by {div_is_residual}."
-                + f"set `init_div_is_residual: false` in model config to disable this."
+                + "set `init_div_is_residual: false` in model config to disable this."
             )
 
     if isinstance(module, nn.Linear):
@@ -103,7 +103,7 @@ def generic_param_init_fn_(
         if emb_init_std is not None:
             std = emb_init_std
             if std == 0:
-                warnings.warn(f"Embedding layer initialized to 0.")
+                warnings.warn("Embedding layer initialized to 0.")
             emb_init_fn_ = partial(torch.nn.init.normal_, mean=0.0, std=std)
             if verbose > 1:
                 warnings.warn(f"Embedding layer initialized using normal distribution with mean=0 and {std=}.")
@@ -116,7 +116,7 @@ def generic_param_init_fn_(
                     warnings.warn(f"Embedding layer initialized to {lim[0]}.")
             else:
                 if lim == 0:
-                    warnings.warn(f"Embedding layer initialized to 0.")
+                    warnings.warn("Embedding layer initialized to 0.")
                 lim = [-lim, lim]
             a, b = lim
             emb_init_fn_ = partial(torch.nn.init.uniform_, a=a, b=b)
@@ -130,7 +130,7 @@ def generic_param_init_fn_(
     elif isinstance(module, nn.LayerNorm):
         # LayerNorm
         if verbose > 1:
-            warnings.warn(f"LayerNorm gamma weights are set to 1. If the layer has a bias it is initialized to 0.")
+            warnings.warn("LayerNorm gamma weights are set to 1. If the layer has a bias it is initialized to 0.")
         torch.nn.init.ones_(module.weight)
         if module.bias is not None:
             torch.nn.init.zeros_(module.bias)
@@ -144,7 +144,7 @@ def generic_param_init_fn_(
             # in_proj_weight is actually 3 layers and should be split up for width based init
             _d = d_model
             splits = (0, _d, 2 * _d, 3 * _d)
-            for s, e in zip(splits[:-1], splits[1:]):
+            for s, e in zip(splits[:-1], splits[1:], strict=False):
                 init_fn_(module.in_proj_weight[s:e])
         else:
             assert (
@@ -187,10 +187,10 @@ def _normal_param_init_fn_(
     module: nn.Module,
     std: float,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     verbose: int = 0,
     **kwargs,
 ):
@@ -216,10 +216,10 @@ def baseline_param_init_fn_(
     module: nn.Module,
     init_std: float,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     verbose: int = 0,
     **kwargs,
 ):
@@ -242,9 +242,9 @@ def small_param_init_fn_(
     module: nn.Module,
     n_layers: int,
     d_model: int,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     verbose: int = 0,
     **kwargs,
 ):
@@ -268,8 +268,8 @@ def neox_param_init_fn_(
     module: nn.Module,
     n_layers: int,
     d_model: int,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     verbose: int = 0,
     **kwargs,
 ):
@@ -299,10 +299,10 @@ def neox_param_init_fn_(
 def kaiming_uniform_param_init_fn_(
     module: nn.Module,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     init_gain: float = 0,
     fan_mode: str = "fan_in",
     init_nonlinearity: str = "leaky_relu",
@@ -313,7 +313,7 @@ def kaiming_uniform_param_init_fn_(
 
     if verbose > 1:
         warnings.warn(
-            f"Using nn.init.kaiming_uniform_ init fn with parameters: "
+            "Using nn.init.kaiming_uniform_ init fn with parameters: "
             + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
         )
 
@@ -339,10 +339,10 @@ def kaiming_uniform_param_init_fn_(
 def kaiming_normal_param_init_fn_(
     module: nn.Module,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     init_gain: float = 0,
     fan_mode: str = "fan_in",
     init_nonlinearity: str = "leaky_relu",
@@ -353,7 +353,7 @@ def kaiming_normal_param_init_fn_(
 
     if verbose > 1:
         warnings.warn(
-            f"Using nn.init.kaiming_normal_ init fn with parameters: "
+            "Using nn.init.kaiming_normal_ init fn with parameters: "
             + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
         )
 
@@ -379,10 +379,10 @@ def kaiming_normal_param_init_fn_(
 def xavier_uniform_param_init_fn_(
     module: nn.Module,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     init_gain: float = 0,
     verbose: int = 0,
     **kwargs,
@@ -391,7 +391,7 @@ def xavier_uniform_param_init_fn_(
     xavier_uniform_ = partial(torch.nn.init.xavier_uniform_, gain=init_gain)
 
     if verbose > 1:
-        warnings.warn(f"Using torch.nn.init.xavier_uniform_ init fn with parameters: " + f"gain={init_gain}")
+        warnings.warn("Using torch.nn.init.xavier_uniform_ init fn with parameters: " + f"gain={init_gain}")
 
     generic_param_init_fn_(
         module=module,
@@ -408,10 +408,10 @@ def xavier_uniform_param_init_fn_(
 def xavier_normal_param_init_fn_(
     module: nn.Module,
     n_layers: int,
-    d_model: Optional[int] = None,
-    init_div_is_residual: Union[int, float, str, bool] = True,
-    emb_init_std: Optional[float] = None,
-    emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+    d_model: int | None = None,
+    init_div_is_residual: int | float | str | bool = True,
+    emb_init_std: float | None = None,
+    emb_init_uniform_lim: tuple[float, float] | float | None = None,
     init_gain: float = 0,
     verbose: int = 0,
     **kwargs,
@@ -419,7 +419,7 @@ def xavier_normal_param_init_fn_(
     xavier_normal_ = partial(torch.nn.init.xavier_normal_, gain=init_gain)
 
     if verbose > 1:
-        warnings.warn(f"Using torch.nn.init.xavier_normal_ init fn with parameters: " + f"gain={init_gain}")
+        warnings.warn("Using torch.nn.init.xavier_normal_ init fn with parameters: " + f"gain={init_gain}")
 
     generic_param_init_fn_(
         module=module,

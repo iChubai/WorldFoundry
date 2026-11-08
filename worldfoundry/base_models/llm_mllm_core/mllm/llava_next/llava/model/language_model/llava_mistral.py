@@ -18,20 +18,18 @@ from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
-    MistralConfig,
-    MistralModel,
-    MistralForCausalLM,
     GenerationConfig,
+    MistralConfig,
+    MistralForCausalLM,
+    MistralModel,
 )
-
-from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from ..llava_arch import LlavaMetaForCausalLM, LlavaMetaModel
 
 
 class LlavaMistralConfig(MistralConfig):
@@ -39,7 +37,7 @@ class LlavaMistralConfig(MistralConfig):
     temperature: float = 0.0  # reset to 0.0, previously 0.9 for Vicuna
     max_new_tokens: int = 1024
     do_sample: bool = False
-    top_p: Optional[float] = None
+    top_p: float | None = None
 
 
 class LlavaMistralModel(LlavaMetaModel, MistralModel):
@@ -69,19 +67,19 @@ class LlavaMistralForCausalLM(MistralForCausalLM, LlavaMetaForCausalLM):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
-        image_sizes: Optional[List[List[int]]] = None,
-        return_dict: Optional[bool] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        images: torch.FloatTensor | None = None,
+        image_sizes: list[list[int]] | None = None,
+        return_dict: bool | None = None,
         cache_position=None,
-    ) -> Union[Tuple, CausalLMOutputWithPast]:
+    ) -> tuple | CausalLMOutputWithPast:
         if inputs_embeds is None:
             (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = (
                 self.prepare_inputs_labels_for_multimodal(
@@ -105,11 +103,11 @@ class LlavaMistralForCausalLM(MistralForCausalLM, LlavaMetaForCausalLM):
     @torch.no_grad()
     def generate(
         self,
-        inputs: Optional[torch.Tensor] = None,
-        images: Optional[torch.Tensor] = None,
-        image_sizes: Optional[torch.Tensor] = None,
+        inputs: torch.Tensor | None = None,
+        images: torch.Tensor | None = None,
+        image_sizes: torch.Tensor | None = None,
         **kwargs,
-    ) -> Union[GenerateOutput, torch.LongTensor]:
+    ) -> GenerateOutput | torch.LongTensor:
         position_ids = kwargs.pop("position_ids", None)
         attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:

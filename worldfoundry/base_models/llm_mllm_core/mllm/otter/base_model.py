@@ -1,10 +1,10 @@
+import importlib
 from abc import ABC, abstractmethod
-from PIL import Image
 from typing import Dict
 
-import importlib
+from PIL import Image
 
-AVAILABLE_MODELS: Dict[str, str] = {
+AVAILABLE_MODELS: dict[str, str] = {
     "video_chat": "VideoChat",
     "otter_video": "OtterVideo",
     "llama_adapter": "LlamaAdapter",
@@ -38,7 +38,7 @@ class BaseModel(ABC):
         pass
 
 
-def load_model(model_name: str, model_args: Dict[str, str]) -> BaseModel:
+def load_model(model_name: str, model_args: dict[str, str]) -> BaseModel:
     assert model_name in AVAILABLE_MODELS, f"{model_name} is not an available model."
     module_path = "pipeline.benchmarks.models." + model_name
     model_formal_name = AVAILABLE_MODELS[model_name]

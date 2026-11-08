@@ -115,12 +115,12 @@ class BackboneBase(nn.Module):
         """
         super().__init__()
         for name, parameter in backbone.named_parameters():
-            if not train_backbone or "layer2" not in name and "layer3" not in name and "layer4" not in name:
+            if not train_backbone or ("layer2" not in name and "layer3" not in name and "layer4" not in name):
                 parameter.requires_grad_(False)
 
         return_layers = {}
         for idx, layer_index in enumerate(return_interm_indices):
-            return_layers.update({"layer{}".format(5 - len(return_interm_indices) + idx): "{}".format(layer_index)})
+            return_layers.update({f"layer{5 - len(return_interm_indices) + idx}": f"{layer_index}"})
 
         # if len:
         #     if use_stage1_feature:
@@ -139,7 +139,7 @@ class BackboneBase(nn.Module):
             tensor_list: The tensor list.
         """
         xs = self.body(tensor_list.tensors)
-        out: Dict[str, NestedTensor] = {}
+        out: dict[str, NestedTensor] = {}
         for name, x in xs.items():
             m = tensor_list.mask
             assert m is not None
@@ -176,7 +176,7 @@ class Backbone(BackboneBase):
                 norm_layer=batch_norm,
             )
         else:
-            raise NotImplementedError("Why you can get here with name {}".format(name))
+            raise NotImplementedError(f"Why you can get here with name {name}")
         # num_channels = 512 if name in ('resnet18', 'resnet34') else 2048
         assert name not in ("resnet18", "resnet34"), "Only resnet50 and resnet101 are available."
         assert return_interm_indices in [[0, 1, 2, 3], [1, 2, 3], [3]]
@@ -204,7 +204,7 @@ class Joiner(nn.Sequential):
             tensor_list: The tensor list.
         """
         xs = self[0](tensor_list)
-        out: List[NestedTensor] = []
+        out: list[NestedTensor] = []
         pos = []
         for name, x in xs.items():
             out.append(x)
@@ -261,7 +261,7 @@ def build_backbone(args):
 
         bb_num_channels = backbone.num_features[4 - len(return_interm_indices) :]
     else:
-        raise NotImplementedError("Unknown backbone {}".format(args.backbone))
+        raise NotImplementedError(f"Unknown backbone {args.backbone}")
 
     assert len(bb_num_channels) == len(return_interm_indices), (
         f"len(bb_num_channels) {len(bb_num_channels)} != len(return_interm_indices) {len(return_interm_indices)}"
@@ -269,8 +269,6 @@ def build_backbone(args):
 
     model = Joiner(backbone, position_embedding)
     model.num_channels = bb_num_channels
-    assert isinstance(bb_num_channels, List), "bb_num_channels is expected to be a List but {}".format(
-        type(bb_num_channels)
-    )
+    assert isinstance(bb_num_channels, list), f"bb_num_channels is expected to be a List but {type(bb_num_channels)}"
     # import ipdb; ipdb.set_trace()
     return model

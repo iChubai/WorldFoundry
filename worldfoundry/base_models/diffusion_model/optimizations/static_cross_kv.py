@@ -27,8 +27,9 @@ default numerical result is unchanged (the same projections, just reused).
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 import torch
 from torch import nn
@@ -52,7 +53,7 @@ class StaticCrossKVProcessor:
     shared ``version`` (via the owning cache) invalidates all entries at once.
     """
 
-    def __init__(self, inner: Any, cache: "_StaticCrossKVCache") -> None:
+    def __init__(self, inner: Any, cache: _StaticCrossKVCache) -> None:
         self._inner = inner
         self._cache = cache
 
@@ -369,7 +370,7 @@ def reset_static_cross_kv(cache: _StaticCrossKVCache) -> None:
 __all__ = [
     "StaticConditionCache",
     "StaticCrossKVProcessor",
-    "reuse_cross_kv",
     "install_static_cross_kv_cache",
     "reset_static_cross_kv",
+    "reuse_cross_kv",
 ]

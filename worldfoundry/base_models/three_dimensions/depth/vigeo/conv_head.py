@@ -2,9 +2,10 @@
 Conv head is from MoGe (https://github.com/microsoft/moge)
 """
 
+from typing import Literal
+
 import torch
 import torch.nn as nn
-from typing import Literal
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
@@ -122,7 +123,7 @@ class ConvHead(nn.Module):
                         for _ in range(num_res_blocks)
                     ),
                 )
-                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample)
+                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)
             ]
         )
 
@@ -188,7 +189,7 @@ class ConvHead(nn.Module):
     def forward(self, hidden_states: torch.Tensor, patch_h: int, patch_w: int, chunk_size: int = 8):
         N = hidden_states.shape[0]
 
-        if chunk_size <= 0 or N <= chunk_size:
+        if chunk_size <= 0 or chunk_size >= N:
             return self._forward_impl(hidden_states, patch_h, patch_w)
 
         all_outputs = []

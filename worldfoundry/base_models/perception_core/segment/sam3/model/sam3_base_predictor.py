@@ -15,6 +15,7 @@ import uuid
 from typing import Dict, List, Optional
 
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,7 +44,7 @@ class Sam3BasePredictor:
         """Init."""
         # Subclasses must populate these
         self.model = None
-        self._all_inference_states: Dict[str, dict] = {}
+        self._all_inference_states: dict[str, dict] = {}
 
     # ── Request dispatch ──────────────────────────────────────────────
 
@@ -149,7 +150,7 @@ class Sam3BasePredictor:
         self,
         session_id: str,
         frame_idx: int,
-        text: Optional[str] = None,
+        text: str | None = None,
         points=None,
         point_labels=None,
         clear_old_points: bool = True,
@@ -157,7 +158,7 @@ class Sam3BasePredictor:
         bounding_box_labels=None,
         clear_old_boxes: bool = True,
         output_prob_thresh: float = 0.5,
-        obj_id: Optional[int] = None,
+        obj_id: int | None = None,
         rel_coordinates: bool = True,
     ):
         """Add text, box and/or point prompt on a specific video frame."""

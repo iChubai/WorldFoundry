@@ -2,8 +2,8 @@
 
 from typing import Optional
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
 import open_clip
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from .flamingo import Flamingo
 from .flamingo_lm import FlamingoLMMixin
@@ -19,7 +19,7 @@ def create_model_and_transforms(
     use_local_files: bool = False,
     decoder_layers_attr_name: str = None,
     freeze_lm_embeddings: bool = False,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
     **flamingo_kwargs,
 ):
     """
@@ -136,7 +136,7 @@ def _infer_decoder_layers_attr_name(model):
             return __KNOWN_DECODER_LAYERS_ATTR_NAMES[k]
 
     raise ValueError(
-        f"We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
+        "We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
     )
 
 

@@ -17,7 +17,7 @@ from .utils import ChatmlTemplateMeta
 @dataclass
 class ValleyTemplateMeta(ChatmlTemplateMeta):
     auto_add_bos: bool = False
-    default_system: Optional[str] = (
+    default_system: str | None = (
         "You are Valley, a large language and vision assistant trained by ByteDance."
         "You are able to understand the visual content or video that the user provides,"
         " and assist the user with a variety of tasks using natural language."
@@ -31,7 +31,7 @@ class ValleyTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         # assert media_type == 'image'
         if media_type == "video":
             from ..vision_utils import load_video_valley
@@ -69,6 +69,7 @@ class ValleyTemplate(Template):
 
     def process_images(self, inputs, images_binary):
         import re
+
         from qwen_vl_utils import fetch_image
 
         if inputs.messages[-1]["role"] == "user":
@@ -113,7 +114,7 @@ class ValleyTemplate(Template):
         results["image_grid_thw"] = data_dict_qwen2vl["image_grid_thw"]
         return results
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images or []
         input_ids = encoded["input_ids"]
@@ -128,7 +129,7 @@ class ValleyTemplate(Template):
         encoded["labels"] = labels
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         if "images" in batch[0]:
             res["images"] = sum([b["images"] for b in batch if "images" in b], start=[])

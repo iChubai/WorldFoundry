@@ -1,33 +1,37 @@
 # common dependencies
-import os
-from os import path
-import warnings
-import time
-import pickle
 import logging
+import os
+import pickle
+import time
+import warnings
+from os import path
+
+import cv2
 
 # 3rd party dependencies
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-import cv2
 import tensorflow as tf
 from deprecated import deprecated
+from tqdm import tqdm
 
 # package dependencies
 from worldfoundry.base_models.perception_core.face.deepface.deepface.basemodels import (
-    VGGFace,
-    OpenFace,
+    ArcFace,
+    DeepID,
+    DlibWrapper,
     Facenet,
     Facenet512,
     FbDeepFace,
-    DeepID,
-    DlibWrapper,
-    ArcFace,
+    OpenFace,
     SFace,
+    VGGFace,
 )
-from worldfoundry.base_models.perception_core.face.deepface.deepface.extendedmodels import Age, Gender, Race, Emotion
-from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions, realtime, distance as dst
+from worldfoundry.base_models.perception_core.face.deepface.deepface.extendedmodels import Age, Emotion, Gender, Race
+
+# isort: split
+from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import distance as dst
+from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions, realtime
 
 # -----------------------------------
 # configurations for dependencies
@@ -71,10 +75,10 @@ def build_model(model_name):
         "Race": Race.loadModel,
     }
 
-    if not "model_obj" in globals():
+    if "model_obj" not in globals():
         model_obj = {}
 
-    if not model_name in model_obj:
+    if model_name not in model_obj:
         model = models.get(model_name)
         if model:
             model = model()
@@ -306,7 +310,7 @@ def analyze(
     for action in actions:
         if action not in ("emotion", "age", "gender", "race"):
             raise ValueError(
-                f"Invalid action passed ({repr(action)})). Valid actions are `emotion`, `age`, `gender`, `race`."
+                f"Invalid action passed ({action!r})). Valid actions are `emotion`, `age`, `gender`, `race`."
             )
     # ---------------------------------
     # build models
@@ -338,7 +342,7 @@ def analyze(
         if img_content.shape[0] > 0 and img_content.shape[1] > 0:
             obj = {}
             # facial attribute analysis
-            pbar = tqdm(range(0, len(actions)), desc="Finding actions", disable=silent)
+            pbar = tqdm(range(len(actions)), desc="Finding actions", disable=silent)
             for index in pbar:
                 action = actions[index]
                 pbar.set_description(f"Action: {action}")
@@ -491,7 +495,7 @@ def find(
 
         # for employee in employees:
         pbar = tqdm(
-            range(0, len(employees)),
+            range(len(employees)),
             desc="Finding representations",
             disable=silent,
         )

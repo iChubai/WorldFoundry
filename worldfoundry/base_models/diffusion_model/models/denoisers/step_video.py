@@ -14,7 +14,6 @@ from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.step_video import StepVideoModel
 
-
 STEP_VIDEO_CONFIG = {
     "num_attention_heads": 48,
     "attention_head_dim": 128,

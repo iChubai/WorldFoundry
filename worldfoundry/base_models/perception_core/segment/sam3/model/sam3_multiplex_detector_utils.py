@@ -4,6 +4,7 @@ import logging
 
 import numpy as np
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3 import perflib
 
 try:
@@ -15,8 +16,8 @@ try:
 except ImportError:
     GENERIC_NMS_AVAILABLE = False
 
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 from worldfoundry.base_models.perception_core.segment.sam3.masks_ops import mask_iom
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 
 
 def nms_masks(

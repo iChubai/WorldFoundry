@@ -2,7 +2,8 @@
 import collections
 import copy
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Optional, Tuple, Union
 
 import mmcv
 import numpy as np
@@ -10,8 +11,8 @@ from mmcv.transforms import BaseTransform
 from mmdet.structures.bbox import autocast_box_type
 from mmengine.dataset import BaseDataset
 from mmengine.dataset.base_dataset import Compose
-from numpy import random
 from mmyolo.registry import TRANSFORMS
+from numpy import random
 
 
 class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
@@ -43,7 +44,7 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
 
     def __init__(
         self,
-        pre_transform: Optional[Sequence[str]] = None,
+        pre_transform: Sequence[str] | None = None,
         prob: float = 1.0,
         use_cached: bool = False,
         max_cached_images: int = 40,
@@ -64,7 +65,7 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
             self.pre_transform = Compose(pre_transform)
 
     @abstractmethod
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> Union[list, int]:
+    def get_indexes(self, dataset: BaseDataset | list) -> list | int:
         """Call function to collect indexes.
 
         Args:
@@ -73,7 +74,6 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
         Returns:
             list or int: indexes.
         """
-        pass
 
     @abstractmethod
     def mix_img_transform(self, results: dict) -> dict:
@@ -85,7 +85,6 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
         Returns:
             results (dict): Updated result dict.
         """
-        pass
 
     def _update_label_text(self, results: dict) -> dict:
         """Update label text."""
@@ -278,8 +277,8 @@ class MultiModalMosaic(BaseMultiModalMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
-        center_ratio_range: Tuple[float, float] = (0.5, 1.5),
+        img_scale: tuple[int, int] = (640, 640),
+        center_ratio_range: tuple[float, float] = (0.5, 1.5),
         bbox_clip_border: bool = True,
         pad_val: float = 114.0,
         pre_transform: Sequence[dict] = None,
@@ -308,7 +307,7 @@ class MultiModalMosaic(BaseMultiModalMixImageTransform):
         self.bbox_clip_border = bbox_clip_border
         self.pad_val = pad_val
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> list:
+    def get_indexes(self, dataset: BaseDataset | list) -> list:
         """Call function to collect indexes.
 
         Args:
@@ -429,7 +428,7 @@ class MultiModalMosaic(BaseMultiModalMixImageTransform):
 
     def _mosaic_combine(
         self, loc: str, center_position_xy: Sequence[float], img_shape_wh: Sequence[int]
-    ) -> Tuple[Tuple[int], Tuple[int]]:
+    ) -> tuple[tuple[int], tuple[int]]:
         """Calculate global coordinate of mosaic image and local coordinate of
         cropped sub-image.
 
@@ -580,9 +579,9 @@ class MultiModalMosaic9(BaseMultiModalMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
+        img_scale: tuple[int, int] = (640, 640),
         bbox_clip_border: bool = True,
-        pad_val: Union[float, int] = 114.0,
+        pad_val: float | int = 114.0,
         pre_transform: Sequence[dict] = None,
         prob: float = 1.0,
         use_cached: bool = False,
@@ -613,7 +612,7 @@ class MultiModalMosaic9(BaseMultiModalMixImageTransform):
         self._center_img_shape = [0, 0]
         self._previous_img_shape = [0, 0]
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> list:
+    def get_indexes(self, dataset: BaseDataset | list) -> list:
         """Call function to collect indexes.
 
         Args:
@@ -703,7 +702,7 @@ class MultiModalMosaic9(BaseMultiModalMixImageTransform):
         results["gt_ignore_flags"] = mosaic_ignore_flags
         return results
 
-    def _mosaic_combine(self, loc: str, img_shape_hw: Tuple[int, int]) -> Tuple[int, ...]:
+    def _mosaic_combine(self, loc: str, img_shape_hw: tuple[int, int]) -> tuple[int, ...]:
         """Calculate global coordinate of mosaic image.
 
         Args:
@@ -877,7 +876,7 @@ class YOLOv5MultiModalMixUp(BaseMultiModalMixImageTransform):
         self.alpha = alpha
         self.beta = beta
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> int:
+    def get_indexes(self, dataset: BaseDataset | list) -> int:
         """Call function to collect indexes.
 
         Args:
@@ -1006,8 +1005,8 @@ class YOLOXMultiModalMixUp(BaseMultiModalMixImageTransform):
 
     def __init__(
         self,
-        img_scale: Tuple[int, int] = (640, 640),
-        ratio_range: Tuple[float, float] = (0.5, 1.5),
+        img_scale: tuple[int, int] = (640, 640),
+        ratio_range: tuple[float, float] = (0.5, 1.5),
         flip_ratio: float = 0.5,
         pad_val: float = 114.0,
         bbox_clip_border: bool = True,
@@ -1035,7 +1034,7 @@ class YOLOXMultiModalMixUp(BaseMultiModalMixImageTransform):
         self.pad_val = pad_val
         self.bbox_clip_border = bbox_clip_border
 
-    def get_indexes(self, dataset: Union[BaseDataset, list]) -> int:
+    def get_indexes(self, dataset: BaseDataset | list) -> int:
         """Call function to collect indexes.
 
         Args:

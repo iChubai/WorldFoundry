@@ -40,7 +40,7 @@ def _resolve_size(
         if max_original / min_original * target > max_size:
             target = int(round(max_size * min_original / max_original))
 
-    if width <= height and width == target or height <= width and height == target:
+    if (width <= height and width == target) or (height <= width and height == target):
         return height, width
     if width < height:
         return int(target * height / width), target
@@ -62,7 +62,7 @@ def resize(image, target, size: int | Sequence[int], max_size: int | None = None
         return resized, None
 
     target = target.copy()
-    ratio_width, ratio_height = (float(new) / float(old) for new, old in zip(resized.size, image.size))
+    ratio_width, ratio_height = (float(new) / float(old) for new, old in zip(resized.size, image.size, strict=False))
     if "boxes" in target:
         target["boxes"] = target["boxes"] * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
     if "area" in target:

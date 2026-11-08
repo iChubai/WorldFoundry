@@ -7,18 +7,18 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> track_refine.py functionality."""
 
+import os
+from functools import partial
+from typing import Tuple, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-from torch import nn, einsum
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange, Reduce
-
 from PIL import Image
-import os
-from typing import Union, Tuple
+from torch import einsum, nn
 
 
 def refine_track(
@@ -307,8 +307,8 @@ def compute_score_fn(query_point_feat, patch_feat, fine_pred_track, sradius, psi
     given the query point features and reference frame feature maps
     """
 
-    from kornia.utils.grid import create_meshgrid
     from kornia.geometry.subpix import dsnt
+    from kornia.utils.grid import create_meshgrid
 
     # query_point_feat initial shape: B x N x C_out,
     # query_point_feat indicates the feat at the coorponsing query points
@@ -381,7 +381,7 @@ def compute_score_fn(query_point_feat, patch_feat, fine_pred_track, sradius, psi
 
 
 def extract_glimpse(
-    tensor: torch.Tensor, size: Tuple[int, int], offsets, mode="bilinear", padding_mode="zeros", debug=False, orib=None
+    tensor: torch.Tensor, size: tuple[int, int], offsets, mode="bilinear", padding_mode="zeros", debug=False, orib=None
 ):
     """Extract glimpse.
 

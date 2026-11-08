@@ -4,8 +4,6 @@
 
 """Module for base_models -> perception_core -> tracking -> track_anything -> aot -> utils -> ema.py functionality."""
 
-from __future__ import division, unicode_literals
-
 import torch
 
 
@@ -65,7 +63,7 @@ class ExponentialMovingAverage:
             decay = min(decay, (1 + self.num_updates) / (10 + self.num_updates))
         one_minus_decay = 1.0 - decay
         with torch.no_grad():
-            for s_param, param in zip(self.shadow_params, parameters):
+            for s_param, param in zip(self.shadow_params, parameters, strict=False):
                 s_param.sub_(one_minus_decay * (s_param - param))
 
     def copy_to(self, parameters):
@@ -75,7 +73,7 @@ class ExponentialMovingAverage:
           parameters: Iterable of `torch.nn.Parameter`; the parameters to be
             updated with the stored moving averages.
         """
-        for s_param, param in zip(self.shadow_params, parameters):
+        for s_param, param in zip(self.shadow_params, parameters, strict=False):
             param.data.copy_(s_param.data)
 
     def store(self, parameters):
@@ -98,6 +96,6 @@ class ExponentialMovingAverage:
           parameters: Iterable of `torch.nn.Parameter`; the parameters to be
             updated with the stored parameters.
         """
-        for c_param, param in zip(self.collected_params, parameters):
+        for c_param, param in zip(self.collected_params, parameters, strict=False):
             param.data.copy_(c_param.data)
         del self.collected_params

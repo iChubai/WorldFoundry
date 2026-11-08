@@ -8,6 +8,7 @@ from transformers.utils import strtobool
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_device_map, patch_fixed_device, patch_output_clone
@@ -57,7 +58,7 @@ def _patch_minicpmv_device_map(model) -> None:
 
 
 def get_model_tokenizer_minicpmv(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
     if load_model:
@@ -93,7 +94,7 @@ register_model(
 
 
 def get_model_tokenizer_minicpmv_2_x(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     from transformers import AutoProcessor
 

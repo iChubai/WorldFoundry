@@ -7,6 +7,7 @@ from mmdet.models.backbones.csp_darknet import CSPLayer
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from .base_yolo_neck import BaseYOLONeck
 
 
@@ -35,7 +36,7 @@ class YOLOXPAFPN(BaseYOLONeck):
 
     def __init__(
         self,
-        in_channels: List[int],
+        in_channels: list[int],
         out_channels: int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,

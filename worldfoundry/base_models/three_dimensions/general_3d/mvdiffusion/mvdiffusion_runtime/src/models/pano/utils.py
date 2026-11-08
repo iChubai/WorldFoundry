@@ -2,8 +2,9 @@
 
 import torch
 import torch.nn.functional as F
-from ..modules.utils import get_x_2d
 from einops import rearrange
+
+from ..modules.utils import get_x_2d
 
 
 def get_correspondences(R, K, img_h, img_w):

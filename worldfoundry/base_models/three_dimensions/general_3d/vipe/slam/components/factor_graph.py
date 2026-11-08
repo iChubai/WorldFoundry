@@ -116,11 +116,11 @@ class FactorGraph:
 
         keep = torch.zeros(ii.shape[0], dtype=torch.bool, device=ii.device)
         eset = set(
-            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj)]
-            + [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac)]
+            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj, strict=False)]
+            + [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac, strict=False)]
         )
 
-        for k, (i, j) in enumerate(zip(ii, jj)):
+        for k, (i, j) in enumerate(zip(ii, jj, strict=False)):
             keep[k] = (i.item(), j.item()) not in eset
 
         return ii[keep], jj[keep]
@@ -485,10 +485,10 @@ class FactorGraph:
                     if abs(di) + abs(dj) <= max(min(abs(i - j) - 2, nms), 0):
                         _suppress(i + di, j + dj)
 
-        for i, j in zip(self.ii.cpu().numpy(), self.jj.cpu().numpy()):
+        for i, j in zip(self.ii.cpu().numpy(), self.jj.cpu().numpy(), strict=False):
             _suppress_nms(i, j)
 
-        for i, j in zip(self.ii_inac.cpu().numpy(), self.jj_inac.cpu().numpy()):
+        for i, j in zip(self.ii_inac.cpu().numpy(), self.jj_inac.cpu().numpy(), strict=False):
             _suppress_nms(i, j)
 
         d[(ii - rad < jj) | (d > thresh)] = np.inf

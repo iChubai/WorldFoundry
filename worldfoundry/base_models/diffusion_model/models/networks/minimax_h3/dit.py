@@ -151,7 +151,7 @@ def _varlen_attention(
     total, num_heads, head_dim = q.shape
     out = torch.empty_like(q)
     bounds = cu_seqlens.tolist()
-    for start, stop in zip(bounds[:-1], bounds[1:]):
+    for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
         length = int(stop) - int(start)
         if length <= 0:
             continue

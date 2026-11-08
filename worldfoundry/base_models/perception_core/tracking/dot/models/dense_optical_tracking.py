@@ -1,12 +1,13 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
-from tqdm import tqdm
 from einops import rearrange, repeat
+from torch import nn
+from tqdm import tqdm
+
+from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import get_grid
 
 from .optical_flow import OpticalFlow
 from .point_tracking import PointTracker
-from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import get_grid
 
 
 class DenseOpticalTracker(nn.Module):

@@ -3,22 +3,24 @@
 Causal self-attention on the DreamX stem.  Adds causal hooks.
 """
 
+import math
+
+import torch
+import torch.nn as nn
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.prope import prope_qkv
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
-    WanRMSNorm,
-    WanLayerNorm,
     WanCrossAttention,
+    WanLayerNorm,
+    WanRMSNorm,
     rope_params,
     sinusoidal_embedding_1d,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.prope import prope_qkv
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-import torch.nn as nn
-import torch
-import math
 
 
 def block_relativistic_rope(x, grid_sizes, freqs, start_frame=0, relative_frame_indices=None):
@@ -452,10 +454,10 @@ class CausalWanAttentionBlock(nn.Module):
         self.eps = eps
 
         self.add_control_adapter = kwargs.get("add_control_adapter", False)
-        self.cam_method = kwargs.get("cam_method", None)
+        self.cam_method = kwargs.get("cam_method")
         self.attn_compress = kwargs.get("attn_compress", 1)
-        self.layer_idx = kwargs.get("layer_idx", None)
-        cam_self_attn_layers = kwargs.get("cam_self_attn_layers", None)
+        self.layer_idx = kwargs.get("layer_idx")
+        cam_self_attn_layers = kwargs.get("cam_self_attn_layers")
 
         # layers
         self.norm1 = WanLayerNorm(dim, eps)
@@ -703,7 +705,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # patch embedding
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]

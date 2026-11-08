@@ -4,7 +4,6 @@ from typing import Optional, Union
 import torch
 from mmdet.models.data_preprocessors import DetDataPreprocessor
 from mmengine.structures import BaseDataElement
-
 from mmyolo.registry import MODELS
 
 CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]
@@ -17,7 +16,7 @@ class YOLOWDetDataPreprocessor(DetDataPreprocessor):
     Note: It must be used together with `mmyolo.datasets.utils.yolow_collate`
     """
 
-    def __init__(self, *args, non_blocking: Optional[bool] = True, **kwargs):
+    def __init__(self, *args, non_blocking: bool | None = True, **kwargs):
         super().__init__(*args, non_blocking=non_blocking, **kwargs)
 
     def forward(self, data: dict, training: bool = False) -> dict:

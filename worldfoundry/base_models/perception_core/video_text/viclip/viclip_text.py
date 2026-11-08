@@ -1,15 +1,16 @@
-import os
+import functools
 import logging
+import os
 from collections import OrderedDict
-from pkg_resources import packaging
-from .simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch import nn
 import torch.utils.checkpoint as checkpoint
-import functools
+from pkg_resources import packaging
+from torch import nn
+
+from .simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ class CLIP_TEXT(nn.Module):
     def no_weight_decay(self):
         return {"token_embedding", "positional_embedding"}
 
-    @functools.lru_cache(maxsize=None)
+    @functools.cache
     def build_attention_mask(self):
         # lazily create causal attention mask, with full attention between the vision tokens
         # pytorch uses additive attention mask; fill with -inf

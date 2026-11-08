@@ -11,7 +11,6 @@ from collections import OrderedDict
 
 import torch
 import torch.nn.functional as F
-
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_base import NO_OBJ_SCORE, SAM2Base
@@ -885,9 +884,9 @@ class SAM2VideoPredictor(SAM2Base):
         new_obj_ids = [old_obj_ids[old_idx] for old_idx in remain_old_obj_inds]
         new_obj_inds = list(range(len(new_obj_ids)))
         # build new mappings
-        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds))
-        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds))
-        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids))
+        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds, strict=False))
+        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds, strict=False))
+        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids, strict=False))
         inference_state["obj_ids"] = new_obj_ids
 
         # Step 2: For per-object tensor storage, we shift their obj_idx in the dict keys.

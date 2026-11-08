@@ -2,9 +2,10 @@
 
 from pathlib import Path
 
+import imageio
 import numpy as np
 import torch
-import imageio
+from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.models.rasterization import (
     GaussianSplatRenderer,
@@ -12,7 +13,6 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.sh_utils import RGB2SH, SH2RGB
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.gs_effects import GSEffects
 from worldfoundry.core.media.artifacts import apply_color_map_to_image
-from tqdm import tqdm
 
 
 def rotation_matrix_to_quaternion(R):
@@ -266,7 +266,7 @@ def render_interpolated_video(
             raw_splats = gs_renderer.rasterizer.runner.splats
         except:
             pass
-        for st in range(0, add_ext.shape[1]):
+        for st in range(add_ext.shape[1]):
             ed = min(st + 1, add_ext.shape[1])
             assert gs_renderer.sh_degree == 0
             if flag is not None and (flag < 0.99).any():
@@ -435,7 +435,7 @@ def render_interpolated_video(
     rgb_frames = []
     depth_frames = []
 
-    for rgb, dep in zip(rgbs, depths):
+    for rgb, dep in zip(rgbs, depths, strict=False):
         rgb_img = rgb.permute(2, 0, 1)  # [3, H, W]
         depth_img = depth_vis(dep)  # [3, H, W]
 

@@ -423,7 +423,7 @@ class Cosmos3OmniTransformer(nn.Module):
         """Scatter-add timestep embeddings onto noisy spatial (or temporal) tokens only."""
         start_noisy_index = 0
         flattened_noisy_frame_indexes: list[torch.Tensor] = []
-        for noisy_indexes_i, token_shape_i in zip(noisy_frame_indexes, token_shapes):
+        for noisy_indexes_i, token_shape_i in zip(noisy_frame_indexes, token_shapes, strict=False):
             spatial_numel_i = math.prod(token_shape_i[1:])
             spatial_indexes_i = torch.arange(spatial_numel_i, device=packed_tokens.device)
             # Broadcast [N, 1] + [spatial_numel_i] → [N, spatial_numel_i]
@@ -476,7 +476,7 @@ class Cosmos3OmniTransformer(nn.Module):
         unpatchified_latents: list[torch.Tensor] = []
         start_idx = 0
         for token_shape, noisy_frame_indexes, original_shape in zip(
-            token_shapes_vision, noisy_frame_indexes_vision, original_latent_shapes
+            token_shapes_vision, noisy_frame_indexes_vision, original_latent_shapes, strict=False
         ):
             t_c = token_shape[0]
             _, h_orig, w_orig = original_shape
@@ -510,7 +510,10 @@ class Cosmos3OmniTransformer(nn.Module):
     ) -> torch.Tensor:
         """List of ``[C, T]`` tensors → packed ``[total_T, C]`` tensor."""
         return torch.cat(
-            [sound[:, : shape[0]].permute(1, 0) for sound, shape in zip(tokens_sound, token_shapes_sound)],
+            [
+                sound[:, : shape[0]].permute(1, 0)
+                for sound, shape in zip(tokens_sound, token_shapes_sound, strict=False)
+            ],
             dim=0,
         )
 
@@ -524,7 +527,7 @@ class Cosmos3OmniTransformer(nn.Module):
         sound_dim = self.config.sound_dim
         unpacked: list[torch.Tensor] = []
         start_idx = 0
-        for shape, noisy_idxs in zip(token_shapes_sound, noisy_frame_indexes_sound):
+        for shape, noisy_idxs in zip(token_shapes_sound, noisy_frame_indexes_sound, strict=False):
             T = shape[0]
             output = torch.zeros((sound_dim, T), device=packed_preds.device, dtype=packed_preds.dtype)
             t_n = len(noisy_idxs)
@@ -543,7 +546,7 @@ class Cosmos3OmniTransformer(nn.Module):
         """List of ``[T, D]`` tensors → packed ``[total_T, D]`` plus per-token domain ids."""
         packed: list[torch.Tensor] = []
         domain_ids: list[torch.Tensor] = []
-        for action, shape, domain_id in zip(tokens_action, token_shapes_action, domain_ids_action):
+        for action, shape, domain_id in zip(tokens_action, token_shapes_action, domain_ids_action, strict=False):
             token_count = shape[0]
             packed.append(action[:token_count])
             domain_ids.append(domain_id.reshape(1).expand(token_count))
@@ -558,7 +561,7 @@ class Cosmos3OmniTransformer(nn.Module):
         """Packed ``[total_noisy_T, D]`` predictions → list of ``[T, D]`` tensors."""
         unpacked: list[torch.Tensor] = []
         start_idx = 0
-        for shape, noisy_idxs in zip(token_shapes_action, noisy_frame_indexes_action):
+        for shape, noisy_idxs in zip(token_shapes_action, noisy_frame_indexes_action, strict=False):
             T = shape[0]
             output = torch.zeros((T, self.action_dim), device=packed_preds.device, dtype=packed_preds.dtype)
             t_n = len(noisy_idxs)
@@ -742,7 +745,7 @@ class Cosmos3OmniTransformer(nn.Module):
         if has_action:
             per_noisy_domain_ids = [
                 domain_id.reshape(1).expand(len(noisy_idxs))
-                for domain_id, noisy_idxs in zip(action_domain_ids, action_noisy_frame_indexes)
+                for domain_id, noisy_idxs in zip(action_domain_ids, action_noisy_frame_indexes, strict=False)
             ]
             per_noisy_domain_ids = torch.cat(per_noisy_domain_ids, dim=0).to(device=last_hidden_state.device)
             preds_action_packed = self.action_proj_out(last_hidden_state[action_mse_loss_indexes], per_noisy_domain_ids)

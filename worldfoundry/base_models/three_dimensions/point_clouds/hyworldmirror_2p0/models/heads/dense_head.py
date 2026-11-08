@@ -8,11 +8,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
-from ..layers.mlp import MlpFP32
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.grid import (
     create_uv_grid,
     position_grid_to_embed,
 )
+
+from ..layers.mlp import MlpFP32
 
 
 class _BaseDPTHead(nn.Module):
@@ -23,7 +24,7 @@ class _BaseDPTHead(nn.Module):
         dim_in: int,
         patch_size: int = 14,
         features: int = 256,
-        out_channels: List[int] = [256, 512, 1024, 1024],
+        out_channels: list[int] = [256, 512, 1024, 1024],
         pos_embed: bool = True,
         down_ratio: int = 1,
         gradient_checkpoint: bool = False,
@@ -101,7 +102,7 @@ class _BaseDPTHead(nn.Module):
             pos_embed = pos_embed.to(x.dtype)
         return x + pos_embed
 
-    def scratch_forward(self, features: List[torch.Tensor]) -> torch.Tensor:
+    def scratch_forward(self, features: list[torch.Tensor]) -> torch.Tensor:
         """Scratch forward.
 
         Args:
@@ -134,7 +135,7 @@ class _BaseDPTHead(nn.Module):
 
     def _extract_fused_features(
         self,
-        token_list: List[torch.Tensor],
+        token_list: list[torch.Tensor],
         B: int,
         S: int,
         H: int,
@@ -148,7 +149,7 @@ class _BaseDPTHead(nn.Module):
         pw = W // self.patch_size
 
         feats = []
-        for proj, resize, tokens in zip(self.projects, self.resize_layers, token_list):
+        for proj, resize, tokens in zip(self.projects, self.resize_layers, token_list, strict=False):
             patch_tokens = tokens[:, :, patch_start_idx:]
             if frame_start is not None and frame_end is not None:
                 patch_tokens = patch_tokens[:, frame_start:frame_end]
@@ -217,7 +218,7 @@ class DPTHead(_BaseDPTHead):
         output_dim: int = 4,
         activation: str = "inv_log+expp1",
         features: int = 256,
-        out_channels: List[int] = [256, 512, 1024, 1024],
+        out_channels: list[int] = [256, 512, 1024, 1024],
         pos_embed: bool = True,
         down_ratio: int = 1,
         is_gsdpt: bool = False,
@@ -296,11 +297,11 @@ class DPTHead(_BaseDPTHead):
 
     def forward(
         self,
-        token_list: List[torch.Tensor],
+        token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frames_chunk_size: int = 8,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass with optional frame chunking for memory efficiency.
 
@@ -381,7 +382,7 @@ class DPTHead(_BaseDPTHead):
 
     def _forward_impl(
         self,
-        token_list: List[torch.Tensor],
+        token_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frame_start: int = None,
@@ -443,7 +444,7 @@ class DPTHead(_BaseDPTHead):
 
     def activate_head(
         self, out_head: torch.Tensor, activation: str = "inv_log+expp1"
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Process network output to extract attribute (e.g. points, depth, etc.) and confidence values.
 
@@ -554,7 +555,7 @@ def _make_fusion_block(features: int, size: int = None, has_residual: bool = Tru
     )
 
 
-def _make_scratch(in_shape: List[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
+def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
     """Helper function to make scratch.
 
     Args:
@@ -729,7 +730,7 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: Tuple[int, int] = None,
+    size: tuple[int, int] = None,
     scale_factor: float = None,
     mode: str = "bilinear",
     align_corners: bool = True,

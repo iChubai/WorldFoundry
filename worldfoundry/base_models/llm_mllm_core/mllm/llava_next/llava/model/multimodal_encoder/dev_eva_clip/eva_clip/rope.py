@@ -1,8 +1,9 @@
-from math import pi
-import torch
-from torch import nn
-from einops import rearrange, repeat
 import logging
+from math import pi
+
+import torch
+from einops import rearrange, repeat
+from torch import nn
 
 
 def broadcat(tensors, dim=-1):
@@ -11,7 +12,7 @@ def broadcat(tensors, dim=-1):
     assert len(shape_lens) == 1, "tensors must all have the same number of dimensions"
     shape_len = list(shape_lens)[0]
     dim = (dim + shape_len) if dim < 0 else dim
-    dims = list(zip(*map(lambda t: list(t.shape), tensors)))
+    dims = list(zip(*map(lambda t: list(t.shape), tensors), strict=False))
     expandable_dims = [(i, val) for i, val in enumerate(dims) if i != dim]
     assert all([*map(lambda t: len(set(t[1])) <= 2, expandable_dims)]), (
         "invalid dimensions for broadcastable concatentation"
@@ -19,8 +20,8 @@ def broadcat(tensors, dim=-1):
     max_dims = list(map(lambda t: (t[0], max(t[1])), expandable_dims))
     expanded_dims = list(map(lambda t: (t[0], (t[1],) * num_tensors), max_dims))
     expanded_dims.insert(dim, (dim, dims[dim]))
-    expandable_shapes = list(zip(*map(lambda t: t[1], expanded_dims)))
-    tensors = list(map(lambda t: t[0].expand(*t[1]), zip(tensors, expandable_shapes)))
+    expandable_shapes = list(zip(*map(lambda t: t[1], expanded_dims), strict=False))
+    tensors = list(map(lambda t: t[0].expand(*t[1]), zip(tensors, expandable_shapes, strict=False)))
     return torch.cat(tensors, dim=dim)
 
 

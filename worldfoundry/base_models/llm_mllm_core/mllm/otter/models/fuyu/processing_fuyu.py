@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2023 The HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +19,9 @@ import re
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-
 from transformers.processing_utils import ProcessorMixin
+from transformers.tokenization_utils_base import PaddingStrategy, TruncationStrategy
 from transformers.utils import TensorType, is_torch_available, logging, requires_backends
-from transformers.tokenization_utils_base import TruncationStrategy, PaddingStrategy
 
 if is_torch_available():
     # from .image_processing_fuyu import FuyuBatchFeature
@@ -50,8 +48,8 @@ BEGINNING_OF_ANSWER_STRING = "<0x04>"  # <boa>
 
 
 def full_unpacked_stream_to_tensor(
-    all_bi_tokens_to_place: List[int],
-    full_unpacked_stream: List["torch.Tensor"],
+    all_bi_tokens_to_place: list[int],
+    full_unpacked_stream: list["torch.Tensor"],
     fill_value: int,
     batch_size: int,
     new_seq_len: int,
@@ -81,12 +79,12 @@ def full_unpacked_stream_to_tensor(
 
 
 def construct_full_unpacked_stream(
-    num_real_text_tokens: Union[List[List[int]], "torch.Tensor"],
+    num_real_text_tokens: Union[list[list[int]], "torch.Tensor"],
     input_stream: "torch.Tensor",
-    image_tokens: List[List["torch.Tensor"]],
+    image_tokens: list[list["torch.Tensor"]],
     batch_size: int,
     num_sub_sequences: int,
-) -> List["torch.Tensor"]:
+) -> list["torch.Tensor"]:
     """Takes an input_stream tensor of shape B x S x ?. For each subsequence, adds any required
     padding to account for images and then unpacks the subsequences to create a single sequence per item in the batch.
     Returns a list of tensors, one for each item in the batch."""
@@ -116,12 +114,12 @@ def _replace_string_repr_with_token_tags(prompt: str) -> str:
     return prompt
 
 
-def _segment_prompt_into_text_token_conversions(prompt: str) -> List:
+def _segment_prompt_into_text_token_conversions(prompt: str) -> list:
     """
     Given a string prompt, converts the prompt into a list of TextTokenConversions.
     """
     # Wherever, we notice the [TOKEN_OPEN_STRING, TOKEN_CLOSE_STRING], we split the prompt
-    prompt_text_list: List = []
+    prompt_text_list: list = []
     regex_pattern = re.compile(
         f"({TOKEN_BBOX_OPEN_STRING}|{TOKEN_BBOX_CLOSE_STRING}|{TOKEN_POINT_OPEN_STRING}|{TOKEN_POINT_CLOSE_STRING})"
     )
@@ -141,7 +139,7 @@ def _segment_prompt_into_text_token_conversions(prompt: str) -> List:
     return prompt_text_list
 
 
-def _transform_coordinates_and_tokenize(prompt: str, scale_factor: float, tokenizer) -> List[int]:
+def _transform_coordinates_and_tokenize(prompt: str, scale_factor: float, tokenizer) -> list[int]:
     """
     This function transforms the prompt in the following fashion:
     - <box> <point> and </box> </point> to their respective token mappings
@@ -161,7 +159,7 @@ def _transform_coordinates_and_tokenize(prompt: str, scale_factor: float, tokeni
     # Tokenize the prompt
     # Convert prompt into a list split
     prompt_text_list = _segment_prompt_into_text_token_conversions(prompt)
-    transformed_prompt_tokens: List[int] = []
+    transformed_prompt_tokens: list[int] = []
     for elem in prompt_text_list:
         if elem[1]:
             # This is a location, we need to tokenize it
@@ -173,7 +171,7 @@ def _transform_coordinates_and_tokenize(prompt: str, scale_factor: float, tokeni
     return transformed_prompt_tokens
 
 
-def _transform_within_tags(text: str, scale_factor: float, tokenizer) -> List[int]:
+def _transform_within_tags(text: str, scale_factor: float, tokenizer) -> list[int]:
     """
     Given a bounding box of the fashion <box>1, 2, 3, 4</box> | <point>1, 2</point> This function is responsible for
     converting 1, 2, 3, 4 into tokens of 1 2 3 4 without any commas.
@@ -210,13 +208,13 @@ def _transform_within_tags(text: str, scale_factor: float, tokenizer) -> List[in
 
 def _tokenize_prompts_with_image_and_batch(
     tokenizer,
-    prompts: List[List[str]],
-    scale_factors: Optional[List[List["torch.Tensor"]]],
+    prompts: list[list[str]],
+    scale_factors: list[list["torch.Tensor"]] | None,
     max_tokens_to_generate: int,
     max_position_embeddings: int,
     add_BOS: bool,  # Same issue with types as above
     add_beginning_of_answer_token: bool,
-) -> Tuple["torch.Tensor", "torch.Tensor"]:
+) -> tuple["torch.Tensor", "torch.Tensor"]:
     """
     Given a set of prompts and number of tokens to generate:
     - tokenize prompts
@@ -227,11 +225,11 @@ def _tokenize_prompts_with_image_and_batch(
     # If not tool use, tranform the coordinates while tokenizing
     if scale_factors is not None:
         transformed_prompt_tokens = []
-        for prompt_seq, scale_factor_seq in zip(prompts, scale_factors):
+        for prompt_seq, scale_factor_seq in zip(prompts, scale_factors, strict=False):
             transformed_prompt_tokens.append(
                 [
                     _transform_coordinates_and_tokenize(prompt, scale_factor.item(), tokenizer)
-                    for prompt, scale_factor in zip(prompt_seq, scale_factor_seq)
+                    for prompt, scale_factor in zip(prompt_seq, scale_factor_seq, strict=False)
                 ]
             )
     else:
@@ -267,8 +265,8 @@ def _tokenize_prompts_with_image_and_batch(
             f"exceeds context length of {max_position_embeddings}. Will generate as many tokens as possible.",
         )
     # Now update the list of list to be of the same size: samples_length.
-    for prompt_tokens_seq, prompts_length_seq in zip(prompts_tokens, prompts_length):
-        for prompt_tokens, prompt_length in zip(prompt_tokens_seq, prompts_length_seq):
+    for prompt_tokens_seq, prompts_length_seq in zip(prompts_tokens, prompts_length, strict=False):
+        for prompt_tokens, prompt_length in zip(prompt_tokens_seq, prompts_length_seq, strict=False):
             if len(prompt_tokens) > samples_length:
                 raise ValueError("Length of subsequence prompt exceeds sequence length.")
             padding_size = samples_length - prompt_length
@@ -291,7 +289,7 @@ def original_to_transformed_w_coords(original_coords, scale_w):
     return np.round(original_coords * scale_w).astype(np.int32)
 
 
-def scale_point_to_transformed_image(x: float, y: float, scale_factor: float) -> List[int]:
+def scale_point_to_transformed_image(x: float, y: float, scale_factor: float) -> list[int]:
     x_scaled = original_to_transformed_w_coords(np.array([x / 2]), scale_factor)[0]
     y_scaled = original_to_transformed_h_coords(np.array([y / 2]), scale_factor)[0]
     return [x_scaled, y_scaled]
@@ -299,7 +297,7 @@ def scale_point_to_transformed_image(x: float, y: float, scale_factor: float) ->
 
 def scale_bbox_to_transformed_image(
     top: float, left: float, bottom: float, right: float, scale_factor: float
-) -> List[int]:
+) -> list[int]:
     top_scaled = original_to_transformed_w_coords(np.array([top / 2]), scale_factor)[0]
     left_scaled = original_to_transformed_h_coords(np.array([left / 2]), scale_factor)[0]
     bottom_scaled = original_to_transformed_w_coords(np.array([bottom / 2]), scale_factor)[0]
@@ -378,7 +376,7 @@ class FuyuProcessor(ProcessorMixin):
 
         return labels
 
-    def _right_pad_inputs_with_attention_mask(self, model_inputs: List[Dict], return_attention_mask: bool):
+    def _right_pad_inputs_with_attention_mask(self, model_inputs: list[dict], return_attention_mask: bool):
         max_length_input_ids = max(entry["input_ids"].shape[1] for entry in model_inputs)
         max_length_image_patch_indices = max(entry["image_patches_indices"].shape[1] for entry in model_inputs)
 
@@ -428,7 +426,7 @@ class FuyuProcessor(ProcessorMixin):
 
         return batched_inputs
 
-    def _left_pad_inputs_with_attention_mask(self, model_inputs: List[Dict], return_attention_mask: bool):
+    def _left_pad_inputs_with_attention_mask(self, model_inputs: list[dict], return_attention_mask: bool):
         max_length_input_ids = max(entry["input_ids"].shape[1] for entry in model_inputs)
         max_length_image_patch_indices = max(entry["image_patches_indices"].shape[1] for entry in model_inputs)
 
@@ -549,18 +547,18 @@ class FuyuProcessor(ProcessorMixin):
         images=None,
         add_special_tokens: bool = True,
         return_attention_mask: bool = True,
-        padding: Union[bool, str, PaddingStrategy] = False,
-        truncation: Union[bool, str, TruncationStrategy] = None,
-        max_length: Optional[int] = None,
+        padding: bool | str | PaddingStrategy = False,
+        truncation: bool | str | TruncationStrategy = None,
+        max_length: int | None = None,
         stride: int = 0,
-        pad_to_multiple_of: Optional[int] = None,
+        pad_to_multiple_of: int | None = None,
         return_overflowing_tokens: bool = False,
         return_special_tokens_mask: bool = False,
         return_offsets_mapping: bool = False,
         return_token_type_ids: bool = False,
         return_length: bool = False,
         verbose: bool = True,
-        return_tensors: Optional[Union[str, TensorType]] = None,
+        return_tensors: str | TensorType | None = None,
         **kwargs,
     ) -> "FuyuBatchFeature":
         """
@@ -649,7 +647,7 @@ class FuyuProcessor(ProcessorMixin):
         all_encodings = []
 
         for prompt, scale_factor, image_unpadded_height, image_unpadded_width, tensor_batch_image in zip(
-            prompts, scale_factors, image_unpadded_heights, image_unpadded_widths, tensor_batch_images
+            prompts, scale_factors, image_unpadded_heights, image_unpadded_widths, tensor_batch_images, strict=False
         ):
             sample_encoding = self.get_sample_encoding(
                 prompts=[prompt],
@@ -768,7 +766,7 @@ class FuyuProcessor(ProcessorMixin):
             raise ValueError("Make sure that you pass in as many target sizes as output sequences")
 
         results = []
-        for seq, size in zip(outputs, target_sizes):
+        for seq, size in zip(outputs, target_sizes, strict=False):
             seq = tokens_to_boxes(seq, size)
             seq = tokens_to_points(seq, size)
             results.append(seq)

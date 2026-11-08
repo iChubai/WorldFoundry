@@ -32,7 +32,7 @@ def _rescan_model_configs():
                 config_files.extend(config_path.glob(f"*{ext}"))
 
     for cf in config_files:
-        with open(cf, "r", encoding="utf8") as f:
+        with open(cf, encoding="utf8") as f:
             model_cfg = json.load(f)
             if all(a in model_cfg for a in ("embed_dim", "vision_cfg", "text_cfg")):
                 _MODEL_CONFIGS[cf.stem] = model_cfg

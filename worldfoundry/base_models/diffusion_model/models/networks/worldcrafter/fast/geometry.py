@@ -2,7 +2,9 @@
 # Source revision: 7e57e4d0448e8661eb6ae078f53e19638bd07102
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
 from __future__ import annotations
+
 from typing import Tuple
+
 import torch
 import torch.nn.functional as F
 from einops import einsum, rearrange, repeat
@@ -20,7 +22,7 @@ def pixel_coordinates(
     pixel_center: bool = False,
     device: torch.device | str = "cpu",
     dtype: torch.dtype = torch.float32,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Sampling coordinates for a ``height x width`` grid.
 
     With ``pixel_center=False`` the samples are the integers ``0 .. W-1``, which

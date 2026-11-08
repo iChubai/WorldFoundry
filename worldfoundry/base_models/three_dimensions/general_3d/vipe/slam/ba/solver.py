@@ -178,7 +178,7 @@ class Solver:
         fully_fixed_groups = {t for t, inds in self.group_fixed_inds.items() if inds is None}
 
         energy: torch.Tensor | None = None
-        for term, kernel in zip(self.terms, self.kernels):
+        for term, kernel in zip(self.terms, self.kernels, strict=False):
             # Compute the newest term formulation
             term.update(self)
             active_group_names = term.group_names().difference(fully_fixed_groups)

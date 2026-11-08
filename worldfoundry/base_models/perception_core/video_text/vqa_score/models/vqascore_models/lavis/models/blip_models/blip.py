@@ -9,10 +9,18 @@ import logging
 import os
 
 import torch
+
 from ...common.dist_utils import download_cached_file
 from ...common.utils import is_url
+
+# isort: split
 from ...models.base_model import BaseModel
+
+# isort: split
+# isort: split
 from ...models.vit import interpolate_pos_embed
+
+# isort: split
 from transformers import BertTokenizer
 
 
@@ -51,7 +59,7 @@ class BlipBase(BaseModel):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        logging.info("Missing keys {}".format(msg.missing_keys))
+        logging.info(f"Missing keys {msg.missing_keys}")
         logging.info("load checkpoint from %s" % url_or_filename)
 
         return msg

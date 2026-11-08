@@ -44,7 +44,6 @@ class RobustKernel(ABC):
         Returns:
             The return value.
         """
-        pass
 
     def update_mu(self, mu: float) -> float:
         """Update mu.

@@ -32,7 +32,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.c
 )
 from worldfoundry.core.model_loading import load_model
 
-
 _RESIDUAL_LAYER_MAP = {
     "conv1": "residual.2",
     "conv2": "residual.6",
@@ -150,7 +149,7 @@ class AutoencoderKLWan(WanAutoencoderAdapterMixin, nn.Module):
         cls,
         pretrained_model_path: str,
         additional_kwargs: dict | None = None,
-    ) -> "AutoencoderKLWan":
+    ) -> AutoencoderKLWan:
         parameters = set(inspect.signature(cls.__init__).parameters) - {"self", "cls"}
         config = {key: value for key, value in (additional_kwargs or {}).items() if key in parameters}
         return load_model(

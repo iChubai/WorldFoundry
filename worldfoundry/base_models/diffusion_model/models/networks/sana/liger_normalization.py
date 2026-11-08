@@ -30,7 +30,7 @@ import torch.nn as nn
 logger = logging.getLogger(__name__)
 
 
-def get_rmsnorm_class() -> Type[nn.Module]:
+def get_rmsnorm_class() -> type[nn.Module]:
     """Return the RMSNorm class to use, controlled by ``SANA_USE_LIGER`` env var.
 
     Liger is **on by default** when the package is installed.

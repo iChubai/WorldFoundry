@@ -10,7 +10,6 @@ Changing a field here changes T2V 1.3B, T2V 14B, and I2V 14B at once.
 """
 
 import torch
-
 from easydict import EasyDict
 
 # ------------------------ Wan shared config ------------------------#

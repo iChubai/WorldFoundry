@@ -44,6 +44,7 @@ from typing import List
 
 import torch
 from torch import Tensor
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
@@ -156,7 +157,7 @@ class FlashInferKVCacheManager:
 
         # ── Physical paged KV caches ─────────────────────────────────────────
         # Shape per block: [max_num_pages, 2, page_size, H, D]   (NHD, K=dim0, V=dim1)
-        self.kv_caches: List[Tensor] = [
+        self.kv_caches: list[Tensor] = [
             torch.zeros(
                 self.max_num_pages,
                 2,
@@ -171,19 +172,19 @@ class FlashInferKVCacheManager:
 
         # ── Per-block state ──────────────────────────────────────────────────
         # Patch pages (IDs 0 .. max_patch_pages-1)
-        self.scale_patch_pages: List[collections.deque] = [collections.deque() for _ in range(num_blocks)]
-        self.live_window_patch_pages: List[collections.deque] = [collections.deque() for _ in range(num_blocks)]
-        self.free_patch_pages: List[List[int]] = [list(range(max_patch_pages)) for _ in range(num_blocks)]
+        self.scale_patch_pages: list[collections.deque] = [collections.deque() for _ in range(num_blocks)]
+        self.live_window_patch_pages: list[collections.deque] = [collections.deque() for _ in range(num_blocks)]
+        self.free_patch_pages: list[list[int]] = [list(range(max_patch_pages)) for _ in range(num_blocks)]
 
         # Special pages (IDs max_patch_pages .. max_num_pages-1)
-        self.all_special_pages: List[List[int]] = [[] for _ in range(num_blocks)]
-        self.free_special_pages: List[List[int]] = [
+        self.all_special_pages: list[list[int]] = [[] for _ in range(num_blocks)]
+        self.free_special_pages: list[list[int]] = [
             list(range(max_patch_pages, self.max_num_pages)) for _ in range(num_blocks)
         ]
-        self.special_token_count: List[int] = [0] * num_blocks
+        self.special_token_count: list[int] = [0] * num_blocks
 
         # Frame counter per block (determines scale vs window routing)
-        self.frame_count: List[int] = [0] * num_blocks
+        self.frame_count: list[int] = [0] * num_blocks
 
         # Deferred eviction support for flow-based keyframe selection.
         # When True, evict_frames() becomes a no-op; caller must later call
@@ -443,7 +444,7 @@ class FlashInferKVCacheManager:
     # Helper methods
     # =========================================================================
 
-    def build_visible_page_table(self, block_idx: int) -> List[int]:
+    def build_visible_page_table(self, block_idx: int) -> list[int]:
         """
         Return page IDs in strict order: scale → window → special.
 

@@ -13,9 +13,9 @@ import logging
 import os
 import warnings
 
-from torch import Tensor
-from torch import nn
 import torch.nn.functional as F
+from torch import Tensor, nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 XFORMERS_AVAILABLE = False

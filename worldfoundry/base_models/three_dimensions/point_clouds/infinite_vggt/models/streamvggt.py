@@ -1,24 +1,27 @@
 """Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> models -> streamvggt.py functionality."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, List, Optional, Tuple
+
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin  # used for model hub
+from transformers.file_utils import ModelOutput
 
-from .aggregator import Aggregator
-from ..heads.camera_head import CameraHead
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.dpt_head import DPTHead
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.track_head import TrackHead
-from transformers.file_utils import ModelOutput
-from typing import Optional, Tuple, List, Any, Callable
-from dataclasses import dataclass
+
+from ..heads.camera_head import CameraHead
+from .aggregator import Aggregator
 
 
 @dataclass
 class StreamVGGTOutput(ModelOutput):
     """Stream vggt output implementation."""
 
-    ress: Optional[List[dict]] = None
-    views: Optional[torch.Tensor] = None
+    ress: list[dict] | None = None
+    views: torch.Tensor | None = None
 
 
 class StreamVGGT(nn.Module, PyTorchModelHubMixin):
@@ -46,7 +49,7 @@ class StreamVGGT(nn.Module, PyTorchModelHubMixin):
         self,
         views,
         query_points: torch.Tensor = None,
-        history_info: Optional[dict] = None,
+        history_info: dict | None = None,
         past_key_values=None,
         use_cache=False,
         past_frame_idx=0,
@@ -131,7 +134,7 @@ class StreamVGGT(nn.Module, PyTorchModelHubMixin):
         frames,
         query_points: torch.Tensor = None,
         past_key_values=None,
-        frame_writer: Optional[Callable[[int, dict, dict], None]] = None,
+        frame_writer: Callable[[int, dict, dict], None] | None = None,
         cache_results: bool = True,
         total_budget=None,
     ):

@@ -112,7 +112,10 @@ class AttentionModule(nn.Module):
                 [
                     self.forward(query, key, value)
                     for query, key, value in zip(
-                        q.split(request_batch_sizes), k.split(request_batch_sizes), v.split(request_batch_sizes)
+                        q.split(request_batch_sizes),
+                        k.split(request_batch_sizes),
+                        v.split(request_batch_sizes),
+                        strict=False,
                     )
                 ]
             )
@@ -134,7 +137,7 @@ class SelfAttentionProcessor:
 
     def __call__(
         self,
-        attention: "SelfAttention",
+        attention: SelfAttention,
         x: torch.Tensor,
         freqs: torch.Tensor,
         **kwargs: Any,
@@ -169,7 +172,7 @@ class SelfAttentionProcessor:
 
 
 def apply_wan_qk_norm_rope(
-    attention: "SelfAttention",
+    attention: SelfAttention,
     q: torch.Tensor,
     k: torch.Tensor,
     freqs: torch.Tensor,
@@ -276,7 +279,7 @@ class SelfAttention(nn.Module):
 
 
 def project_wan_cross_kv(
-    attention: "CrossAttention", context: torch.Tensor, *, image: bool = False
+    attention: CrossAttention, context: torch.Tensor, *, image: bool = False
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Return normalized keys and values, preserving the dense call order."""
     norm_key = attention.norm_k_img if image else attention.norm_k
@@ -293,7 +296,7 @@ class CrossAttentionProcessor:
 
     def __call__(
         self,
-        attention: "CrossAttention",
+        attention: CrossAttention,
         x: torch.Tensor,
         context: torch.Tensor,
         **kwargs: Any,
@@ -731,7 +734,7 @@ class MLP(torch.nn.Module):
 class Head(nn.Module):
     """AdaLN-modulated output projection from tokens back to patch voxels."""
 
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         """Build the unmodulated LayerNorm and the ``C_out * prod(patch)`` linear.
 
         Args:
@@ -790,7 +793,7 @@ class WanModel(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -955,7 +958,7 @@ class WanModel(torch.nn.Module):
             stride=self.patch_size[1:],
         ).to(device=reference.device, dtype=reference.dtype)
 
-    def patchify(self, x: torch.Tensor, control_camera_latents_input: Optional[torch.Tensor] = None):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor | None = None):
         """Conv3d-patchify ``x`` and optionally add the camera-control residual.
 
         Args:
@@ -1037,7 +1040,9 @@ class WanModel(torch.nn.Module):
                 return torch.cat(
                     [
                         project_single(part, image)
-                        for part, image in zip(source.split(request_batch_sizes), clip.split(request_batch_sizes))
+                        for part, image in zip(
+                            source.split(request_batch_sizes), clip.split(request_batch_sizes), strict=False
+                        )
                     ]
                 )
             return project_single(source, clip)
@@ -1176,13 +1181,13 @@ class WanModel(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        clip_feature: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        clip_feature: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
         memory_context=None,
-        fps: Optional[torch.Tensor] = None,
-        control_camera_latents_input: Optional[torch.Tensor] = None,
+        fps: torch.Tensor | None = None,
+        control_camera_latents_input: torch.Tensor | None = None,
         feature_cache: Any = None,
         feature_cache_step: int = 0,
         feature_cache_total_steps: int | None = None,
@@ -1259,7 +1264,7 @@ class WanModel(torch.nn.Module):
                     token_sizes = tuple(size * sequence for size in request_batch_sizes)
                     time_parts = [
                         self.time_embedding(part).unflatten(0, (size, sequence))
-                        for part, size in zip(features.split(token_sizes), request_batch_sizes)
+                        for part, size in zip(features.split(token_sizes), request_batch_sizes, strict=False)
                     ]
                     t = torch.cat(time_parts)
                     t_mod = torch.cat([self.time_projection(part) for part in time_parts]).unflatten(2, (6, self.dim))
@@ -1494,7 +1499,7 @@ class WanModel(torch.nn.Module):
             x = torch.cat(
                 [
                     self.project_output(part, time_part, **kwargs)
-                    for part, time_part in zip(x.split(request_batch_sizes), t.split(request_batch_sizes))
+                    for part, time_part in zip(x.split(request_batch_sizes), t.split(request_batch_sizes), strict=False)
                 ]
             )
         else:

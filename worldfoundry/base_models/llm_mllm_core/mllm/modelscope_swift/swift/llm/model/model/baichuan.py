@@ -8,6 +8,7 @@ from transformers import AutoConfig
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import LLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -17,7 +18,7 @@ logger = get_logger()
 
 
 def get_model_tokenizer_baichuan(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
     # baichuan-13b does not implement the `get_input_embeddings` function
@@ -52,7 +53,7 @@ register_model(
 
 
 def get_model_tokenizer_baichuan_m1(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
@@ -105,7 +106,7 @@ def patch_baichuan2_lm_head_forward(self, hidden_states: Tensor) -> Tensor:
 def get_model_tokenizer_baichuan2(
     model_dir: str,
     model_info: ModelInfo,
-    model_kwargs: Dict[str, Any],
+    model_kwargs: dict[str, Any],
     load_model: bool = True,
     model_config=None,
     **kwargs,

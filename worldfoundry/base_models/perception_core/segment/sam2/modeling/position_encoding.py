@@ -10,7 +10,6 @@ import math
 from typing import Any, Optional, Tuple
 
 import numpy as np
-
 import torch
 from torch import nn
 
@@ -26,12 +25,12 @@ class PositionEmbeddingSine(nn.Module):
         num_pos_feats,
         temperature: int = 10000,
         normalize: bool = True,
-        scale: Optional[float] = None,
+        scale: float | None = None,
         # Following settings only relevant
         # for warmping up cache for compilation
         warmup_cache: bool = True,
         image_size: int = 1024,
-        strides: Tuple[int] = (4, 8, 16, 32),
+        strides: tuple[int] = (4, 8, 16, 32),
     ):
         """Init.
 

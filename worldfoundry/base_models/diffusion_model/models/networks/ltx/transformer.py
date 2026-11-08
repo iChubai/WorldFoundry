@@ -204,7 +204,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
             )
         return attn(rms_norm(x, eps=self.norm_eps), context=context, mask=context_mask)
 
-    def forward(  # noqa: PLR0915
+    def forward(
         self,
         video: TransformerArgs | None,
         audio: TransformerArgs | None,

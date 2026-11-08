@@ -6,9 +6,9 @@
 # Modified by Zhenda Xie
 # --------------------------------------------------------
 
+from .simmim import build_simmim
 from .swin_transformer import build_swin
 from .vision_transformer import build_vit
-from .simmim import build_simmim
 
 
 def build_model(config, is_pretrain=True):

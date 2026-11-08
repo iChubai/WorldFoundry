@@ -1,27 +1,29 @@
-import torch
-import numpy as np
-from PIL import Image
-from typing import List, Union
 import copy
-import time
-from decord import VideoReader, cpu
 import os
 
 # current_dir = os.path.dirname(os.path.abspath(__file__))
 # current_dir = os.path.join(current_dir, "perceptionlm")
 # print(f'current_dir {current_dir}')
 import tempfile
+import time
+from typing import List, Union
+
+import numpy as np
 import requests
+import torch
+from decord import VideoReader, cpu
+from PIL import Image
 
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.args import dataclass_from_dict
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.image_transform import get_image_transform
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.video_transform import get_video_transform
+
+# isort: split
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.generate import (
     PackedCausalTransformerGenerator,
     PackedCausalTransformerGeneratorArgs,
     load_consolidated_model_and_tokenizer,
 )
-
 
 PERCEPTION_LM_MODELS = {
     "perception-lm-1b": {
@@ -67,7 +69,7 @@ class PerceptionLMModel:
         )
         self.model.eval()
 
-    def load_images(self, paths: List[str], num_tiles: int = 4) -> List[Union[torch.Tensor, List[torch.Tensor]]]:
+    def load_images(self, paths: list[str], num_tiles: int = 4) -> list[torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         for path in paths:
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file
@@ -154,8 +156,8 @@ class PerceptionLMModel:
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         num_frames: int = 32,
         num_tiles: int = 36,
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
@@ -169,7 +171,7 @@ class PerceptionLMModel:
         processed_data = self.load_images(paths, num_tiles)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers):
+        for data, question, answer in zip(processed_data, questions, answers, strict=False):
             # Determine if this is a video or image
             media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
 
@@ -201,21 +203,21 @@ class PerceptionLMModel:
 
     def generate(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         num_frames: int = 32,
         num_tiles: int = 36,
         temperature: float = 0.0,
         top_p: float = None,
         top_k: int = None,
         max_new_tokens: int = 256,
-    ) -> List[str]:
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         processed_data = self.load_images(images, num_tiles)
         generated_texts = []
 
-        for data, prompt in zip(processed_data, texts):
+        for data, prompt in zip(processed_data, texts, strict=False):
             # Determine if this is a video or image
             media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
 
@@ -244,23 +246,23 @@ class PerceptionLMModel:
 
     def batch_generate(
         self,
-        media_paths: List[str],
-        questions: List[str],
-        media_types: List[str],
+        media_paths: list[str],
+        questions: list[str],
+        media_types: list[str],
         num_frames: int = 32,
         num_tiles: int = 36,
         temperature: float = 0.0,
         top_p: float = None,
         top_k: int = None,
         max_new_tokens: int = 256,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Batch generation for multiple media files and questions
         """
         assert len(media_paths) == len(questions) == len(media_types), "Inputs must have the same length"
 
         prompts = []
-        for path, question, media_type in zip(media_paths, questions, media_types):
+        for path, question, media_type in zip(media_paths, questions, media_types, strict=False):
             if media_type == "image":
                 transform = get_image_transform(
                     vision_input_type=("vanilla" if num_tiles == 1 else self.config.data.vision_input_type),

@@ -1,24 +1,24 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> rasterization.py functionality."""
 
 import os
-import time
-from typing import *
-from contextlib import contextmanager
 import threading
+import time
 import weakref
+from contextlib import contextmanager
+from typing import *
 
+import moderngl
 import numpy as np
 from numpy import ndarray
-import moderngl
 
 from .transforms import extrinsics_to_view, intrinsics_to_perspective
 
 __all__ = [
     "RastContext",
-    "rasterize_triangles",
-    "rasterize_triangles_peeling",
     "rasterize_lines",
     "rasterize_point_cloud",
+    "rasterize_triangles",
+    "rasterize_triangles_peeling",
     "sample_texture",
     "test_rasterization",
 ]
@@ -444,7 +444,7 @@ def depth_texture_buffer_to_linear(
         buffer_depth_tex: The buffer depth tex.
         linear_depth_tex: The linear depth tex.
     """
-    program_name = f"depth_buffer_to_linear"
+    program_name = "depth_buffer_to_linear"
     if (prog := ctx.programs.get(program_name, None)) is None:
         prog = ctx.mgl_ctx.program(vertex_shader=FULL_SCREEN_VS, fragment_shader=DEPTH_BUFFER_TO_LINEAR_FS)
         prog["bufferDepthMap"] = 0
@@ -462,7 +462,7 @@ def depth_texture_linear_to_buffer(
         linear_depth_tex: The linear depth tex.
         buffer_depth_tex: The buffer depth tex.
     """
-    program_name = f"depth_linear_to_buffer"
+    program_name = "depth_linear_to_buffer"
     if (prog := ctx.programs.get(program_name, None)) is None:
         prog = ctx.mgl_ctx.program(vertex_shader=FULL_SCREEN_VS, fragment_shader=DEPTH_LINEAR_TO_BUFFER_FS)
         prog["linearDepthMap"] = 0
@@ -677,11 +677,9 @@ def rasterize_triangles(
     if return_interpolation:
         vbo_uv = ctx.mgl_ctx.buffer(
             np.ascontiguousarray(
-                (
-                    np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]], dtype=np.float32)
-                    .reshape(1, 3, 2)
-                    .repeat(vertices.shape[0], axis=0)
-                )
+                np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]], dtype=np.float32)
+                .reshape(1, 3, 2)
+                .repeat(vertices.shape[0], axis=0)
             )
         )
 
@@ -692,7 +690,7 @@ def rasterize_triangles(
                 lambda x: x is not None,
                 [
                     (vbo_vertices, "3f", "inVert"),
-                    (vbo_attributes, f"4f", "inAttr") if attributes is not None else None,
+                    (vbo_attributes, "4f", "inAttr") if attributes is not None else None,
                     (vbo_uv, "2f", "inUV") if return_interpolation else None,
                 ],
             )
@@ -1021,11 +1019,9 @@ def rasterize_triangles_peeling(
     if return_interpolation:
         vbo_uv = ctx.mgl_ctx.buffer(
             np.ascontiguousarray(
-                (
-                    np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]], dtype=np.float32)
-                    .reshape(1, 3, 2)
-                    .repeat(vertices.shape[0], axis=0)
-                )
+                np.array([[1.0, 0.0], [0.0, 1.0], [0.0, 0.0]], dtype=np.float32)
+                .reshape(1, 3, 2)
+                .repeat(vertices.shape[0], axis=0)
             )
         )
 
@@ -1036,7 +1032,7 @@ def rasterize_triangles_peeling(
                 lambda x: x is not None,
                 [
                     (vbo_vertices, "3f", "inVert"),
-                    (vbo_attributes, f"4f", "inAttr") if attributes is not None else None,
+                    (vbo_attributes, "4f", "inAttr") if attributes is not None else None,
                     (vbo_uv, "2f", "inUV") if return_interpolation else None,
                 ],
             )
@@ -1371,11 +1367,7 @@ def rasterize_lines(
     if return_interpolation:
         vbo_uv = ctx.mgl_ctx.buffer(
             np.ascontiguousarray(
-                (
-                    np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)
-                    .reshape(1, 2, 2)
-                    .repeat(vertices.shape[0], axis=0)
-                )
+                np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32).reshape(1, 2, 2).repeat(vertices.shape[0], axis=0)
             )
         )
 
@@ -1386,7 +1378,7 @@ def rasterize_lines(
                 lambda x: x is not None,
                 [
                     (vbo_vertices, "3f", "inVert"),
-                    (vbo_attributes, f"4f", "inAttr") if attributes is not None else None,
+                    (vbo_attributes, "4f", "inAttr") if attributes is not None else None,
                     (vbo_uv, "2f", "inUV") if return_interpolation else None,
                 ],
             )
@@ -1713,7 +1705,7 @@ def rasterize_point_cloud(
                 lambda x: x is not None,
                 [
                     (vbo_vertices, "3f", "inVert"),
-                    (vbo_attributes, f"4f", "inAttr") if attributes is not None else None,
+                    (vbo_attributes, "4f", "inAttr") if attributes is not None else None,
                     (vbo_point_sizes, "1f", "inPointSize") if point_sizes is not None else None,
                 ],
             )

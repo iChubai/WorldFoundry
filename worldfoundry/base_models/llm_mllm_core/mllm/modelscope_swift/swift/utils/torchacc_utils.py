@@ -24,7 +24,7 @@ logger = get_logger()
 
 
 # DataLoader
-def get_bucket_sizes(max_length: int) -> List[int]:
+def get_bucket_sizes(max_length: int) -> list[int]:
     """Get the bucket sizes for TorchAcc.
     You can set the environment variable TORCHACC_DATA_BUCKETS to specify
     the bucket sizes. If not set, we use a normal distribution bucketing with
@@ -201,7 +201,7 @@ def ta_load_optimizer_and_scheduler(optimizer, lr_scheduler, checkpoint, device)
     return optimizer, lr_scheduler
 
 
-def save_ta_ddp_checkpoint(self_model, tokenizer, args, output_dir: Optional[str] = None):
+def save_ta_ddp_checkpoint(self_model, tokenizer, args, output_dir: str | None = None):
     output_dir = output_dir if output_dir is not None else args.output_dir
     import torch_xla.core.xla_model as xm
 
@@ -375,16 +375,16 @@ def patch_llama_model(model):
     def llama_attn_forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.Tensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
-        cache_position: Optional[torch.LongTensor] = None,
+        cache_position: torch.LongTensor | None = None,
         **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-        from torchacc.ops import flash_attn_varlen_xla
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         import einops
+        from torchacc.ops import flash_attn_varlen_xla
 
         bsz, q_len, _ = hidden_states.size()
 
@@ -536,8 +536,8 @@ def patah_chatglm_model(model):
         # core attention computation
         # ==================================
 
-        from torchacc.ops import flash_attn_varlen_qkvpacked_xla
         import einops
+        from torchacc.ops import flash_attn_varlen_qkvpacked_xla
 
         query_layer, key_layer, value_layer = [k.permute(1, 2, 0, 3) for k in [query_layer, key_layer, value_layer]]
         bsz, _, q_len, _ = query_layer.size()
@@ -577,12 +577,12 @@ def patch_baichuan_model(model):
     def baichuan_attn_forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
         **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         import einops
 
         bsz, q_len, _ = hidden_states.size()
@@ -699,8 +699,8 @@ def patch_qwen2_model(model):
         key_states = key_states.transpose(1, 2)
         value_states = value_states.transpose(1, 2)
 
-        from torchacc.ops import flash_attn_varlen_xla
         import einops
+        from torchacc.ops import flash_attn_varlen_xla
 
         q, k, v = [einops.rearrange(x, "b s ... -> (b s) ...") for x in [query_states, key_states, value_states]]
         cu_q_lens = torch.arange(0, (bsz + 1) * q_len, step=q_len, dtype=torch.int32, device=q.device)
@@ -720,14 +720,14 @@ def patch_qwen2_model(model):
     def qwen2_forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
         **kwargs,
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
@@ -843,9 +843,9 @@ def patch_qwen2_model(model):
 
 
 def patch_clip_grad_norm(accelerator):
-    from accelerate.utils import DistributedType
-    from accelerate.optimizer import AcceleratedOptimizer
     import torch_xla.core.xla_model as xm
+    from accelerate.optimizer import AcceleratedOptimizer
+    from accelerate.utils import DistributedType
 
     def clip_grad_norm_(self, parameters, max_norm, norm_type=2):
         """

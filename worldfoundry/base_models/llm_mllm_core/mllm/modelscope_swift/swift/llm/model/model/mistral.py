@@ -3,6 +3,7 @@
 from typing import Any, Dict
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..register import (
@@ -167,7 +168,7 @@ register_model(
 
 
 def get_model_tokenizer_mistral_2503(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     try:
         from transformers import Mistral3ForConditionalGeneration

@@ -1,16 +1,16 @@
-import re
 import random
+import re
+
+import numpy as np
 import torch
 import torch.utils.checkpoint
-
+from decord import VideoReader
+from PIL import Image
+from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 from transformers.processing_utils import ProcessorMixin
 from transformers.tokenization_utils_base import BatchEncoding
-from transformers.models.clip.image_processing_clip import CLIPImageProcessor
-from .tokenization_mplug_owl import MplugOwlTokenizer
 
-from decord import VideoReader
-import numpy as np
-from PIL import Image
+from .tokenization_mplug_owl import MplugOwlTokenizer
 
 
 def get_index(num_frames, num_segments):
@@ -101,7 +101,7 @@ def detokenize_generations(tokens_gpu_tensor, lengths_gpu_tensor, return_segment
 
     tokens = tokens_gpu_tensor.cpu().numpy().tolist()
     lengths = lengths_gpu_tensor.cpu().numpy().tolist()
-    for sequence_tokens, length in zip(tokens, lengths):
+    for sequence_tokens, length in zip(tokens, lengths, strict=False):
         sequence_tokens = sequence_tokens[:length]
         prompts_plus_generations.append(tokenizer.detokenize(sequence_tokens))
         if return_segments:
@@ -197,7 +197,7 @@ def _tokenize_prompts_and_batch(prompts, tokens_to_generate, add_BOS, tokenizer,
     # Number of tokens in the each sample of the batch.
     samples_length = max_prompt_len + tokens_to_generate
     # Now update the list of list to be of the same size: samples_length.
-    for prompt_tokens, prompt_length in zip(prompts_tokens, prompts_length):
+    for prompt_tokens, prompt_length in zip(prompts_tokens, prompts_length, strict=False):
         padding_size = samples_length - prompt_length
         prompt_tokens.extend([tokenizer.eos_token_id] * padding_size)
 
@@ -220,7 +220,7 @@ def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65
         prompt_chunk = []
 
     # Pure Text
-    if all([media_token not in prompt for media_token in media_tokens.keys()]):
+    if all([media_token not in prompt for media_token in media_tokens]):
         enc_chunk = prompt_chunk + tokenizer(prompt, add_special_tokens=False, **kwargs)["input_ids"]
 
     # Multi-Modal Text

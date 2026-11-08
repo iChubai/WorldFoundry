@@ -140,7 +140,7 @@ class SegmentedAutoregressiveRunner(NativeDiffusionRunner):
             from ..models.encoders.hy_nomas import action_windows
 
             generated = []
-            for index, (latents, text, camera) in enumerate(zip(chunks, segments, cameras)):
+            for index, (latents, text, camera) in enumerate(zip(chunks, segments, cameras, strict=False)):
                 inputs = dict(text)
                 inputs.update(frame_offset=session.frame_offset, camera_extrinsics=camera)
                 prompts = cast(list[str], request_options.get("segments") or list(request.prompts))

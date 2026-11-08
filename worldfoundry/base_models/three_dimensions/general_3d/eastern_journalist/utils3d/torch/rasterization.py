@@ -1,12 +1,12 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> rasterization.py functionality."""
 
-from typing import *
 import threading
+from typing import *
 
-import torch
-from torch import Tensor
-import torch.nn.functional as F
 import nvdiffrast.torch as dr
+import torch
+import torch.nn.functional as F
+from torch import Tensor
 
 from .transforms import extrinsics_to_view, intrinsics_to_perspective
 

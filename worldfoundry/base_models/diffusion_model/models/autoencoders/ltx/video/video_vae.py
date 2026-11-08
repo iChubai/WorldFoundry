@@ -14,7 +14,8 @@ codecs; sibling of :mod:`~..audio.audio_vae`.
 """
 
 import logging
-from typing import Any, Callable, Iterator, List, Tuple
+from collections.abc import Callable, Iterator
+from typing import Any, List, Tuple
 
 import torch
 from einops import rearrange
@@ -93,7 +94,7 @@ def _make_encoder_block(
     norm_layer: NormLayerType,
     norm_num_groups: int,
     spatial_padding_mode: PaddingModeType,
-) -> Tuple[nn.Module, int]:
+) -> tuple[nn.Module, int]:
     out_channels = in_channels
 
     if block_name == "res_x":
@@ -230,7 +231,7 @@ class VideoEncoder(nn.Module):
         convolution_dimensions: int = 3,
         in_channels: int = 3,
         out_channels: int = 128,
-        encoder_blocks: List[Tuple[str, int]] | List[Tuple[str, dict[str, Any]]] = [],  # noqa: B006
+        encoder_blocks: list[tuple[str, int]] | list[tuple[str, dict[str, Any]]] = [],  # noqa: B006
         patch_size: int = 4,
         norm_layer: NormLayerType = NormLayerType.PIXEL_NORM,
         latent_log_var: LogVarianceType = LogVarianceType.UNIFORM,
@@ -463,7 +464,7 @@ class VideoEncoder(nn.Module):
 def prepare_tiles_for_encoding(
     video: torch.Tensor,
     tiling_config: TilingConfig | None = None,
-) -> List[Tile]:
+) -> list[Tile]:
     """Prepare tiles for VAE encoding.
     Args:
         video: Input video tensor (B, 3, F, H, W) in range [-1, 1]
@@ -531,7 +532,7 @@ def _make_decoder_block(
     timestep_conditioning: bool,
     norm_num_groups: int,
     spatial_padding_mode: PaddingModeType,
-) -> Tuple[nn.Module, int]:
+) -> tuple[nn.Module, int]:
     out_channels = in_channels
     if block_name == "res_x":
         block = UNetMidBlock3D(
@@ -641,7 +642,7 @@ class VideoDecoder(nn.Module):
         convolution_dimensions: int = 3,
         in_channels: int = 128,
         out_channels: int = 3,
-        decoder_blocks: List[Tuple[str, int | dict]] = [],  # noqa: B006
+        decoder_blocks: list[tuple[str, int | dict]] = [],  # noqa: B006
         patch_size: int = 4,
         norm_layer: NormLayerType = NormLayerType.PIXEL_NORM,
         causal: bool = False,
@@ -832,7 +833,7 @@ class VideoDecoder(nn.Module):
         self,
         latent: torch.Tensor,
         tiling_config: TilingConfig | None = None,
-    ) -> List[Tile]:
+    ) -> list[Tile]:
         splitters = [DEFAULT_SPLIT_OPERATION] * len(latent.shape)
         mappers = [DEFAULT_MAPPING_OPERATION] * len(latent.shape)
         if tiling_config is not None and tiling_config.spatial_config is not None:
@@ -975,7 +976,7 @@ class VideoDecoder(nn.Module):
             decoded = self(latent, generator=generator)
             yield to_rgb(decoded)
 
-    def _group_tiles_by_temporal_slice(self, tiles: List[Tile]) -> List[List[Tile]]:
+    def _group_tiles_by_temporal_slice(self, tiles: list[Tile]) -> list[list[Tile]]:
         """Group tiles by their temporal output slice."""
         if not tiles:
             return []
@@ -1001,7 +1002,7 @@ class VideoDecoder(nn.Module):
 
     def _accumulate_temporal_group_into_buffer(
         self,
-        group_tiles: List[Tile],
+        group_tiles: list[Tile],
         buffer: torch.Tensor,
         latent: torch.Tensor,
         timestep: torch.Tensor | None,
@@ -1063,7 +1064,7 @@ def get_video_chunks_number(num_frames: int, tiling_config: TilingConfig | None 
 
 
 def to_mapping_operation(
-    map_func: Callable[[int, int, int, int, int], Tuple[slice, torch.Tensor | None]],
+    map_func: Callable[[int, int, int, int, int], tuple[slice, torch.Tensor | None]],
     scale: int,
 ) -> MappingOperation:
     """Create a mapping operation over a set of tiling intervals.
@@ -1091,7 +1092,7 @@ def to_mapping_operation(
     return map_op
 
 
-def map_temporal_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> Tuple[slice, torch.Tensor]:
+def map_temporal_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> tuple[slice, torch.Tensor]:
     """Map a latent time tile to a pixel slice and trapezoidal blend weights."""
     start = begin * scale
     stop = 1 + (end - 1) * scale
@@ -1103,7 +1104,7 @@ def map_temporal_slice(begin: int, end: int, left_ramp: int, right_ramp: int, sc
 
 def map_temporal_interval_to_latent(
     begin: int, end: int, left_ramp: int, right_ramp: int | None = None, scale: int = 1
-) -> Tuple[slice, torch.Tensor]:
+) -> tuple[slice, torch.Tensor]:
     """
     Map temporal interval in video frame space to latent space.
     Args:
@@ -1129,7 +1130,7 @@ def map_temporal_interval_to_latent(
     return slice(start, stop), mask_1d
 
 
-def map_spatial_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> Tuple[slice, torch.Tensor]:
+def map_spatial_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> tuple[slice, torch.Tensor]:
     """Map a latent spatial tile to a pixel slice and trapezoidal blend weights."""
     start = begin * scale
     stop = end * scale
@@ -1145,7 +1146,7 @@ def map_spatial_interval_to_latent(
     left_ramp: int,
     right_ramp: int,
     scale: int,
-) -> Tuple[slice, torch.Tensor]:
+) -> tuple[slice, torch.Tensor]:
     """Map spatial interval in pixel space to latent space.
        Args:
         begin: Start position in pixel space

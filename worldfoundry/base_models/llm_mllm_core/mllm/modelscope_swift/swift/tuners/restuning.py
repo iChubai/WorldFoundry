@@ -10,6 +10,7 @@ import torch.nn as nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.torch_utils import find_sub_module
+
 from .restuning_components import ResTuner, detach_tensors, probe_input_pre_hook, probe_output_hook
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
@@ -43,9 +44,7 @@ class ResTuningConfig(SwiftConfig):
 
     """
 
-    dims: Optional[Union[List[int], int]] = field(
-        default=None, metadata={"help": "The dimensions of the hidden states"}
-    )
+    dims: list[int] | int | None = field(default=None, metadata={"help": "The dimensions of the hidden states"})
 
     root_modules: str = field(
         default=None,
@@ -58,7 +57,7 @@ class ResTuningConfig(SwiftConfig):
         default="input", metadata={"help": 'The hook type of root modules, can be "input" or "output"'}
     )
 
-    stem_modules: Optional[Union[List[str], str]] = field(
+    stem_modules: list[str] | str | None = field(
         default=None,
         metadata={"help": "The stem modules to be replaced, can a regex string or name list of full match format"},
     )
@@ -78,17 +77,17 @@ class ResTuningConfig(SwiftConfig):
         default="input", metadata={"help": 'The hook type of target modules, can be "input" or "output"'}
     )
 
-    target_hidden_pos: Union[int, str] = field(
+    target_hidden_pos: int | str = field(
         default=None, metadata={"help": "The position of the hidden state for target modules output"}
     )
 
-    tuner_cfg: Optional[Union[List[Dict], Dict, str]] = field(
+    tuner_cfg: list[dict] | dict | str | None = field(
         default=None, metadata={"help": "The configuration of the tuning module, can a string or customized config"}
     )
 
     use_upsample: bool = field(default=False, metadata={"help": "Whether to use auxiliary upsample module"})
 
-    upsample_out_channels: List[int] = field(
+    upsample_out_channels: list[int] = field(
         default=None, metadata={"help": 'The number of output channels when "use_upsample" is set to "True"'}
     )
 
@@ -313,7 +312,7 @@ class ResTuningBypassModule(nn.Module, ActivationMixin):
         x_bypass = x_bypass[0] if isinstance(x_bypass, (list, tuple)) else x_bypass
         x_list = detach_tensors(x_list)
         x_list = [_x[0] if isinstance(_x, (list, tuple)) else _x for _x in x_list]
-        for i, (bp_blk, x_stem) in enumerate(zip(self.bypass_blocks, x_list)):
+        for i, (bp_blk, x_stem) in enumerate(zip(self.bypass_blocks, x_list, strict=False)):
             target_size = x_list[i + 1].shape[2:] if i < len(x_list) - 1 else None
             x_bypass = bp_blk(x_stem, x_bypass, target_size, **kwargs)
         return x_bypass

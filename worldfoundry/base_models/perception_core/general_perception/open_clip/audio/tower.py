@@ -9,8 +9,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .config import CLIPAudioCfg
 from worldfoundry.core.model_loading import load_torch_checkpoint
+
+from .config import CLIPAudioCfg
 
 _logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def _htsat_output_dim(swin_embed_dim, num_layers=4):
     return int(swin_embed_dim * 2 ** (num_layers - 1))
 
 
-def _load_audio_checkpoint(path: Union[str, Path], weights_only: bool = True):
+def _load_audio_checkpoint(path: str | Path, weights_only: bool = True):
     """Helper function to load audio checkpoint.
 
     Args:
@@ -124,7 +125,7 @@ class AudioTower(nn.Module):
                 no_wd.add("encoder." + name)
         return no_wd
 
-    def load_pretrained_encoder(self, path: Union[str, Path], weights_only: bool = True):
+    def load_pretrained_encoder(self, path: str | Path, weights_only: bool = True):
         """Load pretrained encoder.
 
         Args:

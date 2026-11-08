@@ -15,11 +15,12 @@
 
 """Pytorch neural network definitions."""
 
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class ExtraConvBlock(nn.Module):
@@ -204,7 +205,7 @@ class BlockV2(nn.Module):
         self,
         channels_in: int,
         channels_out: int,
-        stride: Union[int, Sequence[int]],
+        stride: int | Sequence[int],
         use_projection: bool,
     ):
         super().__init__()
@@ -286,7 +287,7 @@ class BlockGroup(nn.Module):
         channels_in: int,
         channels_out: int,
         num_blocks: int,
-        stride: Union[int, Sequence[int]],
+        stride: int | Sequence[int],
         use_projection: bool,
     ):
         super().__init__()

@@ -8,14 +8,7 @@ import math
 
 import torch
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
-from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import StaticConditionCache
-from worldfoundry.core.attention.rotary.complex_rope import assemble_complex_rotary_frequencies_3d
-from worldfoundry.core.attention.sequence.varlen import (
-    attention,
-    flash_attention,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
     WanLayerNorm,
     WanRMSNorm,
@@ -23,13 +16,19 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 i
     rope_params,
     sinusoidal_embedding_1d,
 )
-
 from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import (
     apply_camera_modulation,
     camera_condition_for_block,
     embed_wan_camera_condition,
     prepare_wan_camera_condition,
 )
+from worldfoundry.base_models.diffusion_model.optimizations.static_cross_kv import StaticConditionCache
+from worldfoundry.core.attention.rotary.complex_rope import assemble_complex_rotary_frequencies_3d
+from worldfoundry.core.attention.sequence.varlen import (
+    attention,
+    flash_attention,
+)
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 __all__ = ["LingBotWorldV2Model", "WanModelFast"]
 
@@ -616,7 +615,7 @@ class WanModelFast(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -704,10 +703,10 @@ class WanModelFast(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

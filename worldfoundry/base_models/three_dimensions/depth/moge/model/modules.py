@@ -1,23 +1,25 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> model -> modules.py functionality."""
 
-from typing import *
-from numbers import Number
+import functools
 import importlib
 import itertools
-import functools
 import sys
+from numbers import Number
+from typing import *
 
 import torch
-from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 from .....perception_core.general_perception.dinov2.models.vision_transformer import DinoVisionTransformer
 from .utils import (
+    unwrap_module_with_gradient_checkpointing,
     wrap_dinov2_attention_with_sdpa,
     wrap_module_with_gradient_checkpointing,
-    unwrap_module_with_gradient_checkpointing,
 )
+
+# isort: split
 from ..utils.geometry_torch import normalized_view_plane_uv
 
 
@@ -225,7 +227,7 @@ class DINOv2Encoder(nn.Module):
         x = torch.stack(
             [
                 proj(feat.permute(0, 2, 1).unflatten(2, (token_rows, token_cols)).contiguous())
-                for proj, (feat, clstoken) in zip(self.output_projections, features)
+                for proj, (feat, clstoken) in zip(self.output_projections, features, strict=False)
             ],
             dim=1,
         ).sum(dim=1)
@@ -329,7 +331,10 @@ class MLP(nn.Sequential):
         nn.Sequential.__init__(
             self,
             *itertools.chain(
-                *[(nn.Linear(dim_in, dim_out), nn.ReLU(inplace=True)) for dim_in, dim_out in zip(dims[:-2], dims[1:-1])]
+                *[
+                    (nn.Linear(dim_in, dim_out), nn.ReLU(inplace=True))
+                    for dim_in, dim_out in zip(dims[:-2], dims[1:-1], strict=False)
+                ]
             ),
             nn.Linear(dims[-2], dims[-1]),
         )
@@ -375,7 +380,7 @@ class ConvStack(nn.Module):
                 if dim_in_ is not None
                 else nn.Identity()
                 for dim_in_, dim_res_block_ in zip(
-                    dim_in if isinstance(dim_in, Sequence) else itertools.repeat(dim_in), dim_res_blocks
+                    dim_in if isinstance(dim_in, Sequence) else itertools.repeat(dim_in), dim_res_blocks, strict=False
                 )
             ]
         )
@@ -387,6 +392,7 @@ class ConvStack(nn.Module):
                         dim_res_blocks[:-1],
                         dim_res_blocks[1:],
                         resamplers if isinstance(resamplers, Sequence) else itertools.repeat(resamplers),
+                        strict=False,
                     )
                 )
             ]
@@ -415,7 +421,9 @@ class ConvStack(nn.Module):
                 if dim_out_ is not None
                 else nn.Identity()
                 for dim_out_, dim_res_block_ in zip(
-                    dim_out if isinstance(dim_out, Sequence) else itertools.repeat(dim_out), dim_res_blocks
+                    dim_out if isinstance(dim_out, Sequence) else itertools.repeat(dim_out),
+                    dim_res_blocks,
+                    strict=False,
                 )
             ]
         )

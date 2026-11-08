@@ -14,25 +14,38 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import fast_diag_box_iou
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, NestedTensor
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiplex_detector import Sam3MultiplexDetector
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
     fill_holes_in_mask_scores,
     mask_to_box,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base import (
-    _associate_det_trk_compilable,
     LazyAssociateDetTrkResult,
     MaskletConfirmationStatus,
-    realize_adt_result,
     RealizedAssociateDetTrkresult,
     Sam3VideoBase,
+    _associate_det_trk_compilable,
+    realize_adt_result,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
+
+# isort: split
+from torch import Tensor, nn
+
 from worldfoundry.base_models.perception_core.segment.sam3.masks_ops import rle_encode
-from torch import nn, Tensor
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 
 # a short 3-min timeout to quickly detect any synchronization failures
 SAM3_COLLECTIVE_OP_TIMEOUT_SEC = int(os.getenv("SAM3_COLLECTIVE_OP_TIMEOUT_SEC", "180"))
@@ -472,7 +485,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             self._profiler.stop()
             self._profiler.export_chrome_trace(self._current_profile_path)
             print(f"Profiling trace saved to: {self._current_profile_path}")
-            print(f"You can open this file in Perfetto (https://ui.perfetto.dev/) to visualize the trace")
+            print("You can open this file in Perfetto (https://ui.perfetto.dev/) to visualize the trace")
             self._profiler = None
             self._profiling_enabled = False
             os.environ["ENABLE_PROFILING"] = "0"
@@ -484,9 +497,9 @@ class Sam3MultiplexBase(Sam3VideoBase):
         reverse: bool,
         input_batch: BatchedDatapoint,
         geometric_prompt: Any,
-        tracker_states_local: List[Any],
-        tracker_metadata_prev: Dict[str, Any],
-        feature_cache: Dict,
+        tracker_states_local: list[Any],
+        tracker_metadata_prev: dict[str, Any],
+        feature_cache: dict,
         orig_vid_height: int,
         orig_vid_width: int,
         is_image_only: bool = False,
@@ -543,9 +556,9 @@ class Sam3MultiplexBase(Sam3VideoBase):
         reverse: bool,
         input_batch: BatchedDatapoint,
         geometric_prompt: Any,
-        tracker_states_local: List[Any],
-        tracker_metadata_prev: Dict[str, Any],
-        feature_cache: Dict,
+        tracker_states_local: list[Any],
+        tracker_metadata_prev: dict[str, Any],
+        feature_cache: dict,
         orig_vid_height: int,
         orig_vid_width: int,
         is_image_only: bool,
@@ -678,7 +691,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             tracker_obj_scores_global = tracker_obj_scores_global.sigmoid()
             sam2_obj_ids = tracker_metadata_prev["obj_ids_all_gpu"]
             tracker_metadata_new["obj_id_to_sam2_score_frame_wise"][frame_idx].update(
-                dict(zip(sam2_obj_ids, tracker_obj_scores_global))
+                dict(zip(sam2_obj_ids, tracker_obj_scores_global, strict=False))
             )
 
         return (
@@ -696,7 +709,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
         num_frames: int,
         input_batch: BatchedDatapoint,
         geometric_prompt: Any,
-        feature_cache: Dict,
+        feature_cache: dict,
         reverse: bool,
         use_batched_grounding: bool = False,
         batched_grounding_batch_size: int = 16,
@@ -850,8 +863,8 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int,
         num_frames: int,
         reverse: bool,
-        tracker_states_local: List[Any],
-        tracker_metadata_prev: Dict[str, np.ndarray],
+        tracker_states_local: list[Any],
+        tracker_metadata_prev: dict[str, np.ndarray],
     ):
         """Run tracker propagation.
 
@@ -906,10 +919,10 @@ class Sam3MultiplexBase(Sam3VideoBase):
     def _recondition_masklets(
         self,
         frame_idx,
-        det_out: Dict[str, Tensor],
-        trk_id_to_max_iou_high_conf_det: Dict[int, int],  # trk_obj_id -> det_idx
-        tracker_states_local: List[Any],
-        tracker_metadata: Dict[str, np.ndarray],
+        det_out: dict[str, Tensor],
+        trk_id_to_max_iou_high_conf_det: dict[int, int],  # trk_obj_id -> det_idx
+        tracker_states_local: list[Any],
+        tracker_metadata: dict[str, np.ndarray],
         tracker_obj_scores_global: Tensor,
         tracker_low_res_masks_global: Tensor,
     ):
@@ -955,8 +968,8 @@ class Sam3MultiplexBase(Sam3VideoBase):
         high_conf_mask_cpu = high_conf_mask.cpu().numpy()
 
         # Filter to only high-confidence items
-        valid_trk_obj_ids = [tid for tid, valid in zip(trk_obj_ids, high_conf_mask_cpu) if valid]
-        valid_det_indices = [did for did, valid in zip(det_indices, high_conf_mask_cpu) if valid]
+        valid_trk_obj_ids = [tid for tid, valid in zip(trk_obj_ids, high_conf_mask_cpu, strict=False) if valid]
+        valid_det_indices = [did for did, valid in zip(det_indices, high_conf_mask_cpu, strict=False) if valid]
         valid_obj_indices = obj_indices_t[high_conf_mask]  # Keep as tensor
 
         if len(valid_trk_obj_ids) == 0:
@@ -1050,12 +1063,12 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int,
         num_frames: int,
         reverse: bool,
-        det_out: Dict[str, Tensor],
+        det_out: dict[str, Tensor],
         det_keep: Tensor,
         tracker_low_res_masks_global: Tensor,
         tracker_obj_scores_global: Tensor,
-        tracker_metadata_prev: Dict[str, np.ndarray],
-        tracker_states_local: List[Any],
+        tracker_metadata_prev: dict[str, np.ndarray],
+        tracker_states_local: list[Any],
         is_image_only: bool = False,
     ):
         """Run tracker update planning phase.
@@ -1235,13 +1248,13 @@ class Sam3MultiplexBase(Sam3VideoBase):
         if len(new_det_obj_ids) > 0:
             det_scores_np: np.ndarray = det_scores.cpu().numpy()
             tracker_metadata_new["obj_id_to_score"].update(
-                zip(new_det_obj_ids, det_scores_np[adt_result.new_det_fa_inds])
+                zip(new_det_obj_ids, det_scores_np[adt_result.new_det_fa_inds], strict=False)
             )
             # sam2 scores are not available for new objects, use det score instead.
             # Store as GPU tensors for consistency with SAM2 propagation scores
             new_det_scores_tensor = det_scores[adt_result.new_det_fa_inds]
             tracker_metadata_new["obj_id_to_sam2_score_frame_wise"][frame_idx].update(
-                zip(new_det_obj_ids, new_det_scores_tensor)
+                zip(new_det_obj_ids, new_det_scores_tensor, strict=False)
             )
             tracker_metadata_new["max_obj_id"] = max(
                 tracker_metadata_new["max_obj_id"],
@@ -1390,8 +1403,8 @@ class Sam3MultiplexBase(Sam3VideoBase):
         self,
         frame_idx: int,
         tracker_low_res_masks_global: Tensor,
-        tracker_metadata_prev: Dict[str, Any],
-        tracker_metadata_new: Dict[str, Any],
+        tracker_metadata_prev: dict[str, Any],
+        tracker_metadata_new: dict[str, Any],
         to_remove_mask: Tensor,  # GPU boolean mask (N_obj,) instead of CPU set
         reverse: bool = False,
     ):
@@ -1488,7 +1501,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             actual_bucket_count = self._count_buckets_in_states(tracker_states_local)
             tracker_metadata_new["num_buc_per_gpu"][self.rank] = actual_bucket_count
 
-    def _count_buckets_in_states(self, tracker_states_local: List[Any]) -> int:
+    def _count_buckets_in_states(self, tracker_states_local: list[Any]) -> int:
         """Count the total number of buckets across all states."""
         if not self.is_multiplex:
             return 0
@@ -1503,11 +1516,11 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int,
         num_frames: int,
         reverse: bool,
-        det_out: Dict[str, Tensor],  # TODO: Only det_out["mask"][new_det_fa_inds_local_t] is needed
+        det_out: dict[str, Tensor],  # TODO: Only det_out["mask"][new_det_fa_inds_local_t] is needed
         tracker_low_res_masks_global: Tensor,
         tracker_obj_scores_global: Tensor,
-        tracker_metadata_prev: Dict[str, np.ndarray],
-        sam2_update_plan: Dict[str, np.ndarray],
+        tracker_metadata_prev: dict[str, np.ndarray],
+        sam2_update_plan: dict[str, np.ndarray],
         orig_vid_height: int,
         orig_vid_width: int,
         reconditioned_obj_ids: set = None,
@@ -1559,7 +1572,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             else:
                 existing_masklet_video_res_masks = existing_masklet_video_res_masks[:num_ids]
         existing_masklet_binary = existing_masklet_video_res_masks > 0
-        for obj_id, mask in zip(existing_masklet_obj_ids, existing_masklet_binary):
+        for obj_id, mask in zip(existing_masklet_obj_ids, existing_masklet_binary, strict=False):
             obj_id_to_mask[obj_id] = mask  # (1, H_video, W_video)
 
         # Part 2: masks from new detections
@@ -1581,7 +1594,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
 
         new_masklet_binary = new_masklet_video_res_masks > 0
         assert len(new_det_obj_ids) == len(new_masklet_video_res_masks)
-        for obj_id, mask in zip(new_det_obj_ids, new_masklet_binary):
+        for obj_id, mask in zip(new_det_obj_ids, new_masklet_binary, strict=False):
             obj_id_to_mask[obj_id] = mask  # (1, H_video, W_video)
 
         return obj_id_to_mask
@@ -1675,13 +1688,13 @@ class Sam3MultiplexBase(Sam3VideoBase):
 
     def _propogate_tracker_one_frame_local_gpu(
         self,
-        inference_states: List[Any],
+        inference_states: list[Any],
         frame_idx: int,
         reverse: bool,
         # by default, we disable memory encoding until we gather all outputs
         run_mem_encoder: bool = False,
         # When specified, only return masks/scores for these object ids
-        filter_obj_ids: Optional[List[int]] = None,
+        filter_obj_ids: list[int] | None = None,
     ):
         """
         inference_states: List of inference states, each state corresponds to a different set of objects.
@@ -1811,7 +1824,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
         det_keep: Tensor,
         trk_masks: Tensor,
         trk_obj_ids: np.ndarray,
-        default_det_thresh: Optional[float] = None,
+        default_det_thresh: float | None = None,
     ):
         """
         Match detections on the current frame with the existing masklets.
@@ -1986,9 +1999,9 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int,
         reverse: bool,
         adt_result,  # LazyAssociateDetTrkResult (always lazy now)
-        tracker_metadata_prev: Dict[str, Any],
-        gpu_metadata_prev: Dict[str, Tensor],
-    ) -> Tuple[Tensor, Tensor, Dict[str, Tensor]]:
+        tracker_metadata_prev: dict[str, Any],
+        gpu_metadata_prev: dict[str, Tensor],
+    ) -> tuple[Tensor, Tensor, dict[str, Tensor]]:
         """
         Compute removal/suppression masks entirely on GPU without ANY syncs or branches.
 
@@ -2230,12 +2243,12 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int,
         num_frames: int,
         reverse: bool,
-        det_to_matched_trk_obj_ids: Dict[int, np.ndarray],
+        det_to_matched_trk_obj_ids: dict[int, np.ndarray],
         new_det_obj_ids: np.ndarray,
         empty_trk_obj_ids: np.ndarray,
         unmatched_trk_obj_ids: np.ndarray,
-        rank0_metadata: Dict[str, Any],
-        tracker_metadata: Dict[str, Any],
+        rank0_metadata: dict[str, Any],
+        tracker_metadata: dict[str, Any],
     ):
         """Handle hotstart heuristics to remove unmatched or duplicated objects."""
         # obj_id --> first frame index where the object was detected
@@ -2341,9 +2354,9 @@ class Sam3MultiplexBase(Sam3VideoBase):
 
     def _tracker_update_memories(
         self,
-        sam2_inference_states: List[Any],
+        sam2_inference_states: list[Any],
         frame_idx: int,
-        tracker_metadata: Dict[str, Any],
+        tracker_metadata: dict[str, Any],
         low_res_masks: Tensor,
     ):
         """
@@ -2476,12 +2489,12 @@ class Sam3MultiplexBase(Sam3VideoBase):
         self,
         frame_idx: int,
         num_frames: int,
-        new_obj_ids: List[int],
+        new_obj_ids: list[int],
         new_obj_masks: Tensor,
-        tracker_states_local: List[Any],
+        tracker_states_local: list[Any],
         orig_vid_height: int,
         orig_vid_width: int,
-        feature_cache: Dict,
+        feature_cache: dict,
     ):
         """Add new objects to SAM2 inference states."""
 
@@ -2575,7 +2588,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             )
         else:
             # add object one by one
-            for new_obj_id, new_mask in zip(new_obj_ids, new_obj_masks):
+            for new_obj_id, new_mask in zip(new_obj_ids, new_obj_masks, strict=False):
                 self.tracker.add_new_mask(
                     inference_state=new_sam2_state,
                     frame_idx=frame_idx,
@@ -2588,7 +2601,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
 
         return tracker_states_local
 
-    def _tracker_remove_objects(self, tracker_states_local: List[Any], obj_ids: list[int]):
+    def _tracker_remove_objects(self, tracker_states_local: list[Any], obj_ids: list[int]):
         """
         Remove an object from SAM2 inference states. This would remove the object from
         all frames in the video.
@@ -2611,10 +2624,10 @@ class Sam3MultiplexBase(Sam3VideoBase):
 
     def update_masklet_confirmation_status(
         self,
-        rank0_metadata: Dict[str, Any],
+        rank0_metadata: dict[str, Any],
         obj_ids_all_gpu_prev: np.ndarray,
         obj_ids_all_gpu_updated: np.ndarray,
-        det_to_matched_trk_obj_ids: Dict[int, np.ndarray],
+        det_to_matched_trk_obj_ids: dict[int, np.ndarray],
         new_det_obj_ids: np.ndarray,
     ):
         """

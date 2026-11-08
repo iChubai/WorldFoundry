@@ -1,7 +1,6 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> utils.py functionality."""
 
 import torch
-
 import torch.nn as nn
 
 

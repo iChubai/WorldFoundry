@@ -163,7 +163,7 @@ def to_device(item, device):
     elif isinstance(item, dict):
         return {k: to_device(v, device) for k, v in item.items()}
     else:
-        raise NotImplementedError("Call Shilong if you use other containers! type: {}".format(type(item)))
+        raise NotImplementedError(f"Call Shilong if you use other containers! type: {type(item)}")
 
 
 #
@@ -315,7 +315,7 @@ def get_raw_dict(args):
     elif isinstance(args, SLConfig):
         return args._cfg_dict
     else:
-        raise NotImplementedError("Unknown type {}".format(type(args)))
+        raise NotImplementedError(f"Unknown type {type(args)}")
 
 
 def stat_tensors(tensor):
@@ -482,7 +482,7 @@ class ModelEma(torch.nn.Module):
 
     def _update(self, model, update_fn):
         with torch.no_grad():
-            for ema_v, model_v in zip(self.module.state_dict().values(), model.state_dict().values()):
+            for ema_v, model_v in zip(self.module.state_dict().values(), model.state_dict().values(), strict=False):
                 if self.device is not None:
                     model_v = model_v.to(device=self.device)
                 ema_v.copy_(update_fn(ema_v, model_v))
@@ -517,7 +517,7 @@ class BestMetricSingle:
         return False
 
     def __str__(self) -> str:
-        return "best_res: {}\t best_ep: {}".format(self.best_res, self.best_ep)
+        return f"best_res: {self.best_res}\t best_ep: {self.best_ep}"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -568,7 +568,7 @@ class BestMetricHolder:
         return self.__repr__()
 
 
-def targets_to(targets: List[Dict[str, Any]], device):
+def targets_to(targets: list[dict[str, Any]], device):
     """Moves the target dicts to the given device."""
     excluded_keys = [
         "questionId",
@@ -588,7 +588,7 @@ def targets_to(targets: List[Dict[str, Any]], device):
     return [{k: v.to(device) if k not in excluded_keys else v for k, v in t.items()} for t in targets]
 
 
-def get_phrases_from_posmap(posmap: torch.BoolTensor, tokenized: Dict, tokenizer: AutoTokenizer):
+def get_phrases_from_posmap(posmap: torch.BoolTensor, tokenized: dict, tokenizer: AutoTokenizer):
     assert isinstance(posmap, torch.Tensor), "posmap must be torch.Tensor"
     if posmap.dim() == 1:
         non_zero_idx = posmap.nonzero(as_tuple=True)[0].tolist()

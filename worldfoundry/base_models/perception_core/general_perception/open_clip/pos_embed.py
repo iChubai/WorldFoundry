@@ -10,7 +10,6 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> pos_embed.py functionality."""
 
 import numpy as np
-
 import torch
 
 

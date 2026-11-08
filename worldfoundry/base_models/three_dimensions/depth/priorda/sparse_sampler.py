@@ -32,7 +32,7 @@ class SparseSampler:
         self.device = device
         self.min_depth = 0.0001  # We always filter out depth <= 0.
 
-    def __call__(self, image, prior, geometric=None, pattern=None, K=5, prior_cover=False) -> Dict[str, torch.Tensor]:
+    def __call__(self, image, prior, geometric=None, pattern=None, K=5, prior_cover=False) -> dict[str, torch.Tensor]:
         """
         1. Handles the loading and preprocessing of image and prior depth data.
         2. Samples sparse depth points based on the provided pattern or prior depth information.
@@ -340,10 +340,8 @@ class SparseSampler:
 
         else:
             raise NotImplementedError(
-                (
-                    "'pattern' should be in format of ['^LiDAR_\d+$', 'sift', 'orb', '^cubic_\d+$', '^distance_\d+_\d+$',"
-                    "'^downscale_\d*$', '(int)'], but the provided 'pattern' is -- '{}'".format(pattern)
-                )
+                "'pattern' should be in format of ['^LiDAR_\d+$', 'sift', 'orb', '^cubic_\d+$', '^distance_\d+_\d+$',"
+                f"'^downscale_\d*$', '(int)'], but the provided 'pattern' is -- '{pattern}'"
             )
 
         return sparse_depth, sparse_mask, cover_mask

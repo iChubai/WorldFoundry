@@ -449,7 +449,7 @@ class ScaledTransform:
         """Applies the similarity transform to a set of 3D poinqts."""
         return self.scale * self.rotation.act(points) + self.translation[None]
 
-    def inv(self) -> "ScaledTransform":
+    def inv(self) -> ScaledTransform:
         """Returns the inverse of the similarity transform."""
         inv_rotation = self.rotation.inv()
         inv_scale = 1.0 / self.scale

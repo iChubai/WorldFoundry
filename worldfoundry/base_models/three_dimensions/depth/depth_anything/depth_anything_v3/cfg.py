@@ -17,9 +17,12 @@ Configuration utility functions
 """
 
 import importlib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, List, Union
+from typing import Any, List, Union
+
 from omegaconf import DictConfig, ListConfig, OmegaConf
+
 from worldfoundry.core.io.paths import resolve_data_path
 
 try:
@@ -32,7 +35,7 @@ except Exception as e:
 CONFIG_ROOT = resolve_data_path("models", "runtime", "configs", "depth_anything_v3", "configs")
 
 
-def load_config(path: str, argv: List[str] = None) -> Union[DictConfig, ListConfig]:
+def load_config(path: str, argv: list[str] = None) -> DictConfig | ListConfig:
     """
     Load a configuration. Will resolve inheritance.
     Supports both file paths and module paths (e.g., worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.configs.giant).
@@ -71,7 +74,7 @@ def load_config(path: str, argv: List[str] = None) -> Union[DictConfig, ListConf
 
 def resolve_recursive(
     config: Any,
-    resolver: Callable[[Union[DictConfig, ListConfig]], Union[DictConfig, ListConfig]],
+    resolver: Callable[[DictConfig | ListConfig], DictConfig | ListConfig],
 ) -> Any:
     """Resolve recursive.
 
@@ -96,7 +99,7 @@ def resolve_recursive(
     return config
 
 
-def resolve_inheritance(config: Union[DictConfig, ListConfig]) -> Any:
+def resolve_inheritance(config: DictConfig | ListConfig) -> Any:
     """
     Recursively resolve inheritance if the config contains:
     __inherit__: path/to/parent.yaml or a ListConfig of such paths.

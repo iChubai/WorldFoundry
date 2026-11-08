@@ -7,8 +7,9 @@
 
 """Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> bertwarper.py functionality."""
 
-import torch
 import inspect
+
+import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from torch import Tensor, nn

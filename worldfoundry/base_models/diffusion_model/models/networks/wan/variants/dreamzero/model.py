@@ -6,12 +6,14 @@ injected in :mod:`.action` via the Pi0 encoder in :mod:`.action_encoder`.
 """
 
 import math
+import os
 
 import torch
 import torch.nn as nn
-import os
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from einops import repeat
+
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .attention import flash_attention
 
 __all__ = ["WanModel"]
@@ -934,7 +936,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             self.freqs = [freqs_i.to(device) for freqs_i in self.freqs]
 
         if y is not None:
-            x = [torch.cat([u, v.to(dtype=u.dtype)], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v.to(dtype=u.dtype)], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1042,10 +1044,10 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim if c is None else c
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

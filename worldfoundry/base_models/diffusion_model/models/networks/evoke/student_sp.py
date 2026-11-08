@@ -40,7 +40,7 @@ _G_p: int = 1  # = G // G_u
 _sp_rank: int = 0
 _u_rank: int = 0
 _p_rank: int = 0
-_u_group: Optional[dist.ProcessGroup] = None
+_u_group: dist.ProcessGroup | None = None
 _diag: bool = False
 _skip_first_chunk: bool = False  # dmd_score_skip_first_chunk: g1's grad_output is structurally always 0
 _seq_counter: int = 0  # collective sequence counter
@@ -53,7 +53,7 @@ class UlyssesCtx:
     holds only the things that "do not vary with token count"; the S-dependent shard plan is computed on the fly by model.forward (`ShardPlan`).
     """
 
-    __slots__ = ("group", "size", "rank")
+    __slots__ = ("group", "rank", "size")
 
     def __init__(self, group, size: int, rank: int):
         self.group = group
@@ -85,7 +85,7 @@ class ShardPlan:
     dropped exactly by `valid_index()`, not by assuming "pad is always at the very end".
     """
 
-    __slots__ = ("ctx", "S_real", "hist_global", "noise_global", "lh", "ln", "L", "_vidx")
+    __slots__ = ("L", "S_real", "_vidx", "ctx", "hist_global", "lh", "ln", "noise_global")
 
     def __init__(self, ctx: UlyssesCtx, S_real: int, hist_global: int):
         g = ctx.size
@@ -268,7 +268,7 @@ def redundant_grad_div() -> int:
     return _G_u if is_ulysses_enabled() else 1
 
 
-def make_ulysses_ctx() -> Optional[UlyssesCtx]:
+def make_ulysses_ctx() -> UlyssesCtx | None:
     """created at the rollout call site (the only opt-in point). mechanism B off -> None => the transformer takes the original path."""
     if _G_u <= 1 or _u_group is None:
         return None
@@ -440,7 +440,7 @@ def selfcheck_grad(
         n_ok = n_bad = n_none = n_tiny = 0
         worst = (0.0, "", 0.0, 0.0)
         dot = nr = ns = 0.0
-        for (name, _), a, b in zip(params_named(params), g_ref, g_sh):
+        for (name, _), a, b in zip(params_named(params), g_ref, g_sh, strict=False):
             if a is None or b is None:
                 n_none += 1
                 continue

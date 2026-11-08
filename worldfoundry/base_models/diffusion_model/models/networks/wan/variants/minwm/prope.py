@@ -59,11 +59,13 @@ can condition attention.  Used by MinWM causal / action graphs.
 
 """Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> modules -> prope.py functionality."""
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -73,14 +75,14 @@ def prope_qkv(
     v: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
     *,
     viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
-    Ks: Optional[torch.Tensor],  # (batch, cameras, 3, 3)
+    Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
     patches_x: int = None,  # How many patches wide is each image?
     patches_y: int = None,  # How many patches tall is each image?
     image_width: int = None,  # Width of the image. Used to normalize intrinsics.
     image_height: int = None,  # Height of the image. Used to normalize intrinsics.
-    coeffs_x: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-    coeffs_y: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-    mask: Optional[torch.Tensor] = None,
+    coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
+    coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
+    mask: torch.Tensor | None = None,
     kv_cache=None,
     is_cache: bool = False,
     **kwargs,
@@ -125,14 +127,14 @@ def prope_qkv(
 def _prepare_apply_fns_all_dim(
     head_dim: int,  # Q/K/V will have this last dimension
     viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
-    Ks: Optional[torch.Tensor],  # (batch, cameras, 3, 3)
+    Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
     patches_x: int,  # How many patches wide is each image?
     patches_y: int,  # How many patches tall is each image?
     image_width: int,  # Width of the image. Used to normalize intrinsics.
     image_height: int,  # Height of the image. Used to normalize intrinsics.
-    coeffs_x: Optional[torch.Tensor] = None,
-    coeffs_y: Optional[torch.Tensor] = None,
-) -> Tuple[
+    coeffs_x: torch.Tensor | None = None,
+    coeffs_y: torch.Tensor | None = None,
+) -> tuple[
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
@@ -216,7 +218,7 @@ def _apply_tiled_projmat(
 
 def _apply_block_diagonal(
     feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: List[Tuple[Callable[[torch.Tensor], torch.Tensor], int]],
+    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
     """Apply a block-diagonal function to an input array.
 
@@ -226,11 +228,11 @@ def _apply_block_diagonal(
 
     Where the integer is the size of the input to the function.
     """
-    funcs, block_sizes = zip(*func_size_pairs)
+    funcs, block_sizes = zip(*func_size_pairs, strict=False)
     assert feats.shape[-1] == sum(block_sizes)
     x_blocks = torch.split(feats, block_sizes, dim=-1)
     out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks)],
+        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
         dim=-1,
     )
     assert out.shape == feats.shape, "Input/output shapes should match."
@@ -287,7 +289,7 @@ def add_prope_parameters(model, zero_init: bool = True):
 
     # Import here to avoid circular dependency
     try:
-        from ...reference_21 import WanSelfAttention, WanT2VCrossAttention, WanI2VCrossAttention
+        from ...reference_21 import WanI2VCrossAttention, WanSelfAttention, WanT2VCrossAttention
 
         cross_attn_types = (WanT2VCrossAttention, WanI2VCrossAttention)
     except ImportError:
@@ -296,10 +298,16 @@ def add_prope_parameters(model, zero_init: bool = True):
 
     try:
         from .action import (
-            WanSelfAttention as ActionWanSelfAttention,
-            WanT2VCrossAttention as ActionWanT2VCrossAttention,
-            WanI2VCrossAttention as ActionWanI2VCrossAttention,
             WanGanCrossAttention as ActionWanGanCrossAttention,
+        )
+        from .action import (
+            WanI2VCrossAttention as ActionWanI2VCrossAttention,
+        )
+        from .action import (
+            WanSelfAttention as ActionWanSelfAttention,
+        )
+        from .action import (
+            WanT2VCrossAttention as ActionWanT2VCrossAttention,
         )
 
         cross_attn_types = cross_attn_types + (

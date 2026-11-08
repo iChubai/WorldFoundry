@@ -39,13 +39,13 @@ class GOT_OCR2Template(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         # 'OCR: '
         # 'OCR with format: '
         assert media_type == "image"
         return ["<img>" + "<imgpad>" * 256 + "</img>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         image_processor_high = GOTImageEvalProcessor(image_size=1024)
@@ -55,7 +55,7 @@ class GOT_OCR2Template(Template):
             encoded["images"] = images
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = self.gather_list(batch, "images")
         if images:
@@ -77,20 +77,20 @@ class GOT_OCR2HfTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         # 'OCR: '
         # 'OCR with format: '
         assert media_type == "image"
         return ["<img>" + "<imgpad>" * 256 + "</img>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:  # 暂时照抄上面
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:  # 暂时照抄上面
         encoded = super()._encode(inputs)
         images = inputs.images
         if images:
             encoded["images"] = images
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = self.gather_list(batch, "images")
         _inputs = self.processor(images, return_tensors="pt")
@@ -115,7 +115,7 @@ class StepAudioTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "audio", f"media_type: {media_type}"
         from utils import load_audio
 

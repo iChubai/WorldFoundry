@@ -69,13 +69,13 @@ class FpnNeck(nn.Module):
         self,
         position_encoding: nn.Module,
         d_model: int,
-        backbone_channel_list: List[int],
+        backbone_channel_list: list[int],
         kernel_size: int = 1,
         stride: int = 1,
         padding: int = 0,
         fpn_interp_model: str = "bilinear",
         fuse_type: str = "sum",
-        fpn_top_down_levels: Optional[List[int]] = None,
+        fpn_top_down_levels: list[int] | None = None,
     ):
         """Initialize the neck
         :param trunk: the backbone
@@ -115,7 +115,7 @@ class FpnNeck(nn.Module):
             fpn_top_down_levels = range(len(self.convs))
         self.fpn_top_down_levels = list(fpn_top_down_levels)
 
-    def forward(self, xs: List[torch.Tensor]):
+    def forward(self, xs: list[torch.Tensor]):
         """Forward.
 
         Args:

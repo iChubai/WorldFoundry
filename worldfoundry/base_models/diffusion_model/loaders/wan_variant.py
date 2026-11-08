@@ -9,8 +9,8 @@ filename raises :exc:`FileNotFoundError` / :exc:`ValueError`.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 import torch
 
@@ -41,7 +41,8 @@ def _compatible_state_dict(model, state_dict: dict) -> dict:
         if source.shape != target.shape:
             adjusted = source.new_zeros(target.shape)
             common = tuple(
-                slice(0, min(source_size, target_size)) for source_size, target_size in zip(source.shape, target.shape)
+                slice(0, min(source_size, target_size))
+                for source_size, target_size in zip(source.shape, target.shape, strict=False)
             )
             adjusted[common] = source[common]
             state_dict = dict(state_dict)

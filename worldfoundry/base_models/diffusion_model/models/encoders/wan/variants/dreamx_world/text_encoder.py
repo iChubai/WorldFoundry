@@ -88,7 +88,7 @@ class WanT5EncoderModel(ModuleDeviceDtypeMixin, nn.Module):
         additional_kwargs: dict | None = None,
         low_cpu_mem_usage: bool = True,
         torch_dtype: torch.dtype = torch.bfloat16,
-    ) -> "WanT5EncoderModel":
+    ) -> WanT5EncoderModel:
         del low_cpu_mem_usage
         parameters = set(inspect.signature(cls.__init__).parameters) - {"self", "cls"}
         config = {key: value for key, value in (additional_kwargs or {}).items() if key in parameters}

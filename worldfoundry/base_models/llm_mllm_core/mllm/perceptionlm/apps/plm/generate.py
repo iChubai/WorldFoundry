@@ -75,7 +75,7 @@ def sample_tokens(logits, temperature=0.0, top_p=None, top_k=None):
     return next_token.view(shape[:-1])
 
 
-def pack_prompts(prompts: List[int]):
+def pack_prompts(prompts: list[int]):
     res = []
     lengths = []
     for i, p in enumerate(prompts):
@@ -136,16 +136,16 @@ class KVCache(nn.Module):
 @dataclass
 class PackedCausalTransformerGeneratorArgs:
     temperature: float = 0.0
-    top_p: Optional[float] = None
-    top_k: Optional[float] = None
+    top_p: float | None = None
+    top_k: float | None = None
     max_gen_len: int = 256
     max_tokens: int = 11264
-    until: List[str] = field(default_factory=list)
+    until: list[str] = field(default_factory=list)
     compile_prefilling: bool = False
     reduce_generation_overhead: bool = False
     show_progress: bool = False
-    dtype: Optional[str] = "bf16"
-    device: Optional[str] = "cuda"
+    dtype: str | None = "bf16"
+    device: str | None = "cuda"
 
 
 class PackedCausalTransformerGenerator:
@@ -325,9 +325,9 @@ class PackedCausalTransformerGenerator:
         self,
         tokens: torch.Tensor,
         lengths: torch.Tensor,
-        images: Optional[List[torch.Tensor]] = None,
-        image_patch_text_ids: Optional[List[List[int]]] = None,
-        num_image_chunks: Optional[List[int]] = None,
+        images: list[torch.Tensor] | None = None,
+        image_patch_text_ids: list[list[int]] | None = None,
+        num_image_chunks: list[int] | None = None,
     ):
         # Prefilling is done by taking multiple packed sequences and
         # doing block diagonal attention on them so they remain independent
@@ -451,7 +451,7 @@ class PackedCausalTransformerGenerator:
 
             generation.extend([self.tokenizer.decode(g) for g in generated_tokens])
 
-            for p, logit in zip(batch, prompt_logits.squeeze(0).split(lengths.tolist())):
+            for p, logit in zip(batch, prompt_logits.squeeze(0).split(lengths.tolist()), strict=False):
                 x = logit[:-1]
                 y = torch.tensor(p[1:], device=x.device)
                 loglikelihood.append(-F.cross_entropy(x, y, reduction="none").cpu())
@@ -529,7 +529,7 @@ def main(args):
         frames, _ = transform(video_info)
         prompts.append((question, frames))
     else:
-        raise NotImplementedError(f"The provided generate function only supports image and video.")
+        raise NotImplementedError("The provided generate function only supports image and video.")
 
     # Create generator
     gen_cfg = dataclass_from_dict(PackedCausalTransformerGeneratorArgs, {}, strict=False)

@@ -3,12 +3,11 @@
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import math
-from typing import Sequence
+from collections.abc import Sequence
+from dataclasses import asdict, dataclass
 
 import torch
-
 
 DEFAULT_HORIZONTAL_FOV_DEGREES = 100.0
 DEFAULT_VERTICAL_FOV_DEGREES = 71.13349068444832

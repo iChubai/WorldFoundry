@@ -195,7 +195,7 @@ def draw_aapose(
     H, W, C = img.shape
     stickwidth = max(int(min(H, W) / stick_width_norm), 1)
 
-    for _idx, ((k1_index, k2_index), color) in enumerate(zip(limbSeq, colors)):
+    for _idx, ((k1_index, k2_index), color) in enumerate(zip(limbSeq, colors, strict=False)):
         keypoint1 = kp2ds_body[k1_index - 1]
         keypoint2 = kp2ds_body[k2_index - 1]
 
@@ -211,7 +211,7 @@ def draw_aapose(
         polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0, 360, 1)
         cv2.fillConvexPoly(img, polygon, [int(float(c) * 0.6) for c in color])
 
-    for _idx, (keypoint, color) in enumerate(zip(kp2ds_body, colors)):
+    for _idx, (keypoint, color) in enumerate(zip(kp2ds_body, colors, strict=False)):
         if keypoint[-1] < threshold:
             continue
         x, y = keypoint[0], keypoint[1]
@@ -229,7 +229,7 @@ def draw_aapose(
         if idx == -1:
             data_to_json.append(
                 {
-                    "image_id": "frame_{:05d}.jpg".format(len(data_to_json) + 1),
+                    "image_id": f"frame_{len(data_to_json) + 1:05d}.jpg",
                     "height": H,
                     "width": W,
                     "category_id": 1,
@@ -240,7 +240,7 @@ def draw_aapose(
             )
         else:
             data_to_json[idx] = {
-                "image_id": "frame_{:05d}.jpg".format(idx + 1),
+                "image_id": f"frame_{idx + 1:05d}.jpg",
                 "height": H,
                 "width": W,
                 "category_id": 1,

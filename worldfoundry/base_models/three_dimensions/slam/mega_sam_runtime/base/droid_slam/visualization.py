@@ -1,14 +1,17 @@
-import torch
-import cv2
-import lietorch
-import droid_backends
-import time
 import argparse
+import time
+
+# Upstream imports torch first: droid_backends is a compiled PyTorch extension.
+import torch
+
+# isort: split
+import cv2
+import droid_backends
+import geom.projective_ops as pops
+import lietorch
 import numpy as np
 import open3d as o3d
-
 from lietorch import SE3
-import geom.projective_ops as pops
 
 CAM_POINTS = np.array(
     [[0, 0, 0], [-1, -1, 1.5], [1, -1, 1.5], [1, 1, 1.5], [-1, 1, 1.5], [-0.5, 1, 1.5], [0.5, 1, 1.5], [0, 1.2, 1.5]]

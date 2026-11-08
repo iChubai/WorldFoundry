@@ -36,7 +36,7 @@ def _checkpoint_filename(encoder: str) -> str:
     return f"depth_anything_v2_{encoder}.pth"
 
 
-def _infer_encoder_from_name(value: str) -> Optional[str]:
+def _infer_encoder_from_name(value: str) -> str | None:
     lowered = value.lower()
     encoder_hints = {
         "vits": ("depth_anything_v2_vits", "vits", "small"),
@@ -50,7 +50,7 @@ def _infer_encoder_from_name(value: str) -> Optional[str]:
     return None
 
 
-def _unwrap_state_dict(checkpoint: Any) -> Dict[str, torch.Tensor]:
+def _unwrap_state_dict(checkpoint: Any) -> dict[str, torch.Tensor]:
     if isinstance(checkpoint, dict):
         if "model" in checkpoint and isinstance(checkpoint["model"], dict):
             checkpoint = checkpoint["model"]
@@ -61,7 +61,7 @@ def _unwrap_state_dict(checkpoint: Any) -> Dict[str, torch.Tensor]:
     return {(key[7:] if key.startswith("module.") else key): value for key, value in checkpoint.items()}
 
 
-def _infer_encoder_from_state_dict(state_dict: Dict[str, torch.Tensor]) -> Optional[str]:
+def _infer_encoder_from_state_dict(state_dict: dict[str, torch.Tensor]) -> str | None:
     embed_weight = state_dict.get("pretrained.cls_token")
     if embed_weight is None:
         embed_weight = state_dict.get("pretrained.pos_embed")
@@ -82,8 +82,8 @@ class DepthAnything2Representation:
 
     def __init__(
         self,
-        model: Optional[DepthAnythingV2] = None,
-        device: Optional[str] = None,
+        model: DepthAnythingV2 | None = None,
+        device: str | None = None,
         encoder: str = "vitl",
         default_input_size: int = 518,
     ) -> None:
@@ -96,9 +96,9 @@ class DepthAnything2Representation:
 
     @staticmethod
     def _resolve_checkpoint_path(
-        pretrained_model_path: Optional[str],
+        pretrained_model_path: str | None,
         encoder: str,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         requested_encoder = str(encoder or "vitl")
         if requested_encoder not in DEPTH_ANYTHING2_MODEL_CONFIGS:
             raise ValueError(
@@ -163,11 +163,11 @@ class DepthAnything2Representation:
     @classmethod
     def load_model(
         cls,
-        pretrained_model_path: Optional[str] = None,
+        pretrained_model_path: str | None = None,
         encoder: str = "vitl",
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs,
-    ) -> Tuple[DepthAnythingV2, str]:
+    ) -> tuple[DepthAnythingV2, str]:
         del kwargs
         target_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
         checkpoint_path, requested_encoder = cls._resolve_checkpoint_path(pretrained_model_path, encoder)
@@ -198,12 +198,12 @@ class DepthAnything2Representation:
     @classmethod
     def from_pretrained(
         cls,
-        pretrained_model_path: Optional[str] = None,
+        pretrained_model_path: str | None = None,
         encoder: str = "vitl",
-        device: Optional[str] = None,
+        device: str | None = None,
         default_input_size: int = 518,
         **kwargs,
-    ) -> "DepthAnything2Representation":
+    ) -> DepthAnything2Representation:
         model, resolved_encoder = cls.load_model(
             pretrained_model_path=pretrained_model_path,
             encoder=encoder,
@@ -279,7 +279,7 @@ class DepthAnything2Representation:
             align_corners=True,
         )[0, 0]
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         if self.model is None:
             raise RuntimeError("DepthAnything2 model not loaded. Use from_pretrained() first.")
 

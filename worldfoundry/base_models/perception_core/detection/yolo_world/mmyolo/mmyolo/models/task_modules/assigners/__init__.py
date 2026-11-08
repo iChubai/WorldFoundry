@@ -7,10 +7,10 @@ from .utils import select_candidates_in_gts, select_highest_overlaps, yolov6_iou
 
 __all__ = [
     "BatchATSSAssigner",
+    "BatchDynamicSoftLabelAssigner",
     "BatchTaskAlignedAssigner",
+    "PoseSimOTAAssigner",
     "select_candidates_in_gts",
     "select_highest_overlaps",
     "yolov6_iou_calculator",
-    "BatchDynamicSoftLabelAssigner",
-    "PoseSimOTAAssigner",
 ]

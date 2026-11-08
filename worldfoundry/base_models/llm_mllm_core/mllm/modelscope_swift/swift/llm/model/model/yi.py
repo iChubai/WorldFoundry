@@ -7,6 +7,7 @@ from transformers import AutoTokenizer
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -21,7 +22,7 @@ def get_model_tokenizer_yi(model_dir, *args, **kwargs):
 
 
 def get_model_tokenizer_yi_vl(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     local_repo_path = kwargs.get("local_repo_path")
     if local_repo_path:

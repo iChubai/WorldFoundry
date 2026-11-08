@@ -7,7 +7,8 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> utils -> pose_enc.py functionality."""
 
 import torch
-from .rotation import quat_to_mat, mat_to_quat
+
+from .rotation import mat_to_quat, quat_to_mat
 
 
 def extri_intri_to_pose_encoding(

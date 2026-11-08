@@ -20,36 +20,58 @@ only the variants that native recipes construct by name.
 
 from .dual_control import WanDualControlModel, WanModelDualControl
 from .dualcamctrl import WanControlNet
+
+# isort: split
 from .neoverse import NeoVerseControlBranch, NeoVerseControlBranchDictConverter
+
+# isort: split
+# isort: split
 from .s2v import WanS2VModel, WanS2VModelStateDictConverter, rope_precompute
+
+# isort: split
+# isort: split
 from .scope_action import ScopeActionBlock, ScopeActionModule, ScopeActionWanModel
+
+# isort: split
+# isort: split
 from .pusa import PusaWanModel
+
+# isort: split
+# isort: split
 from .sama import SamaWanModel, SemanticDiffusionHead, SigLIPFeatureProjection
+
+# isort: split
+# isort: split
 from .spatia import SpatiaWanModel
+
+# isort: split
+# isort: split
 from .multiworld import ItTakesTwoActionEncoder, MultiWorldDiTBlock, MultiWorldWanModel
+
+# isort: split
 from .fantasy_world import FantasyWorldCameraCondition, FantasyWorldFusionModel, IRGBlock
 
 __all__ = [
-    "WanDualControlModel",
-    "WanModelDualControl",
-    "WanControlNet",
-    "NeoVerseControlBranch",
-    "NeoVerseControlBranchDictConverter",
-    "WanS2VModel",
-    "WanS2VModelStateDictConverter",
-    "rope_precompute",
-    "ScopeActionBlock",
-    "ScopeActionModule",
-    "ScopeActionWanModel",
-    "PusaWanModel",
-    "SamaWanModel",
-    "SemanticDiffusionHead",
-    "SigLIPFeatureProjection",
-    "SpatiaWanModel",
-    "ItTakesTwoActionEncoder",
-    "MultiWorldDiTBlock",
-    "MultiWorldWanModel",
     "FantasyWorldCameraCondition",
     "FantasyWorldFusionModel",
     "IRGBlock",
+    "ItTakesTwoActionEncoder",
+    "MultiWorldDiTBlock",
+    "MultiWorldWanModel",
+    "NeoVerseControlBranch",
+    "NeoVerseControlBranchDictConverter",
+    "PusaWanModel",
+    "SamaWanModel",
+    "ScopeActionBlock",
+    "ScopeActionModule",
+    "ScopeActionWanModel",
+    "SemanticDiffusionHead",
+    "SigLIPFeatureProjection",
+    "SpatiaWanModel",
+    "WanControlNet",
+    "WanDualControlModel",
+    "WanModelDualControl",
+    "WanS2VModel",
+    "WanS2VModelStateDictConverter",
+    "rope_precompute",
 ]

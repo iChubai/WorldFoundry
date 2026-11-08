@@ -3,6 +3,8 @@
 import torch
 import torch.nn.functional as F
 
+# isort: split
+# droid_backends is a compiled PyTorch extension; it loads after torch.
 import droid_backends
 
 

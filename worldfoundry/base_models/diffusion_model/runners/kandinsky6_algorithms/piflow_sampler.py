@@ -40,7 +40,7 @@ def _normalize_grid_prediction(prediction: torch.Tensor, state: torch.Tensor, na
 
 
 @torch.no_grad()
-def piflow_denoise_loop(  # noqa: PLR0913, PLR0915
+def piflow_denoise_loop(
     bundle: LatentBundle,
     dit: torch.nn.Module,
     text_embeds: TextEmbeds,

@@ -10,10 +10,11 @@ shared storage on the current CUDA stream; concurrent branch forwards are not
 supported. Both complete checkpoints remain represented on GPU at all times.
 """
 
-from dataclasses import dataclass
 import gc
 import logging
 import time
+from dataclasses import dataclass
+
 import torch
 import torch.nn.functional as F
 import triton

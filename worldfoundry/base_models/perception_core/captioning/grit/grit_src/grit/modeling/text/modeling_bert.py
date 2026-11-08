@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -16,19 +15,20 @@
 """PyTorch BERT model."""
 # Adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+import builtins
 import copy
-import os
 import json
 import logging
 import math
+import os
 import sys
 from io import open
-import torch
-from torch import nn
-import torch.utils.checkpoint as checkpoint
-from .file_utils import cached_path
 
+import torch
+import torch.utils.checkpoint as checkpoint
+from torch import nn
+
+from .file_utils import cached_path
 
 logger = logging.getLogger()
 
@@ -304,7 +304,7 @@ class BertEncoder(nn.Module):
 CONFIG_NAME = "config.json"
 
 
-class PretrainedConfig(object):
+class PretrainedConfig:
     """Base class for all configuration classes.
     Handle a few common parameters and methods for loading/downloading/saving configurations.
     """
@@ -382,10 +382,10 @@ class PretrainedConfig(object):
         # redirect to the cache, if necessary
         try:
             resolved_config_file = cached_path(config_file, cache_dir=cache_dir)
-        except EnvironmentError:
+        except OSError:
             if pretrained_model_name_or_path in cls.pretrained_config_archive_map:
                 logger.error(
-                    "Couldn't reach server at '{}' to download pretrained model configuration file.".format(config_file)
+                    f"Couldn't reach server at '{config_file}' to download pretrained model configuration file."
                 )
             else:
                 logger.error(
@@ -397,9 +397,9 @@ class PretrainedConfig(object):
                 )
             return None
         if resolved_config_file == config_file:
-            logger.info("loading configuration file {}".format(config_file))
+            logger.info(f"loading configuration file {config_file}")
         else:
-            logger.info("loading configuration file {} from cache at {}".format(config_file, resolved_config_file))
+            logger.info(f"loading configuration file {config_file} from cache at {resolved_config_file}")
 
         # Load config
         config = cls.from_json_file(resolved_config_file)
@@ -412,10 +412,10 @@ class PretrainedConfig(object):
                 to_remove.append(key)
         # add img_layer_norm_eps, use_img_layernorm
         if "img_layer_norm_eps" in kwargs:
-            setattr(config, "img_layer_norm_eps", kwargs["img_layer_norm_eps"])
+            config.img_layer_norm_eps = kwargs["img_layer_norm_eps"]
             to_remove.append("img_layer_norm_eps")
         if "use_img_layernorm" in kwargs:
-            setattr(config, "use_img_layernorm", kwargs["use_img_layernorm"])
+            config.use_img_layernorm = kwargs["use_img_layernorm"]
             to_remove.append("use_img_layernorm")
         for key in to_remove:
             kwargs.pop(key, None)
@@ -437,7 +437,7 @@ class PretrainedConfig(object):
     @classmethod
     def from_json_file(cls, json_file):
         """Constructs a `BertConfig` from a json file of parameters."""
-        with open(json_file, "r", encoding="utf-8") as reader:
+        with builtins.open(json_file, encoding="utf-8") as reader:
             text = reader.read()
         return cls.from_dict(json.loads(text))
 
@@ -458,7 +458,7 @@ class PretrainedConfig(object):
 
     def to_json_file(self, json_file_path):
         """Save this instance to a json file."""
-        with open(json_file_path, "w", encoding="utf-8") as writer:
+        with builtins.open(json_file_path, "w", encoding="utf-8") as writer:
             writer.write(self.to_json_string())
 
 
@@ -512,7 +512,7 @@ class BertConfig(PretrainedConfig):
     ):
         super(BertConfig, self).__init__(**kwargs)
         if isinstance(vocab_size_or_config_json_file, str):
-            with open(vocab_size_or_config_json_file, "r", encoding="utf-8") as reader:
+            with builtins.open(vocab_size_or_config_json_file, encoding="utf-8") as reader:
                 json_config = json.loads(reader.read())
             for key, value in json_config.items():
                 self.__dict__[key] = value

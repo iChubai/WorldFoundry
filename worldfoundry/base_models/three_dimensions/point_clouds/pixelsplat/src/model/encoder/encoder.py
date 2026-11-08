@@ -43,7 +43,6 @@ class Encoder(nn.Module, ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass
 
     def get_data_shim(self) -> DataShim:
         """The default shim doesn't modify the batch."""

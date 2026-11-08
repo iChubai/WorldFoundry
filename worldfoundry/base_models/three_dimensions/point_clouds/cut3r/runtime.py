@@ -52,7 +52,7 @@ class CUT3RRepresentation:
     Representation for CUT3R 3D scene reconstruction.
     """
 
-    def __init__(self, model: Optional[ARCroco3DStereo] = None, device: Optional[str] = None):
+    def __init__(self, model: ARCroco3DStereo | None = None, device: str | None = None):
         """
         Initialize CUT3R representation model.
 
@@ -70,9 +70,9 @@ class CUT3RRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str,
-        device: Optional[str] = None,
-        size: Optional[int] = None,
-        cache_dir: Optional[str] = None,
+        device: str | None = None,
+        size: int | None = None,
+        cache_dir: str | None = None,
         **kwargs,
     ) -> "CUT3RRepresentation":
         """
@@ -151,7 +151,7 @@ class CUT3RRepresentation:
         return instance
 
     @staticmethod
-    def _download_from_google_drive(file_id: str, filename: str, cache_dir: Optional[str] = None) -> str:
+    def _download_from_google_drive(file_id: str, filename: str, cache_dir: str | None = None) -> str:
         """
         Download model from Google Drive.
 
@@ -192,8 +192,8 @@ class CUT3RRepresentation:
             )
 
     def _prepare_views(
-        self, images: Union[np.ndarray, List[np.ndarray], List[str]], size: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+        self, images: np.ndarray | list[np.ndarray] | list[str], size: int | None = None
+    ) -> list[dict[str, Any]]:
         """
         Prepare input views for CUT3R inference.
 
@@ -269,7 +269,7 @@ class CUT3RRepresentation:
 
         return views
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Get 3D scene representation from input data.
 
@@ -316,7 +316,7 @@ class CUT3RRepresentation:
 
         # Transform points to world coordinates
         pts3ds_world = []
-        for pose, pself in zip(pr_poses, pts3ds_self):
+        for pose, pself in zip(pr_poses, pts3ds_self, strict=False):
             pts3d_world = geotrf(pose, pself.unsqueeze(0))
             pts3ds_world.append(pts3d_world)
 
@@ -329,7 +329,7 @@ class CUT3RRepresentation:
         if output_type in ["point_cloud", "all"]:
             filtered_pcs = []
             filtered_colors = []
-            for pc_world, color, conf in zip(pts3ds_world, colors, conf_self):
+            for pc_world, color, conf in zip(pts3ds_world, colors, conf_self, strict=False):
                 pc_np = pc_world.numpy()
                 color_np = color.numpy()
                 conf_np = conf.numpy()
@@ -441,10 +441,10 @@ class CUT3RRepresentation:
     def render_with_3dgs(
         self,
         ply_path: str,
-        camera_config: Dict[str, Any],
+        camera_config: dict[str, Any],
         image_width: int = 704,
         image_height: int = 480,
-        device: Optional[str] = None,
+        device: str | None = None,
         near_plane: float = 0.01,
         far_plane: float = 1000.0,
     ) -> Image.Image:
@@ -660,7 +660,7 @@ class CUT3RRepresentation:
                 z = z[order]
                 c_proj = c_proj[order]
 
-                for uu, vv, zz, cc in zip(u, v, z, c_proj):
+                for uu, vv, zz, cc in zip(u, v, z, c_proj, strict=False):
                     if zz < depth_buf[vv, uu]:
                         depth_buf[vv, uu] = zz
                         img_fallback[vv, uu] = np.clip(cc, 0.0, 1.0)

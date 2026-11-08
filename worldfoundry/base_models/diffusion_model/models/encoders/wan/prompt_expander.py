@@ -65,7 +65,7 @@ DEFAULT_SYS_PROMPTS = {
 
 
 @dataclass
-class PromptOutput(object):
+class PromptOutput:
     """Prompt output implementation."""
 
     status: bool
@@ -113,7 +113,6 @@ class PromptExpander:
             image: The image.
             seed: The seed.
         """
-        pass
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
         """Extend.
@@ -123,7 +122,6 @@ class PromptExpander:
             system_prompt: The system prompt.
             seed: The seed.
         """
-        pass
 
     def decide_system_prompt(self, tar_lang="zh", prompt=None):
         """Decide system prompt.
@@ -231,7 +229,7 @@ class DashScopePromptExpander(PromptExpander):
                 exception = e
         return PromptOutput(status=False, prompt=prompt, seed=seed, system_prompt=system_prompt, message=str(exception))
 
-    def extend_with_img(self, prompt, system_prompt, image: Union[Image.Image, str] = None, seed=-1, *args, **kwargs):
+    def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
         """Extend with img.
 
         Args:
@@ -372,7 +370,8 @@ class QwenPromptExpander(PromptExpander):
 
         generated_ids = self.model.generate(**model_inputs, max_new_tokens=512)
         generated_ids = [
-            output_ids[len(input_ids) :] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+            output_ids[len(input_ids) :]
+            for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids, strict=False)
         ]
 
         expanded_prompt = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
@@ -385,7 +384,7 @@ class QwenPromptExpander(PromptExpander):
             message=json.dumps({"content": expanded_prompt}, ensure_ascii=False),
         )
 
-    def extend_with_img(self, prompt, system_prompt, image: Union[Image.Image, str] = None, seed=-1, *args, **kwargs):
+    def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
         """Extend with img.
 
         Args:
@@ -423,7 +422,9 @@ class QwenPromptExpander(PromptExpander):
 
         # Inference: Generation of the output
         generated_ids = self.model.generate(**inputs, max_new_tokens=512)
-        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+        ]
         expanded_prompt = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )[0]
@@ -481,35 +482,35 @@ if __name__ == "__main__":
         # test prompt extend
         if "t2v" in task or "ti2v" in task:
             # test dashscope api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} dashscope prompt extend")
             test(DashScopePromptExpander, prompt, ds_model_name, task, image=None, en_prompt=en_prompt, seed=seed)
 
             # test qwen api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} qwen prompt extend")
             test(QwenPromptExpander, prompt, qwen_model_name, task, image=None, en_prompt=en_prompt, seed=seed)
 
         # test prompt-image extend
         if "i2v" in task:
             # test dashscope api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} dashscope vl prompt extend")
             test(DashScopePromptExpander, prompt, ds_vl_model_name, task, image=image, en_prompt=en_prompt, seed=seed)
 
             # test qwen api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} qwen vl prompt extend")
             test(QwenPromptExpander, prompt, qwen_vl_model_name, task, image=image, en_prompt=en_prompt, seed=seed)
 
         # test empty prompt extend
         if "i2v-A14B" in task:
             # test dashscope api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} dashscope vl empty prompt extend")
             test(DashScopePromptExpander, "", ds_vl_model_name, task, image=image, en_prompt=None, seed=seed)
 
             # test qwen api
-            logging.info(f"-" * 40)
+            logging.info("-" * 40)
             logging.info(f"Testing {task} qwen vl empty prompt extend")
             test(QwenPromptExpander, "", qwen_vl_model_name, task, image=image, en_prompt=None, seed=seed)

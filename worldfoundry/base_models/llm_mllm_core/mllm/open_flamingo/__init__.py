@@ -14,7 +14,6 @@ from worldfoundry.base_models._vendor_imports import (
     prepend_import_path,
 )
 
-
 PACKAGE_ROOT = Path(__file__).resolve().parent
 IMPORT_ROOT = PACKAGE_ROOT.parent
 

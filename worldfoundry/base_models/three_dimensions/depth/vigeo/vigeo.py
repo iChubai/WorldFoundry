@@ -7,11 +7,11 @@ import torch.nn.functional as F
 from einops import rearrange
 from huggingface_hub import hf_hub_download
 
-from .conv_head import ConvHead
-from .layers.dinov2 import DINOv2
 from .camera_head import CameraHead
+from .conv_head import ConvHead
+from .layers import PositionGetter, RotaryPositionEmbedding2D
+from .layers.dinov2 import DINOv2
 from .transformer_decoder import TransformerDecoder
-from .layers import RotaryPositionEmbedding2D, PositionGetter
 from .utils import depth_to_pointmap, pose_encoding_to_extri, recover_focal_from_xy
 
 
@@ -134,7 +134,7 @@ class ViGeo(nn.Module):
     ):
         B, curr_step, C, orig_H, orig_W = image_chunk.shape
         H, W, patch_h, patch_w = self._resolve_model_size(orig_H, orig_W, num_tokens)
-        if H != orig_H or W != orig_W:
+        if orig_H != H or orig_W != W:
             image_chunk = F.interpolate(
                 image_chunk.flatten(0, 1), size=(H, W), mode="bilinear", align_corners=False
             ).view(B, curr_step, C, H, W)

@@ -1,13 +1,15 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import itertools
-from typing import List, Sequence, Tuple
+from collections.abc import Sequence
+from typing import List, Tuple
+
 import torch
-from torch import Tensor
-from torch.nn.modules.batchnorm import _BatchNorm
+from mmdet.utils import ConfigType, OptMultiConfig
 from mmengine.model import BaseModule
 from mmyolo.registry import MODELS
-from mmdet.utils import OptMultiConfig, ConfigType
-from transformers import AutoTokenizer, AutoModel, CLIPTextConfig
+from torch import Tensor
+from torch.nn.modules.batchnorm import _BatchNorm
+from transformers import AutoModel, AutoTokenizer, CLIPTextConfig
 from transformers import CLIPTextModelWithProjection as CLIPTP
 
 
@@ -29,7 +31,7 @@ class HuggingVisionBackbone(BaseModule):
 
         self._freeze_modules()
 
-    def forward(self, image: Tensor) -> Tuple[Tensor]:
+    def forward(self, image: Tensor) -> tuple[Tensor]:
         encoded_dict = self.image_model(pixel_values=image, output_hidden_states=True)
         hidden_states = encoded_dict.hidden_states
         img_feats = encoded_dict.get("reshaped_hidden_states", hidden_states)
@@ -81,7 +83,7 @@ class HuggingCLIPLanguageBackbone(BaseModule):
             self.text = text.to(device=self.model.device)
         return self.text
 
-    def forward(self, text: List[List[str]]) -> Tensor:
+    def forward(self, text: list[list[str]]) -> Tensor:
         num_per_batch = [len(t) for t in text]
         assert max(num_per_batch) == min(num_per_batch), "number of sequences not equal in batch"
         text = list(itertools.chain(*text))
@@ -141,18 +143,18 @@ class PseudoLanguageBackbone(BaseModule):
             ),
         )
 
-    def forward_cache(self, text: List[List[str]]) -> Tensor:
+    def forward_cache(self, text: list[list[str]]) -> Tensor:
         if not hasattr(self, "cache"):
             self.cache = self.forward_text(text)
         return self.cache
 
-    def forward(self, text: List[List[str]]) -> Tensor:
+    def forward(self, text: list[list[str]]) -> Tensor:
         if self.training:
             return self.forward_text(text)
         else:
             return self.forward_cache(text)
 
-    def forward_text(self, text: List[List[str]]) -> Tensor:
+    def forward_text(self, text: list[list[str]]) -> Tensor:
         num_per_batch = [len(t) for t in text]
         assert max(num_per_batch) == min(num_per_batch), "number of sequences not equal in batch"
         text = list(itertools.chain(*text))
@@ -203,7 +205,7 @@ class MultiModalYOLOBackbone(BaseModule):
         super().train(mode)
         self._freeze_stages()
 
-    def forward(self, image: Tensor, text: List[List[str]]) -> Tuple[Tuple[Tensor], Tensor]:
+    def forward(self, image: Tensor, text: list[list[str]]) -> tuple[tuple[Tensor], Tensor]:
         img_feats = self.image_model(image)
         if text is not None and self.with_text_model:
             txt_feats = self.text_model(text)
@@ -211,10 +213,10 @@ class MultiModalYOLOBackbone(BaseModule):
         else:
             return img_feats, None
 
-    def forward_text(self, text: List[List[str]]) -> Tensor:
+    def forward_text(self, text: list[list[str]]) -> Tensor:
         assert self.with_text_model, "forward_text() requires a text model"
         txt_feats = self.text_model(text)
         return txt_feats
 
-    def forward_image(self, image: Tensor) -> Tuple[Tensor]:
+    def forward_image(self, image: Tensor) -> tuple[Tensor]:
         return self.image_model(image)

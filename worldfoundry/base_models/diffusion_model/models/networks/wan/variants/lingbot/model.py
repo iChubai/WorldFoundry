@@ -5,17 +5,21 @@ behavior is in :mod:`.fast`.  No VACE or action encoder here.
 """
 
 import math
-from einops import rearrange
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as torch_F
+from einops import rearrange
+
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
+# isort: split
 from worldfoundry.core.kernels import (
     layer_norm_scale_shift,
     residual_gate_add,
 )
+
+# isort: split
 
 from worldfoundry.base_models.diffusion_model.optimizations.camera_condition import (
     apply_camera_modulation,
@@ -536,7 +540,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -611,10 +615,10 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

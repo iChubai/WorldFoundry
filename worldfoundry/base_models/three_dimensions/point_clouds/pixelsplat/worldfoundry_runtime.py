@@ -7,12 +7,13 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.core.io.paths import hfd_root_path
+from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 
@@ -86,7 +87,7 @@ class PixelSplatRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "PixelSplatRuntime":
+    ) -> PixelSplatRuntime:
         """From pretrained.
 
         Args:

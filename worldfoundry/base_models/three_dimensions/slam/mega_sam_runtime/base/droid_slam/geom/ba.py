@@ -1,9 +1,10 @@
 import cv2
-import geom.projective_ops as pops
 import lietorch
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
+
+import geom.projective_ops as pops
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_sum
 
 from .chol import block_solve, schur_solve, schur_solve_f

@@ -9,20 +9,21 @@ Import this module only from Vid2World recipes.  Shared timestep
 math stays in :mod:`.schedule_math`.
 """
 
+import copy
+
 import numpy as np
-from tqdm import tqdm
 import torch
+from tqdm import tqdm
+
 from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import (
     make_ddim_sampling_parameters,
     make_ddim_timesteps,
     rescale_noise_cfg,
 )
-from worldfoundry.core.nn.diffusion.utils import noise_like
-from worldfoundry.core.nn.diffusion.utils import extract_into_tensor
-import copy
+from worldfoundry.core.nn.diffusion.utils import extract_into_tensor, noise_like
 
 
-class DDIMSampler(object):
+class DDIMSampler:
     """Ddim sampler implementation."""
 
     def __init__(self, model, schedule="linear", **kwargs):
@@ -280,7 +281,7 @@ class DDIMSampler(object):
             timesteps = self.ddim_timesteps[:subset_end]
 
         intermediates = {"x_inter": [img], "pred_x0": [img]}
-        time_range = reversed(range(0, timesteps)) if ddim_use_original_steps else np.flip(timesteps)
+        time_range = reversed(range(timesteps)) if ddim_use_original_steps else np.flip(timesteps)
         total_steps = timesteps if ddim_use_original_steps else timesteps.shape[0]
         if verbose:
             iterator = tqdm(time_range, desc="DDIM Sampler", total=total_steps)

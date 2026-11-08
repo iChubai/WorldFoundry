@@ -1,4 +1,5 @@
 import os
+
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.vqascore_models._shared.clip_encoder import (
     CLIPVisionTower,
 )

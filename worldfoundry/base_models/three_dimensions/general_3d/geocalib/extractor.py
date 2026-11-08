@@ -80,9 +80,9 @@ class GeoCalib(nn.Module):
         self,
         img: torch.Tensor,
         camera_model: str = "pinhole",
-        priors: Optional[Dict[str, torch.Tensor]] = None,
+        priors: dict[str, torch.Tensor] | None = None,
         shared_intrinsics: bool = False,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Perform calibration with online resizing.
 
         Assumes input image is in range [0, 1] and in RGB format.

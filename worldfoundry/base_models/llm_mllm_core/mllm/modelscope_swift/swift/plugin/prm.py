@@ -1,13 +1,12 @@
+import json
 import os
 from typing import Any, Dict, List, Union
-
-import json
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferRequest
 
 
 class PRM:
-    def __call__(self, **kwargs) -> List[Any]:
+    def __call__(self, **kwargs) -> list[Any]:
         raise NotImplementedError
 
 
@@ -21,7 +20,7 @@ You are a process reward model, give the reward value of the answer, you must fo
 3. A ground truth answer will be given to you, it may be not the best one, consider it as a reference example.
 
 Begin!
-"""  # noqa
+"""
 
 QUERY = """
 The original question or the previous conversation:
@@ -39,9 +38,7 @@ Given the upper information, give your reward(-1.0~1.0) of the following answer:
 
 
 class QwenMaxPRM(PRM):
-    def __call__(
-        self, infer_requests: List[Union[InferRequest, Dict]], ground_truths: List[str], **kwargs
-    ) -> List[float]:
+    def __call__(self, infer_requests: list[InferRequest | dict], ground_truths: list[str], **kwargs) -> list[float]:
         # TODO: check request_config
         rewards = []
 
@@ -52,7 +49,7 @@ class QwenMaxPRM(PRM):
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
         )
 
-        for request, ground_truth in zip(infer_requests, ground_truths):
+        for request, ground_truth in zip(infer_requests, ground_truths, strict=False):
             previous = request.messages[:-1]
             if previous[0]["role"] == "system":
                 previous = previous[1:]
@@ -85,8 +82,9 @@ class QwenMaxPRM(PRM):
 
 class ClientPRM(PRM):
     def __init__(self, api_key=None, base_url=None, model=None):
-        from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferClient
         import os
+
+        from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferClient
 
         if api_key is None:
             api_key = os.getenv("DASHSCOPE_API_KEY")
@@ -100,12 +98,10 @@ class ClientPRM(PRM):
             "model": model,
         }
 
-    def __call__(
-        self, infer_requests: List[Union[InferRequest, Dict]], ground_truths: List[str], **kwargs
-    ) -> List[float]:
+    def __call__(self, infer_requests: list[InferRequest | dict], ground_truths: list[str], **kwargs) -> list[float]:
         prm_infer_requests = []
         request_config = kwargs.get("request_config")
-        for request, ground_truth in zip(infer_requests, ground_truths):
+        for request, ground_truth in zip(infer_requests, ground_truths, strict=False):
             previous = request["messages"][:-1]
             if previous[0]["role"] == "system":
                 previous = previous[1:]

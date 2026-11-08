@@ -2,14 +2,14 @@
 import ast
 import os
 from collections import Counter
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from datasets import Dataset as HfDataset
-from datasets import Image
+from datasets import Image, Sequence, Value
 from datasets import IterableDataset as HfIterableDataset
-from datasets import Sequence, Value
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import history_to_messages
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
@@ -40,9 +40,9 @@ class RowPreprocessor:
     def __init__(
         self,
         *,
-        columns: Optional[Dict[str, str]] = None,
-        dataset_sample: Optional[int] = None,
-        random_state: Union[np.random.RandomState, int, None] = 42,
+        columns: dict[str, str] | None = None,
+        dataset_sample: int | None = None,
+        random_state: np.random.RandomState | int | None = 42,
         traceback_limit: int = 10,
     ) -> None:
         self.columns = columns or {}
@@ -63,7 +63,7 @@ class RowPreprocessor:
         self.random_state = random_state
 
     @staticmethod
-    def _check_messages(row: Dict[str, Any]) -> None:
+    def _check_messages(row: dict[str, Any]) -> None:
         if "messages" not in row:
             return
         messages = row["messages"]
@@ -81,10 +81,10 @@ class RowPreprocessor:
             assert content is not None, f"message: {message}"
 
     @staticmethod
-    def _cast_images(row: Dict[str, Any]) -> None:
+    def _cast_images(row: dict[str, Any]) -> None:
         images = row.get("images")
 
-        if isinstance(images, str) or isinstance(images, list) and images and isinstance(images[0], str):
+        if isinstance(images, str) or (isinstance(images, list) and images and isinstance(images[0], str)):
             if isinstance(images, str):
                 images = [images]
             for i, image in enumerate(images):
@@ -94,14 +94,18 @@ class RowPreprocessor:
             row["images"] = [images]
 
     @staticmethod
-    def _check_rejected_response(row: Dict[str, Any]) -> None:
+    def _check_rejected_response(row: dict[str, Any]) -> None:
         if "rejected_messages" in row:
             chosen_messages = row["messages"]
             rejected_messages = row["rejected_messages"]
             messages = []
             rejected_response = None
             for chosen_user, chosen_assistant, rejected_user, rejected_assistant in zip(
-                chosen_messages[::2], chosen_messages[1::2], rejected_messages[::2], rejected_messages[1::2]
+                chosen_messages[::2],
+                chosen_messages[1::2],
+                rejected_messages[::2],
+                rejected_messages[1::2],
+                strict=False,
             ):
                 assert chosen_user == rejected_user
                 messages.append(chosen_user)
@@ -117,20 +121,20 @@ class RowPreprocessor:
             if rejected_response is None or rejected_response == messages[-1]["content"]:
                 raise ValueError(f"rejected_response: {rejected_response}")
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         raise NotImplementedError
 
     def prepare_dataset(self, dataset: DATASET_TYPE) -> DATASET_TYPE:
         return dataset
 
     @staticmethod
-    def batched_to_rows(batched_row: Dict[str, Any]):
+    def batched_to_rows(batched_row: dict[str, Any]):
         keys = list(batched_row.keys())
         batch_size = len(batched_row[keys[0]])
         return [{key: batched_row[key][i] for key in keys} for i in range(batch_size)]
 
     @staticmethod
-    def rows_to_batched(rows: List[Dict[str, Any]]):
+    def rows_to_batched(rows: list[dict[str, Any]]):
         batched = {}
         for i, row in enumerate(rows):
             for k, v in row.items():
@@ -175,8 +179,8 @@ class RowPreprocessor:
                 box[1], box[3] = box[3], box[1]
 
     def batched_preprocess(
-        self, batched_row: Dict[str, Any], *, strict: bool, ignore_max_length_error: bool
-    ) -> Dict[str, Any]:
+        self, batched_row: dict[str, Any], *, strict: bool, ignore_max_length_error: bool
+    ) -> dict[str, Any]:
         from ...template import MaxLengthError
 
         batched_row = dict(batched_row)
@@ -302,7 +306,7 @@ class RowPreprocessor:
         num_proc: int = 1,
         load_from_cache_file: bool = True,
         strict: bool = False,
-        batch_size: Optional[int] = None,
+        batch_size: int | None = None,
     ) -> DATASET_TYPE:
         from ..utils import sample_dataset
 
@@ -353,7 +357,7 @@ class RowPreprocessor:
 class ResponsePreprocessor(RowPreprocessor):
     """Dataset compatible with older versions of ms-swift"""
 
-    def __init__(self, *, columns: Optional[Dict[str, str]] = None, **kwargs) -> None:
+    def __init__(self, *, columns: dict[str, str] | None = None, **kwargs) -> None:
         super().__init__(columns=columns, **kwargs)
         system_keys = ["system", "system_prompt"]
         query_keys = ["query", "prompt", "input", "instruction", "question", "problem"]
@@ -369,7 +373,7 @@ class ResponsePreprocessor(RowPreprocessor):
         for key in response_keys:
             self.columns[key] = "response"
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         response = row.pop("response", None)
         if response is not None:
             if isinstance(response, (list, tuple)):
@@ -401,7 +405,7 @@ class AlpacaPreprocessor(ResponsePreprocessor):
         assert isinstance(query, str), f"query: {query}"
         return query
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         instruction = row.pop("instruction", None)
         input_ = row.pop("input", None)
         output = row.pop("output", None)
@@ -411,7 +415,7 @@ class AlpacaPreprocessor(ResponsePreprocessor):
         return super().preprocess(row)
 
 
-def default_repair_messages(s: Union[str, Any]) -> Any:
+def default_repair_messages(s: str | Any) -> Any:
     if isinstance(s, str):
         return ast.literal_eval(s)
     return s
@@ -422,17 +426,15 @@ class MessagesPreprocessor(RowPreprocessor):
         self,
         *,
         # If set to None, automatic matching will be performed.
-        role_key: Optional[str] = None,  # 'role', 'from'
-        content_key: Optional[str] = None,  # 'content', 'value'
-        user_role: Optional[str] = None,  # 'user', 'human'
-        assistant_role: Optional[str] = None,  # 'assistant', 'gpt', 'bot'
+        role_key: str | None = None,  # 'role', 'from'
+        content_key: str | None = None,  # 'content', 'value'
+        user_role: str | None = None,  # 'user', 'human'
+        assistant_role: str | None = None,  # 'assistant', 'gpt', 'bot'
         system_role: str = "system",
         # 'conversation', 'conversations' -> 'messages'
-        columns: Optional[Dict[str, str]] = None,
-        repair_messages: Callable[
-            [Union[str, List[Dict[str, str]]]], Optional[List[Dict[str, str]]]
-        ] = default_repair_messages,
-        inner_key: Optional[str] = None,
+        columns: dict[str, str] | None = None,
+        repair_messages: Callable[[str | list[dict[str, str]]], list[dict[str, str]] | None] = default_repair_messages,
+        inner_key: str | None = None,
         **kwargs,
     ):
         super().__init__(columns=columns, **kwargs)
@@ -458,12 +460,12 @@ class MessagesPreprocessor(RowPreprocessor):
             self.columns[key] = "system"
 
     @staticmethod
-    def _is_sharegpt_format(message: Dict[str, str]) -> bool:
+    def _is_sharegpt_format(message: dict[str, str]) -> bool:
         if "role" in message or "content" in message:
             return False
         return True
 
-    def sharegpt_to_messages(self, messages: List[Dict[str, str]], system: Optional[str]) -> List[Dict[str, str]]:
+    def sharegpt_to_messages(self, messages: list[dict[str, str]], system: str | None) -> list[dict[str, str]]:
         self._to_std_key(messages, "user", self.user_roles)
         self._to_std_key(messages, "assistant", self.assistant_roles)
         new_messages = []
@@ -476,7 +478,7 @@ class MessagesPreprocessor(RowPreprocessor):
             new_messages.append(assistant_message)
         return new_messages
 
-    def to_std_messages(self, messages: List[Dict[str, str]], system: Optional[str]) -> None:
+    def to_std_messages(self, messages: list[dict[str, str]], system: str | None) -> None:
         if messages[0]["role"] == self.system_role:
             messages[0]["role"] = "system"
         elif system is not None:
@@ -493,13 +495,13 @@ class MessagesPreprocessor(RowPreprocessor):
                 message["role"] = "tool_response"
 
     @staticmethod
-    def _to_std_key(messages: List[Dict[str, str]], std_key: str, optional_keys: List[str]) -> None:
+    def _to_std_key(messages: list[dict[str, str]], std_key: str, optional_keys: list[str]) -> None:
         for message in messages:
             for key in optional_keys:
                 if key in message:
                     message[std_key] = message.pop(key)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if "rejected_messages" in row:
             row["rejected_messages"] = MessagesPreprocessor.preprocess(self, {"messages": row["rejected_messages"]})[
                 "messages"
@@ -507,7 +509,7 @@ class MessagesPreprocessor(RowPreprocessor):
         messages = row["messages"]
         if self.inner_key is not None:
             messages = messages[self.inner_key]
-        messages: Optional[List[Dict[str, str]]] = self.repair_messages(messages)
+        messages: list[dict[str, str]] | None = self.repair_messages(messages)
         if not messages or isinstance(messages, str):
             return
         self._to_std_key(messages, "role", self.role_keys)
@@ -522,14 +524,14 @@ class MessagesPreprocessor(RowPreprocessor):
 
 
 class ClsPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         res = super().preprocess(row)
         res["label"] = int(res["label"])
         return res
 
 
 class AutoPreprocessor:
-    def __init__(self, *, columns: Optional[Dict[str, str]] = None, **kwargs) -> None:
+    def __init__(self, *, columns: dict[str, str] | None = None, **kwargs) -> None:
         self.columns = columns or {}
         self.kwargs = kwargs
 

@@ -6,8 +6,9 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_predict.py functionality."""
 
-import torch
 import numpy as np
+import torch
+
 from .vggsfm_utils import *
 
 

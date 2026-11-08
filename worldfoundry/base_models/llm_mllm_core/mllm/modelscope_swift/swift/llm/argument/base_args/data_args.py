@@ -31,10 +31,10 @@ class DataArguments:
     """
 
     # dataset_id or dataset_dir or dataset_path
-    dataset: List[str] = field(
+    dataset: list[str] = field(
         default_factory=list, metadata={"help": f"dataset choices: {list(DATASET_MAPPING.keys())}"}
     )
-    val_dataset: List[str] = field(
+    val_dataset: list[str] = field(
         default_factory=list, metadata={"help": f"dataset choices: {list(DATASET_MAPPING.keys())}"}
     )
     split_dataset_ratio: float = 0.01
@@ -45,19 +45,19 @@ class DataArguments:
     dataset_shuffle: bool = True
     val_dataset_shuffle: bool = False
     streaming: bool = False
-    interleave_prob: Optional[List[float]] = None
+    interleave_prob: list[float] | None = None
     stopping_strategy: Literal["first_exhausted", "all_exhausted"] = "first_exhausted"
     shuffle_buffer_size: int = 1000
 
     download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists"
-    columns: Optional[Union[dict, str]] = None
+    columns: dict | str | None = None
     strict: bool = False
     remove_unused_columns: bool = True
     # Chinese name and English name
-    model_name: Optional[List[str]] = field(default=None, metadata={"help": "e.g. ['小黄', 'Xiao Huang']"})
-    model_author: Optional[List[str]] = field(default=None, metadata={"help": "e.g. ['魔搭', 'ModelScope']"})
+    model_name: list[str] | None = field(default=None, metadata={"help": "e.g. ['小黄', 'Xiao Huang']"})
+    model_author: list[str] | None = field(default=None, metadata={"help": "e.g. ['魔搭', 'ModelScope']"})
 
-    custom_dataset_info: List[str] = field(default_factory=list)  # .json
+    custom_dataset_info: list[str] = field(default_factory=list)  # .json
 
     def _init_custom_dataset_info(self):
         """register custom dataset_info.json to datasets"""

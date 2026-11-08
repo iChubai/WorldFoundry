@@ -5,15 +5,16 @@
 
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> block.py functionality."""
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
+from typing import List, Optional
 
 import torch
 from torch import Tensor, nn
 
-from ..utils import cat_keep_shapes, uncat_with_shapes
-
-from .attention import CausalSelfAttention, SelfAttention
 from worldfoundry.core.nn.blocks.layers import LayerScale, Mlp
+
+from ..utils import cat_keep_shapes, uncat_with_shapes
+from .attention import CausalSelfAttention, SelfAttention
 
 
 class SelfAttentionBlock(nn.Module):
@@ -154,7 +155,7 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def _forward_list(self, x_list: List[Tensor], rope_list=None) -> List[Tensor]:
+    def _forward_list(self, x_list: list[Tensor], rope_list=None) -> list[Tensor]:
         """Helper function to forward list.
 
         Args:
@@ -166,18 +167,21 @@ class SelfAttentionBlock(nn.Module):
         """
         b_list = [x.shape[0] for x in x_list]
         sample_subset_sizes = [max(int(b * (1 - self.sample_drop_ratio)), 1) for b in b_list]
-        residual_scale_factors = [b / sample_subset_size for b, sample_subset_size in zip(b_list, sample_subset_sizes)]
+        residual_scale_factors = [
+            b / sample_subset_size for b, sample_subset_size in zip(b_list, sample_subset_sizes, strict=False)
+        ]
 
         if self.training and self.sample_drop_ratio > 0.0:
             indices_1_list = [
                 (torch.randperm(b, device=x.device))[:sample_subset_size]
-                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes)
+                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes, strict=False)
             ]
-            x_subset_1_list = [x[indices_1] for x, indices_1 in zip(x_list, indices_1_list)]
+            x_subset_1_list = [x[indices_1] for x, indices_1 in zip(x_list, indices_1_list, strict=False)]
 
             if rope_list is not None:
                 rope_subset_list = [
-                    self._maybe_index_rope(rope, indices_1) for rope, indices_1 in zip(rope_list, indices_1_list)
+                    self._maybe_index_rope(rope, indices_1)
+                    for rope, indices_1 in zip(rope_list, indices_1_list, strict=False)
                 ]
             else:
                 rope_subset_list = rope_list
@@ -195,15 +199,15 @@ class SelfAttentionBlock(nn.Module):
                     alpha=residual_scale_factor,
                 )
                 for x, residual_1, indices_1, residual_scale_factor in zip(
-                    x_list, residual_1_list, indices_1_list, residual_scale_factors
+                    x_list, residual_1_list, indices_1_list, residual_scale_factors, strict=False
                 )
             ]
 
             indices_2_list = [
                 (torch.randperm(b, device=x.device))[:sample_subset_size]
-                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes)
+                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes, strict=False)
             ]
-            x_subset_2_list = [x[indices_2] for x, indices_2 in zip(x_attn_list, indices_2_list)]
+            x_subset_2_list = [x[indices_2] for x, indices_2 in zip(x_attn_list, indices_2_list, strict=False)]
             flattened, shapes, num_tokens = cat_keep_shapes(x_subset_2_list)
             norm2_flat = self.norm2(flattened)
             norm2_list = uncat_with_shapes(norm2_flat, shapes, num_tokens)
@@ -219,12 +223,12 @@ class SelfAttentionBlock(nn.Module):
                     alpha=residual_scale_factor,
                 )
                 for x_attn, residual_2, indices_2, residual_scale_factor in zip(
-                    x_attn_list, residual_2_list, indices_2_list, residual_scale_factors
+                    x_attn_list, residual_2_list, indices_2_list, residual_scale_factors, strict=False
                 )
             ]
         else:
             x_out = []
-            for x, rope in zip(x_list, rope_list):
+            for x, rope in zip(x_list, rope_list, strict=False):
                 x_attn = x + self.ls1(self.attn(self.norm1(x), rope=rope))
                 x_ffn = x_attn + self.ls2(self.mlp(self.norm2(x_attn)))
                 x_out.append(x_ffn)
@@ -232,7 +236,7 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def forward(self, x_or_x_list, rope_or_rope_list=None) -> List[Tensor]:
+    def forward(self, x_or_x_list, rope_or_rope_list=None) -> list[Tensor]:
         """Forward.
 
         Args:
@@ -260,7 +264,7 @@ class CausalSelfAttentionBlock(nn.Module):
         dim: int,
         num_heads: int,
         ffn_ratio: float = 4.0,
-        ls_init_value: Optional[float] = None,
+        ls_init_value: float | None = None,
         is_causal: bool = True,
         act_layer: Callable = nn.GELU,
         norm_layer: Callable = nn.LayerNorm,

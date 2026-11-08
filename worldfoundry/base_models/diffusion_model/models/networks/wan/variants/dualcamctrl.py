@@ -37,7 +37,7 @@ class WanControlNet(WanModel):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         has_image_input: bool,
@@ -81,7 +81,7 @@ class WanControlNet(WanModel):
         self.rgb_inject_blocks = rgb_inject_blocks
         self.depth_inject_blocks = depth_inject_blocks
         if self.control_adapter is not None:
-            print(f"Adding camera into input using addition.")
+            print("Adding camera into input using addition.")
 
         self.control_block_index = control_block_index
         num_control_block = len(control_block_index)
@@ -186,12 +186,12 @@ class WanControlNet(WanModel):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        clip_feature: Optional[torch.Tensor] = None,
-        control_video: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        clip_feature: torch.Tensor | None = None,
+        control_video: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
-        camera_pose_embedding: Optional[torch.Tensor] = None,
+        camera_pose_embedding: torch.Tensor | None = None,
         **kwargs,
     ):
         """Denoise ``x`` while running the control video through fused inject layers."""

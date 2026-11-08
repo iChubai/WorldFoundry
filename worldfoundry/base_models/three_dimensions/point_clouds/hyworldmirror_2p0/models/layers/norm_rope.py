@@ -18,7 +18,7 @@ class PositionGetter:
         Returns:
             The return value.
         """
-        self.position_cache: Dict[Tuple[int, int], torch.Tensor] = {}
+        self.position_cache: dict[tuple[int, int], torch.Tensor] = {}
 
     def __call__(self, batch_size: int, height: int, width: int, device: torch.device) -> torch.Tensor:
         """Call.
@@ -63,11 +63,11 @@ class NormalizedRotaryPositionEmbedding2D(nn.Module):
         head_dim: int,
         base: float = 100.0,
         normalize_coords: Literal["min", "max", "separate"] = "separate",
-        shift_coords: Union[float, None] = None,
-        jitter_coords: Union[float, None] = None,
-        rescale_coords: Union[float, None] = None,
-        dtype: Union[torch.dtype, None] = None,
-        device: Union[torch.device, None] = None,
+        shift_coords: float | None = None,
+        jitter_coords: float | None = None,
+        rescale_coords: float | None = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
         **ignored_kwargs,
     ) -> None:
         """Init.
@@ -111,7 +111,7 @@ class NormalizedRotaryPositionEmbedding2D(nn.Module):
         periods = self.base**exponents
         self.periods.data.copy_(periods)
 
-    def _get_sincos_for_grid(self, H: int, W: int, device: torch.device, dtype: torch.dtype) -> Tuple[Tensor, Tensor]:
+    def _get_sincos_for_grid(self, H: int, W: int, device: torch.device, dtype: torch.dtype) -> tuple[Tensor, Tensor]:
         """Helper function to get sincos for grid.
 
         Args:

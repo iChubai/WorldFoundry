@@ -6,39 +6,37 @@ Causal rollout is :mod:`.causal`.  Adds optional pose RoPE; no VACE.
 
 import glob
 import json
+import logging
 import math
 import os
 import types
 import warnings
-import logging
 from typing import Optional, Union
 
 import numpy as np
 import torch
 import torch.cuda.amp as amp
-import torch.nn as nn
 import torch.distributed as dist
-
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from worldfoundry.core.nn import ModuleDeviceDtypeMixin
+import torch.nn as nn
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
-from worldfoundry.core.distributed.sequence_parallel.runtime import (
-    get_sequence_parallel_rank,
-    get_sequence_parallel_world_size,
-    get_sp_group,
-)
-
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.prope import prope_qkv
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
     WanLayerNorm,
     WanRMSNorm,
     rope_params,
     sinusoidal_embedding_1d,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.prope import prope_qkv
+from worldfoundry.core.distributed.sequence_parallel.runtime import (
+    get_sequence_parallel_rank,
+    get_sequence_parallel_world_size,
+    get_sp_group,
+)
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+from worldfoundry.core.nn import ModuleDeviceDtypeMixin
 
 
 @amp.autocast(enabled=False)
@@ -324,10 +322,10 @@ class WanAttentionBlock(nn.Module):
         self.eps = eps
 
         self.add_control_adapter = kwargs.get("add_control_adapter", False)
-        self.cam_method = kwargs.get("cam_method", None)
+        self.cam_method = kwargs.get("cam_method")
         self.attn_compress = kwargs.get("attn_compress", 1)
-        self.layer_idx = kwargs.get("layer_idx", None)
-        cam_self_attn_layers = kwargs.get("cam_self_attn_layers", None)
+        self.layer_idx = kwargs.get("layer_idx")
+        cam_self_attn_layers = kwargs.get("cam_self_attn_layers")
 
         # layers
         self.norm1 = WanLayerNorm(dim, eps)
@@ -695,7 +693,7 @@ class WanTransformer3DModel(
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]

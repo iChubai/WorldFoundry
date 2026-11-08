@@ -1,11 +1,15 @@
 from collections import OrderedDict
 
 import cv2
+
+# isort: split
 from droid_net import DroidNet
+
+# isort: split
 import geom.projective_ops as pops
 import lietorch
-from modules.corr import CorrBlock
 import torch
+from modules.corr import CorrBlock
 
 
 class MotionFilter:

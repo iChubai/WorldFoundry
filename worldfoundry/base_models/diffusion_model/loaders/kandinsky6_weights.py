@@ -1,9 +1,10 @@
 """Local Kandinsky-6 checkpoint assignment and meta-buffer materialization."""
 
 import logging
+
 import torch
-from torch import nn
 from safetensors.torch import load_file
+from torch import nn
 
 logger = logging.getLogger(__name__)
 

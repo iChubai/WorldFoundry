@@ -1,28 +1,31 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download
 
-from worldfoundry.core.configuration.python import load_python_config
 from worldfoundry.core import (
     get_video_details,
     load_frames_from_video,
 )
+from worldfoundry.core.configuration.python import load_python_config
 
+# isort: split
 from .multi_modality.models import InternVideo2_Stage2
+
+# isort: split
 from worldfoundry.base_models.llm_mllm_core.mllm.umt.models.backbones.bert.tokenization_bert import (
     BertTokenizer,
 )
+
 from .multi_modality.models.backbones.internvideo2.pos_embed import (
     interpolate_pos_embed_internvideo2_new,
 )
 from .multi_modality.models.criterions import get_sim
-
 
 _MODEL_REPOS = {
     "internvideo2_1b_stage2": (

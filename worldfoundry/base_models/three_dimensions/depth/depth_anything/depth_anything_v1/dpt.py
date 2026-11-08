@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from huggingface_hub import PyTorchModelHubMixin
 
-from .blocks import FeatureFusionBlock, _make_scratch
 from .....perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
+from .blocks import FeatureFusionBlock, _make_scratch
 
 
 def _load_in_tree_dinov2(encoder: str) -> nn.Module:

@@ -38,7 +38,7 @@ class _ColorfulFormatter(logging.Formatter):
 
 
 # so that calling setup_logger multiple times won't add many handlers
-@functools.lru_cache()
+@functools.lru_cache
 def setup_logger(output=None, distributed_rank=0, *, color=True, name="imagenet", abbrev_name=None):
     """
     Initialize the detectron2 logger and set its verbosity level to "INFO".
@@ -96,7 +96,7 @@ def setup_logger(output=None, distributed_rank=0, *, color=True, name="imagenet"
 
 # cache the opened file object, so that different calls to `setup_logger`
 # with the same file name can safely write to the same file.
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _cached_log_stream(filename):
     """Helper function to cached log stream.
 

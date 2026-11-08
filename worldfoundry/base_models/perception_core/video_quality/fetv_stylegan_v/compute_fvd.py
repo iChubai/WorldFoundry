@@ -1,6 +1,11 @@
-import argparse, shutil, json, os, random
-from tqdm import tqdm
+import argparse
+import json
+import os
+import random
+import shutil
 import time
+
+from tqdm import tqdm
 
 categories = {
     "objects": [
@@ -20,7 +25,7 @@ categories = {
 
 def read_data(data_path):
     datas = []
-    with open(data_path, "r") as f:
+    with open(data_path) as f:
         lines = f.readlines()
     for line in lines:
         datas.append(json.loads(line))
@@ -53,13 +58,13 @@ def compute_fvd(result_file, tmp_gen_path, tmp_real_path, gpus):
         --verbose 0 \
         --use_cache 0 "
     os.system(command)
-    with open(result_file, "r") as f:
+    with open(result_file) as f:
         results = json.load(f)
     os.remove(result_file)
     return results["results"]["fvd2048_16f"]
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample_num", default=300, type=int, help="The number of videos per category")
     parser.add_argument("--gen_video_path", default=None, type=str)
@@ -98,7 +103,7 @@ if "__main__" == __name__:
                 print(
                     f"Aspect={aspect}, Category={category}, Real Video Num={len(data_ids_real)}, Gen Video Num={len(data_ids_gen)}"
                 )
-                for data_ids, video_type in zip([data_ids_gen, data_ids_real], ["gen", "real"]):
+                for data_ids, video_type in zip([data_ids_gen, data_ids_real], ["gen", "real"], strict=False):
                     for id in tqdm(data_ids):
                         if video_type == "gen":
                             folder_name = f"video{id}_frames"

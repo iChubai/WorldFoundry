@@ -7,8 +7,8 @@ from .data_preprocessor import (
 )
 
 __all__ = [
-    "YOLOv5DetDataPreprocessor",
-    "PPYOLOEDetDataPreprocessor",
     "PPYOLOEBatchRandomResize",
+    "PPYOLOEDetDataPreprocessor",
     "YOLOXBatchSyncRandomResize",
+    "YOLOv5DetDataPreprocessor",
 ]

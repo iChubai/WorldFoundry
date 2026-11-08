@@ -1,12 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import torch
 from mmdet.models.utils import unpack_gt_instances
 from mmengine.structures import InstanceData
 from torch import Tensor
 
+# isort: split
 from mmyolo.models import YOLOv5Head
+
+# isort: split
 from mmyolo.registry import MODELS
 
 
@@ -16,7 +20,7 @@ class YOLOv5HeadAssigner(YOLOv5Head):
         self,
         batch_gt_instances: Sequence[InstanceData],
         batch_img_metas: Sequence[dict],
-        inputs_hw: Union[Tensor, tuple] = (640, 640),
+        inputs_hw: Tensor | tuple = (640, 640),
     ) -> dict:
         """Calculate the assigning results based on the gt and features
         extracted by the detection head.
@@ -137,7 +141,7 @@ class YOLOv5HeadAssigner(YOLOv5Head):
             assign_results.append(assign_results_feat)
         return assign_results
 
-    def assign(self, batch_data_samples: Union[list, dict], inputs_hw: Union[tuple, torch.Size]) -> dict:
+    def assign(self, batch_data_samples: list | dict, inputs_hw: tuple | torch.Size) -> dict:
         """Calculate assigning results. This function is provided to the
         `assigner_visualization.py` script.
 

@@ -1,13 +1,11 @@
-import numpy as np
 import math
 import os
 from os.path import join
+
 import fvcore.nn.weight_init as weight_init
+import numpy as np
 import torch
 import torch.nn.functional as F
-from torch import nn
-
-from detectron2.modeling.backbone.resnet import BasicStem, BottleneckBlock, DeformBottleneckBlock
 from detectron2.layers import (
     Conv2d,
     DeformConv,
@@ -16,15 +14,16 @@ from detectron2.layers import (
     ShapeSpec,
     get_norm,
 )
-
 from detectron2.modeling.backbone.backbone import Backbone
 from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
 from detectron2.modeling.backbone.fpn import FPN
+from detectron2.modeling.backbone.resnet import BasicStem, BottleneckBlock, DeformBottleneckBlock
+from torch import nn
 
 __all__ = [
+    "BasicStem",
     "BottleneckBlock",
     "DeformBottleneckBlock",
-    "BasicStem",
 ]
 
 DCNV1 = False
@@ -36,7 +35,7 @@ HASH = {
 
 
 def get_model_url(data, name, hash):
-    return join("http://dl.yf.io/dla/models", data, "{}-{}.pth".format(name, hash))
+    return join("http://dl.yf.io/dla/models", data, f"{name}-{hash}.pth")
 
 
 class BasicBlock(nn.Module):
@@ -230,7 +229,7 @@ class DLA(nn.Module):
         self.level5 = Tree(
             levels[5], block, channels[4], channels[5], 2, level_root=True, root_residual=residual_root, norm=norm
         )
-        self.load_pretrained_model(data="imagenet", name="dla{}".format(num_layers), hash=HASH[num_layers])
+        self.load_pretrained_model(data="imagenet", name=f"dla{num_layers}", hash=HASH[num_layers])
 
     def load_pretrained_model(self, data, name, hash):
         checkpoint_path = os.environ.get(f"WORLDFOUNDRY_GRIT_{name.upper()}_CKPT") or os.environ.get(
@@ -271,7 +270,7 @@ class DLA(nn.Module):
         y = []
         x = self.base_layer(x)
         for i in range(6):
-            x = getattr(self, "level{}".format(i))(x)
+            x = getattr(self, f"level{i}")(x)
             y.append(x)
         return y
 
@@ -352,14 +351,14 @@ class DLAUp(nn.Module):
         scales = np.array(scales, dtype=int)
         for i in range(len(channels) - 1):
             j = -i - 2
-            setattr(self, "ida_{}".format(i), IDAUp(channels[j], in_channels[j:], scales[j:] // scales[j], norm=norm))
+            setattr(self, f"ida_{i}", IDAUp(channels[j], in_channels[j:], scales[j:] // scales[j], norm=norm))
             scales[j + 1 :] = scales[j]
             in_channels[j + 1 :] = [channels[j] for _ in channels[j + 1 :]]
 
     def forward(self, layers):
         out = [layers[-1]]  # start with 32
         for i in range(len(layers) - self.startp - 1):
-            ida = getattr(self, "ida_{}".format(i))
+            ida = getattr(self, f"ida_{i}")
             ida(layers, len(layers) - i - 2, len(layers))
             out.insert(0, layers[-1])
         return out
@@ -395,8 +394,8 @@ class DLASeg(Backbone):
                 norm=norm,
             )
         self._out_features = out_features
-        self._out_feature_channels = {"dla{}".format(i): channels[i] for i in range(6)}
-        self._out_feature_strides = {"dla{}".format(i): 2**i for i in range(6)}
+        self._out_feature_channels = {f"dla{i}": channels[i] for i in range(6)}
+        self._out_feature_strides = {f"dla{i}": 2**i for i in range(6)}
         self._size_divisibility = 32
 
     @property
@@ -414,14 +413,14 @@ class DLASeg(Backbone):
             self.ida_up(y, 0, len(y))
             ret = {}
             for i in range(self.last_level - self.first_level):
-                out_feature = "dla{}".format(i)
+                out_feature = f"dla{i}"
                 if out_feature in self._out_features:
                     ret[out_feature] = y[i]
         else:
             ret = {}
             st = self.first_level if self.use_dla_up else 0
             for i in range(self.last_level - st):
-                out_feature = "dla{}".format(i + st)
+                out_feature = f"dla{i + st}"
                 if out_feature in self._out_features:
                     ret[out_feature] = x[i]
 

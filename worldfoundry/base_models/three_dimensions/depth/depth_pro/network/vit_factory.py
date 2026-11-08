@@ -37,18 +37,18 @@ class ViTConfig:
     patch_size: int = 16
 
     # In case we need to rescale the backbone when loading from timm.
-    timm_preset: Optional[str] = None
+    timm_preset: str | None = None
     timm_img_size: int = 384
     timm_patch_size: int = 16
 
     # The following 2 parameters are only used by DPT.  See dpt_factory.py.
-    encoder_feature_layer_ids: List[int] = None
+    encoder_feature_layer_ids: list[int] = None
     """The layers in the Beit/ViT used to constructs encoder features for DPT."""
-    encoder_feature_dims: List[int] = None
+    encoder_feature_dims: list[int] = None
     """The dimension of features of encoder layers from Beit/ViT features for DPT."""
 
 
-VIT_CONFIG_DICT: Dict[ViTPreset, ViTConfig] = {
+VIT_CONFIG_DICT: dict[ViTPreset, ViTConfig] = {
     "dinov2l16_384": ViTConfig(
         in_chans=3,
         embed_dim=1024,

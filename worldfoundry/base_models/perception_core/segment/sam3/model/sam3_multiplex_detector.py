@@ -3,6 +3,7 @@
 import os
 
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import SAM3VLBackbone
 
 try:
@@ -12,6 +13,7 @@ except ImportError:
 from typing import Dict, List, Optional
 
 import numpy as np
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, FindStage
 from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import Prompt
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import SAM3Output
@@ -118,11 +120,11 @@ class Sam3MultiplexImageBase(Sam3Image):
 
     def _trim_outputs(self, *args, **kwargs):
         """Helper function to trim outputs."""
-        pass  # not needed for image-on-video
+        # not needed for image-on-video
 
     def _batch_find_inputs(
         self,
-        find_inputs: List[FindStage],
+        find_inputs: list[FindStage],
         chunk_start: int,
         chunk_end: int,
     ) -> FindStage:
@@ -218,7 +220,7 @@ class Sam3MultiplexImageBase(Sam3Image):
 
     def _batch_geometric_prompts(
         self,
-        geometric_prompts: List[Prompt],
+        geometric_prompts: list[Prompt],
         chunk_start: int,
         chunk_end: int,
     ) -> Prompt:
@@ -238,7 +240,7 @@ class Sam3MultiplexImageBase(Sam3Image):
 
     def _batch_geometric_prompts_from_list(
         self,
-        chunk_prompts: List[Prompt],
+        chunk_prompts: list[Prompt],
     ) -> Prompt:
         """
         Batch a list of Prompt objects into a single batched Prompt.

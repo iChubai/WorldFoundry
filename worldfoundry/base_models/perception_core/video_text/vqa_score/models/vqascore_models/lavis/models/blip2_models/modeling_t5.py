@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2018 Mesh TensorFlow authors, T5 Authors and HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +23,6 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils.checkpoint import checkpoint
-
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
     BaseModelOutput,
@@ -33,6 +31,7 @@ from transformers.modeling_outputs import (
     Seq2SeqModelOutput,
 )
 from transformers.modeling_utils import PreTrainedModel
+from transformers.models.t5.configuration_t5 import T5Config
 from transformers.pytorch_utils import (
     ALL_LAYERNORM_LAYERS,
     find_pruneable_heads_and_indices,
@@ -48,8 +47,6 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 from transformers.utils.model_parallel_utils import assert_device_map, get_device_map
-from transformers.models.t5.configuration_t5 import T5Config
-
 
 logger = logging.get_logger(__name__)
 
@@ -131,31 +128,31 @@ def load_tf_weights_in_t5(model, config, tf_checkpoint_path):
             else:
                 scope_names = [m_name]
             if scope_names[0] in ["kernel", "scale", "embedding"]:
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             elif scope_names[0] == "self_attention":
-                pointer = getattr(pointer, "layer")
+                pointer = pointer.layer
                 pointer = pointer[0]
             elif scope_names[0] == "enc_dec_attention":
-                pointer = getattr(pointer, "layer")
+                pointer = pointer.layer
                 pointer = pointer[1]
             elif scope_names[0] == "dense_relu_dense":
-                pointer = getattr(pointer, "layer")
+                pointer = pointer.layer
                 pointer = pointer[2]
             elif scope_names[0] == "rms_norm":
                 if hasattr(pointer, "layer_norm"):
-                    pointer = getattr(pointer, "layer_norm")
+                    pointer = pointer.layer_norm
                 elif hasattr(pointer, "final_layer_norm"):
-                    pointer = getattr(pointer, "final_layer_norm")
+                    pointer = pointer.final_layer_norm
             elif scope_names[0] == "scale":
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             elif scope_names[0] == "output_bias" or scope_names[0] == "beta":
-                pointer = getattr(pointer, "bias")
+                pointer = pointer.bias
             elif scope_names[0] == "squad":
-                pointer = getattr(pointer, "classifier")
+                pointer = pointer.classifier
             elif scope_names[0] == "decoder" and name[1] == "logits":
                 continue
             elif scope_names[0] == "logits":
-                pointer = getattr(pointer, "lm_head")
+                pointer = pointer.lm_head
             elif scope_names[0] == "wi" and len(scope_names) > 1 and scope_names[1].isdigit():
                 pointer = getattr(pointer, f"wi_{scope_names[1]}")
                 continue
@@ -169,7 +166,7 @@ def load_tf_weights_in_t5(model, config, tf_checkpoint_path):
                 num = int(scope_names[1])
                 pointer = pointer[num]
         if scope_names[0] not in ["kernel", "scale", "embedding"]:
-            pointer = getattr(pointer, "weight")
+            pointer = pointer.weight
         if scope_names[0] != "embedding":
             logger.info(f"Transposing numpy weight of shape {array.shape} for {name}")
             array = np.transpose(array)
@@ -274,7 +271,7 @@ class T5LayerNorm(nn.Module):
 try:
     from apex.normalization import FusedRMSNorm
 
-    T5LayerNorm = FusedRMSNorm  # noqa
+    T5LayerNorm = FusedRMSNorm
 
     logger.info("Discovered apex.normalization.FusedRMSNorm - will use it instead of T5LayerNorm")
 except ImportError:
@@ -282,7 +279,6 @@ except ImportError:
     pass
 except Exception:
     logger.warning("discovered apex but it failed to load, falling back to T5LayerNorm")
-    pass
 
 ALL_LAYERNORM_LAYERS.append(T5LayerNorm)
 
@@ -1009,7 +1005,7 @@ class T5Stack(T5PreTrainedModel):
 
         hidden_states = self.dropout(inputs_embeds)
 
-        for i, (layer_module, past_key_value) in enumerate(zip(self.block, past_key_values)):
+        for i, (layer_module, past_key_value) in enumerate(zip(self.block, past_key_values, strict=False)):
             layer_head_mask = head_mask[i]
             cross_attn_layer_head_mask = cross_attn_head_mask[i]
             # Model parallel
@@ -1373,22 +1369,22 @@ class T5Model(T5PreTrainedModel):
     @replace_return_docstrings(output_type=Seq2SeqModelOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        decoder_input_ids: Optional[torch.LongTensor] = None,
-        decoder_attention_mask: Optional[torch.BoolTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        decoder_head_mask: Optional[torch.FloatTensor] = None,
-        cross_attn_head_mask: Optional[torch.Tensor] = None,
-        encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
-        decoder_inputs_embeds: Optional[torch.Tensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple[torch.FloatTensor], Seq2SeqModelOutput]:
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        decoder_input_ids: torch.LongTensor | None = None,
+        decoder_attention_mask: torch.BoolTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        decoder_head_mask: torch.FloatTensor | None = None,
+        cross_attn_head_mask: torch.Tensor | None = None,
+        encoder_outputs: tuple[tuple[torch.FloatTensor]] | None = None,
+        past_key_values: tuple[tuple[torch.FloatTensor]] | None = None,
+        inputs_embeds: torch.Tensor | None = None,
+        decoder_inputs_embeds: torch.Tensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple[torch.FloatTensor] | Seq2SeqModelOutput:
         r"""
         Returns:
 
@@ -1570,24 +1566,24 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
     @replace_return_docstrings(output_type=Seq2SeqLMOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        decoder_input_ids: Optional[torch.LongTensor] = None,
-        decoder_attention_mask: Optional[torch.BoolTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        decoder_head_mask: Optional[torch.FloatTensor] = None,
-        cross_attn_head_mask: Optional[torch.Tensor] = None,
-        encoder_outputs: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-        reduction: Optional[str] = "mean",
-    ) -> Union[Tuple[torch.FloatTensor], Seq2SeqLMOutput]:
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        decoder_input_ids: torch.LongTensor | None = None,
+        decoder_attention_mask: torch.BoolTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        decoder_head_mask: torch.FloatTensor | None = None,
+        cross_attn_head_mask: torch.Tensor | None = None,
+        encoder_outputs: tuple[tuple[torch.Tensor]] | None = None,
+        past_key_values: tuple[tuple[torch.Tensor]] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        decoder_inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        reduction: str | None = "mean",
+    ) -> tuple[torch.FloatTensor] | Seq2SeqLMOutput:
         r"""
         labels (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
             Labels for computing the sequence classification/regression loss. Indices should be in `[-100, 0, ...,
@@ -1842,14 +1838,14 @@ class T5EncoderModel(T5PreTrainedModel):
     @replace_return_docstrings(output_type=BaseModelOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple[torch.FloatTensor], BaseModelOutput]:
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple[torch.FloatTensor] | BaseModelOutput:
         r"""
         Returns:
 

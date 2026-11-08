@@ -223,9 +223,9 @@ class PriorDepthAnything(nn.Module):
     @torch.no_grad()
     def infer_one_sample(
         self,
-        image: Union[str, torch.Tensor, np.ndarray] = None,
-        prior: Union[str, torch.Tensor, np.ndarray] = None,
-        geometric: Union[str, torch.Tensor, np.ndarray] = None,
+        image: str | torch.Tensor | np.ndarray = None,
+        prior: str | torch.Tensor | np.ndarray = None,
+        geometric: str | torch.Tensor | np.ndarray = None,
         pattern: str = None,
         double_global=False,
         prior_cover=False,

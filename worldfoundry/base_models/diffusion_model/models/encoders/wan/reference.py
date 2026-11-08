@@ -21,14 +21,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.core.model_loading import load_state_dict as load_core_state_dict
-from worldfoundry.core.model_loading import load_torch_checkpoint
-from worldfoundry.core.model_loading import load_torch_state_dict
+from worldfoundry.core.model_loading import load_torch_checkpoint, load_torch_state_dict
 
 __all__ = [
-    "T5Model",
-    "T5Encoder",
     "T5Decoder",
+    "T5Encoder",
     "T5EncoderModel",
+    "T5Model",
 ]
 
 
@@ -730,7 +729,7 @@ class T5EncoderModel:
         seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.model(ids, mask)
         if self.return_full_context:
-            for item, seq_len in zip(context, seq_lens):
+            for item, seq_len in zip(context, seq_lens, strict=False):
                 item[seq_len:] = 0.0
-            return [item for item, _seq_len in zip(context, seq_lens)]
-        return [u[:v] for u, v in zip(context, seq_lens)]
+            return [item for item, _seq_len in zip(context, seq_lens, strict=False)]
+        return [u[:v] for u, v in zip(context, seq_lens, strict=False)]

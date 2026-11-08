@@ -29,10 +29,10 @@ def _as_homogeneous44(ext: np.ndarray) -> np.ndarray:
 
 def _prediction_to_world_point_clouds(
     depth: np.ndarray,
-    intrinsics: Optional[np.ndarray],
-    extrinsics: Optional[np.ndarray],
-    colors: Optional[np.ndarray],
-) -> Optional[Dict[str, Any]]:
+    intrinsics: np.ndarray | None,
+    extrinsics: np.ndarray | None,
+    colors: np.ndarray | None,
+) -> dict[str, Any] | None:
     if intrinsics is None or extrinsics is None:
         return None
 
@@ -85,8 +85,8 @@ class DepthAnything3Representation:
 
     def __init__(
         self,
-        model: Optional[DepthAnything3] = None,
-        device: Optional[str] = None,
+        model: DepthAnything3 | None = None,
+        device: str | None = None,
         default_process_res: int = 504,
         default_process_res_method: str = "upper_bound_resize",
         default_ref_view_strategy: str = "saddle_balanced",
@@ -103,7 +103,7 @@ class DepthAnything3Representation:
             self.model = self.model.to(self.device).eval()
 
     @staticmethod
-    def _resolve_model_source(pretrained_model_path: Optional[str]) -> str:
+    def _resolve_model_source(pretrained_model_path: str | None) -> str:
         if pretrained_model_path is None:
             return DEFAULT_DEPTH_ANYTHING3_REPO
 
@@ -142,14 +142,14 @@ class DepthAnything3Representation:
     @classmethod
     def from_pretrained(
         cls,
-        pretrained_model_path: Optional[str] = None,
-        device: Optional[str] = None,
+        pretrained_model_path: str | None = None,
+        device: str | None = None,
         default_process_res: int = 504,
         default_process_res_method: str = "upper_bound_resize",
         default_ref_view_strategy: str = "saddle_balanced",
         default_align_to_input_ext_scale: bool = True,
         **kwargs,
-    ) -> "DepthAnything3Representation":
+    ) -> DepthAnything3Representation:
         del kwargs
         model_source = cls._resolve_model_source(pretrained_model_path)
         model = DepthAnything3.from_pretrained(model_source)
@@ -164,7 +164,7 @@ class DepthAnything3Representation:
             default_align_to_input_ext_scale=default_align_to_input_ext_scale,
         )
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         if self.model is None:
             raise RuntimeError("DepthAnything3 model not loaded. Use from_pretrained() first.")
 

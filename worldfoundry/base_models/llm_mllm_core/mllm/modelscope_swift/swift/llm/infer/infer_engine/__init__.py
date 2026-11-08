@@ -5,13 +5,34 @@ from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
     from .vllm_engine import VllmEngine
+
+    # isort: split
+    # isort: split
     from .grpo_vllm_engine import GRPOVllmEngine
+
+    # isort: split
+    # isort: split
     from .lmdeploy_engine import LmdeployEngine
+
+    # isort: split
+    # isort: split
     from .pt_engine import PtEngine
+
+    # isort: split
+    # isort: split
     from .infer_client import InferClient
+
+    # isort: split
+    # isort: split
     from .infer_engine import InferEngine
+
+    # isort: split
+    # isort: split
     from .base import BaseInferEngine
-    from .utils import prepare_generation_config, AdapterRequest, patch_vllm_memory_leak
+
+    # isort: split
+    # isort: split
+    from .utils import AdapterRequest, patch_vllm_memory_leak, prepare_generation_config
 else:
     _import_structure = {
         "vllm_engine": ["VllmEngine"],

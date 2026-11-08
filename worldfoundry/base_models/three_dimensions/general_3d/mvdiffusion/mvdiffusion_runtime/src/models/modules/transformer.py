@@ -2,8 +2,8 @@
 
 import torch
 import torch.nn.functional as F
-from torch import nn, einsum
 from einops import rearrange
+from torch import einsum, nn
 
 
 class GEGLU(nn.Module):

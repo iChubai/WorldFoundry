@@ -1,9 +1,10 @@
-import torch
 import numpy as np
+import torch
+
+from .broadcasting import broadcast_inputs
 
 # group operations implemented in cuda
-from .group_ops import Exp, Log, Inv, Mul, Adj, AdjT, Jinv, Act3, Act4, ToMatrix, ToVec, FromVec
-from .broadcasting import broadcast_inputs
+from .group_ops import Act3, Act4, Adj, AdjT, Exp, FromVec, Inv, Jinv, Log, Mul, ToMatrix, ToVec
 
 
 class LieGroupParameter(torch.Tensor):
@@ -53,7 +54,7 @@ class LieGroup:
         self.data = data
 
     def __repr__(self):
-        return "{}: size={}, device={}, dtype={}".format(self.group_name, self.shape, self.device, self.dtype)
+        return f"{self.group_name}: size={self.shape}, device={self.device}, dtype={self.dtype}"
 
     @property
     def shape(self):

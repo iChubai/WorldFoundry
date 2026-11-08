@@ -9,7 +9,6 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 
-
 NUM_SOURCE_VIEWS = 9
 NUM_TARGET_VIEWS = 4
 RAY_HEIGHT = 384
@@ -259,10 +258,10 @@ def prepare_repencoder_camera_conditioning(
 __all__ = [
     "CAMERA_SCALE_MULTIPLIER",
     "DEFAULT_NEAR_ZERO_BASELINE_M",
-    "RepEncoderCameraConditioning",
     "NUM_SOURCE_VIEWS",
     "NUM_TARGET_VIEWS",
     "RAY_HW",
+    "RepEncoderCameraConditioning",
     "normalize_source_target_cameras",
     "prepare_repencoder_camera_conditioning",
 ]

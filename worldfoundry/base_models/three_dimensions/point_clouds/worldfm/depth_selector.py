@@ -24,7 +24,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.worldfm.transforms_i
 
 @dataclass(frozen=True)
 class ConditionDB:
-    cond_paths: List[str]  # len=V
+    cond_paths: list[str]  # len=V
     P_views: torch.Tensor  # (V,3,4) float32 on device
     depth_views: torch.Tensor  # (V,H,W) float32 on device
     C_views: torch.Tensor  # (V,3) float32 on device
@@ -70,14 +70,14 @@ def build_condition_db(
     width = int(torch_renderer.width)
     height = int(torch_renderer.height)
 
-    cond_paths: List[str] = []
-    P_list: List[torch.Tensor] = []
-    depth_list: List[torch.Tensor] = []
-    C_list: List[torch.Tensor] = []
+    cond_paths: list[str] = []
+    P_list: list[torch.Tensor] = []
+    depth_list: list[torch.Tensor] = []
+    C_list: list[torch.Tensor] = []
     skipped = 0
 
     t0 = time.perf_counter()
-    with open(transforms_condition_json, "r", encoding="utf-8") as f:
+    with open(transforms_condition_json, encoding="utf-8") as f:
         raw_frames = json.load(f).get("frames", [])
 
     for idx, fr in enumerate(frames):
@@ -130,8 +130,8 @@ def build_condition_db(
 @torch.inference_mode()
 def build_condition_db_in_memory(
     *,
-    condition_images: List[np.ndarray],
-    transforms_dict: Dict,
+    condition_images: list[np.ndarray],
+    transforms_dict: dict,
     torch_renderer,
     device: torch.device,
 ) -> ConditionDB:
@@ -144,9 +144,9 @@ def build_condition_db_in_memory(
     width = int(torch_renderer.width)
     height = int(torch_renderer.height)
 
-    P_list: List[torch.Tensor] = []
-    depth_list: List[torch.Tensor] = []
-    C_list: List[torch.Tensor] = []
+    P_list: list[torch.Tensor] = []
+    depth_list: list[torch.Tensor] = []
+    C_list: list[torch.Tensor] = []
 
     for fr in frames:
         K_use = scale_K_for_resize(fr.K_3x3, src_wh=(fr.width, fr.height), dst_wh=(width, height))
@@ -174,8 +174,8 @@ def build_condition_db_in_memory(
 def select_best_condition_index(
     *,
     depth_cur: torch.Tensor,
-    K_cur: Union[np.ndarray, torch.Tensor],
-    c2w_cur: Union[np.ndarray, torch.Tensor],
+    K_cur: np.ndarray | torch.Tensor,
+    c2w_cur: np.ndarray | torch.Tensor,
     cond_db: ConditionDB,
     sample_grid: int = 10,
     center_grid: int = 15,
@@ -194,7 +194,7 @@ def select_best_condition_index(
 ) -> tuple:
     device = depth_cur.device
     H, W = int(depth_cur.shape[0]), int(depth_cur.shape[1])
-    assert H == cond_db.height and W == cond_db.width
+    assert cond_db.height == H and cond_db.width == W
 
     t0 = time.perf_counter()
 

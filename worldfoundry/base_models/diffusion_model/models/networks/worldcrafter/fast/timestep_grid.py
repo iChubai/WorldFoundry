@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import torch
 
@@ -69,7 +70,7 @@ class DmdTimestepStep:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> "DmdTimestepStep":
+    def from_dict(cls, payload: Mapping[str, Any]) -> DmdTimestepStep:
         _require_exact_keys(payload, {"model_timestep", "current_sigma", "next_sigma"}, "DMD step")
         return cls(
             model_timestep=float(payload["model_timestep"]),
@@ -103,7 +104,7 @@ class DmdSchedulerConfig:
         expected_range = (0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0)
         if len(self.stage_range) != len(expected_range) or any(
             not math.isclose(actual, expected, rel_tol=0.0, abs_tol=1e-12)
-            for actual, expected in zip(self.stage_range, expected_range)
+            for actual, expected in zip(self.stage_range, expected_range, strict=False)
         ):
             raise ValueError(f"Unsupported DMD stage range: {self.stage_range}")
         if not math.isclose(self.gamma, 1.0 / 3.0, rel_tol=0.0, abs_tol=1e-12):
@@ -136,7 +137,7 @@ class DmdSchedulerConfig:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> "DmdSchedulerConfig":
+    def from_dict(cls, payload: Mapping[str, Any]) -> DmdSchedulerConfig:
         expected = {
             "num_train_timesteps",
             "stages",
@@ -199,7 +200,7 @@ class DmdTimestepContract:
         if len(self.normal_stages) != 3 or len(self.empty_history_stages) != 3:
             raise ValueError("DMD student schedule must contain exactly three pyramid stages")
         expected_empty_multiplier = 2 if self.amplify_empty_history else 1
-        for stage_index, (normal, empty) in enumerate(zip(self.normal_stages, self.empty_history_stages)):
+        for stage_index, (normal, empty) in enumerate(zip(self.normal_stages, self.empty_history_stages, strict=False)):
             expected_normal = self.rollout_steps_per_stage[stage_index]
             if len(normal) != expected_normal:
                 raise ValueError(
@@ -251,11 +252,11 @@ class DmdTimestepContract:
         expected: Sequence[Sequence[float]],
         name: str,
     ) -> None:
-        for stage_index, (actual_stage, expected_stage) in enumerate(zip(stages, expected)):
+        for stage_index, (actual_stage, expected_stage) in enumerate(zip(stages, expected, strict=False)):
             actual = [step.model_timestep for step in actual_stage]
             if len(actual) != len(expected_stage) or any(
                 not math.isclose(value, target, rel_tol=0.0, abs_tol=1e-3)
-                for value, target in zip(actual, expected_stage)
+                for value, target in zip(actual, expected_stage, strict=False)
             ):
                 raise ValueError(
                     f"Locked 384x640x9 DMD {name} schedule changed at stage {stage_index}: "
@@ -337,7 +338,7 @@ class DmdTimestepContract:
         path: str | Path,
         *,
         expected_latent_shape=None,
-    ) -> "DmdTimestepContract":
+    ) -> DmdTimestepContract:
         path = Path(path)
         source = path if path.suffix.lower() == ".json" else resolve_dmd_contract_path(path)
         document = json.loads(source.read_text(encoding="utf-8"))

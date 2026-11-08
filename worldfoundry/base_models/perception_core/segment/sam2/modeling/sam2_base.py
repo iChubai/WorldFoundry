@@ -9,7 +9,6 @@
 import torch
 import torch.distributed
 import torch.nn.functional as F
-
 from torch.nn.init import trunc_normal_
 
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.mask_decoder import MaskDecoder
@@ -651,7 +650,7 @@ class SAM2Base(torch.nn.Module):
                         pos_and_ptrs.append((t_diff, out["obj_ptr"]))
                 # If we have at least one object pointer, add them to the across attention
                 if len(pos_and_ptrs) > 0:
-                    pos_list, ptrs_list = zip(*pos_and_ptrs)
+                    pos_list, ptrs_list = zip(*pos_and_ptrs, strict=False)
                     # stack object pointers along dim=0 into [ptr_seq_len, B, C] shape
                     obj_ptrs = torch.stack(ptrs_list, dim=0)
                     # a temporal positional embedding based on how far each object pointer is from
@@ -784,7 +783,7 @@ class SAM2Base(torch.nn.Module):
         if len(current_vision_feats) > 1:
             high_res_features = [
                 x.permute(1, 2, 0).view(x.size(1), x.size(2), *s)
-                for x, s in zip(current_vision_feats[:-1], feat_sizes[:-1])
+                for x, s in zip(current_vision_feats[:-1], feat_sizes[:-1], strict=False)
             ]
         else:
             high_res_features = None

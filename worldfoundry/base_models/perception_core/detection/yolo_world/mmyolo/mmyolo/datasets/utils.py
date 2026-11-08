@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Sequence
+from collections.abc import Sequence
+from typing import List
 
 import numpy as np
 import torch
@@ -82,7 +83,7 @@ class BatchShapePolicy:
         # The index of batches will affect the calculation of batch shape.
         self.batch_size = batch_size * world_size
 
-    def __call__(self, data_list: List[dict]) -> List[dict]:
+    def __call__(self, data_list: list[dict]) -> list[dict]:
         image_shapes = []
         for data_info in data_list:
             image_shapes.append((data_info["width"], data_info["height"]))

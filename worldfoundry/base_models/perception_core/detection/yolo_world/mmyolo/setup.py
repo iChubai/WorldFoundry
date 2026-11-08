@@ -6,8 +6,8 @@ import platform
 import shutil
 import sys
 import warnings
-from setuptools import find_packages, setup
 
+from setuptools import find_packages, setup
 from torch.utils.cpp_extension import BuildExtension
 
 
@@ -74,7 +74,7 @@ def parse_requirements(fname="requirements.txt", with_version=True):
                         version, platform_deps = map(str.strip, rest.split(";"))
                         info["platform_deps"] = platform_deps
                     else:
-                        version = rest  # NOQA
+                        version = rest
                     info["version"] = (op, version)
             yield info
 

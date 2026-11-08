@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import adaptive_avg_pool3d
 
-from .conv_backbone import convnext_3d_small, convnext_3d_tiny, convnextv2_3d_pico, convnextv2_3d_femto
+from .conv_backbone import convnext_3d_small, convnext_3d_tiny, convnextv2_3d_femto, convnextv2_3d_pico
 from .head import IQAHead, VARHead, VQAHead
 from .swin_backbone import SwinTransformer2D as ImageBackbone
 from .swin_backbone import SwinTransformer3D as VideoBackbone
@@ -130,7 +130,7 @@ class DOVER(nn.Module):
                     if hasattr(self, key.split("_")[0] + "_head"):
                         scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                     else:
-                        scores += [getattr(self, "vqa_head")(feat)]
+                        scores += [self.vqa_head(feat)]
                     if return_pooled_feats:
                         feats[key] = feat
                     if return_raw_feats:
@@ -157,7 +157,7 @@ class DOVER(nn.Module):
                 if hasattr(self, key.split("_")[0] + "_head"):
                     scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                 else:
-                    scores += [getattr(self, "vqa_head")(feat)]
+                    scores += [self.vqa_head(feat)]
                 if return_pooled_feats:
                     feats[key] = feat.mean((-3, -2, -1))
             if reduce_scores:
@@ -185,7 +185,7 @@ class DOVER(nn.Module):
                     if hasattr(self, key.split("_")[0] + "_head"):
                         scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                     else:
-                        scores += [getattr(self, "vqa_head")(feat)]
+                        scores += [self.vqa_head(feat)]
                 if reduce_scores:
                     if len(scores) > 1:
                         scores = reduce(lambda x, y: x + y, scores)
@@ -206,7 +206,7 @@ class DOVER(nn.Module):
                 if hasattr(self, key.split("_")[0] + "_head"):
                     scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                 else:
-                    scores += [getattr(self, "vqa_head")(feat)]
+                    scores += [self.vqa_head(feat)]
                 if return_pooled_feats:
                     feats[key] = feat
             if reduce_scores:

@@ -2,8 +2,9 @@
 import bisect
 import copy
 import warnings
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -33,11 +34,11 @@ except ImportError:
 
 
 def init_detector(
-    config: Union[str, Path, Config],
-    checkpoint: Optional[str] = None,
+    config: str | Path | Config,
+    checkpoint: str | None = None,
     palette: str = "coco",
     device: str = "cuda:0",
-    cfg_options: Optional[dict] = None,
+    cfg_options: dict | None = None,
 ) -> nn.Module:
     """Initialize a detector from config file.
 
@@ -98,9 +99,7 @@ def init_detector(
     return model
 
 
-def reshape_transform(
-    feats: Union[Tensor, List[Tensor]], max_shape: Tuple[int, int] = (20, 20), is_need_grad: bool = False
-):
+def reshape_transform(feats: Tensor | list[Tensor], max_shape: tuple[int, int] = (20, 20), is_need_grad: bool = False):
     """Reshape and aggregate feature maps when the input is a multi-layer
     feature map.
 
@@ -160,7 +159,7 @@ class BoxAMDetectorWrapper(nn.Module):
         """Grad-based methods require loss."""
         self.is_need_loss = is_need_loss
 
-    def set_input_data(self, image: np.ndarray, pred_instances: Optional[InstanceData] = None):
+    def set_input_data(self, image: np.ndarray, pred_instances: InstanceData | None = None):
         """Set the input data to be used in the next step."""
         self.image = image
 
@@ -218,10 +217,10 @@ class BoxAMDetectorVisualizer:
         self,
         method_class,
         model: nn.Module,
-        target_layers: List,
-        reshape_transform: Optional[Callable] = None,
+        target_layers: list,
+        reshape_transform: Callable | None = None,
         is_need_grad: bool = False,
-        extra_params: Optional[dict] = None,
+        extra_params: dict | None = None,
     ):
         self.target_layers = target_layers
         self.reshape_transform = reshape_transform
@@ -300,7 +299,7 @@ class BoxAMDetectorVisualizer:
         image_with_bounding_boxes = self._draw_boxes(boxes, labels, am_image_renormalized, pred_instance.get("scores"))
         return image_with_bounding_boxes
 
-    def _draw_boxes(self, boxes: List, labels: List, image: np.ndarray, scores: Optional[List] = None):
+    def _draw_boxes(self, boxes: list, labels: list, image: np.ndarray, scores: list | None = None):
         """draw boxes on image."""
         for i, box in enumerate(boxes):
             label = labels[i]
@@ -386,7 +385,7 @@ class DetBoxScoreTarget:
         pred_instance: InstanceData,
         match_iou_thr: float = 0.5,
         device: str = "cuda:0",
-        ignore_loss_params: Optional[List] = None,
+        ignore_loss_params: list | None = None,
     ):
         self.focal_bboxes = pred_instance.bboxes
         self.focal_labels = pred_instance.labels
@@ -421,7 +420,7 @@ class DetBoxScoreTarget:
             pred_scores = pred_instances.scores
             pred_labels = pred_instances.labels
 
-            for focal_box, focal_label in zip(self.focal_bboxes, self.focal_labels):
+            for focal_box, focal_label in zip(self.focal_bboxes, self.focal_labels, strict=False):
                 ious = torchvision.ops.box_iou(focal_box[None], pred_bboxes[..., :4])
                 index = ious.argmax()
                 if ious[0, index] > self.match_iou_thr and pred_labels[index] == focal_label:
@@ -443,7 +442,7 @@ class SpatialBaseCAM(BaseCAM):
         self,
         input_tensor: torch.Tensor,
         target_layer: torch.nn.Module,
-        targets: List[torch.nn.Module],
+        targets: list[torch.nn.Module],
         activations: torch.Tensor,
         grads: torch.Tensor,
         eigen_smooth: bool = False,

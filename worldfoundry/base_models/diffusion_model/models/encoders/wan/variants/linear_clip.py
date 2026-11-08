@@ -21,16 +21,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
 from transformers import SiglipVisionModel
-from worldfoundry.core.model_loading import load_state_dict as load_core_state_dict
 
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linear_attention import flash_attention
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.xlm_roberta import XLMRoberta
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linear_attention import flash_attention
+from worldfoundry.core.model_loading import load_state_dict as load_core_state_dict
 
 __all__ = [
+    "CLIPModel",
     "XLMRobertaCLIP",
     "clip_xlm_roberta_vit_h_14",
-    "CLIPModel",
 ]
 
 

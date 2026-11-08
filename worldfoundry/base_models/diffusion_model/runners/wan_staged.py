@@ -9,23 +9,32 @@ Must not: cast scheduler timesteps to BF16 before the sinusoidal embedding
 """
 
 import types
-from ..models.networks.wan.model import WanModel, RMSNorm
+
+# isort: split
+from ..models.networks.wan.model import RMSNorm, WanModel
+
+# isort: split
+# isort: split
 from ..models.networks.wan.vace import VaceWanModel
-from ..models.encoders.wan.model import WanTextEncoder, T5RelativeEmbedding, T5LayerNorm
-from ..models.encoders.wan import WanImageEncoder, WanPrompter
-from ..models.encoders.wan.variants import WanMotionControllerModel
-from ..models.autoencoders.wan.model import WanVideoVAE, RMS_norm, CausalConv3d, Upsample
-from worldfoundry.core.nn import FlowMatchScheduler
-from .staged import StagedDiffusionPipeline
-import torch, os
-from einops import rearrange
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
+
+# isort: split
+import os
 from typing import Optional
 
-from worldfoundry.core.vram import enable_vram_management, AutoWrappedModule, AutoWrappedLinear
-from worldfoundry.core.nn import sinusoidal_embedding_1d
+import numpy as np
+import torch
+from einops import rearrange
+from PIL import Image
+from tqdm import tqdm
+
+from worldfoundry.core.nn import FlowMatchScheduler, sinusoidal_embedding_1d
+from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule, enable_vram_management
+
+from ..models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample, WanVideoVAE
+from ..models.encoders.wan import WanImageEncoder, WanPrompter
+from ..models.encoders.wan.model import T5LayerNorm, T5RelativeEmbedding, WanTextEncoder
+from ..models.encoders.wan.variants import WanMotionControllerModel
+from .staged import StagedDiffusionPipeline
 
 
 def _prepare_scheduler_timestep(timestep: torch.Tensor, *, device: str) -> torch.Tensor:
@@ -247,6 +256,7 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         pipe.fetch_models(model_source)
         if use_usp:
             from xfuser.core.distributed import get_sequence_parallel_world_size
+
             from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import (
                 usp_attn_forward,
                 usp_dit_forward,
@@ -868,14 +878,14 @@ def model_fn_wan_video(
     x: torch.Tensor = None,
     timestep: torch.Tensor = None,
     context: torch.Tensor = None,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     reference_latents=None,
     vace_context=None,
     vace_scale=1.0,
     tea_cache: TeaCache = None,
     use_unified_sequence_parallel: bool = False,
-    motion_bucket_id: Optional[torch.Tensor] = None,
+    motion_bucket_id: torch.Tensor | None = None,
     **kwargs,
 ):
     """Single Wan DiT forward used by WanStagedPipeline.

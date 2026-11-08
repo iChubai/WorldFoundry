@@ -16,30 +16,31 @@
 
 from typing import List, Optional, Tuple, Union
 
+import einops
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin
-from diffusers.utils import logging
-from diffusers.utils.accelerate_utils import apply_forward_hook
 from diffusers.models.activations import get_activation
+from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
 from diffusers.models.modeling_outputs import AutoencoderKLOutput
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
+from diffusers.utils import logging
+from diffusers.utils.accelerate_utils import apply_forward_hook
 
-import einops
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 # Import base components from the canonical Wan autoencoder role.
 try:
     from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
+        CACHE_T as WAN_CACHE_T,
+    )
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
         CausalConv3d,
         RMS_norm,
         Upsample,
-        CACHE_T as WAN_CACHE_T,
     )
 
     # Use CACHE_T from wan_2p1 if available
@@ -85,9 +86,9 @@ else:
             self,
             in_channels: int,
             out_channels: int,
-            kernel_size: Union[int, Tuple[int, int, int]],
-            stride: Union[int, Tuple[int, int, int]] = 1,
-            padding: Union[int, Tuple[int, int, int]] = 0,
+            kernel_size: int | tuple[int, int, int],
+            stride: int | tuple[int, int, int] = 1,
+            padding: int | tuple[int, int, int] = 0,
         ) -> None:
             """Init.
 
@@ -203,7 +204,6 @@ if Upsample is not None:
     class WanUpsample(Upsample):
         """Adapter for Upsample from wan_2p1."""
 
-        pass
 else:
     # Fallback: define WanUpsample locally if import failed
     class WanUpsample(nn.Upsample):
@@ -712,7 +712,7 @@ class WanMidBlock(nn.Module):
         x = self.resnets[0](x, feat_cache, feat_idx)
 
         # Process through attention and residual blocks
-        for attn, resnet in zip(self.attentions, self.resnets[1:]):
+        for attn, resnet in zip(self.attentions, self.resnets[1:], strict=False):
             if attn is not None:
                 x = attn(x)
 
@@ -836,7 +836,7 @@ class WanEncoder3d(nn.Module):
 
         # downsample blocks
         self.down_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if is_residual:
                 self.down_blocks.append(
@@ -1038,7 +1038,7 @@ class WanUpBlock(nn.Module):
         out_dim: int,
         num_res_blocks: int,
         dropout: float = 0.0,
-        upsample_mode: Optional[str] = None,
+        upsample_mode: str | None = None,
         non_linearity: str = "silu",
     ):
         """Init.
@@ -1161,7 +1161,7 @@ class WanDecoder3d(nn.Module):
 
         # upsample blocks
         self.up_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i > 0 and not is_residual:
                 # wan vae 2.1
@@ -1317,14 +1317,14 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     def __init__(
         self,
         base_dim: int = 96,
-        decoder_base_dim: Optional[int] = None,
+        decoder_base_dim: int | None = None,
         z_dim: int = 16,
-        dim_mult: Tuple[int] = [1, 2, 4, 4],
+        dim_mult: tuple[int] = [1, 2, 4, 4],
         num_res_blocks: int = 2,
-        attn_scales: List[float] = [],
-        temperal_downsample: List[bool] = [False, True, True],
+        attn_scales: list[float] = [],
+        temperal_downsample: list[bool] = [False, True, True],
         dropout: float = 0.0,
-        latents_mean: List[float] = [
+        latents_mean: list[float] = [
             -0.7571,
             -0.7089,
             -0.9113,
@@ -1342,7 +1342,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
             0.2503,
             -0.2921,
         ],
-        latents_std: List[float] = [
+        latents_std: list[float] = [
             2.8184,
             1.4541,
             2.3275,
@@ -1363,9 +1363,9 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         is_residual: bool = False,
         in_channels: int = 3,
         out_channels: int = 3,
-        patch_size: Optional[int] = None,
-        scale_factor_temporal: Optional[int] = 4,
-        scale_factor_spatial: Optional[int] = 8,
+        patch_size: int | None = None,
+        scale_factor_temporal: int | None = 4,
+        scale_factor_spatial: int | None = 8,
         clip_output: bool = True,
     ) -> None:
         """Init.
@@ -1458,10 +1458,10 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     def enable_tiling(
         self,
-        tile_sample_min_height: Optional[int] = None,
-        tile_sample_min_width: Optional[int] = None,
-        tile_sample_stride_height: Optional[float] = None,
-        tile_sample_stride_width: Optional[float] = None,
+        tile_sample_min_height: int | None = None,
+        tile_sample_min_width: int | None = None,
+        tile_sample_stride_height: float | None = None,
+        tile_sample_stride_width: float | None = None,
     ) -> None:
         r"""
         Enable tiled VAE decoding. When this option is enabled, the VAE will split the input tensor into tiles to
@@ -1553,7 +1553,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     @apply_forward_hook
     def encode(
         self, x: torch.Tensor, return_dict: bool = True
-    ) -> Union[AutoencoderKLOutput, Tuple[DiagonalGaussianDistribution]]:
+    ) -> AutoencoderKLOutput | tuple[DiagonalGaussianDistribution]:
         r"""
         Encode a batch of images into latents.
 
@@ -1615,7 +1615,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         return DecoderOutput(sample=out)
 
     @apply_forward_hook
-    def decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
+    def decode(self, z: torch.Tensor, return_dict: bool = True) -> DecoderOutput | torch.Tensor:
         r"""
         Decode a batch of images.
 
@@ -1741,7 +1741,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         enc = torch.cat(result_rows, dim=3)[:, :, :, :latent_height, :latent_width]
         return enc
 
-    def tiled_decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
+    def tiled_decode(self, z: torch.Tensor, return_dict: bool = True) -> DecoderOutput | torch.Tensor:
         r"""
         Decode a batch of images using a tiled decoder.
 
@@ -1809,8 +1809,8 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         sample: torch.Tensor,
         sample_posterior: bool = False,
         return_dict: bool = True,
-        generator: Optional[torch.Generator] = None,
-    ) -> Union[DecoderOutput, torch.Tensor]:
+        generator: torch.Generator | None = None,
+    ) -> DecoderOutput | torch.Tensor:
         """
         Args:
             sample (`torch.Tensor`): Input sample.

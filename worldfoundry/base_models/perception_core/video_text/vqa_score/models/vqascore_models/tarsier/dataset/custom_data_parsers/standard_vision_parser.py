@@ -1,8 +1,9 @@
-from typing import Dict, List
-from PIL import Image
 import random
+from typing import Dict, List
 
-from .utils import sample_video, read_image, adjust_bbox, filter_ocr_polygon
+from PIL import Image
+
+from .utils import adjust_bbox, filter_ocr_polygon, read_image, sample_video
 
 
 class VisionParser:
@@ -49,16 +50,16 @@ class VisionParser:
         }
         # fmt: on
 
-    def check_format(self, data_dict: Dict, image_processing_config: Dict):
+    def check_format(self, data_dict: dict, image_processing_config: dict):
         if image_processing_config.get("do_crop", False) and image_processing_config.get("has_coordinates", False):
-            raise ValueError(f"do_crop and has_coordinates cannot be True at the same time!")
+            raise ValueError("do_crop and has_coordinates cannot be True at the same time!")
 
     """
     1. 将 messages 中的 image/video 替换成相应的 PIL.Image/List[PIL.Image]
     2. text 的特殊处理：调整 box；过滤面积太小的OCR
     """
 
-    def transform(self, data_dict: Dict, image_processing_config: Dict = None) -> Dict:
+    def transform(self, data_dict: dict, image_processing_config: dict = None) -> dict:
         self.check_format(data_dict, image_processing_config)
 
         self.set_n_frames(data_dict)
@@ -131,9 +132,7 @@ class VisionParser:
             for msg in data_dict["messages"]:
                 for content in msg["content"]:
                     if content["type"] == "video":
-                        if "frame_indices" in content["video"]:
-                            pass
-                        elif "time_indices" in content["video"]:
+                        if "frame_indices" in content["video"] or "time_indices" in content["video"]:
                             pass
                         else:
                             if curr_n_frames < n_frames:
@@ -144,9 +143,7 @@ class VisionParser:
             for msg in data_dict["messages"]:
                 for content in msg["content"]:
                     if content["type"] == "video":
-                        if "frame_indices" in content["video"]:
-                            pass
-                        elif "time_indices" in content["video"]:
+                        if "frame_indices" in content["video"] or "time_indices" in content["video"]:
                             pass
                         else:
                             if curr_n_frames > self.max_n_frames:
@@ -156,9 +153,7 @@ class VisionParser:
         for msg in data_dict["messages"]:
             for content in msg["content"]:
                 if content["type"] == "video":
-                    if "frame_indices" in content["video"]:
-                        pass
-                    elif "time_indices" in content["video"]:
+                    if "frame_indices" in content["video"] or "time_indices" in content["video"]:
                         pass
                     else:
                         n = self.video_sampling_strategy.get("force_frames_n_divisible", 1)
@@ -174,7 +169,7 @@ class VisionParser:
 
         # check format
         if ("image_file" not in image_item) and ("video_file" not in image_item):
-            raise KeyError(f"Key 'image_file' or 'video_file' not found in image_item")
+            raise KeyError("Key 'image_file' or 'video_file' not found in image_item")
         if "image_file" in image_item:
             if not isinstance(image_item["image_file"], str):
                 raise ValueError(f"{image_item['image_file']} is not a str!")
@@ -190,7 +185,7 @@ class VisionParser:
 
         return image
 
-    def load_video_item(self, video_item) -> List[Image.Image]:
+    def load_video_item(self, video_item) -> list[Image.Image]:
         """
         video_item:
         {"video_file": {"lq": "/path/to/video"}, "n_frames": 8}
@@ -203,7 +198,7 @@ class VisionParser:
 
         # check format
         if ("image_file" not in video_item) and ("video_file" not in video_item):
-            raise KeyError(f"Key 'image_file' or 'video_file' not found in video_item")
+            raise KeyError("Key 'image_file' or 'video_file' not found in video_item")
 
         video_path = video_item.get("video_file", video_item.get("image_file"))
         n_frames = video_item.get("n_frames", None)

@@ -11,7 +11,8 @@ import socket
 import subprocess
 import sys
 import time
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Type, TypeVar
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 import numpy as np
 import torch
@@ -107,7 +108,7 @@ def deep_getattr(obj, attr: str, default=None):
     return obj
 
 
-def seed_everything(seed: Optional[int] = None, full_determinism: bool = False, *, verbose: bool = True) -> int:
+def seed_everything(seed: int | None = None, full_determinism: bool = False, *, verbose: bool = True) -> int:
     if seed is None:
         seed_max = np.iinfo(np.int32).max
         seed = random.randint(0, seed_max)
@@ -138,7 +139,7 @@ def add_version_to_work_dir(work_dir: str) -> str:
 _T = TypeVar("_T")
 
 
-def parse_args(class_type: Type[_T], argv: Optional[List[str]] = None) -> Tuple[_T, List[str]]:
+def parse_args(class_type: type[_T], argv: list[str] | None = None) -> tuple[_T, list[str]]:
     parser = HfArgumentParser([class_type])
     if argv is None:
         argv = sys.argv[1:]
@@ -173,9 +174,7 @@ def upper_bound(lo: int, hi: int, cond: Callable[[int], bool]) -> int:
     return lo
 
 
-def test_time(
-    func: Callable[[], _T], number: int = 1, warmup: int = 0, timer: Optional[Callable[[], float]] = None
-) -> _T:
+def test_time(func: Callable[[], _T], number: int = 1, warmup: int = 0, timer: Callable[[], float] | None = None) -> _T:
     # timer: e.g. time_synchronize
     timer = timer if timer is not None else time.perf_counter
 
@@ -211,14 +210,14 @@ def read_multi_line(addi_prompt: str = "") -> str:
     return "".join(res)
 
 
-def subprocess_run(command: List[str], env: Optional[Dict[str, str]] = None, stdout=None, stderr=None):
+def subprocess_run(command: list[str], env: dict[str, str] | None = None, stdout=None, stderr=None):
     # stdoutm stderr: e.g. subprocess.PIPE.
     resp = subprocess.run(command, env=env, stdout=stdout, stderr=stderr)
     resp.check_returncode()
     return resp
 
 
-def get_env_args(args_name: str, type_func: Callable[[str], _T], default_value: Optional[_T]) -> Optional[_T]:
+def get_env_args(args_name: str, type_func: Callable[[str], _T], default_value: _T | None) -> _T | None:
     args_name_upper = args_name.upper()
     value = os.getenv(args_name_upper)
     if value is None:
@@ -236,7 +235,7 @@ def get_env_args(args_name: str, type_func: Callable[[str], _T], default_value: 
     return value
 
 
-def find_free_port(start_port: Optional[int] = None, retry: int = 100) -> int:
+def find_free_port(start_port: int | None = None, retry: int = 100) -> int:
     if start_port is None:
         start_port = 0
     for port in range(start_port, start_port + retry):

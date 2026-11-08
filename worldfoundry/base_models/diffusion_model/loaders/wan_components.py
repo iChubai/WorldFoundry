@@ -17,8 +17,8 @@ from pathlib import Path
 
 import torch
 
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 from worldfoundry.core.model_loading import load_model, load_state_dict
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 from ..models.autoencoders.wan import (
     WanVideoVAE,

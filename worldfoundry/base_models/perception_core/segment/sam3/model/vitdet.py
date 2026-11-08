@@ -13,8 +13,9 @@ Rope embedding code adopted from:
 """
 
 import math
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -27,13 +28,16 @@ except ModuleNotFoundError:
     # compatibility for older timm versions
     from timm.models.layers import DropPath, trunc_normal_
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
+
+# isort: split
+from torch import Tensor
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import AttentionType, LayerScale
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.fused import addmm_act
 from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
-    apply_rotary_enc_real,
     VisionRotaryEmbeddingVE,
+    apply_rotary_enc_real,
 )
-from torch import Tensor
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -95,7 +99,7 @@ class Mlp(nn.Module):
         return x
 
 
-def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0) -> Tuple[torch.Tensor, torch.Tensor]:
+def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0) -> tuple[torch.Tensor, torch.Tensor]:
     """Init t xy.
 
     Args:
@@ -167,7 +171,7 @@ def apply_rotary_enc(
     xk: torch.Tensor,
     freqs_cis: torch.Tensor,
     repeat_freqs_k: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Apply rotary enc.
 
     Args:
@@ -194,7 +198,7 @@ def apply_rotary_enc(
     return xq_out.type_as(xq).to(xq.device), xk_out.type_as(xk).to(xk.device)
 
 
-def window_partition(x: Tensor, window_size: int) -> Tuple[Tensor, Tuple[int, int]]:
+def window_partition(x: Tensor, window_size: int) -> tuple[Tensor, tuple[int, int]]:
     """
     Partition into non-overlapping windows with padding if needed.
     Args:
@@ -217,7 +221,7 @@ def window_partition(x: Tensor, window_size: int) -> Tuple[Tensor, Tuple[int, in
     return windows, (Hp, Wp)
 
 
-def window_unpartition(windows: Tensor, window_size: int, pad_hw: Tuple[int, int], hw: Tuple[int, int]) -> Tensor:
+def window_unpartition(windows: Tensor, window_size: int, pad_hw: tuple[int, int], hw: tuple[int, int]) -> Tensor:
     """
     Window unpartition into original sequences and removing padding.
     Args:
@@ -275,7 +279,7 @@ def get_rel_pos(q_size: int, k_size: int, rel_pos: Tensor) -> Tensor:
 def get_abs_pos(
     abs_pos: Tensor,
     has_cls_token: bool,
-    hw: Tuple[int, int],
+    hw: tuple[int, int],
     retain_cls_token: bool = False,
     tiling: bool = False,
 ) -> Tensor:
@@ -307,9 +311,9 @@ def get_abs_pos(
     if size != h or size != w:
         new_abs_pos = abs_pos.reshape(1, size, size, -1).permute(0, 3, 1, 2)
         if tiling:
-            new_abs_pos = new_abs_pos.tile([1, 1] + [x // y + 1 for x, y in zip((h, w), new_abs_pos.shape[2:])])[
-                :, :, :h, :w
-            ]
+            new_abs_pos = new_abs_pos.tile(
+                [1, 1] + [x // y + 1 for x, y in zip((h, w), new_abs_pos.shape[2:], strict=False)]
+            )[:, :, :h, :w]
         else:
             new_abs_pos = F.interpolate(
                 new_abs_pos,
@@ -339,13 +343,13 @@ def get_abs_pos(
 def concat_rel_pos(
     q: Tensor,
     k: Tensor,
-    q_hw: Tuple[int, int],
-    k_hw: Tuple[int, int],
+    q_hw: tuple[int, int],
+    k_hw: tuple[int, int],
     rel_pos_h: Tensor,
     rel_pos_w: Tensor,
     rescale: bool = False,
-    relative_coords: Optional[Tensor] = None,
-) -> Tuple[Tensor, Tensor]:
+    relative_coords: Tensor | None = None,
+) -> tuple[Tensor, Tensor]:
     """
     Concatenate rel pos coeffs to the q & k tensors, so that qk^T is now
     effectively including rel pos biases.
@@ -401,9 +405,9 @@ class PatchEmbed(nn.Module):
 
     def __init__(
         self,
-        kernel_size: Tuple[int, int] = (16, 16),
-        stride: Tuple[int, int] = (16, 16),
-        padding: Tuple[int, int] = (0, 0),
+        kernel_size: tuple[int, int] = (16, 16),
+        stride: tuple[int, int] = (16, 16),
+        padding: tuple[int, int] = (0, 0),
         in_chans: int = 3,
         embed_dim: int = 768,
         bias: bool = True,
@@ -452,12 +456,12 @@ class Attention(nn.Module):
         qkv_bias: bool = True,
         use_rel_pos: bool = False,
         rel_pos_zero_init: bool = True,
-        input_size: Optional[Tuple[int, int]] = None,
+        input_size: tuple[int, int] | None = None,
         attn_type: AttentionType = AttentionType.Vanilla,
         cls_token: bool = False,
         use_rope: bool = False,
         rope_theta: float = 10000.0,
-        rope_pt_size: Optional[Tuple[int, int]] = None,
+        rope_pt_size: tuple[int, int] | None = None,
         rope_interp: bool = False,
         rope_tiled: bool = False,
         use_ve_rope: bool = False,
@@ -614,7 +618,7 @@ class Attention(nn.Module):
             self.register_buffer("freqs_cis_real", freqs_cis.real)
             self.register_buffer("freqs_cis_imag", freqs_cis.imag)
 
-    def _apply_rope(self, q, k) -> Tuple[Tensor, Tensor]:
+    def _apply_rope(self, q, k) -> tuple[Tensor, Tensor]:
         """Helper function to apply rope.
 
         Args:
@@ -721,15 +725,15 @@ class Block(nn.Module):
         use_rel_pos: bool = False,
         rel_pos_zero_init: bool = True,
         window_size: int = 0,
-        input_size: Optional[Tuple[int, int]] = None,
+        input_size: tuple[int, int] | None = None,
         use_rope: bool = False,
-        rope_pt_size: Optional[Tuple[int, int]] = None,
+        rope_pt_size: tuple[int, int] | None = None,
         rope_tiled: bool = False,
         rope_interp: bool = False,
         use_ve_rope: bool = False,
         cls_token: bool = False,
         dropout: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         attn_type: AttentionType = AttentionType.Vanilla,
         use_fa3: bool = False,
         use_rope_real: bool = False,
@@ -836,17 +840,17 @@ class ViT(nn.Module):
         mlp_ratio: float = 4.0,
         qkv_bias: bool = True,
         drop_path_rate: float = 0.0,
-        norm_layer: Union[Callable[..., nn.Module], str] = "LayerNorm",
+        norm_layer: Callable[..., nn.Module] | str = "LayerNorm",
         act_layer: Callable[..., nn.Module] = nn.GELU,
         use_abs_pos: bool = True,
         tile_abs_pos: bool = True,
-        rel_pos_blocks: Union[Tuple[int, ...], bool] = (2, 5, 8, 11),
+        rel_pos_blocks: tuple[int, ...] | bool = (2, 5, 8, 11),
         rel_pos_zero_init: bool = True,
         window_size: int = 14,
-        global_att_blocks: Tuple[int, ...] = (2, 5, 8, 11),
+        global_att_blocks: tuple[int, ...] = (2, 5, 8, 11),
         use_rope: bool = False,
         use_tiled_rope: bool = False,
-        rope_pt_size: Optional[int] = None,
+        rope_pt_size: int | None = None,
         use_interp_rope: bool = False,
         use_ve_rope: bool = False,
         use_act_checkpoint: bool = True,
@@ -855,12 +859,12 @@ class ViT(nn.Module):
         retain_cls_token: bool = True,
         dropout: float = 0.0,
         return_interm_layers: bool = False,
-        init_values: Optional[float] = None,  # for layerscale
+        init_values: float | None = None,  # for layerscale
         attn_type: AttentionType = AttentionType.Vanilla,
         ln_pre: bool = False,
         ln_post: bool = False,
         bias_patch_embed: bool = True,
-        compile_mode: Optional[str] = None,
+        compile_mode: str | None = None,
         use_fa3: bool = False,
         use_rope_real: bool = False,
     ):
@@ -1096,11 +1100,12 @@ class ViT(nn.Module):
 
         if layer_name.find("rel_pos") != -1:
             return num_layers + 1
-        elif layer_name.find("ln_pre") != -1:
-            return 0
-        elif layer_name.find("pos_embed") != -1 or layer_name.find("cls_token") != -1:
-            return 0
-        elif layer_name.find("patch_embed") != -1:
+        elif (
+            layer_name.find("ln_pre") != -1
+            or layer_name.find("pos_embed") != -1
+            or layer_name.find("cls_token") != -1
+            or layer_name.find("patch_embed") != -1
+        ):
             return 0
         elif layer_name.find("blocks") != -1:
             return int(layer_name.split("blocks")[1].split(".")[1]) + 1

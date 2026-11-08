@@ -1,4 +1,3 @@
-# flake8: noqa: F821
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
@@ -12,14 +11,15 @@
 """Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> depth_anything_v3 -> layers -> block.py functionality."""
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from torch import nn
 
-from .attention import Attention
 from worldfoundry.core.nn.blocks.layers import Mlp
 from worldfoundry.core.nn.blocks.stochastic_depth import drop_add_residual_stochastic_depth, get_branges_scales
 from worldfoundry.core.nn.transformer.vit import RopePreNormTransformerBlock
+
+from .attention import Attention
 
 logger = logging.getLogger("dinov2")
 XFORMERS_AVAILABLE = True

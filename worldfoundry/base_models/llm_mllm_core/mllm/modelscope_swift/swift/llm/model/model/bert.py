@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from transformers import AutoConfig, AutoModel
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import BertModelType
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_from_local, register_model
 

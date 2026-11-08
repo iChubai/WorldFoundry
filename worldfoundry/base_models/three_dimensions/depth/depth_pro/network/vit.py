@@ -4,7 +4,7 @@
 try:
     from timm.layers import resample_abs_pos_embed
 except ImportError as err:
-    print("ImportError: {0}".format(err))
+    print(f"ImportError: {err}")
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
@@ -52,7 +52,7 @@ def resize_vit(model: nn.Module, img_size) -> nn.Module:
     """Resample the ViT module to the given size."""
     patch_size = model.patch_embed.patch_size
     model.patch_embed.img_size = img_size
-    grid_size = tuple([s // p for s, p in zip(img_size, patch_size)])
+    grid_size = tuple([s // p for s, p in zip(img_size, patch_size, strict=False)])
     model.patch_embed.grid_size = grid_size
 
     pos_embed = resample_abs_pos_embed(

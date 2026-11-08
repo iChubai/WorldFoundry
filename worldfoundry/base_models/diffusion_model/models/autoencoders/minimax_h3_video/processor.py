@@ -39,7 +39,7 @@ NORM_CONFIGS = {
 
 def get_norm_constants(
     norm_type: str = "imagenet",
-) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
     """Return published MiniMax H3 video mean/std tables."""
     if norm_type not in NORM_CONFIGS:
         raise ValueError(f"Unknown norm_type: {norm_type}. Must be one of {list(NORM_CONFIGS.keys())}")
@@ -56,7 +56,7 @@ def get_normalize_transform(norm_type: str = "imagenet", *, inplace: bool = Fals
 def get_denormalize_transform(norm_type: str = "imagenet") -> Normalize:
     """Build the inverse denormalize callable."""
     mean, std = get_norm_constants(norm_type)
-    inv_mean = tuple(-m / s for m, s in zip(mean, std))
+    inv_mean = tuple(-m / s for m, s in zip(mean, std, strict=False))
     inv_std = tuple(1.0 / s for s in std)
     return Normalize(inv_mean, inv_std)
 

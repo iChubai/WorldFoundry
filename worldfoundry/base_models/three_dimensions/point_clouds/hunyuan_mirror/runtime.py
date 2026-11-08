@@ -163,7 +163,7 @@ class HunyuanWorldMirrorRepresentation(nn.Module, PyTorchModelHubMixin):
         """
         return super().from_pretrained(model_name_or_path, **kwargs)
 
-    def forward(self, views: Dict[str, torch.Tensor], cond_flags: List[int] = [0, 0, 0], is_inference=True):
+    def forward(self, views: dict[str, torch.Tensor], cond_flags: list[int] = [0, 0, 0], is_inference=True):
         """
         Execute forward pass through the WorldMirror model.
 

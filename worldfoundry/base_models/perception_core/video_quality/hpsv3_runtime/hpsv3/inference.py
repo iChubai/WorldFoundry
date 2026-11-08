@@ -1,14 +1,16 @@
 import os
 from collections.abc import Mapping
-import torch
-import huggingface_hub
-from .dataset.utils import process_vision_info
-from .dataset.data_collator_qwen import prompt_with_special_token, prompt_without_special_token, INSTRUCTION
-from .utils.parser import ModelConfig, PEFTLoraConfig, TrainingConfig, DataConfig, parse_args_with_yaml
-from .utils.modeling import create_model_and_processor
 from pathlib import Path
 
-_MODEL_CONFIG_PATH = Path(__file__).parent / f"config/"
+import huggingface_hub
+import torch
+
+from .dataset.data_collator_qwen import INSTRUCTION, prompt_with_special_token, prompt_without_special_token
+from .dataset.utils import process_vision_info
+from .utils.modeling import create_model_and_processor
+from .utils.parser import DataConfig, ModelConfig, PEFTLoraConfig, TrainingConfig, parse_args_with_yaml
+
+_MODEL_CONFIG_PATH = Path(__file__).parent / "config/"
 
 
 class HPSv3RewardInferencer:
@@ -97,7 +99,7 @@ class HPSv3RewardInferencer:
         max_pixels = 256 * 28 * 28
         min_pixels = 256 * 28 * 28
         message_list = []
-        for text, image in zip(prompts, image_paths):
+        for text, image in zip(prompts, image_paths, strict=False):
             out_message = [
                 {
                     "role": "user",

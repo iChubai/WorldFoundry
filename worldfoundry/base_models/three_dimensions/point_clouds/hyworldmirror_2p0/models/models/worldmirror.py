@@ -3,15 +3,11 @@
 from typing import Dict, List
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-from worldfoundry.core.model_loading import hash_state_dict_keys
+from huggingface_hub import PyTorchModelHubMixin
 
-from .visual_transformer import VisualGeometryTransformer
-from ..heads.camera_head import CameraHead
-from ..heads.dense_head import DPTHead
-from ..heads.gs_head import GSFeatHead
-from .rasterization import GaussianSplatRenderer
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.camera_utils import (
     extrinsics_to_vector,
     vector_to_camera_matrices,
@@ -20,10 +16,14 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
     normalize_depth,
     normalize_poses,
 )
-from huggingface_hub import PyTorchModelHubMixin
+from worldfoundry.core.model_loading import hash_state_dict_keys
 
+from ..heads.camera_head import CameraHead
+from ..heads.dense_head import DPTHead
+from ..heads.gs_head import GSFeatHead
 from ..layers.block import Block, DistBlock
-import torch.distributed as dist
+from .rasterization import GaussianSplatRenderer
+from .visual_transformer import VisualGeometryTransformer
 
 
 class WorldMirror(nn.Module, PyTorchModelHubMixin):
@@ -302,8 +302,8 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
 
     def forward(
         self,
-        views: Dict[str, torch.Tensor],
-        cond_flags: List[int] = [0, 0, 0],
+        views: dict[str, torch.Tensor],
+        cond_flags: list[int] = [0, 0, 0],
         is_inference=True,
         sp_size=1,
         sp_group=None,
@@ -392,7 +392,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         B, S, C_img, H, W = imgs.shape
 
         # Determine frame assignment for this rank
-        if S >= sp_size:
+        if sp_size <= S:
             base_chunk = S // sp_size
             remainder = S % sp_size
             if rank_in_sp < remainder:
@@ -418,7 +418,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         # values, ceil(my_count / frames_chunk_size) may differ across ranks,
         # causing an NCCL deadlock. Padding all ranks to the same frame count
         # ensures identical iteration counts.
-        if S >= sp_size:
+        if sp_size <= S:
             max_count = (S // sp_size) + (1 if S % sp_size else 0)
         else:
             max_count = 1 if S > 0 else 0

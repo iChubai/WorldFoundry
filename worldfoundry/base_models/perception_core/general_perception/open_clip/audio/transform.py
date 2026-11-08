@@ -20,7 +20,7 @@ class AudioAugmentationCfg:
     int16_normalize: bool = False
 
 
-def _as_audio_cfg_dict(audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]]) -> Dict[str, Any]:
+def _as_audio_cfg_dict(audio_cfg: CLIPAudioCfg | dict[str, Any]) -> dict[str, Any]:
     """Helper function to as audio cfg dict.
 
     Args:
@@ -34,7 +34,7 @@ def _as_audio_cfg_dict(audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]]) -> Dict[s
     return dict(audio_cfg)
 
 
-def get_audio_frame_count(audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]]) -> int:
+def get_audio_frame_count(audio_cfg: CLIPAudioCfg | dict[str, Any]) -> int:
     """Get audio frame count.
 
     Args:
@@ -72,7 +72,7 @@ def float32_to_int16_torch(x: torch.Tensor) -> torch.Tensor:
     return (x * 32767.0).type(torch.int16)
 
 
-def _get_mel(audio_data: torch.Tensor, audio_cfg: Dict[str, Any]) -> torch.Tensor:
+def _get_mel(audio_data: torch.Tensor, audio_cfg: dict[str, Any]) -> torch.Tensor:
     """Helper function to get mel.
 
     Args:
@@ -107,7 +107,7 @@ class AudioPreprocess:
 
     def __init__(
         self,
-        audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+        audio_cfg: CLIPAudioCfg | dict[str, Any],
         data_fill: str = "repeatpad",
         data_trunc: str = "rand_trunc",
         int16_normalize: bool = False,
@@ -220,7 +220,7 @@ class AudioPreprocess:
 
 
 def make_audio_preprocess(
-    audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+    audio_cfg: CLIPAudioCfg | dict[str, Any],
     data_fill: str = "repeatpad",
     data_trunc: str = "rand_trunc",
     int16_normalize: bool = False,
@@ -242,9 +242,9 @@ def make_audio_preprocess(
 
 
 def audio_transform_v2(
-    audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+    audio_cfg: CLIPAudioCfg | dict[str, Any],
     is_train: bool = False,
-    audio_aug_cfg: Union[AudioAugmentationCfg, Dict[str, Any], None] = None,
+    audio_aug_cfg: AudioAugmentationCfg | dict[str, Any] | None = None,
 ):
     """Audio transform v2.
 

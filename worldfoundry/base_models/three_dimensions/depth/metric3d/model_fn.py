@@ -73,7 +73,7 @@ def config_from_py_file(file_path: str) -> dict:
     # config: dict containing all configs.
     """
     namespace = {}
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         exec(f.read(), namespace)
     return namespace["config"]
 

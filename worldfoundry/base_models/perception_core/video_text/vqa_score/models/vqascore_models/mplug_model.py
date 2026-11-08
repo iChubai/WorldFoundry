@@ -1,9 +1,10 @@
-import torch
-import numpy as np
-from PIL import Image
 from typing import List, Union
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor
+
+import numpy as np
+import torch
 from decord import VideoReader, cpu
+from PIL import Image
+from transformers import AutoModelForCausalLM, AutoProcessor, AutoTokenizer
 
 from .vqa_model import VQAScoreModel
 
@@ -46,7 +47,7 @@ class mPLUGOwl3Model(VQAScoreModel):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         self.processor = self.model.init_processor(self.tokenizer)
 
-    def load_images(self, paths: List[str], num_frames: int = 16) -> List[Union[torch.Tensor, List[Image.Image]]]:
+    def load_images(self, paths: list[str], num_frames: int = 16) -> list[torch.Tensor | list[Image.Image]]:
         processed_data = []
         for path in paths:
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file
@@ -84,8 +85,8 @@ class mPLUGOwl3Model(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         num_frames: int = 16,
         question_template: str = 'Does this figure show "{}"? Please answer yes or no.',
         answer_template: str = "Yes",
@@ -97,7 +98,7 @@ class mPLUGOwl3Model(VQAScoreModel):
         processed_data = self.load_images(paths, num_frames)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers):
+        for data, question, answer in zip(processed_data, questions, answers, strict=False):
             if isinstance(data, list):  # Video
                 messages = [{"role": "user", "content": f"<|video|>\n{question}"}, {"role": "assistant", "content": ""}]
                 inputs = self.processor(messages, images=None, videos=[data])
@@ -134,14 +135,14 @@ class mPLUGOwl3Model(VQAScoreModel):
         return torch.tensor(lm_probs)
 
     def generate(
-        self, images: List[str], texts: List[str], num_frames: int = 16, max_new_tokens: int = 256
-    ) -> List[str]:
+        self, images: list[str], texts: list[str], num_frames: int = 16, max_new_tokens: int = 256
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         processed_data = self.load_images(images, num_frames)
 
         generated_texts = []
-        for data, text in zip(processed_data, texts):
+        for data, text in zip(processed_data, texts, strict=False):
             if isinstance(data, list):  # Video
                 messages = [{"role": "user", "content": f"<|video|>\n{text}"}, {"role": "assistant", "content": ""}]
                 inputs = self.processor(messages, images=None, videos=[data])

@@ -1,9 +1,10 @@
 """Kandinsky-6 profiling configuration and inactive sampling context."""
 
-from contextlib import contextmanager
 from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Literal
+
 from .base import ConfigModel
 
 ProfileMode = Literal["none", "time_mem_module"]

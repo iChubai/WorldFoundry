@@ -16,9 +16,10 @@
 import logging
 import math
 import sys
+from collections.abc import Callable, Sequence
 from functools import partial
 from pathlib import Path
-from typing import Callable, Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import torch
 from torch import nn
@@ -35,9 +36,9 @@ from dvlt.model_components.layers.block import Mlp
 from dvlt.model_components.layers.block import NestedTensorBlock as Block
 from dvlt.model_components.layers.patch_embed import PatchEmbed
 from dvlt.model_components.layers.rope import PositionGetter, RotaryPositionEmbedding2D
+
 from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply
-
 
 logger = logging.getLogger("dinov2")
 
@@ -383,11 +384,11 @@ class DinoVisionTransformer(nn.Module):
     def get_intermediate_layers(
         self,
         x: torch.Tensor,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | Sequence = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         norm=True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         """Get intermediate layers.
 
         Args:

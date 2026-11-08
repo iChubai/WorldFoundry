@@ -20,7 +20,7 @@ class MegrezTemplateMeta(TemplateMeta):
             "<|role_start|>user<|role_end|>{{QUERY}}<|turn_end|><|role_start|>assistant<|role_end|>"
         ]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|turn_end|>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|turn_end|>"])
     suffix: Prompt = field(default_factory=lambda: ["<|turn_end|>"])
     default_system: str = "你是Megrez-3B-Instruct，将针对用户的问题给出详细的、积极的回答。"
 
@@ -34,13 +34,13 @@ class MegrezOmniTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return [[-1], "\n"]
         elif media_type == "audio":
             return [f"Audio {index + 1}: ", [-2], "\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
         labels = encoded["labels"]
@@ -80,12 +80,12 @@ class MegrezOmniTemplate(Template):
         encoded["labels"] = labels
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         _, inputs_embeds, _ = model.compose_embeddings(inputs)
         inputs.pop("position_ids", None)
         return {"inputs_embeds": inputs_embeds}
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         new_batch = []
         for b in batch:

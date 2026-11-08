@@ -9,9 +9,10 @@ Provides:
 """
 
 import logging
+from typing import List, Optional, Tuple
+
 import torch
 import torch.nn as nn
-from typing import Optional, Tuple, List
 
 from ..layers.block import Block, FlashInferBlock, SDPABlock
 from ..layers.rope import WanRotaryPosEmbed
@@ -294,7 +295,7 @@ class AggregatorStream(AggregatorBase):
         S_local: int,
         S_global: int,
         C: int,
-        num_frame_for_scale: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
     ) -> torch.Tensor:
         """
         Prepare camera, register, and scale tokens.
@@ -369,13 +370,13 @@ class AggregatorStream(AggregatorBase):
         P: int,
         C: int,
         global_idx: int,
-        pos: Optional[torch.Tensor] = None,
+        pos: torch.Tensor | None = None,
         # Mode-specific parameters
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
         **kwargs,
-    ) -> Tuple[torch.Tensor, int, List[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, int, list[torch.Tensor]]:
         """
         Process causal global attention via FlashInfer streaming path.
 
@@ -424,12 +425,12 @@ class AggregatorStream(AggregatorBase):
         P: int,
         C: int,
         global_idx: int,
-        pos: Optional[torch.Tensor] = None,
+        pos: torch.Tensor | None = None,
         num_frame_per_block: int = 1,
-        sliding_window_size: Optional[int] = None,
-        num_frame_for_scale: Optional[int] = None,
-        image_height: Optional[int] = None,
-        image_width: Optional[int] = None,
+        sliding_window_size: int | None = None,
+        num_frame_for_scale: int | None = None,
+        image_height: int | None = None,
+        image_width: int | None = None,
     ):
         """
         Causal attention for streaming inference using FlashInfer KV cache.

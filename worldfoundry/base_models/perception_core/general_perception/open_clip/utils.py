@@ -5,8 +5,8 @@ from itertools import repeat
 from typing import List, Optional, Tuple, Union
 
 import torch
-from torch import nn as nn
 from torch import _assert
+from torch import nn as nn
 from torchvision.ops.misc import FrozenBatchNorm2d
 
 
@@ -122,9 +122,9 @@ def convert_int8_model_to_inference_mode(model):
 
 def feature_take_indices(
     num_features: int,
-    indices: Optional[Union[int, List[int]]] = None,
+    indices: int | list[int] | None = None,
     as_set: bool = False,
-) -> Tuple[List[int], int]:
+) -> tuple[list[int], int]:
     """Determine the absolute feature indices to 'take' from.
 
     Args:
@@ -146,7 +146,7 @@ def feature_take_indices(
         _assert(0 < indices <= num_features, f"last-n ({indices}) is out of range (1 to {num_features})")
         take_indices = [num_features - indices + i for i in range(indices)]
     else:
-        take_indices: List[int] = []
+        take_indices: list[int] = []
         for i in indices:
             idx = num_features + i if i < 0 else i
             _assert(0 <= idx < num_features, f"feature index {idx} is out of range (0 to {num_features - 1})")
@@ -158,7 +158,7 @@ def feature_take_indices(
     return take_indices, max(take_indices)
 
 
-def _out_indices_as_tuple(x: Union[int, Tuple[int, ...]]) -> Tuple[int, ...]:
+def _out_indices_as_tuple(x: int | tuple[int, ...]) -> tuple[int, ...]:
     """Helper function to out indices as tuple.
 
     Args:

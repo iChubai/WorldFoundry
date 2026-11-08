@@ -22,6 +22,7 @@ StepVideo-only; MiniMax H3 has its own :mod:`~...autoencoders.minimax_h3_video.f
 """
 
 import torch
+
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 

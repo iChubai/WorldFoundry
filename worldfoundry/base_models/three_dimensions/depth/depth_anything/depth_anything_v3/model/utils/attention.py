@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Modified from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py#L103-L110 # noqa
+# Modified from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py#L103-L110
 
 """Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> attention.py functionality."""
 
-from typing import Callable, Optional, Union
+from collections.abc import Callable
+from typing import Optional, Union
+
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
@@ -104,7 +107,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
     ) -> None:
         """Init.
@@ -139,8 +142,8 @@ class Mlp(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float = 0.0,
         bias: bool = True,

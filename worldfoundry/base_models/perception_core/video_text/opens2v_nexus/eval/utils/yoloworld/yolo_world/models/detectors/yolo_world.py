@@ -1,11 +1,12 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 from typing import List, Tuple, Union
+
 import torch
 import torch.nn as nn
-from torch import Tensor
 from mmdet.structures import OptSampleList, SampleList
 from mmyolo.models.detectors import YOLODetector
 from mmyolo.registry import MODELS
+from torch import Tensor
 
 
 @MODELS.register_module()
@@ -25,7 +26,7 @@ class YOLOWorldDetector(YOLODetector):
         self.num_test_classes = num_test_classes
         super().__init__(*args, **kwargs)
 
-    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Union[dict, list]:
+    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> dict | list:
         """Calculate losses from a batch of inputs and data samples."""
         self.bbox_head.num_classes = self.num_train_classes
         img_feats, txt_feats = self.extract_feat(batch_inputs, batch_data_samples)
@@ -46,12 +47,12 @@ class YOLOWorldDetector(YOLODetector):
         batch_data_samples = self.add_pred_to_datasample(batch_data_samples, results_list)
         return batch_data_samples
 
-    def reparameterize(self, texts: List[List[str]]) -> None:
+    def reparameterize(self, texts: list[list[str]]) -> None:
         # encode text embeddings into the detector
         self.texts = texts
         self.text_feats = self.backbone.forward_text(texts)
 
-    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> Tuple[List[Tensor]]:
+    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> tuple[list[Tensor]]:
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
         """
@@ -59,7 +60,7 @@ class YOLOWorldDetector(YOLODetector):
         results = self.bbox_head.forward(img_feats, txt_feats)
         return results
 
-    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Tuple[Tuple[Tensor], Tensor]:
+    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> tuple[tuple[Tensor], Tensor]:
         """Extract features."""
         txt_feats = None
         if batch_data_samples is None:
@@ -139,7 +140,7 @@ class SimpleYOLOWorldDetector(YOLODetector):
             else:
                 self.adapter = None
 
-    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Union[dict, list]:
+    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> dict | list:
         """Calculate losses from a batch of inputs and data samples."""
         self.bbox_head.num_classes = self.num_training_classes
         img_feats, txt_feats = self.extract_feat(batch_inputs, batch_data_samples)
@@ -165,7 +166,7 @@ class SimpleYOLOWorldDetector(YOLODetector):
         batch_data_samples = self.add_pred_to_datasample(batch_data_samples, results_list)
         return batch_data_samples
 
-    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> Tuple[List[Tensor]]:
+    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> tuple[list[Tensor]]:
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
         """
@@ -176,7 +177,7 @@ class SimpleYOLOWorldDetector(YOLODetector):
             results = self.bbox_head.forward(img_feats, txt_feats)
         return results
 
-    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Tuple[Tuple[Tensor], Tensor]:
+    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> tuple[tuple[Tensor], Tensor]:
         """Extract features."""
         # only image features
         img_feats, _ = self.backbone(batch_inputs, None)

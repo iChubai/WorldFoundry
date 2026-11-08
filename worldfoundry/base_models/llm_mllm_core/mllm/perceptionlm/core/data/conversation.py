@@ -19,8 +19,9 @@ NOTE:
 """
 
 import copy
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Union
+from typing import Dict, List, Union
 
 
 @dataclass
@@ -41,7 +42,7 @@ class Conversation:
     # TODO (Maaz): Is there a better name for 'num_patches'. It represents number of vision tokens per image/frame.
     def get_conversation_dict_list(
         self, num_images: int = 1, num_patches: int = 144, media_type: str = "image"
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Each turn of conversation is a dict with source and target keys.
         """
@@ -117,7 +118,7 @@ class Conversation:
         sys_text = self.bos_token + self.pre_system + self.system + self.sep_system
         return sys_text + self.pre_question + prompt + self.sep_question + self.pre_answer
 
-    def add_conv(self, conv: Union[List, Dict]):
+    def add_conv(self, conv: list | dict):
         if isinstance(conv, list):
             self.conversations.extend(conv)
         elif isinstance(conv, dict):

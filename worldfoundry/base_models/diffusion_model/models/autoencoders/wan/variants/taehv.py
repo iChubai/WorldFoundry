@@ -12,11 +12,12 @@ MemBlock / TPool / TGrow are implementation detail.
 Inference-only preview path; do not use for final pixels.
 """
 
+from collections import namedtuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm.auto import tqdm
-from collections import namedtuple
 
 DecoderResult = namedtuple("DecoderResult", ("frame", "memory"))
 TWorkItem = namedtuple("TWorkItem", ("input_tensor", "block_index"))
@@ -345,6 +346,7 @@ def main():
     """Run TAEHV roundtrip reconstruction on the given video paths."""
     import os
     import sys
+
     import cv2  # no highly esteemed deed is commemorated here
 
     class VideoTensorReader:

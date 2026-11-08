@@ -10,15 +10,16 @@ import warnings
 import weakref
 from collections.abc import Iterator
 from contextlib import AbstractContextManager
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch import nn, Tensor
+from torch import Tensor, nn
 from torch.overrides import handle_torch_function, has_torch_function
 from typing_extensions import override
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
@@ -94,31 +95,31 @@ def multi_head_attention_forward(
     value: Tensor,
     embed_dim_to_check: int,
     num_heads: int,
-    in_proj_weight: Optional[Tensor],
-    in_proj_bias: Optional[Tensor],
-    bias_k: Optional[Tensor],
-    bias_v: Optional[Tensor],
+    in_proj_weight: Tensor | None,
+    in_proj_bias: Tensor | None,
+    bias_k: Tensor | None,
+    bias_v: Tensor | None,
     add_zero_attn: bool,
     dropout_p: float,
     out_proj_weight: Tensor,
-    out_proj_bias: Optional[Tensor],
+    out_proj_bias: Tensor | None,
     training: bool = True,
-    key_padding_mask: Optional[Tensor] = None,
+    key_padding_mask: Tensor | None = None,
     need_weights: bool = True,
-    attn_mask: Optional[Tensor] = None,
+    attn_mask: Tensor | None = None,
     use_separate_proj_weight: bool = False,
-    q_proj_weight: Optional[Tensor] = None,
-    k_proj_weight: Optional[Tensor] = None,
-    v_proj_weight: Optional[Tensor] = None,
-    static_k: Optional[Tensor] = None,
-    static_v: Optional[Tensor] = None,
+    q_proj_weight: Tensor | None = None,
+    k_proj_weight: Tensor | None = None,
+    v_proj_weight: Tensor | None = None,
+    static_k: Tensor | None = None,
+    static_v: Tensor | None = None,
     average_attn_weights: bool = True,
     is_causal: bool = False,
     attn_type: AttentionType = AttentionType.Vanilla,
     attn_sparsity: float = 0.0,
-    attn_bias: Optional[Tensor] = None,
+    attn_bias: Tensor | None = None,
     use_fa3: bool = False,
-) -> Tuple[Tensor, Optional[Tensor]]:
+) -> tuple[Tensor, Tensor | None]:
     """Multi head attention forward.
 
     Args:
@@ -446,8 +447,8 @@ class MultiheadAttention(nn.Module):
     """Multihead attention implementation."""
 
     __constants__ = ["batch_first"]
-    bias_k: Optional[torch.Tensor]
-    bias_v: Optional[torch.Tensor]
+    bias_k: torch.Tensor | None
+    bias_v: torch.Tensor | None
 
     def __init__(
         self,
@@ -571,12 +572,12 @@ class MultiheadAttention(nn.Module):
         query: Tensor,
         key: Tensor,
         value: Tensor,
-        key_padding_mask: Optional[Tensor] = None,
+        key_padding_mask: Tensor | None = None,
         need_weights: bool = False,
-        attn_mask: Optional[Tensor] = None,
+        attn_mask: Tensor | None = None,
         average_attn_weights: bool = True,
-        attn_bias: Optional[Tensor] = None,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+        attn_bias: Tensor | None = None,
+    ) -> tuple[Tensor, Tensor | None]:
         """Forward.
 
         Args:
@@ -817,7 +818,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
     ) -> None:
         """Init.
@@ -874,7 +875,7 @@ class TransformerWrapper(nn.Module):
         self.pos_enc_at_input_dec = pos_enc_at_input_dec
 
         # for two stage
-        assert two_stage_type in ["none"], "unknown param {} of two_stage_type".format(two_stage_type)
+        assert two_stage_type in ["none"], f"unknown param {two_stage_type} of two_stage_type"
         self.two_stage_type = two_stage_type
 
         self._reset_parameters()
@@ -899,7 +900,7 @@ class MLP(nn.Module):
         num_layers: int,
         dropout: float = 0.0,
         residual: bool = False,
-        out_norm: Optional[nn.Module] = None,
+        out_norm: nn.Module | None = None,
     ):
         """Init.
 
@@ -915,7 +916,7 @@ class MLP(nn.Module):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim], strict=False))
         self.drop = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
         # whether to add the output as a residual connection to the input
         if residual and input_dim != output_dim:
@@ -1030,7 +1031,7 @@ def gen_sineembed_for_position(pos_tensor, num_feats=256):
 
         pos = torch.cat((pos_y, pos_x, pos_w, pos_h), dim=2)
     else:
-        raise ValueError("Unknown pos_tensor shape(-1):{}".format(pos_tensor.size(-1)))
+        raise ValueError(f"Unknown pos_tensor shape(-1):{pos_tensor.size(-1)}")
     return pos
 
 
@@ -1079,9 +1080,9 @@ class SAM3Output(list):
 
     def __init__(
         self,
-        output: List[List[Dict]] = None,
+        output: list[list[dict]] = None,
         iter_mode: IterMode = IterMode.ALL_STEPS_PER_STAGE,
-        loss_stages: Optional[List[int]] = None,
+        loss_stages: list[int] | None = None,
     ):
         """Init.
 

@@ -8,9 +8,10 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
 import os
+
 import torch
-from torch import nn, Tensor
 import torch.nn.functional as F
+from torch import Tensor, nn
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
@@ -57,7 +58,7 @@ class Attention(nn.Module):
 
     def eviction(self, k: Tensor, v: Tensor, cache_budget: int, num_anchor_tokens: int):
         B, H, N, D = k.shape
-        if N <= cache_budget:
+        if cache_budget >= N:
             return k, v, 0.0
 
         anchor_k, candidate_k = k.split([num_anchor_tokens, N - num_anchor_tokens], dim=2)

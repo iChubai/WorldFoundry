@@ -59,7 +59,7 @@ class PPYOLOEParamSchedulerHook(ParamSchedulerHook):
         self._base_lr = [group["initial_lr"] for group in optimizer.param_groups]
         self._min_lr = [i * self.min_lr_ratio for i in self._base_lr]
 
-    def before_train_iter(self, runner: Runner, batch_idx: int, data_batch: Optional[dict] = None):
+    def before_train_iter(self, runner: Runner, batch_idx: int, data_batch: dict | None = None):
         """Operations before each training iteration.
 
         Args:

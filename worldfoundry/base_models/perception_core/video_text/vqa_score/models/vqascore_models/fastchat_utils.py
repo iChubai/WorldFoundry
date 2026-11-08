@@ -46,9 +46,9 @@ class Conversation:
     # The system message
     system_message: str = ""
     # The names of two roles
-    roles: Tuple[str] = ("USER", "ASSISTANT")
+    roles: tuple[str] = ("USER", "ASSISTANT")
     # All messages. Each item is (role, message).
-    messages: List[List[str]] = ()
+    messages: list[list[str]] = ()
     # The number of few shot examples
     offset: int = 0
     # The separator style and configurations
@@ -56,9 +56,9 @@ class Conversation:
     sep: str = "\n"
     sep2: str = None
     # Stop criteria (the default one is EOS token)
-    stop_str: Union[str, List[str]] = None
+    stop_str: str | list[str] = None
     # Stops generation if meeting any token in this list
-    stop_token_ids: List[int] = None
+    stop_token_ids: list[int] = None
 
     def get_prompt(self) -> str:
         """Get the prompt for generation."""
@@ -310,7 +310,7 @@ class Conversation:
 
 
 # A global registry for all conversation templates
-conv_templates: Dict[str, Conversation] = {}
+conv_templates: dict[str, Conversation] = {}
 
 
 def register_conv_template(template: Conversation, override: bool = False):

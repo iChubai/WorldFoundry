@@ -5,11 +5,11 @@ import hashlib
 import os
 import urllib
 import warnings
+from collections.abc import Iterable
 from functools import partial
-from typing import Dict, Iterable, Optional, Union
+from typing import Dict, Optional, Union
 
 from tqdm import tqdm
-
 
 try:
     import safetensors.torch
@@ -20,14 +20,14 @@ except ImportError:
 
 
 from .constants import (
+    HF_SAFE_WEIGHTS_NAME,
+    HF_WEIGHTS_NAME,
     IMAGENET_MEAN,
     IMAGENET_STD,
     INCEPTION_MEAN,
     INCEPTION_STD,
     OPENAI_DATASET_MEAN,
     OPENAI_DATASET_STD,
-    HF_WEIGHTS_NAME,
-    HF_SAFE_WEIGHTS_NAME,
 )
 from .version import __version__
 
@@ -792,14 +792,14 @@ def list_pretrained(as_str: bool = False):
     """returns list of pretrained models
     Returns a tuple (model_name, pretrain_tag) by default or 'name:tag' if as_str == True
     """
-    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED.keys() for t in _PRETRAINED[k].keys()]
+    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED for t in _PRETRAINED[k].keys()]
 
 
 def list_pretrained_models_by_tag(tag: str):
     """return all models having the specified pretrain tag"""
     models = []
     tag = _clean_tag(tag)
-    for k in _PRETRAINED.keys():
+    for k in _PRETRAINED:
         if tag in _PRETRAINED[k]:
             models.append(k)
     return models
@@ -851,7 +851,7 @@ def get_pretrained_url(model: str, tag: str):
 
 def download_pretrained_from_url(
     url: str,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
 ):
     """Download pretrained from url.
 
@@ -900,7 +900,7 @@ def download_pretrained_from_url(
     if expected_sha256 and not hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(
         expected_sha256
     ):
-        raise RuntimeError(f"Model has been downloaded but the SHA256 checksum does not not match")
+        raise RuntimeError("Model has been downloaded but the SHA256 checksum does not not match")
 
     return download_target
 
@@ -934,9 +934,9 @@ def _get_safe_alternatives(filename: str) -> Iterable[str]:
 
 def download_pretrained_from_hf(
     model_id: str,
-    filename: Optional[str] = None,
-    revision: Optional[str] = None,
-    cache_dir: Optional[str] = None,
+    filename: str | None = None,
+    revision: str | None = None,
+    cache_dir: str | None = None,
 ):
     """Download pretrained from hf.
 
@@ -978,9 +978,9 @@ def download_pretrained_from_hf(
 
 
 def download_pretrained(
-    cfg: Dict,
+    cfg: dict,
     prefer_hf_hub: bool = True,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
 ):
     """Download pretrained.
 

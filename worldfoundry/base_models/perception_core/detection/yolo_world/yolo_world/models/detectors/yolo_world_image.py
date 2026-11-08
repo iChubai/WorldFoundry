@@ -4,11 +4,11 @@ from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 import torch.nn.functional as F
 from mmdet.structures import OptSampleList, SampleList
 from mmyolo.models.detectors import YOLODetector
 from mmyolo.registry import MODELS
+from torch import Tensor
 from transformers import CLIPVisionModelWithProjection
 
 
@@ -160,7 +160,7 @@ class YOLOWorldImageDetector(YOLODetector):
         self.txt_feats = None
         self.image_prompt_encoder = ImagePromptEncoder(vision_encoder=vision_model)
 
-    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Union[dict, list]:
+    def loss(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> dict | list:
         """Calculate losses from a batch of inputs and data samples."""
         self.bbox_head.num_classes = self.num_training_classes
         img_feats, txt_feats = self.extract_feat(batch_inputs, batch_data_samples)
@@ -182,7 +182,7 @@ class YOLOWorldImageDetector(YOLODetector):
         batch_data_samples = self.add_pred_to_datasample(batch_data_samples, results_list)
         return batch_data_samples
 
-    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> Tuple[List[Tensor]]:
+    def _forward(self, batch_inputs: Tensor, batch_data_samples: OptSampleList = None) -> tuple[list[Tensor]]:
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
         """
@@ -197,7 +197,7 @@ class YOLOWorldImageDetector(YOLODetector):
         else:
             self.has_embed = False
 
-    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> Tuple[Tuple[Tensor], Tensor]:
+    def extract_feat(self, batch_inputs: Tensor, batch_data_samples: SampleList) -> tuple[tuple[Tensor], Tensor]:
         """Extract features."""
         # only image features
         if self.has_embed:

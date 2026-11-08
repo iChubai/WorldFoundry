@@ -20,12 +20,13 @@ import math
 import operator as index_operator
 import subprocess
 from collections import OrderedDict
+from collections.abc import Callable, Mapping
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
 from types import SimpleNamespace
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import torch
 
@@ -2094,11 +2095,11 @@ def parse_lightx2v_sparse(option: Any) -> LightX2VSparseConfig:
 
 
 __all__ = [
+    "PINNED_LIGHTX2V_COMMIT",
     "LightX2VSparseAdapter",
     "LightX2VSparseConfig",
     "LightX2VSparseResult",
     "LightX2VSparseUnavailableError",
-    "PINNED_LIGHTX2V_COMMIT",
     "lightx2v_kernel_symbol",
     "lightx2v_provider_family",
     "lightx2v_sparse_capability_contract",

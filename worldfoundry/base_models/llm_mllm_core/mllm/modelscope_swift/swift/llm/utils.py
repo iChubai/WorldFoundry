@@ -3,8 +3,9 @@ import inspect
 import os
 import shutil
 import tempfile
+from collections.abc import Mapping
 from types import MethodType
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -26,10 +27,10 @@ if "TOKENIZERS_PARALLELISM" not in os.environ:
 
 logger = get_logger()
 
-Tool = Dict[str, Union[str, Dict]]
-History = List[Union[Tuple[str, str], List[str]]]
-Message = Dict[str, Union[str, List[Dict[str, Any]]]]
-Messages = List[Message]
+Tool = dict[str, str | dict]
+History = list[tuple[str, str] | list[str]]
+Message = dict[str, str | list[dict[str, Any]]]
+Messages = list[Message]
 
 
 class ProcessorMixin:
@@ -60,7 +61,7 @@ def to_float_dtype(data: Any, dtype: torch.dtype) -> Any:
         return data
 
 
-def to_device(data: Any, device: Union[str, torch.device, int]) -> Any:
+def to_device(data: Any, device: str | torch.device | int) -> Any:
     """Move inputs to a device"""
     if isinstance(data, Mapping):
         return type(data)({k: to_device(v, device) for k, v in data.items()})
@@ -80,7 +81,7 @@ def set_generation_config(model: nn.Module, generation_config: GenerationConfig)
             if k.startswith("_"):
                 continue
             v = getattr(generation_config, k, None)
-            if k in old_generation_priority_config or old_v is not None and v is None:
+            if k in old_generation_priority_config or (old_v is not None and v is None):
                 setattr(generation_config, k, old_v)
     model.generation_config = generation_config
 
@@ -94,7 +95,7 @@ def is_moe_model(model):
     return False
 
 
-def find_module_list(model) -> Optional[nn.ModuleList]:
+def find_module_list(model) -> nn.ModuleList | None:
     module_lists = []
     for m in model.modules():
         if hasattr(m, "gradient_checkpointing") or m.__class__.__name__ == "CheckpointWrapper":
@@ -109,7 +110,7 @@ def find_module_list(model) -> Optional[nn.ModuleList]:
         return max(module_lists, key=lambda x: len(x))
 
 
-def _kwargs_to_args(func, args, kwargs) -> Optional[List[Any]]:
+def _kwargs_to_args(func, args, kwargs) -> list[Any] | None:
     parameters = inspect.signature(func).parameters
     args = list(args)
     parameters = list(parameters.items())[len(args) :]
@@ -179,7 +180,7 @@ def dynamic_gradient_checkpointing(model, including_vit: bool = False) -> None:
 
 
 def history_to_messages(
-    history: History, system: Optional[str] = None, roles: Optional[List[List[str]]] = None
+    history: History, system: str | None = None, roles: list[list[str]] | None = None
 ) -> "Messages":
     """
     history: [['query1', 'response1'], ['query2', 'response2']]
@@ -193,7 +194,7 @@ def history_to_messages(
     if system is not None:
         messages.append({"role": "system", "content": system})
 
-    for role, h in zip(roles, history):
+    for role, h in zip(roles, history, strict=False):
         assert isinstance(h, (list, tuple))
         if h[0] is not None:
             messages.append({"role": role[0], "content": h[0]})
@@ -202,7 +203,7 @@ def history_to_messages(
     return messages
 
 
-def messages_to_history(messages: "Messages") -> Dict[str, Any]:
+def messages_to_history(messages: "Messages") -> dict[str, Any]:
     system = None
     messages = messages.copy()
     if messages[0]["role"] == "system":
@@ -212,7 +213,7 @@ def messages_to_history(messages: "Messages") -> Dict[str, Any]:
         messages.append({"role": "assistant", "content": None})
     history = []
     history_roles = []
-    for user_message, assistant_message in zip(messages[::2], messages[1::2]):
+    for user_message, assistant_message in zip(messages[::2], messages[1::2], strict=False):
         assert user_message["role"] in {"tool", "user"}, f"user_message {user_message}"
         assert assistant_message["role"] == "assistant", f"assistant_message: {assistant_message}"
         history.append([user_message["content"], assistant_message["content"]])
@@ -230,14 +231,14 @@ def messages_to_history(messages: "Messages") -> Dict[str, Any]:
 
 
 def save_checkpoint(
-    model: Optional[PreTrainedModel],
+    model: PreTrainedModel | None,
     processor: "Processor",
     output_dir: str,
     *,
     safe_serialization: bool = True,
-    max_shard_size: Union[int, str] = "5GB",
-    model_dirs: List[str] = None,
-    additional_saved_files: Optional[List[str]] = None,
+    max_shard_size: int | str = "5GB",
+    model_dirs: list[str] = None,
+    additional_saved_files: list[str] | None = None,
 ) -> None:
     if model is not None:
         if model.__class__.__name__ != "SentenceTransformer":
@@ -294,7 +295,7 @@ def get_temporary_cache_files_directory(prefix=None):
     return TEMP_DIR.name
 
 
-def get_ckpt_dir(model_dir: str, adapters_dir: Optional[List[str]]) -> str:
+def get_ckpt_dir(model_dir: str, adapters_dir: list[str] | None) -> str:
     model_dirs = (adapters_dir or []).copy()
     if model_dir:
         model_dirs.append(model_dir)

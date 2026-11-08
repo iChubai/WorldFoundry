@@ -7,9 +7,9 @@
 MapAnything model class defined using UniCeption modules.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from functools import partial
-from typing import Any, Callable, Dict, List, Tuple, Type, Union
+from typing import Any, Dict, List, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
@@ -93,11 +93,11 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
     def __init__(
         self,
         name: str,
-        encoder_config: Dict,
-        info_sharing_config: Dict,
-        pred_head_config: Dict,
-        geometric_input_config: Dict,
-        fusion_norm_layer: Union[Type[nn.Module], Callable[..., nn.Module]] = partial(nn.LayerNorm, eps=1e-6),
+        encoder_config: dict,
+        info_sharing_config: dict,
+        pred_head_config: dict,
+        geometric_input_config: dict,
+        fusion_norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
         pretrained_checkpoint_path: str = None,
         load_specific_pretrained_submodules: bool = False,
         specific_pretrained_submodules: list = None,
@@ -1134,8 +1134,8 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
 
     def downstream_dense_head(
         self,
-        dense_head_inputs: Union[torch.Tensor, List[torch.Tensor]],
-        img_shape: Tuple[int, int],
+        dense_head_inputs: torch.Tensor | list[torch.Tensor],
+        img_shape: tuple[int, int],
     ):
         """
         Run the downstream dense prediction head
@@ -1170,9 +1170,9 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
 
     def downstream_head(
         self,
-        dense_head_inputs: Union[torch.Tensor, List[torch.Tensor]],
+        dense_head_inputs: torch.Tensor | list[torch.Tensor],
         scale_head_inputs: torch.Tensor,
-        img_shape: Tuple[int, int],
+        img_shape: tuple[int, int],
         memory_efficient_inference: bool = False,
         minibatch_size: int = None,
     ):
@@ -1711,7 +1711,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
     @torch.inference_mode()
     def infer(
         self,
-        views: List[Dict[str, Any]],
+        views: list[dict[str, Any]],
         memory_efficient_inference: bool = True,
         minibatch_size: int = None,
         use_amp: bool = True,
@@ -1730,7 +1730,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         use_multiview_confidence: bool = False,
         multiview_conf_depth_abs_thresh: float = 0.02,
         multiview_conf_depth_rel_thresh: float = 0.02,
-    ) -> List[Dict[str, torch.Tensor]]:
+    ) -> list[dict[str, torch.Tensor]]:
         """
         User-friendly inference with strict input validation and automatic conversion.
 

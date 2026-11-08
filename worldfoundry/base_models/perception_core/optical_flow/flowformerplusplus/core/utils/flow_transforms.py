@@ -1,18 +1,18 @@
-from __future__ import division
-import torch
-import random
-import numpy as np
 import numbers
-import types
-import scipy.ndimage as ndimage
 import pdb
-import torchvision
-import PIL.Image as Image
+import random
+import types
+
 import cv2
+import numpy as np
+import PIL.Image as Image
+import scipy.ndimage as ndimage
+import torch
+import torchvision
 from torch.nn import functional as F
 
 
-class Compose(object):
+class Compose:
     """Composes several co_transforms together.
     For example:
     >>> co_transforms.Compose([
@@ -30,7 +30,7 @@ class Compose(object):
         return input, target
 
 
-class Scale(object):
+class Scale:
     """Rescales the inputs and target arrays to the given 'size'.
     'size' will be the size of the smaller edge.
     For example, if height > width, then image will be
@@ -65,7 +65,7 @@ class Scale(object):
         return inputs, target
 
 
-class SpatialAug(object):
+class SpatialAug:
     def __init__(self, crop, scale=None, rot=None, trans=None, squeeze=None, schedule_coeff=1, order=1, black=False):
         self.crop = crop
         self.scale = scale
@@ -153,18 +153,18 @@ class SpatialAug(object):
             scale1 = 1
             squeeze0 = 1
             squeeze1 = 1
-            if not self.rot is None:
+            if self.rot is not None:
                 rot0 = np.random.uniform(-self.rot[0], +self.rot[0])
                 rot1 = np.random.uniform(-self.rot[1] * self.schedule_coeff, self.rot[1] * self.schedule_coeff) + rot0
                 self.left_multiply(np.cos(rot0), np.sin(rot0), -np.sin(rot0), np.cos(rot0), 0, 0)
-            if not self.trans is None:
+            if self.trans is not None:
                 trans0 = np.random.uniform(-self.trans[0], +self.trans[0], 2)
                 trans1 = (
                     np.random.uniform(-self.trans[1] * self.schedule_coeff, +self.trans[1] * self.schedule_coeff, 2)
                     + trans0
                 )
                 self.left_multiply(1, 0, 0, 1, trans0[0] * tw, trans0[1] * th)
-            if not self.squeeze is None:
+            if self.squeeze is not None:
                 squeeze0 = np.exp(np.random.uniform(-self.squeeze[0], self.squeeze[0]))
                 squeeze1 = (
                     np.exp(
@@ -172,7 +172,7 @@ class SpatialAug(object):
                     )
                     * squeeze0
                 )
-            if not self.scale is None:
+            if self.scale is not None:
                 scale0 = np.exp(np.random.uniform(self.scale[2] - self.scale[0], self.scale[2] + self.scale[0]))
                 scale1 = (
                     np.exp(np.random.uniform(-self.scale[1] * self.schedule_coeff, self.scale[1] * self.schedule_coeff))
@@ -189,9 +189,9 @@ class SpatialAug(object):
                 self.left_multiply(-1, 0, 0, 1, 0.5 * tw, -0.5 * th)
             else:
                 self.left_multiply(1, 0, 0, 1, -0.5 * tw, -0.5 * th)
-            if not self.rot is None:
+            if self.rot is not None:
                 self.left_multiply(np.cos(rot1), np.sin(rot1), -np.sin(rot1), np.cos(rot1), 0, 0)
-            if not self.trans is None:
+            if self.trans is not None:
                 self.left_multiply(1, 0, 0, 1, trans1[0] * tw, trans1[1] * th)
             self.left_multiply(1.0 / (scale1 * squeeze1), 0, 0, 1.0 / (scale1 / squeeze1), 0, 0)
             self.left_multiply(1, 0, 0, 1, 0.5 * w, 0.5 * h)
@@ -267,7 +267,7 @@ class SpatialAug(object):
         return inputs, target
 
 
-class pseudoPCAAug(object):
+class pseudoPCAAug:
     """
     Chromatic Eigen Augmentation: https://github.com/lmb-freiburg/flownet2/blob/master/src/caffe/layers/data_augmentation_layer.cu
     This version is faster.
@@ -282,7 +282,7 @@ class pseudoPCAAug(object):
         return inputs, target
 
 
-class PCAAug(object):
+class PCAAug:
     """
     Chromatic Eigen Augmentation: https://github.com/lmb-freiburg/flownet2/blob/master/src/caffe/layers/data_augmentation_layer.cu
     """
@@ -359,42 +359,42 @@ class PCAAug(object):
         self.lmult_mult = 1
         self.lmult_add = 0
         self.col_angle = 0
-        if not ladd_pow is None:
+        if ladd_pow is not None:
             self.pow_nomean[0] = np.exp(np.random.normal(ladd_pow[2], ladd_pow[0]))
-        if not col_pow is None:
+        if col_pow is not None:
             self.pow_nomean[1] = np.exp(np.random.normal(col_pow[2], col_pow[0]))
             self.pow_nomean[2] = np.exp(np.random.normal(col_pow[2], col_pow[0]))
 
-        if not ladd_add is None:
+        if ladd_add is not None:
             self.add_nomean[0] = np.random.normal(ladd_add[2], ladd_add[0])
-        if not col_add is None:
+        if col_add is not None:
             self.add_nomean[1] = np.random.normal(col_add[2], col_add[0])
             self.add_nomean[2] = np.random.normal(col_add[2], col_add[0])
 
-        if not ladd_mult is None:
+        if ladd_mult is not None:
             self.mult_nomean[0] = np.exp(np.random.normal(ladd_mult[2], ladd_mult[0]))
-        if not col_mult is None:
+        if col_mult is not None:
             self.mult_nomean[1] = np.exp(np.random.normal(col_mult[2], col_mult[0]))
             self.mult_nomean[2] = np.exp(np.random.normal(col_mult[2], col_mult[0]))
 
         # with mean
-        if not sat_pow is None:
+        if sat_pow is not None:
             self.pow_withmean[1] = np.exp(np.random.uniform(sat_pow[2] - sat_pow[0], sat_pow[2] + sat_pow[0]))
             self.pow_withmean[2] = self.pow_withmean[1]
-        if not sat_add is None:
+        if sat_add is not None:
             self.add_withmean[1] = np.random.uniform(sat_add[2] - sat_add[0], sat_add[2] + sat_add[0])
             self.add_withmean[2] = self.add_withmean[1]
-        if not sat_mult is None:
+        if sat_mult is not None:
             self.mult_withmean[1] = np.exp(np.random.uniform(sat_mult[2] - sat_mult[0], sat_mult[2] + sat_mult[0]))
             self.mult_withmean[2] = self.mult_withmean[1]
 
-        if not lmult_pow is None:
+        if lmult_pow is not None:
             self.lmult_pow = np.exp(np.random.uniform(lmult_pow[2] - lmult_pow[0], lmult_pow[2] + lmult_pow[0]))
-        if not lmult_mult is None:
+        if lmult_mult is not None:
             self.lmult_mult = np.exp(np.random.uniform(lmult_mult[2] - lmult_mult[0], lmult_mult[2] + lmult_mult[0]))
-        if not lmult_add is None:
+        if lmult_add is not None:
             self.lmult_add = np.random.uniform(lmult_add[2] - lmult_add[0], lmult_add[2] + lmult_add[0])
-        if not col_rotate is None:
+        if col_rotate is not None:
             self.col_angle = np.random.uniform(col_rotate[2] - col_rotate[0], col_rotate[2] + col_rotate[0])
 
         # eigen vectors
@@ -478,7 +478,7 @@ class PCAAug(object):
         return np.clip(np.dot(eig, self.eigvec.transpose()), 0, 1)
 
 
-class ChromaticAug(object):
+class ChromaticAug:
     """
     Chromatic augmentation: https://github.com/lmb-freiburg/flownet2/blob/master/src/caffe/layers/data_augmentation_layer.cu
     """

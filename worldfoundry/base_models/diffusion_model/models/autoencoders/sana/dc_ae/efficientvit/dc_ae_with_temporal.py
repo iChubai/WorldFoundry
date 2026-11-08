@@ -65,7 +65,7 @@ class DCAEWithTemporalEncoderConfig:
     norm: Any = "trms2d"
     act: str = "silu"
     downsample_block_type: Any = "ConvPixelUnshuffle@2@1@3@1"  # spatial factor 2, temporal factor 1, spatial kernel size 3, temporal kernel size 1
-    downsample_shortcut: Optional[str] = "averaging"
+    downsample_shortcut: str | None = "averaging"
     project_out_block_type: str = "ConvLayer3d@3@1"  # spatial kernel size 3, temporal kernel size 1
 
     zero_out: bool = False
@@ -117,33 +117,33 @@ class DCAEWithTemporalConfig:
 
     num_pad_frames: int = 0
 
-    pretrained_path: Optional[str] = None
+    pretrained_path: str | None = None
 
     zero_out: bool = False
     use_feature_cache: bool = False
 
-    encode_temporal_tile_size: Optional[int] = None
-    encode_temporal_tile_latent_size: Optional[int] = None
-    decode_temporal_tile_size: Optional[int] = None
-    decode_temporal_tile_latent_size: Optional[int] = None
+    encode_temporal_tile_size: int | None = None
+    encode_temporal_tile_latent_size: int | None = None
+    decode_temporal_tile_size: int | None = None
+    decode_temporal_tile_latent_size: int | None = None
 
     # spatial tiling
     encode_temporal_tile_overlap_factor: float = 0.0
     decode_temporal_tile_overlap_factor: float = 0.0
 
-    spatial_tile_size: Optional[int] = None
+    spatial_tile_size: int | None = None
     spatial_tile_overlap_factor: float = 0.0
 
     # scaling factor
-    scaling_factor: Optional[float] = None
+    scaling_factor: float | None = None
     # cache_dir
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
 
     verbose: bool = False
 
 
 def build_downsample_block(
-    block_type: str, in_channels: int, out_channels: int, shortcut: Optional[str], zero_out: bool = False
+    block_type: str, in_channels: int, out_channels: int, shortcut: str | None, zero_out: bool = False
 ) -> nn.Module:
     """Build downsample block.
 
@@ -201,7 +201,7 @@ def build_downsample_block(
 
 
 def build_upsample_block(
-    block_type: str, in_channels: int, out_channels: int, shortcut: Optional[str], zero_out: bool = False
+    block_type: str, in_channels: int, out_channels: int, shortcut: str | None, zero_out: bool = False
 ) -> nn.Module:
     """Build upsample block.
 
@@ -260,7 +260,7 @@ def build_upsample_block(
     return block
 
 
-def build_block(block_type: str, channels: int, norm: Optional[str], act: Optional[str], zero_out: bool) -> nn.Module:
+def build_block(block_type: str, channels: int, norm: str | None, act: str | None, zero_out: bool) -> nn.Module:
     """Build block.
 
     Args:
@@ -442,7 +442,7 @@ def build_decoder_project_in_block(block_type: str, in_channels: int, out_channe
 
 
 def build_decoder_project_out_block(
-    block_type: str, in_channels: int, out_channels: int, norm: Optional[str], act: Optional[str]
+    block_type: str, in_channels: int, out_channels: int, norm: str | None, act: str | None
 ):
     """Build decoder project out block.
 
@@ -492,7 +492,7 @@ class DCAEWithTemporalEncoder(nn.Module):
         )
 
         self.stages: list[OpSequential3d] = []
-        for stage_id, (width, depth) in enumerate(zip(cfg.width_list, cfg.depth_list)):
+        for stage_id, (width, depth) in enumerate(zip(cfg.width_list, cfg.depth_list, strict=False)):
             block_type = cfg.block_type[stage_id] if isinstance(cfg.block_type, list) else cfg.block_type
             norm = cfg.norm[stage_id] if isinstance(cfg.norm, list) else cfg.norm
             stage = build_stage_main(
@@ -529,8 +529,8 @@ class DCAEWithTemporalEncoder(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -585,7 +585,7 @@ class DCAEWithTemporalDecoder(nn.Module):
         self.stages: list[OpSequential3d] = []
         self.spatial_compression_ratio = 1
         self.temporal_compression_ratio = 1
-        for stage_id, (width, depth) in reversed(list(enumerate(zip(cfg.width_list, cfg.depth_list)))):
+        for stage_id, (width, depth) in reversed(list(enumerate(zip(cfg.width_list, cfg.depth_list, strict=False)))):
             stage = []
             if stage_id < num_stages - 1 and depth > 0:
                 upsample_block_type = (
@@ -628,8 +628,8 @@ class DCAEWithTemporalDecoder(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -751,7 +751,7 @@ class DCAEWithTemporal(nn.Module):
         row = []
         for i in tqdm(range(0, x.shape[2], overlap_size), desc="Tiled Encode", disable=not self.cfg.verbose):
             tile = x[:, :, i : i + self.cfg.encode_temporal_tile_size, :, :]
-            tile = self.encoder(tile, feature_cache, f"encoder." if self.cfg.use_feature_cache else None)
+            tile = self.encoder(tile, feature_cache, "encoder." if self.cfg.use_feature_cache else None)
             row.append(tile)
         result_row = []
         for i, tile in enumerate(row):
@@ -874,7 +874,7 @@ class DCAEWithTemporal(nn.Module):
         row = []
         for i in tqdm(range(0, z.shape[2], overlap_size), desc="Tiled Decode", disable=not self.cfg.verbose):
             tile = z[:, :, i : i + self.cfg.decode_temporal_tile_latent_size, :, :]
-            decoded = self.decoder(tile, feature_cache, f"decoder." if self.cfg.use_feature_cache else None)
+            decoded = self.decoder(tile, feature_cache, "decoder." if self.cfg.use_feature_cache else None)
             row.append(decoded)
         result_row = []
         for i, tile in enumerate(row):

@@ -1,14 +1,16 @@
 """GPT Blocks used for the GPT Model."""
 
 from typing import Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
+
 from .attention import ATTN_CLASS_REGISTRY
 from .norm import NORM_CLASS_REGISTRY
 
 
 class MPTMLP(nn.Module):
-    def __init__(self, d_model: int, expansion_ratio: int, device: Optional[str] = None):
+    def __init__(self, d_model: int, expansion_ratio: int, device: str | None = None):
         super().__init__()
         self.up_proj = nn.Linear(d_model, expansion_ratio * d_model, device=device)
         ## yh: hard code
@@ -27,7 +29,7 @@ class MPTBlock(nn.Module):
         d_model: int,
         n_heads: int,
         expansion_ratio: int,
-        attn_config: Dict = {
+        attn_config: dict = {
             "attn_type": "multihead_attention",
             "attn_pdrop": 0.0,
             "attn_impl": "triton",
@@ -42,7 +44,7 @@ class MPTBlock(nn.Module):
         resid_pdrop: float = 0.0,
         norm_type: str = "low_precision_layernorm",
         verbose: int = 0,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs,
     ):
         del kwargs
@@ -69,11 +71,11 @@ class MPTBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        attn_bias: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.ByteTensor] = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
+        attn_bias: torch.Tensor | None = None,
+        attention_mask: torch.ByteTensor | None = None,
         is_causal: bool = True,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor] | None]:
         a = self.norm_1(x)
         (b, attn_weights, past_key_value) = self.attn(
             a,

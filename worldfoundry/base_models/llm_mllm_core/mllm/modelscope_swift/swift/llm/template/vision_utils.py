@@ -3,8 +3,9 @@ import base64
 import math
 import os
 import re
+from collections.abc import Callable
 from io import BytesIO
-from typing import Any, Callable, List, TypeVar, Union
+from typing import Any, List, TypeVar, Union
 
 import numpy as np
 import requests
@@ -112,7 +113,7 @@ def rescale_image(img: Image.Image, max_pixels: int) -> Image.Image:
 _T = TypeVar("_T")
 
 
-def load_file(path: Union[str, bytes, _T]) -> Union[BytesIO, _T]:
+def load_file(path: str | bytes | _T) -> BytesIO | _T:
     res = path
     if isinstance(path, str):
         path = path.strip()
@@ -140,7 +141,7 @@ def load_file(path: Union[str, bytes, _T]) -> Union[BytesIO, _T]:
     return res
 
 
-def load_image(image: Union[str, bytes, Image.Image]) -> Image.Image:
+def load_image(image: str | bytes | Image.Image) -> Image.Image:
     image = load_file(image)
     if isinstance(image, BytesIO):
         image = Image.open(image)
@@ -149,9 +150,7 @@ def load_image(image: Union[str, bytes, Image.Image]) -> Image.Image:
     return image
 
 
-def load_batch(
-    path_list: List[Union[str, None, Any, BytesIO]], load_func: Callable[[Any], _T] = load_image
-) -> List[_T]:
+def load_batch(path_list: list[str | None | Any | BytesIO], load_func: Callable[[Any], _T] = load_image) -> list[_T]:
     res = []
     assert isinstance(path_list, (list, tuple)), f"path_list: {path_list}"
     for path in path_list:
@@ -183,7 +182,7 @@ def transform_image(image, input_size=448, max_num=12):
     return pixel_values
 
 
-def load_video_internvl(video: Union[str, bytes], bound=None, num_segments=32):
+def load_video_internvl(video: str | bytes, bound=None, num_segments=32):
     from decord import VideoReader, cpu
 
     video_io = load_file(video)
@@ -198,8 +197,8 @@ def load_video_internvl(video: Union[str, bytes], bound=None, num_segments=32):
     return images
 
 
-def load_video_cogvlm2(video: Union[str, bytes]) -> np.ndarray:
-    from decord import cpu, VideoReader, bridge
+def load_video_cogvlm2(video: str | bytes) -> np.ndarray:
+    from decord import VideoReader, bridge, cpu
 
     video_io = load_file(video)
     bridge.set_bridge("torch")
@@ -216,7 +215,7 @@ def load_video_cogvlm2(video: Union[str, bytes]) -> np.ndarray:
     return video_data
 
 
-def load_video_llava(video: Union[str, bytes]) -> np.ndarray:
+def load_video_llava(video: str | bytes) -> np.ndarray:
     import av
 
     video_io = load_file(video)
@@ -236,7 +235,7 @@ def load_video_llava(video: Union[str, bytes]) -> np.ndarray:
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
 
-def load_video_minicpmv_mplug_owl3(video: Union[str, bytes], max_num_frames):
+def load_video_minicpmv_mplug_owl3(video: str | bytes, max_num_frames):
     from decord import VideoReader, cpu  # pip install decord
 
     def uniform_sample(_l, _n):
@@ -256,7 +255,7 @@ def load_video_minicpmv_mplug_owl3(video: Union[str, bytes], max_num_frames):
     return frames
 
 
-def load_audio(audio: Union[str, bytes], sampling_rate: int, return_sr: bool = False):
+def load_audio(audio: str | bytes, sampling_rate: int, return_sr: bool = False):
     import librosa
 
     audio_io = load_file(audio)
@@ -264,7 +263,7 @@ def load_audio(audio: Union[str, bytes], sampling_rate: int, return_sr: bool = F
     return res if return_sr else res[0]
 
 
-def load_video_valley(video: Union[str, bytes]):
+def load_video_valley(video: str | bytes):
     import decord
     from torchvision import transforms
 

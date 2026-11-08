@@ -86,7 +86,7 @@ class RoPE3D(RoPE1D):
         assert sum(ch_split) == tokens.size(-1)
         mesh_grid = self.get_mesh_3d(rope_positions, bsz=tokens.shape[0])
         out = []
-        for i, (D, x) in enumerate(zip(ch_split, torch.split(tokens, ch_split, dim=-1))):
+        for i, (D, x) in enumerate(zip(ch_split, torch.split(tokens, ch_split, dim=-1), strict=False)):
             cos, sin = self.get_cos_sin(D, int(mesh_grid.max()) + 1, tokens.device, tokens.dtype)
 
             if parallel:

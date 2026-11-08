@@ -186,7 +186,7 @@ class Registry:
         """
         assert isinstance(path, str), "All path must be str."
         if name in cls.mapping["paths"]:
-            raise KeyError("Name '{}' already registered.".format(name))
+            raise KeyError(f"Name '{name}' already registered.")
         cls.mapping["paths"][name] = path
 
     @classmethod
@@ -290,7 +290,7 @@ class Registry:
 
         if "writer" in cls.mapping["state"] and value == default and no_warning is False:
             cls.mapping["state"]["writer"].warning(
-                "Key {} is not present in registry, returning default value of {}".format(original_name, default)
+                f"Key {original_name} is not present in registry, returning default value of {default}"
             )
         return value
 

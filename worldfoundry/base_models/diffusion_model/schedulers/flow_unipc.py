@@ -103,7 +103,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         num_train_timesteps: int = 1000,
         solver_order: int = 2,
         prediction_type: str = "flow_prediction",
-        shift: Optional[float] = 1.0,
+        shift: float | None = 1.0,
         use_dynamic_shifting=False,
         thresholding: bool = False,
         dynamic_thresholding_ratio: float = 0.995,
@@ -111,11 +111,11 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         predict_x0: bool = True,
         solver_type: str = "bh2",
         lower_order_final: bool = True,
-        disable_corrector: List[int] = [],
+        disable_corrector: list[int] = [],
         solver_p: NativeSchedulerMixin = None,
         timestep_spacing: str = "linspace",
         steps_offset: int = 0,
-        final_sigmas_type: Optional[str] = "zero",  # "zero", "sigma_min"
+        final_sigmas_type: str | None = "zero",  # "zero", "sigma_min"
     ):
         """Init.
 
@@ -199,11 +199,11 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
     # Modified from diffusers.schedulers.scheduling_flow_match_euler_discrete.FlowMatchEulerDiscreteScheduler.set_timesteps
     def set_timesteps(
         self,
-        num_inference_steps: Union[int, None] = None,
-        device: Union[str, torch.device] = None,
-        sigmas: Optional[List[float]] = None,
-        mu: Optional[Union[float, None]] = None,
-        shift: Optional[Union[float, None]] = None,
+        num_inference_steps: int | None = None,
+        device: str | torch.device = None,
+        sigmas: list[float] | None = None,
+        mu: float | None | None = None,
+        shift: float | None | None = None,
         use_kerras_sigma: bool = False,
     ):
         """
@@ -727,11 +727,11 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
     def step(
         self,
         model_output: torch.Tensor,
-        timestep: Union[int, torch.Tensor],
+        timestep: int | torch.Tensor,
         sample: torch.Tensor,
         return_dict: bool = True,
         generator=None,
-    ) -> Union[SchedulerOutput, Tuple]:
+    ) -> SchedulerOutput | tuple:
         """
         Predict the sample from the previous timestep by reversing the SDE. This function propagates the sample with
         the multistep UniPC.

@@ -1,14 +1,12 @@
 """Module for base_models -> three_dimensions -> optical_flow -> track_anything -> aot -> networks -> engines -> aot_engine.py functionality."""
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import numpy as np
-
-from ...utils.math import generate_permute_matrix
 from ...utils.image import one_hot_mask
-
+from ...utils.math import generate_permute_matrix
 from ..layers.basic import seq_to_2d
 
 
@@ -226,7 +224,7 @@ class AOTEngine(nn.Module):
         for x in xs:
             all_x = list(torch.split(x, chunk_size, dim=0))
             new_xs.append(all_x)
-        return list(zip(*new_xs))
+        return list(zip(*new_xs, strict=False))
 
     def add_reference_frame(self, img=None, mask=None, frame_step=-1, obj_nums=None, img_embs=None):
         """Add reference frame.
@@ -346,9 +344,11 @@ class AOTEngine(nn.Module):
         if self.long_term_memories is None:
             self.long_term_memories = new_long_term_memories
         updated_long_term_memories = []
-        for new_long_term_memory, last_long_term_memory in zip(new_long_term_memories, self.long_term_memories):
+        for new_long_term_memory, last_long_term_memory in zip(
+            new_long_term_memories, self.long_term_memories, strict=False
+        ):
             updated_e = []
-            for new_e, last_e in zip(new_long_term_memory, last_long_term_memory):
+            for new_e, last_e in zip(new_long_term_memory, last_long_term_memory, strict=False):
                 if new_e is None or last_e is None:
                     updated_e.append(None)
                 else:
@@ -489,7 +489,7 @@ class AOTEngine(nn.Module):
             logit_list.append(now_logit)
 
         total_loss = 0
-        for loss, loss_weight in zip(self.losses, self.loss_weights):
+        for loss, loss_weight in zip(self.losses, self.loss_weights, strict=False):
             total_loss = total_loss + loss_weight * loss(logit_list, label_list, step)
 
         return total_loss
@@ -733,7 +733,9 @@ class AOTInferEngine(nn.Module):
 
         separated_masks, separated_obj_nums = self.separate_mask(mask, obj_nums)
         img_embs = None
-        for aot_engine, separated_mask, separated_obj_num in zip(self.aot_engines, separated_masks, separated_obj_nums):
+        for aot_engine, separated_mask, separated_obj_num in zip(
+            self.aot_engines, separated_masks, separated_obj_nums, strict=False
+        ):
             aot_engine.add_reference_frame(
                 img, separated_mask, obj_nums=[separated_obj_num], frame_step=frame_step, img_embs=img_embs
             )
@@ -776,7 +778,7 @@ class AOTInferEngine(nn.Module):
         """
         _curr_mask = F.interpolate(curr_mask, self.input_size_2d)
         separated_masks, _ = self.separate_mask(_curr_mask, self.obj_nums)
-        for aot_engine, separated_mask in zip(self.aot_engines, separated_masks):
+        for aot_engine, separated_mask in zip(self.aot_engines, separated_masks, strict=False):
             aot_engine.update_short_term_memory(separated_mask, skip_long_term_update=skip_long_term_update)
 
     def update_size(self):

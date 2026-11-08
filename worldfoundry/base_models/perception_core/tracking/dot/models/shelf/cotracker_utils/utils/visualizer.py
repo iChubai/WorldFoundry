@@ -5,16 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
-import numpy as np
-import cv2
-import torch
-import flow_vis
 
-from matplotlib import cm
+import cv2
+import flow_vis
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+from matplotlib import cm
 from moviepy.editor import ImageSequenceClip
-import matplotlib.pyplot as plt
 
 
 def read_video_from_path(path):

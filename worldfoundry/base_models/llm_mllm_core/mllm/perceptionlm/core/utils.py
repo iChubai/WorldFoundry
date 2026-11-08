@@ -1,7 +1,8 @@
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
 
@@ -9,11 +10,11 @@ import torch
 @dataclass
 class InitArgs:
     use_gaussian: bool = True  # gaussian vs uniform
-    coeff_std: Optional[float] = None  # std coeff multiplier
+    coeff_std: float | None = None  # std coeff multiplier
     no_init: bool = False
 
 
-def get_init_fn(args: InitArgs, input_dim: int, init_depth: Optional[int]) -> Callable[[torch.Tensor], torch.Tensor]:
+def get_init_fn(args: InitArgs, input_dim: int, init_depth: int | None) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Init functions.
     """

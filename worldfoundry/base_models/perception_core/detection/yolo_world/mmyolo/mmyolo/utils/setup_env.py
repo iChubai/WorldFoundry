@@ -15,13 +15,13 @@ def register_all_modules(init_default_scope: bool = True):
             registry node. To understand more about the registry, please refer
             to https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/registry.md
             Defaults to True.
-    """  # noqa
-    import mmdet.engine  # noqa: F401,F403
-    import mmdet.visualization  # noqa: F401,F403
+    """
+    import mmdet.engine
+    import mmdet.visualization  # noqa: F401
 
-    import mmyolo.datasets  # noqa: F401,F403
-    import mmyolo.engine  # noqa: F401,F403
-    import mmyolo.models  # noqa: F401,F403
+    import mmyolo.datasets
+    import mmyolo.engine
+    import mmyolo.models  # noqa: F401
 
     if init_default_scope:
         never_created = DefaultScope.get_current_instance() is None or not DefaultScope.check_instance_created("mmyolo")

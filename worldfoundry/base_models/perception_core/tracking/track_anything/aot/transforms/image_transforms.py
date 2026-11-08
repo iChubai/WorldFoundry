@@ -36,10 +36,10 @@ def _get_image_size(img):
     elif isinstance(img, torch.Tensor) and img.dim() > 2:
         return img.shape[-2:][::-1]
     else:
-        raise TypeError("Unexpected type {}".format(type(img)))
+        raise TypeError(f"Unexpected type {type(img)}")
 
 
-class RandomHorizontalFlip(object):
+class RandomHorizontalFlip:
     """Horizontal flip the given PIL Image randomly with a given probability.
 
     Args:
@@ -69,10 +69,10 @@ class RandomHorizontalFlip(object):
 
     def __repr__(self):
         """Repr."""
-        return self.__class__.__name__ + "(p={})".format(self.p)
+        return self.__class__.__name__ + f"(p={self.p})"
 
 
-class RandomVerticalFlip(object):
+class RandomVerticalFlip:
     """Vertical flip the given PIL Image randomly with a given probability.
 
     Args:
@@ -102,10 +102,10 @@ class RandomVerticalFlip(object):
 
     def __repr__(self):
         """Repr."""
-        return self.__class__.__name__ + "(p={})".format(self.p)
+        return self.__class__.__name__ + f"(p={self.p})"
 
 
-class GaussianBlur(object):
+class GaussianBlur:
     """Gaussian blur augmentation from SimCLR: https://arxiv.org/abs/2002.05709"""
 
     def __init__(self, sigma=[0.1, 2.0]):
@@ -127,7 +127,7 @@ class GaussianBlur(object):
         return x
 
 
-class RandomAffine(object):
+class RandomAffine:
     """Random affine transformation of the image keeping center invariant
 
     Args:
@@ -290,7 +290,7 @@ class RandomAffine(object):
         return s.format(name=self.__class__.__name__, **d)
 
 
-class RandomCrop(object):
+class RandomCrop:
     """Crop the given PIL Image at a random location.
 
     Args:
@@ -391,10 +391,10 @@ class RandomCrop(object):
 
     def __repr__(self):
         """Repr."""
-        return self.__class__.__name__ + "(size={0}, padding={1})".format(self.size, self.padding)
+        return self.__class__.__name__ + f"(size={self.size}, padding={self.padding})"
 
 
-class RandomResizedCrop(object):
+class RandomResizedCrop:
     """Crop the given PIL Image to random size and aspect ratio.
 
     A crop of random size (default: of 0.08 to 1.0) of the original size and a random
@@ -496,14 +496,14 @@ class RandomResizedCrop(object):
     def __repr__(self):
         """Repr."""
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
-        format_string = self.__class__.__name__ + "(size={0}".format(self.size)
-        format_string += ", scale={0}".format(tuple(round(s, 4) for s in self.scale))
-        format_string += ", ratio={0}".format(tuple(round(r, 4) for r in self.ratio))
-        format_string += ", interpolation={0})".format(interpolate_str)
+        format_string = self.__class__.__name__ + f"(size={self.size}"
+        format_string += f", scale={tuple(round(s, 4) for s in self.scale)}"
+        format_string += f", ratio={tuple(round(r, 4) for r in self.ratio)}"
+        format_string += f", interpolation={interpolate_str})"
         return format_string
 
 
-class ToOnehot(object):
+class ToOnehot:
     """To oneshot tensor
 
     Args:
@@ -551,7 +551,7 @@ class ToOnehot(object):
 
     def __repr__(self):
         """Repr."""
-        return self.__class__.__name__ + "(max_obj_n={})".format(self.max_obj_n)
+        return self.__class__.__name__ + f"(max_obj_n={self.max_obj_n})"
 
 
 class Resize(torch.nn.Module):
@@ -581,7 +581,7 @@ class Resize(torch.nn.Module):
         """
         super().__init__()
         if not isinstance(size, (int, Sequence)):
-            raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
+            raise TypeError(f"Size should be int or sequence. Got {type(size)}")
         if isinstance(size, Sequence) and len(size) not in (1, 2):
             raise ValueError("If size is a sequence, it should have 1 or 2 values")
         self.size = size
@@ -602,4 +602,4 @@ class Resize(torch.nn.Module):
     def __repr__(self):
         """Repr."""
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
-        return self.__class__.__name__ + "(size={0}, interpolation={1})".format(self.size, interpolate_str)
+        return self.__class__.__name__ + f"(size={self.size}, interpolation={interpolate_str})"

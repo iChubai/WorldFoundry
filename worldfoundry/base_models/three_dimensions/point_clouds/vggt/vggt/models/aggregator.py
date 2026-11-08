@@ -7,16 +7,18 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> models -> aggregator.py functionality."""
 
 import logging
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
-from typing import Optional, Tuple, Union, List, Dict, Any
 
 from worldfoundry.core.nn.blocks.layers import PatchEmbed
+
 from ..layers.block import Block
-from ..layers.rope import RotaryPositionEmbedding2D, PositionGetter
-from ..layers.vision_transformer import vit_small, vit_base, vit_large, vit_giant2
+from ..layers.rope import PositionGetter, RotaryPositionEmbedding2D
+from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +226,7 @@ class Aggregator(nn.Module):
             if hasattr(self.patch_embed, "mask_token"):
                 self.patch_embed.mask_token.requires_grad_(False)
 
-    def forward(self, images: torch.Tensor, cameras_possibly_zero=None) -> Tuple[List[torch.Tensor], int]:
+    def forward(self, images: torch.Tensor, cameras_possibly_zero=None) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images (torch.Tensor): Input images with shape [B, S, 3, H, W], in range [0, 1].

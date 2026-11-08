@@ -10,19 +10,21 @@
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> block.py functionality."""
 
 import logging
-import os
-from typing import Callable, List, Any, Tuple, Dict
-import warnings
 import math
+import os
+import warnings
+from collections.abc import Callable
+from functools import lru_cache, partial
+from typing import Any, Dict, List, Tuple
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
+from torch.nn.attention.flex_attention import BlockMask, create_mask
+
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
 
 from .attention import Attention, CausalAttention, FlashInferAttention, SDPAAttention
-from functools import lru_cache, partial
-from torch.nn.attention.flex_attention import BlockMask, create_mask
-from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 
 class Block(nn.Module):

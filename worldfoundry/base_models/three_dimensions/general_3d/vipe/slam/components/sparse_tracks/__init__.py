@@ -119,6 +119,7 @@ class SparseTracks(ABC):
                 source_frame_inds.cpu().numpy(),
                 target_view_inds.cpu().numpy(),
                 target_frame_inds.cpu().numpy(),
+                strict=False,
             )
         ):
             assert s_vidx == t_vidx, "Only same view tracking is supported"

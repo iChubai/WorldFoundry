@@ -2,10 +2,11 @@
 
 import logging
 import os
+from collections.abc import Iterator, Sequence
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import tiktoken
 import torch
@@ -22,11 +23,11 @@ class Llama3Tokenizer(TikTokenTokenizer):
     Tokenizing and encoding/decoding text using the Tiktoken tokenizer.
     """
 
-    special_tokens: Dict[str, int]
+    special_tokens: dict[str, int]
 
     num_reserved_special_tokens = 256
 
-    pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"  # noqa: E501
+    pat_str = r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
 
     def __init__(self, model_path: str):
         """
@@ -77,7 +78,7 @@ class Llama3Tokenizer(TikTokenTokenizer):
         s: str,
         add_bos: bool,
         add_eos: bool,
-    ) -> List[int]:
+    ) -> list[int]:
         """
         Encodes a string into a list of token IDs.
 
@@ -107,7 +108,7 @@ class Llama3Tokenizer(TikTokenTokenizer):
                 s[i : i + TIKTOKEN_MAX_ENCODE_CHARS], MAX_NO_WHITESPACES_CHARS
             )
         )
-        t: List[int] = []
+        t: list[int] = []
         for substr in substrs:
             t.extend(
                 self.model.encode(
@@ -133,7 +134,7 @@ class Llama3Tokenizer(TikTokenTokenizer):
             str: The decoded string.
         """
         # Typecast is safe here. Tiktoken doesn't do anything list-related with the sequence.
-        return self.model.decode(cast(List[int], t))
+        return self.model.decode(cast(list[int], t))
 
     @staticmethod
     def _split_whitespaces_or_nonwhitespaces(s: str, max_consecutive_slice_len: int) -> Iterator[str]:
@@ -163,9 +164,9 @@ class Llama3Tokenizer(TikTokenTokenizer):
 @dataclass
 class PLMTokenizedSample:
     is_valid: bool = True
-    text_ids: List[int] = field(default_factory=list)
-    image_pos: List[int] = field(default_factory=list)
-    response_pos: List[int] = field(default_factory=list)
+    text_ids: list[int] = field(default_factory=list)
+    image_pos: list[int] = field(default_factory=list)
+    response_pos: list[int] = field(default_factory=list)
     num_media_chunks: int = 0
 
 
@@ -174,13 +175,13 @@ class PLMTokenizer(Llama3Tokenizer):
     def __init__(
         self,
         model_path: str,
-        patch_size: Optional[int] = None,
-        pooling_ratio: Optional[float] = None,
-        seq_len: Optional[int] = 2048,
-        conversation_format: Optional[str] = "plm_sft",
-        image_token: Optional[str] = "<|image|>",
-        bos_token: Optional[str] = "<|begin_of_text|>",
-        eos_token: Optional[str] = "<|end_of_text|>",
+        patch_size: int | None = None,
+        pooling_ratio: float | None = None,
+        seq_len: int | None = 2048,
+        conversation_format: str | None = "plm_sft",
+        image_token: str | None = "<|image|>",
+        bos_token: str | None = "<|begin_of_text|>",
+        eos_token: str | None = "<|end_of_text|>",
     ):
         super().__init__(model_path=model_path)
 
@@ -199,9 +200,9 @@ class PLMTokenizer(Llama3Tokenizer):
 
     def __call__(
         self,
-        conversations: List[Any],
-        media: Optional[torch.Tensor] = None,
-        media_type: Optional[str] = "image",
+        conversations: list[Any],
+        media: torch.Tensor | None = None,
+        media_type: str | None = "image",
     ) -> PLMTokenizedSample:
         conv_template = self.conversation_template.copy()
         assert self.image_token == conv_template.image_token
@@ -265,8 +266,8 @@ class PLMTokenizer(Llama3Tokenizer):
 
     def _tokenize_for_generation(
         self,
-        question: List[Any],
-        media: Optional[torch.Tensor] = None,
+        question: list[Any],
+        media: torch.Tensor | None = None,
     ):
         if media is not None:
             width, height = media.size(-2), media.size(-1)
@@ -279,11 +280,11 @@ class PLMTokenizer(Llama3Tokenizer):
             text_ids = self.encode(prompt, add_bos=False, add_eos=False)
             image_pos = [i for i, t in enumerate(text_ids) if t == self.image_token_id]
         else:
-            raise NotImplementedError(f"Text-only inference is not supported yet.")
+            raise NotImplementedError("Text-only inference is not supported yet.")
 
         return text_ids, image_pos
 
-    def decode_batch(self, tokens: torch.Tensor) -> List[str]:
+    def decode_batch(self, tokens: torch.Tensor) -> list[str]:
         return [self.decode(tokens[i].tolist()) for i in range(tokens.size(0))]
 
 

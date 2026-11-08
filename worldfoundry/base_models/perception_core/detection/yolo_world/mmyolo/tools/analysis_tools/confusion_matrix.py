@@ -11,7 +11,6 @@ from mmengine import Config, DictAction
 from mmengine.fileio import load
 from mmengine.registry import init_default_scope
 from mmengine.utils import ProgressBar
-
 from mmyolo.registry import DATASETS
 
 
@@ -120,7 +119,7 @@ def analyze_per_img_dets(confusion_matrix, gts, result, score_thr=0, tp_iou_thr=
                         confusion_matrix[gt_label, det_label] += 1
                 if det_match == 0:  # BG FP
                     confusion_matrix[-1, det_label] += 1
-    for num_tp, gt_label in zip(true_positives, gt_labels):
+    for num_tp, gt_label in zip(true_positives, gt_labels, strict=False):
         if num_tp == 0:  # FN
             confusion_matrix[gt_label, -1] += 1
 
@@ -183,7 +182,7 @@ def plot_confusion_matrix(
             ax.text(
                 j,
                 i,
-                "{}%".format(int(confusion_matrix[i, j]) if not np.isnan(confusion_matrix[i, j]) else -1),
+                f"{int(confusion_matrix[i, j]) if not np.isnan(confusion_matrix[i, j]) else -1}%",
                 ha="center",
                 va="center",
                 color="w",

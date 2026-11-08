@@ -23,7 +23,8 @@ layout, runs local attention, then reverses.  Tensors are ``B S H D``.
 """
 
 import os
-from typing import Any, Callable, List, Union
+from collections.abc import Callable
+from typing import Any, List, Union
 
 import torch
 import torch.distributed as dist
@@ -81,12 +82,12 @@ def single_all_to_all(input, local_seq_2_local_head, group, async_op=False):
 
 
 def async_a2a_communicate(
-    a2a_inputs: Union[torch.Tensor, List[torch.Tensor]],
+    a2a_inputs: torch.Tensor | list[torch.Tensor],
     cp_size: int,
     cp_group: ProcessGroup,
     cp_stream: torch.cuda.Stream,
     local_seq_2_local_head: bool,
-) -> Union[torch.Tensor, List[torch.Tensor]]:
+) -> torch.Tensor | list[torch.Tensor]:
     """
     A2A communication for context parallelism. best used in communicate qkv
     Modified from Nvidia Transformer Engine.
@@ -158,7 +159,7 @@ class DistributedAttention(torch.nn.Module):
 
     def __init__(
         self,
-        local_attention: Union[Module, Callable],
+        local_attention: Module | Callable,
     ) -> None:
         super(DistributedAttention, self).__init__()
         self.local_attn = local_attention

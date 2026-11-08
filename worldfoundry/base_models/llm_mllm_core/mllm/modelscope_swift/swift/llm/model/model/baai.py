@@ -7,6 +7,7 @@ from transformers import AutoModel
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_device
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -14,7 +15,7 @@ from ..utils import ModelInfo, git_clone_github, safe_snapshot_download
 
 
 def get_model_tokenizer_emu3_gen(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     import sys
 
@@ -22,7 +23,7 @@ def get_model_tokenizer_emu3_gen(
     from processing_emu3 import Emu3Processor
 
     vq_hub = safe_snapshot_download("BAAI/Emu3-VisionTokenizer", check_local=True)
-    from transformers import AutoModel, AutoImageProcessor
+    from transformers import AutoImageProcessor, AutoModel
 
     image_processor = AutoImageProcessor.from_pretrained(vq_hub, trust_remote_code=True)
     image_tokenizer = AutoModel.from_pretrained(vq_hub, trust_remote_code=True).eval().to(get_device())
@@ -59,7 +60,7 @@ register_model(
 
 
 def get_model_tokenizer_emu3_chat(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
 

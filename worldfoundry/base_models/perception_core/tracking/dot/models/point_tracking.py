@@ -1,14 +1,18 @@
-from tqdm import tqdm
 import torch
 from torch import nn
+from tqdm import tqdm
 
 from .optical_flow import OpticalFlow
+
+# isort: split
 from .shelf import CoTracker, CoTracker2, CoTracker3
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.dot.utils.io import read_config
 from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import (
-    sample_points,
-    sample_mask_points,
     get_grid,
+    sample_mask_points,
+    sample_points,
 )
 
 
@@ -77,7 +81,7 @@ class PointTracker(nn.Module):
             for src_step, src_samples in enumerate(samples_per_step):
                 if src_samples == 0:
                     continue
-                if not src_step in motion_boundaries:
+                if src_step not in motion_boundaries:
                     tgt_step = src_step - 1 if src_step > 0 else src_step + 1
                     data = {"src_frame": video[:, src_step], "tgt_frame": video[:, tgt_step]}
                     pred = self.optical_flow_estimator(data, mode="motion_boundaries", **kwargs)

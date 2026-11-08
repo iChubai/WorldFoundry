@@ -4,12 +4,20 @@ Camera-conditioned streaming variant of :mod:`.camera_21`.  Causal
 self-attention plus camera tokens; no VACE or linear attn.
 """
 
+import copy
 import functools
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
 import math
+import time
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from einops import rearrange
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (
-    MLPProj,
     WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
     WanLayerNorm,
     WanRMSNorm,
     rope_apply,
@@ -17,16 +25,8 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camer
     rope_params,
     sinusoidal_embedding_1d,
 )
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import attention
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import torch.nn as nn
-import torch
-import math
-import torch.distributed as dist
-import time
-import copy
-from einops import rearrange
 
 flex_attention = torch.compile(flex_attention, dynamic=False, mode="max-autotune-no-cudagraphs")
 
@@ -216,7 +216,7 @@ class CausalHead(nn.Module):
             e(Tensor): Shape [B, F, 1, C]
         """
         shift, scale = (self.modulation + e.unsqueeze(1)).chunk(2, dim=1)
-        x = self.head((self.norm(x) * (1 + scale) + shift))
+        x = self.head(self.norm(x) * (1 + scale) + shift)
 
         return x
 
@@ -492,9 +492,9 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out

@@ -6,7 +6,7 @@ deepen_factor = 1
 widen_factor = 1
 
 # -----train val related-----
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_l_syncbn_fast_8xb32-300e_coco/yolov6_l_syncbn_fast_8xb32-300e_coco_20221109_183156-91e3c447.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_l_syncbn_fast_8xb32-300e_coco/yolov6_l_syncbn_fast_8xb32-300e_coco_20221109_183156-91e3c447.pth"
 
 # ====================== Unmodified in most cases ===================
 model = dict(

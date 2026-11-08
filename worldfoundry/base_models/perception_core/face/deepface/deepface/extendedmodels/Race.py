@@ -1,6 +1,8 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.basemodels import VGGFace
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
@@ -11,11 +13,11 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
+    from keras.layers import Activation, Convolution2D, Flatten
     from keras.models import Model, Sequential
-    from keras.layers import Convolution2D, Flatten, Activation
 elif tf_version == 2:
+    from tensorflow.keras.layers import Activation, Convolution2D, Flatten
     from tensorflow.keras.models import Model, Sequential
-    from tensorflow.keras.layers import Convolution2D, Flatten, Activation
 # --------------------------
 # Labels for the ethnic phenotypes that can be detected by the model.
 labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispanic"]

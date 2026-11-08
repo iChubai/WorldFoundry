@@ -1,32 +1,34 @@
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> pi3.py functionality."""
 
+from copy import deepcopy
+from functools import partial
+from typing import List, Optional, Union
+
 import torch
 import torch.nn as nn
-from functools import partial
-from copy import deepcopy
-from typing import Optional, Union, List
+from huggingface_hub import PyTorchModelHubMixin
 
-from worldfoundry.core.nn.blocks.layers import Mlp
-from .utils.geometry import homogenize_points, robust_scale_estimation
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import (
-    RoPE2D,
-    PositionGetter,
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import (
+    dinov2_vitl14,
+    dinov2_vitl14_reg,
 )
-from .layers.block import BlockRope
-from .layers.attention import FlashAttentionRope
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.conv_head import ConvHead
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import (
+    PositionGetter,
+    RoPE2D,
+)
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.transformer_head import (
     ContextOnlyTransformerDecoder,
     LinearPts3d,
     TransformerDecoder,
 )
+from worldfoundry.core.nn.blocks.layers import Mlp
+
+from .layers.attention import FlashAttentionRope
+from .layers.block import BlockRope
 from .layers.camera_head import CameraHead
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.conv_head import ConvHead
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import (
-    dinov2_vitl14,
-    dinov2_vitl14_reg,
-)
-from huggingface_hub import PyTorchModelHubMixin
 from .ttt import FastWeightGluMLPMultihead, TTTOperator
+from .utils.geometry import homogenize_points, robust_scale_estimation
 
 
 class Pi3(nn.Module, PyTorchModelHubMixin):
@@ -36,14 +38,14 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         self,
         pos_type="rope100",
         decoder_size="large",
-        ttt_insert_after: Union[int, List[int]] = None,
+        ttt_insert_after: int | list[int] = None,
         ttt_head_dim: int = 512,
         ttt_inter_multi: int = 2,
         num_muon_update_steps: int = 5,
         use_momentum: bool = False,
         ttt_update_steps: int = 1,
         conf: bool = True,
-        attn_insert_after: Union[int, List[int], None] = None,
+        attn_insert_after: int | list[int] | None = None,
         ttt_pre_norm: bool = False,
         pi3x: bool = False,
         pi3x_metric: bool = True,
@@ -70,7 +72,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         # ----------------------
         #        Encoder
         # ----------------------
-        def _normalize_insert_positions(value: Union[int, List[int], None]) -> List[int]:
+        def _normalize_insert_positions(value: int | list[int] | None) -> list[int]:
             """Helper function to normalize insert positions.
 
             Args:
@@ -326,9 +328,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
     def _initialize_ttt_layers_from_global(
         self,
-        layers: Optional[nn.ModuleList],
+        layers: nn.ModuleList | None,
         kind: str,
-        insert_after: Optional[List[int]] = None,
+        insert_after: list[int] | None = None,
     ) -> None:
         """Helper for initializing adapter layers from decoder global attention weights."""
         if layers is None or len(layers) == 0:
@@ -375,9 +377,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         N,
         H,
         W,
-        ttt_dict: Optional[dict] = None,
-        window_size: Optional[int] = None,
-        overlap_size: Optional[int] = None,
+        ttt_dict: dict | None = None,
+        window_size: int | None = None,
+        overlap_size: int | None = None,
         is_first_window: bool = False,
         turn_off_ttt=False,
         turn_off_swa=False,
@@ -408,9 +410,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
         register_token = self.register_token.repeat(B, N, 1, 1).reshape(B * N, *self.register_token.shape[-2:])
 
-        pe_token_0 = getattr(self, "pe_token_0")  # (1, 1, 1, dim)
-        pe_token_1 = getattr(self, "pe_token_1")  # (1, 1, 1, dim)
-        pe_token_2 = getattr(self, "pe_token_2")  # (1, 1, 1, dim)
+        pe_token_0 = self.pe_token_0  # (1, 1, 1, dim)
+        pe_token_1 = self.pe_token_1  # (1, 1, 1, dim)
+        pe_token_2 = self.pe_token_2  # (1, 1, 1, dim)
         if overlap_size is None or window_size is None:
             raise ValueError("overlap_size and window_size must be provided when num_pe_tokens > 0")
         num_overlap_with_previous = min(overlap_size, N)
@@ -448,8 +450,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         ttt_output_info = None
         ttt_state = ttt_dict.get("ttt") if ttt_dict is not None else None
         attn_state = ttt_dict.get("attn") if ttt_dict is not None else None
-        gate_scales: List[torch.Tensor] = []
-        attn_gate_scales: List[torch.Tensor] = []
+        gate_scales: list[torch.Tensor] = []
+        attn_gate_scales: list[torch.Tensor] = []
         for i in range(len(self.decoder)):
             blk = self.decoder[i]
 
@@ -474,9 +476,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 and self.ttt_insert_after.index(i) % 2 == 0
             )
 
-            if i % 2 == 1 and not layer_skip0:
-                hidden_before_block = hidden_for_block
-            elif i % 2 == 0 and layer_skip0:
+            if (i % 2 == 1 and not layer_skip0) or (i % 2 == 0 and layer_skip0):
                 hidden_before_block = hidden_for_block
             else:
                 hidden_before_block = hidden_for_block  # dummy
@@ -631,7 +631,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 final_output.append(hidden.reshape(B * N, hw, -1))
 
         avg_gate_scale = torch.tensor(0.0, device=hidden.device, dtype=torch.float32)
-        avg_attn_gate_scale: Optional[torch.Tensor] = None
+        avg_attn_gate_scale: torch.Tensor | None = None
         if gate_scales:
             all_gate_scales = torch.cat([g.flatten() for g in gate_scales])
             if all_gate_scales.numel() > 0:
@@ -739,8 +739,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 w2 = [None] * len(self.ttt_insert_after)
 
         all_predictions = []
-        all_gate_scales: List[torch.Tensor] = []
-        all_attn_gate_scales: List[torch.Tensor] = []
+        all_gate_scales: list[torch.Tensor] = []
+        all_attn_gate_scales: list[torch.Tensor] = []
 
         windows_iter = windows
         for window_idx, (start_idx, end_idx) in enumerate(windows_iter):
@@ -1117,9 +1117,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         zero_trans = torch.zeros(batch_size, 3, device=device, dtype=dtype)
         one_scale = torch.ones(batch_size, device=device, dtype=dtype)
 
-        aligned_predictions: List[dict] = []
-        sim3_scales: Optional[List[torch.Tensor]] = [] if allow_scale else None
-        sim3_poses: List[torch.Tensor] = []
+        aligned_predictions: list[dict] = []
+        sim3_scales: list[torch.Tensor] | None = [] if allow_scale else None
+        sim3_poses: list[torch.Tensor] = []
 
         window_size = getattr(self, "_last_window_size", -1)
         overlap_size = getattr(self, "_last_overlap_size", 0)
@@ -1129,7 +1129,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             curr_raw: dict,
             overlap: int,
             current_allow_scale: bool,
-            forced_scale: Optional[torch.Tensor] = None,
+            forced_scale: torch.Tensor | None = None,
         ):
             """Helper function to estimate relative sim3.
 
@@ -1143,8 +1143,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             if overlap <= 0:
                 return torch.ones_like(one_scale), identity_rot, zero_trans
 
-            prev_cam = prev_aligned.get("camera_poses", None)
-            curr_cam = curr_raw.get("camera_poses", None)
+            prev_cam = prev_aligned.get("camera_poses")
+            curr_cam = curr_raw.get("camera_poses")
             if prev_cam is None or curr_cam is None or prev_cam.shape[1] == 0 or curr_cam.shape[1] == 0:
                 return torch.ones_like(one_scale), identity_rot, zero_trans
 
@@ -1165,10 +1165,10 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             if forced_scale is not None:
                 relative_scale = forced_scale
             elif current_allow_scale:
-                prev_local_raw = prev_aligned.get("local_points", None)
+                prev_local_raw = prev_aligned.get("local_points")
                 if prev_local_raw is None:
-                    prev_local_raw = prev_aligned.get("_local_points_raw", None)
-                curr_local_raw = curr_raw.get("local_points", None)
+                    prev_local_raw = prev_aligned.get("_local_points_raw")
+                curr_local_raw = curr_raw.get("local_points")
 
                 if (
                     prev_local_raw is not None
@@ -1256,9 +1256,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
             return relative_scale, relative_rot.to(dtype), relative_trans.to(dtype)
 
-        block_scale: Optional[torch.Tensor] = None
-        block_rot: Optional[torch.Tensor] = None
-        block_trans: Optional[torch.Tensor] = None
+        block_scale: torch.Tensor | None = None
+        block_rot: torch.Tensor | None = None
+        block_trans: torch.Tensor | None = None
 
         for window_idx, pred in enumerate(all_predictions):
             if window_idx == 0:
@@ -1319,7 +1319,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 aligned_local_points = None
             aligned_pred["local_points"] = aligned_local_points
 
-            def _transform_camera(cam_tensor: Optional[torch.Tensor]) -> Optional[torch.Tensor]:
+            def _transform_camera(cam_tensor: torch.Tensor | None) -> torch.Tensor | None:
                 """Helper function to transform camera.
 
                 Args:

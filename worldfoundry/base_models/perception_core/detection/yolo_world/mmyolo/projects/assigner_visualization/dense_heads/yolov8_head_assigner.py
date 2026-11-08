@@ -5,8 +5,14 @@ import torch
 from mmdet.utils import InstanceList
 from torch import Tensor
 
+# isort: split
 from mmyolo.models import YOLOv8Head
+
+# isort: split
+# isort: split
 from mmyolo.models.utils import gt_instances_preprocess
+
+# isort: split
 from mmyolo.registry import MODELS
 
 
@@ -14,11 +20,11 @@ from mmyolo.registry import MODELS
 class YOLOv8HeadAssigner(YOLOv8Head):
     def assign_by_gt_and_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
         batch_gt_instances: InstanceList,
-        batch_img_metas: List[dict],
-        inputs_hw: Union[Tensor, tuple] = (640, 640),
+        batch_img_metas: list[dict],
+        inputs_hw: Tensor | tuple = (640, 640),
     ) -> dict:
         """Calculate the assigning results based on the gt and features
         extracted by the detection head.
@@ -138,7 +144,7 @@ class YOLOv8HeadAssigner(YOLOv8Head):
             assign_results.append([assign_results_prior])
         return assign_results
 
-    def assign(self, batch_data_samples: Union[list, dict], inputs_hw: Union[tuple, torch.Size]) -> dict:
+    def assign(self, batch_data_samples: list | dict, inputs_hw: tuple | torch.Size) -> dict:
         """Calculate assigning results.
 
         This function is provided to the

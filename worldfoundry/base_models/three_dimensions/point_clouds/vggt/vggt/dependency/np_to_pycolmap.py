@@ -8,6 +8,7 @@
 
 import numpy as np
 import pycolmap
+
 from .projection import project_3D_points_np
 
 
@@ -71,7 +72,7 @@ def batch_np_matrix_to_pycolmap(
     assert masks is not None
 
     if masks.sum(1).min() < min_inlier_per_frame:
-        print(f"Not enough inliers per frame, skip BA.")
+        print("Not enough inliers per frame, skip BA.")
         return None, None
 
     # Reconstruction object, following the format of PyCOLMAP/COLMAP

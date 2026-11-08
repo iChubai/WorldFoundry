@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
-
 from einops import rearrange
-
+from flash_attn.bert_padding import pad_input, unpad_input
 from flash_attn.flash_attn_interface import flash_attn_varlen_qkvpacked_func
-from flash_attn.bert_padding import unpad_input, pad_input
 
 
 class FlashAttention(nn.Module):

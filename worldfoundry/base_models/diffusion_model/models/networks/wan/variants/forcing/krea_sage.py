@@ -7,9 +7,10 @@ fake kernel keep ``torch.compile`` / export graphs valid.
 This is a kernel adapter only: no action, camera, VACE, or TeaCache.
 """
 
-import torch
-from typing import Optional
 import os
+from typing import Optional
+
+import torch
 
 SAGEATTN_AVAILABLE = False
 try:
@@ -23,7 +24,7 @@ try:
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
         dropout_p: float = 0,
         is_causal: bool = False,
     ) -> torch.Tensor:
@@ -39,7 +40,7 @@ try:
 
     SAGEATTN_AVAILABLE = True
 except Exception as e:
-    print(f"Warning: Could not load sageattention: {str(e)}")
+    print(f"Warning: Could not load sageattention: {e!s}")
     if isinstance(e, ModuleNotFoundError):
         print("sageattention package is not installed")
     elif isinstance(e, ImportError) and "DLL" in str(e):

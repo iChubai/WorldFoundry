@@ -12,6 +12,7 @@ Text prompts remain UMT5.
 """
 
 import math
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -32,7 +33,7 @@ def get_sample_indices(original_fps, total_frames, target_fps, num_sample, fixed
     if required_duration > total_frames / original_fps:
         raise ValueError("required_duration must be less than video length")
 
-    if not fixed_start is None and fixed_start >= 0:
+    if fixed_start is not None and fixed_start >= 0:
         start_frame = fixed_start
     else:
         max_start = total_frames - required_origin_frames
@@ -72,7 +73,7 @@ class WanS2VAudioEncoder(torch.nn.Module):
     def __init__(self):
         """Init."""
         super().__init__()
-        from transformers import Wav2Vec2ForCTC, Wav2Vec2Config
+        from transformers import Wav2Vec2Config, Wav2Vec2ForCTC
 
         config = {
             "_name_or_path": "facebook/wav2vec2-large-xlsr-53",
@@ -289,7 +290,6 @@ class WanS2VAudioEncoderStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_civitai(self, state_dict):
         """From civitai.

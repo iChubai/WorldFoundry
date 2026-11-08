@@ -29,13 +29,13 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util impo
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
     NestedTensor,
     accuracy,
+    get_phrases_from_posmap,
     get_world_size,
     interpolate,
     inverse_sigmoid,
     is_dist_avail_and_initialized,
     nested_tensor_from_tensor_list,
 )
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import get_phrases_from_posmap
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.vl_utils import (
     create_positive_map_from_span,
 )
@@ -181,7 +181,7 @@ class GroundingDINO(nn.Module):
 
         # two stage
         self.two_stage_type = two_stage_type
-        assert two_stage_type in ["no", "standard"], "unknown param {} of two_stage_type".format(two_stage_type)
+        assert two_stage_type in ["no", "standard"], f"unknown param {two_stage_type} of two_stage_type"
         if two_stage_type != "no":
             if two_stage_bbox_embed_share:
                 assert dec_pred_bbox_embed_share
@@ -241,7 +241,7 @@ class GroundingDINO(nn.Module):
         """
         self.refpoint_embed = nn.Embedding(use_num_queries, self.query_dim)
 
-    def forward(self, samples: NestedTensor, targets: List = None, **kw):
+    def forward(self, samples: NestedTensor, targets: list = None, **kw):
         """The forward expects a NestedTensor, which consists of:
            - samples.tensor: batched images, of shape [batch_size x 3 x H x W]
            - samples.mask: a binary mask of shape [batch_size x H x W], containing 1 on padded pixels
@@ -339,7 +339,9 @@ class GroundingDINO(nn.Module):
 
         # deformable-detr-like anchor update
         outputs_coord_list = []
-        for dec_lid, (layer_ref_sig, layer_bbox_embed, layer_hs) in enumerate(zip(reference[:-1], self.bbox_embed, hs)):
+        for dec_lid, (layer_ref_sig, layer_bbox_embed, layer_hs) in enumerate(
+            zip(reference[:-1], self.bbox_embed, hs, strict=False)
+        ):
             layer_delta_unsig = layer_bbox_embed(layer_hs)
             layer_outputs_unsig = layer_delta_unsig + inverse_sigmoid(layer_ref_sig)
             layer_outputs_unsig = layer_outputs_unsig.sigmoid()
@@ -348,7 +350,10 @@ class GroundingDINO(nn.Module):
 
         # output
         outputs_class = torch.stack(
-            [layer_cls_embed(layer_hs, text_dict) for layer_cls_embed, layer_hs in zip(self.class_embed, hs)]
+            [
+                layer_cls_embed(layer_hs, text_dict)
+                for layer_cls_embed, layer_hs in zip(self.class_embed, hs, strict=False)
+            ]
         )
         out = {"pred_logits": outputs_class[-1], "pred_boxes": outputs_coord_list[-1]}
 
@@ -379,7 +384,9 @@ class GroundingDINO(nn.Module):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
-        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class[:-1], outputs_coord[:-1])]
+        return [
+            {"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class[:-1], outputs_coord[:-1], strict=False)
+        ]
 
 
 @MODULE_BUILD_FUNCS.registe_with_name(module_name="groundingdino")

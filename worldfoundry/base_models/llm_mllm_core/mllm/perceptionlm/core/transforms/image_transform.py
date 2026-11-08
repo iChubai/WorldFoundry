@@ -1,9 +1,10 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import math
+from collections.abc import Callable
 from functools import reduce
 from logging import getLogger
-from typing import Any, Callable, Tuple
+from typing import Any, Tuple
 
 import numpy as np
 import torch
@@ -24,7 +25,7 @@ def get_image_transform(
     image_res: int = 336,
     max_num_tiles: int = 1,
     normalize_img: bool = True,
-) -> Tuple[Callable, int]:
+) -> tuple[Callable, int]:
     if vision_input_type == "thumb+tile":
         transforms = VariableSizeImageTransform(
             size=image_res,
@@ -45,7 +46,7 @@ def get_image_transform(
     return transforms
 
 
-class ImageTransform(object):
+class ImageTransform:
     """
     Image transform will resize the longer edge to a given size and pad the shorter edge with mean pixel value of the image.
     """
@@ -90,7 +91,7 @@ class ImageTransform(object):
         return image, (w, h)
 
 
-class VariableSizeImageTransform(object):
+class VariableSizeImageTransform:
     """
     The variable size image transform will resize the image dynamically
     based on the image aspect ratio and the number of image chunks we allow.
@@ -187,7 +188,7 @@ class VariableSizeImageTransform(object):
                     asp_dict[k].append(ratio)
         return asp_dict
 
-    def _find_closest_aspect_ratio(self, img_width: int, img_height: int) -> Tuple:
+    def _find_closest_aspect_ratio(self, img_width: int, img_height: int) -> tuple:
         """
         Given an image width, height and target number of chunks
         this function will find the closest supported aspect ratio.
@@ -251,7 +252,7 @@ class VariableSizeImageTransform(object):
 
     def _get_image_height_width(
         self, image_width: int, image_height: int, target_width: int, target_height: int
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Given image width, height and target width, height for the canvas, return the dimensions of how the image would be resized
         with aspect ratio preservation.
@@ -345,7 +346,7 @@ class VariableSizeImageTransform(object):
                             optimal_image_width_height = image_width_height
         return optimal_canvas
 
-    def __call__(self, image: Image.Image) -> Tuple[Any, Any]:
+    def __call__(self, image: Image.Image) -> tuple[Any, Any]:
         assert isinstance(image, Image.Image), type(image)
         if self.use_thumbnail != "no":
             thumbnail = self.thumbnail_transform(image)[0]

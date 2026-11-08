@@ -9,22 +9,38 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
+
+# isort: split
 from ..albef_models import compute_sim_matrix
+
+# isort: split
 from ..base_model import (
     MomentumDistilationMixin,
     SharedQueueMixin,
     all_gather_with_grad,
     concat_all_gather,
 )
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import (
+    BlipIntermediateOutput,
     BlipOutput,
     BlipSimilarity,
-    BlipIntermediateOutput,
 )
+
+# isort: split
 from ..med import XBertEncoder
+
+# isort: split
+# isort: split
 from ..vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 
 

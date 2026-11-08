@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 Created on 18-5-21 下午5:26
 
 @author: ronghuaiyang
 """
 
+import math
+
 import torch
 import torch.nn as nn
-import math
-import torch.utils.model_zoo as model_zoo
-import torch.nn.utils.weight_norm as weight_norm
 import torch.nn.functional as F
-
+import torch.nn.utils.weight_norm as weight_norm
+import torch.utils.model_zoo as model_zoo
 
 # __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
 #            'resnet152']

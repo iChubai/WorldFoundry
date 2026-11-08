@@ -3,9 +3,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.utils import (
-    coords_grid,
     bilinear_sampler,
+    coords_grid,
 )
 
 try:

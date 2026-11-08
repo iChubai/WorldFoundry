@@ -8,10 +8,11 @@ import itertools
 import os
 import os.path as osp
 import time
+from collections.abc import Sequence
 from functools import partial, reduce
 from math import ceil
 from multiprocessing import Manager, Pool
-from typing import List, Sequence
+from typing import List
 
 import cv2
 import numpy as np
@@ -83,7 +84,7 @@ def parse_args():
     return args, split_cfg
 
 
-def _make_dirs(out_dir: str, phase: List[str], allow_overwrite: bool):
+def _make_dirs(out_dir: str, phase: list[str], allow_overwrite: bool):
     """Prepare folder for DOTA dataset.
 
     Args:
@@ -321,7 +322,7 @@ def ann_window_iof(anns, window, eps=1e-6):
     sg_polys_ann = [shgeo.Polygon(p) for p in anns.reshape(rows, -1, 2)]
     sg_polys_win = [shgeo.Polygon(p) for p in polys_win.reshape(cols, -1, 2)]
     overlaps = np.zeros(h_overlaps.shape)
-    for p in zip(*np.nonzero(h_overlaps)):
+    for p in zip(*np.nonzero(h_overlaps), strict=False):
         overlaps[p] = sg_polys_ann[p[0]].intersection(sg_polys_win[p[-1]]).area
     unions = np.array([p.area for p in sg_polys_ann], dtype=np.float32)
     unions = unions[..., None]
@@ -351,7 +352,7 @@ def crop_and_save_img(info, windows, window_anns, padding, padding_value, save_d
     """
     img = cv2.imread(info["filepath"])
     patch_infos = []
-    for window, ann in zip(windows, window_anns):
+    for window, ann in zip(windows, window_anns, strict=False):
         patch_info = dict()
         for k, v in info.items():
             if k not in ["id", "filename", "filepath", "width", "height", "annotations"]:
@@ -504,7 +505,7 @@ def main():
     # Preprocess patch settings
     patch_settings = []
     for ratio in split_cfg.img_resize_ratio:
-        for size, gap in zip(split_cfg.patch_sizes, split_cfg.patch_overlap_sizes):
+        for size, gap in zip(split_cfg.patch_sizes, split_cfg.patch_overlap_sizes, strict=False):
             size_gap = (int(size / ratio), int(gap / ratio))
             if size_gap not in patch_settings:
                 patch_settings.append(size_gap)

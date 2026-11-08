@@ -165,7 +165,7 @@ def vk_q_mm_divide_fwd_kernel_fp32(
     # `accumulator` will be converted back to fp16 after the loop.
     accumulator = tl.zeros((BLOCK_SIZE_C1, BLOCK_SIZE_N), dtype=tl.float32)
     accumulator1 = tl.zeros((BLOCK_SIZE_N,), dtype=tl.float32)
-    for d in range(0, tl.cdiv(D, BLOCK_SIZE_D)):
+    for d in range(tl.cdiv(D, BLOCK_SIZE_D)):
         # Load the next block of A and B, generate a mask by checking the K dimension.
         # If it is out of bounds, set it to 0.
         a = tl.load(a_ptrs, mask=offs_d[None, :] < D - d * BLOCK_SIZE_D, other=0.0).to(tl.float32)

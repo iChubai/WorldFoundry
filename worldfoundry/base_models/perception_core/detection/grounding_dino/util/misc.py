@@ -30,7 +30,7 @@ if __torchvision_need_compat_flag:
     from torchvision.ops.misc import _output_size
 
 
-class SmoothedValue(object):
+class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
     window or the global series average.
     """
@@ -117,7 +117,7 @@ class SmoothedValue(object):
         )
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def _get_global_gloo_group():
     """
     Return a process group based on gloo backend, containing all the ranks
@@ -179,7 +179,7 @@ def all_gather_cpu(data):
         dist.all_gather(tensor_list, tensor, group=cpu_group)
 
     data_list = []
-    for size, tensor in zip(size_list, tensor_list):
+    for size, tensor in zip(size_list, tensor_list, strict=False):
         tensor = torch.split(tensor, [size, max_size - size], dim=0)[0]
         buffer = io.BytesIO(tensor.cpu().numpy())
         obj = torch.load(buffer)
@@ -228,7 +228,7 @@ def all_gather(data):
     dist.all_gather(tensor_list, tensor)
 
     data_list = []
-    for size, tensor in zip(size_list, tensor_list):
+    for size, tensor in zip(size_list, tensor_list, strict=False):
         buffer = tensor.cpu().numpy().tobytes()[:size]
         data_list.append(pickle.loads(buffer))
 
@@ -258,11 +258,11 @@ def reduce_dict(input_dict, average=True):
         dist.all_reduce(values)
         if average:
             values /= world_size
-        reduced_dict = {k: v for k, v in zip(names, values)}
+        reduced_dict = {k: v for k, v in zip(names, values, strict=False)}
     return reduced_dict
 
 
-class MetricLogger(object):
+class MetricLogger:
     """Metric logger implementation."""
 
     def __init__(self, delimiter="\t"):
@@ -292,7 +292,7 @@ class MetricLogger(object):
             return self.meters[attr]
         if attr in self.__dict__:
             return self.__dict__[attr]
-        raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
     def __str__(self):
         """Str."""
@@ -301,7 +301,7 @@ class MetricLogger(object):
             # print(name, str(meter))
             # import ipdb;ipdb.set_trace()
             if meter.count > 0:
-                loss_str.append("{}: {}".format(name, str(meter)))
+                loss_str.append(f"{name}: {meter!s}")
         return self.delimiter.join(loss_str)
 
     def synchronize_between_processes(self):
@@ -399,7 +399,7 @@ class MetricLogger(object):
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print_func("{} Total time: {} ({:.4f} s / it)".format(header, total_time_str, total_time / len(iterable)))
+        print_func(f"{header} Total time: {total_time_str} ({total_time / len(iterable):.4f} s / it)")
 
 
 def get_sha():
@@ -436,7 +436,7 @@ def collate_fn(batch):
         batch: The batch.
     """
     # import ipdb; ipdb.set_trace()
-    batch = list(zip(*batch))
+    batch = list(zip(*batch, strict=False))
     batch[0] = nested_tensor_from_tensor_list(batch[0])
     return tuple(batch)
 
@@ -455,10 +455,10 @@ def _max_by_axis(the_list):
     return maxes
 
 
-class NestedTensor(object):
+class NestedTensor:
     """Nested tensor implementation."""
 
-    def __init__(self, tensors, mask: Optional[Tensor]):
+    def __init__(self, tensors, mask: Tensor | None):
         """Init.
 
         Args:
@@ -474,7 +474,7 @@ class NestedTensor(object):
             elif self.mask.dim() == 4:
                 self.mask = self.mask.sum(1).to(bool)
             else:
-                raise ValueError("tensors dim must be 3 or 4 but {}({})".format(self.tensors.dim(), self.tensors.shape))
+                raise ValueError(f"tensors dim must be 3 or 4 but {self.tensors.dim()}({self.tensors.shape})")
 
     def imgsize(self):
         """Imgsize."""
@@ -492,7 +492,7 @@ class NestedTensor(object):
         Args:
             device: The device.
         """
-        # type: (Device) -> NestedTensor # noqa
+        # type: (Device) -> NestedTensor
         cast_tensor = self.tensors.to(device)
         mask = self.mask
         if mask is not None:
@@ -509,7 +509,7 @@ class NestedTensor(object):
             tensor: The tensor.
             mask: The mask.
         """
-        assert tensor.dim() == 3, "dim of tensor should be 3 but {}".format(tensor.dim())
+        assert tensor.dim() == 3, f"dim of tensor should be 3 but {tensor.dim()}"
         maxH = (~mask).sum(0).max()
         maxW = (~mask).sum(1).max()
         img = tensor[:, :maxH, :maxW]
@@ -550,7 +550,7 @@ class NestedTensor(object):
         return {"tensors.shape": self.tensors.shape, "mask.shape": self.mask.shape}
 
 
-def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
+def nested_tensor_from_tensor_list(tensor_list: list[Tensor]):
     """Nested tensor from tensor list.
 
     Args:
@@ -572,7 +572,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
         device = tensor_list[0].device
         tensor = torch.zeros(batch_shape, dtype=dtype, device=device)
         mask = torch.ones((b, h, w), dtype=torch.bool, device=device)
-        for img, pad_img, m in zip(tensor_list, tensor, mask):
+        for img, pad_img, m in zip(tensor_list, tensor, mask, strict=False):
             pad_img[: img.shape[0], : img.shape[1], : img.shape[2]].copy_(img)
             m[: img.shape[1], : img.shape[2]] = False
     else:
@@ -583,7 +583,7 @@ def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
 # _onnx_nested_tensor_from_tensor_list() is an implementation of
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
-def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor]) -> NestedTensor:
+def _onnx_nested_tensor_from_tensor_list(tensor_list: list[Tensor]) -> NestedTensor:
     """Helper function to onnx nested tensor from tensor list.
 
     Args:
@@ -605,7 +605,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor]) -> NestedTen
     padded_imgs = []
     padded_masks = []
     for img in tensor_list:
-        padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape))]
+        padding = [(s1 - s2) for s1, s2 in zip(max_size, tuple(img.shape), strict=False)]
         padded_img = torch.nn.functional.pad(img, (0, padding[2], 0, padding[1], 0, padding[0]))
         padded_imgs.append(padded_img)
 
@@ -692,16 +692,14 @@ def init_distributed_mode(args):
         # args.world_size = args.world_size * local_world_size
         # args.gpu = args.local_rank = int(os.environ['LOCAL_RANK'])
         # args.rank = args.rank * local_world_size + args.local_rank
-        print("world size: {}, rank: {}, local rank: {}".format(args.world_size, args.rank, args.local_rank))
+        print(f"world size: {args.world_size}, rank: {args.rank}, local rank: {args.local_rank}")
     elif "SLURM_PROCID" in os.environ:
         args.rank = int(os.environ["SLURM_PROCID"])
         args.gpu = args.local_rank = int(os.environ["SLURM_LOCALID"])
         args.world_size = int(os.environ["SLURM_NPROCS"])
 
         print(
-            "world size: {}, world rank: {}, local rank: {}, device_count: {}".format(
-                args.world_size, args.rank, args.local_rank, torch.cuda.device_count()
-            )
+            f"world size: {args.world_size}, world rank: {args.rank}, local rank: {args.local_rank}, device_count: {torch.cuda.device_count()}"
         )
     else:
         print("Not using distributed mode")
@@ -711,11 +709,11 @@ def init_distributed_mode(args):
         args.local_rank = 0
         return
 
-    print("world_size:{} rank:{} local_rank:{}".format(args.world_size, args.rank, args.local_rank))
+    print(f"world_size:{args.world_size} rank:{args.rank} local_rank:{args.local_rank}")
     args.distributed = True
     torch.cuda.set_device(args.local_rank)
     args.dist_backend = "nccl"
-    print("| distributed init (rank {}): {}".format(args.rank, args.dist_url), flush=True)
+    print(f"| distributed init (rank {args.rank}): {args.dist_url}", flush=True)
 
     torch.distributed.init_process_group(
         backend=args.dist_backend,
@@ -838,7 +836,7 @@ def clean_state_dict(state_dict):
 
 
 def get_phrases_from_posmap(
-    posmap: torch.BoolTensor, tokenized: Dict, tokenizer, left_idx: int = 0, right_idx: int = 255
+    posmap: torch.BoolTensor, tokenized: dict, tokenizer, left_idx: int = 0, right_idx: int = 255
 ):
     """Extract token phrases from a position map over tokenized input.
 
@@ -847,7 +845,7 @@ def get_phrases_from_posmap(
     we import lazily so that backbone code (which also imports from this module)
     does not require ``transformers`` at module load time.
     """
-    from transformers import AutoTokenizer as _AutoTokenizer  # noqa: F811 — lazy import
+    from transformers import AutoTokenizer as _AutoTokenizer  # lazy import
 
     assert isinstance(posmap, torch.Tensor), "posmap must be torch.Tensor"
     if posmap.dim() == 1:

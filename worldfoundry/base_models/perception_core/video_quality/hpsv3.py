@@ -61,12 +61,13 @@ def resolved_config_path() -> Path:
 def load_inferencer(*, device: str = "cuda"):
     add_runtime_to_path()
 
-    import numpy as np
-    import transformers.image_utils as image_utils
     from typing import List
 
+    import numpy as np
+    import transformers.image_utils as image_utils
+
     if not hasattr(image_utils, "VideoInput"):
-        image_utils.VideoInput = List[np.ndarray]
+        image_utils.VideoInput = list[np.ndarray]
 
     from hpsv3.inference import HPSv3RewardInferencer
 

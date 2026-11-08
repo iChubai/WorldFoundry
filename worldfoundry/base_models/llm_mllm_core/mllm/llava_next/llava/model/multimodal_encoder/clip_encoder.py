@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
+from transformers import CLIPImageProcessor, CLIPVisionConfig, CLIPVisionModel
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
-from transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
 
 try:
     from s2wrapper import forward as multiscale_forward
@@ -24,11 +25,11 @@ class CLIPVisionTower(nn.Module):
             self.load_model()
         elif getattr(args, "unfreeze_mm_vision_tower", False):
             # TODO: better detector is needed.
-            rank0_print(f"The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
+            rank0_print("The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
             self.load_model()
         elif hasattr(args, "mm_tunable_parts") and "mm_vision_tower" in args.mm_tunable_parts:
             rank0_print(
-                f"The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
+                "The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
             )
             self.load_model()
         else:
@@ -36,7 +37,7 @@ class CLIPVisionTower(nn.Module):
 
     def load_model(self, device_map=None):
         if self.is_loaded:
-            rank0_print("{} is already loaded, `load_model` called again, skipping.".format(self.vision_tower_name))
+            rank0_print(f"{self.vision_tower_name} is already loaded, `load_model` called again, skipping.")
             return
 
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
@@ -155,7 +156,7 @@ class CLIPVisionTowerS2(CLIPVisionTower):
 
     def load_model(self, device_map=None):
         if self.is_loaded:
-            rank0_print("{} is already loaded, `load_model` called again, skipping.".format(self.vision_tower_name))
+            rank0_print(f"{self.vision_tower_name} is already loaded, `load_model` called again, skipping.")
             return
 
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)

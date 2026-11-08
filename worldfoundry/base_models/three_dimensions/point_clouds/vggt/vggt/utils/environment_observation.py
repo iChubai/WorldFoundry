@@ -17,14 +17,14 @@ with white. Video loading requires optional ``opencv-python``.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Literal
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-
 
 ViewMode = Literal["full", "left", "right"]
 ResizeMode = Literal["crop", "pad"]

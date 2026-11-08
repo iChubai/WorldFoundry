@@ -1,28 +1,28 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> utils.py functionality."""
 
-import numpy as np
-from numpy import ndarray
-import scipy.sparse as sp
-from scipy.sparse import csr_array
-from typing import *
-from numbers import Number, Integral
-import warnings
 import functools
+import warnings
+from numbers import Integral, Number
+from typing import *
 
+import numpy as np
+import scipy.sparse as sp
+from numpy import ndarray
+from scipy.sparse import csr_array
 
 __all__ = [
-    "sliding_window",
-    "pooling",
-    "max_pool_2d",
-    "lookup",
-    "lookup_get",
-    "lookup_set",
-    "segment_roll",
-    "segment_take",
-    "segment_concatenate",
     "csr_matrix_from_dense_indices",
     "group",
     "group_as_segments",
+    "lookup",
+    "lookup_get",
+    "lookup_set",
+    "max_pool_2d",
+    "pooling",
+    "segment_concatenate",
+    "segment_roll",
+    "segment_take",
+    "sliding_window",
 ]
 
 
@@ -390,7 +390,7 @@ def group(labels: ndarray, data: Optional[np.ndarray] = None) -> List[Tuple[ndar
         data = np.arange(labels.shape[0])
     sections = np.cumsum(counts, axis=0)[:-1]
     data_groups = np.split(data[np.argsort(inv)], sections)
-    return list(zip(group_labels, data_groups))
+    return list(zip(group_labels, data_groups, strict=False))
 
 
 def group_as_segments(labels: ndarray, data: Optional[np.ndarray] = None) -> Tuple[ndarray, ndarray, ndarray]:

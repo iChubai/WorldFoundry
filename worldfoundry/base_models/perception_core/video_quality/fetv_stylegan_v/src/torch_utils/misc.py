@@ -6,11 +6,12 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import re
 import contextlib
+import re
+import warnings
+
 import numpy as np
 import torch
-import warnings
 from src import dnnlib
 
 # ----------------------------------------------------------------------------
@@ -32,7 +33,7 @@ def constant(value, shape=None, dtype=None, device=None, memory_format=None):
         memory_format = torch.contiguous_format
 
     key = (value.shape, value.dtype, value.tobytes(), shape, dtype, device, memory_format)
-    tensor = _constant_cache.get(key, None)
+    tensor = _constant_cache.get(key)
     if tensor is None:
         tensor = torch.as_tensor(value.copy(), dtype=dtype, device=device)
         if shape is not None:
@@ -87,7 +88,7 @@ def assert_shape(tensor, ref_shape):
     err_suffix = f" for tensor of size {list(tensor.shape)}"
     if tensor.ndim != len(ref_shape):
         raise AssertionError(f"Wrong number of dimensions: got {tensor.ndim}, expected {len(ref_shape)}{err_suffix}")
-    for idx, (size, ref_size) in enumerate(zip(tensor.shape, ref_shape)):
+    for idx, (size, ref_size) in enumerate(zip(tensor.shape, ref_shape, strict=False)):
         if ref_size is None:
             pass
         elif isinstance(ref_size, torch.Tensor):
@@ -295,10 +296,10 @@ def print_module_summary(module, inputs, max_nesting=3, skip_redundant=True):
     assert len(set(row_lengths)) == 1, f"Summary table contains rows of different lengths: {row_lengths}"
 
     # Print table.
-    widths = [max(len(cell) for cell in column) for column in zip(*rows)]
+    widths = [max(len(cell) for cell in column) for column in zip(*rows, strict=False)]
     print()
     for row in rows:
-        print("  ".join(cell + " " * (width - len(cell)) for cell, width in zip(row, widths)))
+        print("  ".join(cell + " " * (width - len(cell)) for cell, width in zip(row, widths, strict=False)))
     print()
     return outputs
 

@@ -1,4 +1,3 @@
-# flake8: noqa: F722
 # Copyright (c) 2025 ByteDance Ltd. and/or its affiliates
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +15,18 @@
 
 from types import SimpleNamespace
 from typing import Optional
+
 import numpy as np
 import torch
 from einops import einsum
 
 from worldfoundry.core.geometry.transforms import (
     quaternion_xyzw_to_rotation_matrix as quat_to_mat,
+)
+from worldfoundry.core.geometry.transforms import (
     rotation_matrix_to_quaternion_xyzw as mat_to_quat,
+)
+from worldfoundry.core.geometry.transforms import (
     standardize_quaternion_xyzw as standardize_quaternion,
 )
 
@@ -117,7 +121,7 @@ def sample_image_grid(
 
     # Each entry is a floating-point coordinate in the range (0, 1). In the 2D case,
     # each entry is an (x, y) coordinate.
-    coordinates = [(idx + 0.5) / length for idx, length in zip(indices, shape)]
+    coordinates = [(idx + 0.5) / length for idx, length in zip(indices, shape, strict=False)]
     coordinates = reversed(coordinates)
     coordinates = torch.stack(torch.meshgrid(*coordinates, indexing="xy"), dim=-1)
 
@@ -242,7 +246,7 @@ def get_fov(intrinsics: torch.Tensor) -> torch.Tensor:  # "batch 3 3" -> "batch 
 def map_pdf_to_opacity(
     pdf: torch.Tensor,  # " *batch"
     global_step: int = 0,
-    opacity_mapping: Optional[dict] = None,
+    opacity_mapping: dict | None = None,
 ) -> torch.Tensor:  # " *batch"
     """Map pdf to opacity.
 

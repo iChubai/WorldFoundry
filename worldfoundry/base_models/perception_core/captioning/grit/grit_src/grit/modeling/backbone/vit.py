@@ -1,26 +1,23 @@
 # Modified by Jialian Wu from https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/backbone/vit.py
 import logging
 import math
+import os
+import sys
+from functools import partial
+
 import fvcore.nn.weight_init as weight_init
 import torch
 import torch.nn as nn
-from functools import partial
-
-from detectron2.layers import CNNBlockBase, Conv2d, get_norm
+from detectron2.layers import CNNBlockBase, Conv2d, ShapeSpec, get_norm
 from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
-from detectron2.layers import ShapeSpec
-
-import os
-import sys
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(CUR_DIR, "../../../centernet2"))
-from centernet.modeling.backbone.fpn_p5 import LastLevelP6P7_P5
-
 import torch.utils.checkpoint as checkpoint
+from centernet.modeling.backbone.fpn_p5 import LastLevelP6P7_P5
+from detectron2.modeling.backbone.backbone import Backbone
 from timm.models.layers import DropPath, Mlp, trunc_normal_
 
-from detectron2.modeling.backbone.backbone import Backbone
 from .utils import (
     PatchEmbed,
     add_decomposed_rel_pos,
@@ -374,9 +371,9 @@ class ViT_FPN(Backbone):
         self.bottom_up = bottom_up
         self.top_block = top_block
 
-        self._out_feature_strides = {"p{}".format(int(math.log2(s))): s for s in strides}
+        self._out_feature_strides = {f"p{int(math.log2(s))}": s for s in strides}
         self._out_features = list(self._out_feature_strides.keys())
-        self._out_feature_channels = {k: out_channels for k in self._out_features}
+        self._out_feature_channels = dict.fromkeys(self._out_features, out_channels)
         self._size_divisibility = strides[2]
 
         self.maxpool = nn.MaxPool2d(2, stride=2)
@@ -439,7 +436,7 @@ class ViT_FPN(Backbone):
         results.extend(self.top_block(stride32_feature))
 
         assert len(self._out_features) == len(results)
-        fpn_out = {f: res for f, res in zip(self._out_features, results)}
+        fpn_out = {f: res for f, res in zip(self._out_features, results, strict=False)}
 
         return fpn_out
 
@@ -500,7 +497,7 @@ def build_vit_fpn_backbone(cfg, input_shape: ShapeSpec):
 
 @BACKBONE_REGISTRY.register()
 def build_vit_fpn_backbone_large(cfg, input_shape: ShapeSpec):
-    window_block_indexes = list(range(0, 5)) + list(range(6, 11)) + list(range(12, 17)) + list(range(18, 23))
+    window_block_indexes = list(range(5)) + list(range(6, 11)) + list(range(12, 17)) + list(range(18, 23))
     embed_dim = 1024
     vit_out_dim = embed_dim
     bottom_up = ViT(  # Single-scale ViT backbone
@@ -535,7 +532,7 @@ def build_vit_fpn_backbone_large(cfg, input_shape: ShapeSpec):
 
 @BACKBONE_REGISTRY.register()
 def build_vit_fpn_backbone_huge(cfg, input_shape: ShapeSpec):
-    window_block_indexes = list(range(0, 7)) + list(range(8, 15)) + list(range(16, 23)) + list(range(24, 31))
+    window_block_indexes = list(range(7)) + list(range(8, 15)) + list(range(16, 23)) + list(range(24, 31))
     embed_dim = 1280
     vit_out_dim = embed_dim
     bottom_up = ViT(  # Single-scale ViT backbone

@@ -1,5 +1,7 @@
 import os
+
 import cv2
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import FaceDetector
 
 
@@ -54,7 +56,7 @@ def detect_face(detector, img, align=True):
         pass
 
     if len(faces) > 0:
-        for (x, y, w, h), confidence in zip(faces, scores):
+        for (x, y, w, h), confidence in zip(faces, scores, strict=False):
             detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]
 
             if align:

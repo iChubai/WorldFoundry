@@ -13,22 +13,21 @@ Code/weights from https://github.com/Meituan-AutoML/Twins, original copyright/li
 # Written by Xinjie Li, Xiangxiang Chu
 # --------------------------------------------------------
 import math
-from multiprocessing.sharedctypes import Value
-import numpy as np
 from copy import deepcopy
+from functools import partial
+from multiprocessing.sharedctypes import Value
 from typing import Optional, Tuple
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from timm.models.layers import Mlp, DropPath, to_2tuple, trunc_normal_
 from timm.models.fx_features import register_notrace_module
+from timm.models.helpers import build_model_with_cfg
+from timm.models.layers import DropPath, Mlp, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 from timm.models.vision_transformer import Attention
-from timm.models.helpers import build_model_with_cfg
 
 
 def get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False, cossin=False):
@@ -142,7 +141,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
     relative_position_bias_table_keys = [k for k in checkpoint_model.keys() if "relative_position_bias_table" in k]
     for table_key in relative_position_bias_table_keys:
         table_pretrained = checkpoint_model[table_key]
-        if not table_key in model.state_dict():
+        if table_key not in model.state_dict():
             print(f"Key {table_key} not in model")
             continue
         table_current = model.state_dict()[table_key]
@@ -216,7 +215,7 @@ default_cfgs = {
     ),
 }
 
-Size_ = Tuple[int, int]
+Size_ = tuple[int, int]
 
 
 @register_notrace_module  # reason: FX can't symbolically trace control flow in forward method
@@ -399,7 +398,7 @@ class PatchEmbed(nn.Module):
         self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.norm = nn.LayerNorm(embed_dim)
 
-    def forward(self, x) -> Tuple[torch.Tensor, Size_]:
+    def forward(self, x) -> tuple[torch.Tensor, Size_]:
         B, C, H, W = x.shape
 
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -527,7 +526,7 @@ class Twins(nn.Module):
     def forward_features(self, x):
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.patch_embeds, self.pos_drops, self.blocks, self.pos_block)
+            zip(self.patch_embeds, self.pos_drops, self.blocks, self.pos_block, strict=False)
         ):
             x, size = embed(x)
             x = drop(x)
@@ -551,7 +550,7 @@ class Twins(nn.Module):
 
 
 def _create_twins(variant, pretrained=False, **kwargs):
-    if kwargs.get("features_only", None):
+    if kwargs.get("features_only"):
         raise RuntimeError("features_only not implemented for Vision Transformer models.")
 
     model = build_model_with_cfg(Twins, variant, pretrained, **kwargs)

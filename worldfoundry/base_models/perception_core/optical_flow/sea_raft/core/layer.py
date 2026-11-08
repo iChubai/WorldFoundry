@@ -1,12 +1,11 @@
 """Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> layer.py functionality."""
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import torch
-import math
-from torch.nn import Module, Dropout
+from torch.nn import Dropout, Module
 
 ### Gradient Clipping and Zeroing Operations ###
 
@@ -98,7 +97,7 @@ class ConvNextBlock(nn.Module):
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * output_dim, dim)
         self.gamma = (
-            nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             if layer_scale_init_value > 0
             else None
         )

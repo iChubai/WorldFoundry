@@ -21,8 +21,8 @@ from .color_space import srgb_to_linear
 from .layers import (
     DAPFeatureAdapter,
     DAPFeatures,
-    DPTFeatureHead,
     DirectPredictionHead,
+    DPTFeatureHead,
 )
 from .types import (
     ColorInitOption,

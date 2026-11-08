@@ -23,7 +23,7 @@ def yolov5_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Tensor) -> T
     return decoded_bboxes
 
 
-def rtmdet_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Optional[Tensor]) -> Tensor:
+def rtmdet_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Tensor | None) -> Tensor:
     stride = stride[None, :, None]
     bbox_preds *= stride
     tl_x = priors[..., 0] - bbox_preds[..., 0]
@@ -34,7 +34,7 @@ def rtmdet_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Optional[Ten
     return decoded_bboxes
 
 
-def yolox_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Optional[Tensor]) -> Tensor:
+def yolox_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: Tensor | None) -> Tensor:
     stride = stride[None, :, None]
     xys = (bbox_preds[..., :2] * stride) + priors
     whs = bbox_preds[..., 2:].exp() * stride

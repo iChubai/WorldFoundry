@@ -2,12 +2,12 @@ import os
 import urllib
 import warnings
 from functools import lru_cache
-from packaging import version
-from typing import Union, List
+from typing import List, Union
 
 import torch
+from packaging import version
 from PIL import Image
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 from tqdm import tqdm
 
 from worldfoundry.core.io.filesystem.file_utils import file_sha256
@@ -93,7 +93,7 @@ def _transform(n_px):
     )
 
 
-def available_models() -> List[str]:
+def available_models() -> list[str]:
     """Returns the names of available CLIP models"""
     return list(_MODELS.keys())
 
@@ -132,7 +132,7 @@ def clear_checkpoint_cache() -> None:
 
 def load(
     name: str,
-    device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu",
+    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",
     jit: bool = False,
     download_root: str = None,
 ):
@@ -246,8 +246,8 @@ def load(
 
 
 def tokenize(
-    texts: Union[str, List[str]], context_length: int = 77, truncate: bool = False
-) -> Union[torch.IntTensor, torch.LongTensor]:
+    texts: str | list[str], context_length: int = 77, truncate: bool = False
+) -> torch.IntTensor | torch.LongTensor:
     """
     Returns the tokenized representation of given input string(s)
 

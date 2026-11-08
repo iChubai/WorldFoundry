@@ -1,10 +1,9 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import ast
+import json
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
-
-import json
 
 if TYPE_CHECKING:
     from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer import Function
@@ -31,9 +30,9 @@ class ReactCompatMixin:
     keyword = AgentKeyword()
 
     @staticmethod
-    def _split_action_action_input(response: str, keyword: AgentKeyword) -> List["Function"]:
-        from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.template import split_str_parts_by
+    def _split_action_action_input(response: str, keyword: AgentKeyword) -> list["Function"]:
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer import Function
+        from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.template import split_str_parts_by
 
         agent_parts = split_str_parts_by(response, list(asdict(keyword).values()))
         functions = []
@@ -49,7 +48,7 @@ class ReactCompatMixin:
 
         return functions
 
-    def get_toolcall(self, response: str) -> List["Function"]:
+    def get_toolcall(self, response: str) -> list["Function"]:
         functions = self._split_action_action_input(response, self.keyword)
         if len(functions) == 0 and self.keyword != ReactCompatMixin.keyword:
             # compat react
@@ -60,7 +59,7 @@ class ReactCompatMixin:
         self,
         assistant_content: str,
         tool_messages,
-    ) -> Tuple[str, "Prompt"]:
+    ) -> tuple[str, "Prompt"]:
         assert len(tool_messages) > 0
         with_action = self.keyword.action in assistant_content and self.keyword.action_input in assistant_content
         if with_action:
@@ -83,7 +82,7 @@ class ReactCompatMixin:
         return assistant_content, res
 
     @staticmethod
-    def _parse_tool_call(content) -> Dict[str, Any]:
+    def _parse_tool_call(content) -> dict[str, Any]:
         obj = BaseAgentTemplate._parse_json(content)
         name = obj["name"]
         arguments = obj.get("arguments") or obj.get("parameters")
@@ -143,7 +142,7 @@ class BaseAgentTemplate(ReactCompatMixin, ABC):
         return tool_desc
 
     @staticmethod
-    def _parse_json(json_str: str) -> Optional[Any]:
+    def _parse_json(json_str: str) -> Any | None:
         if not isinstance(json_str, str):
             return json_str
         try:
@@ -156,5 +155,5 @@ class BaseAgentTemplate(ReactCompatMixin, ABC):
         return res
 
     @abstractmethod
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         pass

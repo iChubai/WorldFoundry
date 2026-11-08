@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -13,6 +14,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from ..utils import gt_instances_preprocess
 from .yolov5_head import YOLOv5Head
 
@@ -47,7 +49,7 @@ class YOLOv6HeadModule(BaseModule):
     def __init__(
         self,
         num_classes: int,
-        in_channels: Union[int, Sequence],
+        in_channels: int | Sequence,
         widen_factor: float = 1.0,
         num_base_priors: int = 1,
         reg_max=0,
@@ -144,7 +146,7 @@ class YOLOv6HeadModule(BaseModule):
             conv.bias.data.fill_(1.0)
             conv.weight.data.fill_(0.0)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -167,7 +169,7 @@ class YOLOv6HeadModule(BaseModule):
         cls_pred: nn.Module,
         reg_conv: nn.Module,
         reg_pred: nn.Module,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Forward feature of a single scale level."""
         b, _, h, w = x.shape
         y = stem(x)

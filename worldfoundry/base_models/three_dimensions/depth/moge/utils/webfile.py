@@ -1,7 +1,8 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> webfile.py functionality."""
 
-import requests
 from typing import *
+
+import requests
 
 __all__ = ["WebFile"]
 
@@ -127,7 +128,6 @@ class WebFile:
         Returns:
             The return value.
         """
-        pass
 
     def __enter__(self):
         """Enter."""
@@ -141,4 +141,3 @@ class WebFile:
             exc_value: The exc value.
             traceback: The traceback.
         """
-        pass

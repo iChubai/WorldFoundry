@@ -12,8 +12,9 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> vision_transformer.py functionality."""
 
 import logging
+from collections.abc import Sequence
 from functools import partial
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn.init
@@ -205,7 +206,7 @@ class DinoVisionTransformer(nn.Module):
         nn.init.zeros_(self.mask_token)
         named_apply(init_weights_vit, self)
 
-    def prepare_tokens_with_masks(self, x: Tensor, masks=None) -> Tuple[Tensor, Tuple[int]]:
+    def prepare_tokens_with_masks(self, x: Tensor, masks=None) -> tuple[Tensor, tuple[int]]:
         """Prepare tokens with masks.
 
         Args:
@@ -246,7 +247,7 @@ class DinoVisionTransformer(nn.Module):
 
         return x, (H, W)
 
-    def forward_features_list(self, x_list: List[Tensor], masks_list: List[Tensor]) -> List[Dict[str, Tensor]]:
+    def forward_features_list(self, x_list: list[Tensor], masks_list: list[Tensor]) -> list[dict[str, Tensor]]:
         """Forward features list.
 
         Args:
@@ -258,7 +259,7 @@ class DinoVisionTransformer(nn.Module):
         """
         x = []
         rope = []
-        for t_x, t_masks in zip(x_list, masks_list):
+        for t_x, t_masks in zip(x_list, masks_list, strict=False):
             t2_x, hw_tuple = self.prepare_tokens_with_masks(t_x, t_masks)
             x.append(t2_x)
             rope.append(hw_tuple)
@@ -270,7 +271,7 @@ class DinoVisionTransformer(nn.Module):
             x = blk(x, rope_sincos)
         all_x = x
         output = []
-        for idx, (x, masks) in enumerate(zip(all_x, masks_list)):
+        for idx, (x, masks) in enumerate(zip(all_x, masks_list, strict=False)):
             if self.untie_cls_and_patch_norms or self.untie_global_and_local_cls_norm:
                 if self.untie_global_and_local_cls_norm and self.training and idx == 1:
                     # Assume second entry of list corresponds to local crops.
@@ -296,7 +297,7 @@ class DinoVisionTransformer(nn.Module):
             )
         return output
 
-    def forward_features(self, x: Tensor | List[Tensor], masks: Optional[Tensor] = None) -> List[Dict[str, Tensor]]:
+    def forward_features(self, x: Tensor | list[Tensor], masks: Tensor | None = None) -> list[dict[str, Tensor]]:
         """Forward features.
 
         Args:
@@ -311,7 +312,7 @@ class DinoVisionTransformer(nn.Module):
         else:
             return self.forward_features_list(x, masks)
 
-    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int = 1) -> List[Tensor]:
+    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int = 1) -> list[Tensor]:
         """Helper function to get intermediate layers not chunked.
 
         Args:
@@ -340,12 +341,12 @@ class DinoVisionTransformer(nn.Module):
         self,
         x: torch.Tensor,
         *,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | Sequence = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         return_extra_tokens: bool = False,
         norm: bool = True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor, ...]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor, ...]]:
         """Get intermediate layers.
 
         Args:
@@ -377,13 +378,13 @@ class DinoVisionTransformer(nn.Module):
         if not return_class_token and not return_extra_tokens:
             return tuple(outputs)
         elif return_class_token and not return_extra_tokens:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=False))
         elif not return_class_token and return_extra_tokens:
-            return tuple(zip(outputs, extra_tokens))
+            return tuple(zip(outputs, extra_tokens, strict=False))
         elif return_class_token and return_extra_tokens:
-            return tuple(zip(outputs, class_tokens, extra_tokens))
+            return tuple(zip(outputs, class_tokens, extra_tokens, strict=False))
 
-    def forward(self, *args, is_training: bool = True, **kwargs) -> List[Dict[str, Tensor]] | Tensor:
+    def forward(self, *args, is_training: bool = True, **kwargs) -> list[dict[str, Tensor]] | Tensor:
         """Forward.
 
         Returns:

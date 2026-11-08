@@ -1,6 +1,8 @@
-import torch
-from .vision_transformer import vit_base, VisionTransformer
 import os
+
+import torch
+
+from .vision_transformer import VisionTransformer, vit_base
 
 
 def load_synclr_as_dino(patch_size, load_dir="./models", l14=False):

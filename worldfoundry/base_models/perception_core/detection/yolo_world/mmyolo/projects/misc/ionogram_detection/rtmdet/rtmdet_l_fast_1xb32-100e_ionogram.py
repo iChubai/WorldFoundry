@@ -25,7 +25,7 @@ val_batch_size_per_gpu = train_batch_size_per_gpu
 batch_shapes_cfg = dict(batch_size=val_batch_size_per_gpu)
 
 # -----train val related-----
-load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_l_syncbn_fast_8xb32-300e_coco/rtmdet_l_syncbn_fast_8xb32-300e_coco_20230102_135928-ee3abdc4.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/rtmdet/rtmdet_l_syncbn_fast_8xb32-300e_coco/rtmdet_l_syncbn_fast_8xb32-300e_coco_20230102_135928-ee3abdc4.pth"
 
 # default hooks
 save_epoch_intervals = 10

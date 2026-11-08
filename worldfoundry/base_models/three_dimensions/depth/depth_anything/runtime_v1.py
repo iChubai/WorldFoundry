@@ -22,7 +22,7 @@ from worldfoundry.core.model_loading import load_torch_checkpoint
 class DepthAnything1Representation:
     """Representation for Depth Anything V1 depth estimation model."""
 
-    def __init__(self, model: Optional[torch.nn.Module] = None, device: Optional[str] = None):
+    def __init__(self, model: torch.nn.Module | None = None, device: str | None = None):
         """
         Initialize DepthAnything1Representation.
 
@@ -65,7 +65,7 @@ class DepthAnything1Representation:
 
     @classmethod
     def load_model(
-        cls, pretrained_model_path: Optional[str] = None, encoder: str = "vitl", device: Optional[str] = None, **kwargs
+        cls, pretrained_model_path: str | None = None, encoder: str = "vitl", device: str | None = None, **kwargs
     ) -> torch.nn.Module:
         """
         Load DepthAnything model from local checkpoint or HuggingFace repository.
@@ -197,14 +197,14 @@ class DepthAnything1Representation:
         return model
 
     @staticmethod
-    def _load_from_huggingface(pretrained_model_path: Optional[str], encoder: str, device: str) -> DepthAnything:
+    def _load_from_huggingface(pretrained_model_path: str | None, encoder: str, device: str) -> DepthAnything:
         """Load model from HuggingFace repository."""
         model_source = pretrained_model_path or f"LiheYoung/depth_anything_{encoder}14"
         return DepthAnything.from_pretrained(model_source)
 
     @classmethod
     def from_pretrained(
-        cls, pretrained_model_path: Optional[str] = None, encoder: str = "vitl", device: Optional[str] = None, **kwargs
+        cls, pretrained_model_path: str | None = None, encoder: str = "vitl", device: str | None = None, **kwargs
     ) -> "DepthAnything1Representation":
         """
         Create representation instance from pretrained model.
@@ -222,7 +222,7 @@ class DepthAnything1Representation:
 
         return cls(model=model, device=device)
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Get depth representation from input data.
 

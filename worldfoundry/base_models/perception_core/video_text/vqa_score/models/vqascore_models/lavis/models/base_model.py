@@ -11,9 +11,10 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+from omegaconf import OmegaConf
+
 from ..common.dist_utils import download_cached_file, is_dist_avail_and_initialized
 from ..common.utils import get_abs_path, is_url
-from omegaconf import OmegaConf
 
 
 class BaseModel(nn.Module):
@@ -48,7 +49,7 @@ class BaseModel(nn.Module):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        logging.info("Missing keys {}".format(msg.missing_keys))
+        logging.info(f"Missing keys {msg.missing_keys}")
         logging.info("load checkpoint from %s" % url_or_filename)
 
         return msg
@@ -71,7 +72,7 @@ class BaseModel(nn.Module):
 
     @classmethod
     def default_config_path(cls, model_type):
-        assert model_type in cls.PRETRAINED_MODEL_CONFIG_DICT, "Unknown model type {}".format(model_type)
+        assert model_type in cls.PRETRAINED_MODEL_CONFIG_DICT, f"Unknown model type {model_type}"
         return get_abs_path(cls.PRETRAINED_MODEL_CONFIG_DICT[model_type])
 
     def load_checkpoint_from_config(self, cfg, **kwargs):
@@ -105,9 +106,9 @@ class BaseModel(nn.Module):
             tot += w
         if return_str:
             if tot >= 1e6:
-                return "{:.1f}M".format(tot / 1e6)
+                return f"{tot / 1e6:.1f}M"
             else:
-                return "{:.1f}K".format(tot / 1e3)
+                return f"{tot / 1e3:.1f}K"
         else:
             return tot
 
@@ -156,14 +157,14 @@ class MomentumDistilationMixin:
     @torch.no_grad()
     def copy_params(self):
         for model_pair in self.model_pairs:
-            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters()):
+            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters(), strict=False):
                 param_m.data.copy_(param.data)  # initialize
                 param_m.requires_grad = False  # not update by gradient
 
     @torch.no_grad()
     def _momentum_update(self):
         for model_pair in self.model_pairs:
-            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters()):
+            for param, param_m in zip(model_pair[0].parameters(), model_pair[1].parameters(), strict=False):
                 param_m.data = param_m.data * self.momentum + param.data * (1.0 - self.momentum)
 
 

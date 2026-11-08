@@ -7,6 +7,7 @@ from mmcv.cnn import ConvModule
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from ..layers import BepC3StageBlock, BiFusion, RepStageBlock
 from ..utils import make_round
 from .base_yolo_neck import BaseYOLONeck
@@ -37,7 +38,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
 
     def __init__(
         self,
-        in_channels: List[int],
+        in_channels: list[int],
         out_channels: int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
@@ -207,7 +208,7 @@ class YOLOv6CSPRepPAFPN(YOLOv6RepPAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
+        in_channels: list[int],
         out_channels: int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
@@ -314,7 +315,7 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
+        in_channels: list[int],
         out_channels: int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
@@ -386,7 +387,7 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
             act_cfg=self.act_cfg,
         )
 
-    def forward(self, inputs: List[torch.Tensor]) -> tuple:
+    def forward(self, inputs: list[torch.Tensor]) -> tuple:
         """Forward function."""
         assert len(inputs) == len(self.in_channels) + 1
         # reduce layers
@@ -450,7 +451,7 @@ class YOLOv6CSPRepBiPAFPN(YOLOv6RepBiPAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
+        in_channels: list[int],
         out_channels: int,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,

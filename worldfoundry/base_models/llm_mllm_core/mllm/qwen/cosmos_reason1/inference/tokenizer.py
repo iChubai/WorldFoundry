@@ -34,7 +34,7 @@ from transformers.models.auto.processing_auto import AutoProcessor
 
 def build_tokenizer(
     tokenizer_type: str,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
 ):
     return Processor(tokenizer_type, cache_dir)
 

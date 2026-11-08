@@ -69,7 +69,7 @@ def norm_and_concat_per_token_rms(
     Returns:
         [B, T, D*L] normalized tensor with padding zeroed out.
     """
-    B, T, D, L = encoded_text.shape  # noqa: N806
+    B, T, D, L = encoded_text.shape
     variance = torch.mean(encoded_text**2, dim=2, keepdim=True)  # [B,T,1,L]
     normed = encoded_text * torch.rsqrt(variance + 1e-6)
     normed = normed.reshape(B, T, D * L)
@@ -99,7 +99,7 @@ class FeatureExtractorV1(nn.Module):
         self,
         hidden_states: torch.Tensor,
         attention_mask: torch.Tensor,
-        padding_side: str = "left",  # noqa: ARG002 — kept for API stability; norm is layout-agnostic
+        padding_side: str = "left",  # kept for API stability; norm is layout-agnostic
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         encoded = torch.stack(hidden_states, dim=-1) if isinstance(hidden_states, (list, tuple)) else hidden_states
         dtype = encoded.dtype
@@ -128,7 +128,7 @@ class FeatureExtractorV2(nn.Module):
         self,
         hidden_states: torch.Tensor,
         attention_mask: torch.Tensor,
-        padding_side: str = "left",  # noqa: ARG002
+        padding_side: str = "left",
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         encoded = torch.stack(hidden_states, dim=-1) if isinstance(hidden_states, (list, tuple)) else hidden_states
         normed = norm_and_concat_per_token_rms(encoded, attention_mask)

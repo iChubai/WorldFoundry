@@ -16,8 +16,9 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 
 class Registry:

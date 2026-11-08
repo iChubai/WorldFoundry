@@ -19,7 +19,7 @@ warnings.filterwarnings(action="ignore", category=DeprecationWarning)
 class TRTWrapper(torch.nn.Module):
     dtype_mapping = {}
 
-    def __init__(self, weight: Union[str, Path], device: Optional[torch.device]):
+    def __init__(self, weight: str | Path, device: torch.device | None):
         super().__init__()
         weight = Path(weight) if isinstance(weight, str) else weight
         assert weight.exists() and weight.suffix in (".engine", ".plan")
@@ -74,7 +74,7 @@ class TRTWrapper(torch.nn.Module):
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
         self.num_bindings = num_inputs + num_outputs
-        self.bindings: List[int] = [0] * self.num_bindings
+        self.bindings: list[int] = [0] * self.num_bindings
 
     def __init_bindings(self):
         Binding = namedtuple("Binding", ("name", "dtype", "shape"))
@@ -101,7 +101,7 @@ class TRTWrapper(torch.nn.Module):
     def forward(self, *inputs):
         assert len(inputs) == self.num_inputs
 
-        contiguous_inputs: List[torch.Tensor] = [i.contiguous() for i in inputs]
+        contiguous_inputs: list[torch.Tensor] = [i.contiguous() for i in inputs]
 
         for i in range(self.num_inputs):
             self.bindings[i] = contiguous_inputs[i].data_ptr()
@@ -109,7 +109,7 @@ class TRTWrapper(torch.nn.Module):
                 self.context.set_binding_shape(i, tuple(contiguous_inputs[i].shape))
 
         # create output tensors
-        outputs: List[torch.Tensor] = []
+        outputs: list[torch.Tensor] = []
 
         for i in range(self.num_outputs):
             j = i + self.num_inputs
@@ -129,7 +129,7 @@ class TRTWrapper(torch.nn.Module):
 
 
 class ORTWrapper(torch.nn.Module):
-    def __init__(self, weight: Union[str, Path], device: Optional[torch.device]):
+    def __init__(self, weight: str | Path, device: torch.device | None):
         super().__init__()
         weight = Path(weight) if isinstance(weight, str) else weight
         assert weight.exists() and weight.suffix == ".onnx"
@@ -170,7 +170,7 @@ class ORTWrapper(torch.nn.Module):
     def forward(self, *inputs):
         assert len(inputs) == self.num_inputs
 
-        contiguous_inputs: List[np.ndarray] = [i.contiguous().cpu().numpy() for i in inputs]
+        contiguous_inputs: list[np.ndarray] = [i.contiguous().cpu().numpy() for i in inputs]
 
         if not self.is_dynamic:
             # make sure input shape is right for static input shape

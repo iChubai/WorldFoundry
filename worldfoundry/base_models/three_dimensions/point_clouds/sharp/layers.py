@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.dpt import (
-    _make_fusion_block,
-)
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.dap_model import (
     DepthAnythingV2,
+)
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.dpt import (
+    _make_fusion_block,
 )
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.blocks import (
     _make_scratch,

@@ -44,12 +44,12 @@ class Lyra1Representation:
         cls,
         pretrained_model_path,
         device=None,
-        static_ckpt_path: Optional[str] = None,
-        dynamic_ckpt_path: Optional[str] = None,
-        static_config_path: Optional[str] = None,
-        dynamic_config_path: Optional[str] = None,
-        inference_config_path: Optional[str] = None,
-        checkpoint_dir: Optional[str] = None,
+        static_ckpt_path: str | None = None,
+        dynamic_ckpt_path: str | None = None,
+        static_config_path: str | None = None,
+        dynamic_config_path: str | None = None,
+        inference_config_path: str | None = None,
+        checkpoint_dir: str | None = None,
         **kwargs,
     ):
         repo_root = resolve_lyra1_repo_root(pretrained_model_path)
@@ -83,7 +83,7 @@ class Lyra1Representation:
             device=device or "cuda",
         )
 
-    def get_representation(self, data: Dict[str, object]) -> Dict[str, object]:
+    def get_representation(self, data: dict[str, object]) -> dict[str, object]:
         mode = str(data.get("mode", "static")).lower()
         if mode not in {"static", "dynamic"}:
             raise ValueError(f"Unsupported Lyra-1 mode: {mode}")
@@ -196,7 +196,7 @@ class Lyra1Representation:
             target_index_manual=getattr(config, "target_index_manual", None),
         )
         render_results = [self._collect_render_result(root) for root in render_roots]
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "mode": mode,
             "generated_root": str(generated_root),
             "output_dir": str(base_output_dir),
@@ -228,7 +228,7 @@ class Lyra1Representation:
         return source
 
     @staticmethod
-    def _extract_checkpoint_name(ckpt_path: Path, ckpt_name: Optional[str]) -> Optional[str]:
+    def _extract_checkpoint_name(ckpt_path: Path, ckpt_name: str | None) -> str | None:
         if ckpt_name:
             return str(ckpt_name)
         match = re.search(r"(checkpoint-\d+)", str(ckpt_path))
@@ -240,7 +240,7 @@ class Lyra1Representation:
         self,
         out_dir_inference: Path,
         ckpt_path: Path,
-        ckpt_name: Optional[str],
+        ckpt_name: str | None,
         dataset_name: str,
         target_index_manual,
     ):
@@ -262,7 +262,7 @@ class Lyra1Representation:
         return base_output_dir, render_roots
 
     @staticmethod
-    def _collect_render_result(root: Path) -> Dict[str, Any]:
+    def _collect_render_result(root: Path) -> dict[str, Any]:
         return {
             "output_dir": str(root),
             "main_render_dir": str(root / "main_gaussians_renderings"),

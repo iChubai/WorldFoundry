@@ -7,7 +7,6 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import cv2
 import numpy as np
-
 import torch
 
 
@@ -311,7 +310,7 @@ arg_dict = {
 }
 
 
-class RandomAugment(object):
+class RandomAugment:
     def __init__(self, N=2, M=10, isPIL=False, augs=[]):
         self.N = N
         self.M = M
@@ -337,7 +336,7 @@ class RandomAugment(object):
         return img
 
 
-class VideoRandomAugment(object):
+class VideoRandomAugment:
     def __init__(self, N=2, M=10, p=0.0, tensor_in_tensor_out=True, augs=[]):
         self.N = N
         self.M = M

@@ -86,7 +86,7 @@ def _look_at_c2w_opengl(look_at: np.ndarray, eye: np.ndarray) -> np.ndarray:
 class VGGTRepresentation:
     """VGGT Representation model for 3D scene reconstruction."""
 
-    def __init__(self, model: Optional[VGGT] = None, device: Optional[str] = None):
+    def __init__(self, model: VGGT | None = None, device: str | None = None):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
 
@@ -102,9 +102,7 @@ class VGGTRepresentation:
             self.dtype = torch.float32
 
     @classmethod
-    def from_pretrained(
-        cls, pretrained_model_path: str, device: Optional[str] = None, **kwargs
-    ) -> "VGGTRepresentation":
+    def from_pretrained(cls, pretrained_model_path: str, device: str | None = None, **kwargs) -> "VGGTRepresentation":
         try:
             local_model_path = None
             if os.path.isdir(pretrained_model_path):
@@ -130,7 +128,7 @@ class VGGTRepresentation:
         instance.resolution = kwargs.get("resolution", 518)
         return instance
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get representation from input data using VGGT model."""
         if self.model is None:
             raise RuntimeError("Model not loaded. Use from_pretrained() first.")
@@ -140,7 +138,7 @@ class VGGTRepresentation:
         predict_depth = data.get("predict_depth", True)
         predict_points = data.get("predict_points", True)
         predict_tracks = data.get("predict_tracks", False)
-        query_points = data.get("query_points", None)
+        query_points = data.get("query_points")
         preprocess_mode = data.get("preprocess_mode", self.preprocess_mode)
         resolution = data.get("resolution", self.resolution)
         if isinstance(images_input, list):
@@ -273,10 +271,10 @@ class VGGTRepresentation:
     def render_with_3dgs(
         self,
         ply_path: str,
-        camera_config: Dict[str, Any],
+        camera_config: dict[str, Any],
         image_width: int = 704,
         image_height: int = 480,
-        device: Optional[str] = None,
+        device: str | None = None,
         near_plane: float = 0.01,
         far_plane: float = 1000.0,
     ) -> Image.Image:
@@ -409,7 +407,7 @@ class VGGTRepresentation:
                 z = z[order]
                 c_proj = c_proj[order]
 
-                for uu, vv, zz, cc in zip(u, v, z, c_proj):
+                for uu, vv, zz, cc in zip(u, v, z, c_proj, strict=False):
                     if zz < depth_buf[vv, uu]:
                         depth_buf[vv, uu] = zz
                         img_fallback[vv, uu] = np.clip(cc, 0.0, 1.0)

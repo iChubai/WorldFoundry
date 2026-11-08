@@ -3,9 +3,9 @@
 from pathlib import Path
 
 import torch
-from torch import nn
 from diffusers import AutoencoderKL, DDIMScheduler, UNet2DConditionModel
 from einops import rearrange
+from torch import nn
 from transformers import CLIPTextModel, CLIPTokenizer
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path

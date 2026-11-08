@@ -1,16 +1,16 @@
 import os
-import torch
-import numpy as np
+from typing import List, Optional, TypedDict, Union
+
 import decord
-from typing import List, Union
-from transformers import AutoModel, AutoTokenizer
-import torchvision.transforms as transforms
-from torchvision.transforms import PILToTensor
-from decord import VideoReader, cpu
+import numpy as np
+import torch
 import torch.nn.functional as F
+import torchvision.transforms as transforms
+from decord import VideoReader, cpu
 from PIL import Image
+from torchvision.transforms import PILToTensor
 from torchvision.transforms.functional import InterpolationMode
-from typing import List, TypedDict, Union, Optional
+from transformers import AutoModel, AutoTokenizer
 
 decord.bridge.set_bridge("torch")
 
@@ -101,8 +101,8 @@ class InternVideo2Model(VQAScoreModel):
             return self.process_image_chat_hd(path, resolution)
 
     def load_images(
-        self, paths: List[str], num_segments: int = 8, resolution: int = 224, hd_num: int = 6
-    ) -> List[torch.Tensor]:
+        self, paths: list[str], num_segments: int = 8, resolution: int = 224, hd_num: int = 6
+    ) -> list[torch.Tensor]:
         processed_data = []
         for path in paths:
             if path.startswith(("http://", "https://")):
@@ -121,8 +121,8 @@ class InternVideo2Model(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         num_frames: int = 8,
         question_template: str = 'Does this figure show "{}"? Please answer yes or no.',
         answer_template: str = "Yes",
@@ -138,7 +138,7 @@ class InternVideo2Model(VQAScoreModel):
         processed_data = self.load_images(paths, num_segments=num_frames)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers):
+        for data, question, answer in zip(processed_data, questions, answers, strict=False):
             data = data.to(self.device)
             chat_history = []
             media_type = "video" if data.dim() == 6 else "image"  # 6D for video, 5D for image
@@ -284,7 +284,7 @@ class InternVideo2Model(VQAScoreModel):
         return torch.tensor(lm_probs)
 
     def generate(
-        self, images: List[str], texts: List[str], num_frames: int = 8, resolution: int = None, hd_num: int = None
+        self, images: list[str], texts: list[str], num_frames: int = 8, resolution: int = None, hd_num: int = None
     ) -> torch.Tensor:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
@@ -292,7 +292,7 @@ class InternVideo2Model(VQAScoreModel):
         processed_data = self.load_images(images, num_segments=num_frames)
 
         gen_outputs = []
-        for data, question in zip(processed_data, questions):
+        for data, question in zip(processed_data, questions, strict=False):
             data = data.to(self.device)
             chat_history = []
             media_type = "video" if data.dim() == 6 else "image"  # 6D for video, 5D for image
@@ -680,7 +680,7 @@ class InternVideo2Model(VQAScoreModel):
             return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
 
         if ckpt_num_frame != -1 and ckpt_num_frame != cur_frame:
-            logger.info(f"Interpolate position embedding")
+            logger.info("Interpolate position embedding")
             logger.info(f"Testing frame: {cur_frame}")
             logger.info(f"Checkpoint frame: {ckpt_num_frame}")
 
@@ -722,8 +722,8 @@ class InternVideo2Model(VQAScoreModel):
         attention_mask,
         image_idx=None,
         video_idx=None,
-        image: Optional[torch.Tensor] = None,
-        video: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        video: torch.Tensor | None = None,
         num_beams=1,
         max_new_tokens=1,
         do_sample=True,
@@ -840,8 +840,8 @@ class InternVideo2Model(VQAScoreModel):
         attention_mask,
         image_idx=None,
         video_idx=None,
-        image: Optional[torch.Tensor] = None,
-        video: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        video: torch.Tensor | None = None,
         num_beams=1,
         max_new_tokens=1,
         do_sample=True,

@@ -1,15 +1,17 @@
+import math
+import os
 import types
 from typing import List, Tuple
-import math
+
 import torch
 import torch.nn.modules.utils as nn_utils
 from torch import nn
-import os
+
 from .load_clip_as_dino import load_clip_as_dino
+from .load_mae_as_vit import load_mae_as_vit
 from .load_open_clip_as_dino import load_open_clip_as_dino
 from .load_synclr_as_dino import load_synclr_as_dino
 from .vision_transformer import DINOHead
-from .load_mae_as_vit import load_mae_as_vit
 
 """
 Mostly copy-paste from https://github.com/ShirAmir/dino-vit-features.
@@ -114,7 +116,7 @@ class ViTExtractor(nn.Module):
         return model
 
     @staticmethod
-    def _fix_pos_enc(patch_size: int, stride_hw: Tuple[int, int]):
+    def _fix_pos_enc(patch_size: int, stride_hw: tuple[int, int]):
         """
         Creates a method for position encoding interpolation.
         :param patch_size: patch size of the model.
@@ -217,7 +219,7 @@ class ViTExtractor(nn.Module):
 
         return _hook
 
-    def _register_hooks(self, layers: List[int], drop_rate=0) -> None:
+    def _register_hooks(self, layers: list[int], drop_rate=0) -> None:
         """
         register hook to extract features.
         :param layers: layers from which to extract features.
@@ -236,7 +238,7 @@ class ViTExtractor(nn.Module):
             handle.remove()
         self.hook_handlers = []
 
-    def _extract_features(self, batch: torch.Tensor, layers: List[int] = 11, drop_rate=0) -> List[torch.Tensor]:
+    def _extract_features(self, batch: torch.Tensor, layers: list[int] = 11, drop_rate=0) -> list[torch.Tensor]:
         """
         extract features from the model
         :param batch: batch to extract features for. Has shape BxCxHxW.

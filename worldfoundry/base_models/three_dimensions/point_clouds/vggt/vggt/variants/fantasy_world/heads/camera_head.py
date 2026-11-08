@@ -7,19 +7,20 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> heads -> camera_head.py functionality."""
 
 import math
-import numpy as np
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers import Mlp
-from ..layers.block import Block
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head_act import activate_pose
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.geometry_bridge import (
     ChannelExpandAndReshape,
     WanVAE_,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head_act import activate_pose
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers import Mlp
+
+from ..layers.block import Block
 
 
 class CameraHead(nn.Module):

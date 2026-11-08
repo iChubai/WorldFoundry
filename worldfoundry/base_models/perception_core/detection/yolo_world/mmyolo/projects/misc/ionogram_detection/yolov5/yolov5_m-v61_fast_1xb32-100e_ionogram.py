@@ -16,7 +16,7 @@ train_batch_size_per_gpu = 32
 # -----train val related-----
 # Scale lr for SGD
 base_lr = _base_.base_lr * train_batch_size_per_gpu / _base_.train_batch_size_per_gpu
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_m-v61_syncbn_fast_8xb16-300e_coco/yolov5_m-v61_syncbn_fast_8xb16-300e_coco_20220917_204944-516a710f.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_m-v61_syncbn_fast_8xb16-300e_coco/yolov5_m-v61_syncbn_fast_8xb16-300e_coco_20220917_204944-516a710f.pth"
 
 # ===================== Unmodified in most cases ==================
 num_classes = _base_.num_classes

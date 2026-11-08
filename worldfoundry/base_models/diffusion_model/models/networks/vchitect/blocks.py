@@ -123,9 +123,9 @@ class JointTransformerBlock(nn.Module):
 
 
 __all__ = [
+    "GELU",
     "AdaLayerNormContinuous",
     "AdaLayerNormZero",
     "FeedForward",
-    "GELU",
     "JointTransformerBlock",
 ]

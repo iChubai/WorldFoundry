@@ -1,11 +1,11 @@
 """Module for base_models -> perception_core -> optical_flow -> raft -> utils -> frame_utils.py functionality."""
 
-import numpy as np
-from PIL import Image
-from os.path import *
 import re
+from os.path import *
 
 import cv2
+import numpy as np
+from PIL import Image
 
 cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
@@ -22,7 +22,7 @@ def readFlow(fn):
     # print 'fn = %s'%(fn)
     with open(fn, "rb") as f:
         magic = np.fromfile(f, np.float32, count=1)
-        if 202021.25 != magic:
+        if magic != 202021.25:
             print("Magic number incorrect. Invalid .flo file")
             return None
         else:

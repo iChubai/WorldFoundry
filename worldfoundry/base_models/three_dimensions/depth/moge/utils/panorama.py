@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import cv2
 import numpy as np
@@ -131,7 +131,7 @@ def merge_cubemap_blended_to_panorama(
     weighted_depth = np.zeros((height, width), dtype=np.float64)
     weight_sum = np.zeros((height, width), dtype=np.float64)
 
-    for distance, mask, extrinsic, intrinsic in zip(distance_maps, pred_masks, extrinsics, intrinsics):
+    for distance, mask, extrinsic, intrinsic in zip(distance_maps, pred_masks, extrinsics, intrinsics, strict=False):
         projected_uv, projected_depth = project_cv(directions, extrinsics=extrinsic, intrinsics=intrinsic)
         valid = (
             (projected_depth > 0)

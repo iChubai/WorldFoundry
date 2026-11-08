@@ -54,8 +54,9 @@
 #    o_src = F.scaled_dot_product_attention(q_src, k_tgt, v_tgt, **kwargs)
 #    o_src = attn_src._apply_to_o(o_src)
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -88,13 +89,13 @@ class PropeDotProductAttention(torch.nn.Module):
         self.image_height = image_height
 
         if precompute_coeffs:
-            coeffs_x: Tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
+            coeffs_x: tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
                 torch.tile(torch.arange(patches_x), (patches_y,)),
                 freq_base=freq_base,
                 freq_scale=freq_scale,
                 feat_dim=head_dim // 4,
             )
-            coeffs_y: Tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
+            coeffs_y: tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
                 torch.repeat_interleave(torch.arange(patches_y), patches_x),
                 freq_base=freq_base,
                 freq_scale=freq_scale,
@@ -126,7 +127,7 @@ class PropeDotProductAttention(torch.nn.Module):
         k: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
         v: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
         viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
-        Ks: Optional[torch.Tensor],  # (batch, cameras, 3, 3)
+        Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
         **kwargs,
     ) -> torch.Tensor:
         return prope_dot_product_attention(
@@ -147,9 +148,9 @@ class PropeDotProductAttention(torch.nn.Module):
     def _precompute_and_cache_apply_fns(
         self,
         viewmats: torch.Tensor,
-        Ks: Optional[torch.Tensor],
-        coeffs_x: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        coeffs_y: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        Ks: torch.Tensor | None,
+        coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
+        coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
     ):
         (batch, cameras, _, _) = viewmats.shape
         assert viewmats.shape == (batch, cameras, 4, 4)
@@ -195,13 +196,13 @@ def prope_dot_product_attention(
     v: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
     *,
     viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
-    Ks: Optional[torch.Tensor],  # (batch, cameras, 3, 3)
+    Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
     patches_x: int,  # How many patches wide is each image?
     patches_y: int,  # How many patches tall is each image?
     image_width: int,  # Width of the image. Used to normalize intrinsics.
     image_height: int,  # Height of the image. Used to normalize intrinsics.
-    coeffs_x: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-    coeffs_y: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+    coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
+    coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
     **kwargs,
 ) -> torch.Tensor:
     """Similar to torch.nn.functional.scaled_dot_product_attention, but applies PRoPE-style
@@ -248,14 +249,14 @@ def prope_dot_product_attention(
 def _prepare_apply_fns(
     head_dim: int,  # Q/K/V will have this last dimension
     viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
-    Ks: Optional[torch.Tensor],  # (batch, cameras, 3, 3)
+    Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
     patches_x: int,  # How many patches wide is each image?
     patches_y: int,  # How many patches tall is each image?
     image_width: int,  # Width of the image. Used to normalize intrinsics.
     image_height: int,  # Height of the image. Used to normalize intrinsics.
-    coeffs_x: Optional[torch.Tensor] = None,
-    coeffs_y: Optional[torch.Tensor] = None,
-) -> Tuple[
+    coeffs_x: torch.Tensor | None = None,
+    coeffs_y: torch.Tensor | None = None,
+) -> tuple[
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
@@ -376,7 +377,7 @@ def _rope_precompute_coeffs(
     freq_scale: float,
     feat_dim: int,
     dtype: torch.dtype = torch.float32,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Precompute RoPE coefficients."""
     assert len(positions.shape) == 1
     assert feat_dim % 2 == 0
@@ -402,8 +403,8 @@ def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
 
 # Shared PRoPE algebra; WorldCrafter retains only its variable-grid projection rules.
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.layers.prope import (
-    _rope_apply_coeffs,
     _apply_block_diagonal,
-    _invert_SE3,
     _invert_K,
+    _invert_SE3,
+    _rope_apply_coeffs,
 )

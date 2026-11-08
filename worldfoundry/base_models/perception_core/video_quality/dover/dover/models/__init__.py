@@ -6,12 +6,12 @@ from .swin_backbone import SwinTransformer3D as VQABackbone
 from .swin_backbone import swin_3d_small, swin_3d_tiny
 
 __all__ = [
-    "VQABackbone",
-    "IQABackbone",
-    "VQAHead",
-    "IQAHead",
-    "VARHead",
+    "DOVER",
     "BaseEvaluator",
     "BaseImageEvaluator",
-    "DOVER",
+    "IQABackbone",
+    "IQAHead",
+    "VARHead",
+    "VQABackbone",
+    "VQAHead",
 ]

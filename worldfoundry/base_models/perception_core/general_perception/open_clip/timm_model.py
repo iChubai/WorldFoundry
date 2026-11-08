@@ -14,9 +14,8 @@ import torch.nn as nn
 
 try:
     import timm
-    from timm.layers import RotAttentionPool2d
     from timm.layers import AttentionPool2d as AbsAttentionPool2d
-    from timm.layers import Mlp, to_2tuple
+    from timm.layers import Mlp, RotAttentionPool2d, to_2tuple
 except ImportError:
     timm = None
 
@@ -30,15 +29,15 @@ class TimmModel(nn.Module):
         self,
         model_name: str,
         embed_dim: int,
-        image_size: Union[int, Tuple[int, int]] = 224,
+        image_size: int | tuple[int, int] = 224,
         pool: str = "avg",
         proj: str = "linear",
         proj_bias: bool = False,
         drop: float = 0.0,
-        drop_path: Optional[float] = None,
-        patch_drop: Optional[float] = None,
+        drop_path: float | None = None,
+        patch_drop: float | None = None,
         pretrained: bool = False,
-        model_kwargs: Optional[dict] = None,
+        model_kwargs: dict | None = None,
     ):
         """Init.
 
@@ -137,7 +136,7 @@ class TimmModel(nn.Module):
             # NOTE: partial freeze requires latest timm (master) branch and is subject to change
             try:
                 # FIXME import here until API stable and in an official release
-                from timm.models.helpers import group_parameters, group_modules
+                from timm.models.helpers import group_modules, group_parameters
             except ImportError:
                 raise RuntimeError("Please install a recent `timm` release from the configured package index.")
             matcher = self.trunk.group_matcher()
@@ -166,19 +165,19 @@ class TimmModel(nn.Module):
             )
         try:
             self.trunk.set_grad_checkpointing(enable)
-        except Exception as e:
+        except Exception:
             _logger.warning("grad checkpointing not supported for this timm image tower, continuing without...")
 
     def forward_intermediates(
         self,
         x: torch.Tensor,
-        indices: Optional[Union[int, List[int]]] = None,
+        indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize_intermediates: bool = False,
         intermediates_only: bool = False,
         output_fmt: str = "NCHW",
         output_extra_tokens: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -220,7 +219,7 @@ class TimmModel(nn.Module):
         return_dict["image_features"] = image_features
         return return_dict
 
-    def set_input_size(self, image_size: Union[int, Tuple[int, int]]):
+    def set_input_size(self, image_size: int | tuple[int, int]):
         """Set the input image size for the model after initialization.
 
         This method attempts to call set_input_size on the underlying timm model

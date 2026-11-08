@@ -1,16 +1,15 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> motion_filter.py functionality."""
 
-import cv2
-import torch
-import lietorch
-
 from collections import OrderedDict
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
+from functools import partial
+
+import cv2
+import lietorch
+import torch
 
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import CorrBlock
-
-from functools import partial
 
 if torch.__version__.startswith("2"):
     autocast = partial(torch.autocast, device_type="cuda")

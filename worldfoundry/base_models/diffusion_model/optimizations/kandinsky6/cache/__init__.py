@@ -54,7 +54,7 @@ class CacheDiT(MagCache, NaviCache, nn.Module):
         mag_ratios: Sequence[float] | Mapping[str, Sequence[float]] | None = None,
         mode_name: str | None = None,
         thresh: float | None = None,
-        K: int | None = None,  # noqa: N803  # MagCache paper hyperparameter name
+        K: int | None = None,  # MagCache paper hyperparameter name
         retention_ratio: float | None = None,
         # NaviCache
         align_steps: int | None = None,

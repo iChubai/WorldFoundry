@@ -1,7 +1,6 @@
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-
 SUM_FREQ = 100
 
 
@@ -20,7 +19,7 @@ class Logger:
 
         lr = self.scheduler.get_lr().pop()
         metrics_data = [self.running_loss[k] / SUM_FREQ for k in self.running_loss.keys()]
-        training_str = "[{:6d}, {:10.7f}] ".format(self.total_steps + 1, lr)
+        training_str = f"[{self.total_steps + 1:6d}, {lr:10.7f}] "
         metrics_str = ("{:10.4f}, " * len(metrics_data)).format(*metrics_data)
 
         # print the training status

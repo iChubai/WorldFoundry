@@ -2,12 +2,11 @@
 
 from pathlib import Path
 from typing import *
-import requests
 
+import requests
 from tqdm import tqdm
 
-
-__all__ = ["download_file", "download_bytes"]
+__all__ = ["download_bytes", "download_file"]
 
 
 def download_file(url: str, filepath: Union[str, Path], headers: dict = None, resume: bool = True) -> None:

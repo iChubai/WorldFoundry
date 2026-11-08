@@ -1,4 +1,11 @@
-import argparse, shutil, json, os, random, torch, time
+import argparse
+import json
+import os
+import random
+import shutil
+import time
+
+import torch
 from tqdm import tqdm
 
 categories = {
@@ -19,7 +26,7 @@ categories = {
 
 def read_data(data_path):
     datas = []
-    with open(data_path, "r") as f:
+    with open(data_path) as f:
         lines = f.readlines()
     for line in lines:
         datas.append(json.loads(line))
@@ -66,14 +73,14 @@ def compute_fvd(result_path, tmp_gen_path, tmp_real_path, gpus, sample_num):
         --use_cache 0 "
     os.system(command)
     result_file = os.path.join(result_path, f"1/metric-fvd{sample_num}_16f.jsonl")
-    with open(result_file, "r") as f:
+    with open(result_file) as f:
         results = json.load(f)
     # os.remove(result_file)
     shutil.rmtree(result_path)
     return results["results"][f"fvd{sample_num}_16f"]
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample_num", default=300, type=int, help="The number of videos per category")
     parser.add_argument("--model", default="modelscope-t2v", type=str)
@@ -121,7 +128,7 @@ if "__main__" == __name__:
                 )
                 sample_feats(
                     data_ids_real,
-                    os.path.join(f"../datas/videos/real_videos_feats/real_videos_feats.pt"),
+                    os.path.join("../datas/videos/real_videos_feats/real_videos_feats.pt"),
                     os.path.join(tmp_real_path, "feats.pt"),
                 )
 

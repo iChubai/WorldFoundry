@@ -518,7 +518,7 @@ def drawMatches(
         kp2_vis = kp2_vis[ind]
         mask = mask[ind]
 
-    for i, (pt1, pt2) in enumerate(zip(kp1_vis, kp2_vis)):
+    for i, (pt1, pt2) in enumerate(zip(kp1_vis, kp2_vis, strict=False)):
         # random_color = tuple(np.random.randint(low=0, high=255, size=(3,)).tolist())
         coord_angle = np.arctan2(pt1[1] - center[1], pt1[0] - center[0])
         corr_color = np.int32(64 * coord_angle / np.pi) % 128

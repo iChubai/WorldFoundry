@@ -8,15 +8,18 @@ import logging
 
 import torch
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.memory import SimpleMaskEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
     get_1d_sine_pe,
     select_closest_cond_frames,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import MaskDecoder
-from worldfoundry.core.nn.blocks.layers import SamHeadMLP
 from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import PromptEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import TwoWayTransformer
+from worldfoundry.core.nn.blocks.layers import SamHeadMLP
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
 
 try:
@@ -761,7 +764,7 @@ class Sam3TrackerBase(torch.nn.Module):
 
             # If we have at least one object pointer, add them to the across attention
             if len(pos_and_ptrs) > 0:
-                pos_list, ptrs_list, is_selected_cond_frame_list = zip(*pos_and_ptrs)
+                pos_list, ptrs_list, is_selected_cond_frame_list = zip(*pos_and_ptrs, strict=False)
                 # stack object pointers along dim=0 into [ptr_seq_len, B, C] shape
                 obj_ptrs = torch.stack(ptrs_list, dim=0)
                 if getattr(self, "cond_frame_obj_ptr_embedding", None) is not None:
@@ -992,7 +995,7 @@ class Sam3TrackerBase(torch.nn.Module):
         if len(current_vision_feats) > 1:
             high_res_features = [
                 x.permute(1, 2, 0).view(x.size(1), x.size(2), *s)
-                for x, s in zip(current_vision_feats[:-1], feat_sizes[:-1])
+                for x, s in zip(current_vision_feats[:-1], feat_sizes[:-1], strict=False)
             ]
         else:
             high_res_features = None

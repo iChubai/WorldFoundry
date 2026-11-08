@@ -3,6 +3,7 @@
 # --------------------------------------------------------
 import math
 import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,8 +13,8 @@ try:
 except:
     from timm.layers import drop_path, to_2tuple, trunc_normal_
 
-from .transformer import PatchDropout
 from .rope import VisionRotaryEmbedding, VisionRotaryEmbeddingFast
+from .transformer import PatchDropout
 
 if os.getenv("ENV_TYPE") == "deepspeed":
     try:
@@ -41,7 +42,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
     def extra_repr(self) -> str:
-        return "p={}".format(self.drop_prob)
+        return f"p={self.drop_prob}"
 
 
 class Mlp(nn.Module):
@@ -320,8 +321,8 @@ class Block(nn.Module):
             self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, subln=subln, drop=drop)
 
         if init_values is not None and init_values > 0:
-            self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-            self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+            self.gamma_1 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
+            self.gamma_2 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
         else:
             self.gamma_1, self.gamma_2 = None, None
 
@@ -367,7 +368,7 @@ class PatchEmbed(nn.Module):
     def forward(self, x, **kwargs):
         B, C, H, W = x.shape
         # FIXME look at relaxing size constraints
-        assert H == self.img_size[0] and W == self.img_size[1], (
+        assert self.img_size[0] == H and self.img_size[1] == W, (
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x).flatten(2).transpose(1, 2)

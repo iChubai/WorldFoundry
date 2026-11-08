@@ -1,18 +1,16 @@
 """Datamodule for Llava Pretraining and Finetuning"""
 
-from PIL import Image
-from typing import Dict, List, Union
-import traceback
 import json
+import traceback
+from typing import Dict, List, Union
 
 import torch
+from PIL import Image
 from transformers import DataCollatorForSeq2Seq
 
-from .custom_data_parsers.standard_vision_parser import VisionParser
-
-from .tarsier_processor import TarsierProcessor
-
 from ..tools.rw_utils import NumpyArrayEncoder
+from .custom_data_parsers.standard_vision_parser import VisionParser
+from .tarsier_processor import TarsierProcessor
 from .utils import DictToObject
 
 
@@ -20,9 +18,9 @@ class TarsierDataProcessor:
     def __init__(
         self,
         processor: TarsierProcessor,
-        n_frames: Union[int, list],
+        n_frames: int | list,
         max_n_frames=256,
-        max_pixels=int(1280 * 720 // 2),
+        max_pixels=1280 * 720 // 2,
         min_pixels=0,
         max_seq_len=None,
         is_training=True,  # 会影响：1. 训练和测试时采帧不同；2. 测试时忽略 response。
@@ -85,7 +83,7 @@ class TarsierDataProcessor:
 
         return image_processing_config
 
-    def _transform(self, raw_data_dict: Dict) -> Dict:
+    def _transform(self, raw_data_dict: dict) -> dict:
         data_dict = json.loads(json.dumps(raw_data_dict, cls=NumpyArrayEncoder))
         del raw_data_dict
 
@@ -111,7 +109,7 @@ class TarsierDataProcessor:
 
         return [outputs]
 
-    def _split_chosen_rejected(self, data_dict: Dict):
+    def _split_chosen_rejected(self, data_dict: dict):
         chosen_data_dict = data_dict
         rejected_data_dict = json.loads(json.dumps(data_dict, cls=NumpyArrayEncoder))
         for msg in chosen_data_dict["messages"]:
@@ -128,19 +126,19 @@ class TarsierDataProcessor:
 
         return chosen_data_dict, rejected_data_dict
 
-    def transform(self, data_dict: Dict) -> Dict:
+    def transform(self, data_dict: dict) -> dict:
         try:
             if self.train_task == "dpo":
                 chosen_data_dict, rejected_data_dict = self._split_chosen_rejected(data_dict)
                 return self._transform(chosen_data_dict) + self._transform(rejected_data_dict)
             return self._transform(data_dict)
-        except Exception as e:
+        except Exception:
             if self.print_data_error:
                 print(traceback.format_exc())
                 print(f"Error occurs when processing: \n{data_dict}")
             return []
 
-    def batch_transform(self, batch_data: List[Dict]) -> Dict:
+    def batch_transform(self, batch_data: list[dict]) -> dict:
         model_inputs = {}
         # if not self.is_training:
         raw_data_dict = [d.pop("raw_data_dict") for d in batch_data]
@@ -164,7 +162,7 @@ class TarsierDataProcessor:
         model_inputs.update(self.pad_collator(batch_data))
         return model_inputs
 
-    def __call__(self, batch_data: Union[Dict, List[Dict]]) -> Dict:
+    def __call__(self, batch_data: dict | list[dict]) -> dict:
         if isinstance(batch_data, dict):
             batch_data = [batch_data]
         batch = [self.transform(d)[0] for d in batch_data]
@@ -184,7 +182,7 @@ class TarsierDataProcessor:
         return self.processor(messages, image_processing_config)
 
 
-def init_processor(processor: Union[TarsierProcessor, str] = None, config: Dict = None):
+def init_processor(processor: TarsierProcessor | str = None, config: dict = None):
     config = DictToObject(config) if isinstance(config, dict) else config
     if isinstance(processor, str):
         sub_processor = TarsierProcessor.from_pretrained(processor, padding_side="left", trust_remote_code=True)

@@ -1,8 +1,8 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> alignment.py functionality."""
 
-from typing import *
 import math
 from collections import namedtuple
+from typing import *
 
 import numpy as np
 import torch
@@ -45,7 +45,7 @@ def split_batch_fwd(fn: Callable, chunk_size: int, *args, **kwargs):
         results.append(fn(*chunk_args, **chunk_kwargs))
 
     if isinstance(results[0], tuple):
-        return tuple(torch.cat(r, dim=0) for r in zip(*results))
+        return tuple(torch.cat(r, dim=0) for r in zip(*results, strict=False))
     else:
         return torch.cat(results, dim=0)
 
@@ -184,7 +184,7 @@ def align(
                 [
                     _compute_residual(extrema_a_split[:, None], xyw[extrema_i_split, :, :], trunc)
                     for extrema_a_split, extrema_i_split in zip(
-                        extrema_a.split(SPLIT_SIZE), where_extrema_batch.split(SPLIT_SIZE)
+                        extrema_a.split(SPLIT_SIZE), where_extrema_batch.split(SPLIT_SIZE), strict=False
                     )
                 ]
             )  # (num_extrema,)

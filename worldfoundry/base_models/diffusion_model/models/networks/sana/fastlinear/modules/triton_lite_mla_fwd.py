@@ -132,7 +132,7 @@ class TritonLiteMLAFwd(nn.Module):
         super().__init__()
         self.dim, self.num_heads, self.head_dim, self.eps = dim, num_heads, dim // num_heads, eps
         if use_bias:
-            raise NotImplementedError(f"use_bias is not supported for TritonLiteMLA")
+            raise NotImplementedError("use_bias is not supported for TritonLiteMLA")
         self.qkv = nn.Linear(dim, dim * 3, bias=use_bias)
         self.proj = nn.Linear(dim, dim)
 

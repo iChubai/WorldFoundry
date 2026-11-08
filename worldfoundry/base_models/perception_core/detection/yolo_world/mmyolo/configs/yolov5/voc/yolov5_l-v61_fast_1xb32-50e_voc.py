@@ -5,7 +5,7 @@ widen_factor = 1.0
 train_batch_size_per_gpu = 32
 train_num_workers = 8
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_l-v61_syncbn_fast_8xb16-300e_coco/yolov5_l-v61_syncbn_fast_8xb16-300e_coco_20220917_031007-096ef0eb.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_l-v61_syncbn_fast_8xb16-300e_coco/yolov5_l-v61_syncbn_fast_8xb16-300e_coco_20220917_031007-096ef0eb.pth"
 
 model = dict(
     backbone=dict(

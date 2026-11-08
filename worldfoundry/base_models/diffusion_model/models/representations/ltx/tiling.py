@@ -10,8 +10,9 @@ the actual forward.
 from __future__ import annotations
 
 import itertools
+from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 import torch
 

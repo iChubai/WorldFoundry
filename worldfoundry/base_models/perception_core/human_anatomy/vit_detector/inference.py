@@ -1,27 +1,28 @@
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+import math
+from collections import defaultdict
+from typing import Dict, List
+
 import cv2
 import mmcv
-import torch
 import numpy as np
-from tqdm import tqdm
+import torch
 import torch.nn.functional as F
-from torchvision import transforms
-from PIL import Image
-from mmengine.dataset import Compose
 from mmdet.apis import init_detector
+from mmengine.dataset import Compose
+from PIL import Image
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from worldfoundry.base_models.perception_core.detection.yolo_world import ensure_import_path
-from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.logger import create_logger
-from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.config import get_config
-from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.models import build_model
-from torch.nn.parallel import DataParallel
-import math
 from timm.data.transforms import _pil_interp
-from collections import defaultdict
-from typing import List, Dict
+from torch.nn.parallel import DataParallel
+from torchvision import transforms
+from tqdm import tqdm
 
+from worldfoundry.base_models.perception_core.detection.yolo_world import ensure_import_path
+from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.config import get_config
+from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.logger import create_logger
+from worldfoundry.base_models.perception_core.human_anatomy.vit_detector.models import build_model
 
 logger = create_logger(output_dir="./", dist_rank=0, name="abnormality_detection")
 
@@ -105,7 +106,7 @@ class Detector:
                 fh_bboxes = pred_face_hand.bboxes.cpu().numpy()
                 fh_labels = pred_face_hand.labels.cpu().numpy()
 
-                for fh_bbox, label_idx in zip(fh_bboxes, fh_labels):
+                for fh_bbox, label_idx in zip(fh_bboxes, fh_labels, strict=False):
                     adj_bbox = [
                         float(fh_bbox[0] + x1),
                         float(fh_bbox[1] + y1),
@@ -191,7 +192,7 @@ class Analyzer:
         img = self.transforms[category](img)
         return img.unsqueeze(0)
 
-    def analyze(self, video_path: str, detection_results: List[dict]) -> Dict:
+    def analyze(self, video_path: str, detection_results: list[dict]) -> dict:
         self.frame_cache = {}
         cap = cv2.VideoCapture(video_path)
         frame_results = []
@@ -224,7 +225,7 @@ class Analyzer:
         final_score = total_abnormal / total_people if total_people > 0 else 0.0
         return {"video_results": 1 - final_score, "frame_results": frame_results}
 
-    def process_frame(self, frame_idx: int, detections: List[dict]) -> Dict:
+    def process_frame(self, frame_idx: int, detections: list[dict]) -> dict:
         person_data = defaultdict(dict)
         for d in detections:
             person_id = d["person_index"]
@@ -256,7 +257,9 @@ class Analyzer:
             for i in range(0, len(batches[category]["images"]), self.batch_size):
                 results.extend(self.predict_batch(category, batches[category]["images"][i : i + self.batch_size]))
 
-            for pid, pred, bbox in zip(batches[category]["person_ids"], results, batches[category]["bbox"]):
+            for pid, pred, bbox in zip(
+                batches[category]["person_ids"], results, batches[category]["bbox"], strict=False
+            ):
                 # predictions[pid][category] = pred
                 # maybe more than one prediction for each person and category
                 if pid not in predictions:
@@ -292,7 +295,7 @@ class Analyzer:
             "persons": person_results,
         }
 
-    def predict_batch(self, category: str, batch: List[np.ndarray]) -> List[List[float]]:
+    def predict_batch(self, category: str, batch: list[np.ndarray]) -> list[list[float]]:
         preprocessed = [self.preprocess(img, category) for img in batch]
         with torch.no_grad():
             inputs = torch.cat(preprocessed, dim=0).to(self.device)

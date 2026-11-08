@@ -8,7 +8,6 @@ optional per-head gating.  Backends come from :class:`TransformerAttentionOps`.
 import torch
 
 from worldfoundry.core.attention.cache.context import ContextAttentionCache, prepend_history_mask
-
 from worldfoundry.core.nn import TransformerAttentionOps as AttentionOps
 
 from .rope import LTXRopeType, apply_rotary_emb

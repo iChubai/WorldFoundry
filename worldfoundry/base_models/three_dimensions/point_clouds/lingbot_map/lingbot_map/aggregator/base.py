@@ -11,15 +11,17 @@ Subclasses implement mode-specific attention logic.
 """
 
 import logging
+from abc import ABC, abstractmethod
+from typing import List, Optional, Tuple
+
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
-from typing import Optional, Tuple, List
 
 from worldfoundry.core.nn.blocks.layers import PatchEmbed
+
 from ..layers.block import Block
-from ..layers.rope import RotaryPositionEmbedding2D, PositionGetter
-from ..layers.vision_transformer import vit_small, vit_base, vit_large, vit_giant2
+from ..layers.rope import PositionGetter, RotaryPositionEmbedding2D
+from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +282,6 @@ class AggregatorBase(nn.Module, ABC):
         - self.frame_blocks: nn.ModuleList of frame attention blocks
         - self.global_blocks: nn.ModuleList of global attention blocks
         """
-        pass
 
     @abstractmethod
     def _setup_special_tokens(self):
@@ -296,7 +297,6 @@ class AggregatorBase(nn.Module, ABC):
         - self.patch_start_idx
         - self.num_special_tokens
         """
-        pass
 
     def _init_blocks_from_dino(self, dino_ckpt: dict):
         """
@@ -308,7 +308,7 @@ class AggregatorBase(nn.Module, ABC):
         logger.info("Initializing blocks from DINOv2 pretrained weights")
 
         # Extract block keys
-        dino_block_keys = [k for k in dino_ckpt.keys() if k.startswith("blocks.")]
+        dino_block_keys = [k for k in dino_ckpt if k.startswith("blocks.")]
         if not dino_block_keys:
             logger.warning("No 'blocks' found in DINO checkpoint")
             return
@@ -358,8 +358,8 @@ class AggregatorBase(nn.Module, ABC):
     def _embed_images(
         self,
         images: torch.Tensor,
-        num_frame_for_scale: Optional[int] = None,
-    ) -> Tuple[torch.Tensor, int, int, int, int, int]:
+        num_frame_for_scale: int | None = None,
+    ) -> tuple[torch.Tensor, int, int, int, int, int]:
         """
         Embed images and prepare for attention processing.
 
@@ -431,9 +431,8 @@ class AggregatorBase(nn.Module, ABC):
         Returns:
             Special tokens [B*S, N_special, C]
         """
-        pass
 
-    def _get_positions(self, B: int, S: int, H: int, W: int, device) -> Optional[torch.Tensor]:
+    def _get_positions(self, B: int, S: int, H: int, W: int, device) -> torch.Tensor | None:
         """
         Get 2D position embeddings for RoPE.
 
@@ -469,8 +468,8 @@ class AggregatorBase(nn.Module, ABC):
         P: int,
         C: int,
         frame_idx: int,
-        pos: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, int, List[torch.Tensor]]:
+        pos: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, int, list[torch.Tensor]]:
         """
         Process frame attention blocks.
 
@@ -525,9 +524,9 @@ class AggregatorBase(nn.Module, ABC):
         P: int,
         C: int,
         global_idx: int,
-        pos: Optional[torch.Tensor] = None,
+        pos: torch.Tensor | None = None,
         **kwargs,
-    ) -> Tuple[torch.Tensor, int, List[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, int, list[torch.Tensor]]:
         """
         Process global (cross-frame) attention blocks.
 
@@ -550,17 +549,16 @@ class AggregatorBase(nn.Module, ABC):
                 global_idx: Updated global block index
                 intermediates: List of intermediate outputs
         """
-        pass
 
     def forward(
         self,
         images: torch.Tensor,
-        selected_idx: Optional[List[int]] = None,
+        selected_idx: list[int] | None = None,
         # Mode-specific parameters
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Forward pass.
 

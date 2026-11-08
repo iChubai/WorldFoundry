@@ -10,9 +10,18 @@ from mmdet.models.layers import ChannelAttention
 from mmengine.config import ConfigDict
 from torch import Tensor
 
+# isort: split
 from mmyolo.models import RepVGGBlock
+
+# isort: split
+# isort: split
 from mmyolo.models.dense_heads import PPYOLOEHead, RTMDetHead, YOLOv5Head, YOLOv7Head, YOLOv8Head, YOLOXHead
+
+# isort: split
+# isort: split
 from mmyolo.models.layers import ImplicitA, ImplicitM
+
+# isort: split
 from ..backbone import DeployFocus, GConvFocus, NcnnFocus
 from ..bbox_code import rtmdet_bbox_decoder, yolov5_bbox_decoder, yolox_bbox_decoder
 from ..nms import batched_nms, efficient_nms, onnx_nms
@@ -22,7 +31,7 @@ from .backend import MMYOLOBackend
 class DeployModel(nn.Module):
     transpose = False
 
-    def __init__(self, baseModel: nn.Module, backend: MMYOLOBackend, postprocess_cfg: Optional[ConfigDict] = None):
+    def __init__(self, baseModel: nn.Module, backend: MMYOLOBackend, postprocess_cfg: ConfigDict | None = None):
         super().__init__()
         self.baseModel = baseModel
         self.baseHead = baseModel.bbox_head
@@ -78,7 +87,7 @@ class DeployModel(nn.Module):
                     self.baseModel.backbone.stem = GConvFocus(layer)
 
     def pred_by_feat(
-        self, cls_scores: List[Tensor], bbox_preds: List[Tensor], objectnesses: Optional[List[Tensor]] = None, **kwargs
+        self, cls_scores: list[Tensor], bbox_preds: list[Tensor], objectnesses: list[Tensor] | None = None, **kwargs
     ):
         assert len(cls_scores) == len(bbox_preds)
         dtype = cls_scores[0].dtype
@@ -103,7 +112,7 @@ class DeployModel(nn.Module):
 
         mlvl_strides = [
             flatten_priors.new_full((featmap_size[0] * featmap_size[1] * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         flatten_stride = torch.cat(mlvl_strides)
 
@@ -150,18 +159,18 @@ class DeployModel(nn.Module):
         else:
             outputs = []
             if self.transpose:
-                for feats in zip(*neck_outputs):
+                for feats in zip(*neck_outputs, strict=False):
                     if self.backend in (MMYOLOBackend.NCNN, MMYOLOBackend.TORCHSCRIPT):
                         outputs.append(torch.cat([feat.permute(0, 2, 3, 1) for feat in feats], -1))
                     else:
                         outputs.append(torch.cat(feats, 1).permute(0, 2, 3, 1))
             else:
-                for feats in zip(*neck_outputs):
+                for feats in zip(*neck_outputs, strict=False):
                     outputs.append(torch.cat(feats, 1))
             return tuple(outputs)
 
     @staticmethod
-    def forward_single(x: Tensor, convs: nn.Module) -> Tuple[Tensor]:
+    def forward_single(x: Tensor, convs: nn.Module) -> tuple[Tensor]:
         if isinstance(convs, nn.Sequential) and any(type(m) in (ImplicitA, ImplicitM) for m in convs):
             a, c, m = convs
             aw = a.implicit.clone()

@@ -11,18 +11,21 @@
 
 import logging
 import math
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Callable, Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint
 from torch.nn.init import trunc_normal_
 
-from .layers import MemEffAttention, NestedTensorBlock as Block
 from worldfoundry.core.nn import SwiGLUFFN
 from worldfoundry.core.nn.blocks.layers import Mlp, PatchEmbed
 from worldfoundry.core.nn.blocks.module_utils import named_apply
+
+from .layers import MemEffAttention
+from .layers import NestedTensorBlock as Block
 
 logger = logging.getLogger(__name__)
 
@@ -259,13 +262,13 @@ class DinoVisionTransformer(nn.Module):
             x_list: The x list.
             masks_list: The masks list.
         """
-        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list)]
+        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list, strict=False)]
         for blk in self.blocks:
             x = blk(x)
 
         all_x = x
         output = []
-        for x, masks in zip(all_x, masks_list):
+        for x, masks in zip(all_x, masks_list, strict=False):
             x_norm = self.norm(x)
             output.append(
                 {
@@ -343,11 +346,11 @@ class DinoVisionTransformer(nn.Module):
     def get_intermediate_layers(
         self,
         x: torch.Tensor,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | Sequence = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         norm=True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         """Get intermediate layers.
 
         Args:
@@ -375,7 +378,7 @@ class DinoVisionTransformer(nn.Module):
                 for out in outputs
             ]
         if return_class_token:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=False))
         return tuple(outputs)
 
     def forward(self, *args, is_training=False, **kwargs):

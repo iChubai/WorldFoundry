@@ -29,11 +29,11 @@ from typing import List
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
 import torch
 import torch.nn as nn
-from worldfoundry.core.nn.blocks.layers import Mlp
 
 from worldfoundry.base_models.diffusion_model.models.networks.sana.activation import build_act, get_act_name
 from worldfoundry.base_models.diffusion_model.models.networks.sana.normalization import build_norm, get_norm_name
 from worldfoundry.core.nn import get_same_padding, val2tuple
+from worldfoundry.core.nn.blocks.layers import Mlp
 
 
 class ConvLayer(nn.Module):
@@ -222,7 +222,7 @@ class GLUMBConv(nn.Module):
         # Conservative estimate of the largest intermediate (after inverted_conv).
         elements_per_bt = self.inverted_conv.conv.out_channels * H * W
         max_bt = max(1, _INT32_SAFE_CONV_ELEMENTS // elements_per_bt)
-        if BT <= max_bt:
+        if max_bt >= BT:
             return self._apply_spatial(x)
         return torch.cat([self._apply_spatial(x[s : s + max_bt]) for s in range(0, BT, max_bt)], dim=0)
 
@@ -342,7 +342,7 @@ class GLUMBConvTemp(GLUMBConv):
 class ChunkGLUMBConvTemp(GLUMBConvTemp):
     """Chunk-causal temporal GLUMBConv for long video FFN passes."""
 
-    def forward(self, x: torch.Tensor, HW=None, chunk_index: List[int] = [0]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, HW=None, chunk_index: list[int] = [0]) -> torch.Tensor:
         """Forward.
 
         Args:

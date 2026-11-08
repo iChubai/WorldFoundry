@@ -589,7 +589,7 @@ class ConditionModulationBlock(nn.Module):
         return x
 
 
-class PositionGetter(object):
+class PositionGetter:
     """return positions of patches"""
 
     def __init__(self):
@@ -657,11 +657,11 @@ class PatchEmbed(nn.Module):
         """
         B, C, H, W = x.shape
         torch._assert(
-            H == self.img_size[0],
+            self.img_size[0] == H,
             f"Input image height ({H}) doesn't match model ({self.img_size[0]}).",
         )
         torch._assert(
-            W == self.img_size[1],
+            self.img_size[1] == W,
             f"Input image width ({W}) doesn't match model ({self.img_size[1]}).",
         )
         x = self.proj(x)

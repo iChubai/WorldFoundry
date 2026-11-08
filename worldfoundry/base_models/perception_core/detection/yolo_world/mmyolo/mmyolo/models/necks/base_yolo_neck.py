@@ -133,8 +133,8 @@ class BaseYOLONeck(BaseModule, metaclass=ABCMeta):
 
     def __init__(
         self,
-        in_channels: List[int],
-        out_channels: Union[int, List[int]],
+        in_channels: list[int],
+        out_channels: int | list[int],
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         upsample_feats_cat_first: bool = True,
@@ -179,32 +179,26 @@ class BaseYOLONeck(BaseModule, metaclass=ABCMeta):
     @abstractmethod
     def build_reduce_layer(self, idx: int):
         """build reduce layer."""
-        pass
 
     @abstractmethod
     def build_upsample_layer(self, idx: int):
         """build upsample layer."""
-        pass
 
     @abstractmethod
     def build_top_down_layer(self, idx: int):
         """build top down layer."""
-        pass
 
     @abstractmethod
     def build_downsample_layer(self, idx: int):
         """build downsample layer."""
-        pass
 
     @abstractmethod
     def build_bottom_up_layer(self, idx: int):
         """build bottom up layer."""
-        pass
 
     @abstractmethod
     def build_out_layer(self, idx: int):
         """build out layer."""
-        pass
 
     def _freeze_all(self):
         """Freeze the model."""
@@ -221,7 +215,7 @@ class BaseYOLONeck(BaseModule, metaclass=ABCMeta):
         if self.freeze_all:
             self._freeze_all()
 
-    def forward(self, inputs: List[torch.Tensor]) -> tuple:
+    def forward(self, inputs: list[torch.Tensor]) -> tuple:
         """Forward function."""
         assert len(inputs) == len(self.in_channels)
         # reduce layers

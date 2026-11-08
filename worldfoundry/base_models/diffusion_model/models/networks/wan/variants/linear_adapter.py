@@ -21,8 +21,6 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linea
 class SanaVideoMSBlock(WanAttentionBlock):
     """Checkpoint alias of :class:`WanAttentionBlock` for Sana-Video weights."""
 
-    pass
-
 
 class SanaWanModel(WanModel):
     """Wan 2.1 T2V/I2V stem with Sana-named flash-attention blocks."""

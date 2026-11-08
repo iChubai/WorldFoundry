@@ -23,8 +23,9 @@ from __future__ import annotations
 import json
 import re
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 import torch
@@ -194,7 +195,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         model_name: str | None = None,
         weights_path: str | None = None,
         **kwargs,
-    ) -> "DepthAnything3":
+    ) -> DepthAnything3:
         """Load Depth Anything 3 from a local checkpoint or Hugging Face repo."""
         resolved_model_name = model_name or _model_name_from_repo_id(repo_id)
         model = cls(model_name=resolved_model_name, **kwargs)
@@ -323,7 +324,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         # Feat_vis export parameters
         feat_vis_fps: int = 15,
         # Other export parameters, e.g., gs_ply, gs_video
-        export_kwargs: Optional[dict] = None,
+        export_kwargs: dict | None = None,
     ) -> Prediction:
         """
         Run inference on input images.

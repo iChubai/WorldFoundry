@@ -2,14 +2,13 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> ttt.py functionality."""
 
+import collections
 import math
-from einops import rearrange
+
 import torch
 import torch.nn as nn
+from einops import rearrange
 from torch.nn import functional as F
-
-import collections
-
 
 TTTOperator = collections.namedtuple("TTTOperator", ["start", "end", "update", "apply"])
 

@@ -6,6 +6,7 @@ from transformers import AutoConfig, AutoTokenizer
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..constant import LLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -42,7 +43,7 @@ register_model(
 
 
 def get_model_tokenizer_polylm(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True, use_fast=False, legacy=True)
     return get_model_tokenizer_with_flash_attn(
@@ -70,7 +71,7 @@ register_model(
 
 
 def get_model_tokenizer_yuan(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     tokenizer = AutoTokenizer.from_pretrained(
         model_dir, add_eos_token=False, add_bos_token=False, eos_token="<eod>", legacy=True
@@ -300,7 +301,7 @@ register_model(
 def get_model_tokenizer_qwen2_gte(
     model_dir: str,
     model_info: ModelInfo,
-    model_kwargs: Dict[str, Any],
+    model_kwargs: dict[str, Any],
     load_model: bool = True,
     *,
     tokenizer=None,

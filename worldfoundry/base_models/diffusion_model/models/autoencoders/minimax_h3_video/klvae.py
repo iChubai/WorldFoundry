@@ -57,7 +57,7 @@ def get_tile_parallel_state():
     return 0, 1
 
 
-class DiagonalGaussianDistribution(object):
+class DiagonalGaussianDistribution:
     def __init__(self, parameters, upcast_fp32=True):
         if upcast_fp32:
             parameters = parameters.to(dtype=torch.float32)
@@ -298,8 +298,8 @@ class AutoencoderKL(nn.Module):
         num_tiles = i_max * j_max
 
         x_tiles = []
-        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len)):
-            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len)):
+        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):
+            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):
                 tile = x[..., i_pos : i_pos + i_len, j_pos : j_pos + j_len]
                 x_tiles.append(tile)
 
@@ -337,12 +337,12 @@ class AutoencoderKL(nn.Module):
         num_tiles = i_max * j_max
 
         z_tiles = []
-        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len)):
+        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):
             i_pos, i_len = (
                 i_pos // self.vae_ratio,
                 i_len // self.vae_ratio,
             )
-            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len)):
+            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):
                 j_pos, j_len = (j_pos // self.vae_ratio, j_len // self.vae_ratio)
                 tile = z[..., i_pos : i_pos + i_len, j_pos : j_pos + j_len]
                 z_tiles.append(tile)
@@ -736,11 +736,11 @@ class AutoencoderKL(nn.Module):
     @torch.no_grad()
     def encode_images(
         self,
-        images: Union[List[np.ndarray], List[torch.Tensor]],
+        images: list[np.ndarray] | list[torch.Tensor],
         transform_input: bool = False,
         use_fp16_latent: bool = False,
         verbose: bool = False,
-    ) -> List[torch.Tensor]:
+    ) -> list[torch.Tensor]:
         """encode images into latents
 
         Args:
@@ -815,12 +815,12 @@ class AutoencoderKL(nn.Module):
     @torch.no_grad()
     def encode_videos(
         self,
-        videos: Union[List[np.ndarray], List[torch.Tensor]],
+        videos: list[np.ndarray] | list[torch.Tensor],
         transform_input: bool = False,
         use_fp16_latent: bool = False,
         verbose: bool = False,
         encode_prefix: bool = False,
-    ) -> List[torch.Tensor]:
+    ) -> list[torch.Tensor]:
         """encode videos into latents
 
         Args:

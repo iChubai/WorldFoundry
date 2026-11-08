@@ -225,9 +225,9 @@ class UniDepthV2(
         pixel_encoder_embed_dims = (
             pixel_encoder.embed_dims
             if hasattr(pixel_encoder, "embed_dims")
-            else [getattr(pixel_encoder, "embed_dim") * 2**i for i in range(4)]
+            else [pixel_encoder.embed_dim * 2**i for i in range(4)]
         )
-        config["model"]["pixel_encoder"]["embed_dim"] = getattr(pixel_encoder, "embed_dim")
+        config["model"]["pixel_encoder"]["embed_dim"] = pixel_encoder.embed_dim
         config["model"]["pixel_encoder"]["embed_dims"] = pixel_encoder_embed_dims
         config["model"]["pixel_encoder"]["depths"] = pixel_encoder.depths
 
@@ -239,7 +239,7 @@ class UniDepthV2(
         assert stacking_fn in STACKING_FNS, f"Stacking function {stacking_fn} not found in {STACKING_FNS.keys()}"
         self.stacking_fn = STACKING_FNS[stacking_fn]
 
-        self.slices_encoder_range = list(zip([0, *pixel_encoder.depths[:-1]], pixel_encoder.depths))
+        self.slices_encoder_range = list(zip([0, *pixel_encoder.depths[:-1]], pixel_encoder.depths, strict=False))
         self.shape_constraints = config["data"]["shape_constraints"]
         self.shape_constraints["pixels_bounds_ori"] = self.shape_constraints.get("pixels_bounds", [1400, 2400])
         self.interpolation_mode = "bilinear"

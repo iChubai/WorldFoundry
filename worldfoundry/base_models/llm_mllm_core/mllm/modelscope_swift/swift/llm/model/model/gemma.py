@@ -2,6 +2,7 @@
 from typing import Any, Dict
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..register import (
@@ -16,7 +17,7 @@ from ..utils import ModelInfo
 
 
 def get_model_tokenizer_paligemma_vision(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     from transformers import PaliGemmaForConditionalGeneration
 
@@ -117,7 +118,7 @@ register_model(
 
 
 def get_model_tokenizer_gemma3_text(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     # It is strongly recommended to train Gemma3 models with the `eager` attention implementation instead of `sdpa`.
     kwargs["attn_impl"] = kwargs["attn_impl"] or "eager"
@@ -147,7 +148,7 @@ register_model(
 
 
 def get_model_tokenizer_gemma3_vision(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     try:
         from transformers import Gemma3ForConditionalGeneration

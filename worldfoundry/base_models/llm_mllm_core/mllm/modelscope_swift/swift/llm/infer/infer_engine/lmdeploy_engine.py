@@ -3,9 +3,10 @@ import asyncio
 import inspect
 import os
 import time
+from collections.abc import AsyncIterator, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import lmdeploy
 import torch
@@ -23,6 +24,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger, get_seed
+
 from ..protocol import (
     ChatCompletionResponse,
     ChatCompletionResponseChoice,
@@ -49,20 +51,20 @@ class LmdeployEngine(InferEngine):
     def __init__(
         self,
         model_id_or_path: str,
-        torch_dtype: Optional[torch.dtype] = None,
+        torch_dtype: torch.dtype | None = None,
         *,
-        model_type: Optional[str] = None,
-        use_hf: Optional[bool] = None,
-        hub_token: Optional[str] = None,
-        revision: Optional[str] = None,
+        model_type: str | None = None,
+        use_hf: bool | None = None,
+        hub_token: str | None = None,
+        revision: str | None = None,
         # engine_kwargs
         tp: int = 1,
-        session_len: Optional[int] = None,
+        session_len: int | None = None,
         cache_max_entry_count: float = 0.8,
         quant_policy: int = 0,  # e.g. 4, 8
         vision_batch_size: int = 1,  # max_batch_size in VisionConfig
-        engine_kwargs: Optional[Dict[str, Any]] = None,
-        template: Optional[Template] = None,
+        engine_kwargs: dict[str, Any] | None = None,
+        template: Template | None = None,
     ) -> None:
         if engine_kwargs is None:
             engine_kwargs = {}
@@ -97,7 +99,7 @@ class LmdeployEngine(InferEngine):
     def _prepare_engine_kwargs(
         self,
         tp: int = 1,
-        session_len: Optional[int] = None,
+        session_len: int | None = None,
         cache_max_entry_count: float = 0.8,
         quant_policy: int = 0,
         vision_batch_size: int = 1,
@@ -124,7 +126,7 @@ class LmdeployEngine(InferEngine):
     def _patch_pipeline(self):
         _old_best_match_model = async_engine.best_match_model
 
-        def _best_match_model(*args, **kwargs) -> Optional[str]:
+        def _best_match_model(*args, **kwargs) -> str | None:
             return self.model_info.model_type
 
         async_engine.best_match_model = _best_match_model
@@ -154,8 +156,8 @@ class LmdeployEngine(InferEngine):
         else:
             self.generation_config = LmdeployGenerationConfig()
 
-    def _get_stop_token_ids(self, stop_words: List[Union[str, List[int], None]]) -> List[int]:
-        stop_token_ids: List[int] = []
+    def _get_stop_token_ids(self, stop_words: list[str | list[int] | None]) -> list[int]:
+        stop_token_ids: list[int] = []
         for stop_word in stop_words:
             if stop_word is None:
                 continue
@@ -206,7 +208,7 @@ class LmdeployEngine(InferEngine):
         return res
 
     async def _infer_stream_async(
-        self, template: Template, inputs: Dict[str, Any], generation_config: LmdeployGenerationConfig
+        self, template: Template, inputs: dict[str, Any], generation_config: LmdeployGenerationConfig
     ) -> AsyncIterator[ChatCompletionStreamResponse]:
         session_id = time.time_ns()
         kwargs = {"stream_output": True, "gen_config": generation_config, "sequence_start": True, "sequence_end": True}
@@ -255,7 +257,7 @@ class LmdeployEngine(InferEngine):
                 yield ChatCompletionStreamResponse(model=self.model_name, choices=choices, usage=usage_info)
 
     async def _infer_full_async(
-        self, template: Template, inputs: Dict[str, Any], generation_config: LmdeployGenerationConfig
+        self, template: Template, inputs: dict[str, Any], generation_config: LmdeployGenerationConfig
     ) -> ChatCompletionResponse:
         session_id = time.time_ns()
         kwargs = {"stream_output": False, "gen_config": generation_config, "sequence_start": True, "sequence_end": True}
@@ -295,12 +297,12 @@ class LmdeployEngine(InferEngine):
     async def infer_async(
         self,
         infer_request: InferRequest,
-        request_config: Optional[RequestConfig] = None,
+        request_config: RequestConfig | None = None,
         *,
-        template: Optional[Template] = None,
+        template: Template | None = None,
         pre_infer_hook=None,
         **kwargs,
-    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
+    ) -> ChatCompletionResponse | AsyncIterator[ChatCompletionStreamResponse]:
         request_config = deepcopy(request_config or RequestConfig())
         if template is None:
             template = self.default_template
@@ -347,11 +349,11 @@ class LmdeployEngine(InferEngine):
 
     def infer(
         self,
-        infer_requests: List[InferRequest],
-        request_config: Optional[RequestConfig] = None,
-        metrics: Optional[List[Metric]] = None,
+        infer_requests: list[InferRequest],
+        request_config: RequestConfig | None = None,
+        metrics: list[Metric] | None = None,
         *,
-        template: Optional[Template] = None,
-        use_tqdm: Optional[bool] = None,
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+        template: Template | None = None,
+        use_tqdm: bool | None = None,
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         return super().infer(infer_requests, request_config, metrics, template=template, use_tqdm=use_tqdm)

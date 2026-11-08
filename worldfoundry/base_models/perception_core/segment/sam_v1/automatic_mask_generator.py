@@ -41,7 +41,7 @@ class SamAutomaticMaskGenerator:
     def __init__(
         self,
         model: Sam,
-        points_per_side: Optional[int] = 32,
+        points_per_side: int | None = 32,
         points_per_batch: int = 64,
         pred_iou_thresh: float = 0.88,
         stability_score_thresh: float = 0.95,
@@ -51,7 +51,7 @@ class SamAutomaticMaskGenerator:
         crop_nms_thresh: float = 0.7,
         crop_overlap_ratio: float = 512 / 1500,
         crop_n_points_downscale_factor: int = 1,
-        point_grids: Optional[List[np.ndarray]] = None,
+        point_grids: list[np.ndarray] | None = None,
         min_mask_region_area: int = 0,
         output_mode: str = "binary_mask",
     ) -> None:
@@ -139,7 +139,7 @@ class SamAutomaticMaskGenerator:
         self.output_mode = output_mode
 
     @torch.no_grad()
-    def generate(self, image: np.ndarray) -> List[Dict[str, Any]]:
+    def generate(self, image: np.ndarray) -> list[dict[str, Any]]:
         """
         Generates masks for the given image.
 
@@ -213,7 +213,7 @@ class SamAutomaticMaskGenerator:
 
         # Iterate over image crops
         data = MaskData()
-        for crop_box, layer_idx in zip(crop_boxes, layer_idxs):
+        for crop_box, layer_idx in zip(crop_boxes, layer_idxs, strict=False):
             crop_data = self._process_crop(image, crop_box, layer_idx, orig_size)
             data.cat(crop_data)
 
@@ -236,9 +236,9 @@ class SamAutomaticMaskGenerator:
     def _process_crop(
         self,
         image: np.ndarray,
-        crop_box: List[int],
+        crop_box: list[int],
         crop_layer_idx: int,
-        orig_size: Tuple[int, ...],
+        orig_size: tuple[int, ...],
     ) -> MaskData:
         """Helper function to process crop.
 
@@ -288,9 +288,9 @@ class SamAutomaticMaskGenerator:
     def _process_batch(
         self,
         points: np.ndarray,
-        im_size: Tuple[int, ...],
-        crop_box: List[int],
-        orig_size: Tuple[int, ...],
+        im_size: tuple[int, ...],
+        crop_box: list[int],
+        orig_size: tuple[int, ...],
     ) -> MaskData:
         """Helper function to process batch.
 

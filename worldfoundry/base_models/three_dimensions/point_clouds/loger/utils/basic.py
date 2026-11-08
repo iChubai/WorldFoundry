@@ -1,14 +1,15 @@
 """Module for base_models -> three_dimensions -> point_clouds -> loger -> utils -> basic.py functionality."""
 
+import math
 import os
 import os.path as osp
-import math
+
 import cv2
-from PIL import Image
-import torch
-from torchvision import transforms
-from plyfile import PlyData, PlyElement
 import numpy as np
+import torch
+from PIL import Image
+from plyfile import PlyData, PlyElement
+from torchvision import transforms
 
 
 def load_images_as_tensor(path="data/truck", interval=1, PIXEL_LIMIT=255000, Target_W=None, Target_H=None):
@@ -32,7 +33,7 @@ def load_images_as_tensor(path="data/truck", interval=1, PIXEL_LIMIT=255000, Tar
         print(f"Loading frames from video: {path}")
         cap = cv2.VideoCapture(path)
         if not cap.isOpened():
-            raise IOError(f"Cannot open video file: {path}")
+            raise OSError(f"Cannot open video file: {path}")
         frame_idx = 0
         while True:
             ret, frame = cap.read()

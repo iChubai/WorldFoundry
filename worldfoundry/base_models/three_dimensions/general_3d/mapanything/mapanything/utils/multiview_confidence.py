@@ -15,7 +15,6 @@ from typing import List, Optional
 import torch
 import torch.nn.functional as F
 from einops import einsum
-
 from mapanything.utils.geometry import (
     closed_form_pose_inverse,
     depthmap_to_camera_frame,
@@ -64,9 +63,9 @@ def _project_pts3d_to_image_with_depth(pts3d: torch.Tensor, intrinsics: torch.Te
 
 
 def _compute_frustum_intersection_matrix(
-    intrinsics: List[torch.Tensor],
-    camera_poses: List[torch.Tensor],
-    depth_z: List[torch.Tensor],
+    intrinsics: list[torch.Tensor],
+    camera_poses: list[torch.Tensor],
+    depth_z: list[torch.Tensor],
     frustum_chunk_size: int,
     device: torch.device,
 ) -> torch.Tensor:
@@ -117,14 +116,14 @@ def _compute_frustum_intersection_matrix(
 
 
 def compute_multiview_depth_confidence(
-    depth_z: List[torch.Tensor],
-    intrinsics: List[torch.Tensor],
-    camera_poses: List[torch.Tensor],
+    depth_z: list[torch.Tensor],
+    intrinsics: list[torch.Tensor],
+    camera_poses: list[torch.Tensor],
     depth_assoc_abs_thresh: float = 0.02,
     depth_assoc_rel_thresh: float = 0.02,
     frustum_chunk_size: int = 50,
-    depth_masks: Optional[List[torch.Tensor]] = None,
-) -> List[torch.Tensor]:
+    depth_masks: list[torch.Tensor] | None = None,
+) -> list[torch.Tensor]:
     """
     Compute multi-view depth consistency confidence for each view.
 

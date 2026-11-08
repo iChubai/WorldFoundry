@@ -1,10 +1,11 @@
-import torch
-import numpy as np
 import os
 import tempfile
 from typing import List, Union
-from transformers import AutoModel, AutoTokenizer
+
+import numpy as np
+import torch
 from PIL import Image
+from transformers import AutoModel, AutoTokenizer
 
 from .vqa_model import VQAScoreModel
 
@@ -62,7 +63,7 @@ class InternLMXComposer25Model(VQAScoreModel):
         else:
             return path
 
-    def load_images(self, paths: List[str]) -> List[str]:
+    def load_images(self, paths: list[str]) -> list[str]:
         processed_paths = []
         for path in paths:
             if path.startswith(("http://", "https://")):
@@ -74,8 +75,8 @@ class InternLMXComposer25Model(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         question_template: str = 'Does this figure show "{}"? Please answer yes or no.',
         answer_template: str = "Yes",
     ) -> torch.Tensor:
@@ -87,7 +88,7 @@ class InternLMXComposer25Model(VQAScoreModel):
 
         lm_probs = []
         temp_files = []
-        for path, question, answer in zip(processed_paths, questions, answers):
+        for path, question, answer in zip(processed_paths, questions, answers, strict=False):
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file
                 query = f"Here are some frames of a video. {question}"
             else:  # Image file
@@ -163,7 +164,7 @@ class InternLMXComposer25Model(VQAScoreModel):
 
         return torch.tensor(lm_probs)
 
-    def generate(self, images: List[str], texts: List[str], max_new_tokens: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], max_new_tokens: int = 256) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         questions = texts
@@ -171,7 +172,7 @@ class InternLMXComposer25Model(VQAScoreModel):
 
         generated_outputs = []
         temp_files = []
-        for path, question in zip(processed_paths, questions):
+        for path, question in zip(processed_paths, questions, strict=False):
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):
                 query = f"Here are some frames of a video. {question}"
             else:

@@ -10,15 +10,32 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
+
+# isort: split
 from ...models.albef_models import AlbefBase
+
+# isort: split
+# isort: split
 from ...models.albef_models.albef_outputs import (
     AlbefIntermediateOutput,
     AlbefOutputWithLogits,
 )
+
+# isort: split
+# isort: split
 from ...models.base_model import MomentumDistilationMixin
+
+# isort: split
+# isort: split
 from ...models.med import XBertEncoder
+
+# isort: split
+# isort: split
 from ...models.vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 
 
@@ -153,7 +170,7 @@ class AlbefClassification(AlbefBase, MomentumDistilationMixin):
         num_classes = cfg.get("num_classes", -1)
         max_txt_len = cfg.get("max_txt_len", 40)
 
-        assert num_classes > 1, "Invalid number of classes provided, found {}".format(num_classes)
+        assert num_classes > 1, f"Invalid number of classes provided, found {num_classes}"
 
         model = cls(
             image_encoder=image_encoder,

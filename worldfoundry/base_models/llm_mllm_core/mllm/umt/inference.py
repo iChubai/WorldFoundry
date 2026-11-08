@@ -8,11 +8,11 @@ import torch
 from huggingface_hub import hf_hub_download
 from transformers import BertTokenizer
 
-from worldfoundry.core.configuration.python import load_python_config
 from worldfoundry.core import (
     get_video_details,
     load_frames_from_video,
 )
+from worldfoundry.core.configuration.python import load_python_config
 
 from .models import UMT
 from .models.criterions import get_sim

@@ -28,7 +28,7 @@ class Tuner:
     def save_pretrained(
         model: torch.nn.Module,
         save_directory: str,
-        state_dict: Optional[dict] = None,
+        state_dict: dict | None = None,
         safe_serialization: bool = True,
         **kwargs,
     ) -> None:
@@ -59,7 +59,7 @@ class PeftTuner(Tuner):
     def save_pretrained(
         model: torch.nn.Module,
         save_directory: str,
-        state_dict: Optional[dict] = None,
+        state_dict: dict | None = None,
         safe_serialization: bool = True,
         **kwargs,
     ) -> None:

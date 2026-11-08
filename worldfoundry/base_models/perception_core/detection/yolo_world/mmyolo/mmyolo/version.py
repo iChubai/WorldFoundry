@@ -7,7 +7,7 @@ from typing import Tuple
 short_version = __version__
 
 
-def parse_version_info(version_str: str) -> Tuple:
+def parse_version_info(version_str: str) -> tuple:
     """Parse version info of MMYOLO."""
     version_info = []
     for x in version_str.split("."):

@@ -25,7 +25,7 @@ batch_shapes_cfg = dict(img_size=img_scale[0])
 anchors = [[(26, 44), (67, 57), (61, 130)], [(121, 118), (120, 239), (206, 182)], [(376, 161), (234, 324), (428, 322)]]
 num_det_layers = 3
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov5/yolov5_s-v61_syncbn_fast_8xb16-300e_coco/yolov5_s-v61_syncbn_fast_8xb16-300e_coco_20220918_084700-86e02187.pth"
 
 tta_img_scales = [img_scale, (416, 416), (640, 640)]
 

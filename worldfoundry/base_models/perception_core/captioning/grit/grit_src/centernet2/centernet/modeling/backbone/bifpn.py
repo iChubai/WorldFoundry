@@ -1,22 +1,22 @@
 # Modified from https://github.com/rwightman/efficientdet-pytorch/blob/master/effdet/efficientdet.py
 # The original file is under Apache-2.0 License
 import math
-from os.path import join
-import numpy as np
 from collections import OrderedDict
+from os.path import join
 from typing import List
 
-import torch
-from torch import nn
-import torch.utils.model_zoo as model_zoo
-import torch.nn.functional as F
 import fvcore.nn.weight_init as weight_init
-
-from detectron2.layers import ShapeSpec, Conv2d
-from detectron2.modeling.backbone.resnet import build_resnet_backbone
-from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
+import numpy as np
+import torch
+import torch.nn.functional as F
+import torch.utils.model_zoo as model_zoo
+from detectron2.layers import Conv2d, ShapeSpec
 from detectron2.layers.batch_norm import get_norm
 from detectron2.modeling.backbone import Backbone
+from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
+from detectron2.modeling.backbone.resnet import build_resnet_backbone
+from torch import nn
+
 from .dlafpn import dla34
 
 
@@ -287,7 +287,7 @@ class FpnCombine(nn.Module):
         elif self.weight_method == "sum":
             x = torch.stack(nodes, dim=-1)
         else:
-            raise ValueError("unknown weight_method {}".format(self.weight_method))
+            raise ValueError(f"unknown weight_method {self.weight_method}")
         x = torch.sum(x, dim=-1)
         return x
 
@@ -395,13 +395,13 @@ class BiFPN(Backbone):
         self.in_features = in_features
         self._size_divisibility = 128
         levels = [int(math.log2(s)) for s in in_strides]
-        self._out_feature_strides = {"p{}".format(int(math.log2(s))): s for s in in_strides}
+        self._out_feature_strides = {f"p{int(math.log2(s))}": s for s in in_strides}
         if len(in_features) < num_levels:
             for l in range(num_levels - len(in_features)):
                 s = l + levels[-1]
-                self._out_feature_strides["p{}".format(s + 1)] = 2 ** (s + 1)
-        self._out_features = list(sorted(self._out_feature_strides.keys()))
-        self._out_feature_channels = {k: out_channels for k in self._out_features}
+                self._out_feature_strides[f"p{s + 1}"] = 2 ** (s + 1)
+        self._out_features = sorted(self._out_feature_strides.keys())
+        self._out_feature_channels = dict.fromkeys(self._out_features, out_channels)
 
         # print('self._out_feature_strides', self._out_feature_strides)
         # print('self._out_feature_channels', self._out_feature_channels)
@@ -473,7 +473,7 @@ class BiFPN(Backbone):
         shapes = [xx.shape for xx in x]
         # print('resample shapes', shapes)
         x = self.cell(x)
-        out = {f: xx for f, xx in zip(self._out_features, x)}
+        out = {f: xx for f, xx in zip(self._out_features, x, strict=False)}
         # import pdb; pdb.set_trace()
         return out
 

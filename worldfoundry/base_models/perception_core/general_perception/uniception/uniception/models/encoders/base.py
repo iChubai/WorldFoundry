@@ -22,8 +22,6 @@ class EncoderInput:
 class EncoderOutput:
     "Data class for Encoder Output"
 
-    pass
-
 
 @dataclass
 class EncoderGlobalRepInput:
@@ -46,7 +44,7 @@ class UniCeptionEncoderBase(nn.Module):
         self,
         name: str,
         data_norm_type: str,
-        size: Optional[str] = None,
+        size: str | None = None,
         *args,
         **kwargs,
     ):
@@ -56,7 +54,7 @@ class UniCeptionEncoderBase(nn.Module):
         super().__init__(*args, **kwargs)
 
         self.name: str = name
-        self.size: Optional[str] = size
+        self.size: str | None = size
 
         self.data_norm_type: str = data_norm_type
 
@@ -114,7 +112,7 @@ class ViTEncoderOutput(EncoderOutput):
     "Data class for Vision Transformer Encoder Output"
 
     features: Tensor
-    registers: Optional[Tensor] = None
+    registers: Tensor | None = None
 
 
 class UniCeptionViTEncoderBase(UniCeptionEncoderBase):

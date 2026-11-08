@@ -51,22 +51,31 @@ import torch.amp as amp
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 from torch import nn
-from torch.nn import functional as F
 from torch.distributed import ProcessGroup, get_process_group_ranks
 from torch.distributed._composable.fsdp import fully_shard
+from torch.nn import functional as F
 from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
 
 from worldfoundry.core.attention import attention
 from worldfoundry.core.attention.backends.native import NativeAttention
 from worldfoundry.core.distributed.model_parallel.context import split_inputs_cp
 from worldfoundry.core.distributed.runtime.logging import log
+
+# isort: split
 from worldfoundry.core.kernels import layer_norm_scale_shift, qk_rmsnorm_rope, residual_gate_add
-from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.encoders.structured_conditioning import DataType
+from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.context_parallel import (
     MinimalA2AAttnOp,
     NattenA2AAttnOp,
 )
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighborhood_attention import (
     NeighborhoodAttention,
 )
@@ -135,7 +144,7 @@ def torch_attention_op(
     q_B_S_H_D: torch.Tensor,
     k_B_S_H_D: torch.Tensor,
     v_B_S_H_D: torch.Tensor,
-    attn_mask: Optional[torch.Tensor] = None,
+    attn_mask: torch.Tensor | None = None,
     flatten_heads: bool = True,
 ) -> torch.Tensor:
     """Scaled dot-product attention with optional mask.
@@ -159,7 +168,7 @@ def flex_attention_op(
     q_B_S_H_D: torch.Tensor,
     k_B_S_H_D: torch.Tensor,
     v_B_S_H_D: torch.Tensor,
-    attn_mask: Optional[BlockMask] = None,
+    attn_mask: BlockMask | None = None,
     flatten_heads: bool = True,
 ) -> torch.Tensor:
     # Rearrange to [B, H, S, D]
@@ -406,8 +415,8 @@ class Attention(nn.Module):
         q,
         k,
         v,
-        video_size: Optional[VideoSize] = None,
-        kv_cache_cfg: Optional[KVCacheConfig] = None,
+        video_size: VideoSize | None = None,
+        kv_cache_cfg: KVCacheConfig | None = None,
     ):
         additional_args = {}
         if isinstance(self.attn_op, (NattenA2AAttnOp, NeighborhoodAttention)) or self.backend == "i4":
@@ -428,10 +437,10 @@ class Attention(nn.Module):
     def forward(
         self,
         x,
-        context: Optional[torch.Tensor] = None,
-        rope_emb: Optional[torch.Tensor] = None,
-        video_size: Optional[VideoSize] = None,
-        kv_cache_cfg: Optional[KVCacheConfig] = None,
+        context: torch.Tensor | None = None,
+        rope_emb: torch.Tensor | None = None,
+        video_size: VideoSize | None = None,
+        kv_cache_cfg: KVCacheConfig | None = None,
     ):
         """
         Args:
@@ -606,10 +615,10 @@ class VideoRopePosition3DEmb(VideoPositionEmb):
     def generate_embeddings(
         self,
         B_T_H_W_C: torch.Size,
-        fps: Optional[torch.Tensor] = None,
-        h_ntk_factor: Optional[float] = None,
-        w_ntk_factor: Optional[float] = None,
-        t_ntk_factor: Optional[float] = None,
+        fps: torch.Tensor | None = None,
+        h_ntk_factor: float | None = None,
+        w_ntk_factor: float | None = None,
+        t_ntk_factor: float | None = None,
     ):
         """
         Generate embeddings for the given input size.
@@ -637,7 +646,7 @@ class VideoRopePosition3DEmb(VideoPositionEmb):
         temporal_freqs = 1.0 / (t_theta ** self.dim_temporal_range.float())
 
         B, T, H, W, _ = B_T_H_W_C
-        assert H <= self.max_h and W <= self.max_w, (
+        assert self.max_h >= H and self.max_w >= W, (
             f"Input dimensions (H={H}, W={W}) exceed the maximum dimensions (max_h={self.max_h}, max_w={self.max_w})"
         )
         half_emb_h = torch.outer(self.seq[:H], h_spatial_freqs)
@@ -975,7 +984,7 @@ class FinalLayer(nn.Module):
         # x_BT_HW_D,
         x_B_T_H_W_D,
         emb_B_T_D,
-        adaln_lora_B_T_3D: Optional[torch.Tensor] = None,
+        adaln_lora_B_T_3D: torch.Tensor | None = None,
     ):
         # Released Gamma checkpoints store this modulation path in bfloat16.
         # Current PyTorch disables float32 autocast on CUDA, so requiring a
@@ -1037,7 +1046,7 @@ class Block(nn.Module):
         use_adaln_lora: bool = False,
         adaln_lora_dim: int = 256,
         backend: str = "flash",
-        image_context_dim: Optional[int] = None,
+        image_context_dim: int | None = None,
         use_wan_fp32_strategy: bool = False,
     ):
         super().__init__()
@@ -1136,10 +1145,10 @@ class Block(nn.Module):
         x_B_T_H_W_D: torch.Tensor,
         emb_B_T_D: torch.Tensor,
         crossattn_emb: torch.Tensor,
-        rope_emb_L_1_1_D: Optional[torch.Tensor] = None,
-        adaln_lora_B_T_3D: Optional[torch.Tensor] = None,
-        extra_per_block_pos_emb: Optional[torch.Tensor] = None,
-        kv_cache_cfg: Optional[KVCacheConfig] = None,
+        rope_emb_L_1_1_D: torch.Tensor | None = None,
+        adaln_lora_B_T_3D: torch.Tensor | None = None,
+        extra_per_block_pos_emb: torch.Tensor | None = None,
+        kv_cache_cfg: KVCacheConfig | None = None,
     ) -> torch.Tensor:
         if extra_per_block_pos_emb is not None:
             x_B_T_H_W_D = x_B_T_H_W_D + extra_per_block_pos_emb
@@ -1345,7 +1354,7 @@ class MinimalDiT(nn.Module):
         crossattn_emb_channels: int = 1024,
         use_crossattn_projection: bool = False,
         crossattn_proj_in_channels: int = 1024,
-        extra_image_context_dim: Optional[int] = None,
+        extra_image_context_dim: int | None = None,
         # positional embedding settings
         pos_emb_cls: str = "sincos",
         pos_emb_learnable: bool = False,
@@ -1363,7 +1372,7 @@ class MinimalDiT(nn.Module):
         extra_t_extrapolation_ratio: float = 1.0,
         rope_enable_fps_modulation: bool = True,
         n_dense_blocks: int = -1,
-        natten_parameters: Union[dict, list] = None,
+        natten_parameters: dict | list = None,
         # if True, will closely match wan's strategy to use fp32 in certain layers/operations
         use_wan_fp32_strategy: bool = False,
     ) -> None:
@@ -1531,9 +1540,9 @@ class MinimalDiT(nn.Module):
     def prepare_embedded_sequence(
         self,
         x_B_C_T_H_W: torch.Tensor,
-        fps: Optional[torch.Tensor] = None,
-        padding_mask: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]:
+        fps: torch.Tensor | None = None,
+        padding_mask: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
         """
         Prepares an embedded sequence tensor by applying positional embeddings and handling padding masks.
 
@@ -1596,12 +1605,12 @@ class MinimalDiT(nn.Module):
         x_B_C_T_H_W: torch.Tensor,
         timesteps_B_T: torch.Tensor,
         crossattn_emb: torch.Tensor,
-        fps: Optional[torch.Tensor] = None,
-        padding_mask: Optional[torch.Tensor] = None,
-        data_type: Optional[DataType] = DataType.VIDEO,
-        intermediate_feature_ids: Optional[List[int]] = None,
-        img_context_emb: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
+        fps: torch.Tensor | None = None,
+        padding_mask: torch.Tensor | None = None,
+        data_type: DataType | None = DataType.VIDEO,
+        intermediate_feature_ids: list[int] | None = None,
+        img_context_emb: torch.Tensor | None = None,
+    ) -> torch.Tensor | list[torch.Tensor] | tuple[torch.Tensor, list[torch.Tensor]]:
         """Denoise video latents through AdaLN DiT blocks.
 
         ``x_B_C_T_H_W`` is channel-first video.  Inside the trunk tokens live as
@@ -1707,7 +1716,7 @@ class MinimalDiT(nn.Module):
 
         self._is_context_parallel_enabled = False
 
-    def enable_context_parallel(self, process_group: Optional[ProcessGroup] = None):
+    def enable_context_parallel(self, process_group: ProcessGroup | None = None):
         # pos_embedder
         self.pos_embedder.enable_context_parallel(process_group=process_group)
         if self.extra_per_block_abs_pos_emb:
@@ -1730,7 +1739,7 @@ class MinimalDiT(nn.Module):
 
 
 def replace_selfattn_op_with_sparse_attn_op(
-    model: MinimalDiT, n_dense_blocks: int = 0, natten_parameters: Union[dict, list] = None
+    model: MinimalDiT, n_dense_blocks: int = 0, natten_parameters: dict | list = None
 ) -> MinimalDiT:
     """
     Replace the self-attention operator with a sparse self-attention operator.

@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta
+from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 import torch
@@ -35,11 +36,11 @@ class Keypoints(metaclass=ABCMeta):
 
     def __init__(
         self,
-        keypoints: Union[Tensor, np.ndarray],
-        keypoints_visible: Union[Tensor, np.ndarray],
-        device: Optional[DeviceType] = None,
+        keypoints: Tensor | np.ndarray,
+        keypoints_visible: Tensor | np.ndarray,
+        device: DeviceType | None = None,
         clone: bool = True,
-        flip_indices: Optional[List] = None,
+        flip_indices: list | None = None,
     ) -> None:
         assert len(keypoints_visible) == len(keypoints)
         assert keypoints.ndim == 3
@@ -60,7 +61,7 @@ class Keypoints(metaclass=ABCMeta):
         self.keypoints_visible = keypoints_visible
         self.flip_indices = flip_indices
 
-    def flip_(self, img_shape: Tuple[int, int], direction: str = "horizontal") -> None:
+    def flip_(self, img_shape: tuple[int, int], direction: str = "horizontal") -> None:
         """Flip boxes & kpts horizontally in-place.
 
         Args:
@@ -73,7 +74,7 @@ class Keypoints(metaclass=ABCMeta):
         self.keypoints = self.keypoints[:, self.flip_indices]
         self.keypoints_visible = self.keypoints_visible[:, self.flip_indices]
 
-    def translate_(self, distances: Tuple[float, float]) -> None:
+    def translate_(self, distances: tuple[float, float]) -> None:
         """Translate boxes and keypoints in-place.
 
         Args:
@@ -84,7 +85,7 @@ class Keypoints(metaclass=ABCMeta):
         distances = self.keypoints.new_tensor(distances).reshape(1, 1, 2)
         self.keypoints = self.keypoints + distances
 
-    def rescale_(self, scale_factor: Tuple[float, float]) -> None:
+    def rescale_(self, scale_factor: tuple[float, float]) -> None:
         """Rescale boxes & keypoints w.r.t. rescale_factor in-place.
 
         Note:
@@ -102,7 +103,7 @@ class Keypoints(metaclass=ABCMeta):
         scale_factor = self.keypoints.new_tensor(scale_factor).reshape(1, 1, 2)
         self.keypoints = self.keypoints * scale_factor
 
-    def clip_(self, img_shape: Tuple[int, int]) -> None:
+    def clip_(self, img_shape: tuple[int, int]) -> None:
         """Clip bounding boxes and set invisible keypoints outside the image
         boundary in-place.
 
@@ -116,7 +117,7 @@ class Keypoints(metaclass=ABCMeta):
         )
         self.keypoints_visible[kpt_outside] *= 0
 
-    def project_(self, homography_matrix: Union[Tensor, np.ndarray]) -> None:
+    def project_(self, homography_matrix: Tensor | np.ndarray) -> None:
         """Geometrically transform bounding boxes and keypoints in-place using
         a homography matrix.
 
@@ -148,7 +149,7 @@ class Keypoints(metaclass=ABCMeta):
         self.keypoints = keypoints
 
     @classmethod
-    def cat(cls: Type[T], kps_list: Sequence[T], dim: int = 0) -> T:
+    def cat(cls: type[T], kps_list: Sequence[T], dim: int = 0) -> T:
         """Cancatenates an instance list into one single instance. Similar to
         ``torch.cat``.
 

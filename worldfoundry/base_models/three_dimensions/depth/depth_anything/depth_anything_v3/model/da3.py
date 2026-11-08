@@ -20,11 +20,15 @@ import torch
 import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.cfg import create_object
+
+# isort: split
+from addict import Dict
+
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import (
     pose_encoding_to_extri_intri,
 )
-from addict import Dict
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.alignment import (
     apply_metric_scaling,
     compute_alignment_mask,
@@ -291,7 +295,7 @@ class DepthAnything3Net(nn.Module):
         """Extract auxiliary features from specified layers."""
         aux_features = Dict()
         assert len(feats) == len(feat_layers)
-        for feat, feat_layer in zip(feats, feat_layers):
+        for feat, feat_layer in zip(feats, feat_layers, strict=False):
             # Reshape features to spatial dimensions
             feat_reshaped = feat.reshape(
                 [

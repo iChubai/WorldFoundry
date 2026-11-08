@@ -18,10 +18,14 @@ import torch
 from worldfoundry.base_models.diffusion_model.models.networks.wan.vace_core import (
     build_vace_wan_classes,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan.model import (
     DiTBlock,
     WanModel,
 )
+
+# isort: split
 from worldfoundry.core.model_loading import hash_state_dict_keys
 
 VaceWanAttentionBlock, VaceWanModel, VaceWanModelDictConverter = build_vace_wan_classes(

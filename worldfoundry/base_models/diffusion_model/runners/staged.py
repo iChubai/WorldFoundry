@@ -9,11 +9,13 @@ Must not: mutate a process-wide DiffSynth registry; discover checkpoints without
 an explicit ``model_pool_factory``.
 """
 
-from PIL import Image
-import torch
-import numpy as np
-from einops import rearrange, repeat, reduce
 from typing import Union
+
+import numpy as np
+import torch
+from einops import rearrange, reduce, repeat
+from PIL import Image
+
 from worldfoundry.core.execution.device import get_device_name, get_device_type, is_npu_available, parse_device_type
 from worldfoundry.core.model_loading import GeneralLoRALoader, ModelConfig, load_state_dict
 from worldfoundry.core.vram import AutoTorchModule, AutoWrappedLinear
@@ -489,7 +491,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
         blur = GaussianBlur(kernel_size=blur_kernel_size, sigma=blur_sigma)
         height, width = value.shape[-2:]
         weight = torch.ones_like(value)
-        for latent, mask, scale in zip(latents, masks, scales):
+        for latent, mask, scale in zip(latents, masks, scales, strict=False):
             mask = self.preprocess_image(mask.resize((width, height))).mean(dim=1, keepdim=True) > 0
             mask = mask.repeat(1, latent.shape[1], 1, 1).to(dtype=latent.dtype, device=latent.device)
             mask = blur(mask)
@@ -528,7 +530,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
         else:
             noise_pred_locals = [
                 inference_callback(prompt_emb_local, special_kwargs)
-                for prompt_emb_local, special_kwargs in zip(prompt_emb_locals, special_local_kwargs_list)
+                for prompt_emb_local, special_kwargs in zip(prompt_emb_locals, special_local_kwargs_list, strict=False)
             ]
         return self.merge_latents(noise_pred_global, noise_pred_locals, masks, mask_scales)
 
@@ -575,7 +577,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
     def load_lora(
         self,
         module: torch.nn.Module,
-        lora_config: Union[ModelConfig, str] = None,
+        lora_config: ModelConfig | str = None,
         alpha=1,
         hotload=None,
         state_dict=None,
@@ -602,9 +604,9 @@ class StagedDiffusionPipeline(torch.nn.Module):
         lora_loader = self.lora_loader(torch_dtype=self.torch_dtype, device=self.device)
         lora = lora_loader.convert_state_dict(lora)
         if hotload is None:
-            hotload = hasattr(module, "vram_management_enabled") and getattr(module, "vram_management_enabled")
+            hotload = hasattr(module, "vram_management_enabled") and module.vram_management_enabled
         if hotload:
-            if not (hasattr(module, "vram_management_enabled") and getattr(module, "vram_management_enabled")):
+            if not (hasattr(module, "vram_management_enabled") and module.vram_management_enabled):
                 raise ValueError("VRAM Management is not enabled. LoRA hotloading is not supported.")
             updated_num = 0
             for _, module in module.named_modules():
@@ -669,7 +671,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
         """Check vram management state."""
         vram_management_enabled = False
         for module in self.children():
-            if hasattr(module, "vram_management_enabled") and getattr(module, "vram_management_enabled"):
+            if hasattr(module, "vram_management_enabled") and module.vram_management_enabled:
                 vram_management_enabled = True
         return vram_management_enabled
 
@@ -690,7 +692,8 @@ class StagedDiffusionPipeline(torch.nn.Module):
             if isinstance(noise_pred_posi, tuple):
                 # Separately handling different output types of latents, eg. video and audio latents.
                 noise_pred = tuple(
-                    n_nega + cfg_scale * (n_posi - n_nega) for n_posi, n_nega in zip(noise_pred_posi, noise_pred_nega)
+                    n_nega + cfg_scale * (n_posi - n_nega)
+                    for n_posi, n_nega in zip(noise_pred_posi, noise_pred_nega, strict=False)
                 )
             else:
                 noise_pred = noise_pred_nega + cfg_scale * (noise_pred_posi - noise_pred_nega)
@@ -708,7 +711,6 @@ class InferenceStageGraph:
 
     def __init__(self):
         """Init."""
-        pass
 
     def build_edges(self, units: list[InferenceStage]):
         """Build edges.
@@ -842,7 +844,6 @@ class InferenceStageRunner:
 
     def __init__(self):
         """Init."""
-        pass
 
     def __call__(
         self,

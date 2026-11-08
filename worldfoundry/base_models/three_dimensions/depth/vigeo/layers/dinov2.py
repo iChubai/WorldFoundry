@@ -8,24 +8,24 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 #   https://github.com/ByteDance-Seed/Depth-Anything-3/blob/main/src/depth_anything_3/model/dinov2/vision_transformer.py
 
-import math
 import logging
+import math
+from collections.abc import Callable, Sequence
 from functools import partial
-from collections.abc import Sequence
-from typing import Any, Callable
-from einops import rearrange
+from typing import Any, Literal
 
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import Literal
+from einops import rearrange
 from torch.nn.init import trunc_normal_
 from torch.utils.checkpoint import checkpoint
-from .patch_embed import PatchEmbed
-from .block import Block
-from .swiglu_ffn import SwiGLUFFNFused
-from .mlp import Mlp
+
 from .attention import Attention
+from .block import Block
+from .mlp import Mlp
+from .patch_embed import PatchEmbed
+from .swiglu_ffn import SwiGLUFFNFused
 
 logger = logging.getLogger("dinov2")
 
@@ -340,7 +340,7 @@ class DinoVisionTransformer(nn.Module):
         x = self.prepare_tokens_with_masks(x)
         x = rearrange(x, "(b s) n c -> b s n c", b=B, s=S)
 
-        pos = kwargs.get("pos", None)
+        pos = kwargs.get("pos")
         new_kv_caches = [] if use_cache else None
         final_output = []
         current_budgets = []

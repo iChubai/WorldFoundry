@@ -13,8 +13,9 @@ LANDMARKS_CONFIDENCE_THRESHOLD = 0.5
 
 def build_model():
     """Build YOLO (yolov8n-face) model"""
-    import gdown
     import os
+
+    import gdown
 
     # Import the Ultralytics YOLO model
     from ultralytics import YOLO

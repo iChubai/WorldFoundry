@@ -6,9 +6,10 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> distortion.py functionality."""
 
-import torch
-import numpy as np
 from typing import Union
+
+import numpy as np
+import torch
 
 ArrayLike = Union[np.ndarray, torch.Tensor]
 
@@ -173,6 +174,7 @@ def apply_distortion(extra_params, u, v):
 
 if __name__ == "__main__":
     import random
+
     import pycolmap
 
     max_diff = 0

@@ -1,14 +1,16 @@
 import math
-from PIL import Image
+
 import numpy as np
+from PIL import Image
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import distance
 from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import (
-    OpenCvWrapper,
-    SsdWrapper,
     DlibWrapper,
-    MtcnnWrapper,
-    RetinaFaceWrapper,
     MediapipeWrapper,
+    MtcnnWrapper,
+    OpenCvWrapper,
+    RetinaFaceWrapper,
+    SsdWrapper,
     YoloWrapper,
     YunetWrapper,
 )
@@ -28,7 +30,7 @@ def build_model(detector_backend):
         "yunet": YunetWrapper.build_model,
     }
 
-    if not "face_detector_obj" in globals():
+    if "face_detector_obj" not in globals():
         face_detector_obj = {}
 
     built_models = list(face_detector_obj.keys())

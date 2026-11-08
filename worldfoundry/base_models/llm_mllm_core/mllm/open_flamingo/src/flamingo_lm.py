@@ -1,9 +1,11 @@
 """Module for base_models -> llm_mllm_core -> mllm -> open_flamingo -> src -> flamingo_lm.py functionality."""
 
+import copy
+
 import torch.nn as nn
+
 from .helpers import GatedCrossAttentionBlock
 from .utils import getattr_recursive, setattr_recursive
-import copy
 
 
 class FlamingoLayer(nn.Module):
@@ -171,7 +173,7 @@ class FlamingoLMMixin(nn.Module):
                 [
                     FlamingoLayer(gated_cross_attn_layer, decoder_layer, gradient_checkpointing, residual=residual)
                     for gated_cross_attn_layer, decoder_layer in zip(
-                        self.gated_cross_attn_layers, self.old_decoder_blocks
+                        self.gated_cross_attn_layers, self.old_decoder_blocks, strict=False
                     )
                 ]
             )

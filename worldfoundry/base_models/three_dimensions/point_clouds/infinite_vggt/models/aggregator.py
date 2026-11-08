@@ -7,23 +7,25 @@
 """Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> models -> aggregator.py functionality."""
 
 import logging
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional, Tuple, Union, List, Dict, Any
 
-from worldfoundry.core.nn.blocks.layers import PatchEmbed
-from ..layers.block import Block
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.rope import (
-    RotaryPositionEmbedding2D,
     PositionGetter,
+    RotaryPositionEmbedding2D,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.vision_transformer import (
-    vit_small,
     vit_base,
-    vit_large,
     vit_giant2,
+    vit_large,
+    vit_small,
 )
+from worldfoundry.core.nn.blocks.layers import PatchEmbed
+
+from ..layers.block import Block
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +220,7 @@ class Aggregator(nn.Module):
 
     def forward(
         self, images: torch.Tensor, past_key_values=None, use_cache=False, past_frame_idx=0, total_budget=0
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images (torch.Tensor): Input images with shape [B, S, 3, H, W], in range [0, 1].
@@ -373,7 +375,7 @@ class Aggregator(nn.Module):
         use_cache=False,
         past_frame_idx=0,
         cache_budget=None,
-    ) -> Union[Tuple[torch.Tensor, int, List[torch.Tensor]], Tuple[torch.Tensor, int, List[torch.Tensor], List]]:
+    ) -> tuple[torch.Tensor, int, list[torch.Tensor]] | tuple[torch.Tensor, int, list[torch.Tensor], list]:
         """
         Process global attention blocks. We keep tokens in shape (B, S*P, C).
         """

@@ -1,12 +1,13 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-import json
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger, use_hf_hub
+
 from .preprocessor import DATASET_TYPE, AutoPreprocessor, MessagesPreprocessor
 
 PreprocessFunc = Callable[..., DATASET_TYPE]
@@ -17,13 +18,13 @@ logger = get_logger()
 @dataclass
 class SubsetDataset:
     # `Name` is used for matching subsets of the dataset, and `subset` refers to the subset_name on the hub.
-    name: Optional[str] = None
+    name: str | None = None
     # If set to None, then subset is set to subset_name.
     subset: str = "default"
 
     # Higher priority. If set to None, the attributes of the DatasetMeta will be used.
-    split: Optional[List[str]] = None
-    preprocess_func: Optional[PreprocessFunc] = None
+    split: list[str] | None = None
+    preprocess_func: PreprocessFunc | None = None
 
     # If the dataset specifies "all," weak subsets will be skipped.
     is_weak_subset: bool = False
@@ -43,22 +44,22 @@ class SubsetDataset:
 
 @dataclass
 class DatasetMeta:
-    ms_dataset_id: Optional[str] = None
-    hf_dataset_id: Optional[str] = None
-    dataset_path: Optional[str] = None
-    dataset_name: Optional[str] = None
-    ms_revision: Optional[str] = None
-    hf_revision: Optional[str] = None
+    ms_dataset_id: str | None = None
+    hf_dataset_id: str | None = None
+    dataset_path: str | None = None
+    dataset_name: str | None = None
+    ms_revision: str | None = None
+    hf_revision: str | None = None
 
-    subsets: List[Union[SubsetDataset, str]] = field(default_factory=lambda: ["default"])
+    subsets: list[SubsetDataset | str] = field(default_factory=lambda: ["default"])
     # Applicable to all subsets.
-    split: List[str] = field(default_factory=lambda: ["train"])
+    split: list[str] = field(default_factory=lambda: ["train"])
     # First perform column mapping, then proceed with the preprocess_func.
     preprocess_func: PreprocessFunc = field(default_factory=lambda: AutoPreprocessor())
-    load_function: Optional[LoadFunction] = None
+    load_function: LoadFunction | None = None
 
-    tags: List[str] = field(default_factory=list)
-    help: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    help: str | None = None
     huge_dataset: bool = False
 
     def __post_init__(self):
@@ -71,7 +72,7 @@ class DatasetMeta:
                 self.subsets[i] = SubsetDataset(subset=subset)
 
 
-DATASET_MAPPING: Dict[Tuple[str, str, str], DatasetMeta] = {}
+DATASET_MAPPING: dict[tuple[str, str, str], DatasetMeta] = {}
 
 
 def get_dataset_list():
@@ -103,7 +104,7 @@ def register_dataset(dataset_meta: DatasetMeta, *, exist_ok: bool = False) -> No
     DATASET_MAPPING[dataset_name] = dataset_meta
 
 
-def _preprocess_d_info(d_info: Dict[str, Any], *, base_dir: Optional[str] = None) -> Dict[str, Any]:
+def _preprocess_d_info(d_info: dict[str, Any], *, base_dir: str | None = None) -> dict[str, Any]:
     d_info = deepcopy(d_info)
 
     columns = None
@@ -132,7 +133,7 @@ def _preprocess_d_info(d_info: Dict[str, Any], *, base_dir: Optional[str] = None
     return d_info
 
 
-def _register_d_info(d_info: Dict[str, Any], *, base_dir: Optional[str] = None) -> DatasetMeta:
+def _register_d_info(d_info: dict[str, Any], *, base_dir: str | None = None) -> DatasetMeta:
     """Register a single dataset to dataset mapping
 
     Args:
@@ -144,7 +145,7 @@ def _register_d_info(d_info: Dict[str, Any], *, base_dir: Optional[str] = None) 
     return dataset_meta
 
 
-def register_dataset_info(dataset_info: Union[str, List[str], None] = None) -> List[DatasetMeta]:
+def register_dataset_info(dataset_info: str | list[str] | None = None) -> list[DatasetMeta]:
     """Register dataset from the `dataset_info.json` or a custom dataset info file
     This is used to deal with the datasets defined in the json info file.
 
@@ -162,7 +163,7 @@ def register_dataset_info(dataset_info: Union[str, List[str], None] = None) -> L
         if os.path.isfile(dataset_path):
             log_msg = dataset_path
             base_dir = os.path.dirname(dataset_path)
-            with open(dataset_path, "r", encoding="utf-8") as f:
+            with open(dataset_path, encoding="utf-8") as f:
                 dataset_info = json.load(f)
         else:
             dataset_info = json.loads(dataset_info)  # json

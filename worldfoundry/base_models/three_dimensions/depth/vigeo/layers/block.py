@@ -8,19 +8,21 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
 import os
-import torch
+from collections.abc import Callable
 from typing import Any
-from .mlp import Mlp
-from typing import Callable
-from torch import nn, Tensor
+
+import torch
+from torch import Tensor, nn
+
 from .attention import Attention, MemEffAttention
 from .drop_path import DropPath
 from .layer_scale import LayerScale
+from .mlp import Mlp
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
     if XFORMERS_ENABLED:
-        from xformers.ops import fmha, scaled_index_add, index_select_cat
+        from xformers.ops import fmha, index_select_cat, scaled_index_add
 
         XFORMERS_AVAILABLE = True
         # warnings.warn("xFormers is available (Block)")
@@ -153,10 +155,10 @@ def get_attn_bias_and_cat(x_list, branges=None):
     this will perform the index select, cat the tensors, and provide the attn_bias from cache
     """
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
         attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)

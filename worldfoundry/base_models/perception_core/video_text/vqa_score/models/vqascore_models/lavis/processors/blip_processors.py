@@ -7,12 +7,13 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import re
 
-from ..common.registry import registry
-from .base_processor import BaseProcessor
-from .randaugment import RandomAugment
 from omegaconf import OmegaConf
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
+
+from ..common.registry import registry
+from .base_processor import BaseProcessor
+from .randaugment import RandomAugment
 
 
 class BlipImageBaseProcessor(BaseProcessor):

@@ -12,8 +12,9 @@
 
 import logging
 import math
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -253,7 +254,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
     ) -> None:
         """Init.
@@ -296,13 +297,13 @@ class PatchEmbed(nn.Module):
 
     def __init__(
         self,
-        img_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
         in_chans: int = 3,
         embed_dim: int = 768,
-        norm_layer: Optional[Callable] = None,
+        norm_layer: Callable | None = None,
         flatten_embedding: bool = True,
-        tuning_mode: Optional[str] = None,
+        tuning_mode: str | None = None,
     ) -> None:
         """Init.
 
@@ -394,12 +395,12 @@ class Mlp(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float = 0.0,
         bias: bool = True,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
         """Init.
 
@@ -463,12 +464,12 @@ class SwiGLUFFN(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = None,
         drop: float = 0.0,
         bias: bool = True,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
         """Init.
 
@@ -534,8 +535,8 @@ class SwiGLUFFNFused(SwiGLUFFN):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -576,7 +577,7 @@ class Attention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         window_size: int = 0,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
         """Init.
 
@@ -728,7 +729,7 @@ class Block(nn.Module):
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
         attn_class: Callable[..., nn.Module] = Attention,
         ffn_layer: Callable[..., nn.Module] = Mlp,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
         """Init.
 
@@ -935,7 +936,7 @@ def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None
     return x_plus_residual
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 def get_attn_bias_and_cat(x_list, branges=None):
@@ -946,10 +947,10 @@ def get_attn_bias_and_cat(x_list, branges=None):
         raise NotImplementedError("Nested tensor attention requires xFormers, which is disabled in ViPE")
 
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
         attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
@@ -966,7 +967,7 @@ def get_attn_bias_and_cat(x_list, branges=None):
 
 
 def drop_add_residual_stochastic_depth_list(
-    x_list: List[Tensor],
+    x_list: list[Tensor],
     residual_func: Callable[[Tensor, Any], Tensor],
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
@@ -994,7 +995,9 @@ def drop_add_residual_stochastic_depth_list(
     residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
 
     outputs = []
-    for x, brange, residual, residual_scale_factor in zip(x_list, branges, residual_list, residual_scale_factors):
+    for x, brange, residual, residual_scale_factor in zip(
+        x_list, branges, residual_list, residual_scale_factors, strict=False
+    ):
         outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
     return outputs
 
@@ -1002,7 +1005,7 @@ def drop_add_residual_stochastic_depth_list(
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
 
-    def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """
@@ -1343,13 +1346,13 @@ class DinoVisionTransformer(nn.Module):
             x_list: The x list.
             masks_list: The masks list.
         """
-        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list)]
+        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list, strict=False)]
         for blk in self.blocks:
             x = blk(x)
 
         all_x = x
         output = []
-        for x, masks in zip(all_x, masks_list):
+        for x, masks in zip(all_x, masks_list, strict=False):
             x_norm = self.norm(x)
             output.append(
                 {
@@ -1490,11 +1493,11 @@ class DinoVisionTransformer(nn.Module):
     def get_intermediate_layers(
         self,
         x: torch.Tensor,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | Sequence = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         norm=True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         """Get intermediate layers.
 
         Args:
@@ -1522,7 +1525,7 @@ class DinoVisionTransformer(nn.Module):
                 for out in outputs
             ]
         if return_class_token:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=False))
         return tuple(outputs)
 
     def forward(self, *args, is_training=False, **kwargs):

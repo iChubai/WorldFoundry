@@ -22,11 +22,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import einops
 import torch
-import torch.utils.checkpoint  # used explicitly by the self-check below
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
-
+import torch.utils.checkpoint  # used explicitly by the self-check below
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
 from diffusers.models._modeling_parallel import ContextParallelInput, ContextParallelOutput
@@ -42,10 +40,11 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import FP32LayerNorm
 from diffusers.utils import apply_lora_scale, deprecate, logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
+from einops import rearrange
 
-from .kernels import attn_varlen_func, create_navit_attention_masks
 from worldfoundry.core.attention.cache.kv_arena import KVSegmentArena
 
+from .kernels import attn_varlen_func, create_navit_attention_masks
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -143,19 +142,19 @@ def _compute_noise_slots(
     original_context_length: int,
     enable_navit: bool,
     original_context_length_list: list,
-    warp_len_list: Optional[list] = None,
-) -> List[Tuple[int, int]]:
+    warp_len_list: list | None = None,
+) -> list[tuple[int, int]]:
     """Return (start, end) index pairs for noise tokens in the final hidden_states layout.
 
     Per stage the layout is [shared_history | warp_s | noise_s]. warp_len_list (same base order as
     original_context_length_list) gives each stage's warp_s token count; None/zeros => legacy fixed_mem.
     """
     if enable_navit:
-        slots: List[Tuple[int, int]] = []
+        slots: list[tuple[int, int]] = []
         _off = 0
         _rev = original_context_length_list[::-1]
         _wrev = warp_len_list[::-1] if warp_len_list is not None else [0] * len(_rev)
-        for cur_len, w_len in zip(_rev, _wrev):
+        for cur_len, w_len in zip(_rev, _wrev, strict=False):
             _off += history_context_length + w_len
             slots.append((_off, _off + cur_len))
             _off += cur_len
@@ -223,7 +222,7 @@ class LoRALinearLayer(nn.Module):
         out_features: int,
         rank: int = 128,
         device="cuda",
-        dtype: Optional[torch.dtype] = torch.float32,
+        dtype: torch.dtype | None = torch.float32,
     ):
         super().__init__()
         self.down = nn.Linear(in_features, rank, bias=False, device=device, dtype=dtype)
@@ -290,14 +289,14 @@ class EvokeAttnProcessor:
         self,
         attn: "EvokeAttention",
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         original_context_length: int = None,
         original_context_length_list: list = None,
         enable_navit: bool = False,
         is_first_denoising_step: bool = False,
-        history_seq_len_override: Optional[int] = None,
+        history_seq_len_override: int | None = None,
         # Token shard plan (student_sp.ShardPlan); None means no sharding, hence bit-identical.
         #   Only attn1 (self-attn) is ever given one: it needs full-sequence KV, so heads all-to-all.
         sp_plan=None,
@@ -643,8 +642,8 @@ class EvokeAttention(torch.nn.Module, AttentionModuleMixin):
         dim_head: int = 64,
         eps: float = 1e-5,
         dropout: float = 0.0,
-        added_kv_proj_dim: Optional[int] = None,
-        cross_attention_dim_head: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
+        cross_attention_dim_head: int | None = None,
         processor=None,
         is_cross_attention=None,
         restrict_self_attn=False,
@@ -776,9 +775,9 @@ class EvokeAttention(torch.nn.Module, AttentionModuleMixin):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         original_context_length: int = None,
         original_context_length_list: list = None,
         enable_navit: bool = False,
@@ -816,7 +815,7 @@ class EvokeTimeTextEmbedding(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
         is_return_encoder_hidden_states: bool = True,
     ):
         B = None
@@ -910,7 +909,7 @@ class EvokeTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        added_kv_proj_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
         restrict_self_attn: bool = False,
         guidance_cross_attn: bool = False,
         is_train_restrict_lora: bool = False,
@@ -972,14 +971,14 @@ class EvokeTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        navit_hidden_attention_mask: Optional[torch.Tensor] = None,
-        navit_encoder_attention_mask: Optional[torch.Tensor] = None,
+        navit_hidden_attention_mask: torch.Tensor | None = None,
+        navit_encoder_attention_mask: torch.Tensor | None = None,
         original_context_length: int = None,
         original_context_length_list: list = None,
         is_first_denoising_step: bool = False,
-        cam_token_seq: Optional[torch.Tensor] = None,
-        cam_noise_slots: Optional[list] = None,
-        warp_len_list: Optional[list] = None,
+        cam_token_seq: torch.Tensor | None = None,
+        cam_noise_slots: list | None = None,
+        warp_len_list: list | None = None,
         # Token shard plan (student_sp.ShardPlan); None means no sharding, hence bit-identical.
         #   Computed by model.forward and passed as an argument, so the checkpoint closure captures
         #   it and recomputation sees the same one.
@@ -1258,13 +1257,13 @@ class EvokeTransformer3DModel(
         is_use_gan_hooks: bool = False,
         is_use_gan_final: bool = False,
         gan_cond_map_dim: int = 768,
-        gan_hooks: List[int] = [5, 15, 25, 35],
+        gan_hooks: list[int] = [5, 15, 25, 35],
         # Metadata flag; does not change module topology. Signals caller to supply sink_latents.
         use_raw_sink_frames: bool = False,
         # Camera control: add lingbot-style AdaLN projections to transformer top-level and selected blocks.
         enable_cam_control: bool = False,
         cam_rank: int = 128,
-        cam_ctrl_layers: Optional[List[int]] = None,
+        cam_ctrl_layers: list[int] | None = None,
         # GEO additive Plucker: project per-frame Plucker field via a 2-layer MLP and ADD the resulting
         # tokens to BOTH the noise tokens and the short-tier warp tokens (no AdaLN). Zero-init -> warm-start safe.
         geo_warp_plucker_enabled: bool = False,
@@ -1519,7 +1518,7 @@ class EvokeTransformer3DModel(
 
         def _noise_rope(_fi, _H, _W, _dev):
             # Coarser-than-full stage -> lift noise coords to the centroid of each coarse cell in the warp frame.
-            if _noise_center_on and _nc_full_hpp is not None and (_H < _nc_full_hpp or _W < _nc_full_wpp):
+            if _noise_center_on and _nc_full_hpp is not None and (_nc_full_hpp > _H or _nc_full_wpp > _W):
                 _sch = _nc_full_hpp / max(1, _H)
                 _scw = _nc_full_wpp / max(1, _W)
                 return self.rope(
@@ -1956,7 +1955,7 @@ class EvokeTransformer3DModel(
         #   passes one; GEO-REG, teacher, critic and eval pass None, so they cannot be sharded by
         #   accident.
         sf_student_sp_ctx=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         _multi_term_present = (
             latents_history_short is not None or latents_history_mid is not None or latents_history_long is not None
         )
@@ -2102,7 +2101,7 @@ class EvokeTransformer3DModel(
             _warp_rope_rev = warp_rope_list[::-1] if warp_rope_list is not None else None
 
             seq_start = 0
-            for idx, cur_seq_len in zip(range(navit_len), original_context_length_list[::-1]):
+            for idx, cur_seq_len in zip(range(navit_len), original_context_length_list[::-1], strict=False):
                 cur_hidden_states = hidden_states[:, seq_start : seq_start + cur_seq_len, :]
                 cur_rotary_emb = rotary_emb[:, seq_start : seq_start + cur_seq_len, :]
 
@@ -2412,6 +2411,7 @@ class EvokeTransformer3DModel(
                 reversed(post_patch_num_frames_list),
                 reversed(post_patch_height_list),
                 reversed(post_patch_width_list),
+                strict=False,
             ):
                 # Per-stage segment = [shared_history | warp_s | noise_s]; keep only noise_s.
                 _seg = cur_original_context_length + history_context_length + cur_warp_len
@@ -2514,9 +2514,8 @@ class EvokeTransformer3DModel(
         import os
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        from huggingface_hub import snapshot_download
-
         from diffusers.utils import WEIGHTS_NAME
+        from huggingface_hub import snapshot_download
 
         if os.path.exists(pretrained_model_path):
             if subfolder is not None:
@@ -2536,7 +2535,7 @@ class EvokeTransformer3DModel(
         config_file = os.path.join(pretrained_model_path, "config.json")
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
 
         model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)

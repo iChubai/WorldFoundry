@@ -1,21 +1,22 @@
-from typing import List, Dict, Union
-import os
-import random
-import tempfile
-from PIL import Image, ImageSequence
 import base64
 import io
-import re
-import uuid
 import json
-import numpy as np
-import pyarrow.fs as pf
-import func_timeout
-from func_timeout import func_set_timeout
 import math
+import os
+import random
+import re
+import tempfile
+import uuid
+from typing import Dict, List, Union
 
 # fmt: on
 import decord
+import func_timeout
+import numpy as np
+import pyarrow.fs as pf
+from func_timeout import func_set_timeout
+from PIL import Image, ImageSequence
+
 # fmt: off
 
 
@@ -25,14 +26,14 @@ def denorm_box(points, height, width):
         new_points.append((round(p[0] * width), round(p[1] * height)))
     return new_points
 
-def process_image_for_tiktok(frames: List[Image.Image], mask_boxes):
+def process_image_for_tiktok(frames: list[Image.Image], mask_boxes):
     mask_boxes = mask_boxes[:len(frames)]
     frames = [np.array(f) for f in frames]
     # assert len(mask_boxes) == len(frames)
     height, width = frames[0].shape[:2]
 
     new_frames = []
-    for boxes, frame in zip(mask_boxes, frames):
+    for boxes, frame in zip(mask_boxes, frames, strict=False):
         left, top, right, bottom = 0, 0, width, height
         for box in boxes:
             pts = np.array(denorm_box(box, height, width), np.int32)
@@ -79,20 +80,20 @@ def conduct_disturb_frame(frame_indices):
         # 均等分成4个segments, 随机交换两个segment
         seg_len = math.ceil(n_frames / 4)
         seg_idxs = list(range(0, n_frames, seg_len))
-        target_idxs = random.sample(range(0, 4), 2)
+        target_idxs = random.sample(range(4), 2)
         seg_idxs[target_idxs[0]], seg_idxs[target_idxs[1]] = seg_idxs[target_idxs[1]], seg_idxs[target_idxs[0]]
         for idx in seg_idxs:
             frame_indices_new += frame_indices[idx: idx+seg_len]
     elif disturb_type == 'crop':
         # 随机截取出3/4时长，再采均匀n_frames帧
         crop_len = math.ceil(n_frames / 4)
-        idx_s = random.choice(range(0, crop_len+1))
+        idx_s = random.choice(range(crop_len+1))
         idx_e = n_frames - 1 - (crop_len - idx_s)
         frame_indices_new = np.linspace(frame_indices[idx_s], frame_indices[idx_e], n_frames, dtype=int).tolist()
     elif disturb_type == 'reverse':
         # 随机选择长度为[1/2, 1]时长的片段进行顺序颠倒
         reverse_len = math.ceil(random.uniform(0.5,1) * n_frames)
-        idx_s = random.choice(range(0, n_frames-reverse_len+1))
+        idx_s = random.choice(range(n_frames-reverse_len+1))
         idx_e = idx_s + reverse_len - 1
         frame_indices_new = frame_indices[:idx_s] + list(reversed(frame_indices[idx_s: idx_e+1])) + frame_indices[idx_e+1:]
     elif disturb_type == 'discard':
@@ -175,7 +176,7 @@ class VideoReader:
     def fps(self):
         return self._fps
 
-    def sample(self, frame_indices) -> List[Image.Image]:
+    def sample(self, frame_indices) -> list[Image.Image]:
         frames = self.vr.get_batch(frame_indices)
         # Ensure compatibility: Convert to NumPy array if necessary
         if hasattr(frames, "asnumpy"):  # It's a Tensor
@@ -194,7 +195,7 @@ class VideoReader:
             os.remove(self.local_path)
 
 class ImageSeqReader:
-    def __init__(self, path: List[str]) -> None:
+    def __init__(self, path: list[str]) -> None:
         self.path = path
         self.local_path = self.preprocess()
         self._length = len(self.local_path)
@@ -269,12 +270,12 @@ def check_frame_indices(frame_indices, total_frames, video_path):
 
 
 def sample_video(
-    video_path: Union[str, List[str]], 
-    frame_indices: List[int] = None, 
+    video_path: str | list[str], 
+    frame_indices: list[int] = None, 
     start_frame:int=None, 
     end_frame:int=None, 
     n_frames:int = None,
-    time_indices: List[float] = None,
+    time_indices: list[float] = None,
     start_time:int=None,
     end_time:int=None,
     sampling_fps:float=None,
@@ -282,7 +283,7 @@ def sample_video(
     is_training:bool=False,
     video_sampling_strategy={'video_sampler_version': 'v1'},
     return_frame_ids: bool=False,
-    ) -> List[Image.Image]:
+    ) -> list[Image.Image]:
 
     do_frame_disturb = video_sampling_strategy.get('do_frame_disturb', False)
 
@@ -408,14 +409,14 @@ def adjust_bbox(text, frame):
 
 def bbox_area(vertices, convert_format = True):
     if convert_format:
-        vertices = list(zip(vertices[::2], vertices[1::2]))
+        vertices = list(zip(vertices[::2], vertices[1::2], strict=False))
     x0, y0 = vertices[0]
     x1, y1 = vertices[1]
     return abs((x1 - x0) * (y1 - y0))
 
 def polygon_area(vertices, convert_format = True):
     if convert_format:
-        vertices = list(zip(vertices[::2], vertices[1::2]))
+        vertices = list(zip(vertices[::2], vertices[1::2], strict=False))
     n = len(vertices)  # 多边形顶点的数量
     if n == 2:
         return bbox_area(vertices, convert_format=False)

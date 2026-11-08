@@ -11,8 +11,8 @@ no extra neg-prompt prefix).
 """
 
 import torch
-
 from easydict import EasyDict
+
 from .shared import wan_shared_cfg
 
 # ------------------------ Wan I2V 14B ------------------------#

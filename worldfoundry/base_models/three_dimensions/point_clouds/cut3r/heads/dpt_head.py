@@ -13,7 +13,7 @@ import torch.nn as nn
 from einops import rearrange
 
 from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.libs.croco.dpt_block import (
-    DPTOutputAdapter,  # noqa
+    DPTOutputAdapter,
 )
 
 from ..blocks import ConditionModulationBlock
@@ -44,7 +44,7 @@ class DPTOutputAdapter_fix(DPTOutputAdapter):
         del self.act_3_postprocess
         del self.act_4_postprocess
 
-    def forward(self, encoder_tokens: List[torch.Tensor], image_size=None):
+    def forward(self, encoder_tokens: list[torch.Tensor], image_size=None):
         """Forward.
 
         Args:

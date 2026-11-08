@@ -4,11 +4,14 @@
 """Multiscale UCPE geometry; local control poses and global memory poses stay separate."""
 
 from __future__ import annotations
+
 from typing import Any
+
 import torch
 from einops import rearrange, repeat
-from . import geometry as ucpe_cc
+
 from ..ucpe import prope as prope_torch
+from . import geometry as ucpe_cc
 
 
 def rope_axis_positions(

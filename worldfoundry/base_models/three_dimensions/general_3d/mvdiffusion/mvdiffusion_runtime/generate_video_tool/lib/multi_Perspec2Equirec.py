@@ -2,9 +2,10 @@
 
 import os
 import sys
+
 import cv2
-import numpy as np
 import lib.Perspec2Equirec as P2E
+import numpy as np
 
 
 class Perspective:
@@ -35,7 +36,7 @@ class Perspective:
         #
         merge_image = np.zeros((height, width, 3))
         merge_mask = np.zeros((height, width, 3))
-        for img_dir, [F, T, P] in zip(self.img_array, self.F_T_P_array):
+        for img_dir, [F, T, P] in zip(self.img_array, self.F_T_P_array, strict=False):
             per = P2E.Perspective(img_dir, F, T, P)  # Load equirectangular image
             img, mask = per.GetEquirec(height, width)  # Specify parameters(FOV, theta, phi, height, width)
             mask = mask.astype(np.float32)

@@ -7,9 +7,9 @@ renders each frame via gsplat, and saves MP4 videos.
 
 from pathlib import Path
 
+import imageio
 import numpy as np
 import torch
-import imageio
 from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hyworldmirror_2p0.models.models.rasterization import (
@@ -293,7 +293,7 @@ def render_interpolated_video(
     depth_frames = []
 
     if render_depth:
-        for rgb, dep in zip(rgbs, depths_all):
+        for rgb, dep in zip(rgbs, depths_all, strict=False):
             rgb_frames.append(rgb.permute(2, 0, 1))
             depth_frames.append(_depth_vis(dep))
     else:
@@ -321,7 +321,7 @@ def render_interpolated_video(
         if render_depth:
             _make_video(depth_frames, out_path / "rendered_depth.mp4")
     elif save_mode == "both" and render_depth:
-        combined = [torch.cat([r, d], dim=1) for r, d in zip(rgb_frames, depth_frames)]
+        combined = [torch.cat([r, d], dim=1) for r, d in zip(rgb_frames, depth_frames, strict=False)]
         _make_video(combined, out_path / "rendered.mp4")
 
     print(f"Video saved to {out_path} (mode: {save_mode})")

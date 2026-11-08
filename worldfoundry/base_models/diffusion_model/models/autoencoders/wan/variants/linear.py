@@ -23,9 +23,9 @@ import torch.nn.functional as F
 from einops import rearrange
 from omegaconf import MISSING, OmegaConf
 
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.io import hf_download_or_fpath
 from worldfoundry.core.model_loading.checkpoints.file import load_state_dict, load_torch_state_dict
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = [
     "WanVAE",
@@ -367,7 +367,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -490,7 +490,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -758,7 +758,7 @@ class WanVAEConfig:
     """Wan vae config implementation."""
 
     # cache_dir
-    cache_dir: Optional[str] = None
+    cache_dir: str | None = None
 
 
 class WanVAE:

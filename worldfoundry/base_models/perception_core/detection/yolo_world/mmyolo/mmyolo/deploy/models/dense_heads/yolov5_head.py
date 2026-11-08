@@ -46,14 +46,14 @@ def yolov5_bbox_decoder(priors: Tensor, bbox_preds: Tensor, stride: int) -> Tens
 @FUNCTION_REWRITER.register_rewriter(func_name="mmyolo.models.dense_heads.yolov5_head.YOLOv5Head.predict_by_feat")
 def yolov5_head__predict_by_feat(
     self,
-    cls_scores: List[Tensor],
-    bbox_preds: List[Tensor],
-    objectnesses: Optional[List[Tensor]] = None,
-    batch_img_metas: Optional[List[dict]] = None,
-    cfg: Optional[ConfigDict] = None,
+    cls_scores: list[Tensor],
+    bbox_preds: list[Tensor],
+    objectnesses: list[Tensor] | None = None,
+    batch_img_metas: list[dict] | None = None,
+    cfg: ConfigDict | None = None,
     rescale: bool = False,
     with_nms: bool = True,
-) -> Tuple[InstanceData]:
+) -> tuple[InstanceData]:
     """Transform a batch of output features extracted by the head into
     bbox results.
     Args:
@@ -110,7 +110,7 @@ def yolov5_head__predict_by_feat(
 
     mlvl_strides = [
         flatten_priors.new_full((featmap_size[0] * featmap_size[1] * self.num_base_priors,), stride)
-        for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+        for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
     ]
     flatten_stride = torch.cat(mlvl_strides)
 
@@ -148,7 +148,7 @@ def yolov5_head__predict_by_feat(
 @FUNCTION_REWRITER.register_rewriter(
     func_name="mmyolo.models.dense_heads.yolov5_head.YOLOv5Head.predict", backend="rknn"
 )
-def yolov5_head__predict__rknn(self, x: Tuple[Tensor], *args, **kwargs) -> Tuple[Tensor, Tensor, Tensor]:
+def yolov5_head__predict__rknn(self, x: tuple[Tensor], *args, **kwargs) -> tuple[Tensor, Tensor, Tensor]:
     """Perform forward propagation of the detection head and predict detection
     results on the features of the upstream network.
 
@@ -163,7 +163,7 @@ def yolov5_head__predict__rknn(self, x: Tuple[Tensor], *args, **kwargs) -> Tuple
 @FUNCTION_REWRITER.register_rewriter(
     func_name="mmyolo.models.dense_heads.yolov5_head.YOLOv5HeadModule.forward", backend="rknn"
 )
-def yolov5_head_module__forward__rknn(self, x: Tensor, *args, **kwargs) -> Tuple[Tensor, Tensor, Tensor]:
+def yolov5_head_module__forward__rknn(self, x: Tensor, *args, **kwargs) -> tuple[Tensor, Tensor, Tensor]:
     """Forward feature of a single scale level."""
     out = []
     for i, feat in enumerate(x):

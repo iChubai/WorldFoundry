@@ -1,8 +1,8 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
-import json
 import torch
 from torch import nn
 
@@ -25,13 +25,13 @@ class FlorenceTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         return []
 
-    def replace_bbox(self, bbox: List[int], index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_bbox(self, bbox: list[int], index: int, inputs: StdTemplateInputs) -> list[Context]:
         return ["".join(f"<loc_{box}>" for box in bbox)]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         processor = self.processor
         inputs.query = inputs.to_history()["query"]
         new_query = processor._construct_prompts([inputs.query])[0]
@@ -54,7 +54,7 @@ class FlorenceTemplate(Template):
         encoded["labels"] = labels
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         inputs_embeds = model.get_input_embeddings()(inputs["input_ids"])
         pixel_values = inputs.get("pixel_values")
         if pixel_values is not None:
@@ -64,7 +64,7 @@ class FlorenceTemplate(Template):
             )
         return {"inputs_embeds": inputs_embeds}
 
-    def decode(self, generate_ids: List[int], **kwargs) -> Any:
+    def decode(self, generate_ids: list[int], **kwargs) -> Any:
         response = super().decode(generate_ids, **kwargs)
         template_inputs = kwargs.get("template_inputs")
         images = template_inputs.images
@@ -92,9 +92,9 @@ register_template(
 class Phi3TemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=list)
     prompt: Prompt = field(default_factory=lambda: ["<|user|>\n{{QUERY}}<|end|>\n<|assistant|>\n"])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|end|>\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|end|>\n"])
     suffix: Prompt = field(default_factory=lambda: ["<|end|>"])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: ["<|system|>\n{{SYSTEM}}<|end|>\n"])
+    system_prefix: Prompt | None = field(default_factory=lambda: ["<|system|>\n{{SYSTEM}}<|end|>\n"])
     auto_add_bos: bool = True
 
 
@@ -107,11 +107,9 @@ class Phi4TemplateMeta(TemplateMeta):
     prompt: Prompt = field(
         default_factory=lambda: ["<|im_start|>user<|im_sep|>{{QUERY}}<|im_end|><|im_start|>assistant<|im_sep|>"]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|im_end|>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|im_end|>"])
     suffix: Prompt = field(default_factory=lambda: ["<|im_end|>"])
-    system_prefix: Optional[Prompt] = field(
-        default_factory=lambda: ["<|im_start|>system<|im_sep|>{{SYSTEM}}<|im_end|>"]
-    )
+    system_prefix: Prompt | None = field(default_factory=lambda: ["<|im_start|>system<|im_sep|>{{SYSTEM}}<|im_end|>"])
     auto_add_bos: bool = True
 
 
@@ -123,13 +121,13 @@ class Phi3VisionTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if self.mode == "vllm":
             return [f"<|image_{index + 1}|>\n"]  # <|image_1|>\n
         else:
             return super().replace_tag(media_type, index, inputs)
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         images = inputs.images or []
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
@@ -165,7 +163,7 @@ class Phi4MMTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return [[-100]]
         elif media_type == "audio":
@@ -174,7 +172,7 @@ class Phi4MMTemplate(Template):
             inputs.audios[index] = sf.read(load_file(inputs.audios[index]))
             return [[-200]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
         labels = encoded["labels"]
@@ -196,7 +194,7 @@ class Phi4MMTemplate(Template):
         encoded.update(new_encoded)
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         keys = [
             "input_image_embeds",

@@ -3,11 +3,11 @@
 import os
 import time
 from xml.dom.minidom import Notation
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from gsplat import rasterization
 
 # torch.backends.cuda.preferred_linalg_library(backend="magma")

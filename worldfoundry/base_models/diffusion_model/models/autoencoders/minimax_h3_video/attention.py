@@ -58,11 +58,11 @@ class Attention(nn.Module):
         self,
         heads,
         dim_head,
-        embed_dim: Optional[int] = None,
-        qk_norm_type: Optional[str] = None,
+        embed_dim: int | None = None,
+        qk_norm_type: str | None = None,
         qk_norm_affine: bool = False,
         bias: bool = True,
-        out_bias: Optional[bool] = None,
+        out_bias: bool | None = None,
         eps: float = 1e-5,
         **kwargs,
     ):
@@ -152,7 +152,7 @@ class Attention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        rotary_pos_emb: Optional[torch.Tensor] = None,
+        rotary_pos_emb: torch.Tensor | None = None,
         pack_info: dict = {},
     ) -> torch.Tensor:
         batch_size, seq_len, _ = hidden_states.shape

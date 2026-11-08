@@ -119,10 +119,10 @@ class InspatioCausalRollout(torch.nn.Module):
     def inference(
         self,
         noise: torch.Tensor,
-        text_prompts: List[str],
-        ref_latent: Optional[torch.Tensor] = None,
-        render_latent: Optional[torch.Tensor] = None,
-        mask_latent: Optional[torch.Tensor] = None,
+        text_prompts: list[str],
+        ref_latent: torch.Tensor | None = None,
+        render_latent: torch.Tensor | None = None,
+        mask_latent: torch.Tensor | None = None,
         decode: bool = True,
         noise_generator=None,
     ) -> torch.Tensor:

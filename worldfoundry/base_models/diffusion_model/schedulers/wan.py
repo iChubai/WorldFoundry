@@ -276,7 +276,7 @@ class FastVideoCausalWanSelfForcingScheduler:
             raise ValueError("FastVideo CausalWan raw_timesteps cannot be empty")
         if any(value <= 0 or value > self.num_train_timesteps for value in self.raw_timesteps):
             raise ValueError("FastVideo CausalWan raw timesteps must be in (0, num_train_timesteps]")
-        if any(left <= right for left, right in zip(self.raw_timesteps, self.raw_timesteps[1:])):
+        if any(left <= right for left, right in zip(self.raw_timesteps, self.raw_timesteps[1:], strict=False)):
             raise ValueError("FastVideo CausalWan raw timesteps must be strictly descending")
 
     def schedule(

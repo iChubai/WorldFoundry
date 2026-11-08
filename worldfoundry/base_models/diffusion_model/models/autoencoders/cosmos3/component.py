@@ -147,7 +147,7 @@ def build_cosmos3_media_decoder(context: ComponentBuildContext) -> Cosmos3MediaD
 __all__ = [
     "Cosmos3MediaDecoder",
     "build_cosmos3_media_decoder",
+    "load_cosmos3_audio_decoder",
     "load_cosmos3_video_vae",
     "load_cosmos3_video_vae_checkpoint",
-    "load_cosmos3_audio_decoder",
 ]

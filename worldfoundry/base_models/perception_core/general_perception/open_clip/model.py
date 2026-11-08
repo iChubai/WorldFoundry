@@ -9,6 +9,7 @@ import math
 
 _logger = logging.getLogger(__name__)
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -16,20 +17,19 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.utils.checkpoint import checkpoint
-from functools import partial
 
 from .hf_model import HFTextEncoder
 from .modified_resnet import ModifiedResNet
 from .timm_model import TimmModel
 from .transformer import (
-    LayerNormFp32,
-    LayerNorm,
-    QuickGELU,
     Attention,
-    VisionTransformer,
+    LayerNorm,
+    LayerNormFp32,
+    QuickGELU,
     TextTransformer,
-    text_global_pool,
+    VisionTransformer,
     lock_text_tower,
+    text_global_pool,
 )
 from .utils import to_2tuple
 
@@ -38,15 +38,15 @@ from .utils import to_2tuple
 class CLIPVisionCfg:
     """Clip vision cfg implementation."""
 
-    layers: Union[Tuple[int, int, int, int], int] = 12
+    layers: tuple[int, int, int, int] | int = 12
     width: int = 768
     head_width: int = 64
     mlp_ratio: float = 4.0
     patch_size: int = 16
-    image_size: Union[Tuple[int, int], int] = 224
-    image_seq_len: Optional[int] = None
+    image_size: tuple[int, int] | int = 224
+    image_seq_len: int | None = None
 
-    ls_init_value: Optional[float] = None  # layer scale initial value
+    ls_init_value: float | None = None  # layer scale initial value
     patch_dropout: float = 0.0  # what fraction of patches to dropout during training (0 would mean disabled and no patches dropped) - 0.5 to 0.75 recommended in the paper for optimal results
     attentional_pool: bool = (
         False  # whether to use attentional pooler in the last embedding layer (overrides pool_type)
@@ -58,11 +58,11 @@ class CLIPVisionCfg:
     final_ln_after_pool: bool = False  # apply final LayerNorm after pooling
     pool_type: str = "tok"
     output_tokens: bool = False
-    act_kwargs: Optional[dict] = None
-    norm_kwargs: Optional[dict] = None
+    act_kwargs: dict | None = None
+    norm_kwargs: dict | None = None
 
     # Custom attention block settings
-    block_type: Optional[str] = (
+    block_type: str | None = (
         None  # attention block type ('default', 'custom'), auto-selects 'custom' if any below features enabled
     )
     qk_norm: bool = False  # apply layer norm to q and k in attention
@@ -72,14 +72,14 @@ class CLIPVisionCfg:
     scale_attn: bool = False  # apply layer norm after full attention block
     scale_fc: bool = False  # apply layer norm in MLP block
 
-    timm_model_name: Optional[str] = None  # a valid model name overrides layers, width, patch_size
+    timm_model_name: str | None = None  # a valid model name overrides layers, width, patch_size
     timm_model_pretrained: bool = False  # use (imagenet) pretrained weights for named model
     timm_pool: str = "avg"  # feature pooling for timm model ('abs_attn', 'rot_attn', 'avg', '')
     timm_proj: str = "linear"  # linear projection for timm model output ('linear', 'mlp', '')
     timm_proj_bias: bool = False  # enable bias final projection
     timm_drop: float = 0.0  # head dropout
-    timm_drop_path: Optional[float] = None  # backbone stochastic depth
-    timm_model_kwargs: Optional[dict] = None  # additional kwargs forwarded to timm.create_model()
+    timm_drop_path: float | None = None  # backbone stochastic depth
+    timm_model_kwargs: dict | None = None  # additional kwargs forwarded to timm.create_model()
 
 
 @dataclass
@@ -88,15 +88,15 @@ class CLIPTextCfg:
 
     context_length: int = 77
     vocab_size: int = 49408
-    hf_tokenizer_name: Optional[str] = None
-    tokenizer_mode: Optional[str] = None
-    tokenizer_kwargs: Optional[dict] = None
+    hf_tokenizer_name: str | None = None
+    tokenizer_mode: str | None = None
+    tokenizer_kwargs: dict | None = None
 
     width: int = 512
     heads: int = 8
     layers: int = 12
     mlp_ratio: float = 4.0
-    ls_init_value: Optional[float] = None  # layer scale initial value
+    ls_init_value: float | None = None  # layer scale initial value
     embed_cls: bool = False
     pad_id: int = 0
     eos_id: int = 2  # only used for when pool_type == 'eos', must match tokenizer eos
@@ -110,7 +110,7 @@ class CLIPTextCfg:
     norm_kwargs: dict = None
 
     # Custom attention block settings
-    block_type: Optional[str] = (
+    block_type: str | None = (
         None  # attention block type ('default', 'custom'), auto-selects 'custom' if any custom features enabled
     )
     qk_norm: bool = False  # apply layer norm to q and k in attention
@@ -121,7 +121,7 @@ class CLIPTextCfg:
     scale_fc: bool = False  # apply layer norm in MLP block
 
     # HuggingFace specific text tower config
-    hf_model_name: Optional[str] = None
+    hf_model_name: str | None = None
     hf_model_pretrained: bool = True
     hf_proj_type: str = "mlp"
     hf_pooler_type: str = "mean_pooler"  # attentional pooling for HF models
@@ -156,7 +156,7 @@ def get_input_dtype(precision: str):
 
 
 def _build_vision_tower(
-    embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: Optional[torch.dtype] = None
+    embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: torch.dtype | None = None
 ):
     """Helper function to build vision tower.
 
@@ -244,7 +244,7 @@ def _build_text_tower(
     embed_dim: int,
     text_cfg: CLIPTextCfg,
     quick_gelu: bool = False,
-    cast_dtype: Optional[torch.dtype] = None,
+    cast_dtype: torch.dtype | None = None,
 ):
     """Helper function to build text tower.
 
@@ -314,9 +314,9 @@ class CLIP(nn.Module):
         text_cfg: CLIPTextCfg,
         quick_gelu: bool = False,
         init_logit_scale: float = np.log(1 / 0.07),
-        init_logit_bias: Optional[float] = None,
+        init_logit_bias: float | None = None,
         nonscalar_logit_scale: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
         output_dict: bool = False,
     ):
         """Init.
@@ -463,10 +463,10 @@ class CLIP(nn.Module):
 
     def forward_intermediates(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
-        image_indices: Optional[Union[int, List[int]]] = None,
-        text_indices: Optional[Union[int, List[int]]] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
+        image_indices: int | list[int] | None = None,
+        text_indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize: bool = True,
         normalize_intermediates: bool = False,
@@ -477,7 +477,7 @@ class CLIP(nn.Module):
         text_output_extra_tokens: bool = False,
         output_logits: bool = False,
         output_logit_scale_bias: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -562,8 +562,8 @@ class CLIP(nn.Module):
 
     def forward(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
     ):
         """Forward.
 
@@ -599,9 +599,9 @@ class CustomTextCLIP(nn.Module):
         text_cfg: CLIPTextCfg,
         quick_gelu: bool = False,
         init_logit_scale: float = np.log(1 / 0.07),
-        init_logit_bias: Optional[float] = None,
+        init_logit_bias: float | None = None,
         nonscalar_logit_scale: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
         output_dict: bool = False,
     ):
         """Init.
@@ -727,10 +727,10 @@ class CustomTextCLIP(nn.Module):
 
     def forward_intermediates(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
-        image_indices: Optional[Union[int, List[int]]] = None,
-        text_indices: Optional[Union[int, List[int]]] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
+        image_indices: int | list[int] | None = None,
+        text_indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize: bool = True,
         normalize_intermediates: bool = False,
@@ -741,7 +741,7 @@ class CustomTextCLIP(nn.Module):
         text_output_extra_tokens: bool = False,
         output_logits: bool = False,
         output_logit_scale_bias: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -817,8 +817,8 @@ class CustomTextCLIP(nn.Module):
 
     def forward(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
     ):
         """Forward.
 
@@ -1002,7 +1002,7 @@ def get_model_preprocess_cfg(model):
     preprocess_cfg = getattr(module, "preprocess_cfg", {})
     if not preprocess_cfg:
         # use separate legacy attributes if preprocess_cfg dict not found
-        size = getattr(module, "image_size")
+        size = module.image_size
         if size is not None:
             preprocess_cfg["size"] = size
         mean = getattr(module, "image_mean", None)
@@ -1014,7 +1014,7 @@ def get_model_preprocess_cfg(model):
     return preprocess_cfg
 
 
-def set_model_preprocess_cfg(model, preprocess_cfg: Dict[str, Any]):
+def set_model_preprocess_cfg(model, preprocess_cfg: dict[str, Any]):
     """Set model preprocess cfg.
 
     Args:

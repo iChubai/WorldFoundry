@@ -21,8 +21,8 @@ from importlib import import_module
 
 from .adapter import ResidualBlock, SimpleAdapter
 from .model import (
-    AttentionModule,
     MLP,
+    AttentionModule,
     CrossAttention,
     GateModule,
     Head,
@@ -41,14 +41,14 @@ def __getattr__(name):
 
 
 __all__ = [
-    "CrossAttention",
+    "MLP",
     "AttentionModule",
+    "CrossAttention",
     "GateModule",
     "Head",
-    "MLP",
     "ResidualBlock",
     "SimpleAdapter",
+    "WanControlNet",
     "WanModel",
     "WanModelStateDictConverter",
-    "WanControlNet",
 ]

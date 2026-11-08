@@ -17,6 +17,7 @@ Alignment utilities for depth estimation and metric scaling.
 """
 
 from typing import Tuple
+
 import torch
 
 
@@ -134,7 +135,7 @@ def set_sky_regions_to_max_depth(
     depth_conf: torch.Tensor,
     non_sky_mask: torch.Tensor,
     max_depth: float = 200.0,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Set sky regions to maximum depth and high confidence.
 

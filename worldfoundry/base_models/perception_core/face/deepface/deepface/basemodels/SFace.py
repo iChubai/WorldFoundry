@@ -1,7 +1,8 @@
 import os
-import numpy as np
+
 import cv2 as cv
 import gdown
+import numpy as np
 
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 

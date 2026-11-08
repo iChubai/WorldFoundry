@@ -8,12 +8,12 @@ from .ConvNeXt import convnext_base, convnext_large, convnext_small, convnext_ti
 from .ViT_DINO_reg import vit_giant2_reg, vit_large_reg, vit_small_reg
 
 __all__ = [
-    "convnext_xlarge",
-    "convnext_small",
     "convnext_base",
     "convnext_large",
+    "convnext_small",
     "convnext_tiny",
-    "vit_small_reg",
-    "vit_large_reg",
+    "convnext_xlarge",
     "vit_giant2_reg",
+    "vit_large_reg",
+    "vit_small_reg",
 ]

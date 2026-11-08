@@ -16,7 +16,6 @@ from ....contracts import DiffusionRequest
 from ....loaders import ModuleLoadSpec, NativeModuleLoader
 from .model import AutoencoderKL
 
-
 LVDM_AUTOENCODER_CONFIG = {
     "embed_dim": 4,
     "monitor": "val/rec_loss",

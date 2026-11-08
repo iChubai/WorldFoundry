@@ -43,10 +43,9 @@ from mmengine.fileio import dump
 from mmengine.logging import MMLogger
 from mmengine.registry import init_default_scope
 from mmengine.utils import ProgressBar
+from mmyolo.registry import DATASETS
 from scipy.optimize import differential_evolution
 from torch import Tensor
-
-from mmyolo.registry import DATASETS
 
 try:
     from scipy.cluster.vq import kmeans
@@ -366,7 +365,7 @@ class YOLOV5KMeansAnchorOptimizer(BaseAnchorOptimizer):
 
         return anchors
 
-    def anchor_metric(self, box_size: Tensor, anchors: Tensor, threshold: float = 4.0) -> Tuple:
+    def anchor_metric(self, box_size: Tensor, anchors: Tensor, threshold: float = 4.0) -> tuple:
         """compute boxes metric with anchors.
 
         Args:
@@ -383,7 +382,7 @@ class YOLOV5KMeansAnchorOptimizer(BaseAnchorOptimizer):
         # According to the uniform distribution,the scaling scale between
         # augment_min and augment_max is randomly generated
         scale = np.random.uniform(self.augment_min, self.augment_max, size=(box_size.shape[0], 1))
-        box_size = torch.tensor(np.array([l[:,] * s for s, l in zip(scale, box_size.cpu().numpy())])).to(
+        box_size = torch.tensor(np.array([l[:,] * s for s, l in zip(scale, box_size.cpu().numpy(), strict=False)])).to(
             box_size.device, dtype=torch.float32
         )
         # step2: calculate ratio
@@ -407,7 +406,7 @@ class YOLOV5KMeansAnchorOptimizer(BaseAnchorOptimizer):
         _, best = self._metric(box_size, anchors)
         return (best * (best > thr).float()).mean()
 
-    def _metric(self, box_size: Tensor, anchors: Tensor) -> Tuple:
+    def _metric(self, box_size: Tensor, anchors: Tensor) -> tuple:
         """compute boxes metric with anchors.
 
         Args:
@@ -515,14 +514,14 @@ class YOLODEAnchorOptimizer(BaseAnchorOptimizer):
             disp=True,
         )
         self.logger.info(f"Anchor evolution finish. Average IOU: {1 - result.fun}")
-        anchors = [(w, h) for w, h in zip(result.x[::2], result.x[1::2])]
+        anchors = [(w, h) for w, h in zip(result.x[::2], result.x[1::2], strict=False)]
         anchors = sorted(anchors, key=lambda x: x[0] * x[1])
         return anchors
 
     @staticmethod
     def avg_iou_cost(anchor_params, bboxes):
         assert len(anchor_params) % 2 == 0
-        anchor_whs = torch.tensor([[w, h] for w, h in zip(anchor_params[::2], anchor_params[1::2])]).to(
+        anchor_whs = torch.tensor([[w, h] for w, h in zip(anchor_params[::2], anchor_params[1::2], strict=False)]).to(
             bboxes.device, dtype=bboxes.dtype
         )
         anchor_boxes = bbox_cxcywh_to_xyxy(torch.cat([torch.zeros_like(anchor_whs), anchor_whs], dim=1))

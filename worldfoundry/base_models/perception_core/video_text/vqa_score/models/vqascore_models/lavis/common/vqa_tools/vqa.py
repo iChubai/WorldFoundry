@@ -23,9 +23,9 @@ __version__ = "0.9"
 
 # Help on each function can be accessed by: "help(COCO.function)"
 
-import json
-import datetime
 import copy
+import datetime
+import json
 
 
 class VQA:
@@ -44,8 +44,8 @@ class VQA:
         if not annotation_file == None and not question_file == None:
             print("loading VQA annotations and questions into memory...")
             time_t = datetime.datetime.utcnow()
-            dataset = json.load(open(annotation_file, "r"))
-            questions = json.load(open(question_file, "r"))
+            dataset = json.load(open(annotation_file))
+            questions = json.load(open(question_file))
             self.dataset = dataset
             self.questions = questions
             self.createIndex()

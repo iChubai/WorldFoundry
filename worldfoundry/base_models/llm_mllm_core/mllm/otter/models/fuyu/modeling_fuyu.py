@@ -1,6 +1,5 @@
 import torch
-from transformers import FuyuPreTrainedModel, FuyuConfig, AutoModelForCausalLM
-
+from transformers import AutoModelForCausalLM, FuyuConfig, FuyuPreTrainedModel
 
 try:
     from .modeling_persimmon import PersimmonForCausalLM
@@ -12,8 +11,9 @@ except ImportError:
     print("Using transformers PersimmonForCausalLM without Flash Attention")
 
 from typing import List, Optional, Tuple, Union
-from transformers.modeling_outputs import BaseModelOutputWithPast
+
 import torch.nn as nn
+from transformers.modeling_outputs import BaseModelOutputWithPast
 
 
 class FuyuForCausalLM(FuyuPreTrainedModel):
@@ -46,7 +46,7 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
     def gather_continuous_embeddings(
         self,
         word_embeddings: torch.Tensor,
-        continuous_embeddings: List[torch.Tensor],
+        continuous_embeddings: list[torch.Tensor],
         image_patch_input_indices: torch.Tensor,
     ) -> torch.Tensor:
         """This function places the continuous_embeddings into the word_embeddings at the locations
@@ -89,15 +89,15 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
         labels: torch.LongTensor = None,
         image_patches: torch.Tensor = None,  # [batch_size, num_total_patches, patch_size_ x patch_size x num_channels ]
         image_patches_indices: torch.Tensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutputWithPast]:
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutputWithPast:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -170,7 +170,7 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
         if past_key_values:
             input_ids = input_ids[:, -1:]
 
-        position_ids = kwargs.get("position_ids", None)
+        position_ids = kwargs.get("position_ids")
         if attention_mask is not None and position_ids is None:
             # create position_ids on the fly for batch generation
             position_ids = attention_mask.long().cumsum(-1) - 1

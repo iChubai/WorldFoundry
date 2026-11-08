@@ -4,8 +4,8 @@ import os
 import os.path as osp
 from dataclasses import dataclass
 from functools import partial
-from typing import Literal, cast
 from pathlib import Path
+from typing import Literal, cast
 
 import cv2
 import imageio
@@ -15,11 +15,11 @@ import torch.nn.functional as F
 import tyro
 from loguru import logger as guru
 from roma import roma
+from scipy.spatial.transform import Rotation
 from tqdm import tqdm
 
-from scipy.spatial.transform import Rotation
-
 from flow3d.data.base_dataset import BaseDataset
+from flow3d.data.colmap import get_colmap_camera_params_txt
 from flow3d.data.utils import (
     UINT16_MAX,
     SceneNormDict,
@@ -29,7 +29,6 @@ from flow3d.data.utils import (
     normalize_coords,
     parse_tapir_track_info,
 )
-from flow3d.data.colmap import get_colmap_camera_params_txt
 from flow3d.transforms import rt_to_mat4
 
 
@@ -411,7 +410,9 @@ class CasualDataset(BaseDataset):
             tidx = target_idcs.index(q_idx)
             tracks_tuple = get_tracks_3d_for_query_frame(tidx, img, tracks_2d, depths, fg_masks, inv_Ks, c2ws)
             tracks_all_queries.append(tracks_tuple)
-        tracks_3d, colors, visibles, invisibles, confidences = map(partial(torch.cat, dim=0), zip(*tracks_all_queries))
+        tracks_3d, colors, visibles, invisibles, confidences = map(
+            partial(torch.cat, dim=0), zip(*tracks_all_queries, strict=False)
+        )
 
         return tracks_3d, visibles, invisibles, confidences, colors
 
@@ -517,7 +518,7 @@ class CasualDataset(BaseDataset):
             guru.debug(f"{query_idx=} {points.shape=}")
             bg_geometry.append((points, point_normals, point_colors))
 
-        bg_points, bg_normals, bg_colors = map(partial(torch.cat, dim=0), zip(*bg_geometry))
+        bg_points, bg_normals, bg_colors = map(partial(torch.cat, dim=0), zip(*bg_geometry, strict=False))
 
         if len(bg_points) > num_samples:
             sel_idcs = np.random.choice(len(bg_points), num_samples, replace=False)

@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -48,9 +49,9 @@ class Llama3TemplateMeta(TemplateMeta):
             "<|start_header_id|>assistant<|end_header_id|>\n\n"
         ]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|eot_id|>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|eot_id|>"])
     suffix: Prompt = field(default_factory=lambda: ["<|eot_id|>"])
-    system_prefix: Optional[Prompt] = field(
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{{SYSTEM}}<|eot_id|>"]
     )
     agent_template: str = "llama3"
@@ -69,7 +70,7 @@ def _get_llama3_2_prefix() -> Prompt:
 @dataclass
 class Llama3_2TemplateMeta(Llama3TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: _get_llama3_2_prefix())
-    system_prefix: Optional[Prompt] = None
+    system_prefix: Prompt | None = None
 
 
 register_template(Llama3_2TemplateMeta(LLMTemplateType.llama3_2))
@@ -78,14 +79,14 @@ register_template(Llama3_2TemplateMeta(LLMTemplateType.llama3_2))
 class Llama3_2VisionTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return ["<|image|>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         from transformers.models.mllama.processing_mllama import (
-            get_cross_attention_token_mask,
             convert_sparse_cross_attention_mask_to_dense,
+            get_cross_attention_token_mask,
         )
 
         encoded = super()._encode(inputs)
@@ -108,7 +109,7 @@ class Llama3_2VisionTemplate(Template):
 
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         for key in ["aspect_ratio_ids", "aspect_ratio_mask"]:
             value = [b[key] for b in batch if b.get(key) is not None]
@@ -131,11 +132,11 @@ class Llama4Template(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return [[-100]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         if images:
@@ -165,10 +166,10 @@ class Llama4TemplateMeta(TemplateMeta):
             "<|header_start|>user<|header_end|>\n\n{{QUERY}}<|eot|><|header_start|>assistant<|header_end|>\n\n"
         ]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<|eot|>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<|eot|>"])
     suffix: Prompt = field(default_factory=lambda: ["<|eot|>"])
-    stop_words: List[Word] = field(default_factory=lambda: ["<|end_of_text|>", "<|eom|>"])
-    system_prefix: Optional[Prompt] = field(
+    stop_words: list[Word] = field(default_factory=lambda: ["<|end_of_text|>", "<|eom|>"])
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<|begin_of_text|><|header_start|>system<|header_end|>\n\n{{SYSTEM}}<|eot|>"]
     )
     agent_template: str = "llama4"
@@ -193,7 +194,7 @@ class Llama3_1OmniTemplate(Template):
     skip_prompt = False
     audio_placeholder = [[-200]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         import whisper
 
         encoded = super()._encode(inputs)
@@ -209,7 +210,7 @@ class Llama3_1OmniTemplate(Template):
 
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         speech = inputs.get("speech")
         input_ids = inputs["input_ids"]
         labels = inputs.get("labels")

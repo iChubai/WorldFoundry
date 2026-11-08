@@ -8,8 +8,13 @@ from typing import Dict, List
 import numpy as np
 import PIL
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3.model import box_ops
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import FindStage, interpolate
+
+# isort: split
 from torchvision.transforms import v2
 
 
@@ -79,7 +84,7 @@ class Sam3Processor:
         return state
 
     @torch.inference_mode()
-    def set_image_batch(self, images: List[np.ndarray], state=None):
+    def set_image_batch(self, images: list[np.ndarray], state=None):
         """Sets the image batch on which we want to do predictions."""
         if state is None:
             state = {}
@@ -107,7 +112,7 @@ class Sam3Processor:
         return state
 
     @torch.inference_mode()
-    def set_text_prompt(self, prompt: str, state: Dict):
+    def set_text_prompt(self, prompt: str, state: dict):
         """Sets the text prompt and run the inference"""
 
         if "backbone_out" not in state:
@@ -122,7 +127,7 @@ class Sam3Processor:
         return self._forward_grounding(state)
 
     @torch.inference_mode()
-    def add_geometric_prompt(self, box: List, label: bool, state: Dict):
+    def add_geometric_prompt(self, box: list, label: bool, state: dict):
         """Adds a box prompt and run the inference.
         The image needs to be set, but not necessarily the text prompt.
         The box is assumed to be in [center_x, center_y, width, height] format and normalized in [0, 1] range.
@@ -146,7 +151,7 @@ class Sam3Processor:
 
         return self._forward_grounding(state)
 
-    def reset_all_prompts(self, state: Dict):
+    def reset_all_prompts(self, state: dict):
         """Removes all the prompts and results"""
         if "backbone_out" in state:
             backbone_keys_to_del = [
@@ -160,8 +165,7 @@ class Sam3Processor:
 
         keys_to_del = ["geometric_prompt", "boxes", "masks", "masks_logits", "scores"]
         for key in keys_to_del:
-            if key in state:
-                del state[key]
+            state.pop(key, None)
 
     @torch.inference_mode()
     def set_confidence_threshold(self, threshold: float, state=None):
@@ -175,7 +179,7 @@ class Sam3Processor:
         return state
 
     @torch.inference_mode()
-    def _forward_grounding(self, state: Dict):
+    def _forward_grounding(self, state: dict):
         """Helper function to forward grounding.
 
         Args:

@@ -8,8 +8,8 @@ import logging
 
 import numpy as np
 import torch
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
 
 try:
     from torch_generic_nms import generic_nms as generic_nms_cuda

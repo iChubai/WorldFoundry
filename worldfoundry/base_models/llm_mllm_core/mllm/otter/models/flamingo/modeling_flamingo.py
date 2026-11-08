@@ -1,8 +1,10 @@
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 from accelerate.hooks import AlignDevicesHook, add_hook_to_module
 from einops import rearrange, repeat
@@ -11,11 +13,10 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.modeling_utils import PreTrainedModel
 from transformers.models.auto import AutoModel, AutoModelForCausalLM, AutoTokenizer
 
-from .configuration_flamingo import FlamingoConfig
 from ..falcon.modelling_RW import RWForCausalLM
 from ..mpt.modeling_mpt import MPTForCausalLM
 from ..mpt_redpajama.mosaic_gpt import MosaicGPT
-import torch.distributed as dist
+from .configuration_flamingo import FlamingoConfig
 
 # from .configuration_flamingo import FlamingoConfig
 
@@ -47,7 +48,7 @@ def _infer_decoder_layers_attr_name(model: nn.Module):
             return __KNOWN_DECODER_LAYERS_ATTR_NAMES[k]
 
     raise ValueError(
-        f"We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
+        "We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
     )
 
 
@@ -156,8 +157,8 @@ class FlamingoPerceiverResampler(nn.Module):
         heads: int = 8,
         num_latents: int = 64,
         # max_num_frames: int = 128,
-        max_num_media: Optional[int] = None,
-        max_num_frames: Optional[int] = None,
+        max_num_media: int | None = None,
+        max_num_frames: int | None = None,
         ff_mult: int = 4,
     ):
         super().__init__()
@@ -226,7 +227,7 @@ class FlamingoMaskedCrossAttention(nn.Module):
         self,
         x: torch.Tensor,
         media: torch.Tensor,
-        media_locations: Optional[torch.BoolTensor] = None,
+        media_locations: torch.BoolTensor | None = None,
         attend_previous: bool = True,
     ) -> torch.Tensor:
         """
@@ -332,7 +333,7 @@ class FlamingoGatedCrossAttentionBlock(nn.Module):
         self,
         x: torch.Tensor,
         media: torch.Tensor,
-        media_locations: Optional[torch.BoolTensor] = None,
+        media_locations: torch.BoolTensor | None = None,
         attend_previous: bool = True,
     ) -> torch.Tensor:
         x = (
@@ -378,7 +379,7 @@ class FlamingoLayer(nn.Module):
     def forward(
         self,
         lang_x: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
         **decoder_layer_kwargs,
     ):
         if self.gated_cross_attn_layer is None:
@@ -441,7 +442,7 @@ class FlamingoLMMixin(nn.Module):
                 [
                     FlamingoLayer(gated_cross_attn_layer, decoder_layer)
                     for gated_cross_attn_layer, decoder_layer in zip(
-                        gated_cross_attn_layers, self._get_decoder_layers()
+                        gated_cross_attn_layers, self._get_decoder_layers(), strict=False
                     )
                 ]
             )
@@ -629,11 +630,11 @@ class FlamingoModel(FlamingoPreTrainedModel):
         self,
         vision_x: torch.Tensor,
         lang_x: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        labels: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        labels: torch.Tensor | None = None,
         use_cached_vision_x: bool = False,
         clear_conditioned_layers: bool = True,
-        past_key_values: Optional[torch.Tensor] = None,
+        past_key_values: torch.Tensor | None = None,
         use_cache: bool = False,
         **kwargs,
     ) -> CausalLMOutputWithPast:
@@ -851,11 +852,11 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         self,
         vision_x: torch.Tensor,
         lang_x: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        labels: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        labels: torch.Tensor | None = None,
         use_cached_vision_x: bool = False,
         clear_conditioned_layers: bool = True,
-        past_key_values: Optional[torch.Tensor] = None,
+        past_key_values: torch.Tensor | None = None,
         use_cache: bool = False,
         **kwargs,
     ) -> CausalLMOutputWithPast:
@@ -938,14 +939,14 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         self,
         vision_x: torch.Tensor,
         lang_x: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
         num_beams: int = 1,
-        max_new_tokens: Optional[int] = None,
+        max_new_tokens: int | None = None,
         temperature: float = 1.0,
         top_k: int = 0,
         top_p: float = 1.0,
         no_repeat_ngram_size: int = 0,
-        prefix_allowed_tokens_fn: Optional[Callable[[int, torch.Tensor], list[int]]] = None,
+        prefix_allowed_tokens_fn: Callable[[int, torch.Tensor], list[int]] | None = None,
         length_penalty: float = 1.0,
         num_return_sequences: int = 1,
         do_sample: bool = False,

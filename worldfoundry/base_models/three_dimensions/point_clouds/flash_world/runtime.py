@@ -70,11 +70,11 @@ def _snapshot_candidates(cache_root: Path) -> list[Path]:
     return deduped
 
 
-def _has_required_files(directory: Path, required_files: Tuple[str, ...]) -> bool:
+def _has_required_files(directory: Path, required_files: tuple[str, ...]) -> bool:
     return all((directory / name).exists() for name in required_files)
 
 
-def _resolve_hf_snapshot_root(value: str, required_files: Tuple[str, ...] = ()) -> str:
+def _resolve_hf_snapshot_root(value: str, required_files: tuple[str, ...] = ()) -> str:
     """Resolve a repo id, HF cache repo root, or regular local directory."""
     path = Path(value).expanduser()
     if path.is_dir():
@@ -121,7 +121,7 @@ class MyFlowMatchEulerDiscreteScheduler(FlowMatchEulerDiscreteScheduler):
 class FlashWorldRepresentation:
     """Representation for FlashWorld 3D scene generation."""
 
-    def __init__(self, model: Optional[nn.Module] = None, device: Optional[str] = None):
+    def __init__(self, model: nn.Module | None = None, device: str | None = None):
         """
         Initialize FlashWorldRepresentation.
 
@@ -137,7 +137,7 @@ class FlashWorldRepresentation:
 
     @classmethod
     def from_pretrained(
-        cls, pretrained_model_path: str, device: Optional[str] = None, **kwargs
+        cls, pretrained_model_path: str, device: str | None = None, **kwargs
     ) -> "FlashWorldRepresentation":
         """
         Create representation instance from pretrained model.
@@ -165,7 +165,7 @@ class FlashWorldRepresentation:
     def _load_generation_system(model_root: str, device: str, **kwargs) -> nn.Module:
         """Load GenerationSystem model."""
         # Find checkpoint file
-        ckpt_path = kwargs.get("ckpt_path", None)
+        ckpt_path = kwargs.get("ckpt_path")
         if ckpt_path is None:
             # Try to find checkpoint in model_root
             ckpt_files = (
@@ -209,7 +209,7 @@ class FlashWorldRepresentation:
 
         return generation_system
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Get 3D scene representation from input data.
 
@@ -236,7 +236,7 @@ class FlashWorldRepresentation:
 
         text_prompt = data.get("text_prompt", "")
         cameras = data["cameras"]  # Required
-        image = data.get("image", None)
+        image = data.get("image")
         image_index = data.get("image_index", 0)
         image_height = data.get("image_height", 480)
         image_width = data.get("image_width", 704)
@@ -495,7 +495,7 @@ class GenerationSystem(nn.Module):
                 text_embeds = self.text_encoder(text_input_ids, mask).last_hidden_state.to(self.device)
         else:
             text_embeds = self.text_encoder(text_input_ids, mask).last_hidden_state
-        text_embeds = [u[:v] for u, v in zip(text_embeds, seq_lens)]
+        text_embeds = [u[:v] for u, v in zip(text_embeds, seq_lens, strict=False)]
         text_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in text_embeds], dim=0
         )

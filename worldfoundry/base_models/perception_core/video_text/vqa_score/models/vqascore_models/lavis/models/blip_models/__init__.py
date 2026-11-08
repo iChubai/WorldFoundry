@@ -12,7 +12,7 @@ from torch import nn
 
 
 def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_model_prefix: str, skip_key: str):
-    uninitialized_encoder_weights: List[str] = []
+    uninitialized_encoder_weights: list[str] = []
     if decoder.__class__ != encoder.__class__:
         logging.info(
             f"{decoder.__class__} and {encoder.__class__} are not equal. In this case make sure that all encoder weights are correctly initialized."
@@ -22,7 +22,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
         decoder_pointer: nn.Module,
         encoder_pointer: nn.Module,
         module_name: str,
-        uninitialized_encoder_weights: List[str],
+        uninitialized_encoder_weights: list[str],
         skip_key: str,
         depth=0,
     ):

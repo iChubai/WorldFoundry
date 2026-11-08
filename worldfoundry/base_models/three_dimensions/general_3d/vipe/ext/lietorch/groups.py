@@ -101,7 +101,7 @@ class LieGroup:
 
     def __repr__(self):
         """Repr."""
-        return "{}: size={}, device={}, dtype={}".format(self.group_name, self.shape, self.device, self.dtype)
+        return f"{self.group_name}: size={self.shape}, device={self.device}, dtype={self.dtype}"
 
     @property
     def shape(self):

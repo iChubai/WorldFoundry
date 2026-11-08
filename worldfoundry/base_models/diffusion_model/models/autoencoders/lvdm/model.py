@@ -4,16 +4,17 @@ Standard SD VAE graph. :class:`~.component.LVDMVideoDecoder` calls ``decode`` pe
 
 import os
 from contextlib import contextmanager
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from einops import rearrange
 import torch.nn.functional as F
+from einops import rearrange
 
 # import pytorch_lightning as pl
-from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Encoder, Decoder
-from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Decoder, Encoder
 from worldfoundry.core.model_loading.factory import instantiate_from_config
+from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
 
 
 class AutoencoderKL(nn.Module):
@@ -122,7 +123,7 @@ class AutoencoderKL(nn.Module):
         for k in keys:
             for ik in ignore_keys:
                 if k.startswith(ik):
-                    print("Deleting key {} from state_dict.".format(k))
+                    print(f"Deleting key {k} from state_dict.")
                     del sd[k]
         self.load_state_dict(sd, strict=False)
         # self.load_state_dict(sd, strict=True)

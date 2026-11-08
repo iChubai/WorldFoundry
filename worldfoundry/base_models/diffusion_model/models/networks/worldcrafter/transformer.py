@@ -8,8 +8,10 @@ Adapted from TencentARC/WorldCrafter at 7e57e4d; see THIRD-PARTY-NOTICES (WorldC
 
 import json
 import os
+
 import torch
 from diffusers.utils import logging
+
 from worldfoundry.base_models.diffusion_model.models.networks.helios.model import (
     HeliosTransformer3DModel,
     HeliosTransformerBlock,
@@ -131,7 +133,7 @@ class WorldCrafterTransformer3DModel(HeliosTransformer3DModel):
         for index_name in index_names:
             index_path = os.path.join(checkpoint_dir, index_name)
             if os.path.exists(index_path):
-                with open(index_path, "r", encoding="utf-8") as f:
+                with open(index_path, encoding="utf-8") as f:
                     index = json.load(f)
                 weight_map = index.get("weight_map", {})
                 return set(weight_map.keys())

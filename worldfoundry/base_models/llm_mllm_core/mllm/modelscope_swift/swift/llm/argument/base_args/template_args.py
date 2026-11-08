@@ -28,15 +28,13 @@ class TemplateArguments:
         template_backend (str): Use swift template or jinja
     """
 
-    template: Optional[str] = field(
-        default=None, metadata={"help": f"template choices: {list(TEMPLATE_MAPPING.keys())}"}
-    )
-    system: Optional[str] = None  # Override the default_system in the template.
-    max_length: Optional[int] = None
+    template: str | None = field(default=None, metadata={"help": f"template choices: {list(TEMPLATE_MAPPING.keys())}"})
+    system: str | None = None  # Override the default_system in the template.
+    max_length: int | None = None
 
     truncation_strategy: Literal["delete", "left", "right", None] = None
-    max_pixels: Optional[int] = None
-    agent_template: Optional[str] = None
+    max_pixels: int | None = None
+    agent_template: str | None = None
     norm_bbox: Literal["norm1000", "none", None] = None
     use_chat_template: bool = True
     # train
@@ -45,7 +43,7 @@ class TemplateArguments:
     loss_scale: str = "default"
     sequence_parallel_size: int = 1
     # infer/deploy
-    response_prefix: Optional[str] = None
+    response_prefix: str | None = None
     template_backend: Literal["swift", "jinja"] = "swift"
 
     def __post_init__(self):
@@ -54,7 +52,7 @@ class TemplateArguments:
         if self.system is not None:
             if self.system.endswith(".txt"):
                 assert os.path.isfile(self.system), f"self.system: {self.system}"
-                with open(self.system, "r") as f:
+                with open(self.system) as f:
                     self.system = f.read()
             else:
                 self.system = self.system.replace("\\n", "\n")

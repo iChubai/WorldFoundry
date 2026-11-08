@@ -242,7 +242,7 @@ def masked_median_blur(image, mask, kernel_size=11):
     if not len(image.shape) == 4:
         raise ValueError(f"Invalid input shape, we expect BxCxHxW. Got: {image.shape}")
 
-    padding: Tuple[int, int] = _compute_zero_padding((kernel_size, kernel_size))
+    padding: tuple[int, int] = _compute_zero_padding((kernel_size, kernel_size))
 
     # prepare kernel
     kernel: torch.Tensor = get_binary_kernel2d((kernel_size, kernel_size)).to(image)
@@ -264,16 +264,16 @@ def masked_median_blur(image, mask, kernel_size=11):
     return median
 
 
-def _compute_zero_padding(kernel_size: Tuple[int, int]) -> Tuple[int, int]:
+def _compute_zero_padding(kernel_size: tuple[int, int]) -> tuple[int, int]:
     r"""Utility function that computes zero padding tuple."""
-    computed: List[int] = [(k - 1) // 2 for k in kernel_size]
+    computed: list[int] = [(k - 1) // 2 for k in kernel_size]
     return computed[0], computed[1]
 
 
 def get_binary_kernel2d(
     window_size: tuple[int, int] | int,
     *,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
     """

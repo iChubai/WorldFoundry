@@ -6,20 +6,18 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
-import os
 import copy
-from typing import List, Dict
-import zipfile
 import json
+import os
 import random
-from typing import Tuple
+import zipfile
+from typing import Dict, List, Tuple
 
 import numpy as np
 import PIL.Image
 import torch
-from src import dnnlib
 from omegaconf import DictConfig, OmegaConf
-
+from src import dnnlib
 from src.dataset_support.layers import sample_frames
 from torchvision import transforms
 
@@ -197,17 +195,17 @@ class ImageFolderDataset(Dataset):
             self._type = "zip"
             self._all_fnames = set(self._get_zipfile().namelist())
         else:
-            raise IOError("Path must point to a directory or zip")
+            raise OSError("Path must point to a directory or zip")
 
         PIL.Image.init()
         self._image_fnames = sorted(fname for fname in self._all_fnames if self._file_ext(fname) in PIL.Image.EXTENSION)
         if len(self._image_fnames) == 0:
-            raise IOError("No image files found in the specified path")
+            raise OSError("No image files found in the specified path")
 
         name = os.path.splitext(os.path.basename(self._path))[0]
         raw_shape = [len(self._image_fnames)] + list(self._load_raw_image(0).shape)
         if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
-            raise IOError(
+            raise OSError(
                 f"Image files do not match the specified resolution. Resolution is {resolution}, shape is {raw_shape}"
             )
         super().__init__(name=name, raw_shape=raw_shape, **super_kwargs)
@@ -324,7 +322,7 @@ class VideoFramesFolderDataset(Dataset):
             self._type = "zip"
             self._all_objects = set(self._get_zipfile().namelist())
         else:
-            raise IOError("Path must be either a directory or point to a zip archive")
+            raise OSError("Path must be either a directory or point to a zip archive")
 
         PIL.Image.init()
         self._video_dir2frames = {}
@@ -338,12 +336,11 @@ class VideoFramesFolderDataset(Dataset):
             if self._file_ext(o) in PIL.Image.EXTENSION:
                 assert o.startswith(curr_d), f"Object {o} is out of sync. It should lie inside {curr_d}"
                 assert curr_obj_depth == root_path_depth + 2, "Frame images should be inside directories"
-                if not curr_d in self._video_dir2frames:
+                if curr_d not in self._video_dir2frames:
                     self._video_dir2frames[curr_d] = []
                 self._video_dir2frames[curr_d].append(o)
             elif self._file_ext(o) == "json":
                 assert curr_obj_depth == root_path_depth + 1, "Classes info file should be inside the root dir"
-                pass
             else:
                 # We encountered a new directory
                 assert curr_obj_depth == root_path_depth + 1, (
@@ -364,7 +361,7 @@ class VideoFramesFolderDataset(Dataset):
         self._video_idx2frames = [frames for frames in self._video_dir2frames.values()]
 
         if len(self._video_idx2frames) == 0:
-            raise IOError("No videos found in the specified archive")
+            raise OSError("No videos found in the specified archive")
 
         raw_shape = [len(self._video_idx2frames)] + list(self._load_raw_frames(0, [0])[0][0].shape)
 
@@ -432,7 +429,7 @@ class VideoFramesFolderDataset(Dataset):
 
         return labels
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         if self.load_n_consecutive:
             num_frames_available = len(self._video_idx2frames[self._raw_idx[idx]])
             assert num_frames_available - self.load_n_consecutive * self.subsample_factor >= 0, (
@@ -473,15 +470,15 @@ class VideoFramesFolderDataset(Dataset):
     def get_video_len(self, idx: int) -> int:
         return min(self.max_num_frames, len(self._video_idx2frames[self._raw_idx[idx]]))
 
-    def _load_raw_frames(self, raw_idx: int, frames_idx: List[int] = None) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_raw_frames(self, raw_idx: int, frames_idx: list[int] = None) -> tuple[np.ndarray, np.ndarray]:
         frame_paths = self._video_idx2frames[raw_idx]
         total_len = len(frame_paths)
         offset = 0
         images = []
 
         if frames_idx is None:
-            assert not self.sampling_dict is None, (
-                f"The dataset was created without `cfg.sampling` config and cannot sample frames on its own."
+            assert self.sampling_dict is not None, (
+                "The dataset was created without `cfg.sampling` config and cannot sample frames on its own."
             )
             if total_len > self.max_num_frames:
                 offset = random.randint(0, total_len - self.max_num_frames)

@@ -6,11 +6,9 @@ from dataclasses import dataclass
 
 import torch
 import tyro
-from loguru import logger as guru
-
-from flow3d.renderer import Renderer
-
 import yaml
+from flow3d.renderer import Renderer
+from loguru import logger as guru
 
 torch.set_float32_matmul_precision("high")
 
@@ -35,7 +33,7 @@ def main(cfg: RenderConfig):
     assert os.path.exists(ckpt_path)
 
     train_cfg_path = f"{cfg.work_dir}/cfg.yaml"
-    with open(train_cfg_path, "r") as file:
+    with open(train_cfg_path) as file:
         train_cfg = yaml.safe_load(file)
 
     renderer = Renderer.init_from_checkpoint(

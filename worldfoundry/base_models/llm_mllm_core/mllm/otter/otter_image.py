@@ -2,15 +2,15 @@ import mimetypes
 import os
 from io import BytesIO
 from typing import Union
+
 import cv2
 import requests
 import torch
 import transformers
 from PIL import Image
 
-from .models.otter.modeling_otter import OtterForConditionalGeneration
 from .base_model import BaseModel
-
+from .models.otter.modeling_otter import OtterForConditionalGeneration
 
 # Disable warnings
 requests.packages.urllib3.disable_warnings()

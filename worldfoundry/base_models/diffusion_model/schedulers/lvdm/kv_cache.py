@@ -7,8 +7,9 @@ so their K and V in temporal self-attention remain constant across all diffusion
 Cache structure: cache[layer_name][frame_idx] = {'k': tensor, 'v': tensor}
 """
 
-import torch
 from typing import Dict, Optional, Tuple
+
+import torch
 
 
 class KVCacheManager:
@@ -27,7 +28,7 @@ class KVCacheManager:
         Args:
             verbose: The verbose.
         """
-        self.cache: Dict[str, Dict[int, Dict[str, torch.Tensor]]] = {}
+        self.cache: dict[str, dict[int, dict[str, torch.Tensor]]] = {}
         self.verbose = verbose
         self.stats = {"hits": 0, "misses": 0, "stores": 0}
 
@@ -39,7 +40,7 @@ class KVCacheManager:
         self.cache[layer_name][frame_idx] = {"k": k.detach().clone(), "v": v.detach().clone()}
         self.stats["stores"] += 1
 
-    def retrieve(self, layer_name: str, frame_range: range) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+    def retrieve(self, layer_name: str, frame_range: range) -> tuple[torch.Tensor | None, torch.Tensor | None]:
         """Retrieve cached K,V for a range of frames."""
         if layer_name not in self.cache:
             self.stats["misses"] += 1
@@ -77,7 +78,7 @@ class KVCacheManager:
         ) / (1024**3)
 
         print(f"\n{'=' * 60}")
-        print(f"KV Cache Statistics:")
+        print("KV Cache Statistics:")
         print(f"  Layers: {len(self.cache)}")
         print(f"  Cache hits: {self.stats['hits']}")
         print(f"  Cache misses: {self.stats['misses']}")

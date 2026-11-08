@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import CLIPImageProcessor
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 
 try:
@@ -31,11 +32,11 @@ class OpenCLIPVisionTower(nn.Module):
             self.load_model()
         elif getattr(args, "unfreeze_mm_vision_tower", False):
             # TODO: better detector is needed.
-            rank0_print(f"The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
+            rank0_print("The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
             self.load_model()
         elif hasattr(args, "mm_tunable_parts") and "mm_vision_tower" in args.mm_tunable_parts:
             rank0_print(
-                f"The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
+                "The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
             )
             self.load_model()
 

@@ -29,12 +29,19 @@ import torch
 import torch.nn as nn
 from torch.nn import Linear, Module, init
 
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana import get_2d_sincos_pos_embed
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import RopePosEmbed
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_multi_scale import (
     SanaMS,
     SanaMSBlock,
 )
+
+# isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.sana.capabilities import (
     is_triton_module_available,
     is_xformers_available,

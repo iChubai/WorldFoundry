@@ -4,8 +4,9 @@ CUDA point-cloud renderer (pure PyTorch, no EGL/OpenGL).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -39,8 +40,8 @@ class TorchPointCloudRenderer:
         z_soft_alpha: float = 500.0,
         mode: str = "fast",
         use_fp16_cache: bool = True,
-        axis_flip: Optional[np.ndarray] = None,
-        max_points: Optional[int] = None,
+        axis_flip: np.ndarray | None = None,
+        max_points: int | None = None,
     ) -> None:
         self.width = int(width)
         self.height = int(height)
@@ -93,8 +94,8 @@ class TorchPointCloudRenderer:
         c2w_4x4: np.ndarray,
         c2w_is_camera_to_world: bool = True,
         return_torch: bool = False,
-        point_ranges: Optional[Sequence[Tuple[int, int]]] = None,
-    ) -> Union[RenderOutput, RenderOutputTorch]:
+        point_ranges: Sequence[tuple[int, int]] | None = None,
+    ) -> RenderOutput | RenderOutputTorch:
         K = torch.tensor(np.asarray(K_3x3, dtype=np.float32), device=self.device)
         if K.shape != (3, 3):
             raise ValueError(f"K must be (3,3), got {tuple(K.shape)}")
@@ -200,7 +201,7 @@ class TorchPointCloudRenderer:
         K_3x3: np.ndarray,
         c2w_4x4: np.ndarray,
         c2w_is_camera_to_world: bool = True,
-        point_ranges: Optional[Sequence[Tuple[int, int]]] = None,
+        point_ranges: Sequence[tuple[int, int]] | None = None,
     ) -> RenderOutputTorch:
         out = self.render(
             K_3x3=K_3x3,

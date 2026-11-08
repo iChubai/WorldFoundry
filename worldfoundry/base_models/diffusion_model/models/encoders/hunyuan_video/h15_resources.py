@@ -113,7 +113,7 @@ class HunyuanVideo15Resources:
             if not os.path.exists(config_path):
                 continue
             try:
-                with open(config_path, "r", encoding="utf-8") as f:
+                with open(config_path, encoding="utf-8") as f:
                     config = json.load(f)
             except Exception as exc:
                 loguru.logger.warning("Skipping unreadable HY-WorldPlay text encoder config {}: {}", config_path, exc)
@@ -176,7 +176,7 @@ class HunyuanVideo15Resources:
             if not os.path.exists(config_path):
                 continue
             try:
-                with open(config_path, "r", encoding="utf-8") as f:
+                with open(config_path, encoding="utf-8") as f:
                     config = json.load(f)
             except Exception as exc:
                 loguru.logger.warning("Skipping unreadable HY-WorldPlay vision encoder config {}: {}", config_path, exc)

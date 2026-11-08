@@ -8,10 +8,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
-
 from uniception.models.encoders.base import UniCeptionViTEncoderBase, ViTEncoderInput, ViTEncoderOutput
 from uniception.models.utils.intermediate_feature_return import IntermediateFeatureReturner
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 class DINOv2Encoder(UniCeptionViTEncoderBase):
@@ -29,7 +28,7 @@ class DINOv2Encoder(UniCeptionViTEncoderBase):
         torch_hub_force_reload: bool = False,
         torch_hub_pretrained: bool = True,
         gradient_checkpointing: bool = False,
-        keep_first_n_layers: Optional[int] = None,
+        keep_first_n_layers: int | None = None,
         use_pytorch_sdpa=True,
         disable_torch_compile_for_pe=False,
         *args,
@@ -234,10 +233,10 @@ class DINOv2IntermediateFeatureReturner(DINOv2Encoder, IntermediateFeatureReturn
         pretrained_checkpoint_path: str = None,
         torch_hub_force_reload: bool = False,
         gradient_checkpointing: bool = False,
-        keep_first_n_layers: Optional[int] = None,
+        keep_first_n_layers: int | None = None,
         use_pytorch_sdpa=True,
         disable_torch_compile_for_pe=False,
-        indices: Optional[Union[int, List[int]]] = 1,
+        indices: int | list[int] | None = 1,
         norm_intermediate: bool = True,
         *args,
         **kwargs,
@@ -285,7 +284,7 @@ class DINOv2IntermediateFeatureReturner(DINOv2Encoder, IntermediateFeatureReturn
             norm_intermediate=norm_intermediate,
         )
 
-    def forward(self, encoder_input: ViTEncoderInput) -> List[ViTEncoderOutput]:
+    def forward(self, encoder_input: ViTEncoderInput) -> list[ViTEncoderOutput]:
         """
         DINOv2 Encoder Forward Pass with Intermediate Feature Return
 

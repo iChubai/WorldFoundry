@@ -30,7 +30,6 @@ import os
 
 import torch
 from mmengine import ProgressBar
-
 from mmyolo.utils.misc import get_file_list
 
 try:
@@ -39,7 +38,7 @@ try:
 except ImportError:
     raise ImportError(
         "mmdeploy is not installed, please see "
-        "https://mmdeploy.readthedocs.io/en/1.x/01-how-to-build/build_from_source.html"  # noqa
+        "https://mmdeploy.readthedocs.io/en/1.x/01-how-to-build/build_from_source.html"
     )
 
 

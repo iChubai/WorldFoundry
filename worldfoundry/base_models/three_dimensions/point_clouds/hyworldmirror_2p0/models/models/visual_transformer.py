@@ -2,18 +2,19 @@
 
 import logging
 import random
-from typing import Tuple, List
+from typing import List, Tuple
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
 from worldfoundry.core.nn.blocks.layers import PatchEmbed, PatchEmbed_Mlp
-from ..layers.vision_transformer import vit_small, vit_base, vit_large, vit_giant2
-from ..layers.block import Block, DistBlock
-from ...comm.padding import minimal_pad_to_divisible, depad_by_length, pad_by_length
-import torch.distributed as dist
+
 from ...comm.communication import _All2All, _Allgather
+from ...comm.padding import depad_by_length, minimal_pad_to_divisible, pad_by_length
+from ..layers.block import Block, DistBlock
+from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ class VisualGeometryTransformer(nn.Module):
         sampling_strategy="uniform",
         fixed_patch_embed=False,
         condition_strategy=["token", "pow3r", "token"],
-        intermediate_idxs: List[int] = [4, 11, 17, 23],
+        intermediate_idxs: list[int] = [4, 11, 17, 23],
     ):
         """Init.
 
@@ -359,13 +360,13 @@ class VisualGeometryTransformer(nn.Module):
     def forward(
         self,
         images: torch.Tensor,
-        priors: List | None = None,
-        cond_flags: List[int] = [0, 0, 0],
+        priors: list | None = None,
+        cond_flags: list[int] = [0, 0, 0],
         ctx_frames: int = None,
         enable_bf16=False,
         sp_size: int = 1,
         sp_group: torch._C._distributed_c10d.ProcessGroup = None,
-    ) -> Tuple[List[torch.Tensor], int]:
+    ) -> tuple[list[torch.Tensor], int]:
         """
         Args:
             images: Input images with shape [B, S, 3, H, W], in range [0, 1]

@@ -1,6 +1,6 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
 
 from ...utils.utils import coords_grid
 

@@ -6,17 +6,18 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> utils -> amg.py functionality."""
 
+import math
+from collections.abc import Generator, ItemsView
+from copy import deepcopy
+from itertools import product
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
 import torch
 
-import math
-from copy import deepcopy
-from itertools import product
-from typing import Any, Dict, Generator, ItemsView, List, Tuple
-
 
 def is_box_near_crop_edge(
-    boxes: torch.Tensor, crop_box: List[int], orig_box: List[int], atol: float = 20.0
+    boxes: torch.Tensor, crop_box: list[int], orig_box: list[int], atol: float = 20.0
 ) -> torch.Tensor:
     """Filter masks at the edge of a crop, but not at the edge of the original image."""
     crop_box_torch = torch.as_tensor(crop_box, dtype=torch.float, device=boxes.device)
@@ -43,7 +44,7 @@ def box_xyxy_to_xywh(box_xyxy: torch.Tensor) -> torch.Tensor:
     return box_xywh
 
 
-def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
+def batch_iterator(batch_size: int, *args) -> Generator[list[Any], None, None]:
     """Batch iterator.
 
     Args:
@@ -60,7 +61,7 @@ def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
         yield [arg[b * batch_size : (b + 1) * batch_size] for arg in args]
 
 
-def mask_to_rle_pytorch(tensor: torch.Tensor) -> List[Dict[str, Any]]:
+def mask_to_rle_pytorch(tensor: torch.Tensor) -> list[dict[str, Any]]:
     """
     Encodes masks to an uncompressed RLE, in the format expected by
     pycoco tools.
@@ -91,7 +92,7 @@ def mask_to_rle_pytorch(tensor: torch.Tensor) -> List[Dict[str, Any]]:
     return out
 
 
-def rle_to_mask(rle: Dict[str, Any]) -> np.ndarray:
+def rle_to_mask(rle: dict[str, Any]) -> np.ndarray:
     """Compute a binary mask from an uncompressed RLE."""
     h, w = rle["size"]
     mask = np.empty(h * w, dtype=bool)
@@ -105,7 +106,7 @@ def rle_to_mask(rle: Dict[str, Any]) -> np.ndarray:
     return mask.transpose()  # Put in C order
 
 
-def area_from_rle(rle: Dict[str, Any]) -> int:
+def area_from_rle(rle: dict[str, Any]) -> int:
     """Area from rle.
 
     Args:
@@ -140,7 +141,7 @@ def build_point_grid(n_per_side: int) -> np.ndarray:
     return points
 
 
-def build_all_layer_point_grids(n_per_side: int, n_layers: int, scale_per_layer: int) -> List[np.ndarray]:
+def build_all_layer_point_grids(n_per_side: int, n_layers: int, scale_per_layer: int) -> list[np.ndarray]:
     """Generates point grids for all crop layers."""
     points_by_layer = []
     for i in range(n_layers + 1):
@@ -150,8 +151,8 @@ def build_all_layer_point_grids(n_per_side: int, n_layers: int, scale_per_layer:
 
 
 def generate_crop_boxes(
-    im_size: Tuple[int, ...], n_layers: int, overlap_ratio: float
-) -> Tuple[List[List[int]], List[int]]:
+    im_size: tuple[int, ...], n_layers: int, overlap_ratio: float
+) -> tuple[list[list[int]], list[int]]:
     """
     Generates a list of crop boxes of different sizes. Each layer
     has (2**i)**2 boxes for the ith layer.
@@ -193,7 +194,7 @@ def generate_crop_boxes(
     return crop_boxes, layer_idxs
 
 
-def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
+def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
     """Uncrop boxes xyxy.
 
     Args:
@@ -211,7 +212,7 @@ def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
     return boxes + offset
 
 
-def uncrop_points(points: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
+def uncrop_points(points: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
     """Uncrop points.
 
     Args:
@@ -229,7 +230,7 @@ def uncrop_points(points: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
     return points + offset
 
 
-def uncrop_masks(masks: torch.Tensor, crop_box: List[int], orig_h: int, orig_w: int) -> torch.Tensor:
+def uncrop_masks(masks: torch.Tensor, crop_box: list[int], orig_h: int, orig_w: int) -> torch.Tensor:
     """Uncrop masks.
 
     Args:
@@ -250,7 +251,7 @@ def uncrop_masks(masks: torch.Tensor, crop_box: List[int], orig_h: int, orig_w: 
     return torch.nn.functional.pad(masks, pad, value=0)
 
 
-def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> Tuple[np.ndarray, bool]:
+def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> tuple[np.ndarray, bool]:
     """
     Removes small disconnected regions and holes in a mask. Returns the
     mask and an indicator of if the mask has been modified.
@@ -275,7 +276,7 @@ def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> Tup
     return mask, True
 
 
-def coco_encode_rle(uncompressed_rle: Dict[str, Any]) -> Dict[str, Any]:
+def coco_encode_rle(uncompressed_rle: dict[str, Any]) -> dict[str, Any]:
     """Coco encode rle.
 
     Args:

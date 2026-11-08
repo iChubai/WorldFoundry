@@ -11,6 +11,7 @@ import math
 import warnings
 from types import MethodType
 from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 from transformers.models.bloom.modeling_bloom import (
     BaseModelOutputWithPastAndCrossAttentions,
@@ -18,12 +19,12 @@ from transformers.models.bloom.modeling_bloom import (
     BloomModel,
     CausalLMOutputWithCrossAttentions,
     CrossEntropyLoss,
+    logging,
 )
 from transformers.models.bloom.modeling_bloom import _expand_mask as _expand_mask_bloom
 from transformers.models.bloom.modeling_bloom import (
     _make_causal_mask as _make_causal_mask_bloom,
 )
-from transformers.models.bloom.modeling_bloom import logging
 from transformers.models.gpt2.modeling_gpt2 import GPT2LMHeadModel
 from transformers.models.gpt_neo.modeling_gpt_neo import GPTNeoForCausalLM
 from transformers.models.gpt_neox.modeling_gpt_neox import GPTNeoXForCausalLM
@@ -60,7 +61,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
     assert isinstance(model, _SUPPORTED_GPT_MODELS)
     assert model.config.add_cross_attention == False, "Only supports GPT-style decoder-only models"
 
-    def _get_attn_modules(model: CAUSAL_GPT_TYPES) -> List[torch.nn.Module]:
+    def _get_attn_modules(model: CAUSAL_GPT_TYPES) -> list[torch.nn.Module]:
         """Helper that gets a list of the model's attention modules.
 
         Each module has a `bias` buffer used for causal masking. The Prefix LM
@@ -84,24 +85,24 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
             attn_modules.append(attn_module)
         return attn_modules
 
-    setattr(model, "_original_forward", getattr(model, "forward"))
-    setattr(model, "_original_generate", getattr(model, "generate"))
+    model._original_forward = model.forward
+    model._original_generate = model.generate
 
     def forward(
         self: CAUSAL_GPT_TYPES,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        bidirectional_mask: Optional[torch.Tensor] = None,
-        token_type_ids: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        input_ids: torch.LongTensor | None = None,
+        past_key_values: tuple[tuple[torch.Tensor]] | None = None,
+        attention_mask: torch.FloatTensor | None = None,
+        bidirectional_mask: torch.Tensor | None = None,
+        token_type_ids: torch.LongTensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
     ):
         """Wraps original forward to enable PrefixLM attention."""
 
@@ -162,7 +163,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
             attn_module.bias.data = torch.tril(attn_module.bias.data[0, 0])[None, None]
         return output
 
-    def generate(self: CAUSAL_GPT_TYPES, *args: tuple, **kwargs: Dict[str, Any]):
+    def generate(self: CAUSAL_GPT_TYPES, *args: tuple, **kwargs: dict[str, Any]):
         """Wraps original generate to enable PrefixLM attention."""
         attn_modules = _get_attn_modules(model)
         for attn_module in attn_modules:
@@ -172,9 +173,9 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
             attn_module.bias.data = torch.tril(attn_module.bias.data[0, 0])[None, None]
         return output
 
-    setattr(model, "forward", MethodType(forward, model))
-    setattr(model, "generate", MethodType(generate, model))
-    setattr(model, "_prefix_lm_converted", True)
+    model.forward = MethodType(forward, model)
+    model.generate = MethodType(generate, model)
+    model._prefix_lm_converted = True
     return model
 
 
@@ -194,8 +195,8 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     def _prepare_attn_mask(
         self: BloomModel,
         attention_mask: torch.Tensor,
-        bidirectional_mask: Optional[torch.Tensor],
-        input_shape: Tuple[int, int],
+        bidirectional_mask: torch.Tensor | None,
+        input_shape: tuple[int, int],
         past_key_values_length: int,
     ) -> torch.BoolTensor:
         combined_attention_mask = None
@@ -251,22 +252,22 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
         alibi = alibi.expand(batch_size, -1, -1, -1).reshape(-1, query_length, key_length)
         return alibi.to(dtype)
 
-    KeyValueT = Tuple[torch.Tensor, torch.Tensor]
+    KeyValueT = tuple[torch.Tensor, torch.Tensor]
 
     def forward(
         self: BloomModel,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[KeyValueT, ...]] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        bidirectional_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.LongTensor] = None,
-        inputs_embeds: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        input_ids: torch.LongTensor | None = None,
+        past_key_values: tuple[KeyValueT, ...] | None = None,
+        attention_mask: torch.Tensor | None = None,
+        bidirectional_mask: torch.Tensor | None = None,
+        head_mask: torch.LongTensor | None = None,
+        inputs_embeds: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
         **deprecated_arguments,
-    ) -> Union[Tuple[torch.Tensor, ...], BaseModelOutputWithPastAndCrossAttentions]:
+    ) -> tuple[torch.Tensor, ...] | BaseModelOutputWithPastAndCrossAttentions:
         if deprecated_arguments.pop("position_ids", False) is not False:
             warnings.warn(
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. "
@@ -321,7 +322,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
             input_shape=(batch_size, seq_length),
             past_key_values_length=past_key_values_length,
         )
-        for i, (block, layer_past) in enumerate(zip(self.h, past_key_values)):
+        for i, (block, layer_past) in enumerate(zip(self.h, past_key_values, strict=False)):
             if output_hidden_states:
                 hst = (hidden_states,)
                 all_hidden_states = all_hidden_states + hst
@@ -371,16 +372,14 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
             all_hidden_states = all_hidden_states + hst
         if not return_dict:
             return tuple(
-                (
-                    v
-                    for v in [
-                        hidden_states,
-                        presents,
-                        all_hidden_states,
-                        all_self_attentions,
-                    ]
-                    if v is not None
-                )
+                v
+                for v in [
+                    hidden_states,
+                    presents,
+                    all_hidden_states,
+                    all_self_attentions,
+                ]
+                if v is not None
             )
         return BaseModelOutputWithPastAndCrossAttentions(
             last_hidden_state=hidden_states,
@@ -389,34 +388,26 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
             attentions=all_self_attentions,
         )
 
-    setattr(
-        model.transformer,
-        "_prepare_attn_mask",
-        MethodType(_prepare_attn_mask, model.transformer),
-    )
-    setattr(
-        model.transformer,
-        "_build_alibi_tensor",
-        MethodType(_build_alibi_tensor, model.transformer),
-    )
-    setattr(model.transformer, "forward", MethodType(forward, model.transformer))
-    KeyValueT = Tuple[torch.Tensor, torch.Tensor]
+    model.transformer._prepare_attn_mask = MethodType(_prepare_attn_mask, model.transformer)
+    model.transformer._build_alibi_tensor = MethodType(_build_alibi_tensor, model.transformer)
+    model.transformer.forward = MethodType(forward, model.transformer)
+    KeyValueT = tuple[torch.Tensor, torch.Tensor]
 
     def forward(
         self: BloomForCausalLM,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[KeyValueT, ...]] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        bidirectional_mask: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
-        labels: Optional[torch.Tensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        input_ids: torch.LongTensor | None = None,
+        past_key_values: tuple[KeyValueT, ...] | None = None,
+        attention_mask: torch.Tensor | None = None,
+        bidirectional_mask: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        inputs_embeds: torch.Tensor | None = None,
+        labels: torch.Tensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
         **deprecated_arguments,
-    ) -> Union[Tuple[torch.Tensor], CausalLMOutputWithCrossAttentions]:
+    ) -> tuple[torch.Tensor] | CausalLMOutputWithCrossAttentions:
         """Replacement forward method for BloomCausalLM."""
         if deprecated_arguments.pop("position_ids", False) is not False:
             warnings.warn(
@@ -465,8 +456,8 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     def prepare_inputs_for_generation(
         self: BloomForCausalLM,
         input_ids: torch.LongTensor,
-        past: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        past: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
         **kwargs,
     ) -> dict:
         if past:
@@ -484,13 +475,9 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
             "bidirectional_mask": bidirectional_mask,
         }
 
-    setattr(model, "forward", MethodType(forward, model))
-    setattr(
-        model,
-        "prepare_inputs_for_generation",
-        MethodType(prepare_inputs_for_generation, model),
-    )
-    setattr(model, "_prefix_lm_converted", True)
+    model.forward = MethodType(forward, model)
+    model.prepare_inputs_for_generation = MethodType(prepare_inputs_for_generation, model)
+    model._prefix_lm_converted = True
     return model
 
 
@@ -506,8 +493,8 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
         return model
     assert isinstance(model, OPTForCausalLM)
     assert model.config.add_cross_attention == False, "Only supports OPT decoder-only models"
-    setattr(model, "_original_forward", getattr(model, "forward"))
-    setattr(model, "_original_generate", getattr(model, "generate"))
+    model._original_forward = model.forward
+    model._original_generate = model.generate
     model.model.decoder.bidirectional_mask = None
 
     def _prepare_decoder_attention_mask(self, attention_mask, input_shape, inputs_embeds, past_key_values_length):
@@ -543,25 +530,23 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
             )
         return combined_attention_mask
 
-    setattr(
-        model.model.decoder,
-        "_prepare_decoder_attention_mask",
-        MethodType(_prepare_decoder_attention_mask, model.model.decoder),
+    model.model.decoder._prepare_decoder_attention_mask = MethodType(
+        _prepare_decoder_attention_mask, model.model.decoder
     )
 
     def forward(
         self: OPTForCausalLM,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        bidirectional_mask: Optional[torch.ByteTensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        bidirectional_mask: torch.ByteTensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
     ):
         def call_og_forward():
             return self._original_forward(
@@ -588,7 +573,7 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
         self.model.decoder.bidirectional_mask = None
         return outputs
 
-    def generate(self: OPTForCausalLM, *args: tuple, **kwargs: Dict[str, Any]):
+    def generate(self: OPTForCausalLM, *args: tuple, **kwargs: dict[str, Any]):
         """Wraps original generate to enable PrefixLM-style attention."""
         self.model.decoder.bidirectional_mask = "g"
         try:
@@ -599,9 +584,9 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
         self.model.decoder.bidirectional_mask = None
         return output
 
-    setattr(model, "forward", MethodType(forward, model))
-    setattr(model, "generate", MethodType(generate, model))
-    setattr(model, "_prefix_lm_converted", True)
+    model.forward = MethodType(forward, model)
+    model.generate = MethodType(generate, model)
+    model._prefix_lm_converted = True
     return model
 
 
@@ -681,20 +666,20 @@ def convert_hf_causal_lm_to_prefix_lm(model: CAUSAL_LM_TYPES) -> CAUSAL_LM_TYPES
         return _convert_opt_causal_lm_to_prefix_lm(model)
     else:
         raise TypeError(
-            f"Cannot convert model to Prefix LM. "
-            + f"Model does not belong to set of supported HF models:"
+            "Cannot convert model to Prefix LM. "
+            + "Model does not belong to set of supported HF models:"
             + f"\n{_SUPPORTED_HF_MODELS}"
         )
 
 
-def add_bidirectional_mask_if_missing(batch: Dict[str, Any]):
+def add_bidirectional_mask_if_missing(batch: dict[str, Any]):
     """Attempts to add bidirectional_mask to batch if missing.
 
     Raises:
         KeyError if bidirectional_mask is missing and can't be inferred
     """
     if "bidirectional_mask" not in batch:
-        if batch.get("mode", None) == "icl_task":
+        if batch.get("mode") == "icl_task":
             batch["bidirectional_mask"] = batch["attention_mask"].clone()
             for i, continuation_indices in enumerate(batch["continuation_indices"]):
                 batch["bidirectional_mask"][i, continuation_indices] = 0

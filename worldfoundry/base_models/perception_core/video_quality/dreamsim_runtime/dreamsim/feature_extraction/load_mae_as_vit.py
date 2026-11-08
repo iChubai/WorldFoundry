@@ -1,7 +1,9 @@
 import os
+
 import torch
-from .vision_transformer import vit_base, vit_large, vit_huge
 from transformers import ViTMAEModel
+
+from .vision_transformer import vit_base, vit_huge, vit_large
 
 
 def load_mae_as_vit(model_type, load_dir="./models"):

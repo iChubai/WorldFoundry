@@ -5,9 +5,13 @@ from einops import rearrange
 from torch import nn
 
 from .backbones.vit import build_vit
+
+# isort: split
 from .backbones.bert.builder import build_bert
-from .criterions import MLMLoss, VTC_VTM_Loss, UTA_Loss
-from .mask import TubeMaskingGenerator, RandomMaskingGenerator
+
+# isort: split
+from .criterions import MLMLoss, UTA_Loss, VTC_VTM_Loss
+from .mask import RandomMaskingGenerator, TubeMaskingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +130,7 @@ class UMT(nn.Module):
         if self.clip_teacher is None or self.loss_weight.uta == 0:
             return None, None
 
-        if H != self.clip_img_size:
+        if self.clip_img_size != H:
             image = torch.nn.functional.interpolate(
                 image.reshape(B, C * T, H, W),
                 size=(self.clip_img_size, self.clip_img_size),

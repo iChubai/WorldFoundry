@@ -84,9 +84,9 @@ class WanSelfAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: torch.Tensor | None = None,
         kv_cache=None,
         kv_cache_flag=None,
     ) -> torch.Tensor:
@@ -159,7 +159,7 @@ class WanSelfAttnProcessor2_0:
                     ),
                 ],
                 dim=2,
-            )  # noqa: E501
+            )
             key = torch.cat(
                 [
                     key,
@@ -168,7 +168,7 @@ class WanSelfAttnProcessor2_0:
                     ),
                 ],
                 dim=2,
-            )  # noqa: E501
+            )
             value = torch.cat(
                 [
                     value,
@@ -179,7 +179,7 @@ class WanSelfAttnProcessor2_0:
                     ),
                 ],
                 dim=2,
-            )  # noqa: E501
+            )
 
             hidden_states = compiled_flex_attention()(query, key, value, block_mask=attention_mask)[:, :, :seq_len]
 
@@ -205,9 +205,9 @@ class WanCrossAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rotary_emb: torch.Tensor | None = None,
     ) -> torch.Tensor:
         query = attn.to_q(hidden_states)
         key = attn.to_k(encoder_hidden_states)
@@ -264,7 +264,7 @@ class WanTimeTextImageEmbedding(nn.Module):
         time_freq_dim: int,
         time_proj_dim: int,
         text_embed_dim: int,
-        image_embed_dim: Optional[int] = None,
+        image_embed_dim: int | None = None,
     ):
         super().__init__()
 
@@ -302,7 +302,7 @@ class WanTimeTextImageEmbedding(nn.Module):
         timestep: torch.Tensor,
         r_timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         far_cfg=None,
         clean_timestep=None,
         is_causal=True,
@@ -310,15 +310,15 @@ class WanTimeTextImageEmbedding(nn.Module):
         if is_causal:
             full_frame_timestep, full_frame_timestep_proj = self.forward_timestep(
                 timestep[:, -far_cfg["num_full_frames"] :], encoder_hidden_states, far_cfg["full_token_per_frame"]
-            )  # noqa: E501
+            )
             compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(
                 timestep[:, : -far_cfg["num_full_frames"]], encoder_hidden_states, far_cfg["compressed_token_per_frame"]
-            )  # noqa: E501
+            )
 
             if clean_timestep is not None:
                 clean_timestep, clean_timestep_proj = self.forward_timestep(
                     clean_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
-                )  # noqa: E501
+                )
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep, clean_timestep], dim=1)
                 timestep_proj = torch.cat(
                     [compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1
@@ -333,7 +333,7 @@ class WanTimeTextImageEmbedding(nn.Module):
         else:
             timestep, timestep_proj = self.forward_timestep(
                 timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
-            )  # noqa: E501
+            )
 
             encoder_hidden_states = self.text_embedder(encoder_hidden_states)
             if encoder_hidden_states_image is not None:
@@ -353,7 +353,7 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         time_freq_dim: int,
         time_proj_dim: int,
         text_embed_dim: int,
-        image_embed_dim: Optional[int] = None,
+        image_embed_dim: int | None = None,
     ):
         super().__init__()
 
@@ -410,7 +410,7 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         timestep: torch.Tensor,
         r_timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         far_cfg=None,
         clean_timestep=None,
         is_causal=True,
@@ -428,18 +428,18 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
                 delta_timestep[:, -far_cfg["num_full_frames"] :],
                 encoder_hidden_states,
                 far_cfg["full_token_per_frame"],
-            )  # noqa: E501
+            )
             compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(
                 timestep[:, : -far_cfg["num_full_frames"]],
                 delta_timestep[:, : -far_cfg["num_full_frames"]],
                 encoder_hidden_states,
                 far_cfg["compressed_token_per_frame"],
-            )  # noqa: E501
+            )
 
             if clean_timestep is not None:
                 clean_timestep, clean_timestep_proj = self.forward_timestep(
                     clean_timestep, clean_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
-                )  # noqa: E501
+                )
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep, clean_timestep], dim=1)
                 timestep_proj = torch.cat(
                     [compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1
@@ -454,7 +454,7 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         else:
             timestep, timestep_proj = self.forward_timestep(
                 timestep, delta_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
-            )  # noqa: E501
+            )
 
             encoder_hidden_states = self.text_embedder(encoder_hidden_states)
             if encoder_hidden_states_image is not None:
@@ -467,8 +467,8 @@ class WanRotaryPosEmbed(nn.Module):
     def __init__(
         self,
         attention_head_dim: int,
-        patch_size: Tuple[int, int, int],
-        compressed_patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
+        compressed_patch_size: tuple[int, int, int],
         max_seq_len: int,
         theta: float = 10000.0,
     ):
@@ -570,7 +570,7 @@ class WanRotaryPosEmbed(nn.Module):
             compressed_frame_freqs, full_frame_freqs = (
                 compressed_frame_freqs[: far_cfg["num_compressed_frames"]],
                 full_frame_freqs[far_cfg["num_compressed_frames"] :],
-            )  # noqa: E501
+            )
 
             compressed_frame_freqs = compressed_frame_freqs.flatten(start_dim=0, end_dim=2)
             full_frame_freqs = full_frame_freqs.flatten(start_dim=0, end_dim=2)
@@ -604,7 +604,7 @@ class WanTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        added_kv_proj_dim: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
     ):
         super().__init__()
 
@@ -666,7 +666,7 @@ class WanTransformerBlock(nn.Module):
             c_shift_msa.squeeze(2),
             c_scale_msa.squeeze(2),
             c_gate_msa.squeeze(2),
-        )  # noqa: E501
+        )
 
         # 1. Self-attention
         norm_hidden_states = (self.norm1(hidden_states.float()) * (1 + scale_msa) + shift_msa).type_as(hidden_states)
@@ -676,7 +676,7 @@ class WanTransformerBlock(nn.Module):
             attention_mask=attention_mask,
             kv_cache=kv_cache,
             kv_cache_flag=kv_cache_flag,
-        )  # noqa: E501
+        )
         hidden_states = (hidden_states.float() + attn_output * gate_msa).type_as(hidden_states)
 
         # 2. Cross-attention
@@ -740,10 +740,10 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
     @register_to_config
     def __init__(
         self,
-        patch_size: Tuple[int] = (1, 2, 2),
-        compressed_patch_size: Optional[Tuple[int]] = None,
-        full_chunk_limit: Optional[int] = None,
-        chunk_partition: Optional[List[int]] = None,
+        patch_size: tuple[int] = (1, 2, 2),
+        compressed_patch_size: tuple[int] | None = None,
+        full_chunk_limit: int | None = None,
+        chunk_partition: list[int] | None = None,
         num_attention_heads: int = 40,
         attention_head_dim: int = 128,
         in_channels: int = 16,
@@ -753,13 +753,13 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = "rms_norm_across_heads",
+        qk_norm: str | None = "rms_norm_across_heads",
         eps: float = 1e-6,
-        image_dim: Optional[int] = None,
-        added_kv_proj_dim: Optional[int] = None,
+        image_dim: int | None = None,
+        added_kv_proj_dim: int | None = None,
         rope_max_seq_len: int = 1024,
-        gate_value: Optional[float] = None,
-        deltatime_type: Optional[str] = None,
+        gate_value: float | None = None,
+        deltatime_type: str | None = None,
     ) -> None:
         super().__init__()
 
@@ -871,7 +871,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         full_hidden_states, compressed_hidden_states = (
             hidden_states[:, :, far_cfg["num_compressed_frames"] :],
             hidden_states[:, :, : far_cfg["num_compressed_frames"]],
-        )  # noqa: E501
+        )
 
         patchified_full_hidden_states = (
             self.patch_embedding(full_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
@@ -918,7 +918,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             context_chunk_partition, noise_chunk_partition = (
                 chunk_partition[: far_cfg["num_compressed_chunk"]],
                 chunk_partition[far_cfg["num_compressed_chunk"] :],
-            )  # noqa: E501
+            )
 
             if len(context_chunk_partition) != 0:
                 context_frame_idx = torch.cat(
@@ -926,7 +926,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
                         torch.ones(chunk_len * far_cfg["compressed_token_per_frame"], device=device) * chunk_idx
                         for chunk_idx, chunk_len in enumerate(context_chunk_partition)
                     ]
-                )  # noqa: E501
+                )
             else:
                 context_frame_idx = None
             noise_frame_idx = clean_frame_idx = torch.cat(
@@ -935,7 +935,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
                     * (chunk_idx + len(context_chunk_partition))
                     for chunk_idx, chunk_len in enumerate(noise_chunk_partition)
                 ]
-            )  # noqa: E501
+            )
             pad_frame_idx = torch.zeros(padded_seq_len - real_seq_len, device=device)
 
             if len(context_chunk_partition) != 0:
@@ -993,7 +993,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             context_chunk_partition, noise_chunk_partition = (
                 chunk_partition[: far_cfg["num_compressed_chunk"]],
                 chunk_partition[far_cfg["num_compressed_chunk"] :],
-            )  # noqa: E501
+            )
 
             if len(context_chunk_partition) != 0:
                 context_frame_idx = torch.cat(
@@ -1001,7 +1001,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
                         torch.ones(chunk_len * far_cfg["compressed_token_per_frame"], device=device) * chunk_idx
                         for chunk_idx, chunk_len in enumerate(context_chunk_partition)
                     ]
-                )  # noqa: E501
+                )
             else:
                 context_frame_idx = None
 
@@ -1011,7 +1011,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
                     * (chunk_idx + len(context_chunk_partition))
                     for chunk_idx, chunk_len in enumerate(noise_chunk_partition)
                 ]
-            )  # noqa: E501
+            )
             pad_frame_idx = torch.zeros(padded_seq_len - real_seq_len, device=device)
 
             if len(context_chunk_partition) != 0:
@@ -1037,7 +1037,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
     def forward(self, *args, **kwargs):
         is_causal = kwargs.pop("is_causal", True)
         if is_causal:
-            if kwargs.get("kv_cache", None) is not None:
+            if kwargs.get("kv_cache") is not None:
                 if kwargs["kv_cache_flag"].get("is_cache_step"):
                     return self._forward_cache(*args, **kwargs)
                 else:
@@ -1054,12 +1054,12 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         timestep: torch.LongTensor,
         r_timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        attention_kwargs: dict[str, Any] | None = None,
         kv_cache=None,
         kv_cache_flag=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
 
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
@@ -1082,7 +1082,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         kv_cache_flag["num_cached_full_tokens"] = (
             sum(chunk_partition[num_compressed_chunk : num_compressed_chunk + (num_full_chunk - 1)])
             * full_token_per_frame
-        )  # noqa: E501
+        )
         kv_cache_flag["num_cached_compressed_tokens"] = (
             sum(chunk_partition[:num_compressed_chunk]) * compressed_token_per_frame
         )
@@ -1112,7 +1112,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             r_timestep,
             encoder_hidden_states,
             encoder_hidden_states_image,
-            far_cfg=far_cfg,  # noqa: E501
+            far_cfg=far_cfg,
         )
         timestep_proj = timestep_proj.unflatten(2, (6, -1))
 
@@ -1173,14 +1173,14 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         timestep: torch.LongTensor,
         r_timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        attention_kwargs: dict[str, Any] | None = None,
         clean_hidden_states=None,
         clean_timestep=None,
         kv_cache=None,
         kv_cache_flag=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
         if clean_hidden_states is not None:
             clean_hidden_states = rearrange(clean_hidden_states, "b f c h w -> b c f h w")
@@ -1277,12 +1277,12 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         timestep: torch.LongTensor,
         r_timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        attention_kwargs: dict[str, Any] | None = None,
         clean_hidden_states=None,
         clean_timestep=None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
         if clean_hidden_states is not None:
             clean_hidden_states = rearrange(clean_hidden_states, "b f c h w -> b c f h w")
@@ -1383,7 +1383,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             height=height,
             width=width,
             patch_size=self.config.patch_size[1],
-        )  # noqa: E501
+        )
 
         if not return_dict:
             return output
@@ -1396,11 +1396,11 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         timestep: torch.LongTensor,
         r_timestep: torch.LongTensor,
         encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states_image: Optional[torch.Tensor] = None,
+        encoder_hidden_states_image: torch.Tensor | None = None,
         return_dict: bool = True,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
+        attention_kwargs: dict[str, Any] | None = None,
         is_causal=False,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
 
         assert is_causal is False
@@ -1470,7 +1470,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             height=height,
             width=width,
             patch_size=self.config.patch_size[1],
-        )  # noqa: E501
+        )
 
         if not return_dict:
             return (output,)

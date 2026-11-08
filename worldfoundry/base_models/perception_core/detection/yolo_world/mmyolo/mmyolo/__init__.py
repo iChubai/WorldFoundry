@@ -38,4 +38,4 @@ assert mmdet_version >= digit_version(mmdet_minimum_version) and mmdet_version <
     f"<{mmdet_maximum_version}."
 )
 
-__all__ = ["__version__", "version_info", "digit_version"]
+__all__ = ["__version__", "digit_version", "version_info"]

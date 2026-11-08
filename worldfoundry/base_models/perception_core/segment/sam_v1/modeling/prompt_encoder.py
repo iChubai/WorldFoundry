@@ -6,11 +6,11 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> prompt_encoder.py functionality."""
 
+from typing import Any, Optional, Tuple, Type
+
 import numpy as np
 import torch
 from torch import nn
-
-from typing import Any, Optional, Tuple, Type
 
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d, PositionEmbeddingRandom
 
@@ -21,10 +21,10 @@ class PromptEncoder(nn.Module):
     def __init__(
         self,
         embed_dim: int,
-        image_embedding_size: Tuple[int, int],
-        input_image_size: Tuple[int, int],
+        image_embedding_size: tuple[int, int],
+        input_image_size: tuple[int, int],
         mask_in_chans: int,
-        activation: Type[nn.Module] = nn.GELU,
+        activation: type[nn.Module] = nn.GELU,
     ) -> None:
         """
         Encodes prompts for input to SAM's mask decoder.
@@ -110,9 +110,9 @@ class PromptEncoder(nn.Module):
 
     def _get_batch_size(
         self,
-        points: Optional[Tuple[torch.Tensor, torch.Tensor]],
-        boxes: Optional[torch.Tensor],
-        masks: Optional[torch.Tensor],
+        points: tuple[torch.Tensor, torch.Tensor] | None,
+        boxes: torch.Tensor | None,
+        masks: torch.Tensor | None,
     ) -> int:
         """
         Gets the batch size of the output given the batch size of the input prompts.
@@ -136,10 +136,10 @@ class PromptEncoder(nn.Module):
 
     def forward(
         self,
-        points: Optional[Tuple[torch.Tensor, torch.Tensor]],
-        boxes: Optional[torch.Tensor],
-        masks: Optional[torch.Tensor],
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        points: tuple[torch.Tensor, torch.Tensor] | None,
+        boxes: torch.Tensor | None,
+        masks: torch.Tensor | None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Embeds different types of prompts, returning both sparse and dense
         embeddings.

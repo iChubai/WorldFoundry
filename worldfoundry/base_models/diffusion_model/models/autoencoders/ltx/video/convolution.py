@@ -22,8 +22,8 @@ from torch.nn import functional as F
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enums import PaddingModeType
 
 
-def make_conv_nd(  # noqa: PLR0913
-    dims: Union[int, Tuple[int, int]],
+def make_conv_nd(
+    dims: int | tuple[int, int],
     in_channels: int,
     out_channels: int,
     kernel_size: int,
@@ -111,9 +111,9 @@ class DualConv3d(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: int,
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        padding: Union[int, Tuple[int, int, int]] = 0,
-        dilation: Union[int, Tuple[int, int, int]] = 1,
+        stride: int | tuple[int, int, int] = 1,
+        padding: int | tuple[int, int, int] = 0,
+        dilation: int | tuple[int, int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
@@ -289,7 +289,7 @@ class CausalConv3d(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: int = 3,
-        stride: Union[int, Tuple[int]] = 1,
+        stride: int | tuple[int] = 1,
         dilation: int = 1,
         groups: int = 1,
         bias: bool = True,

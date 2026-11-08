@@ -184,7 +184,7 @@ class Transformer(nn.Module):
         self.num_queries = num_queries  # useful for single stage model only
         self.num_patterns = num_patterns
         if not isinstance(num_patterns, int):
-            Warning("num_patterns should be int but {}".format(type(num_patterns)))
+            Warning(f"num_patterns should be int but {type(num_patterns)}")
             self.num_patterns = 0
 
         if num_feature_levels > 1:
@@ -204,7 +204,7 @@ class Transformer(nn.Module):
 
         # for two stage
         self.two_stage_type = two_stage_type
-        assert two_stage_type in ["no", "standard"], "unknown param {} of two_stage_type".format(two_stage_type)
+        assert two_stage_type in ["no", "standard"], f"unknown param {two_stage_type} of two_stage_type"
         if two_stage_type == "standard":
             # anchor selection at the output of encoder
             self.enc_output = nn.Linear(d_model, d_model)
@@ -267,7 +267,7 @@ class Transformer(nn.Module):
         mask_flatten = []
         lvl_pos_embed_flatten = []
         spatial_shapes = []
-        for lvl, (src, mask, pos_embed) in enumerate(zip(srcs, masks, pos_embeds)):
+        for lvl, (src, mask, pos_embed) in enumerate(zip(srcs, masks, pos_embeds, strict=False)):
             bs, c, h, w = src.shape
             spatial_shape = (h, w)
             spatial_shapes.append(spatial_shape)
@@ -381,7 +381,7 @@ class Transformer(nn.Module):
             init_box_proposal = refpoint_embed_.sigmoid()
 
         else:
-            raise NotImplementedError("unknown two_stage_type {}".format(self.two_stage_type))
+            raise NotImplementedError(f"unknown two_stage_type {self.two_stage_type}")
         #########################################################
         # End preparing tgt
         # - tgt: bs, NQ, d_model
@@ -656,7 +656,7 @@ class TransformerDecoder(nn.Module):
         self.return_intermediate = return_intermediate
         assert return_intermediate, "support return_intermediate only"
         self.query_dim = query_dim
-        assert query_dim in [2, 4], "query_dim should be 2/4 but {}".format(query_dim)
+        assert query_dim in [2, 4], f"query_dim should be 2/4 but {query_dim}"
         self.num_feature_levels = num_feature_levels
 
         self.ref_point_head = MLP(query_dim // 2 * d_model, d_model, d_model, 2)
@@ -674,19 +674,19 @@ class TransformerDecoder(nn.Module):
         self,
         tgt,
         memory,
-        tgt_mask: Optional[Tensor] = None,
-        memory_mask: Optional[Tensor] = None,
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        memory_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
-        refpoints_unsigmoid: Optional[Tensor] = None,  # num_queries, bs, 2
+        tgt_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        tgt_key_padding_mask: Tensor | None = None,
+        memory_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
+        refpoints_unsigmoid: Tensor | None = None,  # num_queries, bs, 2
         # for memory
-        level_start_index: Optional[Tensor] = None,  # num_levels
-        spatial_shapes: Optional[Tensor] = None,  # bs, num_levels, 2
-        valid_ratios: Optional[Tensor] = None,
+        level_start_index: Tensor | None = None,  # num_levels
+        spatial_shapes: Tensor | None = None,  # bs, num_levels, 2
+        valid_ratios: Tensor | None = None,
         # for text
-        memory_text: Optional[Tensor] = None,
-        text_attention_mask: Optional[Tensor] = None,
+        memory_text: Tensor | None = None,
+        text_attention_mask: Tensor | None = None,
     ):
         """
         Input:
@@ -967,22 +967,22 @@ class DeformableTransformerDecoderLayer(nn.Module):
     def forward(
         self,
         # for tgt
-        tgt: Optional[Tensor],  # nq, bs, d_model
-        tgt_query_pos: Optional[Tensor] = None,  # pos for query. MLP(Sine(pos))
-        tgt_query_sine_embed: Optional[Tensor] = None,  # pos for query. Sine(pos)
-        tgt_key_padding_mask: Optional[Tensor] = None,
-        tgt_reference_points: Optional[Tensor] = None,  # nq, bs, 4
-        memory_text: Optional[Tensor] = None,  # bs, num_token, d_model
-        text_attention_mask: Optional[Tensor] = None,  # bs, num_token
+        tgt: Tensor | None,  # nq, bs, d_model
+        tgt_query_pos: Tensor | None = None,  # pos for query. MLP(Sine(pos))
+        tgt_query_sine_embed: Tensor | None = None,  # pos for query. Sine(pos)
+        tgt_key_padding_mask: Tensor | None = None,
+        tgt_reference_points: Tensor | None = None,  # nq, bs, 4
+        memory_text: Tensor | None = None,  # bs, num_token, d_model
+        text_attention_mask: Tensor | None = None,  # bs, num_token
         # for memory
-        memory: Optional[Tensor] = None,  # hw, bs, d_model
-        memory_key_padding_mask: Optional[Tensor] = None,
-        memory_level_start_index: Optional[Tensor] = None,  # num_levels
-        memory_spatial_shapes: Optional[Tensor] = None,  # bs, num_levels, 2
-        memory_pos: Optional[Tensor] = None,  # pos for memory
+        memory: Tensor | None = None,  # hw, bs, d_model
+        memory_key_padding_mask: Tensor | None = None,
+        memory_level_start_index: Tensor | None = None,  # num_levels
+        memory_spatial_shapes: Tensor | None = None,  # bs, num_levels, 2
+        memory_pos: Tensor | None = None,  # pos for memory
         # sa
-        self_attn_mask: Optional[Tensor] = None,  # mask used for self-attention
-        cross_attn_mask: Optional[Tensor] = None,  # mask used for cross-attention
+        self_attn_mask: Tensor | None = None,  # mask used for self-attention
+        cross_attn_mask: Tensor | None = None,  # mask used for cross-attention
     ):
         """
         Input:

@@ -8,8 +8,9 @@ DINOv2
 
 import collections.abc
 import math
+from collections.abc import Callable
 from itertools import repeat
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -93,8 +94,8 @@ class SwiGLUFFN(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -116,8 +117,8 @@ class SwiGLUFFNFused(SwiGLUFFN):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -141,7 +142,7 @@ class Attention(nn.Module):
     def __init__(
         self,
         dim: int,
-        latent_attn_dim: Optional[int] = None,
+        latent_attn_dim: int | None = None,
         num_heads: int = 8,
         qkv_bias: bool = False,
         qk_norm: bool = False,
@@ -419,13 +420,13 @@ class SelfAttentionBlock(nn.Module):
         self,
         dim: int,
         num_heads: int,
-        latent_attn_dim: Optional[int] = None,
+        latent_attn_dim: int | None = None,
         mlp_ratio: float = 4.0,
         qkv_bias: bool = False,
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
@@ -526,7 +527,7 @@ class CrossAttentionBlock(nn.Module):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
@@ -958,7 +959,7 @@ class DiffSelfAttentionBlock(SelfAttentionBlock):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
@@ -1007,7 +1008,7 @@ class DiffCrossAttentionBlock(CrossAttentionBlock):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,

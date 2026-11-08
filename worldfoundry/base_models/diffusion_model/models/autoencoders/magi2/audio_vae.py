@@ -13,7 +13,6 @@ from torch import nn
 from torch.nn import functional as F
 from torch.nn.utils import weight_norm
 
-
 __all__ = ["AudioAutoencoder", "create_model_from_config"]
 
 

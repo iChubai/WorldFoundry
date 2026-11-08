@@ -28,8 +28,14 @@ import torch
 from einops import rearrange
 from omegaconf.dictconfig import DictConfig
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import slam_ext
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.lietorch import SE3
+
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth import DepthEstimationInput, DepthEstimationModel
 from worldfoundry.base_models.three_dimensions.depth.base import DepthType
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType

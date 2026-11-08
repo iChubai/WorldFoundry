@@ -28,10 +28,10 @@ class SpaceToDepthDownsample(nn.Module):
 
     def __init__(
         self,
-        dims: Union[int, Tuple[int, int]],
+        dims: int | tuple[int, int],
         in_channels: int,
         out_channels: int,
-        stride: Tuple[int, int, int],
+        stride: tuple[int, int, int],
         spatial_padding_mode: PaddingModeType = PaddingModeType.ZEROS,
     ):
         super().__init__()
@@ -86,9 +86,9 @@ class DepthToSpaceUpsample(nn.Module):
 
     def __init__(
         self,
-        dims: int | Tuple[int, int],
+        dims: int | tuple[int, int],
         in_channels: int,
-        stride: Tuple[int, int, int],
+        stride: tuple[int, int, int],
         residual: bool = False,
         out_channels_reduction_factor: int = 1,
         spatial_padding_mode: PaddingModeType = PaddingModeType.ZEROS,

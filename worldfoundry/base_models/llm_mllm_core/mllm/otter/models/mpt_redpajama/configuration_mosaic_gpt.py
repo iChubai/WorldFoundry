@@ -24,21 +24,21 @@ class MosaicGPTConfig(PretrainedConfig):
         emb_pdrop: float = 0.0,
         attn_impl: str = "triton",
         attn_qk_ln: bool = False,
-        attn_clip_qkv: Optional[float] = None,
-        softmax_scale: Optional[float] = None,
-        prefix_lm: Optional[bool] = False,
-        attn_uses_sequence_id: Optional[bool] = False,
+        attn_clip_qkv: float | None = None,
+        softmax_scale: float | None = None,
+        prefix_lm: bool | None = False,
+        attn_uses_sequence_id: bool | None = False,
         alibi: bool = False,
         alibi_bias_max: int = 8,
         init_device: str = "cpu",
-        logit_scale: Optional[Union[float, str]] = None,
+        logit_scale: float | str | None = None,
         no_bias: bool = False,
         verbose: int = 0,
         param_init_fn: str = "kaiming_normal_",
-        init_div_is_residual: Union[int, float, str, bool] = True,
+        init_div_is_residual: int | float | str | bool = True,
         init_std: float = 0.02,
-        emb_init_std: Optional[float] = None,
-        emb_init_uniform_lim: Optional[Union[Tuple[float, float], float]] = None,
+        emb_init_std: float | None = None,
+        emb_init_uniform_lim: tuple[float, float] | float | None = None,
         init_gain: float = 0,
         fan_mode: str = "fan_in",
         init_nonlinearity: str = "relu",
@@ -126,10 +126,8 @@ class MosaicGPTConfig(PretrainedConfig):
         self.embedding_fraction = embedding_fraction
         self.low_precision_layernorm = low_precision_layernorm
         self.use_cache = use_cache
-        if "name" in kwargs:
-            del kwargs["name"]
-        if "loss_fn" in kwargs:
-            del kwargs["loss_fn"]
+        kwargs.pop("name", None)
+        kwargs.pop("loss_fn", None)
         super().__init__(**kwargs)
 
         self._validate_config()

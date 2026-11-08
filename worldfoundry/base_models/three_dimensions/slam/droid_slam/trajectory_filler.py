@@ -1,16 +1,16 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> trajectory_filler.py functionality."""
 
-import cv2
-import torch
-import lietorch
-
-from lietorch import SE3
 from collections import OrderedDict
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
-import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
-
 from functools import partial
+
+import cv2
+import lietorch
+import torch
+from lietorch import SE3
+
+import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
 
 if torch.__version__.startswith("2"):
     autocast = partial(torch.autocast, device_type="cuda")

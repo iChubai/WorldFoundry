@@ -13,6 +13,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.to
     find_sub_module,
     get_logger,
 )
+
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -40,7 +41,7 @@ class AdapterConfig(SwiftConfig):
 
     dim: int = field(default=None, metadata={"help": "The dimension of the hidden states"})
 
-    target_modules: Union[str, List[str]] = field(
+    target_modules: str | list[str] = field(
         default=None,
         metadata={
             "help": "The feedforward module to be replaced. in regex format if this argument is str, "
@@ -48,7 +49,7 @@ class AdapterConfig(SwiftConfig):
         },
     )
 
-    hidden_pos: Union[str, int] = field(
+    hidden_pos: str | int = field(
         default=None,
         metadata={
             "help": "The position of the hidden state to be passed into the adapter, can be int (args) or str (kwargs)"
@@ -81,7 +82,7 @@ class Adapter(SwiftAdapter):
             else:
                 target_module_found = any(module_key.endswith(target_key) for target_key in config.target_modules)
 
-            if target_module_found:  # noqa
+            if target_module_found:
                 module = model.get_submodule(module_key)
 
                 def _forward(self, *args, **kwargs):

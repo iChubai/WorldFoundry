@@ -20,7 +20,6 @@ import logging
 import torch
 from transformers.feature_extraction_utils import BatchFeature
 
-
 logger = logging.getLogger(__name__)
 
 

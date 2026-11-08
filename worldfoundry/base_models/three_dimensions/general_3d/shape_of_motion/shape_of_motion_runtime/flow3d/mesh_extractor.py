@@ -3,14 +3,11 @@
 import math
 
 import numpy as np
-
 import open3d as o3d
-import trimesh
-
 import torch
 import torch.nn.functional as F
+import trimesh
 from torch import Tensor
-
 from tqdm import tqdm
 
 
@@ -72,7 +69,7 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
         H: The h.
     """
     camera_traj = []
-    for i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks)):
+    for i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks, strict=False)):
         intrinsic = o3d.camera.PinholeCameraIntrinsic(
             width=H,
             height=W,
@@ -94,7 +91,7 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
     return camera_traj
 
 
-class MeshExtractor(object):
+class MeshExtractor:
     """Mesh extractor implementation."""
 
     def __init__(
@@ -259,14 +256,14 @@ class MeshExtractor(object):
             surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (
                 torch.max(surf_norm_save) - torch.min(surf_norm_save)
             )
-            imageio.imwrite(f"./tmp.png", (surf_norm_save * 255).numpy().astype(np.uint8))
+            imageio.imwrite("./tmp.png", (surf_norm_save * 255).numpy().astype(np.uint8))
 
             surf_norm_save = depth.detach().cpu().repeat(1, 1, 3)
             surf_norm_save = surf_norm_save * 0.5 + 0.5
             surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (
                 torch.max(surf_norm_save) - torch.min(surf_norm_save)
             )
-            imageio.imwrite(f"./tmp_depth.png", (surf_norm_save * 255).numpy().astype(np.uint8))
+            imageio.imwrite("./tmp_depth.png", (surf_norm_save * 255).numpy().astype(np.uint8))
 
             # make open3d rgbd
 

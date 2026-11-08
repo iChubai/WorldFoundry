@@ -2,7 +2,6 @@
 # License text: THIRD-PARTY-NOTICES, BigVGAN alias-free-torch LICENSE_3.
 
 import torch.nn as nn
-
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import (
     DownSample1d,
     UpSample1d,

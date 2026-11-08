@@ -11,9 +11,8 @@ passthrough (``_eager_decode``) so ``decode`` runs eagerly. diffusers
 ModelMixin/ConfigMixin are kept.
 """
 
-from typing import Optional, Tuple, Union
-
 import json
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -22,7 +21,6 @@ from diffusers.models.modeling_utils import ModelMixin
 from einops import rearrange
 
 from .config import WAN22_LATENTS_MEAN, WAN22_LATENTS_STD
-
 
 __all__ = ["TurboVAED", "get_turbo_vaed"]
 
@@ -126,8 +124,8 @@ class TurboVAEDConv2dSplitUpsampler(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        kernel_size: Union[int, Tuple[int, int]] = 3,
-        stride: Union[int, Tuple[int, int]] = 1,
+        kernel_size: int | tuple[int, int] = 3,
+        stride: int | tuple[int, int] = 1,
         upscale_factor: int = 1,
         padding_mode: str = "zeros",
     ):
@@ -166,9 +164,9 @@ class TurboVAEDCausalConv3d(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int, int, int]] = 3,
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        dilation: Union[int, Tuple[int, int, int]] = 1,
+        kernel_size: int | tuple[int, int, int] = 3,
+        stride: int | tuple[int, int, int] = 1,
+        dilation: int | tuple[int, int, int] = 1,
         groups: int = 1,
         padding_mode: str = "zeros",
         is_causal: bool = False,
@@ -215,9 +213,9 @@ class TurboVAEDCausalDepthwiseSeparableConv3d(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int, int, int]] = 3,
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        dilation: Union[int, Tuple[int, int, int]] = 1,
+        kernel_size: int | tuple[int, int, int] = 3,
+        stride: int | tuple[int, int, int] = 1,
+        dilation: int | tuple[int, int, int] = 1,
         padding_mode: str = "zeros",
         is_causal: bool = True,
     ):
@@ -272,7 +270,7 @@ class TurboVAEDResNetBlock3d(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_channels: Optional[int] = None,
+        out_channels: int | None = None,
         eps: float = 1e-6,
         elementwise_affine: bool = False,
         non_linearity: str = "swish",
@@ -388,7 +386,7 @@ class WanResample(nn.Module):
         if self.mode == "upsample3d":
             x = self.time_conv(x)
             x = rearrange(x, "b (n_split c) t h w -> b c (t n_split) h w", n_split=2)
-            assert x.shape == (b, c, t * 2, h, w), "x.shape: {}, expected: {}".format(x.shape, (b, c, t * 2, h, w))
+            assert x.shape == (b, c, t * 2, h, w), f"x.shape: {x.shape}, expected: {(b, c, t * 2, h, w)}"
             if is_first_chunk:
                 x = x[:, :, 1:]
 
@@ -442,7 +440,7 @@ class TurboVAEDUpBlock3d(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_channels: Optional[int] = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         resnet_eps: float = 1e-6,
         resnet_act_fn: str = "swish",
@@ -517,16 +515,16 @@ class TurboVAEDDecoder3d(nn.Module):
         self,
         in_channels: int = 128,
         out_channels: int = 3,
-        block_out_channels: Tuple[int, ...] = (128, 256, 512, 512),
-        spatio_temporal_scaling: Tuple[bool, ...] = (True, True, True, False),
-        layers_per_block: Tuple[int, ...] = (4, 3, 3, 3, 4),
+        block_out_channels: tuple[int, ...] = (128, 256, 512, 512),
+        spatio_temporal_scaling: tuple[bool, ...] = (True, True, True, False),
+        layers_per_block: tuple[int, ...] = (4, 3, 3, 3, 4),
         patch_size: int = 4,
         patch_size_t: int = 1,
         resnet_norm_eps: float = 1e-6,
         is_causal: bool = False,
-        decoder_is_dw_conv: Tuple[bool, ...] = (False, False, False, False, False),
+        decoder_is_dw_conv: tuple[bool, ...] = (False, False, False, False, False),
         decoder_dw_kernel_size: int = 3,
-        spatio_only: Tuple[bool, ...] = (False, False, False, False),
+        spatio_only: tuple[bool, ...] = (False, False, False, False),
         upsampling: bool = False,
         use_unpatchify: bool = False,
     ) -> None:
@@ -653,17 +651,17 @@ class TurboVAED(ModelMixin, ConfigMixin):
         in_channels: int = 3,  # useless arg for compatibility, we only use latent channels
         out_channels: int = 3,
         latent_channels: int = 128,
-        decoder_block_out_channels: Tuple[int, ...] = (128, 256, 512, 512),
-        decoder_layers_per_block: Tuple[int, ...] = (4, 3, 3, 3, 4),
-        decoder_spatio_temporal_scaling: Tuple[bool, ...] = (True, True, True, False),
+        decoder_block_out_channels: tuple[int, ...] = (128, 256, 512, 512),
+        decoder_layers_per_block: tuple[int, ...] = (4, 3, 3, 3, 4),
+        decoder_spatio_temporal_scaling: tuple[bool, ...] = (True, True, True, False),
         patch_size: int = 4,
         patch_size_t: int = 1,
         resnet_norm_eps: float = 1e-6,
         scaling_factor: float = 1.0,
         decoder_causal: bool = False,
-        decoder_is_dw_conv: Tuple[bool, ...] = (False, False, False, False, False),
+        decoder_is_dw_conv: tuple[bool, ...] = (False, False, False, False, False),
         decoder_dw_kernel_size: int = 3,
-        decoder_spatio_only: Tuple[bool, ...] = (False, False, False, False),
+        decoder_spatio_only: tuple[bool, ...] = (False, False, False, False),
         first_chunk_size: int = 3,
         step_size: int = 5,
         spatial_compression_ratio: int = 16,
@@ -801,7 +799,7 @@ Magi2TurboDecoder = TurboVAED
 
 
 def get_turbo_vaed(config_path, ckpt_path, device="cuda", weight_dtype=torch.float32) -> TurboVAED:
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         config = json.load(f)
     student = TurboVAED.from_config(config)
 

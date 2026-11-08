@@ -51,7 +51,7 @@ class MultiplexState:
         dtype: torch.dtype,
         allowed_bucket_capacity: int,
         *,
-        object_ids: Optional[list[int]] = None,
+        object_ids: list[int] | None = None,
     ):
         """
         assignments: a list of lists of object indices
@@ -69,7 +69,7 @@ class MultiplexState:
         self.allowed_bucket_capacity = allowed_bucket_capacity
         self._initialize_assignments(assignments, object_ids=object_ids)
 
-    def _initialize_assignments(self, assignments: list[list[int]], *, object_ids: Optional[list[int]] = None):
+    def _initialize_assignments(self, assignments: list[list[int]], *, object_ids: list[int] | None = None):
         """Helper function to initialize assignments.
 
         Args:
@@ -156,7 +156,7 @@ class MultiplexState:
         self,
         object_indices: list[int],
         *,
-        object_ids: Optional[list[int]] = None,
+        object_ids: list[int] | None = None,
         allow_new_buckets: bool = False,
         prefer_new_buckets: bool = False,
     ):
@@ -461,7 +461,7 @@ class MultiplexController(nn.Module):
         dtype: torch.dtype,
         random: bool = True,
         *,
-        object_ids: Optional[list[int]] = None,  # object_ids is an auxiliary field that we pass to the state unmodified
+        object_ids: list[int] | None = None,  # object_ids is an auxiliary field that we pass to the state unmodified
     ) -> MultiplexState:
         """Get state.
 

@@ -4,19 +4,21 @@ Conditioning may include an extra visual stream; layout and skip
 connections match the released vid2world checkpoint.
 """
 
-from functools import partial
 from abc import abstractmethod
+from functools import partial
+
 import torch
 import torch.nn as nn
-from einops import rearrange
 import torch.nn.functional as F
-from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import timestep_embedding
-from worldfoundry.core.nn.diffusion.utils import checkpoint
-from worldfoundry.core.nn.diffusion.convolution import zero_module, conv_nd, linear, avg_pool_nd, normalization
+from einops import rearrange
+
 from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention_vid2world import (
     SpatialTransformer,
     TemporalTransformer,
 )
+from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import timestep_embedding
+from worldfoundry.core.nn.diffusion.convolution import avg_pool_nd, conv_nd, linear, normalization, zero_module
+from worldfoundry.core.nn.diffusion.utils import checkpoint
 
 
 class TimestepBlock(nn.Module):

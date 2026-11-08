@@ -27,8 +27,8 @@ def _has_spatial_correlation_ext() -> bool:
     global _SPATIAL_CORR_EXT_AVAILABLE
     if _SPATIAL_CORR_EXT_AVAILABLE is None:
         try:
-            getattr(_corr_ext, "forward")
-            getattr(_corr_ext, "backward")
+            _corr_ext.forward
+            _corr_ext.backward
             _SPATIAL_CORR_EXT_AVAILABLE = True
         except Exception:
             _SPATIAL_CORR_EXT_AVAILABLE = False

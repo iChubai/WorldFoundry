@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import warnings
-from typing import List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -15,6 +16,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from ..utils import gt_instances_preprocess
 from .rtmdet_head import RTMDetHead, RTMDetSepBNHeadModule
 
@@ -122,7 +124,7 @@ class RTMDetRotatedSepBNHeadModule(RTMDetSepBNHeadModule):
         for rtm_ang in self.rtm_ang:
             normal_init(rtm_ang, std=0.01)
 
-    def forward(self, feats: Tuple[Tensor, ...]) -> tuple:
+    def forward(self, feats: tuple[Tensor, ...]) -> tuple:
         """Forward features from the upstream network.
 
         Args:
@@ -305,15 +307,15 @@ class RTMDetRotatedHead(RTMDetHead):
 
     def predict_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        angle_preds: List[Tensor],
-        objectnesses: Optional[List[Tensor]] = None,
-        batch_img_metas: Optional[List[dict]] = None,
-        cfg: Optional[ConfigDict] = None,
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        angle_preds: list[Tensor],
+        objectnesses: list[Tensor] | None = None,
+        batch_img_metas: list[dict] | None = None,
+        cfg: ConfigDict | None = None,
         rescale: bool = True,
         with_nms: bool = True,
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Transform a batch of output features extracted by the head into bbox
         results.
 
@@ -381,7 +383,7 @@ class RTMDetRotatedHead(RTMDetHead):
 
         mlvl_strides = [
             flatten_priors.new_full((featmap_size.numel() * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         flatten_stride = torch.cat(mlvl_strides)
 
@@ -415,7 +417,7 @@ class RTMDetRotatedHead(RTMDetHead):
 
         results_list = []
         for bboxes, scores, objectness, img_meta in zip(
-            flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas
+            flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas, strict=False
         ):
             scale_factor = img_meta["scale_factor"]
             if "pad_param" in img_meta:
@@ -475,11 +477,11 @@ class RTMDetRotatedHead(RTMDetHead):
 
     def loss_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        angle_preds: List[Tensor],
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        angle_preds: list[Tensor],
         batch_gt_instances: InstanceList,
-        batch_img_metas: List[dict],
+        batch_img_metas: list[dict],
         batch_gt_instances_ignore: OptInstanceList = None,
     ) -> dict:
         """Compute losses of the head.

@@ -1,7 +1,6 @@
 import torch
-from torch import nn
-
 from detectron2.layers import Conv2d
+from torch import nn
 
 
 class _NewEmptyTensorOp(torch.autograd.Function):
@@ -104,7 +103,9 @@ class DFConv2d(nn.Module):
         # get output shape
         output_shape = [
             (i + 2 * p - (di * (k - 1) + 1)) // d + 1
-            for i, p, di, k, d in zip(x.shape[-2:], self.padding, self.dilation, self.kernel_size, self.stride)
+            for i, p, di, k, d in zip(
+                x.shape[-2:], self.padding, self.dilation, self.kernel_size, self.stride, strict=False
+            )
         ]
         output_shape = [x.shape[0], self.conv.weight.shape[0]] + output_shape
         return _NewEmptyTensorOp.apply(x, output_shape)

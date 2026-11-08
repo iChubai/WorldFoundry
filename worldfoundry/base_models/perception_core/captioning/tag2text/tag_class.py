@@ -1,6 +1,5 @@
 import numpy as np
 
-
 tra_array = [
     "tennis",
     "bear cub",

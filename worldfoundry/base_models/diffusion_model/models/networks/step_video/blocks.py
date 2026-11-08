@@ -18,10 +18,12 @@ projected caption tokens.  AdaLN scale/shift/gate come from the shared
 timestep table.
 """
 
+from typing import Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional
 from einops import rearrange
+
 from .attention import Attention
 from .normalization import RMSNorm
 from .rope import RoPE3D
@@ -152,8 +154,8 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        inner_dim: Optional[int] = None,
-        dim_out: Optional[int] = None,
+        inner_dim: int | None = None,
+        dim_out: int | None = None,
         mult: int = 4,
         bias: bool = False,
     ):
@@ -227,7 +229,7 @@ class StepVideoTransformerBlock(nn.Module):
         dim: int,
         attention_head_dim: int,
         norm_eps: float = 1e-5,
-        ff_inner_dim: Optional[int] = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = False,
         attention_type: str = "parallel",
     ):
@@ -249,8 +251,8 @@ class StepVideoTransformerBlock(nn.Module):
     def forward(
         self,
         q: torch.Tensor,
-        kv: Optional[torch.Tensor] = None,
-        timestep: Optional[torch.LongTensor] = None,
+        kv: torch.Tensor | None = None,
+        timestep: torch.LongTensor | None = None,
         attn_mask=None,
         rope_positions: list = None,
     ) -> torch.Tensor:

@@ -4,23 +4,25 @@ Causal self-attention over generated prefixes.  Used by the shared
 Self-Forcing runtime.  Adds causal attention; no VACE or linear attn.
 """
 
+import math
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
 from worldfoundry.core.attention.sequence.varlen import attention
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .model import (
+    WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
+    WanLayerNorm,
     WanRMSNorm,
     rope_apply,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
-    MLPProj,
     sinusoidal_embedding_1d,
 )
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import torch.nn as nn
-import torch
-import math
-import torch.distributed as dist
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -685,7 +687,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         noisy_image_end_list = noisy_image_start_list + attention_block_size
 
         # attention for noisy frames
-        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list)):
+        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list, strict=False)):
             # attend to noisy tokens within the same block
             noise_noise_starts[start:end] = start
             noise_noise_ends[start:end] = end
@@ -864,7 +866,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1018,7 +1020,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                     )
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1110,7 +1112,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
     def forward(self, *args, **kwargs):
         """Forward."""
-        if kwargs.get("kv_cache", None) is not None:
+        if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         else:
             return self._forward_train(*args, **kwargs)
@@ -1133,10 +1135,10 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

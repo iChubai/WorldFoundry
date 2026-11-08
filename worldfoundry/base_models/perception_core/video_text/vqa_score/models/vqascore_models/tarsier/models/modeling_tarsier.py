@@ -1,29 +1,25 @@
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union, Dict, Any
 import math
+import os
+import sys
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
-import torch.nn.functional as F
-
-from transformers import PreTrainedModel, AutoConfig, AutoModel
+from transformers import AutoConfig, AutoModel, LlamaForCausalLM, PreTrainedModel, Qwen2ForCausalLM
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache
-from transformers.modeling_outputs import ModelOutput
-from transformers.utils import logging
 from transformers.configuration_utils import PretrainedConfig
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
-from transformers.models.auto import AutoModel, AutoModelForCausalLM, CONFIG_MAPPING
 from transformers.generation import GenerationMixin
-
-from transformers import LlamaForCausalLM, Qwen2ForCausalLM
+from transformers.modeling_outputs import ModelOutput
+from transformers.models.auto import CONFIG_MAPPING, AutoModel, AutoModelForCausalLM
+from transformers.utils import logging
 
 # from models.modeling_qwen2 import Qwen2ForCausalLM
 from ..models.modeling_qwen2_vl_fast import Qwen2VLForCausalLM
 from ..models.utils import _pad_input, _unpad_input
-
-import sys
-import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -98,12 +94,12 @@ class LlavaConfig(PretrainedConfig):
 @dataclass
 # Copied from transformers.models.idefics.modeling_idefics.IdeficsCausalLMOutputWithPast with Idefics->Llava
 class LlavaCausalLMOutputWithPast(ModelOutput):
-    loss: Optional[torch.FloatTensor] = None
+    loss: torch.FloatTensor | None = None
     logits: torch.FloatTensor = None
-    past_key_values: Optional[List[torch.FloatTensor]] = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
-    position_ids: Optional[torch.LongTensor] = None
+    past_key_values: list[torch.FloatTensor] | None = None
+    hidden_states: tuple[torch.FloatTensor] | None = None
+    attentions: tuple[torch.FloatTensor] | None = None
+    position_ids: torch.LongTensor | None = None
 
 
 def add_split_tokens(image_features, image_newline_embed, image_new_embed):
@@ -328,7 +324,7 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
     def tie_weights(self):
         return self.language_model.tie_weights()
 
-    def resize_token_embeddings(self, new_num_tokens: Optional[int] = None, pad_to_multiple_of=None) -> nn.Embedding:
+    def resize_token_embeddings(self, new_num_tokens: int | None = None, pad_to_multiple_of=None) -> nn.Embedding:
         model_embeds = self.language_model.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
         # update vocab size
         self.config.text_config.vocab_size = model_embeds.num_embeddings
@@ -337,20 +333,20 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
         pixel_values: torch.FloatTensor = None,
-        image_grid_thw: Optional[torch.Tensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        labels: Optional[torch.LongTensor] = None,
-        num_images: Optional[torch.Tensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-        use_rmpad: Optional[bool] = False,
+        image_grid_thw: torch.Tensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        labels: torch.LongTensor | None = None,
+        num_images: torch.Tensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        use_rmpad: bool | None = False,
         **kwargs,
-    ) -> Union[Tuple, LlavaCausalLMOutputWithPast]:
+    ) -> tuple | LlavaCausalLMOutputWithPast:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -427,7 +423,7 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
             loss_fct = nn.CrossEntropyLoss()
             if use_rmpad:
                 labels = labels.view(-1)[input_ids_indices.long()]
-                shift_labels = torch.cat((labels[1:], labels.new_ones((1)) * -100))
+                shift_labels = torch.cat((labels[1:], labels.new_ones(1) * -100))
                 shift_labels.requires_grad = False
                 lbl_seq_lens = (cu_seqlens[1:] - 1).long()
                 shift_labels[lbl_seq_lens] = -100
@@ -495,10 +491,10 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
     def _update_model_kwargs_for_generation(
         self,
         outputs: ModelOutput,
-        model_kwargs: Dict[str, Any],
+        model_kwargs: dict[str, Any],
         is_encoder_decoder: bool = False,
         num_new_tokens: int = 1,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         model_kwargs = super()._update_model_kwargs_for_generation(
             outputs=outputs,
             model_kwargs=model_kwargs,

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 import torch
@@ -167,7 +168,7 @@ class LingBotMapRepresentation:
     def __init__(
         self,
         model: Any = None,
-        device: Optional[str] = None,
+        device: str | None = None,
         *,
         mode: str = "streaming",
         image_size: int = 518,
@@ -198,9 +199,9 @@ class LingBotMapRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str | os.PathLike[str] | None,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs: Any,
-    ) -> "LingBotMapRepresentation":
+    ) -> LingBotMapRepresentation:
         _ensure_runtime_importable()
         mode = str(kwargs.get("mode", "streaming"))
         if mode not in {"streaming", "windowed"}:
@@ -287,7 +288,7 @@ class LingBotMapRepresentation:
             return 1 if num_frames <= 320 else (num_frames + 319) // 320
         return max(1, int(value))
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         if self.model is None:
             raise RuntimeError("LingBot-Map model is not loaded. Use from_pretrained() first.")
         options = dict(data)
@@ -328,7 +329,7 @@ class LingBotMapRepresentation:
         from lingbot_map.utils.pose_enc import pose_encoding_to_extri_intri
 
         extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], images.shape[-2:])
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "extrinsic": extrinsic.float().cpu().numpy().squeeze(0),
             "intrinsic": intrinsic.float().cpu().numpy().squeeze(0),
             "keyframe_interval": keyframe_interval,

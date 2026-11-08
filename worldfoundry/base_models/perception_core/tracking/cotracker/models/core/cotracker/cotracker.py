@@ -8,22 +8,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.cotracker.blocks import (
+    Attention,
+    AttnBlock,
+    BasicEncoder,
+    CorrBlock,
+    Mlp,
+)
+from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.embeddings import (
+    get_1d_sincos_pos_embed_from_grid,
+    get_2d_embedding,
+    get_2d_sincos_pos_embed,
+)
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.model_utils import (
     sample_features4d,
     sample_features5d,
-)
-from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.embeddings import (
-    get_2d_embedding,
-    get_1d_sincos_pos_embed_from_grid,
-    get_2d_sincos_pos_embed,
-)
-
-from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.cotracker.blocks import (
-    Mlp,
-    BasicEncoder,
-    AttnBlock,
-    CorrBlock,
-    Attention,
 )
 
 torch.manual_seed(0)

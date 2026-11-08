@@ -23,7 +23,6 @@ from ....components import ComponentBuildContext
 from ....contracts import Conditioning, DiffusionRequest
 from ..cosmos2p5.component import Cosmos25PromptConditioner, build_cosmos25_prompt_conditioner
 
-
 DEFAULT_NEGATIVE_PROMPT = (
     "The video contains static scenes, motion blur, low resolution, poor lighting, "
     "visual artifacts, flicker, jerky motion, or implausible transitions."

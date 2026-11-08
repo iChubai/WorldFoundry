@@ -3,8 +3,8 @@ _base_ = [
     "../../rtmdet/rtmdet_s_syncbn_fast_8xb32-300e_coco.py",
 ]
 
-checkpoint_file = "https://download.openmmlab.com/mmrazor/v1/ofa/ofa_mobilenet_subnet_8xb256_in1k_note8_lat%4031ms_top1%4072.8_finetune%4025.py_20221214_0939-981a8b2a.pth"  # noqa
-fix_subnet = "https://download.openmmlab.com/mmrazor/v1/yolo_nas_backbone/OFA_SUBNET_NOTE8_LAT31.yaml"  # noqa
+checkpoint_file = "https://download.openmmlab.com/mmrazor/v1/ofa/ofa_mobilenet_subnet_8xb256_in1k_note8_lat%4031ms_top1%4072.8_finetune%4025.py_20221214_0939-981a8b2a.pth"
+fix_subnet = "https://download.openmmlab.com/mmrazor/v1/yolo_nas_backbone/OFA_SUBNET_NOTE8_LAT31.yaml"
 deepen_factor = 0.167
 widen_factor = 1.0
 channels = [40, 112, 160]

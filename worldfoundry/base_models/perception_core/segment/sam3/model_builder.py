@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 from huggingface_hub import hf_hub_download
 from iopath.common.file_io import g_pathmgr
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.decoder import (
     DecoupledTransformerDecoderLayerv2,
     SimpleRoPEAttention,
@@ -37,10 +38,12 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.memory import (
     SimpleMaskEncoder,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
-    DotProductScoring,
     MLP,
-    MultiheadAttentionWrapper as MultiheadAttention,
+    DotProductScoring,
     TransformerWrapper,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
+    MultiheadAttentionWrapper as MultiheadAttention,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import MultiplexController
 from worldfoundry.base_models.perception_core.segment.sam3.model.necks import Sam3DualViTDetNeck, Sam3TriViTDetNeck
@@ -676,9 +679,9 @@ def download_ckpt_from_hf(version="sam3"):
 
 
 def build_sam3_video_model(
-    checkpoint_path: Optional[str] = None,
+    checkpoint_path: str | None = None,
     load_from_HF=True,
-    bpe_path: Optional[str] = None,
+    bpe_path: str | None = None,
     has_presence_token: bool = True,
     geo_encoder_use_img_cross_attn: bool = True,
     strict_state_dict_loading: bool = True,
@@ -926,7 +929,7 @@ def _create_multiplex_tri_backbone(compile_mode=None, use_fa3=False, use_rope_re
 
 
 def build_sam3_multiplex_video_model(
-    checkpoint_path: Optional[str] = None,
+    checkpoint_path: str | None = None,
     load_from_HF=True,
     multiplex_count: int = 16,
     use_fa3: bool = False,
@@ -1053,8 +1056,8 @@ def build_sam3_multiplex_video_model(
 
 
 def build_sam3_multiplex_video_predictor(
-    checkpoint_path: Optional[str] = None,
-    bpe_path: Optional[str] = None,
+    checkpoint_path: str | None = None,
+    bpe_path: str | None = None,
     max_num_objects: int = 16,
     multiplex_count: int = 16,
     use_fa3: bool = True,
@@ -1224,8 +1227,8 @@ def build_sam3_multiplex_video_predictor(
 
 
 def build_sam3_predictor(
-    checkpoint_path: Optional[str] = None,
-    bpe_path: Optional[str] = None,
+    checkpoint_path: str | None = None,
+    bpe_path: str | None = None,
     version: str = "sam3.1",  # "sam3" or "sam3.1"
     compile: bool = False,
     warm_up: bool = False,

@@ -17,6 +17,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS
+
 from .rtmdet_head import RTMDetHead, RTMDetSepBNHeadModule
 
 
@@ -59,7 +60,7 @@ class MaskFeatModule(BaseModule):
         self.stacked_convs = nn.Sequential(*convs)
         self.projection = nn.Conv2d(feat_channels, num_prototypes, kernel_size=1)
 
-    def forward(self, features: Tuple[Tensor, ...]) -> Tensor:
+    def forward(self, features: tuple[Tensor, ...]) -> Tensor:
         # multi-level feature fusion
         fusion_feats = [features[0]]
         size = features[0].shape[-2:]
@@ -224,11 +225,11 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
             if is_norm(m):
                 constant_init(m, 1)
         bias_cls = bias_init_with_prob(0.01)
-        for rtm_cls, rtm_reg, rtm_kernel in zip(self.rtm_cls, self.rtm_reg, self.rtm_kernel):
+        for rtm_cls, rtm_reg, rtm_kernel in zip(self.rtm_cls, self.rtm_reg, self.rtm_kernel, strict=False):
             normal_init(rtm_cls, std=0.01, bias=bias_cls)
             normal_init(rtm_reg, std=0.01, bias=1)
 
-    def forward(self, feats: Tuple[Tensor, ...]) -> tuple:
+    def forward(self, feats: tuple[Tensor, ...]) -> tuple:
         """Forward features from the upstream network.
 
         Args:
@@ -254,7 +255,7 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
         cls_scores = []
         bbox_preds = []
         kernel_preds = []
-        for idx, (x, stride) in enumerate(zip(feats, self.featmap_strides)):
+        for idx, (x, stride) in enumerate(zip(feats, self.featmap_strides, strict=False)):
             cls_feat = x
             reg_feat = x
             kernel_feat = x
@@ -328,16 +329,16 @@ class RTMDetInsSepBNHead(RTMDetHead):
 
     def predict_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        kernel_preds: List[Tensor],
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        kernel_preds: list[Tensor],
         mask_feats: Tensor,
-        score_factors: Optional[List[Tensor]] = None,
-        batch_img_metas: Optional[List[dict]] = None,
-        cfg: Optional[ConfigDict] = None,
+        score_factors: list[Tensor] | None = None,
+        batch_img_metas: list[dict] | None = None,
+        cfg: ConfigDict | None = None,
         rescale: bool = True,
         with_nms: bool = True,
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Transform a batch of output features extracted from the head into
         bbox results.
 
@@ -402,7 +403,7 @@ class RTMDetInsSepBNHead(RTMDetHead):
 
         mlvl_strides = [
             flatten_priors.new_full((featmap_size.numel() * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         flatten_stride = torch.cat(mlvl_strides)
 
@@ -426,7 +427,7 @@ class RTMDetInsSepBNHead(RTMDetHead):
 
         results_list = []
         for bboxes, scores, kernel_pred, mask_feat, img_meta in zip(
-            flatten_decoded_bboxes, flatten_cls_scores, flatten_kernel_preds, mask_feats, batch_img_metas
+            flatten_decoded_bboxes, flatten_cls_scores, flatten_kernel_preds, mask_feats, batch_img_metas, strict=False
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
@@ -505,8 +506,8 @@ class RTMDetInsSepBNHead(RTMDetHead):
         rescale_bbox: bool = False,
         rescale_mask: bool = True,
         with_nms: bool = True,
-        pad_param: Optional[np.ndarray] = None,
-        img_meta: Optional[dict] = None,
+        pad_param: np.ndarray | None = None,
+        img_meta: dict | None = None,
     ) -> InstanceData:
         """bbox and mask post-processing method.
 
@@ -630,7 +631,7 @@ class RTMDetInsSepBNHead(RTMDetHead):
 
         n_layers = len(weights)
         x = mask_feat.reshape(1, -1, h, w)
-        for i, (weight, bias) in enumerate(zip(weights, biases)):
+        for i, (weight, bias) in enumerate(zip(weights, biases, strict=False)):
             x = F.conv2d(x, weight, bias=bias, stride=1, padding=0, groups=num_inst)
             if i < n_layers - 1:
                 x = F.relu(x)
@@ -658,10 +659,10 @@ class RTMDetInsSepBNHead(RTMDetHead):
 
     def loss_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
         batch_gt_instances: InstanceList,
-        batch_img_metas: List[dict],
+        batch_img_metas: list[dict],
         batch_gt_instances_ignore: OptInstanceList = None,
     ) -> dict:
         raise NotImplementedError

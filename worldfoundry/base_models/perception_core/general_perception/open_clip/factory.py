@@ -14,29 +14,29 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 
-from worldfoundry.core.model_loading import load_torch_checkpoint
 from worldfoundry.core.io.paths import resolve_data_path
+from worldfoundry.core.model_loading import load_torch_checkpoint
 
+from .clap_model import CLAP
+from .coca_model import CoCa
 from .convert import convert_state_dict
 from .model import (
     CLIP,
     CustomTextCLIP,
-    convert_weights_to_lp,
     convert_to_custom_text_state_dict,
-    resize_pos_embed,
+    convert_weights_to_lp,
     get_cast_dtype,
+    resize_pos_embed,
     resize_text_pos_embed,
     set_model_preprocess_cfg,
 )
-from .clap_model import CLAP
-from .coca_model import CoCa
 from .naflex_convert import apply_naflex_vision_config, convert_naflex_state_dict
 from .pretrained import (
-    is_pretrained_cfg,
-    get_pretrained_cfg,
     download_pretrained,
-    list_pretrained_tags_by_model,
     download_pretrained_from_hf,
+    get_pretrained_cfg,
+    is_pretrained_cfg,
+    list_pretrained_tags_by_model,
 )
 from .transform import (
     AugmentationCfg,
@@ -47,7 +47,9 @@ from .transform import (
     merge_preprocess_kwargs,
     naflex_eval_transform_v2,
 )
-from .tokenizer import HFTokenizer, SimpleTokenizer, SigLipTokenizer, DEFAULT_CONTEXT_LENGTH
+
+# isort: split
+from .tokenizer import DEFAULT_CONTEXT_LENGTH, HFTokenizer, SigLipTokenizer, SimpleTokenizer
 
 HF_HUB_PREFIX = "hf-hub:"
 _MODEL_CONFIG_PATHS = [resolve_data_path("models", "runtime", "configs", "open_clip", "model_configs")]
@@ -77,7 +79,7 @@ def _rescan_model_configs():
                 config_files.extend(config_path.glob(f"*{ext}"))
 
     for cf in config_files:
-        with open(cf, "r") as f:
+        with open(cf) as f:
             model_cfg = json.load(f)
             has_vision = all(a in model_cfg for a in ("embed_dim", "vision_cfg", "text_cfg"))
             has_audio = all(a in model_cfg for a in ("embed_dim", "audio_cfg", "text_cfg"))
@@ -108,7 +110,7 @@ HF_HUB_PREFIX = "hf-hub:"
 LOCAL_DIR_PREFIX = "local-dir:"
 
 
-def parse_model_name(model_name: str) -> Tuple[Optional[str], str]:
+def parse_model_name(model_name: str) -> tuple[str | None, str]:
     """
     Parses a model name string to identify a schema and the remaining identifier.
 
@@ -156,7 +158,7 @@ def parse_model_name(model_name: str) -> Tuple[Optional[str], str]:
 
 def _get_hf_config(
     model_id: str,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
 ):
     """Fetch model config from HuggingFace Hub."""
     config_path = download_pretrained_from_hf(
@@ -164,7 +166,7 @@ def _get_hf_config(
         filename="open_clip_config.json",
         cache_dir=cache_dir,
     )
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         config = json.load(f)
     return config
 
@@ -174,7 +176,7 @@ def get_model_config(model_name):
     loc, model_id = parse_model_name(model_name)
     if loc == "local-dir":
         local_path = Path(model_id) / "open_clip_config.json"
-        with open(local_path, "r", encoding="utf-8") as f:
+        with open(local_path, encoding="utf-8") as f:
             config = json.load(f)
         return config.get("model_cfg", config)
     elif loc == "hf-hub":
@@ -216,7 +218,7 @@ def load_state_dict(
 
 
 def load_checkpoint(
-    model: Union[CLIP, CustomTextCLIP],
+    model: CLIP | CustomTextCLIP,
     checkpoint_path: str,
     strict: bool = True,
     weights_only: bool = True,
@@ -275,7 +277,7 @@ def load_checkpoint(
     return incompatible_keys
 
 
-def _find_checkpoint_in_dir(dir_path: Path) -> Optional[str]:
+def _find_checkpoint_in_dir(dir_path: Path) -> str | None:
     """Helper function to find checkpoint in dir.
 
     Args:
@@ -314,24 +316,24 @@ def _find_checkpoint_in_dir(dir_path: Path) -> Optional[str]:
 
 def create_model(
     model_name: str,  # Can contain schemas 'hf-hub:' or 'local-dir:'
-    pretrained: Optional[str] = None,  # Used ONLY if model_name has NO schema
+    pretrained: str | None = None,  # Used ONLY if model_name has NO schema
     load_weights: bool = True,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     force_quick_gelu: bool = False,
     force_custom_text: bool = False,
-    force_patch_dropout: Optional[float] = None,
-    force_image_size: Optional[Union[int, Tuple[int, int]]] = None,
-    force_preprocess_cfg: Optional[Dict[str, Any]] = None,
-    force_context_length: Optional[int] = None,
+    force_patch_dropout: float | None = None,
+    force_image_size: int | tuple[int, int] | None = None,
+    force_preprocess_cfg: dict[str, Any] | None = None,
+    force_context_length: int | None = None,
     force_naflex_vision: bool = False,
     pretrained_image: bool = False,  # Load default base image weights (at creation, if no CLIP weights)
     pretrained_text: bool = True,  # Load default base text weights (at creation, if no CLIP weights) - NEW
-    pretrained_image_path: Optional[str] = None,  # Load specific image weights from file (after creation)
-    pretrained_text_path: Optional[str] = None,  # Load specific text weights from file (after creation)
-    pretrained_audio_path: Optional[str] = None,  # Load specific audio encoder weights from file (after creation)
-    cache_dir: Optional[str] = None,
-    output_dict: Optional[bool] = None,
+    pretrained_image_path: str | None = None,  # Load specific image weights from file (after creation)
+    pretrained_text_path: str | None = None,  # Load specific text weights from file (after creation)
+    pretrained_audio_path: str | None = None,  # Load specific audio encoder weights from file (after creation)
+    cache_dir: str | None = None,
+    output_dict: bool | None = None,
     require_pretrained: bool = False,
     weights_only: bool = True,
     **model_kwargs,
@@ -406,7 +408,7 @@ def create_model(
         if local_config_path.is_file():
             try:
                 # Try loading and parsing the JSON config
-                with open(local_config_path, "r", encoding="utf-8") as f:
+                with open(local_config_path, encoding="utf-8") as f:
                     local_json_config = json.load(f)
                 # Check if the required 'model_cfg' key is present
                 if "model_cfg" in local_json_config:
@@ -740,8 +742,8 @@ def create_model(
 
 def get_tokenizer(
     model_name: str = "",
-    context_length: Optional[int] = None,
-    cache_dir: Optional[str] = None,
+    context_length: int | None = None,
+    cache_dir: str | None = None,
     **kwargs,  # Additional tokenizer kwargs passed to constructor
 ):
     """
@@ -771,7 +773,7 @@ def get_tokenizer(
         if local_config_path.is_file():
             try:
                 # Load and parse the JSON config
-                with open(local_config_path, "r", encoding="utf-8") as f:
+                with open(local_config_path, encoding="utf-8") as f:
                     local_json_config = json.load(f)
                 if "model_cfg" in local_json_config:
                     config = local_json_config["model_cfg"]
@@ -810,7 +812,7 @@ def get_tokenizer(
 
     # Check if config determination failed completely (should only be possible if initial schema parsing failed badly)
     if config is None:
-        _logger.warning(f"Model configuration not found, returning default SimpleTokenizer.")
+        _logger.warning("Model configuration not found, returning default SimpleTokenizer.")
         return SimpleTokenizer(context_length=context_length or DEFAULT_CONTEXT_LENGTH, **kwargs)
 
     # Safely access text_cfg even if config is {} (from non-builtin name case)
@@ -915,29 +917,29 @@ def _set_model_device_and_precision(
 
 def create_model_and_transforms(
     model_name: str,
-    pretrained: Optional[str] = None,
+    pretrained: str | None = None,
     load_weights: bool = True,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     force_quick_gelu: bool = False,
     force_custom_text: bool = False,
-    force_patch_dropout: Optional[float] = None,
-    force_image_size: Optional[Union[int, Tuple[int, int]]] = None,
-    force_context_length: Optional[int] = None,
+    force_patch_dropout: float | None = None,
+    force_image_size: int | tuple[int, int] | None = None,
+    force_context_length: int | None = None,
     force_naflex_vision: bool = False,
-    image_mean: Optional[Tuple[float, ...]] = None,
-    image_std: Optional[Tuple[float, ...]] = None,
-    image_interpolation: Optional[str] = None,
-    image_resize_mode: Optional[str] = None,  # only effective for inference
-    aug_cfg: Optional[Union[Dict[str, Any], AugmentationCfg]] = None,
-    audio_aug_cfg: Optional[Any] = None,
+    image_mean: tuple[float, ...] | None = None,
+    image_std: tuple[float, ...] | None = None,
+    image_interpolation: str | None = None,
+    image_resize_mode: str | None = None,  # only effective for inference
+    aug_cfg: dict[str, Any] | AugmentationCfg | None = None,
+    audio_aug_cfg: Any | None = None,
     pretrained_image: bool = False,
     pretrained_text: bool = True,
-    pretrained_image_path: Optional[str] = None,
-    pretrained_text_path: Optional[str] = None,
-    pretrained_audio_path: Optional[str] = None,
-    cache_dir: Optional[str] = None,
-    output_dict: Optional[bool] = None,
+    pretrained_image_path: str | None = None,
+    pretrained_text_path: str | None = None,
+    pretrained_audio_path: str | None = None,
+    cache_dir: str | None = None,
+    output_dict: bool | None = None,
     weights_only: bool = True,
     **model_kwargs,
 ):
@@ -1070,21 +1072,21 @@ def create_model_and_transforms(
 
 def create_model_from_pretrained(
     model_name: str,
-    pretrained: Optional[str] = None,
+    pretrained: str | None = None,
     precision: str = "fp32",
-    device: Union[str, torch.device] = "cpu",
+    device: str | torch.device = "cpu",
     force_quick_gelu: bool = False,
     force_custom_text: bool = False,
-    force_image_size: Optional[Union[int, Tuple[int, int]]] = None,
-    force_context_length: Optional[int] = None,
+    force_image_size: int | tuple[int, int] | None = None,
+    force_context_length: int | None = None,
     force_naflex_vision: bool = False,
-    image_mean: Optional[Tuple[float, ...]] = None,
-    image_std: Optional[Tuple[float, ...]] = None,
-    image_interpolation: Optional[str] = None,
-    image_resize_mode: Optional[str] = None,  # only effective for inference
+    image_mean: tuple[float, ...] | None = None,
+    image_std: tuple[float, ...] | None = None,
+    image_interpolation: str | None = None,
+    image_resize_mode: str | None = None,  # only effective for inference
     return_transform: bool = True,
-    cache_dir: Optional[str] = None,
-    audio_aug_cfg: Optional[Any] = None,
+    cache_dir: str | None = None,
+    audio_aug_cfg: Any | None = None,
     weights_only: bool = True,
     **model_kwargs,
 ):

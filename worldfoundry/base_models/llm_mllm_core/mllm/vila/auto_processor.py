@@ -20,8 +20,8 @@ except ImportError:
     from typing import Any as ImageInput
     from typing import Any as VideoInput
 
-from .constants import DEFAULT_IMAGE_TOKEN, MEDIA_TOKENS
 from .configuration_vila import VILAConfig
+from .constants import DEFAULT_IMAGE_TOKEN, MEDIA_TOKENS
 from .media import Image, Video, _load_video, extract_media
 from .mm_utils import process_image, process_images
 from .tokenizer_utils import tokenize_conversation
@@ -107,7 +107,7 @@ def fetch_video(ele: dict, return_video_sample_fps: bool = False):
     return frames
 
 
-def pad_fn(input_ids_list: List[torch.Tensor], padding_value=0, target_len=None, padding_side="left") -> torch.Tensor:
+def pad_fn(input_ids_list: list[torch.Tensor], padding_value=0, target_len=None, padding_side="left") -> torch.Tensor:
     # tensor shape is (batch_size, seq_len)
     max_len = max([ids.shape[1] for ids in input_ids_list])
     if target_len is not None:
@@ -214,7 +214,7 @@ class VILAProcessor(ProcessorMixin):
     def process_vision_info(
         conversations: list[dict] | list[list[dict]],
         return_video_kwargs: bool = False,
-    ) -> tuple[list[PIL.Image.Image] | None, list[torch.Tensor | list[PIL.Image.Image]] | None, Optional[dict]]:
+    ) -> tuple[list[PIL.Image.Image] | None, list[torch.Tensor | list[PIL.Image.Image]] | None, dict | None]:
         """
         referernce from qwen_vl_utils
         NVILA does not depend on the function, but the interface is the same.
@@ -285,7 +285,7 @@ class VILAProcessor(ProcessorMixin):
         ]
         and `conversation` will be a list of such `conv`s
         """
-        if kwargs.get("text", None) is not None:
+        if kwargs.get("text") is not None:
             conversation = kwargs.get("text")
         assert conversation is not None, "`conversation` or `text` is required"
         padding_side = kwargs.get("padding_side", self.padding_side)
@@ -333,7 +333,7 @@ class VILAProcessor(ProcessorMixin):
         self,
         conversation,
         images: ImageInput = None,
-        text: Union[TextInput, PreTokenizedInput, List[TextInput], List[PreTokenizedInput]] = None,
+        text: TextInput | PreTokenizedInput | list[TextInput] | list[PreTokenizedInput] = None,
         videos: VideoInput = None,
         **kwargs: Unpack[VILAProcessorKwargs],
     ) -> BatchFeature:

@@ -3,11 +3,9 @@ import copy
 import os.path as osp
 from typing import List
 
-from mmengine.fileio import get_local_path
-
-from mmdet.datasets.api_wrappers import COCO
 from mmdet.datasets import CocoDataset
-
+from mmdet.datasets.api_wrappers import COCO
+from mmengine.fileio import get_local_path
 from mmyolo.datasets.yolov5_coco import BatchShapePolicyDataset
 from mmyolo.registry import DATASETS
 
@@ -39,12 +37,12 @@ class V3DetDataset(CocoDataset):
     # ann_id is unique in coco dataset.
     ANN_ID_UNIQUE = True
 
-    def load_data_list(self) -> List[dict]:
+    def load_data_list(self) -> list[dict]:
         """Load annotations from an annotation file named as ``self.ann_file``
 
         Returns:
             List[dict]: A list of annotation.
-        """  # noqa: E501
+        """
         with get_local_path(self.ann_file, backend_args=self.backend_args) as local_path:
             self.coco = self.COCOAPI(local_path)
 
@@ -98,5 +96,3 @@ class YOLOv5V3DetDataset(BatchShapePolicyDataset, V3DetDataset):
     We only add `BatchShapePolicy` function compared with Objects365V1Dataset.
     See `mmyolo/datasets/utils.py#BatchShapePolicy` for details
     """
-
-    pass

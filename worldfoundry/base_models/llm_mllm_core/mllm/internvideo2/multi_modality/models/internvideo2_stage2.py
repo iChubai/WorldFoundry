@@ -7,9 +7,13 @@ from .backbones.internvideo2 import (
     pretrain_internvideo2_1b_patch14_224,
     pretrain_internvideo2_6b_patch14_224,
 )
+
+# isort: split
 from .backbones.bert.builder import build_bert
+
+# isort: split
 from .criterions import MLMLoss, VTC_VTM_Loss, new_UTA_Loss
-from .mask import TubeMaskingGenerator, RandomMaskingGenerator
+from .mask import RandomMaskingGenerator, TubeMaskingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +195,7 @@ class InternVideo2_Stage2(nn.Module):
         if self.clip_teacher is None or self.loss_weight.uta == 0:
             return None, None, None
 
-        if H != self.clip_img_size:
+        if self.clip_img_size != H:
             image = torch.nn.functional.interpolate(
                 image.reshape(B, C * T, H, W),
                 size=(self.clip_img_size, self.clip_img_size),

@@ -7,14 +7,15 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> modules.py functionality."""
 
+import collections
+from collections.abc import Callable
+from functools import partial
+from itertools import repeat
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-from typing import Callable
-import collections
 from torch import Tensor
-from itertools import repeat
 
 
 # From PyTorch internals

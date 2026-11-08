@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
-from typing import Sequence
+from collections.abc import Sequence
 
 from mmengine.hooks import Hook
 from mmengine.model import is_model_wrapper

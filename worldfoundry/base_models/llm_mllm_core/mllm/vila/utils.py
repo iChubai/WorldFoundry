@@ -72,7 +72,7 @@ def get_model_config(config):
     if root_path is not None and not osp.exists(root_path):
         try:
             valid_hf_repo = repo_exists(root_path)
-        except HFValidationError as e:
+        except HFValidationError:
             valid_hf_repo = False
         if valid_hf_repo:
             root_path = snapshot_download(root_path)

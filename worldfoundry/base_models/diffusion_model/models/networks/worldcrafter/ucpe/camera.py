@@ -4,11 +4,13 @@
 from functools import lru_cache
 
 import torch
-from torch import nn
-from .prope import PropeDotProductAttention
-from worldfoundry.core.attention import packed_sequence_attention as flash_attention
-from einops import rearrange, repeat, einsum
 import torch.nn.functional as F
+from einops import einsum, rearrange, repeat
+from torch import nn
+
+from worldfoundry.core.attention import packed_sequence_attention as flash_attention
+
+from .prope import PropeDotProductAttention
 
 
 def compute_fx_from_fov_xi(
@@ -479,9 +481,9 @@ class UcpeSelfAttention(nn.Module):
         # Precompute camera-specific functions (only once per batch)
         self.prope_attn._precompute_and_cache_apply_fns(
             viewmats=control_camera_dit_input["viewmats"],
-            Ks=control_camera_dit_input.get("K", None),
-            coeffs_x=control_camera_dit_input.get("coeffs_x", None),
-            coeffs_y=control_camera_dit_input.get("coeffs_y", None),
+            Ks=control_camera_dit_input.get("K"),
+            coeffs_x=control_camera_dit_input.get("coeffs_x"),
+            coeffs_y=control_camera_dit_input.get("coeffs_y"),
         )
 
         # PRoPE matrices and coefficients are deliberately built in the FP32

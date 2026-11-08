@@ -1,26 +1,25 @@
+import math
+from typing import Optional, Tuple
+
 import loguru
 import torch
-import math
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange
+from einops.layers.torch import Rearrange
+from timm.models.layers import DropPath
 from torch import einsum
 
-from einops.layers.torch import Rearrange
-from einops import rearrange
-
-from ...utils.utils import coords_grid, bilinear_sampler, upflow8
+from ...utils.utils import bilinear_sampler, coords_grid, upflow8
+from ..encoders import convnext_large, twins_svt_large
 from .attention import (
     BroadMultiHeadAttention,
-    MultiHeadAttention,
-    LinearPositionEmbeddingSine,
     ExpPositionEmbeddingSine,
+    LinearPositionEmbeddingSine,
+    MultiHeadAttention,
 )
-from ..encoders import twins_svt_large, convnext_large
-from typing import Optional, Tuple
-from .twins import Size_, PosConv
-from .cnn import TwinsSelfAttentionLayer, TwinsCrossAttentionLayer, BasicEncoder
-
-from timm.models.layers import DropPath
+from .cnn import BasicEncoder, TwinsCrossAttentionLayer, TwinsSelfAttentionLayer
+from .twins import PosConv, Size_
 
 
 class PatchEmbed(nn.Module):
@@ -467,9 +466,7 @@ class MemoryEncoder(nn.Module):
 
         if self.cfg.pretrain_mode and self.cfg.crop_cost_volume:
             print(
-                "[H_offset is {}, W_offset is {}, and crop_cost_volume to get inner cost volume]".format(
-                    self.cfg.H_offset, self.cfg.W_offset
-                )
+                f"[H_offset is {self.cfg.H_offset}, W_offset is {self.cfg.W_offset}, and crop_cost_volume to get inner cost volume]"
             )
 
     def corr(self, fmap1, fmap2):

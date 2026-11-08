@@ -6,8 +6,9 @@
 """Module for base_models -> perception_core -> general_perception -> dinov3 -> models -> convnext.py functionality."""
 
 import logging
+from collections.abc import Sequence
 from functools import partial
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -40,7 +41,7 @@ class Block(nn.Module):
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.layer_scale_init_value = layer_scale_init_value
         self.gamma = (
-            nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             if layer_scale_init_value > 0
             else None
         )
@@ -113,8 +114,8 @@ class ConvNeXt(nn.Module):
     def __init__(
         self,
         in_chans: int = 3,
-        depths: List[int] = [3, 3, 9, 3],
-        dims: List[int] = [96, 192, 384, 768],
+        depths: list[int] = [3, 3, 9, 3],
+        dims: list[int] = [96, 192, 384, 768],
         drop_path_rate: float = 0.0,
         layer_scale_init_value: float = 1e-6,
         patch_size: int | None = None,
@@ -199,7 +200,7 @@ class ConvNeXt(nn.Module):
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
 
-    def forward_features(self, x: Tensor | List[Tensor], masks: Optional[Tensor] = None) -> List[Dict[str, Tensor]]:
+    def forward_features(self, x: Tensor | list[Tensor], masks: Tensor | None = None) -> list[dict[str, Tensor]]:
         """Forward features.
 
         Args:
@@ -214,7 +215,7 @@ class ConvNeXt(nn.Module):
         else:
             return self.forward_features_list(x, masks)
 
-    def forward_features_list(self, x_list: List[Tensor], masks_list: List[Tensor]) -> List[Dict[str, Tensor]]:
+    def forward_features_list(self, x_list: list[Tensor], masks_list: list[Tensor]) -> list[dict[str, Tensor]]:
         """Forward features list.
 
         Args:
@@ -225,7 +226,7 @@ class ConvNeXt(nn.Module):
             The return value.
         """
         output = []
-        for x, masks in zip(x_list, masks_list):
+        for x, masks in zip(x_list, masks_list, strict=False):
             h, w = x.shape[-2:]
             for i in range(4):
                 x = self.downsample_layers[i](x)
@@ -288,7 +289,7 @@ class ConvNeXt(nn.Module):
     def get_intermediate_layers(
         self,
         x,
-        n: Union[int, Sequence] = 1,
+        n: int | Sequence = 1,
         reshape: bool = False,
         return_class_token: bool = False,
         norm: bool = True,
@@ -315,19 +316,19 @@ class ConvNeXt(nn.Module):
                     norm(cls_token),
                     norm(patches.flatten(-2, -1).permute(0, 2, 1)),
                 )
-                for (cls_token, patches), norm in zip(outputs, norms)
+                for (cls_token, patches), norm in zip(outputs, norms, strict=False)
             ]
             if reshape:
                 outputs = [
                     (cls_token, patches.permute(0, 2, 1).reshape(*nchw).contiguous())
-                    for (cls_token, patches), nchw in zip(outputs, nchw_shapes)
+                    for (cls_token, patches), nchw in zip(outputs, nchw_shapes, strict=False)
                 ]
         elif not reshape:
             outputs = [(cls_token, patches.flatten(-2, -1).permute(0, 2, 1)) for (cls_token, patches) in outputs]
         class_tokens = [out[0] for out in outputs]
         outputs = [out[1] for out in outputs]
         if return_class_token:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=False))
         return tuple(outputs)
 
 

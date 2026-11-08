@@ -5,6 +5,7 @@ from functools import partial, wraps
 from typing import Any, Dict
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -12,7 +13,7 @@ from ..utils import ModelInfo, git_clone_github, safe_snapshot_download
 
 
 def get_model_tokenizer_valley(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     llm_model_type = kwargs.pop("llm_model_type")
     local_repo_path = kwargs.get("local_repo_path")
@@ -23,7 +24,7 @@ def get_model_tokenizer_valley(
 
     if llm_model_type == "valley":
         from transformers.modeling_outputs import CausalLMOutputWithPast
-        from valley_eagle.model.language_model.valley_qwen2 import ValleyQwen2ForCausalLM, ValleyConfig
+        from valley_eagle.model.language_model.valley_qwen2 import ValleyConfig, ValleyQwen2ForCausalLM
 
         model_config = ValleyConfig.from_pretrained(model_dir)
         model_config.mm_vision_tower = safe_snapshot_download(

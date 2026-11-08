@@ -7,6 +7,7 @@ import torch
 from PIL import Image
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_device
+
 from ..base import Template
 from ..constant import MLLMTemplateType
 from ..register import register_template
@@ -39,7 +40,7 @@ class Emu3GenTemplate(Template):
         self.skip_prompt = False
         self.apply_loss_on_only_vision = True
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         if self.is_training:
             p_prob = random.random()
             if p_prob < self.NULL_PROMPT_PROB:
@@ -92,10 +93,12 @@ class Emu3GenTemplate(Template):
     def prepare_for_output(self, output: str) -> str:
         return output
 
-    def prepare_generate_kwargs(self, generate_kwargs: Dict[str, Any], *, model=None) -> Dict[str, Any]:
-        from transformers import UnbatchedClassifierFreeGuidanceLogitsProcessor
-        from transformers import PrefixConstrainedLogitsProcessor
-        from transformers import LogitsProcessorList
+    def prepare_generate_kwargs(self, generate_kwargs: dict[str, Any], *, model=None) -> dict[str, Any]:
+        from transformers import (
+            LogitsProcessorList,
+            PrefixConstrainedLogitsProcessor,
+            UnbatchedClassifierFreeGuidanceLogitsProcessor,
+        )
 
         negative_prompt = self.NEGATIVE_PROMPT
         neg_inputs = self._process_prompt_test(negative_prompt)
@@ -122,7 +125,7 @@ class Emu3GenTemplate(Template):
         res["logits_processor"] = logits_processor
         return res
 
-    def decode(self, generate_ids: List[int], **kwargs) -> Any:
+    def decode(self, generate_ids: list[int], **kwargs) -> Any:
         mm_list = self.processor.decode(generate_ids)
         for im in mm_list:
             if not isinstance(im, Image.Image):
@@ -174,7 +177,7 @@ class Emu3ChatTemplate(Template):
     system = "You are a helpful assistant."
     image_placeholder = ["<|image token|>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         # image
         images = inputs.images

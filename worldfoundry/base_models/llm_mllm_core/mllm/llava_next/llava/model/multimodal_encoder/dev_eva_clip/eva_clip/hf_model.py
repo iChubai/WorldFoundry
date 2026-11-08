@@ -7,18 +7,18 @@ import re
 
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
 from torch import TensorType
+from torch.nn import functional as F
 
 try:
     import transformers
-    from transformers import AutoModel, AutoModelForMaskedLM, AutoTokenizer, AutoConfig, PretrainedConfig
+    from transformers import AutoConfig, AutoModel, AutoModelForMaskedLM, AutoTokenizer, PretrainedConfig
     from transformers.modeling_outputs import (
         BaseModelOutput,
         BaseModelOutputWithPooling,
         BaseModelOutputWithPoolingAndCrossAttentions,
     )
-except ImportError as e:
+except ImportError:
     transformers = None
 
     class BaseModelOutput:

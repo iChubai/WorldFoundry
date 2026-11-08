@@ -3,7 +3,6 @@
 
 import torch.nn as nn
 from torch.nn import functional as F
-
 from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.filter import (
     LowPassFilter1d,
     kaiser_sinc_filter1d,

@@ -22,9 +22,10 @@ tokenization is separate in :mod:`.clip`.
 StepVideo-specific; do not reuse for Wan UMT5.
 """
 
-import torch.nn as nn
-import torch
 from typing import List
+
+import torch
+import torch.nn as nn
 
 
 class LLaMaEmbedding(nn.Module):
@@ -176,7 +177,7 @@ class StepChatTokenizer:
         """Vocab size."""
         return self._tokenizer.vocab_size()
 
-    def tokenize(self, text: str) -> List[int]:
+    def tokenize(self, text: str) -> list[int]:
         """Tokenize.
 
         Args:
@@ -187,7 +188,7 @@ class StepChatTokenizer:
         """
         return self._tokenizer.encode_as_ids(text)
 
-    def detokenize(self, token_ids: List[int]) -> str:
+    def detokenize(self, token_ids: list[int]) -> str:
         """Detokenize.
 
         Args:

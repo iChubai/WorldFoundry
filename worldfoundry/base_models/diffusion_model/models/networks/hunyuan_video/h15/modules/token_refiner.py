@@ -74,8 +74,8 @@ class IndividualTokenRefinerBlock(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         """Self-attn + MLP block that refines caption tokens ``B L C``."""
         factory_kwargs = {"device": device, "dtype": dtype}
@@ -117,7 +117,7 @@ class IndividualTokenRefinerBlock(nn.Module):
         self,
         x: torch.Tensor,
         c: torch.Tensor,  # timestep_aware_representations + context_aware_representations
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Forward pass for IndividualTokenRefinerBlock.
@@ -171,8 +171,8 @@ class IndividualTokenRefiner(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         """Stack IndividualTokenRefinerBlock layers."""
         factory_kwargs = {"device": device, "dtype": dtype}
@@ -198,7 +198,7 @@ class IndividualTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         c: torch.LongTensor,
-        mask: Optional[torch.Tensor] = None,
+        mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Forward pass for IndividualTokenRefiner.
@@ -250,8 +250,8 @@ class SingleTokenRefiner(nn.Module):
         qk_norm: bool = False,
         qk_norm_type: str = "layer",
         qkv_bias: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         """Project caption tokens, add timestep/text cond, then refine ``B L C``."""
         factory_kwargs = {"device": device, "dtype": dtype}
@@ -277,7 +277,7 @@ class SingleTokenRefiner(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.LongTensor,
-        mask: Optional[torch.LongTensor] = None,
+        mask: torch.LongTensor | None = None,
     ) -> torch.Tensor:
         """
         Forward pass for SingleTokenRefiner.

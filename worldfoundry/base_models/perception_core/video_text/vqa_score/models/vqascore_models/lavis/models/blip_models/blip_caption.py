@@ -6,14 +6,23 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import torch
+
 from ...common.registry import registry
 
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import (
-    BlipOutput,
     BlipIntermediateOutput,
+    BlipOutput,
 )
+
+# isort: split
 from ..med import XBertLMHeadDecoder
+
+# isort: split
+# isort: split
 from ..vit import VisionTransformerEncoder
 
 

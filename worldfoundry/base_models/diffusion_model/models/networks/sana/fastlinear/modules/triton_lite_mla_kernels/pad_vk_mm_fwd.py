@@ -130,7 +130,7 @@ def pad_vk_mm_fwd_kernel_fp32_fp32(
     # `accumulator` will be converted back to fp16 after the loop.
     accumulator = tl.zeros((BLOCK_SIZE_C1, BLOCK_SIZE_C), dtype=tl.float32)
     accumulator1 = tl.zeros((BLOCK_SIZE_C,), dtype=tl.float32)
-    for n in range(0, tl.cdiv(N, BLOCK_SIZE_N)):
+    for n in range(tl.cdiv(N, BLOCK_SIZE_N)):
         # Load the next block of A and B, generate a mask by checking the K dimension.
         # If it is out of bounds, set it to 0.
         a = tl.load(a_ptrs, mask=offs_n[None, :] < N - n * BLOCK_SIZE_N, other=0.0).to(tl.float32)

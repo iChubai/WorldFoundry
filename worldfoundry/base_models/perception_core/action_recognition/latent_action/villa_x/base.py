@@ -22,7 +22,7 @@ class ModelConfig(BaseModel):
     config: dict
 
     @classmethod
-    def load(cls, path: str | Path) -> "ModelConfig":
+    def load(cls, path: str | Path) -> ModelConfig:
         return cls.model_validate_json(Path(path).read_text())
 
 
@@ -46,7 +46,7 @@ class PretrainedModel(nn.Module):
         self.apply(self._initialize_weights)
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: str, strict: bool = False, **kwargs) -> "PretrainedModel":
+    def from_pretrained(cls, pretrained_model_path: str, strict: bool = False, **kwargs) -> PretrainedModel:
         from safetensors.torch import load_model
 
         model_dir = Path(pretrained_model_path)

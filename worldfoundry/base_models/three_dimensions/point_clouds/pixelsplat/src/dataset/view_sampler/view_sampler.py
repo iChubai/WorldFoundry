@@ -65,7 +65,6 @@ class ViewSampler(ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass
 
     @property
     @abstractmethod
@@ -75,7 +74,6 @@ class ViewSampler(ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass
 
     @property
     @abstractmethod
@@ -85,4 +83,3 @@ class ViewSampler(ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass

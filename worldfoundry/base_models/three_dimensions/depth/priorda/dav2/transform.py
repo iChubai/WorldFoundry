@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 
-class Resize(object):
+class Resize:
     """Resize implementation."""
 
     def __init__(
@@ -99,7 +99,7 @@ class Resize(object):
         return sample
 
 
-class NormalizeImage(object):
+class NormalizeImage:
     """Normalize image implementation."""
 
     def __init__(self, mean, std, device="cpu"):

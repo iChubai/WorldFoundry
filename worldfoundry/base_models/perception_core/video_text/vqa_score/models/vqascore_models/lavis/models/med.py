@@ -15,13 +15,11 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import torch
-from torch import Tensor, device
-import torch.utils.checkpoint
-from torch import nn
-from torch.nn import CrossEntropyLoss
 import torch.nn.functional as F
+import torch.utils.checkpoint
+from torch import Tensor, device, nn
+from torch.nn import CrossEntropyLoss
 from transformers import BatchEncoding, PreTrainedTokenizer
-
 from transformers.activations import ACT2FN
 from transformers.file_utils import (
     ModelOutput,
@@ -51,10 +49,10 @@ except ImportError:  # pragma: no cover - compatibility with older transformers
         find_pruneable_heads_and_indices,
         prune_linear_layer,
     )
-from transformers.utils import logging
 from transformers.models.bert.configuration_bert import BertConfig
-from ..common.utils import get_abs_path
+from transformers.utils import logging
 
+from ..common.utils import get_abs_path
 from ..models.base_model import BaseEncoder
 
 logging.set_verbosity_error()
@@ -693,7 +691,7 @@ class BertModel(BertPreTrainedModel):
     def get_extended_attention_mask(
         self,
         attention_mask: Tensor,
-        input_shape: Tuple[int],
+        input_shape: tuple[int],
         device: device,
         is_decoder: bool,
     ) -> Tensor:
@@ -747,9 +745,7 @@ class BertModel(BertPreTrainedModel):
                 extended_attention_mask = attention_mask[:, None, None, :]
         else:
             raise ValueError(
-                "Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(
-                    input_shape, attention_mask.shape
-                )
+                f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
             )
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
@@ -1165,8 +1161,8 @@ class BertLMHeadModel(BertPreTrainedModel):
             "input_ids": input_ids,
             "attention_mask": attention_mask,
             "past_key_values": past,
-            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states", None),
-            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask", None),
+            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states"),
+            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask"),
             "is_decoder": True,
         }
 
@@ -1276,7 +1272,7 @@ class XBertEncoder(BertModel, BaseEncoder):
 
     def forward_text(self, tokenized_text, **kwargs):
         text = tokenized_text
-        token_type_ids = kwargs.get("token_type_ids", None)
+        token_type_ids = kwargs.get("token_type_ids")
 
         text_output = super().forward(
             text.input_ids,

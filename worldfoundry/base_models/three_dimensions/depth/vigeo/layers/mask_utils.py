@@ -29,7 +29,7 @@ def depth_masking(
     B, N, D = x.shape
     device = x.device
 
-    assert N == patch_num_h * patch_num_w, f"N={N} must equal patch_num_h * patch_num_w = {patch_num_h * patch_num_w}"
+    assert patch_num_h * patch_num_w == N, f"N={N} must equal patch_num_h * patch_num_w = {patch_num_h * patch_num_w}"
 
     # Compute depth invalid mask
     depth_invalid_mask = _compute_depth_invalid_mask(

@@ -40,16 +40,16 @@ class LoGeRRepresentation:
 
     def __init__(
         self,
-        model: Optional[Pi3] = None,
-        device: Optional[str] = None,
-        inference_defaults: Optional[Dict[str, Any]] = None,
+        model: Pi3 | None = None,
+        device: str | None = None,
+        inference_defaults: dict[str, Any] | None = None,
     ):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.model_type = "loger"
         # Inference-time forward() defaults parsed from original_config.yaml.
         # Keys here serve as fallbacks; values in data dict always take priority.
-        self.inference_defaults: Dict[str, Any] = inference_defaults or {}
+        self.inference_defaults: dict[str, Any] = inference_defaults or {}
 
         if self.model is not None:
             self.model = self.model.to(self.device).eval()
@@ -64,9 +64,9 @@ class LoGeRRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str,
-        device: Optional[str] = None,
-        config_path: Optional[str] = None,
-        subfolder: Optional[str] = None,
+        device: str | None = None,
+        config_path: str | None = None,
+        subfolder: str | None = None,
         **kwargs,
     ) -> "LoGeRRepresentation":
         device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -131,8 +131,8 @@ class LoGeRRepresentation:
                 config_path = candidate if os.path.exists(candidate) else None
 
         # ── Parse config ───────────────────────────────────────────
-        model_kwargs: Dict[str, Any] = {}
-        inference_defaults: Dict[str, Any] = {}
+        model_kwargs: dict[str, Any] = {}
+        inference_defaults: dict[str, Any] = {}
 
         if config_path:
             model_kwargs, inference_defaults = cls._parse_config(config_path)
@@ -152,7 +152,7 @@ class LoGeRRepresentation:
         return cls(model=model, device=device, inference_defaults=inference_defaults)
 
     @staticmethod
-    def _to_numpy(tensor: Optional[torch.Tensor]) -> Optional[np.ndarray]:
+    def _to_numpy(tensor: torch.Tensor | None) -> np.ndarray | None:
         """Move a tensor to CPU and convert to float32 numpy array."""
         if tensor is None:
             return None
@@ -169,11 +169,11 @@ class LoGeRRepresentation:
         model_kwargs      : valid Pi3.__init__ parameters
         inference_defaults: forward() parameters (se3, window_size, overlap_size, ...)
         """
-        model_kwargs: Dict[str, Any] = {}
-        inference_defaults: Dict[str, Any] = {}
+        model_kwargs: dict[str, Any] = {}
+        inference_defaults: dict[str, Any] = {}
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
 
             # ── Model init kwargs ──────────────────────────────────
@@ -239,7 +239,7 @@ class LoGeRRepresentation:
         return model_kwargs, inference_defaults
 
     @torch.no_grad()
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Run LoGeR inference and return all scene representation outputs.
 
@@ -304,7 +304,7 @@ class LoGeRRepresentation:
             raw = self.model(imgs, **forward_kwargs)
 
         # ── Core geometry outputs ──────────────────────────────────
-        results: Dict[str, Any] = {}
+        results: dict[str, Any] = {}
         results["points"] = self._to_numpy(raw.get("points"))
         results["local_points"] = self._to_numpy(raw.get("local_points"))
         results["camera_poses"] = self._to_numpy(raw.get("camera_poses"))

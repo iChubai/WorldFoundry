@@ -4,7 +4,6 @@ from typing import *
 
 import numpy as np
 
-
 __all__ = ["linear_spline_interpolate"]
 
 

@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import math
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -59,7 +60,7 @@ class DepthProEncoder(nn.Module):
             dim_in: int,
             dim_out: int,
             upsample_layers: int,
-            dim_int: Optional[int] = None,
+            dim_int: int | None = None,
         ) -> nn.Module:
             if dim_int is None:
                 dim_int = dim_out

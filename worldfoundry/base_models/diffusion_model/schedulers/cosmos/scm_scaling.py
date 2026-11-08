@@ -36,7 +36,7 @@ class EDM_sCMWrapper:
         """
         self.sigma_data = sigma_data
 
-    def __call__(self, trigflow_t: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __call__(self, trigflow_t: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Call.
 
         Args:
@@ -69,7 +69,7 @@ class RectifiedFlow_sCMWrapper:
         """
         self.sigma_data = sigma_data
 
-    def __call__(self, trigflow_t: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __call__(self, trigflow_t: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Call.
 
         Args:

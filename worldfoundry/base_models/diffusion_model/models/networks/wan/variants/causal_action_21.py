@@ -7,26 +7,28 @@ is causal over frames; ``causal_rope_apply`` offsets RoPE by
 Adds action + causal attention.  No VACE or linear attn.
 """
 
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_attention_21 import attention
+import math
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_21 import (
+    WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
+    WanLayerNorm,
     WanRMSNorm,
     rope_apply,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
-    MLPProj,
     sinusoidal_embedding_1d,
 )
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import torch.nn as nn
-import torch
-import math
-import torch.distributed as dist
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_attention_21 import attention
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.action_conditioning_21 import ActionModule
 from worldfoundry.base_models.diffusion_model.optimizations.qkv_fusion import project_fused_qkv
-from .causal_cache import read_kv_cache_positions, commit_kv_cache_positions
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
+from .causal_cache import commit_kv_cache_positions, read_kv_cache_positions
 
 # wan 1.3B model has a weird channel / head configurations and require max-autotune to work with flexattention
 # see https://github.com/pytorch/pytorch/issues/133254
@@ -1027,7 +1029,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
     def forward(self, *args, **kwargs):
         """Forward."""
-        if kwargs.get("kv_cache", None) is not None:
+        if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         else:
             return self._forward_train(*args, **kwargs)
@@ -1052,7 +1054,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         bs = x.shape[0]
         x = x.view(bs, *grid_sizes, *self.patch_size, c)
         x = torch.einsum("bfhwpqrc->bcfphqwr", x)
-        x = x.reshape(bs, c, *[i * j for i, j in zip(grid_sizes, self.patch_size)])
+        x = x.reshape(bs, c, *[i * j for i, j in zip(grid_sizes, self.patch_size, strict=False)])
         return x
 
     def init_weights(self):

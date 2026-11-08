@@ -239,7 +239,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -376,7 +376,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -491,7 +491,7 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.video_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -596,7 +596,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.image_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split
@@ -680,7 +680,7 @@ class ResizedImageDataset(torch.utils.data.Dataset):
         if isinstance(self.ann_file, list):
             self.image_infos = self.ann_file
         else:
-            with open(self.ann_file, "r") as fin:
+            with open(self.ann_file) as fin:
                 for line in fin:
                     line_split = line.strip().split(",")
                     filename, _, _, label = line_split

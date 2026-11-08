@@ -18,8 +18,9 @@
 
 import copy
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence, cast
+from typing import Any, cast
 
 from omegaconf import DictConfig
 

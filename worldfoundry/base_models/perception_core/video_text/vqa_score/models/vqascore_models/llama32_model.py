@@ -1,8 +1,9 @@
+from typing import List, Union
+
+import numpy as np
 import torch
 from PIL import Image
-from transformers import MllamaForConditionalGeneration, AutoProcessor
-from typing import List, Union
-import numpy as np
+from transformers import AutoProcessor, MllamaForConditionalGeneration
 
 LLAMA_32_VISION_MODELS = {
     "llama-3.2-1b": {
@@ -110,7 +111,7 @@ class LLaMA32VisionModel:
         )
         self.processor = AutoProcessor.from_pretrained(self.model_info["processor"]["path"], cache_dir=self.cache_dir)
 
-    def load_images(self, paths: List[str]) -> List[Image.Image]:
+    def load_images(self, paths: list[str]) -> list[Image.Image]:
         processed_data = []
         for path in paths:
             if path.startswith(("http://", "https://")):
@@ -128,8 +129,8 @@ class LLaMA32VisionModel:
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
         answer_template: str = "Yes",
     ) -> torch.Tensor:
@@ -140,7 +141,7 @@ class LLaMA32VisionModel:
         answers = [answer_template.format(text) for text in texts]
 
         lm_probs = []
-        for image, question, answer in zip(images, questions, answers):
+        for image, question, answer in zip(images, questions, answers, strict=False):
             messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": question}]}]
             input_text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
             inputs = self.processor(image, input_text, return_tensors="pt").to(self.model.device)
@@ -161,14 +162,14 @@ class LLaMA32VisionModel:
 
         return torch.tensor(lm_probs)
 
-    def generate(self, images: List[str], texts: List[str], max_new_tokens: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], max_new_tokens: int = 256) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         images = self.load_images(images)
         questions = texts
 
         generated_outputs = []
-        for image, question in zip(images, questions):
+        for image, question in zip(images, questions, strict=False):
             messages = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": question}]}]
             input_text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
             inputs = self.processor(image, input_text, return_tensors="pt").to(self.model.device)

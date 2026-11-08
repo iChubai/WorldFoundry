@@ -1,8 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import re
 from typing import TYPE_CHECKING, List, Tuple, Union
-
-import json
 
 from .base import BaseAgentTemplate
 
@@ -17,7 +16,7 @@ class Llama3AgentTemplate(BaseAgentTemplate):
     end_token = "<|end_header_id|>"
     eot_token = "<|eot_id|>"
 
-    def get_toolcall(self, response: str) -> List["Function"]:
+    def get_toolcall(self, response: str) -> list["Function"]:
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer import Function
 
         if response.endswith(self.eom_token):
@@ -37,7 +36,7 @@ class Llama3AgentTemplate(BaseAgentTemplate):
         self,
         assistant_content: str,
         tool_messages,
-    ) -> Tuple[str, "Prompt"]:
+    ) -> tuple[str, "Prompt"]:
         with_action = self.keyword.action in assistant_content and self.keyword.action_input in assistant_content
         if with_action:
             return super()._format_tool_responses(assistant_content, tool_messages)
@@ -48,7 +47,7 @@ class Llama3AgentTemplate(BaseAgentTemplate):
         res.append(f"{self.start_token}assistant{self.end_token}\n\n")
         return assistant_content, res
 
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         assert user_message is not None
         user_content = user_message["content"]
         tool_descs = [json.dumps(tool, ensure_ascii=False, indent=4) for tool in tools]
@@ -62,7 +61,7 @@ Respond in the format {"name": function name, "parameters": dictionary of argume
             + f"""
 
 {user_content}"""
-        )  # noqa
+        )
         user_message["content"] = new_user_content
         return system
 

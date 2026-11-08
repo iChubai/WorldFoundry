@@ -14,17 +14,17 @@ This is the OpenCLIP family, not Gemma or UMT5.
 import os
 from pathlib import Path
 
+import kornia
+import open_clip
 import open_clip.transformer
 import torch
 import torch.nn as nn
-import kornia
 import torchvision.transforms as transforms
-import open_clip
 from torch.utils.checkpoint import checkpoint
-from transformers import T5Tokenizer, T5EncoderModel, CLIPTokenizer, CLIPTextModel
-from worldfoundry.core.nn.diffusion.utils import autocast
-from worldfoundry.core.model_loading.factory import count_params
+from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5Tokenizer
 
+from worldfoundry.core.model_loading.factory import count_params
+from worldfoundry.core.nn.diffusion.utils import autocast
 
 # LayerNormFp32 forces a cast to fp32, which causes a bug with amp_bf16
 open_clip.model.LayerNormFp32 = open_clip.transformer.LayerNorm

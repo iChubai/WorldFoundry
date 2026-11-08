@@ -1,8 +1,8 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
 from typing import Any, Dict
 
-import json
 from transformers import AutoConfig, AutoProcessor
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
@@ -13,6 +13,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     get_dist_setting,
     get_logger,
 )
+
 from ..constant import LLMModelType, MLLMModelType
 from ..patcher import patch_ignore_check_imports
 from ..register import Model, ModelGroup, ModelMeta, get_model_tokenizer_with_flash_attn, register_model
@@ -22,7 +23,7 @@ logger = get_logger()
 
 
 def get_model_tokenizer_minimax_vl(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     logger.warn("NOTE: minimax-vl-01 model does not support training.")
     n_gpu = get_device_count()
@@ -53,7 +54,7 @@ def get_model_tokenizer_minimax_vl(
 
     if len(device_ids) > 1:
         model_safetensors_index_path = os.path.join(model_dir, "model.safetensors.index.json")
-        with open(model_safetensors_index_path, "r") as f:
+        with open(model_safetensors_index_path) as f:
             model_safetensors_index = json.load(f)
         weight_map = model_safetensors_index["weight_map"]
         vision_map = {}
@@ -114,7 +115,7 @@ register_model(
 
 
 def get_model_tokenizer_minimax_text(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     logger.warn("NOTE: minimax-text-01 model does not support training.")
     n_gpu = get_device_count()

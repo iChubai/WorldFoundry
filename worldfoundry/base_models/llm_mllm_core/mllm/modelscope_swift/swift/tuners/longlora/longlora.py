@@ -11,6 +11,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.l
     mark_lora_as_trainable,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.lora_layers import LoraModel
+
 from .. import LoRA, LoRAConfig, SwiftOutput
 
 
@@ -32,7 +33,7 @@ class LongLoRAConfig(LoRAConfig):
             Note: The sequence length should be split to smaller sequences by the ratio.
     """
 
-    embedder_and_normalizer: Union[str, List[str], Tuple[str]] = field(
+    embedder_and_normalizer: str | list[str] | tuple[str] = field(
         default=("embed", "norm"),
         metadata={
             "help": "The names of embedder and normalizer, regex format if is a str, else will match with sub sequences"
@@ -62,7 +63,7 @@ class LongLoRA(LoRA):
                     target_module_found = re.fullmatch(config.embedder_and_normalizer, name)
                 else:
                     target_module_found = any(target_key in name for target_key in config.embedder_and_normalizer)
-                if target_module_found and name not in _state_dict:  # noqa
+                if target_module_found and name not in _state_dict:
                     _state_dict[name] = value
             return _state_dict
 
@@ -82,13 +83,11 @@ class LongLoRA(LoRA):
         )
 
 
-def mark_embedding_normalizer_as_trainable(
-    model: nn.Module, extra_parameters: Union[str, List[str], Tuple[str]]
-) -> None:
+def mark_embedding_normalizer_as_trainable(model: nn.Module, extra_parameters: str | list[str] | tuple[str]) -> None:
     for name, sub_module in model.named_parameters():
         if isinstance(extra_parameters, str):
             target_module_found = re.fullmatch(extra_parameters, name)
         else:
             target_module_found = any(target_key in name for target_key in extra_parameters)
-        if target_module_found:  # noqa
+        if target_module_found:
             sub_module.requires_grad = True

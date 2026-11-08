@@ -12,7 +12,7 @@ DEFAULT_VGGT_OMEGA_CHECKPOINT_NAME = "vggt_omega_1b_512.pt"
 class VGGTOmegaRepresentation:
     """VGGT-Omega representation model for camera, depth, and point maps."""
 
-    def __init__(self, model: Optional[Any] = None, device: Optional[str] = None) -> None:
+    def __init__(self, model: Any | None = None, device: str | None = None) -> None:
         """
         Create a VGGT-Omega runtime wrapper.
 
@@ -29,11 +29,11 @@ class VGGTOmegaRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str,
-        device: Optional[str] = None,
+        device: str | None = None,
         enable_alignment: bool = False,
-        repo_root: Optional[str] = None,
+        repo_root: str | None = None,
         **kwargs: Any,
-    ) -> "VGGTOmegaRepresentation":
+    ) -> VGGTOmegaRepresentation:
         """
         Load the official VGGT-Omega checkpoint.
 
@@ -65,7 +65,7 @@ class VGGTOmegaRepresentation:
         instance.patch_size = kwargs.get("patch_size", 16)
         return instance
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Run VGGT-Omega inference and return WorldFoundry-compatible arrays.
 
@@ -107,7 +107,7 @@ class VGGTOmegaRepresentation:
         intrinsic_np = intrinsic.squeeze(0).detach().cpu().numpy()
         point_map = _unproject_depth_map_to_point_map(depth_map, extrinsic_np, intrinsic_np)
 
-        results: Dict[str, Any] = {
+        results: dict[str, Any] = {
             "extrinsic": extrinsic_np,
             "intrinsic": intrinsic_np,
             "depth_map": depth_map,

@@ -10,13 +10,16 @@
 """Module for base_models -> perception_core -> segment -> repvit_sam -> modeling -> tiny_vit_sam.py functionality."""
 
 import itertools
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-from timm.models.layers import DropPath as TimmDropPath, to_2tuple, trunc_normal_
+from timm.models.layers import DropPath as TimmDropPath
+from timm.models.layers import to_2tuple, trunc_normal_
 from timm.models.registry import register_model
-from typing import Tuple
+
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d
 
 
@@ -96,7 +99,7 @@ class PatchEmbed(nn.Module):
             activation: The activation.
         """
         super().__init__()
-        img_size: Tuple[int, int] = to_2tuple(resolution)
+        img_size: tuple[int, int] = to_2tuple(resolution)
         self.patches_resolution = (img_size[0] // 4, img_size[1] // 4)
         self.num_patches = self.patches_resolution[0] * self.patches_resolution[1]
         self.in_chans = in_chans
@@ -490,7 +493,7 @@ class TinyViTBlock(nn.Module):
         B, L, C = x.shape
         assert L == H * W, "input feature has wrong size"
         res_x = x
-        if H == self.window_size and W == self.window_size:
+        if self.window_size == H and self.window_size == W:
             x = self.attn(x)
         else:
             x = x.view(B, H, W, C)

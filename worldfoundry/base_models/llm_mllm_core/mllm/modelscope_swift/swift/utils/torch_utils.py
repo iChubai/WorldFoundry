@@ -7,9 +7,10 @@ import re
 import time
 import uuid
 from bisect import bisect_right
+from collections.abc import Callable
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -34,7 +35,7 @@ def _find_local_mac() -> str:
     return mac_address
 
 
-def get_n_params_grads(model) -> Tuple[List[int], List[int]]:
+def get_n_params_grads(model) -> tuple[list[int], list[int]]:
     n_params, n_grads = [], []
     for p in model.parameters():
         if is_deepspeed_zero3_enabled():
@@ -49,7 +50,7 @@ def get_n_params_grads(model) -> Tuple[List[int], List[int]]:
     return n_params, n_grads
 
 
-def get_model_parameter_info(model: nn.Module, name: Optional[str] = None) -> str:
+def get_model_parameter_info(model: nn.Module, name: str | None = None) -> str:
     n_params, n_grads = get_n_params_grads(model)
     n_params = sum(n_params)
     n_grads = sum(n_grads)
@@ -70,7 +71,7 @@ def get_model_parameter_info(model: nn.Module, name: Optional[str] = None) -> st
     return s
 
 
-def find_sub_module(module: torch.nn.Module, module_name: str) -> List[torch.nn.Module]:
+def find_sub_module(module: torch.nn.Module, module_name: str) -> list[torch.nn.Module]:
     _modules = list()
     for name, sub_module in module.named_modules():
         if not name:
@@ -80,7 +81,7 @@ def find_sub_module(module: torch.nn.Module, module_name: str) -> List[torch.nn.
     return _modules
 
 
-def show_layers(model: nn.Module, max_lines: Optional[int] = 20) -> None:
+def show_layers(model: nn.Module, max_lines: int | None = 20) -> None:
     named_p = list(model.named_parameters())
     for i, (n, p) in enumerate(named_p):
         if max_lines is not None and i >= max_lines:
@@ -92,8 +93,8 @@ def show_layers(model: nn.Module, max_lines: Optional[int] = 20) -> None:
 def freeze_parameters(
     model: nn.Module,
     freeze_parameters_ratio: float,
-    freeze_parameters: List[str],
-    freeze_parameters_regex: Optional[str] = None,
+    freeze_parameters: list[str],
+    freeze_parameters_regex: str | None = None,
 ) -> None:
     if freeze_parameters_ratio > 0:
         n_parameters = get_n_params_grads(model)[0]
@@ -101,7 +102,7 @@ def freeze_parameters(
         n_freeze_parameters = int(np.sum(n_parameters) * freeze_parameters_ratio)
         n_parameters_cs = np.cumsum(n_parameters)
         idx = bisect_right(n_parameters_cs, n_freeze_parameters)
-        for _, p in zip(range(idx), model.parameters()):
+        for _, p in zip(range(idx), model.parameters(), strict=False):
             p.requires_grad = False
 
     if len(freeze_parameters) > 0:
@@ -123,7 +124,7 @@ def freeze_parameters(
 
 
 def activate_parameters(
-    model: nn.Module, additional_trainable_parameters: List[str], trainable_parameters_regex: Optional[str] = None
+    model: nn.Module, additional_trainable_parameters: list[str], trainable_parameters_regex: str | None = None
 ) -> None:
     has_activate = False
     if len(additional_trainable_parameters) > 0:
@@ -163,7 +164,7 @@ def time_synchronize() -> float:
     return time.perf_counter()  # second
 
 
-def _get_max_memory(device_ids: List[int]) -> Dict[Union[int, str], int]:
+def _get_max_memory(device_ids: list[int]) -> dict[int | str, int]:
     """add feat in accelerate to support MP + DDP"""
     import psutil
 
@@ -181,7 +182,7 @@ def _get_max_memory(device_ids: List[int]) -> Dict[Union[int, str], int]:
     return max_memory
 
 
-def _sync_max_memory(max_memory: Dict[Union[int, str], int]) -> Dict[Union[int, str], int]:
+def _sync_max_memory(max_memory: dict[int | str, int]) -> dict[int | str, int]:
     """Make sure that the model structure of MP(device_map) is the same, when using DDP."""
     max_memory_list = [v for k, v in max_memory.items() if (v > 0 and k != "cpu")]
     _, local_rank, world_size, _ = get_dist_setting()
@@ -201,9 +202,9 @@ def _sync_max_memory(max_memory: Dict[Union[int, str], int]) -> Dict[Union[int, 
 def find_layers(
     model: nn.Module,
     cond: Callable[[str, nn.Module], bool],
-    sub_module: Optional[str] = None,
-    min_name_len: Optional[int] = None,
-) -> List[str]:
+    sub_module: str | None = None,
+    min_name_len: int | None = None,
+) -> list[str]:
     # The content of target_module_names cannot exist in inner_nodes.
     sub_module_str = sub_module
     if sub_module is None:
@@ -224,11 +225,8 @@ def find_layers(
             module_name = module_name_list.pop()
             i = 1
             for inner_node in inner_nodes:
-                while (
-                    module_name_list
-                    and inner_node.endswith(re.sub(r"\d+\.", "{}.", module_name))
-                    or min_name_len
-                    and i < min_name_len
+                while (module_name_list and inner_node.endswith(re.sub(r"\d+\.", "{}.", module_name))) or (
+                    min_name_len and i < min_name_len
                 ):
                     module_name = f"{module_name_list.pop()}.{module_name}"
                     i += 1
@@ -236,7 +234,7 @@ def find_layers(
     return list(target_module_names)
 
 
-def find_norm(model: nn.Module) -> List[str]:
+def find_norm(model: nn.Module) -> list[str]:
     # find_layer_norm
     return find_layers(
         model,
@@ -244,7 +242,7 @@ def find_norm(model: nn.Module) -> List[str]:
     )
 
 
-def find_embedding(model: nn.Module) -> List[str]:
+def find_embedding(model: nn.Module) -> list[str]:
     return find_layers(model, lambda name, module: isinstance(module, torch.nn.Embedding))
 
 
@@ -270,8 +268,7 @@ def find_all_linears(model, model_arch=None, extra_layers=None, sub_module=None)
     def _cond(name, module):
         module_name = module.__class__.__name__.lower()
         if (
-            extra_layers
-            and isinstance(module, tuple(extra_layers))
+            (extra_layers and isinstance(module, tuple(extra_layers)))
             or ("linear" in module_name and all(linear_cls not in module_name for linear_cls in ignore_linear_cls))
         ) and all(layer not in name for layer in ignore_layers):
             return True
@@ -281,7 +278,7 @@ def find_all_linears(model, model_arch=None, extra_layers=None, sub_module=None)
 
 
 @contextmanager
-def safe_ddp_context(hash_id: Optional[str], use_barrier: bool = False):
+def safe_ddp_context(hash_id: str | None, use_barrier: bool = False):
     if use_barrier and dist.is_initialized():
         if is_dist() or is_dist_ta():
             if not is_master():
@@ -307,16 +304,16 @@ def safe_ddp_context(hash_id: Optional[str], use_barrier: bool = False):
         yield
 
 
-def get_device(local_rank: Optional[Union[str, int]] = None) -> str:
+def get_device(local_rank: str | int | None = None) -> str:
     if local_rank is None:
         local_rank = max(0, get_dist_setting()[1])
     local_rank = str(local_rank)
     if is_torch_npu_available():
-        device = "npu:{}".format(local_rank)
+        device = f"npu:{local_rank}"
     elif is_torch_mps_available():
-        device = "mps:{}".format(local_rank)
+        device = f"mps:{local_rank}"
     elif is_torch_cuda_available():
-        device = "cuda:{}".format(local_rank)
+        device = f"cuda:{local_rank}"
     else:
         device = "cpu"
 
@@ -335,7 +332,7 @@ def get_current_device():
     return current_device
 
 
-def set_device(local_rank: Optional[Union[str, int]] = None):
+def set_device(local_rank: str | int | None = None):
     if local_rank is None:
         local_rank = max(0, get_dist_setting()[1])
     if is_torch_npu_available():
@@ -395,7 +392,7 @@ def set_default_ddp_config():
         os.environ["MASTER_PORT"] = os.environ.get("MASTER_PORT", "29500")
 
 
-def init_process_group(backend: Optional[str] = None, timeout: int = 18000000):
+def init_process_group(backend: str | None = None, timeout: int = 18000000):
     if dist.is_initialized():
         return
     set_device()
@@ -419,7 +416,7 @@ def seed_worker(worker_id: int, num_workers: int, rank: int):
     set_seed(worker_seed)
 
 
-def check_shared_disk(error, cache_dir: Optional[str] = None):
+def check_shared_disk(error, cache_dir: str | None = None):
     nnodes = get_node_setting()[1]
     if nnodes <= 1:
         return True

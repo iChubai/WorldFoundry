@@ -70,10 +70,10 @@ class Upsample(torch.nn.Module):
         return x
 
 
-def build_upsampling_path(  # noqa: PLR0913
+def build_upsampling_path(
     *,
     ch: int,
-    ch_mult: Tuple[int, ...],
+    ch_mult: tuple[int, ...],
     num_resolutions: int,
     num_res_blocks: int,
     resolution: int,
@@ -82,7 +82,7 @@ def build_upsampling_path(  # noqa: PLR0913
     norm_type: NormType,
     causality_axis: CausalityAxis,
     attn_type: AttentionType,
-    attn_resolutions: Set[int],
+    attn_resolutions: set[int],
     resamp_with_conv: bool,
     initial_block_channels: int,
 ) -> tuple[torch.nn.ModuleList, int]:

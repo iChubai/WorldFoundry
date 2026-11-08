@@ -1,5 +1,6 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 # Copyright 2023-present the HuggingFace Inc. team.
+import json
 import os
 import re
 import shutil
@@ -11,7 +12,6 @@ from inspect import Parameter, Signature, signature
 from types import MethodType
 from typing import Dict, List, Literal, Optional, Union
 
-import json
 import torch
 from modelscope import snapshot_download
 from peft.utils import CONFIG_NAME
@@ -24,6 +24,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.co
     SWIFT_TYPE_KEY,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.logger import get_logger
+
 from ..utils.torch_utils import get_device_count
 from .mapping import SwiftTuners
 from .peft import PeftConfig, PeftModel, get_peft_model
@@ -48,8 +49,8 @@ class SwiftModel(nn.Module):
     def __init__(
         self,
         model: Union[nn.Module, "SwiftModel"],
-        config: Union[SwiftConfig, Dict[str, SwiftConfig]],
-        extra_state_keys: List[str] = None,
+        config: SwiftConfig | dict[str, SwiftConfig],
+        extra_state_keys: list[str] = None,
         inference_mode: bool = False,
         **kwargs,
     ):
@@ -208,7 +209,7 @@ class SwiftModel(nn.Module):
         state_dicts = {}
         if kwargs.get("save_adapter", True):
             for name, output in self.adapters.items():
-                if (adapter_name == name or adapter_name is None) and output.config.has_additional_modules:  # noqa
+                if (adapter_name == name or adapter_name is None) and output.config.has_additional_modules:
                     state_dicts.update(output.state_dict_callback(state_dict, name))
                     modules_to_save_names = [
                         sub_name
@@ -249,7 +250,7 @@ class SwiftModel(nn.Module):
             raise
 
     @staticmethod
-    def load_state_file(path, device: Optional[str] = None):
+    def load_state_file(path, device: str | None = None):
         """Load a state dict file by the input path.
 
         Args:
@@ -311,7 +312,7 @@ class SwiftModel(nn.Module):
         cls,
         model: Union[nn.Module, "SwiftModel"],
         model_id: str = None,
-        adapter_name: Union[str, List[str], Dict[str, str]] = None,
+        adapter_name: str | list[str] | dict[str, str] = None,
         inference_mode: bool = True,
         revision: str = None,
         **kwargs,
@@ -340,7 +341,7 @@ class SwiftModel(nn.Module):
             raise ValueError(f"Please pass in a local dir or a model id, not a local file: {model_dir}")
         extra_state_keys = kwargs.pop("extra_state_keys", None)
         if extra_state_keys is None and os.path.isfile(os.path.join(model_dir, cls.EXTRA_STATE_DIR, CONFIG_NAME)):
-            with open(os.path.join(model_dir, cls.EXTRA_STATE_DIR, CONFIG_NAME), "r", encoding="utf-8") as file:
+            with open(os.path.join(model_dir, cls.EXTRA_STATE_DIR, CONFIG_NAME), encoding="utf-8") as file:
                 _json = json.load(file)
                 extra_state_keys = _json.get("extra_state_keys")
         if adapter_name is None:
@@ -363,7 +364,7 @@ class SwiftModel(nn.Module):
                 logger.warning(f"{_name} is not a valid tuner")
                 continue
 
-            with open(config_file, "r", encoding="utf-8") as file:
+            with open(config_file, encoding="utf-8") as file:
                 json_object = json.load(file)
 
             if SWIFT_TYPE_KEY not in json_object:
@@ -422,7 +423,7 @@ class SwiftModel(nn.Module):
         if not os.path.exists(os.path.join(output_dir, "README.md")):
             lines = []
         else:
-            with open(os.path.join(output_dir, "README.md"), "r", encoding="utf-8") as f:
+            with open(os.path.join(output_dir, "README.md"), encoding="utf-8") as f:
                 lines = f.readlines()
 
         quantization_config = None
@@ -561,7 +562,7 @@ class SwiftModel(nn.Module):
         self,
         save_directory: str,
         safe_serialization: bool = False,
-        adapter_name: Union[str, List[str]] = None,
+        adapter_name: str | list[str] = None,
         **kwargs,
     ):
         """Save the adapters to a local directory.
@@ -662,7 +663,7 @@ class SwiftModel(nn.Module):
         finally:
             self.set_active_adapters(adapter_names=self.adapters.keys())
 
-    def set_active_adapters(self, adapter_names: Union[List[str], str], offload: str = None):
+    def set_active_adapters(self, adapter_names: list[str] | str, offload: str = None):
         """Set activated adapters
 
         Args:
@@ -748,7 +749,7 @@ class Swift:
 
     @staticmethod
     def prepare_model(
-        model: Union[nn.Module, SwiftModel], config: Union[SwiftConfig, PeftConfig, Dict[str, SwiftConfig]], **kwargs
+        model: nn.Module | SwiftModel, config: SwiftConfig | PeftConfig | dict[str, SwiftConfig], **kwargs
     ):
         """Prepare a model by the input config.
 
@@ -768,7 +769,7 @@ class Swift:
             return get_peft_model(model, config, **kwargs)
 
     @staticmethod
-    def merge_and_unload(model: Union[PeftModel, SwiftModel], **kwargs):
+    def merge_and_unload(model: PeftModel | SwiftModel, **kwargs):
         """Merge tuners into the base model and unload them.
 
         Args:
@@ -785,7 +786,7 @@ class Swift:
             from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift import LoRAConfig
             from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners import LoRA
 
-            adapter_name = kwargs.get("adapter_name", None)
+            adapter_name = kwargs.get("adapter_name")
             if isinstance(adapter_name, str):
                 adapter_name = [adapter_name]
             for adapter, output in model.adapters.items():
@@ -794,7 +795,7 @@ class Swift:
 
     @staticmethod
     @contextmanager
-    def grpo_context(model: Union[SwiftModel, torch.nn.Module], processor):
+    def grpo_context(model: SwiftModel | torch.nn.Module, processor):
         # Save the model and temporarily modify model.model_dir.
         if not isinstance(model, SwiftModel):
             yield
@@ -820,26 +821,26 @@ class Swift:
                 shutil.rmtree(temp_dir)
 
     @staticmethod
-    def merge(model: Union[PeftModel, SwiftModel], **kwargs):
+    def merge(model: PeftModel | SwiftModel, **kwargs):
         """Merge tuners into the base model, will not unload them.
 
         Args:
             model(`Union[PeftModel, SwiftModel]`): The model instance with tuners
         """
-        from .lora_layers import LoraLayer, LoRALayer
+        from .lora_layers import LoRALayer, LoraLayer
 
         for sub_module in model.modules():
             if isinstance(sub_module, (LoraLayer, LoRALayer)):
                 sub_module.merge(**kwargs)
 
     @staticmethod
-    def unmerge(model: Union[PeftModel, SwiftModel], **kwargs):
+    def unmerge(model: PeftModel | SwiftModel, **kwargs):
         """Unmerge tuners from the base model
 
         Args:
             model(`Union[PeftModel, SwiftModel]`): The model instance with tuners
         """
-        from .lora_layers import LoraLayer, LoRALayer
+        from .lora_layers import LoRALayer, LoraLayer
 
         for sub_module in model.modules():
             if isinstance(sub_module, (LoraLayer, LoRALayer)):
@@ -914,9 +915,9 @@ class Swift:
 
     @staticmethod
     def from_pretrained(
-        model: Union[nn.Module, SwiftModel, PeftModel],
+        model: nn.Module | SwiftModel | PeftModel,
         model_id: str = None,
-        adapter_name: Union[str, List[str], Dict[str, str]] = None,
+        adapter_name: str | list[str] | dict[str, str] = None,
         revision: str = None,
         **kwargs,
     ):
@@ -936,7 +937,7 @@ class Swift:
             model_id = snapshot_download(model_id, revision=revision)
         is_peft_model = False
         if os.path.exists(os.path.join(model_id, CONFIG_NAME)):
-            with open(os.path.join(model_id, CONFIG_NAME), "r", encoding="utf-8") as f:
+            with open(os.path.join(model_id, CONFIG_NAME), encoding="utf-8") as f:
                 _json = json.load(f)
             is_peft_model = SWIFT_TYPE_KEY not in _json
 
@@ -949,7 +950,7 @@ class Swift:
         )
         _name = _name or ""
         if os.path.exists(os.path.join(model_id, _name, CONFIG_NAME)):
-            with open(os.path.join(model_id, _name, CONFIG_NAME), "r", encoding="utf-8") as f:
+            with open(os.path.join(model_id, _name, CONFIG_NAME), encoding="utf-8") as f:
                 _json = json.load(f)
             is_peft_model = SWIFT_TYPE_KEY not in _json and "extra_state_keys" not in _json
 

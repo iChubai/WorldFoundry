@@ -7,7 +7,8 @@
 import functools
 import inspect
 import logging
-from typing import Callable, List
+from collections.abc import Callable
+from typing import List
 
 import numpy as np
 import torch
@@ -146,7 +147,7 @@ class TensorWrapper:
         return self.__class__(self._data.squeeze(*args, **kwargs))
 
     @classmethod
-    def stack(cls, objects: List, dim=0, *, out=None):
+    def stack(cls, objects: list, dim=0, *, out=None):
         """Stack a list of objects with the same type and shape."""
         data = torch.stack([obj._data for obj in objects], dim=dim, out=out)
         return cls(data)

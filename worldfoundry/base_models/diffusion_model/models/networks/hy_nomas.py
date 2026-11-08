@@ -75,7 +75,7 @@ class HyNomasRotaryPosEmbed(nn.Module):
             indexing="ij",
         )
         cosines, sines = ([], [])
-        for dim, position in zip(self.axes_dim, positions):
+        for dim, position in zip(self.axes_dim, positions, strict=False):
             frequencies = 1.0 / self.theta ** (torch.arange(0, dim, 2, device=computation_device).float() / dim)
             angles = torch.outer(position.flatten(), frequencies)
             cosines.append(angles.cos().repeat_interleave(2, dim=-1))
@@ -312,7 +312,7 @@ class HyNomasAttnProcessor:
                     groups.extend(
                         (
                             (video_length + min(start, text_length), video_length + min(end, text_length), index)
-                            for index, (start, end) in enumerate(zip(offsets[:-1], offsets[1:]))
+                            for index, (start, end) in enumerate(zip(offsets[:-1], offsets[1:], strict=False))
                         )
                     )
                 for start, end, action_index in groups:
@@ -440,7 +440,7 @@ class HyNomasCameraAttnProcessor:
         query = attn.key_attn_q_norm(query).to(value.dtype)
         key = attn.key_attn_k_norm(key).to(value.dtype)
         tokens_per_frame = hidden_states.shape[1] // num_frames
-        query_rotary_emb = tuple((component.repeat_interleave(tokens_per_frame, dim=0) for component in rotary_emb))
+        query_rotary_emb = tuple(component.repeat_interleave(tokens_per_frame, dim=0) for component in rotary_emb)
         query = _apply_rotary_emb(query, query_rotary_emb)
         key = _apply_rotary_emb(key, rotary_emb)
         output = self._compute_attention(query, key, value, num_frames, tokens_per_frame)
@@ -556,7 +556,7 @@ class HyNomasTransformer3DModel(nn.Module):
             camera_num_attention_heads=camera_num_attention_heads,
             camera_rope_axes_dim=camera_rope_axes_dim,
         )
-        if sum(rope_axes_dim) != attention_head_dim or any((dim % 2 for dim in rope_axes_dim)):
+        if sum(rope_axes_dim) != attention_head_dim or any(dim % 2 for dim in rope_axes_dim):
             raise ValueError("Even rope_axes_dim entries must sum to attention_head_dim.")
         if camera_attention_dim != camera_num_attention_heads * sum(camera_rope_axes_dim):
             raise ValueError("camera_attention_dim must match camera_num_attention_heads * sum(camera_rope_axes_dim).")

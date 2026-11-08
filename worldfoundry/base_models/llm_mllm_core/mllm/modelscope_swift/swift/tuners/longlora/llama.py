@@ -96,19 +96,19 @@ def _postprocess_qkv_fa2(attn_module, attn_output, q_len):
     return attn_output
 
 
-# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py # noqa
+# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py
 def eager_forward(
     self,
     hidden_states: torch.Tensor,
-    attention_mask: Optional[torch.Tensor] = None,
-    position_ids: Optional[torch.LongTensor] = None,
-    past_key_value: Optional[Cache] = None,
+    attention_mask: torch.Tensor | None = None,
+    position_ids: torch.LongTensor | None = None,
+    past_key_value: Cache | None = None,
     output_attentions: bool = False,
     use_cache: bool = False,
-    cache_position: Optional[torch.LongTensor] = None,
-    position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
+    cache_position: torch.LongTensor | None = None,
+    position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
     **kwargs,
-) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
     bsz, q_len, _ = hidden_states.size()
 
     if self.config.pretraining_tp > 1:
@@ -197,18 +197,18 @@ def eager_forward(
     return attn_output, attn_weights, past_key_value
 
 
-# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py # noqa
+# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py
 def fa2_forward(
     self,
     hidden_states: torch.Tensor,
-    attention_mask: Optional[torch.LongTensor] = None,
-    position_ids: Optional[torch.LongTensor] = None,
-    past_key_value: Optional[Cache] = None,
+    attention_mask: torch.LongTensor | None = None,
+    position_ids: torch.LongTensor | None = None,
+    past_key_value: Cache | None = None,
     output_attentions: bool = False,
     use_cache: bool = False,
-    cache_position: Optional[torch.LongTensor] = None,
-    position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
-) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    cache_position: torch.LongTensor | None = None,
+    position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
+) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
     if isinstance(past_key_value, StaticCache):
         raise ValueError(
             "`static` cache implementation is not compatible with `attn_implementation==flash_attention_2` "
@@ -313,19 +313,19 @@ def fa2_forward(
     return attn_output, attn_weights, past_key_value
 
 
-# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py  # noqa
+# code borrowed from https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py
 def sdpa_forward(
     self,
     hidden_states: torch.Tensor,
-    attention_mask: Optional[torch.Tensor] = None,
-    position_ids: Optional[torch.LongTensor] = None,
-    past_key_value: Optional[Cache] = None,
+    attention_mask: torch.Tensor | None = None,
+    position_ids: torch.LongTensor | None = None,
+    past_key_value: Cache | None = None,
     output_attentions: bool = False,
     use_cache: bool = False,
-    cache_position: Optional[torch.LongTensor] = None,
-    position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
+    cache_position: torch.LongTensor | None = None,
+    position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
     **kwargs,
-) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
     if output_attentions:
         return super().forward(
             hidden_states=hidden_states,
@@ -416,7 +416,7 @@ def replace_llama_attn(model: nn.Module):
             cuda_major, cuda_minor = torch.cuda.get_device_capability()
             if cuda_major < 8:
                 logger.warn(
-                    "Flash attention is only supported on A100 or H100 GPU during training due to head dim > 64 backward."  # noqa
+                    "Flash attention is only supported on A100 or H100 GPU during training due to head dim > 64 backward."
                     "ref: https://github.com/HazyResearch/flash-attention/issues/190#issuecomment-1523359593"
                 )
             m.self_attn.forward = MethodType(fa2_forward, m.self_attn)

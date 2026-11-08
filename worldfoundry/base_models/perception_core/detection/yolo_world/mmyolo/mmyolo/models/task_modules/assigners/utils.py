@@ -35,7 +35,7 @@ def select_candidates_in_gts(priors_points: Tensor, gt_bboxes: Tensor, eps: floa
     return (bbox_deltas.min(axis=-1)[0] > eps).to(gt_bboxes.dtype)
 
 
-def select_highest_overlaps(pos_mask: Tensor, overlaps: Tensor, num_gt: int) -> Tuple[Tensor, Tensor, Tensor]:
+def select_highest_overlaps(pos_mask: Tensor, overlaps: Tensor, num_gt: int) -> tuple[Tensor, Tensor, Tensor]:
     """If an anchor box is assigned to multiple gts, the one with the highest
     iou will be selected.
 

@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -13,6 +14,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from ..utils import gt_instances_preprocess, make_divisible
 from .yolov5_head import YOLOv5Head
 
@@ -46,7 +48,7 @@ class YOLOv8HeadModule(BaseModule):
     def __init__(
         self,
         num_classes: int,
-        in_channels: Union[int, Sequence],
+        in_channels: int | Sequence,
         widen_factor: float = 1.0,
         num_base_priors: int = 1,
         featmap_strides: Sequence[int] = (8, 16, 32),
@@ -76,7 +78,7 @@ class YOLOv8HeadModule(BaseModule):
     def init_weights(self, prior_prob=0.01):
         """Initialize the weight and bias of PPYOLOE head."""
         super().init_weights()
-        for reg_pred, cls_pred, stride in zip(self.reg_preds, self.cls_preds, self.featmap_strides):
+        for reg_pred, cls_pred, stride in zip(self.reg_preds, self.cls_preds, self.featmap_strides, strict=False):
             reg_pred[-1].bias.data[:] = 1.0  # box
             # cls (.01 objects, 80 classes, 640 img)
             cls_pred[-1].bias.data[: self.num_classes] = math.log(5 / self.num_classes / (640 / stride) ** 2)
@@ -141,7 +143,7 @@ class YOLOv8HeadModule(BaseModule):
         proj = torch.arange(self.reg_max, dtype=torch.float)
         self.register_buffer("proj", proj, persistent=False)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -154,7 +156,7 @@ class YOLOv8HeadModule(BaseModule):
         assert len(x) == self.num_levels
         return multi_apply(self.forward_single, x, self.cls_preds, self.reg_preds)
 
-    def forward_single(self, x: torch.Tensor, cls_pred: nn.ModuleList, reg_pred: nn.ModuleList) -> Tuple:
+    def forward_single(self, x: torch.Tensor, cls_pred: nn.ModuleList, reg_pred: nn.ModuleList) -> tuple:
         """Forward feature of a single scale level."""
         b, _, h, w = x.shape
         cls_logit = cls_pred(x)

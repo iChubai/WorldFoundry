@@ -7,6 +7,7 @@ from transformers import AutoConfig
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_device, get_env_args
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..patcher import patch_ignore_check_imports, patch_output_clone
@@ -22,7 +23,7 @@ from ..utils import ModelInfo, use_submodel_func
 
 
 def get_model_tokenizer_phi3_vision(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     processor_kwargs = {}
     if "num_crops" in kwargs:
@@ -97,7 +98,7 @@ register_model(
 
 
 def get_model_tokenizer_florence(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model_config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     model_config.vision_config.model_type = "davit"  # fix merge-lora
@@ -137,7 +138,7 @@ register_model(
 
 
 def get_model_tokenizer_phi3_small(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
 
@@ -178,7 +179,7 @@ register_model(
 
 
 def get_model_tokenizer_phi(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     # TODO: check
     return get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)

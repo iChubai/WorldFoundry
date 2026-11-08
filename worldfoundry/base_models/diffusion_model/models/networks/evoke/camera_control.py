@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-
 
 # Substring tokens that identify camera-control parameters by name.
 CAM_PARAM_TOKENS = (
@@ -352,7 +352,7 @@ def apply_cam_modulation(
 
 def iter_cam_state_dict_keys(
     num_layers: int,
-    cam_ctrl_layers: Optional[Iterable[int]] = None,
+    cam_ctrl_layers: Iterable[int] | None = None,
 ):
     """Yield all expected cam state_dict keys: 6 global + 12 per active layer."""
     yield "patch_embedding_wancamctrl.weight"
@@ -406,7 +406,7 @@ def load_camera_ctrl_weights(
     model: nn.Module,
     ckpt_path: str,
     num_layers: int,
-    cam_ctrl_layers: Optional[Iterable[int]] = None,
+    cam_ctrl_layers: Iterable[int] | None = None,
     strict: bool = True,
 ) -> dict:
     """Load cam weights from ckpt into model.
@@ -501,8 +501,8 @@ def _has_cam_loaded_sentinel(model: nn.Module) -> bool:
 def reinit_cam_modules(
     model: nn.Module,
     num_layers: int,
-    cam_weight_path: Optional[str] = None,
-    cam_ctrl_layers: Optional[Iterable[int]] = None,
+    cam_weight_path: str | None = None,
+    cam_ctrl_layers: Iterable[int] | None = None,
     strict: bool = True,
 ):
     """Initialize cam weights: (1) load from path, (2) keep if sentinel positive, (3) Xavier fallback."""

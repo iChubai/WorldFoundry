@@ -32,7 +32,7 @@ class OksLoss(nn.Module):
         loss_weight (float): Weight for the loss.
     """
 
-    def __init__(self, metainfo: Optional[str] = None, loss_weight: float = 1.0):
+    def __init__(self, metainfo: str | None = None, loss_weight: float = 1.0):
         super().__init__()
 
         if metainfo is not None:
@@ -46,15 +46,13 @@ class OksLoss(nn.Module):
                 self.register_buffer("sigmas", torch.as_tensor(sigmas))
         self.loss_weight = loss_weight
 
-    def forward(
-        self, output: Tensor, target: Tensor, target_weights: Tensor, bboxes: Optional[Tensor] = None
-    ) -> Tensor:
+    def forward(self, output: Tensor, target: Tensor, target_weights: Tensor, bboxes: Tensor | None = None) -> Tensor:
         oks = self.compute_oks(output, target, target_weights, bboxes)
         loss = 1 - oks
         return loss * self.loss_weight
 
     def compute_oks(
-        self, output: Tensor, target: Tensor, target_weights: Tensor, bboxes: Optional[Tensor] = None
+        self, output: Tensor, target: Tensor, target_weights: Tensor, bboxes: Tensor | None = None
     ) -> Tensor:
         """Calculates the OKS loss.
 

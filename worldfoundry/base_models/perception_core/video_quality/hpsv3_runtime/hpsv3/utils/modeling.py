@@ -1,10 +1,9 @@
 import torch
+from hpsv3.model.differentiable_image_processor import Qwen2VLImageProcessor
+from hpsv3.model.reward_model import Qwen2VLRewardModelBT
 from peft import LoraConfig, get_peft_model
 from transformers import AutoProcessor
 from trl import get_kbit_device_map, get_quantization_config
-
-from hpsv3.model.differentiable_image_processor import Qwen2VLImageProcessor
-from hpsv3.model.reward_model import Qwen2VLRewardModelBT
 
 try:
     import flash_attn

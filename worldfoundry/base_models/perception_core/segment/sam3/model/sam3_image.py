@@ -10,13 +10,25 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import SAM3Output
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam1_task_predictor import (
     SAM3InteractiveImagePredictor,
 )
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import SAM3VLBackbone
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.nms import nms_masks
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
+
+# isort: split
 
 from .act_ckpt_utils import activation_ckpt_wrapper
 from .box_ops import box_cxcywh_to_xyxy
@@ -40,7 +52,7 @@ def _update_out(out, out_name, out_value, auxiliary=True, update_aux=True):
         if "aux_outputs" not in out:
             out["aux_outputs"] = [{} for _ in range(len(out_value) - 1)]
         assert len(out["aux_outputs"]) == len(out_value) - 1
-        for aux_output, aux_value in zip(out["aux_outputs"], out_value[:-1]):
+        for aux_output, aux_value in zip(out["aux_outputs"], out_value[:-1], strict=False):
             aux_output[out_name] = aux_value
 
 
@@ -255,12 +267,12 @@ class Sam3Image(torch.nn.Module):
 
     def _run_encoder(
         self,
-        backbone_out: Dict,
+        backbone_out: dict,
         find_input: FindStage,
         prompt: torch.Tensor,
         prompt_mask: torch.Tensor,
-        encoder_extra_kwargs: Optional[Dict] = None,
-    ) -> Tuple[Dict, Dict, Tuple]:
+        encoder_extra_kwargs: dict | None = None,
+    ) -> tuple[dict, dict, tuple]:
         """Helper function to run encoder.
 
         Args:
@@ -575,7 +587,7 @@ class Sam3Image(torch.nn.Module):
             self._compute_matching(out, self.back_convert(find_target))
         return out
 
-    def _postprocess_out(self, out: Dict, multimask_output: bool = False):
+    def _postprocess_out(self, out: dict, multimask_output: bool = False):
         """Helper function to postprocess out.
 
         Args:
@@ -724,7 +736,7 @@ class Sam3Image(torch.nn.Module):
         self,
         inference_state,
         **kwargs,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Predict inst.
 
         Args:
@@ -748,7 +760,9 @@ class Sam3Image(torch.nn.Module):
         vision_feats[-1] = vision_feats[-1] + self.inst_interactive_predictor.model.no_mem_embed
         feats = [
             feat.permute(1, 2, 0).view(1, -1, *feat_size)
-            for feat, feat_size in zip(vision_feats[::-1], self.inst_interactive_predictor._bb_feat_sizes[::-1])
+            for feat, feat_size in zip(
+                vision_feats[::-1], self.inst_interactive_predictor._bb_feat_sizes[::-1], strict=False
+            )
         ][::-1]
         self.inst_interactive_predictor._features = {
             "image_embed": feats[-1],
@@ -766,7 +780,7 @@ class Sam3Image(torch.nn.Module):
         inference_state,
         *args,
         **kwargs,
-    ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+    ) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray]]:
         """Predict inst batch.
 
         Args:
@@ -794,7 +808,9 @@ class Sam3Image(torch.nn.Module):
         )
         feats = [
             feat.permute(1, 2, 0).view(batch_size, -1, *feat_size)
-            for feat, feat_size in zip(vision_feats[::-1], self.inst_interactive_predictor._bb_feat_sizes[::-1])
+            for feat, feat_size in zip(
+                vision_feats[::-1], self.inst_interactive_predictor._bb_feat_sizes[::-1], strict=False
+            )
         ][::-1]
         self.inst_interactive_predictor._features = {
             "image_embed": feats[-1],
@@ -803,7 +819,7 @@ class Sam3Image(torch.nn.Module):
         self.inst_interactive_predictor._is_image_set = True
         self.inst_interactive_predictor._is_batch = True
         self.inst_interactive_predictor._orig_hw = [
-            (orig_h, orig_w) for orig_h, orig_w in zip(orig_heights, orig_widths)
+            (orig_h, orig_w) for orig_h, orig_w in zip(orig_heights, orig_widths, strict=False)
         ]
         res = self.inst_interactive_predictor.predict_batch(*args, **kwargs)
         self.inst_interactive_predictor._features = None
@@ -829,22 +845,22 @@ class Sam3ImageOnVideoMultiGPU(Sam3Image):
 
     def forward_video_grounding_multigpu(
         self,
-        backbone_out: Dict,
-        find_inputs: List,
+        backbone_out: dict,
+        find_inputs: list,
         geometric_prompt: Prompt,
         frame_idx: int,
         num_frames: int,
         # `multigpu_buffer` is a dict to cache detector's outputs in a chunk between different calls
-        multigpu_buffer: Dict,
+        multigpu_buffer: dict,
         track_in_reverse: bool = False,
         # whether to also return the SAM2 backbone features
         return_sam2_backbone_feats: bool = False,
         # whether to perform NMS and suppress the scores of those detections removed by NMS
         run_nms: bool = False,
-        nms_prob_thresh: Optional[float] = None,
-        nms_iou_thresh: Optional[float] = None,
+        nms_prob_thresh: float | None = None,
+        nms_iou_thresh: float | None = None,
         **kwargs,
-    ) -> Tuple[Dict, Dict]:
+    ) -> tuple[dict, dict]:
         """
         Compute the detector's detection outputs in a distributed manner, where all GPUs process
         a chunk of frames (equal to the number of GPUs) at once and store them in cache.

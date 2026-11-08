@@ -1,6 +1,6 @@
 _base_ = "../yolox_s_fast_8xb32-300e-rtmdet-hyp_coco.py"
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco_20230210_134645-3a8dfbd7.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolox/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco/yolox_s_fast_8xb32-300e-rtmdet-hyp_coco_20230210_134645-3a8dfbd7.pth"
 
 num_keypoints = 17
 scaling_ratio_range = (0.75, 1.0)

@@ -1,10 +1,11 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_vae.py functionality."""
 
-import torch
 from typing import List, Optional, Tuple, Union
-from torch import nn
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
+import torch
+from torch import nn
+
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 CACHE_T = 2
 
@@ -28,9 +29,9 @@ class QwenImageCausalConv3d(torch.nn.Conv3d):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int, int, int]],
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        padding: Union[int, Tuple[int, int, int]] = 0,
+        kernel_size: int | tuple[int, int, int],
+        stride: int | tuple[int, int, int] = 1,
+        padding: int | tuple[int, int, int] = 0,
     ) -> None:
         """Init.
 
@@ -430,7 +431,7 @@ class QwenImageMidBlock(nn.Module):
         x = self.resnets[0](x, feat_cache, feat_idx)
 
         # Process through attention and residual blocks
-        for attn, resnet in zip(self.attentions, self.resnets[1:]):
+        for attn, resnet in zip(self.attentions, self.resnets[1:], strict=False):
             if attn is not None:
                 x = attn(x)
 
@@ -495,7 +496,7 @@ class QwenImageEncoder3d(nn.Module):
 
         # downsample blocks
         self.down_blocks = torch.nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 self.down_blocks.append(QwenImageResidualBlock(in_dim, out_dim, dropout))
@@ -584,7 +585,7 @@ class QwenImageUpBlock(nn.Module):
         out_dim: int,
         num_res_blocks: int,
         dropout: float = 0.0,
-        upsample_mode: Optional[str] = None,
+        upsample_mode: str | None = None,
         non_linearity: str = "silu",
     ):
         """Init.
@@ -704,7 +705,7 @@ class QwenImageDecoder3d(nn.Module):
 
         # upsample blocks
         self.up_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # residual (+attention) blocks
             if i > 0:
                 in_dim = in_dim // 2
@@ -787,10 +788,10 @@ class QwenImageVAE(torch.nn.Module):
         self,
         base_dim: int = 96,
         z_dim: int = 16,
-        dim_mult: Tuple[int] = [1, 2, 4, 4],
+        dim_mult: tuple[int] = [1, 2, 4, 4],
         num_res_blocks: int = 2,
-        attn_scales: List[float] = [],
-        temperal_downsample: List[bool] = [False, True, True],
+        attn_scales: list[float] = [],
+        temperal_downsample: list[bool] = [False, True, True],
         dropout: float = 0.0,
     ) -> None:
         """Init.
@@ -902,7 +903,6 @@ class QwenImageVAEStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_diffusers(self, state_dict):
         """From diffusers.

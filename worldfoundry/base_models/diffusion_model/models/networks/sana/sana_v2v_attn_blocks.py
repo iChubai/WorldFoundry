@@ -35,6 +35,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.networks.sana.capabilities import (
+    get_flash_attn_func,
+    is_flash_attn_available,
+    is_xformers_available,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.sana.normalization import RMSNorm
 from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
     _execution_weight_bias,
@@ -44,11 +49,6 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
     fused_bidi_merge,
     fused_bidi_stateful_chunkwise_shared_phase_a,
     prepare_rope_tables,
-)
-from worldfoundry.base_models.diffusion_model.models.networks.sana.capabilities import (
-    get_flash_attn_func,
-    is_flash_attn_available,
-    is_xformers_available,
 )
 
 _xformers_available = False if os.environ.get("DISABLE_XFORMERS", "0") == "1" else is_xformers_available()
@@ -752,9 +752,9 @@ class V2VStateCachedBiGDNAttention(nn.Module):
         T, H, W = HW
         S = H * W
 
-        kv_cache = kwargs.get("kv_cache", None)
+        kv_cache = kwargs.get("kv_cache")
         save_kv_cache = kwargs.get("save_kv_cache", False)
-        cache_frame_index = _get_cache_frame_index(kwargs.get("cache_frame_indices", None), T=T)
+        cache_frame_index = _get_cache_frame_index(kwargs.get("cache_frame_indices"), T=T)
 
         if self.use_fused_gdn and T > 1 and cache_frame_index is None:
             return self._fused_statecached_forward(x, HW, rotary_emb, kv_cache, save_kv_cache)
@@ -952,9 +952,9 @@ class V2VAfterRoPEGatedSoftmaxAttention(nn.Module):
         T, H, W = HW
         S = H * W
 
-        kv_cache = kwargs.get("kv_cache", None)
+        kv_cache = kwargs.get("kv_cache")
         save_kv_cache = kwargs.get("save_kv_cache", False)
-        cache_frame_index = _get_cache_frame_index(kwargs.get("cache_frame_indices", None), T=T)
+        cache_frame_index = _get_cache_frame_index(kwargs.get("cache_frame_indices"), T=T)
 
         x_qk = rearrange(x.reshape(B, T, S, C), "b t s c -> (b s) c t")
 

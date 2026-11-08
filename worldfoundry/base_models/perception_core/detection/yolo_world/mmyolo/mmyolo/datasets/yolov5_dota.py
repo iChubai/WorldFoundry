@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 from mmyolo.datasets.yolov5_coco import BatchShapePolicyDataset
+
 from ..registry import DATASETS
 
 try:

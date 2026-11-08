@@ -224,10 +224,10 @@ class DacAudioVAE(nn.Module):
     def __init__(
         self,
         encoder_dim: int = 64,
-        encoder_rates: List[int] = [2, 4, 8, 8],
+        encoder_rates: list[int] = [2, 4, 8, 8],
         latent_dim: int = None,
         decoder_dim: int = 1536,
-        decoder_rates: List[int] = [8, 8, 4, 2],
+        decoder_rates: list[int] = [8, 8, 4, 2],
         sample_rate: int = 44100,
         vae_latent_channels: int = 64,
         attn_proj: bool = False,

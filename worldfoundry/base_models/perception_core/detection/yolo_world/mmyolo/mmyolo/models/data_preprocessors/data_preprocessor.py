@@ -62,7 +62,7 @@ class YOLOv5DetDataPreprocessor(DetDataPreprocessor):
     Note: It must be used together with `mmyolo.datasets.utils.yolov5_collate`
     """
 
-    def __init__(self, *args, non_blocking: Optional[bool] = True, **kwargs):
+    def __init__(self, *args, non_blocking: bool | None = True, **kwargs):
         super().__init__(*args, non_blocking=non_blocking, **kwargs)
 
     def forward(self, data: dict, training: bool = False) -> dict:
@@ -196,11 +196,11 @@ class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
 
     def __init__(
         self,
-        random_size_range: Tuple[int, int],
+        random_size_range: tuple[int, int],
         interval: int = 1,
         size_divisor: int = 32,
         random_interp=True,
-        interp_mode: Union[List[str], str] = ["nearest", "bilinear", "bicubic", "area"],
+        interp_mode: list[str] | str = ["nearest", "bilinear", "bicubic", "area"],
         keep_ratio: bool = False,
     ) -> None:
         super().__init__(random_size_range, interval, size_divisor)
@@ -222,7 +222,7 @@ class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
             self.interp_mode_list = None
             self.interp_mode = interp_mode
 
-    def forward(self, inputs: list, data_samples: dict) -> Tuple[Tensor, Tensor]:
+    def forward(self, inputs: list, data_samples: dict) -> tuple[Tensor, Tensor]:
         """Resize a batch of images and bboxes to shape ``self._input_size``.
 
         The inputs and data_samples should be list, and
@@ -283,7 +283,7 @@ class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
         else:
             raise NotImplementedError("Not implemented yet!")
 
-    def _get_random_size_and_interp(self) -> Tuple[int, int]:
+    def _get_random_size_and_interp(self) -> tuple[int, int]:
         """Randomly generate a shape in ``_random_size_range`` and a
         interp_mode in interp_mode_list."""
         size = random.randint(*self._random_size_range)

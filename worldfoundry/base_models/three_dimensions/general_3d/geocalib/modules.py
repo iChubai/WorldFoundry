@@ -16,7 +16,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _pair as to_2tuple
 
-# flake8: noqa: E266
 # mypy: ignore-errors
 
 
@@ -144,7 +143,7 @@ class NMF2D(nn.Module):
         bases = torch.rand((B * S, D, R)).to(device)
         return F.normalize(bases, dim=1)
 
-    def local_step(self, x: torch.Tensor, bases: torch.Tensor, coef: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def local_step(self, x: torch.Tensor, bases: torch.Tensor, coef: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Update bases and coefficient."""
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
         numerator = torch.bmm(x.transpose(1, 2), bases)
@@ -169,7 +168,7 @@ class NMF2D(nn.Module):
         # multiplication update
         return coef * numerator / (denominator + 1e-6)
 
-    def local_inference(self, x: torch.Tensor, bases: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def local_inference(self, x: torch.Tensor, bases: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Local inference."""
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
         coef = torch.bmm(x.transpose(1, 2), bases)
@@ -265,7 +264,7 @@ class LightHamHead(nn.Module):
         self.out_conv = ConvModule(self.out_channels, self.out_channels, 3, padding=1, bias=False)
         self.ll_fusion = FeatureFusionBlock(self.out_channels, upsample=False)
 
-    def forward(self, features: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, features: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass."""
         inputs = [features["hl"][i] for i in self.in_index]
 
@@ -491,8 +490,8 @@ class Block(nn.Module):
             drop=drop,
         )
         layer_scale_init_value = 1e-2
-        self.layer_scale_1 = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
-        self.layer_scale_2 = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+        self.layer_scale_1 = nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
+        self.layer_scale_2 = nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
 
     def forward(self, x: torch.Tensor, H: int, W: int) -> torch.Tensor:
         """Forward pass."""
@@ -533,7 +532,7 @@ class OverlapPatchEmbed(nn.Module):
         )
         self.norm = nn.BatchNorm2d(embed_dim)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, int, int]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, int, int]:
         """Forward pass."""
         x = self.proj(x)
         _, _, H, W = x.shape

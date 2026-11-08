@@ -55,7 +55,7 @@ class AttentionOpWithKVCache(nn.Module):
       `max_cache_size` frames. Upon overflow, the oldest frames are dropped.
     """
 
-    def __init__(self, attn_op: nn.Module | Any, max_cache_size: Optional[int] = None):
+    def __init__(self, attn_op: nn.Module | Any, max_cache_size: int | None = None):
         """Initialize the KV cache wrapper.
 
         Args:
@@ -67,10 +67,10 @@ class AttentionOpWithKVCache(nn.Module):
         super().__init__()
         self.attn_op = attn_op
         self.reset_kv_cache(max_cache_size=max_cache_size)
-        self.pg: Optional[Any] = None
-        self.stream: Optional[Any] = None
+        self.pg: Any | None = None
+        self.stream: Any | None = None
 
-    def reset_kv_cache(self, max_cache_size: Optional[int] = None) -> None:
+    def reset_kv_cache(self, max_cache_size: int | None = None) -> None:
         """Reset/initialize the KV caches.
 
         Args:
@@ -156,7 +156,7 @@ class VideoSeqPos:
     def size(self) -> int:
         return int(self.pos_h.numel())
 
-    def frame(self, t_idx: int) -> "VideoSeqPos":
+    def frame(self, t_idx: int) -> VideoSeqPos:
         """Return a `VideoSeqPos` view for a single frame at absolute index `t_idx`.
 
         This is useful for streaming / KV-cache inference where the model is run on

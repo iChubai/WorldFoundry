@@ -7,12 +7,15 @@ Stores and replays memory hidden states across clips.  Used with
 import math
 import types
 from types import SimpleNamespace
+
 import torch
 import torch.distributed as dist
+
 from .attention import attention
-from .model import sinusoidal_embedding_1d
+from .causal import CausalWanSelfAttention as _RelropeSelfAttention
+from .causal import causal_rope_apply
 from .infinity import CausalWanModel as CausalWanModelInfinityBase
-from .causal import CausalWanSelfAttention as _RelropeSelfAttention, causal_rope_apply
+from .model import sinusoidal_embedding_1d
 
 _FIRST_LONG_LOGGED = {"flag": False}
 _FIRST_BULK_LOGGED = {"flag": False}
@@ -392,7 +395,7 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]

@@ -1,7 +1,8 @@
+from typing import List, Union
+
 import torch
 from PIL import Image
 from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
-from typing import List, Union
 
 MOLMO_MODELS = {
     "molmo-72b-0924": {
@@ -52,7 +53,7 @@ class MOLMOVisionModel:
             cache_dir=self.cache_dir,
         )
 
-    def load_images(self, paths: List[str]) -> List[Image.Image]:
+    def load_images(self, paths: list[str]) -> list[Image.Image]:
         processed_data = []
         for path in paths:
             if path.startswith(("http://", "https://")):
@@ -68,8 +69,8 @@ class MOLMOVisionModel:
 
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
         answer_template: str = "Yes",
     ) -> torch.Tensor:
@@ -80,7 +81,7 @@ class MOLMOVisionModel:
         answers = [answer_template.format(text) for text in texts]
 
         lm_probs = []
-        for image, question, answer in zip(images, questions, answers):
+        for image, question, answer in zip(images, questions, answers, strict=False):
             inputs = self.processor.process(images=[image], text=question)
             inputs = {k: v.to(self.model.device).unsqueeze(0) for k, v in inputs.items()}
 
@@ -108,7 +109,7 @@ class MOLMOVisionModel:
 
         return torch.tensor(lm_probs)
 
-    def generate(self, paths: List[str], texts: List[str], max_new_tokens: int = 256) -> List[str]:
+    def generate(self, paths: list[str], texts: list[str], max_new_tokens: int = 256) -> list[str]:
         """
         Generate text responses for the given images and prompts.
 
@@ -125,7 +126,7 @@ class MOLMOVisionModel:
         images = self.load_images(paths)
         generated_texts = []
 
-        for image, prompt in zip(images, texts):
+        for image, prompt in zip(images, texts, strict=False):
             inputs = self.processor.process(images=[image], text=prompt)
             inputs = {k: v.to(self.model.device).unsqueeze(0) for k, v in inputs.items()}
 

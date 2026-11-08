@@ -5,12 +5,12 @@ import torch.nn as nn
 from torch import Tensor
 
 from worldfoundry.base_models.diffusion_model.kandinsky6_types import LatentBundle, TextEmbeds
-from worldfoundry.base_models.diffusion_model.schedulers.kandinsky6.flow_matching import flow_match_timesteps
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.guidance import apply_cfg
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.prepare_ropes import (
     compute_rope1d,
     compute_visual_rope,
 )
+from worldfoundry.base_models.diffusion_model.schedulers.kandinsky6.flow_matching import flow_match_timesteps
 
 
 def _build_video_input(
@@ -175,7 +175,7 @@ def denoise_loop(
     ref_positions = video_cu_seqlens[1:] - 1 if tail_cond and video_cu_seqlens is not None else None
     batched_video = video is not None and video.ndim == 5
 
-    for t, dt in zip(timesteps[:-1], torch.diff(timesteps)):
+    for t, dt in zip(timesteps[:-1], torch.diff(timesteps), strict=False):
         t_step: Tensor | list[Tensor] = t.unsqueeze(0).expand(bs) * 1000  # (bs,)
 
         model_input_v = (

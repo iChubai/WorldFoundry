@@ -5,23 +5,35 @@ from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
     from .adapter import Adapter, AdapterConfig, AdapterModule
-    from .base import SwiftModel, Swift
+    from .base import Swift, SwiftModel
+
+    # isort: split
     from .lora import LoRA, LoRAConfig
+
+    # isort: split
+    # isort: split
     from .mapping import SWIFT_MAPPING, SwiftTuners
-    from .side import Side, SideConfig, SideModule
+
+    # isort: split
     from .neftune import NEFTune, NEFTuneConfig
-    from .longlora.longlora import LongLoRAModelType, LongLoRAConfig, LongLoRA
-    from .restuning import ResTuning, ResTuningConfig, ResTuningBypassModule
-    from .reft import Reft, ReftConfig
+    from .side import Side, SideConfig, SideModule
+
+    # isort: split
+    from .longlora.longlora import LongLoRA, LongLoRAConfig, LongLoRAModelType
+
+    # isort: split
     from .llamapro import LLaMAPro, LLaMAProConfig
+    from .reft import Reft, ReftConfig
+    from .restuning import ResTuning, ResTuningBypassModule, ResTuningConfig
+
+    # isort: split
     from .peft import (
         AdaLoraConfig,
+        BOFTConfig,
         LoftQConfig,
         LoHaConfig,
         LoKrConfig,
         LoraConfig,
-        VeraConfig,
-        BOFTConfig,
         OFTConfig,
         PeftConfig,
         PeftModel,
@@ -33,10 +45,13 @@ if TYPE_CHECKING:
         PromptEncoderConfig,
         PromptLearningConfig,
         PromptTuningConfig,
+        VeraConfig,
         get_peft_config,
         get_peft_model,
         get_peft_model_state_dict,
     )
+
+    # isort: split
     from .prompt import Prompt, PromptConfig, PromptModule
     from .scetuning.scetuning import SCETuning, SCETuningConfig
     from .utils import SwiftConfig, SwiftOutput, swift_to_peft_format

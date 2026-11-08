@@ -26,12 +26,13 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.temp
     RolloutInferRequest,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_device, get_logger
+
 from .infer_engine import GRPOVllmEngine, InferClient
 from .protocol import InitCommunicatorRequest, RequestConfig, UpdateWeightsRequest
 
 try:
-    from vllm.utils import get_open_port
     from trl.scripts.vllm_serve import chunk_list
+    from vllm.utils import get_open_port
 
 except ImportError:
     pass
@@ -91,7 +92,7 @@ class SwiftRolloutDeploy(SwiftPipeline):
         self.app.post("/close_communicator/")(self.close_communicator)
         self.app.post("/infer/", response_model=None)(self.infer)
 
-    def __init__(self, args: Union[List[str], DeployArguments, None] = None):
+    def __init__(self, args: list[str] | DeployArguments | None = None):
         super().__init__(args)
         safe_set_start_method()
         self.app = FastAPI(lifespan=self.lifespan)
@@ -244,15 +245,15 @@ class SwiftRolloutDeploy(SwiftPipeline):
 
     async def infer(
         self,
-        infer_requests: List[RolloutInferRequest],
-        request_config: Optional[RequestConfig] = None,
+        infer_requests: list[RolloutInferRequest],
+        request_config: RequestConfig | None = None,
         *,
-        use_tqdm: Optional[bool] = None,
+        use_tqdm: bool | None = None,
     ):
         chunked_infer_requests = chunk_list(infer_requests, self.args.data_parallel_size)
 
         # Send the prompts to each worker
-        for i, (connection, requests) in enumerate(zip(self.connections, chunked_infer_requests)):
+        for i, (connection, requests) in enumerate(zip(self.connections, chunked_infer_requests, strict=False)):
             # When the number of prompts is less than data_parallel_size, some workers will receive empty prompts.
             # However, vLLM requires that we always send at least one prompt. So we send a placeholder prompt to comply
             # with vLLM's requirement, and we later ignore the result.
@@ -266,7 +267,9 @@ class SwiftRolloutDeploy(SwiftPipeline):
 
         all_outputs = [connection.recv() for connection in self.connections]
         # Handle empty prompts (see above)
-        all_outputs = [output for output, requests in zip(all_outputs, chunked_infer_requests) if requests]
+        all_outputs = [
+            output for output, requests in zip(all_outputs, chunked_infer_requests, strict=False) if requests
+        ]
         all_outputs = list(chain.from_iterable(all_outputs))  # from list of list to single list
 
         return all_outputs
@@ -276,7 +279,7 @@ class SwiftRolloutDeploy(SwiftPipeline):
         uvicorn.run(self.app, host=args.host, port=args.port, log_level=args.log_level)
 
 
-def rollout_main(args: Union[List[str], DeployArguments, None] = None) -> None:
+def rollout_main(args: list[str] | DeployArguments | None = None) -> None:
     SwiftRolloutDeploy(args).main()
 
 

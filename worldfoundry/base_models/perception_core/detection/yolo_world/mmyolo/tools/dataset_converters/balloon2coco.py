@@ -22,7 +22,7 @@ def convert_balloon_to_coco(ann_file, out_file, image_prefix):
             obj = obj["shape_attributes"]
             px = obj["all_points_x"]
             py = obj["all_points_y"]
-            poly = [(x + 0.5, y + 0.5) for x, y in zip(px, py)]
+            poly = [(x + 0.5, y + 0.5) for x, y in zip(px, py, strict=False)]
             poly = [p for x in poly for p in x]
 
             x_min, y_min, x_max, y_max = (min(px), min(py), max(px), max(py))

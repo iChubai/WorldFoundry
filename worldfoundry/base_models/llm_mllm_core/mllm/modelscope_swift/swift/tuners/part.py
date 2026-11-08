@@ -9,6 +9,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -23,7 +24,7 @@ class PartConfig(SwiftConfig):
         target_modules(`Optional[str]`): The target modules to be trained in regex format
     """
 
-    target_modules: Optional[str] = None
+    target_modules: str | None = None
 
     def __post_init__(self):
         from .mapping import SwiftTuners
@@ -86,7 +87,7 @@ class Part(SwiftAdapter):
         def mark_trainable_callback(model: nn.Module):
             pass
 
-        def load_state_dict_callback(model: nn.Module, adapter_name: str, state_dict: Dict[str, torch.Tensor]):
+        def load_state_dict_callback(model: nn.Module, adapter_name: str, state_dict: dict[str, torch.Tensor]):
             new_state_dict = {}
             for name, module in model.named_modules(remove_duplicate=False):
                 module: nn.Module

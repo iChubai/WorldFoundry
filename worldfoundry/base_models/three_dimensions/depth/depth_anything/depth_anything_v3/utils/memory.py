@@ -8,13 +8,12 @@ the Gradio UI to keep memory-management behavior consistent.
 from __future__ import annotations
 
 import gc
-
 from typing import Any, Dict, Optional
 
 import torch
 
 
-def get_gpu_memory_info() -> Optional[Dict[str, Any]]:
+def get_gpu_memory_info() -> dict[str, Any] | None:
     """Return a snapshot of current GPU memory usage or None if CUDA not available.
 
     Keys in returned dict: total_gb, allocated_gb, reserved_gb, free_gb, utilization

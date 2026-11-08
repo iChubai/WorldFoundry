@@ -1,7 +1,9 @@
 """Kandinsky-6 compile configuration values."""
 
 from typing import Any, Literal
+
 from pydantic import Field
+
 from .base import ConfigModel
 
 CompileStrategyName = Literal["none", "torch"]

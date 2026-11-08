@@ -8,7 +8,6 @@ from mmdet.utils import setup_cache_size_limit_of_dynamo
 from mmengine.config import Config, ConfigDict, DictAction
 from mmengine.evaluator import DumpResults
 from mmengine.runner import Runner
-
 from mmyolo.registry import RUNNERS
 from mmyolo.utils import is_metainfo_lower
 

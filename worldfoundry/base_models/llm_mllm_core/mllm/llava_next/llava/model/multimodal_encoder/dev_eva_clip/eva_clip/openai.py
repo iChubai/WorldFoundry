@@ -10,22 +10,22 @@ from typing import List, Optional, Union
 import torch
 
 from .model import build_model_from_openai_state_dict, convert_weights_to_lp, get_cast_dtype
-from .pretrained import get_pretrained_url, list_pretrained_models_by_tag, download_pretrained_from_url
+from .pretrained import download_pretrained_from_url, get_pretrained_url, list_pretrained_models_by_tag
 
 __all__ = ["list_openai_models", "load_openai_model"]
 
 
-def list_openai_models() -> List[str]:
+def list_openai_models() -> list[str]:
     """Returns the names of available CLIP models"""
     return list_pretrained_models_by_tag("openai")
 
 
 def load_openai_model(
     name: str,
-    precision: Optional[str] = None,
-    device: Optional[Union[str, torch.device]] = None,
+    precision: str | None = None,
+    device: str | torch.device | None = None,
     jit: bool = True,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
 ):
     """Load a CLIP model
 

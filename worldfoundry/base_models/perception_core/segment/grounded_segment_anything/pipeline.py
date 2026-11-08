@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -33,7 +34,7 @@ class GroundedSegmentAnything:
         grounding_checkpoint_path: str,
         sam_predictor: Any,
         device: str = "cuda",
-    ) -> "GroundedSegmentAnything":
+    ) -> GroundedSegmentAnything:
         """From paths.
 
         Returns:

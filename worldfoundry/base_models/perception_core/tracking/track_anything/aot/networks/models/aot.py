@@ -161,7 +161,7 @@ class AOT(nn.Module):
             pos_emb,
             size_2d,
         )
-        lstt_curr_memories, lstt_long_memories, lstt_short_memories = zip(*lstt_memories)
+        lstt_curr_memories, lstt_long_memories, lstt_short_memories = zip(*lstt_memories, strict=False)
         return lstt_embs, lstt_curr_memories, lstt_long_memories, lstt_short_memories
 
     def _init_weight(self):

@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
+from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Sequence, Tuple, Union
+from typing import List, Tuple, Union
 
 import cv2
 import mmcv
@@ -20,6 +21,7 @@ from mmdet.structures.mask import PolygonMasks, polygon_to_bitmap
 from numpy import random
 
 from mmyolo.registry import TRANSFORMS
+
 from .keypoint_structure import Keypoints
 
 # TODO: Waiting for MMCV support
@@ -53,12 +55,12 @@ class YOLOv5KeepRatioResize(MMDET_Resize):
         scale (Union[int, Tuple[int, int]]): Images scales for resizing.
     """
 
-    def __init__(self, scale: Union[int, Tuple[int, int]], keep_ratio: bool = True, **kwargs):
+    def __init__(self, scale: int | tuple[int, int], keep_ratio: bool = True, **kwargs):
         assert keep_ratio is True
         super().__init__(scale=scale, keep_ratio=True, **kwargs)
 
     @staticmethod
-    def _get_rescale_ratio(old_size: Tuple[int, int], scale: Union[float, Tuple[int]]) -> float:
+    def _get_rescale_ratio(old_size: tuple[int, int], scale: float | tuple[int]) -> float:
         """Calculate the ratio for rescaling.
 
         Args:
@@ -90,7 +92,7 @@ class YOLOv5KeepRatioResize(MMDET_Resize):
         """Resize images with ``results['scale']``."""
         assert self.keep_ratio is True
 
-        if results.get("img", None) is not None:
+        if results.get("img") is not None:
             image = results["img"]
             original_h, original_w = image.shape[:2]
             ratio = self._get_rescale_ratio((original_h, original_w), self.scale)
@@ -153,7 +155,7 @@ class LetterResize(MMDET_Resize):
 
     def __init__(
         self,
-        scale: Union[int, Tuple[int, int]],
+        scale: int | tuple[int, int],
         pad_val: dict = dict(img=0, mask=0, seg=255),
         use_mini_pad: bool = False,
         stretch_only: bool = False,
@@ -175,7 +177,7 @@ class LetterResize(MMDET_Resize):
 
     def _resize_img(self, results: dict):
         """Resize images with ``results['scale']``."""
-        image = results.get("img", None)
+        image = results.get("img")
         if image is None:
             return
 
@@ -257,7 +259,7 @@ class LetterResize(MMDET_Resize):
 
     def _resize_masks(self, results: dict):
         """Resize masks with ``results['scale']``"""
-        if results.get("gt_masks", None) is None:
+        if results.get("gt_masks") is None:
             return
 
         gt_masks = results["gt_masks"]
@@ -281,7 +283,7 @@ class LetterResize(MMDET_Resize):
 
     def _resize_bboxes(self, results: dict):
         """Resize bounding boxes with ``results['scale_factor']``."""
-        if results.get("gt_bboxes", None) is None:
+        if results.get("gt_bboxes") is None:
             return
         results["gt_bboxes"].rescale_(results["scale_factor"])
 
@@ -327,9 +329,9 @@ class YOLOv5HSVRandomAug(BaseTransform):
 
     def __init__(
         self,
-        hue_delta: Union[int, float] = 0.015,
-        saturation_delta: Union[int, float] = 0.7,
-        value_delta: Union[int, float] = 0.4,
+        hue_delta: int | float = 0.015,
+        saturation_delta: int | float = 0.7,
+        value_delta: int | float = 0.4,
     ):
         self.hue_delta = hue_delta
         self.saturation_delta = saturation_delta
@@ -505,7 +507,7 @@ class LoadAnnotations(MMDET_LoadAnnotations):
         gt_masks = PolygonMasks([mask for mask in gt_masks], h, w)
         results["gt_masks"] = gt_masks
 
-    def merge_multi_segment(self, gt_masks: List[np.ndarray]) -> List[np.ndarray]:
+    def merge_multi_segment(self, gt_masks: list[np.ndarray]) -> list[np.ndarray]:
         """Merge multi segments to one list.
 
         Find the coordinates with min distance between each segment,
@@ -568,7 +570,7 @@ class LoadAnnotations(MMDET_LoadAnnotations):
             )
         ]
 
-    def min_index(self, arr1: np.ndarray, arr2: np.ndarray) -> Tuple[int, int]:
+    def min_index(self, arr1: np.ndarray, arr2: np.ndarray) -> tuple[int, int]:
         """Find a pair of indexes with the shortest distance.
 
         Args:
@@ -687,10 +689,10 @@ class YOLOv5RandomAffine(BaseTransform):
         self,
         max_rotate_degree: float = 10.0,
         max_translate_ratio: float = 0.1,
-        scaling_ratio_range: Tuple[float, float] = (0.5, 1.5),
+        scaling_ratio_range: tuple[float, float] = (0.5, 1.5),
         max_shear_degree: float = 2.0,
-        border: Tuple[int, int] = (0, 0),
-        border_val: Tuple[int, int, int] = (114, 114, 114),
+        border: tuple[int, int] = (0, 0),
+        border_val: tuple[int, int, int] = (114, 114, 114),
         bbox_clip_border: bool = True,
         min_bbox_size: int = 2,
         min_area_ratio: float = 0.1,
@@ -947,7 +949,7 @@ class YOLOv5RandomAffine(BaseTransform):
         return wh_valid_idx & area_valid_idx & aspect_ratio_valid_idx
 
     @cache_randomness
-    def _get_random_homography_matrix(self, height: int, width: int) -> Tuple[np.ndarray, float]:
+    def _get_random_homography_matrix(self, height: int, width: int) -> tuple[np.ndarray, float]:
         """Get random homography matrix.
 
         Args:
@@ -1214,9 +1216,9 @@ class PPYOLOERandomCrop(BaseTransform):
 
     def __init__(
         self,
-        aspect_ratio: List[float] = [0.5, 2.0],
-        thresholds: List[float] = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9],
-        scaling: List[float] = [0.3, 1.0],
+        aspect_ratio: list[float] = [0.5, 2.0],
+        thresholds: list[float] = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9],
+        scaling: list[float] = [0.3, 1.0],
         num_attempts: int = 50,
         allow_no_crop: bool = True,
         cover_all_box: bool = False,
@@ -1228,9 +1230,7 @@ class PPYOLOERandomCrop(BaseTransform):
         self.allow_no_crop = allow_no_crop
         self.cover_all_box = cover_all_box
 
-    def _crop_data(
-        self, results: dict, crop_box: Tuple[int, int, int, int], valid_inds: np.ndarray
-    ) -> Union[dict, None]:
+    def _crop_data(self, results: dict, crop_box: tuple[int, int, int, int], valid_inds: np.ndarray) -> dict | None:
         """Function to randomly crop images, bounding boxes, masks, semantic
         segmentation maps.
 
@@ -1255,32 +1255,32 @@ class PPYOLOERandomCrop(BaseTransform):
         results["img_shape"] = img.shape
 
         # crop bboxes accordingly and clip to the image boundary
-        if results.get("gt_bboxes", None) is not None:
+        if results.get("gt_bboxes") is not None:
             bboxes = results["gt_bboxes"]
             bboxes.translate_([-crop_x1, -crop_y1])
             bboxes.clip_(img_shape[:2])
 
             results["gt_bboxes"] = bboxes[valid_inds]
 
-            if results.get("gt_ignore_flags", None) is not None:
+            if results.get("gt_ignore_flags") is not None:
                 results["gt_ignore_flags"] = results["gt_ignore_flags"][valid_inds]
 
-            if results.get("gt_bboxes_labels", None) is not None:
+            if results.get("gt_bboxes_labels") is not None:
                 results["gt_bboxes_labels"] = results["gt_bboxes_labels"][valid_inds]
 
-            if results.get("gt_masks", None) is not None:
+            if results.get("gt_masks") is not None:
                 results["gt_masks"] = results["gt_masks"][valid_inds.nonzero()[0]].crop(
                     np.asarray([crop_x1, crop_y1, crop_x2, crop_y2])
                 )
 
         # crop semantic seg
-        if results.get("gt_seg_map", None) is not None:
+        if results.get("gt_seg_map") is not None:
             results["gt_seg_map"] = results["gt_seg_map"][crop_y1:crop_y2, crop_x1:crop_x2]
 
         return results
 
     @autocast_box_type()
-    def transform(self, results: dict) -> Union[dict, None]:
+    def transform(self, results: dict) -> dict | None:
         """The random crop transform function.
 
         Args:
@@ -1289,7 +1289,7 @@ class PPYOLOERandomCrop(BaseTransform):
         Returns:
             dict: The result dict.
         """
-        if results.get("gt_bboxes", None) is None or len(results["gt_bboxes"]) == 0:
+        if results.get("gt_bboxes") is None or len(results["gt_bboxes"]) == 0:
             return results
 
         orig_img_h, orig_img_w = results["img"].shape[:2]
@@ -1345,7 +1345,7 @@ class PPYOLOERandomCrop(BaseTransform):
         return results
 
     @cache_randomness
-    def _rand_offset(self, margin: Tuple[int, int]) -> Tuple[int, int]:
+    def _rand_offset(self, margin: tuple[int, int]) -> tuple[int, int]:
         """Randomly generate crop offset.
 
         Args:
@@ -1362,7 +1362,7 @@ class PPYOLOERandomCrop(BaseTransform):
         return (offset_h, offset_w)
 
     @cache_randomness
-    def _get_crop_size(self, image_size: Tuple[int, int]) -> Tuple[int, int]:
+    def _get_crop_size(self, image_size: tuple[int, int]) -> tuple[int, int]:
         """Randomly generates the crop size based on `image_size`.
 
         Args:
@@ -1476,7 +1476,7 @@ class YOLOv5CopyPaste(BaseTransform):
         self.prob = prob
 
     @autocast_box_type()
-    def transform(self, results: dict) -> Union[dict, None]:
+    def transform(self, results: dict) -> dict | None:
         """The YOLOv5 and YOLOv8 Copy-Paste transform function.
 
         Args:
@@ -1492,7 +1492,7 @@ class YOLOv5CopyPaste(BaseTransform):
             gt_masks
         )
         gt_bboxes = results["gt_bboxes"]
-        gt_bboxes_labels = results.get("gt_bboxes_labels", None)
+        gt_bboxes_labels = results.get("gt_bboxes_labels")
         img = results["img"]
         img_h, img_w = img.shape[:2]
 
@@ -1600,7 +1600,7 @@ class RemoveDataElement(BaseTransform):
         keys (Union[str, Sequence[str]]): Keys need to be removed.
     """
 
-    def __init__(self, keys: Union[str, Sequence[str]]):
+    def __init__(self, keys: str | Sequence[str]):
         self.keys = [keys] if isinstance(keys, str) else keys
 
     def transform(self, results: dict) -> dict:
@@ -1684,7 +1684,7 @@ class Polygon2Mask(BaseTransform):
         self.mask_overlap = mask_overlap
         self.coco_style = coco_style
 
-    def polygon2mask(self, img_shape: Tuple[int, int], polygons: np.ndarray, color: int = 1) -> np.ndarray:
+    def polygon2mask(self, img_shape: tuple[int, int], polygons: np.ndarray, color: int = 1) -> np.ndarray:
         """
         Args:
             img_shape (tuple): The image size.
@@ -1716,7 +1716,7 @@ class Polygon2Mask(BaseTransform):
             mask = mmcv.imresize(mask, (nw, nh))
         return mask
 
-    def polygons2masks(self, img_shape: Tuple[int, int], polygons: PolygonMasks, color: int = 1) -> np.ndarray:
+    def polygons2masks(self, img_shape: tuple[int, int], polygons: PolygonMasks, color: int = 1) -> np.ndarray:
         """Return a list of bitmap masks.
 
         Args:
@@ -1738,8 +1738,8 @@ class Polygon2Mask(BaseTransform):
             return np.array(masks)
 
     def polygons2masks_overlap(
-        self, img_shape: Tuple[int, int], polygons: PolygonMasks
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        self, img_shape: tuple[int, int], polygons: PolygonMasks
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Return a overlap mask and the sorted idx of area.
 
         Args:
@@ -1804,7 +1804,7 @@ class FilterAnnotations(FilterDetAnnotations):
         self.by_keypoints = by_keypoints
 
     @autocast_box_type()
-    def transform(self, results: dict) -> Union[dict, None]:
+    def transform(self, results: dict) -> dict | None:
         """Transform function to filter annotations.
 
         Args:
@@ -1911,19 +1911,19 @@ class RandomFlip(MMDET_RandomFlip):
         img_shape = results["img"].shape[:2]
 
         # flip bboxes
-        if results.get("gt_bboxes", None) is not None:
+        if results.get("gt_bboxes") is not None:
             results["gt_bboxes"].flip_(img_shape, results["flip_direction"])
 
         # flip keypoints
-        if results.get("gt_keypoints", None) is not None:
+        if results.get("gt_keypoints") is not None:
             results["gt_keypoints"].flip_(img_shape, results["flip_direction"])
 
         # flip masks
-        if results.get("gt_masks", None) is not None:
+        if results.get("gt_masks") is not None:
             results["gt_masks"] = results["gt_masks"].flip(results["flip_direction"])
 
         # flip segs
-        if results.get("gt_seg_map", None) is not None:
+        if results.get("gt_seg_map") is not None:
             results["gt_seg_map"] = mmcv.imflip(results["gt_seg_map"], direction=results["flip_direction"])
 
         # record homography matrix for flip
@@ -1934,7 +1934,7 @@ class RandomFlip(MMDET_RandomFlip):
 class Resize(MMDET_Resize):
     def _resize_keypoints(self, results: dict) -> None:
         """Resize bounding boxes with ``results['scale_factor']``."""
-        if results.get("gt_keypoints", None) is not None:
+        if results.get("gt_keypoints") is not None:
             results["gt_keypoints"].rescale_(results["scale_factor"])
             if self.clip_object_border:
                 results["gt_keypoints"].clip_(results["img_shape"])

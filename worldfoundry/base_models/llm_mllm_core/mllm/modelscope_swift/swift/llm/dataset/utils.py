@@ -6,9 +6,10 @@ import os
 import pickle
 import threading
 import time
+from collections.abc import Callable
 from copy import copy
 from queue import Queue
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from datasets import Dataset as HfDataset
@@ -21,6 +22,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     is_master,
     safe_ddp_context,
 )
+
 from ..template import MaxLengthError
 from .preprocessor import RowPreprocessor
 
@@ -29,9 +31,9 @@ logger = get_logger()
 
 def sample_dataset(
     dataset: HfDataset,
-    dataset_sample: Optional[int],
+    dataset_sample: int | None,
     shuffle: bool = True,
-    random_state: Optional[np.random.RandomState] = None,
+    random_state: np.random.RandomState | None = None,
 ) -> HfDataset:
     """Sample dataset by a dataset_sample number
     Args:
@@ -71,11 +73,11 @@ class LazyLLMDataset(Dataset):
     def __init__(
         self,
         dataset: HfDataset,
-        encode_func: Callable[[Dict[str, Any]], Dict[str, Any]],
+        encode_func: Callable[[dict[str, Any]], dict[str, Any]],
         *,
         n_try_fetch: int = 10,
         strict: bool = False,
-        random_state: Union[np.random.RandomState, int, None] = None,
+        random_state: np.random.RandomState | int | None = None,
         traceback_limit: int = 10,
     ) -> None:
         self.dataset = dataset
@@ -95,7 +97,7 @@ class LazyLLMDataset(Dataset):
         self._idx = 0
         self._idx_list = self.random_state.permutation(len(self.dataset)).tolist()
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         for i in range(self.n_try_fetch):
             n_try = i
             if i == 0:
@@ -159,7 +161,7 @@ class BasePackingDataset:
             res.append(packed)
         return res, ret_sequences
 
-    def _encode_data(self, data) -> Dict[str, Any]:
+    def _encode_data(self, data) -> dict[str, Any]:
         res = None
         try:
             res = self.template.encode(data)
@@ -210,7 +212,7 @@ class IndexedDatasetBuilder:
                     os.remove(self.bin_path)
                 self.bin_file = open(self.bin_path, "ab")
 
-    def add_items(self, items: List[Any]) -> None:
+    def add_items(self, items: list[Any]) -> None:
         if self._thread is None:
             self._thread = threading.Thread(target=self._write_worker, daemon=True)
             self._thread.start()
@@ -330,7 +332,7 @@ class PackingDataset(BasePackingDataset, Dataset):
                 worker.terminate()
         self.packed_dataset = IndexedDataset(self.dataset_name)
 
-    def fetch_packing_data(self, res: Optional[list] = None):
+    def fetch_packing_data(self, res: list | None = None):
         res = res or []
         for _ in range(self.packing_interval):
             data = self._queue.get()
@@ -456,7 +458,7 @@ class EncodePreprocessor(RowPreprocessor):
         super().__init__()
         self.template = template
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         return self.template.encode(row)
 
 

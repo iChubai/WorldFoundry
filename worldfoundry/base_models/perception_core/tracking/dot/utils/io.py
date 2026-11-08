@@ -1,11 +1,12 @@
-import os
 import argparse
-from PIL import Image
-from glob import glob
-import numpy as np
 import json
+import os
+from glob import glob
+
+import numpy as np
 import torch
 import torchvision
+from PIL import Image
 from torch.nn import functional as F
 
 
@@ -121,7 +122,7 @@ def write_tracks(tracks, path):
 
 
 def read_config(path):
-    with open(path, "r") as f:
+    with open(path) as f:
         config = json.load(f)
     args = argparse.Namespace(**config)
     return args

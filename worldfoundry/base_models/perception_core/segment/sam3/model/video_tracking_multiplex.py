@@ -14,13 +14,14 @@ import logging
 from copy import deepcopy
 
 try:
-    from typing import Iterable, Literal, NotRequired, Optional, Required, TypedDict
+    from collections.abc import Iterable
+    from typing import Literal, NotRequired, Optional, Required, TypedDict
 except ImportError:
+    from collections.abc import Iterable
+    from typing import Literal, Optional
+
     from typing_extensions import (
-        Iterable,
-        Literal,
         NotRequired,  # not available in Python 3.10
-        Optional,
         Required,  # not available in Python 3.10
         TypedDict,
     )
@@ -30,10 +31,15 @@ import torch
 import torch.distributed
 import torch.nn as nn
 import torch.nn.functional as F
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, NestedTensor
+
+# isort: split
+from timm.models.layers import trunc_normal_
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.memory import SimpleMaskEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_mask_decoder import MultiplexMaskDecoder
-from worldfoundry.core.nn.blocks.layers import PositionEmbeddingRandom, SamHeadMLP
 from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (
     MultiplexController,
     MultiplexState,
@@ -47,8 +53,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_ut
 from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import MaskDecoder
 from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import PromptEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import TwoWayTransformer
-from timm.models.layers import trunc_normal_
-
+from worldfoundry.core.nn.blocks.layers import PositionEmbeddingRandom, SamHeadMLP
 
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
@@ -237,7 +242,7 @@ class VideoTrackingMultiplex(nn.Module):
         # does not apply to spatial memories (only to obj ptrs), unless unified_tpos_enc=True
         sincos_tpos_enc: bool = True,
         # extra arguments used to construct the SAM mask decoder; if not None, it should be a dict of kwargs to be passed into `MaskDecoder` class.
-        sam_mask_decoder_extra_args: Optional[dict] = None,
+        sam_mask_decoder_extra_args: dict | None = None,
         # whether to compile all the model compoents
         compile_all_components: bool = False,
         # save and use image features in the memory
@@ -258,7 +263,7 @@ class VideoTrackingMultiplex(nn.Module):
         # add a per-object embedding to the spatial memory features if that object is a conditioning input
         add_object_conditional_embeddings: bool = False,
         # if None, follow add_object_conditional_embeddings
-        add_object_unconditional_embeddings: Optional[bool] = None,
+        add_object_unconditional_embeddings: bool | None = None,
         # for each object, add an additional channel in the mask encoder to indicate conditional/unconditional objects
         condition_as_mask_input: bool = False,
         condition_as_mask_input_fg: float = 1.0,
@@ -714,14 +719,14 @@ class VideoTrackingMultiplex(nn.Module):
         self,
         backbone_features: torch.Tensor,
         *,
-        point_inputs: Optional[dict[str, torch.Tensor]] = None,
-        mask_inputs: Optional[torch.Tensor] = None,
-        interactive_high_res_features: Optional[list[torch.Tensor]] = None,
-        propagation_high_res_features: Optional[list[torch.Tensor]] = None,
+        point_inputs: dict[str, torch.Tensor] | None = None,
+        mask_inputs: torch.Tensor | None = None,
+        interactive_high_res_features: list[torch.Tensor] | None = None,
+        propagation_high_res_features: list[torch.Tensor] | None = None,
         multimask_output: bool = False,
         gt_masks=None,
         multiplex_state: MultiplexState,
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
     ) -> SAMOutput:
         """
         Forward SAM prompt encoders and mask heads.
@@ -970,7 +975,7 @@ class VideoTrackingMultiplex(nn.Module):
         high_res_features: list[torch.Tensor],
         mask_inputs: torch.Tensor,
         multiplex_state: MultiplexState,
-        objects_in_mask: Optional[list[int]] = None,
+        objects_in_mask: list[int] | None = None,
     ) -> SAMOutput:
         """
         Directly turn binary `mask_inputs` into a output mask logits without using SAM.
@@ -1508,17 +1513,17 @@ class VideoTrackingMultiplex(nn.Module):
 
                 # If we have at least one object pointer, add them to the across attention
                 if len(pos_and_outs_for_ptr) > 0:
-                    pos_list, out_list, is_selected_cond_frame_list = zip(*pos_and_outs_for_ptr)
+                    pos_list, out_list, is_selected_cond_frame_list = zip(*pos_and_outs_for_ptr, strict=False)
                     # Filter out outputs that don't have obj_ptr (e.g., when object has empty mask)
                     filtered_data = [
                         (pos, out, is_cond)
-                        for pos, out, is_cond in zip(pos_list, out_list, is_selected_cond_frame_list)
+                        for pos, out, is_cond in zip(pos_list, out_list, is_selected_cond_frame_list, strict=False)
                         if "obj_ptr" in out
                     ]
 
                     # Only proceed if we have at least one valid obj_ptr
                     if len(filtered_data) > 0:
-                        pos_list, out_list, is_selected_cond_frame_list = zip(*filtered_data)
+                        pos_list, out_list, is_selected_cond_frame_list = zip(*filtered_data, strict=False)
                         # each out["obj_ptr"] is a tensor of shape (num_buckets, seq_len, C)
                         # cat object pointers along dim=0 into [ptr_seq_len, B, C] shape
                         obj_ptrs = torch.cat([out["obj_ptr"] for out in out_list], dim=1).transpose(0, 1)
@@ -1611,7 +1616,7 @@ class VideoTrackingMultiplex(nn.Module):
         object_score_logits,
         is_mask_from_pts,
         *,
-        conditioning_objects: Optional[Iterable[int]] = None,
+        conditioning_objects: Iterable[int] | None = None,
         multiplex_state: MultiplexState,
     ):
         """Encode the current image and its prediction into a memory feature."""
@@ -1744,7 +1749,7 @@ class VideoTrackingMultiplex(nn.Module):
         backbone_out,
         input,
         return_dict=False,
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
     ):
         """Forward video tracking on each frame (and sample correction clicks)."""
         img_feats_already_computed = "interactive" in backbone_out or "sam2_backbone_out" in backbone_out
@@ -1863,7 +1868,7 @@ class VideoTrackingMultiplex(nn.Module):
         run_mem_encoder=True,
         prev_sam_mask_logits=None,
         multiplex_state: MultiplexState,
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
         need_aux_output: bool = False,
     ) -> tuple[StageOutput, dict]:
         """
@@ -1935,7 +1940,7 @@ class VideoTrackingMultiplex(nn.Module):
             if len(interactive_vision_feats) > 1:
                 interactive_high_res_features = [
                     x.permute(1, 2, 0).view(x.size(1), x.size(2), *s)
-                    for x, s in zip(interactive_vision_feats[:-1], interactive_feat_sizes[:-1])
+                    for x, s in zip(interactive_vision_feats[:-1], interactive_feat_sizes[:-1], strict=False)
                 ]
         else:
             # cannot do point interaction without interactive features
@@ -1954,7 +1959,7 @@ class VideoTrackingMultiplex(nn.Module):
             if len(propagation_vision_feats) > 1:
                 propagation_high_res_features = [
                     x.permute(1, 2, 0).view(x.size(1), x.size(2), *s)
-                    for x, s in zip(propagation_vision_feats[:-1], propagation_feat_sizes[:-1])
+                    for x, s in zip(propagation_vision_feats[:-1], propagation_feat_sizes[:-1], strict=False)
                 ]
         else:
             # we can get away without propagation features if we are interacting and not encoding new memory
@@ -2364,7 +2369,7 @@ class VideoTrackingMultiplex(nn.Module):
         # Optionally, trim the output of past non-conditioning frame (r * num_maskmem frames
         # before the current frame) during evaluation. This is intended to save GPU or CPU
         # memory for semi-supervised VOS eval, where only the first frame receives prompts.
-        def _trim_past_out(past_out: StageOutput, current_out: StageOutput) -> Optional[StageOutput]:
+        def _trim_past_out(past_out: StageOutput, current_out: StageOutput) -> StageOutput | None:
             """Helper function to trim past out.
 
             Args:
@@ -2435,7 +2440,7 @@ class VideoTrackingMultiplex(nn.Module):
         multiplex_state: MultiplexState,
         # The list of object idx that point_inputs correspond to; only this set of objects will
         # be interacted with in the correction stage
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
     ) -> StageOutput:
         """Track step.
 
@@ -2966,11 +2971,11 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         *,
         interactive_pix_feat: torch.Tensor,
         interactive_high_res_features: list[torch.Tensor],
-        propagation_vision_feats: Optional[list[torch.Tensor]],  # needed when add_mask_to_memory=True
-        propagation_feat_sizes: Optional[list[tuple[int, int]]],  # needed when add_mask_to_memory=True
+        propagation_vision_feats: list[torch.Tensor] | None,  # needed when add_mask_to_memory=True
+        propagation_feat_sizes: list[tuple[int, int]] | None,  # needed when add_mask_to_memory=True
         new_masks: torch.Tensor,
         obj_idxs_in_mask: list[int],  # len(obj_idxs_in_mask) == new_masks.shape[0]; object idx internal to this state
-        obj_ids_in_mask: Optional[list[int]],  # len(obj_ids_in_mask) == new_masks.shape[0]; global object ids
+        obj_ids_in_mask: list[int] | None,  # len(obj_ids_in_mask) == new_masks.shape[0]; global object ids
         prev_output: StageOutput,  # this state will be modified in-place
         multiplex_state: MultiplexState,
         add_mask_to_memory: bool = True,
@@ -3104,11 +3109,11 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         *,
         interactive_pix_feat: torch.Tensor,
         interactive_high_res_features: list[torch.Tensor],
-        propagation_vision_feats: Optional[list[torch.Tensor]],  # needed when add_mask_to_memory=True
-        propagation_feat_sizes: Optional[list[tuple[int, int]]],  # needed when add_mask_to_memory=True
+        propagation_vision_feats: list[torch.Tensor] | None,  # needed when add_mask_to_memory=True
+        propagation_feat_sizes: list[tuple[int, int]] | None,  # needed when add_mask_to_memory=True
         new_masks: torch.Tensor,
         obj_idxs_in_mask: list[int],  # len(obj_idxs_in_mask) == new_masks.shape[0]; object idx internal to this state
-        obj_ids_in_mask: Optional[list[int]],  # len(obj_ids_in_mask) == new_masks.shape[0]; global object ids
+        obj_ids_in_mask: list[int] | None,  # len(obj_ids_in_mask) == new_masks.shape[0]; global object ids
         prev_output: StageOutput,  # this state will be modified in-place
         multiplex_state: MultiplexState,
         add_mask_to_memory: bool = True,
@@ -3237,11 +3242,11 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         multiplex_state: MultiplexState,
         # The list of object IDs that point_inputs correspond to; only this set of objects will
         # be interacted with in the correction stage
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
         # The following parameters are specific to the dynamic multiplexing model
-        new_object_masks: Optional[torch.Tensor] = None,
-        new_object_idxs: Optional[list[int]] = None,
-        new_object_ids: Optional[list[int]] = None,
+        new_object_masks: torch.Tensor | None = None,
+        new_object_idxs: list[int] | None = None,
+        new_object_ids: list[int] | None = None,
         are_new_masks_from_pts: bool = False,
     ) -> StageOutput:
         """Track step.
@@ -3303,7 +3308,7 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         backbone_out,
         input,
         return_dict=False,
-        objects_to_interact: Optional[list[int]] = None,
+        objects_to_interact: list[int] | None = None,
     ):
         """Forward video tracking on each frame (and sample correction clicks)."""
         img_feats_already_computed = "interactive" in backbone_out or "sam2_backbone_out" in backbone_out

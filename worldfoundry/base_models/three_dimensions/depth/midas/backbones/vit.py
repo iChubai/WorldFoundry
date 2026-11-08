@@ -1,19 +1,20 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> vit.py functionality."""
 
+import math
+import types
+
+import timm
 import torch
 import torch.nn as nn
-import timm
-import types
-import math
 import torch.nn.functional as F
 
 from .utils import (
+    Transpose,
     activations,
     forward_adapted_unflatten,
     get_activation,
     get_readout_oper,
     make_backbone_default,
-    Transpose,
 )
 
 

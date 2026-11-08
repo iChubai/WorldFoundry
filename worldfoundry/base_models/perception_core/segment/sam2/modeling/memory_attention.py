@@ -9,10 +9,9 @@
 from typing import Optional
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.transformer import RoPEAttention
-
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_utils import get_activation_fn, get_clones
 
 
@@ -115,8 +114,8 @@ class MemoryAttentionLayer(nn.Module):
         self,
         tgt,
         memory,
-        pos: Optional[Tensor] = None,
-        query_pos: Optional[Tensor] = None,
+        pos: Tensor | None = None,
+        query_pos: Tensor | None = None,
         num_k_exclude_rope: int = 0,
     ) -> torch.Tensor:
         """Forward.
@@ -174,8 +173,8 @@ class MemoryAttention(nn.Module):
         self,
         curr: torch.Tensor,  # self-attention inputs
         memory: torch.Tensor,  # cross-attention inputs
-        curr_pos: Optional[Tensor] = None,  # pos_enc for self-attention inputs
-        memory_pos: Optional[Tensor] = None,  # pos_enc for cross-attention inputs
+        curr_pos: Tensor | None = None,  # pos_enc for self-attention inputs
+        memory_pos: Tensor | None = None,  # pos_enc for cross-attention inputs
         num_obj_ptr_tokens: int = 0,  # number of object pointer *tokens*
     ):
         """Forward.

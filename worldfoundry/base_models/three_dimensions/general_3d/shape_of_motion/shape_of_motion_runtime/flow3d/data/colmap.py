@@ -103,7 +103,7 @@ class Point3D:
     id: int
     xyz: np.ndarray
     rgb: np.ndarray
-    error: Union[float, np.ndarray]
+    error: float | np.ndarray
     image_ids: np.ndarray
     point2D_idxs: np.ndarray
 
@@ -144,14 +144,14 @@ def read_next_bytes(fid, num_bytes, format_char_sequence, endian_character="<"):
     return struct.unpack(endian_character + format_char_sequence, data)
 
 
-def read_cameras_text(path: Union[str, Path]) -> Dict[int, Camera]:
+def read_cameras_text(path: str | Path) -> dict[int, Camera]:
     """
     see: src/base/reconstruction.cc
         void Reconstruction::WriteCamerasText(const std::string& path)
         void Reconstruction::ReadCamerasText(const std::string& path)
     """
     cameras = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -168,7 +168,7 @@ def read_cameras_text(path: Union[str, Path]) -> Dict[int, Camera]:
     return cameras
 
 
-def read_cameras_binary(path_to_model_file: Union[str, Path]) -> Dict[int, Camera]:
+def read_cameras_binary(path_to_model_file: str | Path) -> dict[int, Camera]:
     """
     see: src/base/reconstruction.cc
         void Reconstruction::WriteCamerasBinary(const std::string& path)
@@ -197,14 +197,14 @@ def read_cameras_binary(path_to_model_file: Union[str, Path]) -> Dict[int, Camer
     return cameras
 
 
-def read_images_text(path: Union[str, Path]) -> Dict[int, Image]:
+def read_images_text(path: str | Path) -> dict[int, Image]:
     """
     see: src/base/reconstruction.cc
         void Reconstruction::ReadImagesText(const std::string& path)
         void Reconstruction::WriteImagesText(const std::string& path)
     """
     images = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -232,7 +232,7 @@ def read_images_text(path: Union[str, Path]) -> Dict[int, Image]:
     return images
 
 
-def read_images_binary(path_to_model_file: Union[str, Path]) -> Dict[int, Image]:
+def read_images_binary(path_to_model_file: str | Path) -> dict[int, Image]:
     """
     see: src/base/reconstruction.cc
         void Reconstruction::ReadImagesBinary(const std::string& path)
@@ -272,14 +272,14 @@ def read_images_binary(path_to_model_file: Union[str, Path]) -> Dict[int, Image]
     return images
 
 
-def read_points3D_text(path: Union[str, Path]):
+def read_points3D_text(path: str | Path):
     """
     see: src/base/reconstruction.cc
         void Reconstruction::ReadPoints3DText(const std::string& path)
         void Reconstruction::WritePoints3DText(const std::string& path)
     """
     points3D = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -304,7 +304,7 @@ def read_points3D_text(path: Union[str, Path]):
     return points3D
 
 
-def read_points3d_binary(path_to_model_file: Union[str, Path]) -> Dict[int, Point3D]:
+def read_points3d_binary(path_to_model_file: str | Path) -> dict[int, Point3D]:
     """
     see: src/base/reconstruction.cc
         void Reconstruction::ReadPoints3DBinary(const std::string& path)

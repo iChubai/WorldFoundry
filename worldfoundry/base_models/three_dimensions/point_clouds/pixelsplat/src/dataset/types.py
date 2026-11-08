@@ -1,6 +1,7 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> dataset -> types.py functionality."""
 
-from typing import Callable, Literal, TypedDict
+from collections.abc import Callable
+from typing import Literal, TypedDict
 
 from jaxtyping import Float, Int64
 from torch import Tensor

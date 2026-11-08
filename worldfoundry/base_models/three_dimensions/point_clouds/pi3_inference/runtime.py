@@ -21,7 +21,7 @@ class Pi3Representation:
     def __init__(
         self,
         model=None,
-        device: Optional[str] = None,
+        device: str | None = None,
     ):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
@@ -40,7 +40,7 @@ class Pi3Representation:
     def from_pretrained(
         cls,
         pretrained_model_path: str,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs,
     ) -> "Pi3Representation":
         """
@@ -68,7 +68,7 @@ class Pi3Representation:
 
         return cls(model=model, device=device)
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """Run Pi3 inference and return all outputs.
         Returns: Dict with numpy arrays for all model outputs.
         """

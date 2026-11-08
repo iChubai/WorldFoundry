@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
+import bisect
 import os
-from typing import Tuple, List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
 import torch
 from PIL import Image
 from torchvision.ops import box_convert
-import bisect
 
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import clean_state_dict
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import get_phrases_from_posmap
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
+    clean_state_dict,
+    get_phrases_from_posmap,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OLD API
@@ -58,7 +60,7 @@ def load_model(model_config_path: str, model_checkpoint_path: str, device: str =
     return model
 
 
-def load_image(image_path: str) -> Tuple[np.array, torch.Tensor]:
+def load_image(image_path: str) -> tuple[np.array, torch.Tensor]:
     """Load image.
 
     Args:
@@ -88,7 +90,7 @@ def predict(
     text_threshold: float,
     device: str = "cuda",
     remove_combined: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, List[str]]:
+) -> tuple[torch.Tensor, torch.Tensor, list[str]]:
     """Predict.
 
     Args:
@@ -143,7 +145,7 @@ def predict(
     return boxes, logits.max(dim=1)[0], phrases
 
 
-def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor, phrases: List[str]) -> np.ndarray:
+def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor, phrases: list[str]) -> np.ndarray:
     """
     This function annotates an image with bounding boxes and labels.
 
@@ -188,7 +190,7 @@ class Model:
 
     def predict_with_caption(
         self, image: np.ndarray, caption: str, box_threshold: float = 0.35, text_threshold: float = 0.25
-    ) -> Tuple[sv.Detections, List[str]]:
+    ) -> tuple[sv.Detections, list[str]]:
         """
         import cv2
 
@@ -221,7 +223,7 @@ class Model:
         return detections, phrases
 
     def predict_with_classes(
-        self, image: np.ndarray, classes: List[str], box_threshold: float, text_threshold: float
+        self, image: np.ndarray, classes: list[str], box_threshold: float, text_threshold: float
     ) -> sv.Detections:
         """
         import cv2
@@ -300,7 +302,7 @@ class Model:
         return sv.Detections(xyxy=xyxy, confidence=confidence)
 
     @staticmethod
-    def phrases2classes(phrases: List[str], classes: List[str]) -> np.ndarray:
+    def phrases2classes(phrases: list[str], classes: list[str]) -> np.ndarray:
         """Phrases2classes.
 
         Args:

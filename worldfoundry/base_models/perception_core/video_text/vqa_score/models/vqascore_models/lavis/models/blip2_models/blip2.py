@@ -6,24 +6,28 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 """
 
 import contextlib
+import datetime
 import logging
 import os
 import time
-import datetime
 
 import torch
-import torch.nn as nn
 import torch.distributed as dist
+import torch.nn as nn
 import torch.nn.functional as F
 
 from ...common import dist_utils
 from ...common.dist_utils import download_cached_file
-from ...common.utils import is_url
 from ...common.logger import MetricLogger
+from ...common.utils import is_url
 from ..base_model import BaseModel
-from .Qformer import BertConfig, BertLMHeadModel
 from ..eva_vit import create_eva_vit_g
+from .Qformer import BertConfig, BertLMHeadModel
+
+# isort: split
 from ..clip_vit import create_clip_vit_L
+
+# isort: split
 from transformers import BertTokenizer
 
 
@@ -203,6 +207,6 @@ def compute_sim_matrix(model, data_loader, **kwargs):
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    logging.info("Evaluation time {}".format(total_time_str))
+    logging.info(f"Evaluation time {total_time_str}")
 
     return score_matrix_i2t.cpu().numpy(), score_matrix_t2i.cpu().numpy()

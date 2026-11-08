@@ -9,13 +9,12 @@ from __future__ import annotations
 import os
 import re
 import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import cv2
 import torch
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
-
 
 # ---------------------------------------------------------------------------
 # Entity parsing helpers
@@ -282,7 +281,9 @@ class Qwen3VLEntityExtractor:
             inputs = inputs.to(self.device)
 
             generated_ids = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens)
-            generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+            generated_ids_trimmed = [
+                out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+            ]
             output_text = self.processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )[0]
@@ -318,7 +319,9 @@ class Qwen3VLEntityExtractor:
         inputs = inputs.to(self.device)
 
         generated_ids = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens)
-        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+        ]
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )[0]

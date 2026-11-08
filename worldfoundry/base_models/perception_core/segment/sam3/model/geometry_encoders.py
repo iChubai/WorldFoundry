@@ -430,7 +430,7 @@ class MaskEncoder(nn.Module):
         self.mask_downsampler = mask_downsampler
         self.position_encoding = position_encoding
 
-    def forward(self, masks, *args, **kwargs) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, masks, *args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:
@@ -482,7 +482,7 @@ class FusedMaskEncoder(MaskEncoder):
         masks: torch.Tensor,
         pix_feat: torch.Tensor,
         **kwargs,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
         Args:

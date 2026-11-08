@@ -94,11 +94,11 @@ def retrieve_text(frames, texts, models=None, topk=5, device=torch.device("cuda"
 
 
 __all__ = [
-    "ViCLIP",
     "SimpleTokenizer",
+    "ViCLIP",
     "_Tokenizer",
-    "checkpoint_path",
     "_frame_from_video",
+    "checkpoint_path",
     "frame_from_video",
     "frames2tensor",
     "get_text_feat_dict",

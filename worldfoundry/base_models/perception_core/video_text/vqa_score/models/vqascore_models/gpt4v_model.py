@@ -1,11 +1,12 @@
-import cv2
 import base64
-import numpy as np
+import os
 from typing import List, Union
+
+import cv2
+import numpy as np
+import tiktoken
 import torch
 from openai import OpenAI
-import tiktoken
-import os
 
 from .vqa_model import VQAScoreModel
 
@@ -59,7 +60,7 @@ class GPT4VModel(VQAScoreModel):
         self.tokenizer = tiktoken.encoding_for_model("gpt-4o")
         self.client = OpenAI(api_key=self.api_key)
 
-    def load_images(self, paths: List[str], num_frames: int = None) -> List[dict]:
+    def load_images(self, paths: list[str], num_frames: int = None) -> list[dict]:
         loaded_data = []
         for path in paths:
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file
@@ -122,7 +123,7 @@ class GPT4VModel(VQAScoreModel):
                 print(f"completion {completion}")
             except Exception as e:  # Old Error Handling
                 print(f"Failed image: {data['path']} and question: {question} and answer: {answer}")
-                print(f"Error: {str(e)}")
+                print(f"Error: {e!s}")
                 return torch.Tensor([0.0])
 
         is_generated = False
@@ -147,8 +148,8 @@ class GPT4VModel(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         question_template: str = default_question_template,
         answer_template: str = default_answer_template,
         num_frames: int = 4,
@@ -165,7 +166,7 @@ class GPT4VModel(VQAScoreModel):
 
         lm_prob = torch.zeros(len(paths))
 
-        for idx, (data, question, answer) in enumerate(zip(loaded_data, questions, answers)):
+        for idx, (data, question, answer) in enumerate(zip(loaded_data, questions, answers, strict=False)):
             lm_prob[idx] = self.forward_single(data, question, answer)
 
         return lm_prob
@@ -218,14 +219,14 @@ class GPT4VModel(VQAScoreModel):
                 )
             except Exception as e:
                 print(f"Failed image: {data['path']} and question: {question}")
-                print(f"Error: {str(e)}")
+                print(f"Error: {e!s}")
                 return ""
 
         return completion.choices[0].message.content
 
     def generate(
-        self, images: List[str], texts: List[str], num_frames: int = 5, max_new_tokens: int = 256
-    ) -> List[str]:
+        self, images: list[str], texts: list[str], num_frames: int = 5, max_new_tokens: int = 256
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         questions = texts
@@ -233,7 +234,7 @@ class GPT4VModel(VQAScoreModel):
 
         generated_outputs = []
 
-        for idx, (data, question) in enumerate(zip(loaded_data, questions)):
+        for idx, (data, question) in enumerate(zip(loaded_data, questions, strict=False)):
             generated_text = self.generate_single(data, question, max_new_tokens)
             generated_outputs.append(generated_text)
 

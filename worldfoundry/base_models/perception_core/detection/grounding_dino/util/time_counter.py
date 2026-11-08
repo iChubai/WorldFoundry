@@ -13,7 +13,6 @@ class TimeCounter:
         Returns:
             The return value.
         """
-        pass
 
     def clear(self):
         """Clear."""
@@ -62,7 +61,7 @@ class TimeHolder:
         return json.dumps(self.final_res(), indent=2)
 
 
-class AverageMeter(object):
+class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self, name, fmt=":f", val_only=False):

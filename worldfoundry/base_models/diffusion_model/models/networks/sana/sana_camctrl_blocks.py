@@ -39,8 +39,9 @@ Public surface
 """
 
 import os
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -77,7 +78,7 @@ def _maybe_drop_cam_branch(camera_conditions, cam_branch_drop_prob, training, de
 def create_grid(
     height: int,
     width: int,
-    batch: Optional[int] = None,
+    batch: int | None = None,
     dtype: torch.dtype = torch.float32,
     device: torch.device = torch.device("cpu"),
 ) -> torch.Tensor:
@@ -99,11 +100,11 @@ def create_grid(
 def ucm_unproject_grid(
     height: int,
     width: int,
-    fx: Union[float, torch.Tensor],
-    fy: Union[float, torch.Tensor],
-    cx: Union[float, torch.Tensor],
-    cy: Union[float, torch.Tensor],
-    xi: Union[float, torch.Tensor],
+    fx: float | torch.Tensor,
+    fy: float | torch.Tensor,
+    cx: float | torch.Tensor,
+    cy: float | torch.Tensor,
+    xi: float | torch.Tensor,
     dtype: torch.dtype = torch.float32,
     device: torch.device = torch.device("cpu"),
     y_down: bool = True,
@@ -156,10 +157,10 @@ def ucm_unproject_grid(
 
 
 def compute_fx_from_fov_xi(
-    x_fov: Union[torch.Tensor, float],
-    xi: Union[torch.Tensor, float],
+    x_fov: torch.Tensor | float,
+    xi: torch.Tensor | float,
     width: int,
-    device: Union[torch.device, str] = "cpu",
+    device: torch.device | str = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
     """Recover focal length ``fx`` from horizontal FoV (degrees) + UCM xi."""
@@ -187,8 +188,8 @@ def compute_fx_from_fov_xi(
 
 
 def compute_fov_from_fx_xi(
-    fx: Union[torch.Tensor, float],
-    xi: Union[torch.Tensor, float],
+    fx: torch.Tensor | float,
+    xi: torch.Tensor | float,
     width: int,
     device="cpu",
     dtype=torch.float32,
@@ -220,14 +221,14 @@ def compute_fov_from_fx_xi(
 
 
 def ucm_unproject_grid_fov(
-    x_fov: Union[float, torch.Tensor],
-    y_fov: Union[float, torch.Tensor],
-    xi: Union[float, torch.Tensor],
+    x_fov: float | torch.Tensor,
+    y_fov: float | torch.Tensor,
+    xi: float | torch.Tensor,
     height: int,
     width: int,
-    cx: Union[float, torch.Tensor],
-    cy: Union[float, torch.Tensor],
-    device: Union[torch.device, str] = "cpu",
+    cx: float | torch.Tensor,
+    cy: float | torch.Tensor,
+    device: torch.device | str = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
     """Unproject grid with intrinsics expressed as FoV (degrees) + xi."""
@@ -548,14 +549,14 @@ def _apply_complex_rope(
 
 def _apply_block_diagonal(
     feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: List[Tuple[Callable[[torch.Tensor], torch.Tensor], int]],
+    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
     """Apply a block-diagonal function: split features by sizes, transform each, concat."""
-    funcs, block_sizes = zip(*func_size_pairs)
+    funcs, block_sizes = zip(*func_size_pairs, strict=False)
     assert feats.shape[-1] == sum(block_sizes)
     x_blocks = torch.split(feats, block_sizes, dim=-1)
     out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks)],
+        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
         dim=-1,
     )
     assert out.shape == feats.shape, "Input/output shapes should match."
@@ -583,9 +584,9 @@ def _prepare_ray_apply_fns(
     P: torch.Tensor,  # (batch, seqlen, 4, 4) P = ray<-world
     P_T: torch.Tensor,  # (batch, seqlen, 4, 4) P_T = world<-ray
     P_inv: torch.Tensor,  # (batch, seqlen, 4, 4) P_inv = world<-ray
-    rotary_emb: Optional[torch.Tensor] = None,
+    rotary_emb: torch.Tensor | None = None,
     apply_vo: bool = True,
-) -> Tuple[Callable, Callable, Callable]:
+) -> tuple[Callable, Callable, Callable]:
     """Build ``(apply_q, apply_kv, apply_o)`` block-diagonal callables for UCPE."""
     if rotary_emb is not None:
         rope_fn = partial(_apply_complex_rope, freqs=rotary_emb, inverse=False)
@@ -618,10 +619,10 @@ def _prepare_ray_apply_fns(
 
 
 def _slice_rope_for_cam(
-    rotary_emb: Optional[torch.Tensor],
+    rotary_emb: torch.Tensor | None,
     head_dim: int,
     rope_dim: int,
-) -> Optional[torch.Tensor]:
+) -> torch.Tensor | None:
     """Re-slice WAN RoPE frequencies for a smaller rope_dim using the same (T, H, W) split."""
     if rotary_emb is None:
         return None
@@ -640,11 +641,11 @@ def prepare_prope_fns(
     camctrl_type: str,
     head_dim: int,
     camera_conditions: torch.Tensor,
-    HW: Tuple[int, int, int],
-    patch_size: Tuple[int, int, int],
-    rotary_emb: Optional[torch.Tensor] = None,
+    HW: tuple[int, int, int],
+    patch_size: tuple[int, int, int],
+    rotary_emb: torch.Tensor | None = None,
     **kwargs,
-) -> Tuple[Callable, Callable, Callable]:
+) -> tuple[Callable, Callable, Callable]:
     """Precompute UCPE apply functions once for a batch (shared across all blocks).
 
     Only ``camctrl_type == "UCPE"`` is supported.  Accepts either precomputed

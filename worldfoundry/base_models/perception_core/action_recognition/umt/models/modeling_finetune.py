@@ -1,11 +1,12 @@
 from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.checkpoint as checkpoint
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
-import torch.utils.checkpoint as checkpoint
 
 
 def _cfg(url="", **kwargs):
@@ -33,7 +34,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
     def extra_repr(self) -> str:
-        return "p={}".format(self.drop_prob)
+        return f"p={self.drop_prob}"
 
 
 class Mlp(nn.Module):
@@ -136,8 +137,8 @@ class Block(nn.Module):
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
         if init_values > 0:
-            self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-            self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+            self.gamma_1 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
+            self.gamma_2 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
         else:
             self.gamma_1, self.gamma_2 = None, None
 
@@ -175,7 +176,7 @@ class PatchEmbed(nn.Module):
     def forward(self, x, **kwargs):
         B, C, T, H, W = x.shape
         # FIXME look at relaxing size constraints
-        assert H == self.img_size[0] and W == self.img_size[1], (
+        assert self.img_size[0] == H and self.img_size[1] == W, (
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -204,7 +205,7 @@ def get_sinusoid_encoding_table(n_position, d_hid, cur_frame=-1, pre_n_position=
         C = d_hid
         new_P = int((n_position // cur_frame) ** 0.5)  # testing size
         print(f"Pretraining uses 14x14, but current version is {new_P}x{new_P}")
-        print(f"Interpolate the position embedding")
+        print("Interpolate the position embedding")
         sinusoid_table = sinusoid_table.reshape(-1, T, P, P, C)
         sinusoid_table = sinusoid_table.reshape(-1, P, P, C).permute(0, 3, 1, 2)
         sinusoid_table = torch.nn.functional.interpolate(
@@ -215,7 +216,7 @@ def get_sinusoid_encoding_table(n_position, d_hid, cur_frame=-1, pre_n_position=
         sinusoid_table = sinusoid_table.flatten(1, 3)  # B, THW, C
     if cur_frame != -1 and cur_frame != 8:
         print(f"Pretraining uses 8 frames, but current frame is {cur_frame}")
-        print(f"Interpolate the position embedding")
+        print("Interpolate the position embedding")
         T = 8  # checkpoint frame
         new_T = cur_frame  # testing frame
         # interpolate
@@ -422,9 +423,9 @@ def vit_large_patch16_224(pretrained=False, **kwargs):
 
 if __name__ == "__main__":
     import time
-    from fvcore.nn import FlopCountAnalysis
-    from fvcore.nn import flop_count_table
+
     import numpy as np
+    from fvcore.nn import FlopCountAnalysis, flop_count_table
 
     seed = 4217
     np.random.seed(seed)

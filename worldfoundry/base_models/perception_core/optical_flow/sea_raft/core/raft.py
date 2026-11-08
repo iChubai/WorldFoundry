@@ -1,18 +1,18 @@
 """Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> raft.py functionality."""
 
+import math
+
 import numpy as np
 import torch
-import math
 import torch.nn as nn
 import torch.nn.functional as F
+from huggingface_hub import PyTorchModelHubMixin
 
-from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.update import BasicUpdateBlock
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.corr import CorrBlock
-from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.utils import coords_grid, InputPadder
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.extractor import ResNetFPN
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.layer import conv1x1, conv3x3
-
-from huggingface_hub import PyTorchModelHubMixin
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.update import BasicUpdateBlock
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.utils import InputPadder, coords_grid
 
 
 class RAFT(

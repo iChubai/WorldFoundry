@@ -22,8 +22,8 @@ class PromptEncoder(nn.Module):
     def __init__(
         self,
         embed_dim: int,
-        image_embedding_size: Tuple[int, int],
-        input_image_size: Tuple[int, int],
+        image_embedding_size: tuple[int, int],
+        input_image_size: tuple[int, int],
     ) -> None:
         """
         Encodes prompts for input to SAM's mask decoder.
@@ -121,7 +121,7 @@ class PositionEmbeddingRandom(nn.Module):
         # outputs d_1 x ... x d_n x C shape
         return torch.cat([torch.sin(coords), torch.cos(coords)], dim=-1)
 
-    def forward(self, size: Tuple[int, int]) -> torch.Tensor:
+    def forward(self, size: tuple[int, int]) -> torch.Tensor:
         """Generate positional encoding for a grid of the specified size."""
         h, w = size
         device = self.positional_encoding_gaussian_matrix.device
@@ -134,7 +134,7 @@ class PositionEmbeddingRandom(nn.Module):
         pe = self._pe_encoding(torch.stack([x_embed, y_embed], dim=-1))
         return pe.permute(2, 0, 1)  # C x H x W
 
-    def forward_with_coords(self, coords_input: torch.Tensor, image_size: Tuple[int, int]) -> torch.Tensor:
+    def forward_with_coords(self, coords_input: torch.Tensor, image_size: tuple[int, int]) -> torch.Tensor:
         """Positionally encode points that are not normalized to [0,1]."""
         coords = coords_input.clone()
         coords[:, :, 0] = coords[:, :, 0] / image_size[1]
@@ -151,12 +151,12 @@ class MaskDecoder(nn.Module):
         transformer_dim: int,
         transformer: nn.Module,
         num_multimask_outputs: int,
-        activation: Type[nn.Module],
+        activation: type[nn.Module],
         normalization_type: str,
         normalize_before_activation: bool,
         iou_head_depth: int,
         iou_head_hidden_dim: int,
-        upscaling_layer_dims: List[int],
+        upscaling_layer_dims: list[int],
     ) -> None:
         """
         Predicts masks given an image and prompt embeddings, using a
@@ -231,7 +231,7 @@ class MaskDecoder(nn.Module):
         image_pe: torch.Tensor,
         sparse_prompt_embeddings: torch.Tensor,
         multimask_output: bool,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Predict masks given image and prompt embeddings.
 
@@ -286,7 +286,7 @@ class MaskDecoder(nn.Module):
         image_embeddings: torch.Tensor,
         image_pe: torch.Tensor,
         sparse_prompt_embeddings: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Predicts masks. See 'forward' for more details."""
         # Concatenate output tokens
         output_tokens = torch.cat([self.iou_token.weight, self.mask_tokens.weight], dim=0)
@@ -304,7 +304,7 @@ class MaskDecoder(nn.Module):
 
         for upscaling_layer in self.final_output_upscaling_layers:
             upscaled_embedding = upscaling_layer(upscaled_embedding)
-        hyper_in_list: List[torch.Tensor] = []
+        hyper_in_list: list[torch.Tensor] = []
         for i, output_hypernetworks_mlp in enumerate(self.output_hypernetworks_mlps):
             hyper_in_list.append(output_hypernetworks_mlp(mask_tokens_out[:, i, :]))
         hyper_in = torch.stack(hyper_in_list, dim=1)

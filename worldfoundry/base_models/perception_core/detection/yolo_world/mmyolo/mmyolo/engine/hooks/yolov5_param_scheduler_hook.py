@@ -68,7 +68,7 @@ class YOLOv5ParamSchedulerHook(ParamSchedulerHook):
         self._base_lr = [group["initial_lr"] for group in optimizer.param_groups]
         self._base_momentum = [group["initial_momentum"] for group in optimizer.param_groups]
 
-    def before_train_iter(self, runner: Runner, batch_idx: int, data_batch: Optional[dict] = None):
+    def before_train_iter(self, runner: Runner, batch_idx: int, data_batch: dict | None = None):
         """Operations before each training iteration.
 
         Args:

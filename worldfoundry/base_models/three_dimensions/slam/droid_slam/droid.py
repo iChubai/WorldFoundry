@@ -1,17 +1,17 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> droid.py functionality."""
 
-import torch
+from collections import OrderedDict
+
 import lietorch
 import numpy as np
+import torch
 
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.depth_video import DepthVideo
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.motion_filter import MotionFilter
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_frontend import DroidFrontend
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_backend import DroidBackend
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_frontend import DroidFrontend
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import DroidNet
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.motion_filter import MotionFilter
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.trajectory_filler import PoseTrajectoryFiller
-
-from collections import OrderedDict
 
 
 class Droid:

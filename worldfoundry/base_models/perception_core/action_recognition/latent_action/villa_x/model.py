@@ -174,7 +174,9 @@ class IgorEncoder(IgorPretrainedModel):
             if actions is None:
                 actions = new_actions
             else:
-                actions = [torch.cat((current, new[-1:]), dim=0) for current, new in zip(actions, new_actions)]
+                actions = [
+                    torch.cat((current, new[-1:]), dim=0) for current, new in zip(actions, new_actions, strict=False)
+                ]
 
         if actions is None:
             raise RuntimeError("No Villa-X action window was produced")

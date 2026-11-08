@@ -3,16 +3,19 @@
 # Academic-use terms: THIRD-PARTY-NOTICES (WorldCrafter)
 """Contract-driven sampler with separate image- and text-to-video routing."""
 
-from typing import Any, Callable
 import math
+from collections.abc import Callable
+from typing import Any
+
 import torch
 import torch.nn.functional as F
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
-from ..models.networks.worldcrafter.fast.contract import resolve_dmd_inference_trace
+
 from ..models.networks.worldcrafter.fast.camera import (
     build_ucpe_attention_kwargs_sequential_pyramid,
     pyramid_token_grids,
 )
+from ..models.networks.worldcrafter.fast.contract import resolve_dmd_inference_trace
 from .helios import XLA_AVAILABLE
 
 
@@ -142,7 +145,7 @@ def sample_fast(
                 int(chunk_index),
                 int(i_s),
                 int(idx),
-                int(len(timesteps)),
+                len(timesteps),
             )
             timestep = self.dmd_timestep_contract.student_condition(t, latents.shape[0], device=latents.device)
             with stage_transformer.cache_context("cond"):

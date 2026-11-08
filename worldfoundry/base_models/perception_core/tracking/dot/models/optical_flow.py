@@ -1,12 +1,16 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 from tqdm import tqdm
 
+# isort: split
 from .shelf import RAFT
-from .interpolation import interpolate
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.dot.utils.io import read_config
 from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import get_grid, get_sobel_kernel
+
+from .interpolation import interpolate
 
 
 class OpticalFlow(nn.Module):

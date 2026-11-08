@@ -14,18 +14,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from PIL import Image
-from io import BytesIO
 import base64
-import numpy as np
-import os, math, cv2, re
-
-import torch
-from transformers import StoppingCriteria
-
+import math
+import os
+import re
 import tempfile
 from io import BytesIO
+
+import cv2
+import numpy as np
+import torch
 from decord import VideoReader, cpu
+from PIL import Image
+from transformers import StoppingCriteria
 
 
 def read_video_cv2(video_path, all_indices):

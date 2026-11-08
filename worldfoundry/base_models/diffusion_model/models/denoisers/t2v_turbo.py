@@ -121,8 +121,8 @@ def build_t2v_turbo_denoiser(context: ComponentBuildContext) -> T2VTurboDenoiser
 
 
 __all__ = [
-    "T2VTurboDenoiser",
     "T2V_TURBO_UNET_CONFIG",
+    "T2VTurboDenoiser",
     "build_t2v_turbo_denoiser",
     "t2v_turbo_guidance_projection",
 ]

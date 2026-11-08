@@ -1,11 +1,12 @@
-import numpy as np
-import torch
 import glob
-import cv2
 import os
 import os.path as osp
 
+import cv2
+import numpy as np
+import torch
 from lietorch import SE3
+
 from .base import RGBDDataset
 from .stream import RGBDStream
 

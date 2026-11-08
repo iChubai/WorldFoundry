@@ -1,6 +1,8 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 # --------------------------------
@@ -9,33 +11,37 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
-    from keras.models import Model
-    from keras.layers import Activation
-    from keras.layers import BatchNormalization
-    from keras.layers import Concatenate
-    from keras.layers import Conv2D
-    from keras.layers import Dense
-    from keras.layers import Dropout
-    from keras.layers import GlobalAveragePooling2D
-    from keras.layers import Input
-    from keras.layers import Lambda
-    from keras.layers import MaxPooling2D
-    from keras.layers import add
     from keras import backend as K
+    from keras.layers import (
+        Activation,
+        BatchNormalization,
+        Concatenate,
+        Conv2D,
+        Dense,
+        Dropout,
+        GlobalAveragePooling2D,
+        Input,
+        Lambda,
+        MaxPooling2D,
+        add,
+    )
+    from keras.models import Model
 else:
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Activation
-    from tensorflow.keras.layers import BatchNormalization
-    from tensorflow.keras.layers import Concatenate
-    from tensorflow.keras.layers import Conv2D
-    from tensorflow.keras.layers import Dense
-    from tensorflow.keras.layers import Dropout
-    from tensorflow.keras.layers import GlobalAveragePooling2D
-    from tensorflow.keras.layers import Input
-    from tensorflow.keras.layers import Lambda
-    from tensorflow.keras.layers import MaxPooling2D
-    from tensorflow.keras.layers import add
     from tensorflow.keras import backend as K
+    from tensorflow.keras.layers import (
+        Activation,
+        BatchNormalization,
+        Concatenate,
+        Conv2D,
+        Dense,
+        Dropout,
+        GlobalAveragePooling2D,
+        Input,
+        Lambda,
+        MaxPooling2D,
+        add,
+    )
+    from tensorflow.keras.models import Model
 
 # --------------------------------
 

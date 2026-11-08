@@ -14,19 +14,20 @@
 
 
 import os
-import warnings
 import shutil
+import warnings
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
 import torch
-from worldfoundry.core.attention import resolve_transformers_attention_implementation
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model import *
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    DEFAULT_IMAGE_PATCH_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
 )
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model import *
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
+from worldfoundry.core.attention import resolve_transformers_attention_implementation
 
 
 def _single_device_from_map(device_map):
@@ -237,8 +238,7 @@ def load_pretrained_model(
                     **kwargs,
                 )
             elif (
-                "wizardlm-2" in model_name.lower()
-                and "vicuna" in model_name.lower()
+                ("wizardlm-2" in model_name.lower() and "vicuna" in model_name.lower())
                 or "llama" in model_name.lower()
                 or "yi" in model_name.lower()
                 or "nous-hermes" in model_name.lower()
@@ -301,8 +301,7 @@ def load_pretrained_model(
                     model_path, low_cpu_mem_usage=True, attn_implementation=attn_implementation, **kwargs
                 )
             elif (
-                "wizardlm-2" in model_name.lower()
-                and "vicuna" in model_name.lower()
+                ("wizardlm-2" in model_name.lower() and "vicuna" in model_name.lower())
                 or "llama" in model_name.lower()
                 or "yi" in model_name.lower()
                 or "nous-hermes" in model_name.lower()
@@ -430,7 +429,7 @@ def load_pretrained_model(
             )
             print(f"Loading LoRA weights from {model_path}")
             model = PeftModel.from_pretrained(model, model_path)
-            print(f"Merging weights")
+            print("Merging weights")
             model = model.merge_and_unload()
             print("Convert to FP16...")
             model.to(torch.float16)

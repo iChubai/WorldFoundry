@@ -249,7 +249,7 @@ class SanaVideoMSBlock(nn.Module):
 
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.scale_shift_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
-        self.block_hook: Optional[BlockHook] = None
+        self.block_hook: BlockHook | None = None
 
     def forward_frame_aware(self, x, y, t, mask=None, THW=None, rotary_emb=None, chunk_index=None, **kwargs):
         """Forward frame aware.
@@ -289,7 +289,7 @@ class SanaVideoMSBlock(nn.Module):
             x = x + self.flash_attn_additional(x, HW=THW)
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
 
@@ -349,10 +349,10 @@ class SanaVideoMSBlock(nn.Module):
         }
         if chunk_index is not None:
             self_attn_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        save_kv_cache = kwargs.get("save_kv_cache", None)
+        save_kv_cache = kwargs.get("save_kv_cache")
         if save_kv_cache is not None:
             self_attn_kwargs["save_kv_cache"] = save_kv_cache
-        kv_cache = kwargs.get("kv_cache", None)
+        kv_cache = kwargs.get("kv_cache")
         if kv_cache is not None:
             self_attn_kwargs["kv_cache"] = kv_cache
         x_sa = self.attn(x_sa_in, **self_attn_kwargs)
@@ -367,7 +367,7 @@ class SanaVideoMSBlock(nn.Module):
         x = gated_residual(x, x_sa, gate_msa, self.drop_path, policy=self._worldfoundry_block_fusion)
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
 
@@ -820,8 +820,8 @@ class SanaMSVideo(Sana):
         else:
             timestep = timestep.long().to(torch.float32)
         y = y.to(self.dtype)
-        start_f = kwargs.get("start_f", None)
-        end_f = kwargs.get("end_f", None)
+        start_f = kwargs.get("start_f")
+        end_f = kwargs.get("end_f")
         kv_cache = kwargs.pop("kv_cache", None)
         if start_f is not None and end_f is not None:
             assert self.pos_embed_type == "casual_wan_rope"
@@ -1031,13 +1031,7 @@ class SanaMSVideo(Sana):
                     new_param[2 * new_hidden_size : 2 * new_hidden_size + old_hidden_size] = checkpoint_param[
                         2 * old_hidden_size :
                     ]
-                elif "q_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "q_norm.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.bias" in key:
+                elif "q_norm.weight" in key or "q_norm.bias" in key or "k_norm.weight" in key or "k_norm.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "cross_attn.q_linear.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1059,11 +1053,11 @@ class SanaMSVideo(Sana):
                     new_param[:, :old_hidden_size] = checkpoint_param
                 elif "final_layer.linear.weight" in key:
                     new_param[:, : checkpoint_param.shape[1]] = checkpoint_param
-                elif "final_layer.linear.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.bias" in key:
+                elif (
+                    "final_layer.linear.bias" in key
+                    or "t_embedder.mlp.0.weight" in key
+                    or "t_embedder.mlp.0.bias" in key
+                ):
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "t_embedder.mlp.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1093,9 +1087,7 @@ class SanaMSVideo(Sana):
                         ]
                 elif "t_block.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.bias" in key:
+                elif "y_embedder.y_proj.fc1.weight" in key or "y_embedder.y_proj.fc1.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "y_embedder.y_proj.fc2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param

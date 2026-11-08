@@ -1,16 +1,16 @@
+import csv
+import json
+import math
+import os
+import os.path as osp
+import pickle
+import random
+
+import cv2
 import numpy as np
 import torch
-import torch.utils.data as data
 import torch.nn.functional as F
-
-import csv
-import os
-import cv2
-import math
-import random
-import json
-import pickle
-import os.path as osp
+import torch.utils.data as data
 
 from .rgbd_utils import *
 

@@ -559,7 +559,7 @@ class BaseModelCapability:
         if not self.package_imports:
             return {}
         if self.install_packages and len(self.install_packages) == len(self.package_imports):
-            pairs = zip(self.package_imports, self.install_packages)
+            pairs = zip(self.package_imports, self.install_packages, strict=False)
             return {import_name: package for import_name, package in pairs if import_name not in non_pip and package}
         pip_imports = [name for name in self.package_imports if name not in non_pip]
         install_packages = self.install_packages or tuple(pip_imports)

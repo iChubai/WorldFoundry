@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 x-plug and The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +18,9 @@ import os
 from typing import Union
 
 from transformers.configuration_utils import PretrainedConfig
+from transformers.models.auto import CONFIG_MAPPING
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from transformers.utils import logging
-from transformers.models.auto import CONFIG_MAPPING
-
 
 logger = logging.get_logger(__name__)
 
@@ -108,7 +106,7 @@ class MplugOwlVisionConfig(PretrainedConfig):
         self.use_flash_attn = use_flash_attn
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
 
         # get the vision config dict if we are loading from MplugOwlConfig
@@ -150,7 +148,7 @@ class MplugOwlVisualAbstractorConfig(PretrainedConfig):
         self.encoder_hidden_size = encoder_hidden_size
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
 
         # get the visual_abstractor config dict if we are loading from MplugOwlConfig

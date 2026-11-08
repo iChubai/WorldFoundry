@@ -62,7 +62,7 @@ def extract_audio_from_video(
     return np.concatenate(chunks).astype(np.float32, copy=False)
 
 
-def mux_video_audio(  # noqa: PLR0913
+def mux_video_audio(
     frames: Tensor,
     audio: list[np.ndarray] | np.ndarray | None,
     output_path: str | Path,

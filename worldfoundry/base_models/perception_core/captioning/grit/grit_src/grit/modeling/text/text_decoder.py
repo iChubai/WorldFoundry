@@ -1,11 +1,12 @@
 # Modified by Jialian Wu from
 # https://github.com/microsoft/GenerativeImage2Text/blob/main/generativeimage2text/layers/decoder.py
 # and https://github.com/kdexd/virtex
-from torch import nn
-import torch
 import functools
-from torch.nn import functional as F
 import warnings
+
+import torch
+from torch import nn
+from torch.nn import functional as F
 
 
 class TextualHead(nn.Module):
@@ -355,7 +356,7 @@ class TransformerDecoderTextualHead(TextualHead):
         return mask
 
 
-class AutoRegressiveBeamSearch(object):
+class AutoRegressiveBeamSearch:
     def __init__(
         self,
         end_token_id: int,

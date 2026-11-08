@@ -1,23 +1,23 @@
 """Module for base_models -> perception_core -> general_perception -> open_clip -> coca_model.py functionality."""
 
+import logging
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-import logging
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
-import numpy as np
-from dataclasses import dataclass
 
 _logger = logging.getLogger(__name__)
 
+from .model import CLIPTextCfg, CLIPVisionCfg, _build_text_tower, _build_vision_tower
 from .transformer import (
-    LayerNormFp32,
     LayerNorm,
-    QuickGELU,
+    LayerNormFp32,
     MultimodalTransformer,
+    QuickGELU,
 )
-from .model import CLIPTextCfg, CLIPVisionCfg, _build_vision_tower, _build_text_tower
 
 
 @dataclass
@@ -35,7 +35,7 @@ def _build_text_decoder_tower(
     embed_dim,
     multimodal_cfg,
     quick_gelu: bool = False,
-    cast_dtype: Optional[torch.dtype] = None,
+    cast_dtype: torch.dtype | None = None,
 ):
     """Helper function to build text decoder tower.
 
@@ -74,9 +74,9 @@ class CoCa(nn.Module):
         vision_cfg: CLIPVisionCfg,
         quick_gelu: bool = False,
         init_logit_scale: float = np.log(1 / 0.07),
-        init_logit_bias: Optional[float] = None,
+        init_logit_bias: float | None = None,
         nonscalar_logit_scale: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
         pad_id: int = 0,
     ):
         """Init.
@@ -190,10 +190,10 @@ class CoCa(nn.Module):
 
     def forward_intermediates(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
-        image_indices: Optional[Union[int, List[int]]] = None,
-        text_indices: Optional[Union[int, List[int]]] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
+        image_indices: int | list[int] | None = None,
+        text_indices: int | list[int] | None = None,
         stop_early: bool = False,
         normalize: bool = True,
         normalize_intermediates: bool = False,
@@ -204,7 +204,7 @@ class CoCa(nn.Module):
         text_output_extra_tokens: bool = False,
         output_logits: bool = False,
         output_logit_scale_bias: bool = False,
-    ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
+    ) -> dict[str, torch.Tensor | list[torch.Tensor]]:
         """Forward features that returns intermediates.
 
         Args:
@@ -272,10 +272,10 @@ class CoCa(nn.Module):
 
     def forward(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
-        image_latent: Optional[torch.Tensor] = None,
-        image_embs: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
+        image_latent: torch.Tensor | None = None,
+        image_embs: torch.Tensor | None = None,
     ):
         """Forward.
 
@@ -362,8 +362,9 @@ class CoCa(nn.Module):
                 stacklevel=2,
             )
         try:
-            from .generation import MultimodalGenerationWrapper
             from transformers import GenerationConfig as GC
+
+            from .generation import MultimodalGenerationWrapper
         except (ImportError, Exception) as e:
             raise RuntimeError(
                 "Please install transformers for generate functionality. `pip install transformers`."

@@ -8,16 +8,17 @@ Provides shared functionality:
 """
 
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List, Union
 from huggingface_hub import PyTorchModelHubMixin
 
 from ..heads.dpt_head import DPTHead
-from ..utils.pose_enc import pose_encoding_to_extri_intri
 from ..utils.geometry import closed_form_inverse_se3
+from ..utils.pose_enc import pose_encoding_to_extri_intri
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         Returns:
             The return value.
         """
-        pass
 
     @abstractmethod
     def _build_camera_head(self) -> nn.Module:
@@ -130,7 +130,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         Returns:
             The return value.
         """
-        pass
 
     def _build_depth_head(self) -> nn.Module:
         """Helper function to build depth head.
@@ -191,12 +190,12 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
     def _aggregate_features(
         self,
         images: torch.Tensor,
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
-        view_graphs: Optional[torch.Tensor] = None,
-        causal_graphs: Optional[Union[torch.Tensor, List[np.ndarray]]] = None,
-        ordered_video: Optional[torch.Tensor] = None,
+        view_graphs: torch.Tensor | None = None,
+        causal_graphs: torch.Tensor | list[np.ndarray] | None = None,
+        ordered_video: torch.Tensor | None = None,
     ) -> tuple:
         """Helper function to aggregate features.
 
@@ -212,18 +211,17 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         Returns:
             The return value.
         """
-        pass
 
     def _predict_camera(
         self,
         aggregated_tokens_list: list,
-        mask: Optional[torch.Tensor] = None,
+        mask: torch.Tensor | None = None,
         causal_inference: bool = False,
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
         gather_outputs: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Helper function to predict camera.
 
         Args:
@@ -266,7 +264,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         images: torch.Tensor,
         patch_start_idx: int,
         gather_outputs: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Helper function to predict depth.
 
         Args:
@@ -297,7 +295,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         images: torch.Tensor,
         patch_start_idx: int,
         gather_outputs: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Helper function to predict points.
 
         Args:
@@ -328,7 +326,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         images: torch.Tensor,
         patch_start_idx: int,
         gather_outputs: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """Helper function to predict local points.
 
         Args:
@@ -400,17 +398,17 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
     def forward(
         self,
         images: torch.Tensor,
-        query_points: Optional[torch.Tensor] = None,
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        query_points: torch.Tensor | None = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
-        mask: Optional[torch.Tensor] = None,
+        mask: torch.Tensor | None = None,
         causal_inference: bool = False,
-        ordered_video: Optional[torch.Tensor] = None,
+        ordered_video: torch.Tensor | None = None,
         gather_outputs: bool = True,
-        point_masks: Optional[torch.Tensor] = None,
+        point_masks: torch.Tensor | None = None,
         **kwargs,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Forward pass of the GCT model.
 

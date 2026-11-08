@@ -15,7 +15,7 @@ class GroupOp(torch.autograd.Function):
 
     @classmethod
     def backward(cls, ctx, grad):
-        error_str = "Backward operation not implemented for {}".format(cls)
+        error_str = f"Backward operation not implemented for {cls}"
         assert cls.backward_op is not None, error_str
 
         inputs = ctx.saved_tensors

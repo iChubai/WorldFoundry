@@ -1,40 +1,40 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> maps.py functionality."""
 
-from typing import *
-from typing_extensions import Unpack
 import math
 from numbers import Number
+from typing import *
 
 import torch
-from torch import Tensor
 import torch.nn.functional as F
+from torch import Tensor
+from typing_extensions import Unpack
 
+from .helpers import batched
 from .mesh import remove_unused_vertices, triangulate_mesh
 from .transforms import unproject_cv
 from .utils import masked_max, masked_min, sliding_window
-from .helpers import batched
 
 __all__ = [
-    "uv_map",
-    "image_uv",
-    "pixel_coord_map",
-    "screen_coord_map",
-    "build_mesh_from_map",
-    "build_mesh_from_depth_map",
-    "depth_map_edge",
-    "depth_map_aliasing",
-    "point_map_to_normal_map",
-    "depth_to_points",
-    "depth_map_to_point_map",
-    "depth_map_to_normal_map",
-    "chessboard",
     "bounding_rect_from_mask",
-    "masked_nearest_resize",
-    "masked_area_resize",
+    "build_mesh_from_depth_map",
+    "build_mesh_from_map",
+    "chessboard",
+    "depth_map_aliasing",
+    "depth_map_edge",
+    "depth_map_to_normal_map",
+    "depth_map_to_point_map",
+    "depth_to_points",
     "flood_fill",
+    "fractal_perlin_noise_map",
+    "image_uv",
+    "masked_area_resize",
+    "masked_nearest_resize",
     "perlin_noise",
     "perlin_noise_map",
-    "fractal_perlin_noise_map",
+    "pixel_coord_map",
+    "point_map_to_normal_map",
+    "screen_coord_map",
+    "uv_map",
 ]
 
 

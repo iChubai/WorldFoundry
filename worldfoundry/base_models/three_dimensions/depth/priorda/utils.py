@@ -71,7 +71,7 @@ def chw2hwc(chw):
     Args:
         chw: The chw.
     """
-    assert 3 == len(chw.shape)
+    assert len(chw.shape) == 3
     if isinstance(chw, torch.Tensor):
         hwc = torch.permute(chw, (1, 2, 0))
     elif isinstance(chw, np.ndarray):

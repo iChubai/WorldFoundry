@@ -117,7 +117,7 @@ User Prompt:"""
 
             return result
 
-        for idx, (txt, imgs) in enumerate(zip(text_list, ref_images)):
+        for idx, (txt, imgs) in enumerate(zip(text_list, ref_images, strict=False)):
             messages = [{"role": "user", "content": []}]
 
             messages[0]["content"].append({"type": "text", "text": f"{self.prefix}"})

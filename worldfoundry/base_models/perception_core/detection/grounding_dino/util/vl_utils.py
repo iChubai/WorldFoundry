@@ -66,7 +66,7 @@ def build_captions_and_token_span(cat_list, force_lowercase):
         if force_lowercase:
             class_name = class_name.lower()
         if "/" in class_name:
-            class_name_list: List = class_name.strip().split("/")
+            class_name_list: list = class_name.strip().split("/")
             class_name_list.append(class_name)
             class_name: str = random.choice(class_name_list)
 

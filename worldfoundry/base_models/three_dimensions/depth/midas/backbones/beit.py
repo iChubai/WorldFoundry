@@ -1,16 +1,16 @@
 """Module for base_models -> three_dimensions -> depth -> midas -> backbones -> beit.py functionality."""
 
-import timm
-import torch
 import types
+from typing import Optional
 
 import numpy as np
+import timm
+import torch
 import torch.nn.functional as F
-
-from .utils import forward_adapted_unflatten, make_backbone_default
 from timm.models.beit import gen_relative_position_index
 from torch.utils.checkpoint import checkpoint
-from typing import Optional
+
+from .utils import forward_adapted_unflatten, make_backbone_default
 
 
 def forward_beit(pretrained, x):
@@ -70,7 +70,7 @@ def _get_rel_pos_bias(self, window_size):
     return relative_position_bias.unsqueeze(0)
 
 
-def attention_forward(self, x, resolution, shared_rel_pos_bias: Optional[torch.Tensor] = None):
+def attention_forward(self, x, resolution, shared_rel_pos_bias: torch.Tensor | None = None):
     """
     Modification of timm.models.beit.py: Attention.forward to support arbitrary window sizes.
     """
@@ -99,7 +99,7 @@ def attention_forward(self, x, resolution, shared_rel_pos_bias: Optional[torch.T
     return x
 
 
-def block_forward(self, x, resolution, shared_rel_pos_bias: Optional[torch.Tensor] = None):
+def block_forward(self, x, resolution, shared_rel_pos_bias: torch.Tensor | None = None):
     """
     Modification of timm.models.beit.py: Block.forward to support arbitrary window sizes.
     """

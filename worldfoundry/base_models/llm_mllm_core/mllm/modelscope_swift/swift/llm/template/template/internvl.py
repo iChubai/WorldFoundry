@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args, is_deepspeed_enabled
+
 from ..base import Template
 from ..constant import MLLMTemplateType
 from ..register import register_template
@@ -23,14 +24,14 @@ class InternvlTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if self.mode == "vllm":
             image_context = ["<image>\n"]
         else:
             image_context = ["<img>", [-100], "</img>\n"]
         return image_context
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         input_ids = encoded["input_ids"]
         idx_list = findall(input_ids, -100)
@@ -47,7 +48,7 @@ class InternvlTemplate(Template):
             image_bs = pixel_values.shape[0]
 
             idx, idx2 = idx_list[0], idx_list[-1]  # remove [-100, -100]
-            img_tokens: List[int] = (
+            img_tokens: list[int] = (
                 self.processor.encode("<IMG_CONTEXT>", add_special_tokens=False) * self.num_image_token * image_bs
             )
             input_ids = input_ids[:idx] + img_tokens + input_ids[idx2 + 1 :]
@@ -67,7 +68,7 @@ class InternvlTemplate(Template):
         else:
             return super().compute_loss_context(model, inputs)
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         embedding = model.get_input_embeddings()
         device = embedding.weight.device
         input_ids = inputs["input_ids"]
@@ -108,7 +109,7 @@ class Internvl2Template(InternvlTemplate):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         image_context = super().replace_tag("image", index, inputs)
         if media_type == "image":
             return image_context
@@ -117,13 +118,13 @@ class Internvl2Template(InternvlTemplate):
             load_video = partial(load_video_internvl, num_segments=video_segments)
             return self.replace_video2image(load_video, inputs, lambda i: [f"Frame{i + 1}: "] + image_context)
 
-    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<ref>{ref}</ref>"]
 
-    def replace_bbox(self, bbox: List[int], index: int, inputs: StdTemplateInputs) -> List[Context]:
+    def replace_bbox(self, bbox: list[int], index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<box>[{bbox}]</box>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super(InternvlTemplate, self)._encode(inputs)
         input_ids = encoded["input_ids"]
         idx_list = findall(input_ids, -100)
@@ -149,7 +150,7 @@ class Internvl2Template(InternvlTemplate):
         )
 
         def _get_new_tokens(i):
-            img_tokens: List[int] = (
+            img_tokens: list[int] = (
                 self.processor.encode("<IMG_CONTEXT>", add_special_tokens=False) * self.num_image_token * num_patches[i]
             )
             return img_tokens

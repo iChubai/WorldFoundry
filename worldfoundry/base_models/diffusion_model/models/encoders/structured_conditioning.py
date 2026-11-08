@@ -18,10 +18,11 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import torch
 from torch import nn
@@ -29,9 +30,9 @@ from torch import nn
 from worldfoundry.core.configuration.lazy_config import instantiate
 from worldfoundry.core.distributed.model_parallel.context import broadcast
 from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.execution.inference_runtime import disabled_train
 from worldfoundry.core.io.assets.easy_io import easy_io
 from worldfoundry.core.utils.tensors.batch import batch_mul
-from worldfoundry.core.execution.inference_runtime import disabled_train
 
 
 class DataType(str, Enum):
@@ -62,7 +63,7 @@ class BaseCondition(ABC):
     def is_broadcasted(self) -> bool:
         return self._is_broadcasted
 
-    def broadcast(self, process_group: torch.distributed.ProcessGroup | None) -> "BaseCondition":
+    def broadcast(self, process_group: torch.distributed.ProcessGroup | None) -> BaseCondition:
         return broadcast_condition(self, process_group)
 
 
@@ -90,7 +91,7 @@ class Text2WorldCondition(BaseCondition):
     padding_mask: torch.Tensor | None = None
     fps: torch.Tensor | None = None
 
-    def edit_data_type(self, data_type: DataType) -> "Text2WorldCondition":
+    def edit_data_type(self, data_type: DataType) -> Text2WorldCondition:
         values = self.to_dict(skip_underscore=False)
         values["data_type"] = DataType(data_type)
         return type(self)(**values)
@@ -360,7 +361,7 @@ class GeneralConditioner(nn.Module, ABC):
         }
 
     def get_condition_uncondition(self, data_batch: Mapping[str, Any]) -> tuple[BaseCondition, BaseCondition]:
-        positive = {name: 0.0 for name in self.embedders}
+        positive = dict.fromkeys(self.embedders, 0.0)
         negative = {name: 1.0 if embedder.dropout_rate > 1e-4 else 0.0 for name, embedder in self.embedders.items()}
         return self(data_batch, positive), self(data_batch, negative)
 
@@ -368,7 +369,7 @@ class GeneralConditioner(nn.Module, ABC):
         self,
         data_batch: Mapping[str, Any],
     ) -> tuple[BaseCondition, BaseCondition]:
-        positive = {name: 0.0 for name in self.embedders}
+        positive = dict.fromkeys(self.embedders, 0.0)
         negative = {
             name: 0.0 if isinstance(embedder, TextAttr) else (1.0 if embedder.dropout_rate > 1e-4 else 0.0)
             for name, embedder in self.embedders.items()

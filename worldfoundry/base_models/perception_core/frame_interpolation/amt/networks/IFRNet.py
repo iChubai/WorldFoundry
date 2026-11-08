@@ -1,10 +1,15 @@
 import torch
 import torch.nn as nn
+
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.flow_utils import warp
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.blocks.ifrnet import (
+    ResBlock,
     convrelu,
     resize,
-    ResBlock,
 )
 
 

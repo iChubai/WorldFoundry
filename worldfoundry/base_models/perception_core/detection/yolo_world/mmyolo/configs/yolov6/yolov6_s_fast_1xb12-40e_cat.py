@@ -10,7 +10,7 @@ train_batch_size_per_gpu = 12
 train_num_workers = 4
 num_last_epochs = 5
 
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_s_syncbn_fast_8xb32-400e_coco/yolov6_s_syncbn_fast_8xb32-400e_coco_20221102_203035-932e1d91.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov6/yolov6_s_syncbn_fast_8xb32-400e_coco/yolov6_s_syncbn_fast_8xb32-400e_coco_20221102_203035-932e1d91.pth"
 
 model = dict(
     backbone=dict(frozen_stages=4),
@@ -48,4 +48,4 @@ default_hooks = dict(
     logger=dict(type="LoggerHook", interval=5),
 )
 train_cfg = dict(max_epochs=max_epochs, val_interval=10, dynamic_intervals=[(max_epochs - num_last_epochs, 1)])
-# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')]) # noqa
+# visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])

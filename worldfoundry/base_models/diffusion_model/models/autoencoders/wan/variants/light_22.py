@@ -13,6 +13,7 @@ Use only when the recipe ships a LightVAE weight file.
 """
 
 import logging
+
 import torch
 import torch._dynamo
 
@@ -22,11 +23,13 @@ elif hasattr(torch._dynamo.config, "accumulated_recompile_limit"):
     torch._dynamo.config.accumulated_recompile_limit = 1024
 torch._dynamo.config.suppress_errors = True
 
+import os
+import time
+
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-import os
-import time
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
 
@@ -873,7 +876,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -1010,7 +1013,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
             # temperal_upsample = [True, True, False]
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(

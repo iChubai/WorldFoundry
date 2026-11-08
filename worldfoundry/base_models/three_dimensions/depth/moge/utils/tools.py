@@ -1,16 +1,16 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> tools.py functionality."""
 
-from typing import *
-import time
-from pathlib import Path
-from numbers import Number
-from functools import wraps
-import warnings
-import math
-import json
-import os
 import importlib
 import importlib.util
+import json
+import math
+import os
+import time
+import warnings
+from functools import wraps
+from numbers import Number
+from pathlib import Path
+from typing import *
 
 
 def catch_exception(fn):
@@ -25,7 +25,7 @@ def catch_exception(fn):
         """Wrapper."""
         try:
             return fn(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             import traceback
 
             print(f"Exception in {fn.__name__}", end="r")
@@ -172,7 +172,7 @@ def read_jsonl(file):
     """
     import json
 
-    with open(file, "r") as f:
+    with open(file) as f:
         data = f.readlines()
     return [json.loads(line) for line in data]
 
@@ -359,6 +359,7 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
     """
     from concurrent.futures import ThreadPoolExecutor
     from contextlib import nullcontext
+
     from tqdm import tqdm
 
     if pbar is not None:

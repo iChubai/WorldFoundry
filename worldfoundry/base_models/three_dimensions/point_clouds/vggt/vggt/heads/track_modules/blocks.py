@@ -10,12 +10,13 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> track_modules -> blocks.py functionality."""
 
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .modules import AttnBlock, CrossAttnBlock, Mlp, ResidualBlock
 from .utils import bilinear_sampler
-from .modules import Mlp, AttnBlock, CrossAttnBlock, ResidualBlock
 
 
 class EfficientUpdateFormer(nn.Module):

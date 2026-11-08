@@ -4,19 +4,20 @@ from __future__ import annotations
 
 import os
 import typing
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import cv2
 import numpy as np
 import torch
 from omegaconf import OmegaConf
 
-from worldfoundry.core.io import list_numbered_frame_paths
 from worldfoundry.core.execution.inference_runtime import (
     is_accelerator_out_of_memory,
     resolve_inference_batch_size,
 )
+from worldfoundry.core.io import list_numbered_frame_paths
 
 from .utils.build_utils import build_from_cfg
 from .utils.utils import InputPadder, check_dim_and_resize, img2tensor
@@ -283,7 +284,7 @@ class MotionSmoothness:
                     keep_outputs=keep_outputs,
                 )
                 outputs = [inputs[0]]
-                for prediction, second_input in zip(predictions, inputs[1:]):
+                for prediction, second_input in zip(predictions, inputs[1:], strict=False):
                     outputs.extend((prediction, second_input))
                 inputs = outputs
 
@@ -312,7 +313,7 @@ class MotionSmoothness:
             original = original[:-trailing_targets]
         if not interpolated:
             raise ValueError("At least one interpolated frame is required")
-        scores = [self.get_diff(left, right) for left, right in zip(original, interpolated)]
+        scores = [self.get_diff(left, right) for left, right in zip(original, interpolated, strict=False)]
         return float(np.mean(scores))
 
     @staticmethod
@@ -321,8 +322,8 @@ class MotionSmoothness:
 
 
 __all__ = [
-    "FrameProcess",
     "LEGACY_OUTPUT_OFFLOAD_ENV",
-    "MotionSmoothness",
     "OUTPUT_OFFLOAD_ENV",
+    "FrameProcess",
+    "MotionSmoothness",
 ]

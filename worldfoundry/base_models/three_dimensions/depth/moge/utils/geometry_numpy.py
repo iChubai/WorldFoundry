@@ -1,15 +1,14 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> utils -> geometry_numpy.py functionality."""
 
-from typing import *
-from functools import partial
 import math
+from functools import partial
+from typing import *
 
 import cv2
 import numpy as np
 from scipy.signal import fftconvolve
-import numpy as np
-from ....general_3d.eastern_journalist.utils3d.numpy import masked_nearest_resize, sliding_window
 
+from ....general_3d.eastern_journalist.utils3d.numpy import masked_nearest_resize, sliding_window
 from .tools import timeit
 
 
@@ -280,7 +279,7 @@ def disk_kernel(radius: int) -> np.ndarray:
     L = np.arange(-radius, radius + 1)
     X, Y = np.meshgrid(L, L)
     # Generate disk: region inside circle with radius R is 1
-    kernel = ((X**2 + Y**2) <= radius**2).astype(np.float32)
+    kernel = (radius**2 >= (X**2 + Y**2)).astype(np.float32)
     # Normalize the kernel
     kernel /= np.sum(kernel)
     return kernel

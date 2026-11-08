@@ -25,8 +25,8 @@ class InfiniteVGGTRepresentation:
 
     def __init__(
         self,
-        model: Optional[StreamVGGT] = None,
-        device: Optional[str] = None,
+        model: StreamVGGT | None = None,
+        device: str | None = None,
         total_budget: int = 1200000,
     ):
         """Initialize representation model. self.model = model."""
@@ -50,7 +50,7 @@ class InfiniteVGGTRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str,
-        device: Optional[str] = None,
+        device: str | None = None,
         total_budget: int = 1200000,
         **kwargs,
     ) -> "InfiniteVGGTRepresentation":
@@ -134,7 +134,7 @@ class InfiniteVGGTRepresentation:
 
         return images
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Run streaming inference and return point maps, depth, and cameras.
 

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from .yolov5_head import YOLOv5Head
 
 
@@ -57,7 +59,7 @@ class YOLOXHeadModule(BaseModule):
     def __init__(
         self,
         num_classes: int,
-        in_channels: Union[int, Sequence],
+        in_channels: int | Sequence,
         widen_factor: float = 1.0,
         num_base_priors: int = 1,
         feat_channels: int = 256,
@@ -65,7 +67,7 @@ class YOLOXHeadModule(BaseModule):
         featmap_strides: Sequence[int] = [8, 16, 32],
         use_depthwise: bool = False,
         dcn_on_last_conv: bool = False,
-        conv_bias: Union[bool, str] = "auto",
+        conv_bias: bool | str = "auto",
         conv_cfg: OptConfigType = None,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="SiLU", inplace=True),
@@ -132,7 +134,7 @@ class YOLOXHeadModule(BaseModule):
             )
         return nn.Sequential(*stacked_convs)
 
-    def _build_predictor(self) -> Tuple[nn.Module, nn.Module, nn.Module]:
+    def _build_predictor(self) -> tuple[nn.Module, nn.Module, nn.Module]:
         """Initialize predictor layers of a single level head."""
         conv_cls = nn.Conv2d(self.feat_channels, self.num_classes, 1)
         conv_reg = nn.Conv2d(self.feat_channels, 4, 1)
@@ -144,11 +146,11 @@ class YOLOXHeadModule(BaseModule):
         # Use prior in model initialization to improve stability
         super().init_weights()
         bias_init = bias_init_with_prob(0.01)
-        for conv_cls, conv_obj in zip(self.multi_level_conv_cls, self.multi_level_conv_obj):
+        for conv_cls, conv_obj in zip(self.multi_level_conv_cls, self.multi_level_conv_obj, strict=False):
             conv_cls.bias.data.fill_(bias_init)
             conv_obj.bias.data.fill_(bias_init)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -177,7 +179,7 @@ class YOLOXHeadModule(BaseModule):
         conv_cls: nn.Module,
         conv_reg: nn.Module,
         conv_obj: nn.Module,
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Forward feature of a single scale level."""
 
         cls_feat = cls_convs(x)
@@ -251,7 +253,7 @@ class YOLOXHead(YOLOv5Head):
             # YOLOX does not support sampling
             self.sampler = PseudoSampler()
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         return self.head_module(x)
 
     def loss_by_feat(
@@ -374,7 +376,7 @@ class YOLOXHead(YOLOv5Head):
         objectness: Tensor,
         gt_instances: InstanceData,
         img_meta: dict,
-        gt_instances_ignore: Optional[InstanceData] = None,
+        gt_instances_ignore: InstanceData | None = None,
     ) -> tuple:
         """Compute classification, regression, and objectness targets for
         priors in a single image.
@@ -456,7 +458,7 @@ class YOLOXHead(YOLOv5Head):
         return bbox_aux_target
 
     @staticmethod
-    def gt_instances_preprocess(batch_gt_instances: Tensor, batch_size: int) -> List[InstanceData]:
+    def gt_instances_preprocess(batch_gt_instances: Tensor, batch_size: int) -> list[InstanceData]:
         """Split batch_gt_instances with batch size.
 
         Args:

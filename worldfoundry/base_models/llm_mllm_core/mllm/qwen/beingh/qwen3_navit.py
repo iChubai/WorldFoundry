@@ -4,14 +4,18 @@
 """Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen3_navit.py functionality."""
 
 import glob
-import torch
 import re
 from functools import partial
 from typing import List, Optional, Tuple
+
+import torch
+from safetensors import safe_open
 from torch import nn
 from torch.nn.attention.flex_attention import flex_attention
-from safetensors import safe_open
+
 from worldfoundry.core.attention import scaled_dot_product_attention
+
+from .qwen3.configuration_qwen3 import Qwen3Config as _Qwen3Config
 from .qwen3.modeling_qwen3 import (
     Qwen3Attention,
     Qwen3MLP,
@@ -21,9 +25,12 @@ from .qwen3.modeling_qwen3 import (
     apply_rotary_pos_emb,
 )
 
-from .qwen3.configuration_qwen3 import Qwen3Config as _Qwen3Config
+# isort: split
 from .qwen2_navit import get_layer_mapping_strategy, interpolate_layer_params
-from .qwen2_navit import NaiveCache, BaseNavitOutputWithPast, pad_sequence
+
+# isort: split
+# isort: split
+from .qwen2_navit import BaseNavitOutputWithPast, NaiveCache, pad_sequence
 
 torch._dynamo.config.cache_size_limit = 512
 torch._dynamo.config.accumulated_cache_size_limit = 4096
@@ -51,7 +58,7 @@ class Qwen3Config(_Qwen3Config):
 class PackedAttention(Qwen3Attention):
     """Packed attention implementation."""
 
-    def __init__(self, config, layer_idx: Optional[int] = None):
+    def __init__(self, config, layer_idx: int | None = None):
         """Init.
 
         Args:
@@ -73,9 +80,9 @@ class PackedAttention(Qwen3Attention):
     def forward_train(
         self,
         packed_sequence: torch.Tensor,
-        sample_lens: List[int],
-        attention_mask: List[torch.Tensor],
-        packed_position_embeddings: Tuple[torch.Tensor, torch.Tensor],
+        sample_lens: list[int],
+        attention_mask: list[torch.Tensor],
+        packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ):
         """Forward train.
@@ -116,7 +123,7 @@ class PackedAttention(Qwen3Attention):
             packed_query_states_, packed_key_states_, packed_cos, packed_sin, unsqueeze_dim=1
         )
 
-        if isinstance(attention_mask, List):
+        if isinstance(attention_mask, list):
             packed_key_states_ = packed_key_states_[:, :, None, :].repeat(1, 1, self.num_key_value_groups, 1)
             packed_key_states_ = packed_key_states_.reshape(-1, self.num_heads, self.head_dim)
             packed_value_states = packed_value_states[:, :, None, :].repeat(1, 1, self.num_key_value_groups, 1)
@@ -127,7 +134,7 @@ class PackedAttention(Qwen3Attention):
             unpacked_value_states = packed_value_states.transpose(0, 1).split(sample_lens, dim=1)
             upacked_attn_output = []
             for query_states, key_states, value_states, attention_mask_per_sample in zip(
-                unpacked_query_states, unpacked_key_states, unpacked_value_states, attention_mask
+                unpacked_query_states, unpacked_key_states, unpacked_value_states, attention_mask, strict=False
             ):
                 attn_output = scaled_dot_product_attention(
                     query_states.to(torch.bfloat16).unsqueeze(0),
@@ -162,7 +169,7 @@ class PackedAttention(Qwen3Attention):
 class PackedAttentionMoT(Qwen3Attention):
     """Packed attention mo t implementation."""
 
-    def __init__(self, config, layer_idx: Optional[int] = None):
+    def __init__(self, config, layer_idx: int | None = None):
         """Init.
 
         Args:
@@ -202,9 +209,9 @@ class PackedAttentionMoT(Qwen3Attention):
         self,
         packed_sequence_und: torch.Tensor,
         packed_sequence_gen: torch.Tensor,
-        sample_lens: List[int],
+        sample_lens: list[int],
         attention_mask,
-        packed_position_embeddings: Tuple[torch.Tensor, torch.Tensor],
+        packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ):
@@ -261,7 +268,7 @@ class PackedAttentionMoT(Qwen3Attention):
             packed_query_states_, packed_key_states_, packed_cos, packed_sin, unsqueeze_dim=1
         )
 
-        if isinstance(attention_mask, List):
+        if isinstance(attention_mask, list):
             packed_key_states_ = packed_key_states_[:, :, None, :].repeat(1, 1, self.num_key_value_groups, 1)
             packed_key_states_ = packed_key_states_.reshape(-1, self.num_heads, self.head_dim)
             packed_value_states = packed_value_states[:, :, None, :].repeat(1, 1, self.num_key_value_groups, 1)
@@ -272,7 +279,7 @@ class PackedAttentionMoT(Qwen3Attention):
             unpacked_value_states = packed_value_states.transpose(0, 1).split(sample_lens, dim=1)
             upacked_attn_output = []
             for query_states, key_states, value_states, attention_mask_per_sample in zip(
-                unpacked_query_states, unpacked_key_states, unpacked_value_states, attention_mask
+                unpacked_query_states, unpacked_key_states, unpacked_value_states, attention_mask, strict=False
             ):
                 # breakpoint()
                 attn_output = scaled_dot_product_attention(
@@ -334,9 +341,9 @@ class Qwen3DecoderLayer(nn.Module):
         self,
         packed_sequence_und: torch.Tensor,
         packed_sequence_gen: torch.Tensor,
-        sample_lens: List[int],
+        sample_lens: list[int],
         attention_mask,
-        packed_position_embeddings: Tuple[torch.Tensor, torch.Tensor],
+        packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
         """Forward train.
@@ -383,8 +390,8 @@ class Qwen3MoTDecoderLayer(nn.Module):
         self,
         config,
         # gen_config
-        layer_idx: Optional[int] = None,
-        attn_module: Optional[Qwen3Attention] = PackedAttentionMoT,
+        layer_idx: int | None = None,
+        attn_module: Qwen3Attention | None = PackedAttentionMoT,
     ):
         """Init.
 
@@ -418,9 +425,9 @@ class Qwen3MoTDecoderLayer(nn.Module):
         self,
         packed_sequence_und: torch.Tensor,
         packed_sequence_gen: torch.Tensor,
-        sample_lens: List[int],
+        sample_lens: list[int],
         attention_mask,
-        packed_position_embeddings: Tuple[torch.Tensor, torch.Tensor],
+        packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
@@ -480,9 +487,9 @@ class Qwen3MoTDecoderLayer(nn.Module):
         query_lens: torch.Tensor,
         packed_query_position_embeddings: torch.Tensor,
         packed_query_indexes: torch.Tensor,
-        past_key_values: Optional[NaiveCache] = None,
-        key_values_lens: Optional[torch.Tensor] = None,
-        packed_key_value_indexes: Optional[torch.Tensor] = None,
+        past_key_values: NaiveCache | None = None,
+        key_values_lens: torch.Tensor | None = None,
+        packed_key_value_indexes: torch.Tensor | None = None,
         update_past_key_values=True,
         is_causal=True,
         mode="und",
@@ -600,11 +607,11 @@ class Qwen3Model(Qwen3PreTrainedModel):
         self,
         packed_sequence_und: torch.Tensor,
         packed_sequence_gen: torch.Tensor,
-        sample_lens: List[int],
+        sample_lens: list[int],
         attention_mask,
         packed_position_ids: torch.Tensor,
-        packed_und_token_indexes: Optional[torch.LongTensor] = None,
-        packed_gen_token_indexes: Optional[torch.LongTensor] = None,
+        packed_und_token_indexes: torch.LongTensor | None = None,
+        packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
         """Forward train.
 
@@ -837,11 +844,11 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         self,
         packed_sequence_und: torch.Tensor,
         packed_sequence_gen: torch.Tensor,
-        sample_lens: List[int],
+        sample_lens: list[int],
         attention_mask,
         packed_position_ids: torch.Tensor,
-        packed_und_token_indexes: Optional[torch.LongTensor] = None,
-        packed_gen_token_indexes: Optional[torch.LongTensor] = None,
+        packed_und_token_indexes: torch.LongTensor | None = None,
+        packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
         """Forward train.
 

@@ -1,9 +1,10 @@
-import dataclasses
-from enum import auto, Enum
-from typing import List, Any, Dict, Union, Tuple
-import re
 import base64
+import dataclasses
+import re
+from enum import Enum, auto
 from io import BytesIO
+from typing import Any, Dict, List, Tuple, Union
+
 from PIL import Image
 from transformers import AutoTokenizer
 
@@ -27,8 +28,8 @@ class Conversation:
     """A class that keeps all conversation history."""
 
     system: str
-    roles: List[str]
-    messages: List[List[str]]
+    roles: list[str]
+    messages: list[list[str]]
     offset: int
     sep_style: SeparatorStyle = SeparatorStyle.SINGLE
     sep: str = "###"
@@ -38,9 +39,9 @@ class Conversation:
     tokenizer_id: str = ""
     tokenizer: Any = None
     # Stop criteria (the default one is EOS token)
-    stop_str: Union[str, List[str]] = None
+    stop_str: str | list[str] = None
     # Stops generation if meeting any token in this list
-    stop_token_ids: List[int] = None
+    stop_token_ids: list[int] = None
 
     skip_next: bool = False
 

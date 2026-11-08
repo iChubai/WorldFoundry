@@ -7,15 +7,16 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.core.model_utils import (
-    sample_features5d,
-    bilinear_sampler,
-)
+
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.embeddings import (
     get_1d_sincos_pos_embed_from_grid,
 )
+from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.core.model_utils import (
+    bilinear_sampler,
+    sample_features5d,
+)
 
-from .blocks import Mlp, BasicEncoder
+from .blocks import BasicEncoder, Mlp
 from .cotracker import EfficientUpdateFormer
 
 torch.manual_seed(0)
@@ -335,7 +336,7 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
         H4, W4 = H // self.stride, W // self.stride
 
         # Compute convolutional features for the video or for the current chunk in case of online mode
-        if (not is_train) and (T > fmaps_chunk_size):
+        if (not is_train) and (fmaps_chunk_size < T):
             fmaps = []
             for t in range(0, T, fmaps_chunk_size):
                 video_chunk = video[:, t : t + fmaps_chunk_size]

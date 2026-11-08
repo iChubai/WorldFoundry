@@ -13,28 +13,28 @@
 #    limitations under the License.
 
 
-from abc import ABC, abstractmethod
-
 import math
+import random
 import re
 import time
+from abc import ABC, abstractmethod
+
 import torch
 import torch.nn as nn
-from .multimodal_encoder.builder import build_vision_tower
-from .multimodal_resampler.builder import build_vision_resampler
-from .multimodal_projector.builder import build_vision_projector
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
+    DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_PATCH_TOKEN,
     IGNORE_INDEX,
     IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_PATCH_TOKEN,
-    DEFAULT_IM_START_TOKEN,
-    DEFAULT_IM_END_TOKEN,
 )
-
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import get_anyres_image_grid_shape
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print, rank_print
-import random
+
+from .multimodal_encoder.builder import build_vision_tower
+from .multimodal_projector.builder import build_vision_projector
+from .multimodal_resampler.builder import build_vision_resampler
 
 
 class LlavaMetaModel:
@@ -509,9 +509,13 @@ class LlavaMetaForCausalLM(ABC):
         # remove the padding using attention_mask -- FIXME
         _input_ids = input_ids
         input_ids = [
-            cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)
+            cur_input_ids[cur_attention_mask]
+            for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask, strict=False)
         ]
-        labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
+        labels = [
+            cur_labels[cur_attention_mask]
+            for cur_labels, cur_attention_mask in zip(labels, attention_mask, strict=False)
+        ]
 
         new_input_embeds = []
         new_labels = []
@@ -576,8 +580,10 @@ class LlavaMetaForCausalLM(ABC):
         tokenizer_model_max_length = getattr(self.config, "tokenizer_model_max_length", None)
         # rank_print("Finishing Inserting")
 
-        new_input_embeds = [x[:tokenizer_model_max_length] for x, modality in zip(new_input_embeds, modalities)]
-        new_labels = [x[:tokenizer_model_max_length] for x, modality in zip(new_labels, modalities)]
+        new_input_embeds = [
+            x[:tokenizer_model_max_length] for x, modality in zip(new_input_embeds, modalities, strict=False)
+        ]
+        new_labels = [x[:tokenizer_model_max_length] for x, modality in zip(new_labels, modalities, strict=False)]
         # TODO: Hard code for control loss spike
         # if tokenizer_model_max_length is not None:
         #     new_input_embeds = [x[:4096] if modality != "video" else x[:tokenizer_model_max_length] for x, modality in zip(new_input_embeds, modalities)]
@@ -595,7 +601,7 @@ class LlavaMetaForCausalLM(ABC):
         position_ids = torch.zeros((batch_size, max_len), dtype=position_ids.dtype, device=position_ids.device)
         # rank0_print("Prepare pos id")
 
-        for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels)):
+        for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels, strict=False)):
             cur_len = cur_new_embed.shape[0]
             if getattr(self.config, "tokenizer_padding_side", "right") == "left":
                 new_input_embeds_padded.append(

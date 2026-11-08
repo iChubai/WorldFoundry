@@ -6,10 +6,15 @@
 
 import torch
 import torch.nn.functional as F
-
 from tqdm import tqdm
+
+# isort: split
 from .models.core.cotracker.cotracker import get_points_on_a_grid
+
+# isort: split
 from .models.core.model_utils import smart_cat
+
+# isort: split
 from .models.build_cotracker import build_cotracker
 
 

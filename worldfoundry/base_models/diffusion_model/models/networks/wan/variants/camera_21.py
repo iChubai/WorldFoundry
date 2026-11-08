@@ -12,18 +12,17 @@ import math
 
 import torch
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from einops import repeat
+from einops import rearrange, repeat
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import (
-    flash_attention,
-    sageattn_func,
-    SAGEATTN_AVAILABLE,
     FLASH_ATTN_2_AVAILABLE,
     FLASH_ATTN_3_AVAILABLE,
+    SAGEATTN_AVAILABLE,
+    flash_attention,
+    sageattn_func,
 )
-from einops import rearrange
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 __all__ = ["WanModel"]
 
@@ -828,7 +827,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             self.init_freqs(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         if render_latent_input is not None:
             x = torch.cat([x, render_latent_input], dim=1)
@@ -951,10 +950,10 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim if c is None else c
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

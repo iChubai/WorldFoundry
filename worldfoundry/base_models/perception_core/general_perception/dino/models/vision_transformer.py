@@ -472,5 +472,3 @@ def vit_base(patch_size=16, **kwargs):
 
 class DINOHead(nn.Module):
     """Dino head implementation."""
-
-    pass

@@ -8,8 +8,9 @@ sharded sequence ranks.  Tokens are ``B S H D``; this module does not
 own the DiT residual path.
 """
 
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
 from torch import Tensor
@@ -31,8 +32,8 @@ from torch.nn.attention.flex_attention import (
 @lru_cache
 def create_block_mask_cached(
     score_mod: _mask_mod_signature,
-    B: Optional[int],
-    H: Optional[int],
+    B: int | None,
+    H: int | None,
     M: int,
     N: int,
     device: str = "cuda",
@@ -61,9 +62,9 @@ def flex_attention_cp(
     query: Tensor,
     key: Tensor,
     value: Tensor,
-    process_group: Optional[ProcessGroup] = None,
-    mask_mod: Optional[_mask_mod_signature] = None,
-    block_mask: Optional[BlockMask] = None,
+    process_group: ProcessGroup | None = None,
+    mask_mod: _mask_mod_signature | None = None,
+    block_mask: BlockMask | None = None,
     flex_attention_fn: Callable = flex_attention,
     seq_dim: int = 2,
     **kwargs,

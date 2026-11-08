@@ -33,12 +33,8 @@ except ModuleNotFoundError:
     class CameraState:  # type: ignore[no-redef]
         """Camera state implementation."""
 
-        pass
-
     class Viewer:  # type: ignore[no-redef]
         """Viewer implementation."""
-
-        pass
 
 
 try:

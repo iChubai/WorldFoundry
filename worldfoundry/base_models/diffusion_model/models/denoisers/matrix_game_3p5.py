@@ -139,7 +139,7 @@ def _build_mosaic_cross_attn_keep_mask(
 
 def _build_subject_ref_memory_tokens(
     dit: WanModel,
-    subject_ref_latents: Optional[torch.Tensor],
+    subject_ref_latents: torch.Tensor | None,
     *,
     batch_size: int,
     video_h: int,
@@ -388,9 +388,9 @@ def _prepend_subject_ref_prope_camera_info(
     *,
     prefix_token_count: int,
     tokens_per_frame: int,
-    frame_count: Optional[int] = None,
+    frame_count: int | None = None,
     mode: str = "identity",
-    clean_anchor_token_index: Optional[int] = None,
+    clean_anchor_token_index: int | None = None,
 ):
     if camera_info is None or int(prefix_token_count) <= 0:
         return camera_info
@@ -797,27 +797,27 @@ def matrix_game_35_forward(
     timestep: torch.Tensor,
     context: torch.Tensor,
     fuse_vae_embedding_in_latents: bool = False,
-    first_frame_latents: Optional[torch.Tensor] = None,
-    mosaic_latent: Optional[torch.Tensor] = None,
+    first_frame_latents: torch.Tensor | None = None,
+    mosaic_latent: torch.Tensor | None = None,
     mosaic_timestep_zero: bool = True,
-    mosaic_revgrid: Optional[np.ndarray] = None,
+    mosaic_revgrid: np.ndarray | None = None,
     mosaic_use_revgrid_rope: bool = False,
-    mosaic_view_change: Optional[torch.Tensor] = None,
+    mosaic_view_change: torch.Tensor | None = None,
     mosaic_view_change_prope: bool = False,
     mosaic_mask_holes: bool = True,
     mosaic_drop_holes: bool = False,
-    mosaic_frame_indices: Optional[torch.Tensor] = None,
-    latent_rope_time_indices: Optional[torch.Tensor] = None,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
-    subject_ref_latents: Optional[torch.Tensor] = None,
+    mosaic_frame_indices: torch.Tensor | None = None,
+    latent_rope_time_indices: torch.Tensor | None = None,
+    height: int | None = None,
+    width: int | None = None,
+    subject_ref_latents: torch.Tensor | None = None,
     subject_ref_slot_ratio: float = 0.5,
     subject_ref_time_gap: int = 1,
     subject_ref_prope_mode: str = "identity",
-    clean_latent_indices_prope_intrinsic: Optional[torch.Tensor] = None,
-    clean_latent_indices_prope_extrinsic: Optional[torch.Tensor] = None,
-    noisy_latent_indices_prope_intrinsic: Optional[torch.Tensor] = None,
-    noisy_latent_indices_prope_extrinsic: Optional[torch.Tensor] = None,
+    clean_latent_indices_prope_intrinsic: torch.Tensor | None = None,
+    clean_latent_indices_prope_extrinsic: torch.Tensor | None = None,
+    noisy_latent_indices_prope_intrinsic: torch.Tensor | None = None,
+    noisy_latent_indices_prope_extrinsic: torch.Tensor | None = None,
     **kwargs,
 ):
     """Matrix-Game 3.5 denoiser with Mosaic, PRoPE, and subject memory."""
@@ -1065,8 +1065,8 @@ def matrix_game_35_forward(
             device=x.device,
         )
     mosaic_attn_mask = None
-    drop_holes_keep_idx_full: Optional[torch.Tensor] = None
-    drop_holes_pre_seq_len: Optional[int] = None
+    drop_holes_keep_idx_full: torch.Tensor | None = None
+    drop_holes_pre_seq_len: int | None = None
     if mosaic_hole_mask is not None:
         _hm = mosaic_hole_mask.to(x.device)
         hm_parts = []
@@ -1239,10 +1239,10 @@ def build_matrix_game_35_denoiser(context: ComponentBuildContext) -> MatrixGame3
 
 __all__ = [
     "MATRIX_GAME_35_DIT_CONFIG",
+    "WAN_VIDEO_PROPE_CAMERA_KEYS",
     "MatrixGame35Denoiser",
     "MatrixLatentSequence",
     "MatrixPropeCameraBuilder",
-    "WAN_VIDEO_PROPE_CAMERA_KEYS",
     "build_matrix_game_35_denoiser",
     "matrix_game_35_forward",
 ]

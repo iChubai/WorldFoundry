@@ -19,21 +19,21 @@
 Checkpoint-compatible causal 3-D VAE with tiling. Public ``encode`` / ``decode`` are wrapped by :class:`~.component.HunyuanVideo15Codec`."""
 
 import math
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union
-from contextlib import contextmanager
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor, nn
-from torch.nn import Conv3d
 from torch import distributed as dist
+from torch.nn import Conv3d
 
+from worldfoundry.core.distributed.model_parallel.sequence_mesh_state import get_parallel_state
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from worldfoundry.core.nn.latent.distributions import AutoencoderKLOutput, DecoderOutput, DiagonalGaussianDistribution
-from worldfoundry.core.distributed.model_parallel.sequence_mesh_state import get_parallel_state
 
 
 def swish(x: Tensor, inplace=False) -> Tensor:
@@ -101,7 +101,7 @@ class PatchCausalConv3d(nn.Conv3d):
         """
         T = input.shape[2]  # input: NCTHW
         memory_count = torch.prod(torch.tensor(input.shape)).item() * 2 / 1024**3
-        if T > self.kernel_size[0] and memory_count > 0.6:
+        if self.kernel_size[0] < T and memory_count > 0.6:
             kernel_size = self.kernel_size[0]
             part_num = int(memory_count / 2) + 1
             split_indices = self.find_split_indices(T, part_num)
@@ -157,9 +157,9 @@ class CausalConv3d(nn.Module):
         self,
         chan_in,
         chan_out,
-        kernel_size: Union[int, Tuple[int, int, int]],
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        dilation: Union[int, Tuple[int, int, int]] = 1,
+        kernel_size: int | tuple[int, int, int],
+        stride: int | tuple[int, int, int] = 1,
+        dilation: int | tuple[int, int, int] = 1,
         pad_mode="replicate",
         disable_causal=False,
         enable_patch_conv=False,
@@ -445,7 +445,7 @@ class Encoder(nn.Module):
         self,
         in_channels: int,
         z_channels: int,
-        block_out_channels: Tuple[int, ...],
+        block_out_channels: tuple[int, ...],
         num_res_blocks: int,
         ffactor_spatial: int,
         ffactor_temporal: int,
@@ -542,7 +542,7 @@ class Decoder(nn.Module):
         self,
         z_channels: int,
         out_channels: int,
-        block_out_channels: Tuple[int, ...],
+        block_out_channels: tuple[int, ...],
         num_res_blocks: int,
         ffactor_spatial: int,
         ffactor_temporal: int,
@@ -639,14 +639,14 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         in_channels: int,
         out_channels: int,
         latent_channels: int,
-        block_out_channels: Tuple[int, ...],
+        block_out_channels: tuple[int, ...],
         layers_per_block: int,
         ffactor_spatial: int,
         ffactor_temporal: int,
         sample_size: int,
         sample_tsize: int,
         scaling_factor: float = None,
-        shift_factor: Optional[float] = None,
+        shift_factor: float | None = None,
         downsample_match_channel: bool = True,
         upsample_match_channel: bool = True,
     ):

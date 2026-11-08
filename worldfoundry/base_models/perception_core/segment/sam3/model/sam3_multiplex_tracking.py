@@ -5,33 +5,58 @@ from functools import reduce
 from typing import Dict
 
 import numpy as np
+
+# isort: split
 import worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiplex_base
+
+# isort: split
+# isort: split
 import worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base
+
+# isort: split
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
+
 from worldfoundry.base_models.perception_core.segment.sam3 import perflib
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
 from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import box_xywh_to_cxcywh, box_xyxy_to_xywh
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiplex_base import (
     MaskletConfirmationStatus,
     Sam3MultiplexBase,
 )
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_inference import is_image_type
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.compile import (
     clone_output_wrapper,
     compile_wrapper,
     shape_logging_wrapper,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
-    mask_iou,
-    masks_to_boxes as perf_masks_to_boxes,
-)
+
+# isort: split
 from torch import Tensor
 from torchvision.ops import masks_to_boxes
 from tqdm.auto import tqdm
+
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
+    mask_iou,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
+    masks_to_boxes as perf_masks_to_boxes,
+)
 
 logger = get_logger(__name__)
 
@@ -42,9 +67,9 @@ from typing import List
 
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
     BatchedPointer,
-    convert_my_tensors,
     FindStage,
     NestedTensor,
+    convert_my_tensors,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import Prompt
 from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import load_resource_as_video_frames
@@ -442,7 +467,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
                                 else yield_frame_idx - unconfirmed_status_delay
                             )
                             unconfirmed_status_frame_idx = max(0, min(unconfirmed_status_frame_idx, num_frames - 1))
-                            unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx, None)
+                            unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx)
 
                             batched_outs.append(
                                 (
@@ -486,7 +511,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
                                 postprocessed_outs.append(postprocessed_out)
 
                         # Yield results
-                        for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs):
+                        for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs, strict=False):
                             yield yield_frame_idx, postprocessed_out
                     else:
                         # No output on other GPUs
@@ -517,7 +542,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
                             else yield_frame_idx - unconfirmed_status_delay
                         )
                         unconfirmed_status_frame_idx = max(0, min(unconfirmed_status_frame_idx, num_frames - 1))
-                        unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx, None)
+                        unconfirmed_obj_ids = unconfirmed_obj_ids_per_frame.get(unconfirmed_status_frame_idx)
 
                         batched_outs.append(
                             (
@@ -558,7 +583,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
                             )
                             postprocessed_outs.append(postprocessed_out)
 
-                    for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs):
+                    for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs, strict=False):
                         yield yield_frame_idx, postprocessed_out
                 else:
                     for yield_frame_idx, _, _ in postprocess_yield_list:
@@ -1207,7 +1232,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
             frame_idx: The frame idx.
             refined_obj_id_to_mask: The refined obj id to mask.
         """
-        if not frame_idx in inference_state["cached_frame_outputs"]:
+        if frame_idx not in inference_state["cached_frame_outputs"]:
             return {}
 
         cached_outputs = inference_state["cached_frame_outputs"][frame_idx]
@@ -1501,7 +1526,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
             "obj_ids_per_gpu": [np.arange(num_objects)],
             "obj_ids_all_gpu": np.arange(num_objects),  # Same as 1 GPU
             "num_obj_per_gpu": [num_objects],
-            "obj_id_to_score": {i: 1.0 for i in range(num_objects)},
+            "obj_id_to_score": dict.fromkeys(range(num_objects), 1.0),
             "obj_id_to_sam2_score_frame_wise": defaultdict(dict),
             "obj_id_to_last_occluded": {},
             "max_obj_id": num_objects,
@@ -1681,7 +1706,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         tracking_res = defaultdict(dict)  # frame_idx --> {obj_id: mask}
         scores_labels = defaultdict(tuple)  # obj_id --> (score, text_prompt_id)
         inference_state = self.init_state(resource_path=input.raw_images)
-        for prompt_id, prompt in zip(text_prompt_ids, text_prompt_list):
+        for prompt_id, prompt in zip(text_prompt_ids, text_prompt_list, strict=False):
             self.add_prompt(inference_state, frame_idx=0, text_str=prompt)
             start_obj_id = max(scores_labels.keys(), default=-1) + 1  # prev max + 1
 
@@ -1703,7 +1728,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
                 )
 
                 current_frame_res = tracking_res[frame_idx]
-                for obj_id, mask in zip(out_obj_ids, out_binary_masks):
+                for obj_id, mask in zip(out_obj_ids, out_binary_masks, strict=False):
                     mask_tensor = torch.tensor(mask[None], dtype=torch.bool)
                     current_frame_res[obj_id + start_obj_id] = mask_tensor
                 obj_ids_this_prompt.update(current_frame_res.keys())
@@ -1964,7 +1989,7 @@ class Sam3MultiplexTrackingProd(Sam3MultiplexTracking):
                                 postprocessed_outs.append(postprocessed_out)
 
                         # Yield results
-                        for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs):
+                        for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs, strict=False):
                             yield yield_frame_idx, postprocessed_out
                     else:
                         # No output on other GPUs
@@ -2047,7 +2072,7 @@ class Sam3MultiplexTrackingProd(Sam3MultiplexTracking):
                             )
                             postprocessed_outs.append(postprocessed_out)
 
-                    for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs):
+                    for yield_frame_idx, postprocessed_out in zip(frame_indices, postprocessed_outs, strict=False):
                         yield yield_frame_idx, postprocessed_out
                 else:
                     for yield_frame_idx, _, _ in postprocess_yield_list:
@@ -2306,7 +2331,7 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
                         obj_rank = self._get_gpu_id_by_obj_id(inference_state, obj_id)
                         if self.rank == obj_rank:
                             # This GPU has the object, broadcast its data
-                            data_to_broadcast = local_obj_data.get(obj_id, None)
+                            data_to_broadcast = local_obj_data.get(obj_id)
                             data_list = [data_to_broadcast]
                             self.broadcast_python_obj_cpu(data_list, src=obj_rank)
                             if data_to_broadcast is not None:

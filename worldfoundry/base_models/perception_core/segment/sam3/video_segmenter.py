@@ -7,10 +7,10 @@ The model implementation and this high-level inference wrapper both live in
 from __future__ import annotations
 
 import gc
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Optional
-
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -21,7 +21,6 @@ from worldfoundry.base_models.perception_core.segment.sam3.model_builder import 
     build_sam3_video_predictor,
 )
 from worldfoundry.core.io import load_video_frames
-
 
 _NULL_PROMPT_PHRASES = (
     "nothing",
@@ -43,13 +42,13 @@ _NULL_PROMPT_PHRASES = (
 class Sam3VideoSegmenter:
     """SAM3 video segmenter."""
 
-    gpus_to_use: Optional[list[int]] = None
+    gpus_to_use: list[int] | None = None
     propagation_direction: str = "both"
-    score_threshold_detection: Optional[float] = None
-    new_det_thresh: Optional[float] = None
-    checkpoint_path: Optional[str] = None
+    score_threshold_detection: float | None = None
+    new_det_thresh: float | None = None
+    checkpoint_path: str | None = None
     multi_prompt: bool = False
-    resize_input_to: Optional[int] = None
+    resize_input_to: int | None = None
 
     def __post_init__(self):
         self.predictor = build_sam3_video_predictor(

@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange, repeat
-
 
 from . import camera as ucpe_cc
 from . import prope as prope_torch

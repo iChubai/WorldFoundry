@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> init_utils.py functionality."""
 
-import time
 import os
+import time
 from typing import Literal
 
 import imageio.v3 as iio
@@ -11,9 +11,9 @@ import numpy as np
 import roma
 import torch
 import torch.nn.functional as F
-from torch import Tensor
 from loguru import logger as guru
 from matplotlib.pyplot import get_cmap
+from torch import Tensor
 from tqdm import tqdm
 
 try:
@@ -40,7 +40,7 @@ from flow3d.loss_utils import (
     knn,
     masked_l1_loss,
 )
-from flow3d.params import GaussianParams, MotionBases, CameraPoses
+from flow3d.params import CameraPoses, GaussianParams, MotionBases
 from flow3d.tensor_dataclass import StaticObservations, TrackObservations
 from flow3d.transforms import cont_6d_to_rmat, rt_to_mat4, solve_procrustes
 from flow3d.vis.utils import draw_keypoints_video, get_server, project_2d_tracks
@@ -268,15 +268,10 @@ def init_motion_params_with_procrustes(
 
     guru.info(f"{skipped_ts=}")
     guru.info(
-        "procrustes init median error: {:.5f} => {:.5f}".format(
-            np.median(errs_before[errs_before > 0]),
-            np.median(errs_after[errs_after > 0]),
-        )
+        f"procrustes init median error: {np.median(errs_before[errs_before > 0]):.5f} => {np.median(errs_after[errs_after > 0]):.5f}"
     )
     guru.info(
-        "procrustes init mean error: {:.5f} => {:.5f}".format(
-            np.mean(errs_before[errs_before > 0]), np.mean(errs_after[errs_after > 0])
-        )
+        f"procrustes init mean error: {np.mean(errs_before[errs_before > 0]):.5f} => {np.mean(errs_after[errs_after > 0]):.5f}"
     )
     guru.info(f"{init_rots.shape=}, {init_ts.shape=}, {motion_coefs.shape=}")
 
@@ -336,7 +331,7 @@ def run_initial_optim(
     ts_clamped = torch.clamp(ts, min=1, max=num_frames - 2)
     ts_neighbors = torch.cat((ts_clamped - 1, ts_clamped, ts_clamped + 1))  # i (3B,)
 
-    pbar = tqdm(range(0, num_iters))
+    pbar = tqdm(range(num_iters))
     for i in pbar:
         coefs = fg.get_coefs()
         transfms = bases.compute_transforms(ts, coefs)
@@ -624,7 +619,7 @@ def sample_initial_bases_centers(mode: str, cano_t: int, tracks_3d: TrackObserva
     sampled_centers = torch.stack(
         [means_canonical[torch.tensor(labels == i)].median(dim=0).values for i in range(num_bases)]
     )[None]
-    print("number of {} clusters: ".format(mode), num_bases)
+    print(f"number of {mode} clusters: ", num_bases)
     return sampled_centers, num_bases, torch.tensor(labels)
 
 
@@ -675,7 +670,7 @@ def _sample_initial_bases_centers_cpu(mode: str, cano_t: int, tracks_3d: TrackOb
         sampled.append(cluster_points.median(dim=0).values)
     sampled_centers = torch.stack(sampled, dim=0)[None]
     num_bases = sampled_centers.shape[1]
-    print("number of {} clusters: ".format(mode), num_bases)
+    print(f"number of {mode} clusters: ", num_bases)
     return sampled_centers, num_bases, labels
 
 

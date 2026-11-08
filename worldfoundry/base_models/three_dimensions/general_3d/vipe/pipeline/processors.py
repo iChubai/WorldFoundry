@@ -17,7 +17,8 @@
 """Module for base_models -> three_dimensions -> general_3d -> vipe -> pipeline -> processors.py functionality."""
 
 import logging
-from typing import Any, Iterable, Iterator, cast
+from collections.abc import Iterable, Iterator
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -29,8 +30,16 @@ from worldfoundry.base_models.three_dimensions.depth.alignment import align_inv_
 from worldfoundry.base_models.three_dimensions.depth.priorda import PriorDAModel
 from worldfoundry.base_models.three_dimensions.depth.videodepthanything import VideoDepthAnythingDepthModel
 from worldfoundry.base_models.three_dimensions.general_3d.geocalib import GeoCalib
+
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.lietorch import SE3, SO3
+
+# isort: split
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.slam.interface import SLAMOutput
+
+# isort: split
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.adaptive_models import AdaptiveDepthModels
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import (
     CachedVideoStream,
     FrameAttribute,
@@ -44,8 +53,6 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.geometry im
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.logging import pbar
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.misc import unpack_optional
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.morph import erode
-
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.adaptive_models import AdaptiveDepthModels
 
 logger = logging.getLogger(__name__)
 
@@ -614,11 +621,13 @@ class MultiviewDepthProcessor(StreamProcessor):
                     t for t in sw_keyframe_inds if self.keyframes_inds[t] not in current_sliding_window_idx
                 ]
 
-                sw_images, sw_exts, sw_ints = zip(*[frame.dav3_conditions() for frame in current_sliding_window])
+                sw_images, sw_exts, sw_ints = zip(
+                    *[frame.dav3_conditions() for frame in current_sliding_window], strict=False
+                )
 
                 if len(sw_keyframe_inds) > 0:
                     kf_images, kf_exts, kf_ints = zip(
-                        *[self.keyframes_data[t].dav3_conditions() for t in sw_keyframe_inds]
+                        *[self.keyframes_data[t].dav3_conditions() for t in sw_keyframe_inds], strict=False
                     )
                 else:
                     kf_images, kf_exts, kf_ints = tuple(), tuple(), tuple()

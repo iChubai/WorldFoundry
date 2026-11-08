@@ -1,9 +1,12 @@
 from typing import List
+
 import torch
 
-from .vqa_model import VQAScoreModel
+from ...constants import CONTEXT_LEN, DEFAULT_IMAGE_TOKEN, HF_CACHE_DIR, IGNORE_INDEX, SYSTEM_MSG
 from .mm_utils import expand2square, load_pretrained_model, t5_tokenizer_image_token
-from ...constants import HF_CACHE_DIR, CONTEXT_LEN, SYSTEM_MSG, DEFAULT_IMAGE_TOKEN, IGNORE_INDEX
+from .vqa_model import VQAScoreModel
+
+# isort: split
 from .clip_t5.model import CLIPT5ForConditionalGeneration, ModelArguments
 
 default_question_template = 'Does this figure show "{}"? Please answer yes or no.'
@@ -217,7 +220,7 @@ class CLIPT5Model(VQAScoreModel):
             cache_dir=self.cache_dir,
         )
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         if any(path.startswith(("http://", "https://")) for path in image):
             raise NotImplementedError(
@@ -237,8 +240,8 @@ class CLIPT5Model(VQAScoreModel):
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         question_template: str = default_question_template,
         answer_template: str = default_answer_template,
     ) -> torch.Tensor:
@@ -304,8 +307,8 @@ class CLIPT5Model(VQAScoreModel):
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
     def generate(
         self,
-        images: List[str],
-        prompts: List[str],
+        images: list[str],
+        prompts: list[str],
         temperature: float = 0.2,
     ):
         """Forward pass of the model to return n strings for n (image, prompt) pairs"""

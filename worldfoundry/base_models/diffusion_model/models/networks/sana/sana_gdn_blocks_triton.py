@@ -104,7 +104,7 @@ def _project_materialized_camera_qkv(
         qkv_b = torch.cat(
             [
                 bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
-                for bias, weight in zip(biases, weights)
+                for bias, weight in zip(biases, weights, strict=False)
             ]
         )
     return torch.nn.functional.linear(x, qkv_w, qkv_b)
@@ -170,7 +170,7 @@ class BidirectionalGDNTriton(BidirectionalGDN):
         if HW is None:
             raise ValueError("BidirectionalGDNTriton requires HW=(T, H, W).")
         del mask, block_mask  # unused in the bidirectional Triton path
-        if kwargs.get("frame_valid_mask", None) is not None:
+        if kwargs.get("frame_valid_mask") is not None:
             raise NotImplementedError(
                 "BidirectionalGDNTriton does not support frame_valid_mask (training-only feature)."
             )
@@ -199,7 +199,7 @@ class BidirectionalGDNTriton(BidirectionalGDN):
             qkv[:, :, 1].copy_(k_conv.reshape(B, N, H, D))
 
         # ---- 3. Frame gates (precomputed when shared with cam branch). ----
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -424,7 +424,7 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
             )
 
         # ---- Guards: k_conv_only=True. ----
-        if kwargs.get("frame_valid_mask", None) is not None:
+        if kwargs.get("frame_valid_mask") is not None:
             raise NotImplementedError(
                 "BidirectionalGDNUCPESinglePathLiteLABothTriton does not "
                 "support frame_valid_mask (training-only feature)."
@@ -513,7 +513,7 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
         inflation_sq = inflation_sq.view(B, H_heads, 1, N)
 
         # ---- 5. Gates + beta discounting -------------------------------
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:

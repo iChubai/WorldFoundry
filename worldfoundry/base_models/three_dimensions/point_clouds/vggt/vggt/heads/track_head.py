@@ -7,6 +7,7 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> track_head.py functionality."""
 
 import torch.nn as nn
+
 from .dpt_head import DPTHead
 from .track_modules.base_track_predictor import BaseTrackerPredictor
 

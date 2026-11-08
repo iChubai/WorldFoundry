@@ -31,7 +31,7 @@ class LowLevelEncoder(nn.Module):
         self.conv1 = ConvModule(self.in_channel, self.feat_dim, kernel_size=3, padding=1)
         self.conv2 = ConvModule(self.feat_dim, self.feat_dim, kernel_size=3, padding=1)
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass."""
         x = data["image"]
 
@@ -54,7 +54,7 @@ class UpDecoder(nn.Module):
         self.decoder = LightHamHead()
         self.linear_pred_up = nn.Conv2d(self.decoder.out_channels, 2, kernel_size=1)
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass."""
         x, log_confidence = self.decoder(data["features"])
         up = self.linear_pred_up(x)
@@ -73,7 +73,7 @@ class LatitudeDecoder(nn.Module):
         self.decoder = LightHamHead()
         self.linear_pred_latitude = nn.Conv2d(self.decoder.out_channels, 1, kernel_size=1)
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass."""
         x, log_confidence = self.decoder(data["features"])
         eps = 1e-5  # avoid nan in backward of asin
@@ -94,7 +94,7 @@ class PerspectiveDecoder(nn.Module):
         self.up_head = UpDecoder()
         self.latitude_head = LatitudeDecoder()
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass."""
         return self.up_head(data) | self.latitude_head(data)
 
@@ -115,7 +115,7 @@ class GeoCalib(nn.Module):
 
         self.optimizer = LMOptimizer({**optimizer_options})
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Forward pass."""
         features = {
             "hl": self.backbone(data)["features"],
@@ -129,7 +129,7 @@ class GeoCalib(nn.Module):
 
         return out
 
-    def flexible_load(self, state_dict: Dict[str, torch.Tensor]) -> None:
+    def flexible_load(self, state_dict: dict[str, torch.Tensor]) -> None:
         """Load a checkpoint with flexible key names."""
         dict_params = set(state_dict.keys())
         model_params = set(map(lambda n: n[0], self.named_parameters()))

@@ -30,15 +30,15 @@ except ModuleNotFoundError:
     flash_attn_2_func = None
     FLASH_ATTN_2_AVAILABLE = False
 
-from .krea_sage import sageattn_func, SAGEATTN_AVAILABLE
-
 import warnings
 
+from .krea_sage import SAGEATTN_AVAILABLE, sageattn_func
+
 __all__ = [
-    "flash_attention",
-    "attention",
-    "sageattn_func",
     "SAGEATTN_AVAILABLE",
+    "attention",
+    "flash_attention",
+    "sageattn_func",
 ]
 
 print("flash attn 3 available", FLASH_ATTN_3_AVAILABLE)
@@ -105,7 +105,7 @@ def flash_attention(
         q = half(q.flatten(0, 1))
         q_lens = torch.tensor([lq] * b, dtype=torch.int32).to(device=q.device, non_blocking=True)
     else:
-        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens)]))
+        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens, strict=False)]))
 
     # preprocess key, value
     if k_lens is None:
@@ -113,8 +113,8 @@ def flash_attention(
         v = half(v.flatten(0, 1))
         k_lens = torch.tensor([lk] * b, dtype=torch.int32).to(device=k.device, non_blocking=True)
     else:
-        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens)]))
-        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens)]))
+        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens, strict=False)]))
+        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens, strict=False)]))
 
     q = q.to(v.dtype)
     k = k.to(v.dtype)

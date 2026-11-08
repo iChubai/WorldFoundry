@@ -13,20 +13,19 @@ import math
 
 import torch
 import torch.nn.functional as F
-from torch import nn, Tensor
+from torch import Tensor, nn
 
-from worldfoundry.base_models.diffusion_model.models.networks.kandinsky6.tensors import (
-    get_freqs,
-    apply_scale_shift_norm,
-    apply_gate_sum,
-    apply_rotary,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.kandinsky6.attention.dispatch import (
     SelfAttentionEngine,
     _sdpa,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.kandinsky6.rope import RoPE1D, RoPE3D
-
+from worldfoundry.base_models.diffusion_model.models.networks.kandinsky6.tensors import (
+    apply_gate_sum,
+    apply_rotary,
+    apply_scale_shift_norm,
+    get_freqs,
+)
 
 # ---------------------------------------------------------------------------
 # Small embedding / projection modules

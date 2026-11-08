@@ -18,8 +18,9 @@ import math
 import os
 import os.path as osp
 import warnings
+from collections.abc import Sequence
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import transformers
@@ -73,10 +74,10 @@ def _maybe_add_sentinel_token(tokenizer: transformers.PreTrainedTokenizer) -> No
 
 
 def tokenize_conversation_legacy(
-    messages: Sequence[Dict[str, str]],
+    messages: Sequence[dict[str, str]],
     tokenizer: transformers.PreTrainedTokenizer,
     add_generation_prompt: bool = False,
-    overrides: Optional[Dict[str, str]] = None,
+    overrides: dict[str, str] | None = None,
     no_system_prompt: bool = False,
 ) -> torch.Tensor:
     conv = default_conversation.copy()
@@ -106,10 +107,10 @@ def tokenize_conversation_legacy(
 
 
 def tokenize_conversation(
-    messages: Sequence[Dict[str, str]],
+    messages: Sequence[dict[str, str]],
     tokenizer: transformers.PreTrainedTokenizer,
     add_generation_prompt: bool = False,
-    overrides: Optional[Dict[str, str]] = None,
+    overrides: dict[str, str] | None = None,
     no_system_prompt: bool = False,
 ) -> torch.Tensor:
     # Normalize the conversation before tokenization
@@ -151,7 +152,7 @@ def tokenize_conversation(
     return tokenizer_image_token(text, tokenizer, return_tensors="pt")
 
 
-def infer_stop_tokens(tokenizer: transformers.PreTrainedTokenizer) -> List[str]:
+def infer_stop_tokens(tokenizer: transformers.PreTrainedTokenizer) -> list[str]:
     _maybe_add_sentinel_token(tokenizer)
     template = tokenize_conversation(DUMMY_CONVERSATION, tokenizer, overrides={"gpt": SENTINEL_TOKEN})
 
@@ -180,7 +181,7 @@ def build_llm_and_tokenizer(
     model_max_length=None,
     *args,
     **kwargs,
-) -> Tuple[PreTrainedModel, PreTrainedTokenizer]:
+) -> tuple[PreTrainedModel, PreTrainedTokenizer]:
     # print(model_name_or_path)
     llm_cfg = AutoConfig.from_pretrained(model_name_or_path)
     llm_cfg._attn_implementation = attn_implementation

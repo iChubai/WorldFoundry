@@ -4,26 +4,25 @@ from typing import List, Optional, Union
 
 import torch
 import torch.nn as nn
-from torch.nn import GroupNorm, LayerNorm
 from mmengine.dist import get_world_size
 from mmengine.logging import print_log
-from mmengine.optim import OptimWrapper, DefaultOptimWrapperConstructor
+from mmengine.optim import DefaultOptimWrapperConstructor, OptimWrapper
 from mmengine.utils.dl_utils import mmcv_full_available
 from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm, _InstanceNorm
-
 from mmyolo.registry import OPTIM_WRAPPER_CONSTRUCTORS, OPTIM_WRAPPERS, OPTIMIZERS
+from torch.nn import GroupNorm, LayerNorm
 
 
 @OPTIM_WRAPPER_CONSTRUCTORS.register_module()
 class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
     """YOLO World v5 constructor for optimizers."""
 
-    def __init__(self, optim_wrapper_cfg: dict, paramwise_cfg: Optional[dict] = None) -> None:
+    def __init__(self, optim_wrapper_cfg: dict, paramwise_cfg: dict | None = None) -> None:
         super().__init__(optim_wrapper_cfg, paramwise_cfg)
         self.base_total_batch_size = self.paramwise_cfg.pop("base_total_batch_size", 64)
 
     def add_params(
-        self, params: List[dict], module: nn.Module, prefix: str = "", is_dcn_module: Optional[Union[int, float]] = None
+        self, params: list[dict], module: nn.Module, prefix: str = "", is_dcn_module: int | float | None = None
     ) -> None:
         """Add all parameters of module to the params list.
 
@@ -157,7 +156,7 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
             optimizer = OPTIMIZERS.build(optimizer_cfg)
         else:
             # set param-wise lr and weight decay recursively
-            params: List = []
+            params: list = []
             self.add_params(params, model)
             optimizer_cfg["params"] = params
             optimizer = OPTIMIZERS.build(optimizer_cfg)

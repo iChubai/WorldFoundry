@@ -7,17 +7,21 @@
 # --------------------------------------------------------'
 # not tested yet
 import math
-from transformers import CLIPImageProcessor
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
+from transformers import CLIPImageProcessor
+
+# isort: split
 from .eva_clip import create_model_and_transforms, get_model_config
-import torch
-import torchvision
+
+# isort: split
 import time
+
+import torchvision
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 
@@ -43,11 +47,11 @@ class EvaViTWrapper(nn.Module):
             self.load_model()
         elif getattr(args, "unfreeze_mm_vision_tower", False):
             # TODO: better detector is needed.
-            rank0_print(f"The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
+            rank0_print("The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
             self.load_model()
         elif hasattr(args, "mm_tunable_parts") and "mm_vision_tower" in args.mm_tunable_parts:
             rank0_print(
-                f"The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
+                "The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
             )
             self.load_model()
 

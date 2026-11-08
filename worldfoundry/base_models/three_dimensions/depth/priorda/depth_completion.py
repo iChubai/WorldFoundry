@@ -4,10 +4,10 @@
 
 """Module for base_models -> three_dimensions -> depth -> priorda -> depth_completion.py functionality."""
 
+import os
 import re
 import time
 import warnings
-import os
 from typing import Dict, Tuple
 
 import torch
@@ -175,7 +175,7 @@ class DepthCompletion(torch.nn.Module):
         prior_depths=None,
         geometric_depths=None,
         pattern=None,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Processe input images and sparse depth information to produce completed depth maps.
         We use global alignment and KNN alignment to refine the depth predictions.
@@ -295,7 +295,7 @@ class DepthCompletion(torch.nn.Module):
 
     def perform_weighted(
         self, sparse_ori: torch.Tensor, pred_ori: torch.Tensor, dists: torch.Tensor
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Perform weighted operations on input tensors using distance-based weights. A diagonal
         matrix is created from the normalized weights and used to weight the inputs.
@@ -326,7 +326,7 @@ class DepthCompletion(torch.nn.Module):
 
     def knn_aligns(
         self, sparse_disparities, pred_disparities, sparse_masks, complete_masks, K
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Perform K-Nearest Neighbors (KNN) alignment on sparse and predicted disparities.
 
@@ -465,7 +465,7 @@ class DepthCompletion(torch.nn.Module):
         scaled_preds[sparse_masks] = sparse_disparities[sparse_masks]
         return scaled_preds
 
-    def global_aligns(self, sparse_disparities, pred_disparities, sparse_masks) -> Tuple[torch.Tensor, ...]:
+    def global_aligns(self, sparse_disparities, pred_disparities, sparse_masks) -> tuple[torch.Tensor, ...]:
         """
         Perform global alignment on sparse and predicted disparities. Extract the valid disparities from
         both sparse and predicted map based on the sparse masks.

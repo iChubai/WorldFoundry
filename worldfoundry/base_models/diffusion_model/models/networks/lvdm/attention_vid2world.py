@@ -4,11 +4,12 @@ Feature maps remain ``B C T H W``.  Spatial attn uses ``(B·T) (H·W) C``;
 temporal attn uses ``(B·H·W) T C``.
 """
 
+from functools import partial
+
 import torch
-from torch import nn, einsum
 import torch.nn.functional as F
 from einops import rearrange, repeat
-from functools import partial
+from torch import einsum, nn
 
 try:
     import xformers
@@ -17,12 +18,12 @@ try:
     XFORMERS_IS_AVAILBLE = True
 except:
     XFORMERS_IS_AVAILBLE = False
+from worldfoundry.core.nn.diffusion.convolution import zero_module
 from worldfoundry.core.nn.diffusion.utils import (
     checkpoint,
-    exists,
     default,
+    exists,
 )
-from worldfoundry.core.nn.diffusion.convolution import zero_module
 
 
 class RelativePosition(nn.Module):

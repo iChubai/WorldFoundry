@@ -1,12 +1,12 @@
 """Module for base_models -> three_dimensions -> depth -> moge -> model -> v1.py functionality."""
 
-from typing import *
-from numbers import Number
-from functools import partial
-from pathlib import Path
 import importlib
-import warnings
 import json
+import warnings
+from functools import partial
+from numbers import Number
+from pathlib import Path
+from typing import *
 
 import torch
 import torch.nn as nn
@@ -14,17 +14,20 @@ import torch.nn.functional as F
 import torch.utils
 import torch.utils.checkpoint
 import torch.version
+
+# isort: split
 from ....general_3d.eastern_journalist.utils3d.torch import depth_map_to_point_map, intrinsics_from_focal_center
+
+# isort: split
 from huggingface_hub import hf_hub_download
 
-
-from ..utils.geometry_torch import normalized_view_plane_uv, recover_focal_shift, gaussian_blur_2d, dilate_with_mask
+from ..utils.geometry_torch import dilate_with_mask, gaussian_blur_2d, normalized_view_plane_uv, recover_focal_shift
+from ..utils.tools import timeit
 from .utils import (
+    unwrap_module_with_gradient_checkpointing,
     wrap_dinov2_attention_with_sdpa,
     wrap_module_with_gradient_checkpointing,
-    unwrap_module_with_gradient_checkpointing,
 )
-from ..utils.tools import timeit
 
 
 class ResidualConvBlock(nn.Module):
@@ -151,7 +154,7 @@ class Head(nn.Module):
                         for _ in range(num_res_blocks)
                     ),
                 )
-                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample)
+                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)
             ]
         )
 
@@ -242,7 +245,7 @@ class Head(nn.Module):
         x = torch.stack(
             [
                 proj(feat.permute(0, 2, 1).unflatten(2, (patch_h, patch_w)).contiguous())
-                for proj, (feat, clstoken) in zip(self.projects, hidden_states)
+                for proj, (feat, clstoken) in zip(self.projects, hidden_states, strict=False)
             ],
             dim=1,
         ).sum(dim=1)

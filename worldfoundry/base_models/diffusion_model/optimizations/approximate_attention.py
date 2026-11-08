@@ -770,7 +770,7 @@ def _load_sparse_ops() -> Any:
     Triton path. This loader does not manufacture a second sparse fallback.
     """
     try:
-        import fastvideo_kernel  # noqa: F401
+        import fastvideo_kernel
 
         return fastvideo_kernel
     except (ImportError, OSError):
@@ -837,7 +837,7 @@ def _validate_vmoba_grid_profile(
             f"VMoBA grid {grid} is incompatible with spatial_chunk_size="
             f"{config.spatial_chunk_size}; h and w must be divisible respectively"
         )
-    if any(size % chunk for size, chunk in zip(grid, config.st_chunk_size)):
+    if any(size % chunk for size, chunk in zip(grid, config.st_chunk_size, strict=False)):
         raise RuntimeError(
             f"VMoBA grid {grid} is incompatible with st_chunk_size="
             f"{config.st_chunk_size}; t, h, and w must be divisible respectively"
@@ -2044,11 +2044,7 @@ def install_approximate_attention(
             layer_specs=layer_specs,
             checkpoint_state_dict=checkpoint_state_dict,
         )
-        setattr(
-            model,
-            "_worldfoundry_fastvideo_sla_adapter",
-            state.fastvideo_sla_adapter,
-        )
+        model._worldfoundry_fastvideo_sla_adapter = state.fastvideo_sla_adapter
     wrapped = 0
     installed_layer_indices: list[int] = []
     for ordinal, (module_path, module) in enumerate(matching_attention):
@@ -2841,16 +2837,16 @@ def fastvideo_sla_attention_report(
 __all__ = [
     "ApproximateAttentionConfig",
     "ApproximateSelfAttentionProcessor",
-    "parse_approximate_attention",
-    "install_approximate_attention",
+    "_recoverable_sparse_kernel_error",
     "advance_approximate_step",
-    "finalize_approximate_attention_request",
     "approximate_attention_lifecycle_report",
-    "reset_approximate_attention",
     "approximate_attention_report",
-    "lightx2v_attention_report",
     "fastvideo_sla_attention_report",
+    "finalize_approximate_attention_request",
+    "install_approximate_attention",
+    "lightx2v_attention_report",
+    "parse_approximate_attention",
     "place_fastvideo_sla_providers",
     "prepare_lightx2v_providers",
-    "_recoverable_sparse_kernel_error",
+    "reset_approximate_attention",
 ]

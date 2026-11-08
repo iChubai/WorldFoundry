@@ -16,7 +16,8 @@ token (block-wise SSM) or apply a depthwise temporal convolution
 from __future__ import annotations
 
 import math
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -26,7 +27,7 @@ from worldfoundry.core.attention import packed_sequence_attention
 from worldfoundry.core.nn import RMSNorm
 from worldfoundry.core.nn import scale_shift as modulate
 
-from ..wan.model import DiTBlock, _SELF_ATTENTION_INTERNAL_KWARGS
+from ..wan.model import _SELF_ATTENTION_INTERNAL_KWARGS, DiTBlock
 from .architecture import EchoCheckpointArchitecture
 from .schema import EchoMemoryMechanism, EchoMemoryRecipe, SpatialInjection
 

@@ -64,7 +64,7 @@ class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
         cls,
         pretrained_model_path: str,
         transformer_additional_kwargs: dict | None = None,
-    ) -> "CLIPModel":
+    ) -> CLIPModel:
         del transformer_additional_kwargs
         return load_model(
             cls,

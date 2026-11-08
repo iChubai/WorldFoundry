@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 
 
-def transform_jsonl_to_df(dict_list: List[Dict[str, Any]]) -> pd.DataFrame:
+def transform_jsonl_to_df(dict_list: list[dict[str, Any]]) -> pd.DataFrame:
     """Relevant function: `io_utils.read_from_jsonl()`"""
-    data_dict: Dict[str, List[Any]] = {}
+    data_dict: dict[str, list[Any]] = {}
     for i, obj in enumerate(dict_list):
         for k, v in obj.items():
             if k not in data_dict:
@@ -18,7 +18,7 @@ def transform_jsonl_to_df(dict_list: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.DataFrame.from_dict(data_dict)
 
 
-def get_seed(random_state: Optional[np.random.RandomState] = None) -> int:
+def get_seed(random_state: np.random.RandomState | None = None) -> int:
     if random_state is None:
         random_state = np.random.RandomState()
     seed_max = np.iinfo(np.int32).max
@@ -26,7 +26,7 @@ def get_seed(random_state: Optional[np.random.RandomState] = None) -> int:
     return seed
 
 
-def stat_array(array: Union[np.ndarray, List[int], "torch.Tensor"]) -> Tuple[Dict[str, float], str]:
+def stat_array(array: Union[np.ndarray, list[int], "torch.Tensor"]) -> tuple[dict[str, float], str]:
     if isinstance(array, list):
         array = np.array(array)
     mean = array.mean().item()

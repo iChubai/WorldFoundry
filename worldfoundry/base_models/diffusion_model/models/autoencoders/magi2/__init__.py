@@ -10,11 +10,11 @@ Exposes:
 from .audio_vae import AudioAutoencoder, create_model_from_config
 from .audio_vae import AudioAutoencoder as Magi2AudioVAE
 from .config import (
+    WAN22_LATENTS_MEAN,
+    WAN22_LATENTS_STD,
     AudioVAEConfig,
     TurboDecoderConfig,
     VideoVAEConfig,
-    WAN22_LATENTS_MEAN,
-    WAN22_LATENTS_STD,
 )
 from .turbo_decoder import TurboVAED, get_turbo_vaed
 from .turbo_decoder import TurboVAED as Magi2TurboDecoder

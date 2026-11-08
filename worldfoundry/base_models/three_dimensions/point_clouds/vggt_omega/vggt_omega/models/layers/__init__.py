@@ -6,9 +6,10 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> __init__.py functionality."""
 
+from worldfoundry.core.nn.blocks.layers import LayerScale, PatchEmbed
+
 from .attention import CausalSelfAttention, LinearKMaskedBias, SelfAttention
 from .block import CausalSelfAttentionBlock, SelfAttentionBlock
-from worldfoundry.core.nn.blocks.layers import LayerScale, PatchEmbed
 from .ffn_layers import Mlp, SwiGLUFFN
 from .rms_norm import RMSNorm
 from .rope_position_encoding import RopePositionEmbedding

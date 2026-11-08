@@ -1,11 +1,17 @@
-from typing import List
-import torch
 import copy
+from typing import List
 
-from .vqa_model import VQAScoreModel
+import torch
+
+from ...constants import CONTEXT_LEN, DEFAULT_IMAGE_TOKEN, HF_CACHE_DIR, IGNORE_INDEX, SYSTEM_MSG
 from .mm_utils import expand2square, load_pretrained_model, tokenizer_image_token
-from ...constants import HF_CACHE_DIR, CONTEXT_LEN, SYSTEM_MSG, DEFAULT_IMAGE_TOKEN, IGNORE_INDEX
+from .vqa_model import VQAScoreModel
+
+# isort: split
 from .llava_16.model import LlavaLlamaForCausalLM
+
+# isort: split
+# isort: split
 from .llava.model import ModelArguments
 
 default_question_template = 'Does this figure show "{}"? Please answer yes or no.'
@@ -107,7 +113,7 @@ class LLaVA16Model(VQAScoreModel):
             cache_dir=self.cache_dir,
         )
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         if any(path.startswith(("http://", "https://")) for path in image):
             raise NotImplementedError(
@@ -127,8 +133,8 @@ class LLaVA16Model(VQAScoreModel):
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         question_template: str = default_question_template,
         answer_template: str = default_answer_template,
     ) -> torch.Tensor:
@@ -146,11 +152,11 @@ class LLaVA16Model(VQAScoreModel):
 
         images = self.load_images(images)
 
-        prompts = [qs + ans for qs, ans in zip(questions, answers)]
+        prompts = [qs + ans for qs, ans in zip(questions, answers, strict=False)]
 
         input_ids = [tokenizer_image_token(prompt, self.tokenizer, return_tensors="pt") for prompt in prompts]
         labels = copy.deepcopy(input_ids)
-        for label, qs in zip(labels, questions):
+        for label, qs in zip(labels, questions, strict=False):
             tokenized_len = len(tokenizer_image_token(qs, self.tokenizer))
             if qs[-1] == " ":
                 tokenized_len -= 1  # because white space
@@ -213,7 +219,7 @@ class LLaVA16Model(VQAScoreModel):
 
     @torch.no_grad()
     @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
-    def generate(self, images: List[str], texts: List[str], max_new_tokens: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], max_new_tokens: int = 256) -> list[str]:
         assert len(images) == len(texts), "Number of images and texts must match"
 
         questions = texts

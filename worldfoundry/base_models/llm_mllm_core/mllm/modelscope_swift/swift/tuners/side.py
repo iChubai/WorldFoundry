@@ -13,6 +13,7 @@ from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.logger import get_logger
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.torch_utils import find_sub_module
+
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -41,14 +42,14 @@ class SideConfig(SwiftConfig):
 
     side_module_name: str = field(default="fcn4", metadata={"help": "The name of the additive side networks"})
 
-    source_hidden_pos: Union[str, int] = field(
+    source_hidden_pos: str | int = field(
         default=0,
         metadata={
             "help": "The position of the hidden state input to the target module, can be int (args) or str (kwargs)"
         },
     )
 
-    target_hidden_pos: Union[str, int] = field(
+    target_hidden_pos: str | int = field(
         default=0,
         metadata={
             "help": "The position of the hidden state output from the target module, can be int (args) or str (kwargs)"
@@ -68,7 +69,7 @@ class Side(SwiftAdapter):
         module_keys = [key for key, _ in model.named_modules()]
 
         for module_key in module_keys:
-            if re.fullmatch(config.target_modules, module_key):  # noqa
+            if re.fullmatch(config.target_modules, module_key):
                 tgt_module = model.get_submodule(module_key)
                 logger.info(f"Matching target module [{module_key}] of type {type(tgt_module)}")
                 if isinstance(tgt_module, (nn.ModuleList, nn.ModuleDict)):

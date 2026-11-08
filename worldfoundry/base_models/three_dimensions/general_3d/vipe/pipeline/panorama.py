@@ -24,7 +24,10 @@ import rerun as rr
 import torch
 from omegaconf import DictConfig
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import lietorch as lt
+
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth.base import DepthEstimationInput, DepthEstimationModel
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1 import DAPModel
 from worldfoundry.base_models.three_dimensions.depth.unik3d import Unik3DModel
@@ -125,7 +128,7 @@ class MergedPanoramaVideoStream(VideoStream):
         last_inv_scale = 1.0
 
         for frame_idx, (pano_frame_data, *projected_frame_data) in enumerate(
-            zip(self.pano_stream, *self.projected_streams)
+            zip(self.pano_stream, *self.projected_streams, strict=False)
         ):
             pano_frame_data.intrinsics = torch.zeros(4).float().cuda()
             pano_frame_data.pose = self.slam_output.trajectory[frame_idx]
@@ -328,7 +331,7 @@ class PanoramaAnnotationPipeline(Pipeline):
         cached_video_stream = CachedVideoStream(video_stream)
 
         slam_streams: list[VideoStream] = []
-        for rig_transform, rig_name in zip(rig_transforms, rig_names):
+        for rig_transform, rig_name in zip(rig_transforms, rig_names, strict=False):
             projectors: list[StreamProcessor] = [
                 EquirectProjectionProcessor(
                     se3_to_so3(rig_transform),

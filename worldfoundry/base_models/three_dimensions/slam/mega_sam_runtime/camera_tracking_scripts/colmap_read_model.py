@@ -27,8 +27,8 @@ import collections
 import os
 import struct
 import sys
-import numpy as np
 
+import numpy as np
 
 CameraModel = collections.namedtuple("CameraModel", ["model_id", "model_name", "num_params"])
 Camera = collections.namedtuple("Camera", ["id", "model", "width", "height", "params"])
@@ -76,7 +76,7 @@ def read_cameras_text(path):
     void Reconstruction::ReadCamerasText(const std::string& path)
     """
     cameras = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -129,7 +129,7 @@ def read_images_text(path):
     void Reconstruction::WriteImagesText(const std::string& path)
     """
     images = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:
@@ -204,7 +204,7 @@ def read_points3D_text(path):
     void Reconstruction::WritePoints3DText(const std::string& path)
     """
     points3D = {}
-    with open(path, "r") as fid:
+    with open(path) as fid:
         while True:
             line = fid.readline()
             if not line:

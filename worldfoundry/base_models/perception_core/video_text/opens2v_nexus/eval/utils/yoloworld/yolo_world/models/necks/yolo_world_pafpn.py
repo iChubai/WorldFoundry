@@ -4,12 +4,11 @@ from typing import List, Union
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 from mmdet.utils import ConfigType, OptMultiConfig
-
-from mmyolo.registry import MODELS
-from mmyolo.models.utils import make_divisible, make_round
 from mmyolo.models.necks.yolov8_pafpn import YOLOv8PAFPN
+from mmyolo.models.utils import make_divisible, make_round
+from mmyolo.registry import MODELS
+from torch import Tensor
 
 
 @MODELS.register_module()
@@ -20,11 +19,11 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
-        out_channels: Union[List[int], int],
+        in_channels: list[int],
+        out_channels: list[int] | int,
         guide_channels: int,
-        embed_channels: List[int],
-        num_heads: List[int],
+        embed_channels: list[int],
+        num_heads: list[int],
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
@@ -106,7 +105,7 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         )
         return MODELS.build(block_cfg)
 
-    def forward(self, img_feats: List[Tensor], txt_feats: Tensor = None) -> tuple:
+    def forward(self, img_feats: list[Tensor], txt_feats: Tensor = None) -> tuple:
         """Forward function.
         including multi-level image features, text features: BxLxD
         """
@@ -152,11 +151,11 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
 
     def __init__(
         self,
-        in_channels: List[int],
-        out_channels: Union[List[int], int],
+        in_channels: list[int],
+        out_channels: list[int] | int,
         guide_channels: int,
-        embed_channels: List[int],
-        num_heads: List[int],
+        embed_channels: list[int],
+        num_heads: list[int],
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
@@ -198,7 +197,7 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         print(text_enhancder)
         self.text_enhancer = MODELS.build(text_enhancder)
 
-    def forward(self, img_feats: List[Tensor], txt_feats: Tensor) -> tuple:
+    def forward(self, img_feats: list[Tensor], txt_feats: Tensor) -> tuple:
         """Forward function."""
         assert len(img_feats) == len(self.in_channels)
         # reduce layers

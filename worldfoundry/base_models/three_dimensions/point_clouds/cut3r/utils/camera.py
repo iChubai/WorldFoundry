@@ -219,7 +219,7 @@ class HarmonicEmbedding(torch.nn.Module):
         )
         self.append_input = append_input
 
-    def forward(self, x: torch.Tensor, diag_cov: Optional[torch.Tensor] = None, **kwargs) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, diag_cov: torch.Tensor | None = None, **kwargs) -> torch.Tensor:
         """
         Args:
             x: tensor of shape [..., dim]

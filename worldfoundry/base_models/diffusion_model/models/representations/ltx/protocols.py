@@ -49,7 +49,7 @@ class Patchifier(Protocol):
         """
 
     @property
-    def patch_size(self) -> Tuple[int, int, int]:
+    def patch_size(self) -> tuple[int, int, int]:
         ...
         """
         Returns the patch size as a tuple of (temporal, height, width) dimensions

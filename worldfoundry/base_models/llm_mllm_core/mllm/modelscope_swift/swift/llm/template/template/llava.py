@@ -28,11 +28,11 @@ class LlavaHfTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return ["<image>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         if images:
@@ -92,7 +92,7 @@ register_template(
 class LlavaVideoHfTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return ["<image>\n"]
         assert media_type == "video"
@@ -103,7 +103,7 @@ class LlavaVideoHfTemplate(Template):
             inputs.videos[index] = load_video_llava(inputs.videos[index])
             return ["<video>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images or []
         videos = inputs.videos or []
@@ -133,7 +133,7 @@ register_template(
 
 
 class Llava1_6HfTemplate(LlavaHfTemplate):
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         for b in batch:
             pixel_values = b.get("pixel_values")
             if pixel_values is not None:
@@ -146,9 +146,9 @@ class Llava1_6HfTemplate(LlavaHfTemplate):
 class LlavaMistralTemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: ["<s>[INST] "])
     prompt: Prompt = field(default_factory=lambda: ["{{QUERY}} [/INST]"])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["</s>[INST] "])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["</s>[INST] "])
     suffix: Prompt = field(default_factory=lambda: ["</s>"])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: ["<<SYS>>\n{{system}}\n<</SYS>>\n\n"])
+    system_prefix: Prompt | None = field(default_factory=lambda: ["<<SYS>>\n{{system}}\n<</SYS>>\n\n"])
 
 
 register_template(LlavaMistralTemplateMeta(MLLMTemplateType.llava1_6_mistral_hf, template_cls=Llava1_6HfTemplate))
@@ -173,7 +173,7 @@ register_template(
 class LLava1_6YiHfTemplate(Llava1_6HfTemplate):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if self.mode == "vllm":
             return [[64000], "\n"]
         else:
@@ -198,7 +198,7 @@ register_template(QwenTemplateMeta(MLLMTemplateType.llava_next_qwen_hf, template
 
 
 class LlavaOneVisionHfTemplate(Llava1_6HfTemplate):
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = Template._encode(self, inputs)
         images = inputs.images
         input_ids = encoded["input_ids"]
@@ -210,7 +210,9 @@ class LlavaOneVisionHfTemplate(Llava1_6HfTemplate):
             image_inputs = image_processor(images, return_tensors="pt").to(self.model_info.torch_dtype)
             height, width = image_inputs["pixel_values"][0].shape[-2:]
             added_tokens_len = 0
-            for idx, pixel_v, image_size in zip(idx_list, image_inputs["pixel_values"], image_inputs["image_sizes"]):
+            for idx, pixel_v, image_size in zip(
+                idx_list, image_inputs["pixel_values"], image_inputs["image_sizes"], strict=False
+            ):
                 if isinstance(image_size, torch.Tensor):
                     image_size = image_size.tolist()
                 orig_height, orig_width = image_size
@@ -252,7 +254,7 @@ class LlavaLlama3_1HfTemplate(LlavaHfTemplate):
         "and assist the user with a variety of tasks using natural language."
     )
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         if len(encoded["pixel_values"].shape) == 5:  # (1, num_patch, 3, H/W, W/H)
             encoded["pixel_values"] = torch.squeeze(encoded["pixel_values"], dim=0)  # (num_patch, 3, H/W, W/H)
@@ -272,7 +274,7 @@ class LLavaLlama3HfTemplate(Template):
     # xtuner
     image_placeholder = ["<image>\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         raw_image = inputs.images
         if raw_image:
@@ -295,11 +297,11 @@ class LLavaTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return [[-200], "\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images or []
         image_sizes = [x.size for x in images]
@@ -315,7 +317,7 @@ class LLavaTemplate(Template):
             encoded["image_sizes"] = image_sizes
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = [b["images"] for b in batch if "images" in b]
         if images:

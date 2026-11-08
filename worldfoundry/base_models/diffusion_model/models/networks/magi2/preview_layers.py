@@ -20,9 +20,10 @@ world_size == 1 (no all-to-all, no Ulysses).
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Callable, List, Optional, Tuple, TypeAlias, Union
+from typing import List, Optional, Tuple, TypeAlias, Union
 
 import torch
 import torch.nn as nn
@@ -69,7 +70,7 @@ def create_activation_func(activation_type: MLPActivationType) -> Callable:
 # ============================================================
 
 
-def _maybe_gather(input: torch.Tensor, gather_ids: Optional[torch.Tensor]) -> torch.Tensor:
+def _maybe_gather(input: torch.Tensor, gather_ids: torch.Tensor | None) -> torch.Tensor:
     if gather_ids is None:
         return input
     gather_ids = gather_ids.to(input.device)
@@ -78,7 +79,7 @@ def _maybe_gather(input: torch.Tensor, gather_ids: Optional[torch.Tensor]) -> to
     return torch.gather(input, 0, gather_ids)
 
 
-def _m_splits_from(cu_seqlens: Optional[torch.Tensor], m_splits: Optional[Union[list[int], torch.Tensor]]) -> list[int]:
+def _m_splits_from(cu_seqlens: torch.Tensor | None, m_splits: list[int] | torch.Tensor | None) -> list[int]:
     if isinstance(m_splits, torch.Tensor):
         return [int(v) for v in m_splits.detach().cpu().tolist()]
     if m_splits is not None:
@@ -91,9 +92,9 @@ def _m_splits_from(cu_seqlens: Optional[torch.Tensor], m_splits: Optional[Union[
 def _torch_grouped_linear(
     input: torch.Tensor,
     weight: torch.Tensor,
-    bias: Optional[torch.Tensor],
+    bias: torch.Tensor | None,
     m_splits: list[int],
-    gather_ids: Optional[torch.Tensor] = None,
+    gather_ids: torch.Tensor | None = None,
 ) -> torch.Tensor:
     ordered_input = _maybe_gather(input, gather_ids)
     chunks = list(torch.split(ordered_input, m_splits, dim=0))
@@ -133,9 +134,9 @@ class GroupedLinearBase(nn.Module):
     def forward(
         self,
         input: torch.Tensor,
-        cu_seqlens: Optional[torch.Tensor] = None,
-        m_splits: Optional[list[int]] = None,
-        gather_ids: Optional[torch.Tensor] = None,
+        cu_seqlens: torch.Tensor | None = None,
+        m_splits: list[int] | None = None,
+        gather_ids: torch.Tensor | None = None,
     ) -> torch.Tensor:
         weight = self.weight.view(self.num_experts, self.out_features, self.in_features)
         bias = self.bias.view(self.num_experts, self.out_features) if self.bias is not None else None
@@ -172,8 +173,8 @@ class CustomGroupedLinear(GroupedLinearBase):
     def forward(
         self,
         input: torch.Tensor,
-        modality_dispatcher: Optional[Union["ModalityDispatcher", list[int]]] = None,
-        gather_ids: Optional[torch.Tensor] = None,
+        modality_dispatcher: ModalityDispatcher | list[int] | None = None,
+        gather_ids: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if isinstance(modality_dispatcher, ModalityDispatcher):
             m_splits = modality_dispatcher.group_size_cpu
@@ -250,7 +251,7 @@ class MultiModalityRMSNorm(nn.Module):
         self.weight_bias = 1.0
         self.weight = nn.Parameter(torch.zeros(num_patterns * dim * num_modality, device=device, dtype=_FP32))
 
-    def forward(self, x: torch.Tensor, modality_dispatcher: Optional["ModalityDispatcher"] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, modality_dispatcher: ModalityDispatcher | None = None) -> torch.Tensor:
         if self.num_modality > 1:
             assert modality_dispatcher is not None, "modality_dispatcher is required for multi-modality RMSNorm"
             return self._forward_multi_experts(x, modality_dispatcher, self.out_dtype)
@@ -259,7 +260,7 @@ class MultiModalityRMSNorm(nn.Module):
     def _forward_multi_experts(
         self,
         x: torch.Tensor,
-        modality_dispatcher: "ModalityDispatcher",
+        modality_dispatcher: ModalityDispatcher,
         target_dtype: torch.dtype | None,
     ) -> torch.Tensor:
         t, original_dtype = x.float(), x.dtype
@@ -285,14 +286,14 @@ class MultiModalityRMSNorm(nn.Module):
 # element-wise Fourier RoPE embedding
 # ============================================================
 
-Coords: TypeAlias = Tuple[int, int, int]
+Coords: TypeAlias = tuple[int, int, int]
 
 
 def freq_bands(
     num_bands: int,
     temperature: float = 10000.0,
     step: int = 2,
-    device: Optional[torch.device] = None,
+    device: torch.device | None = None,
 ) -> torch.Tensor:
     exp = torch.arange(0, num_bands, step, dtype=torch.int64, device=device).to(_FP32) / num_bands
     return 1.0 / (temperature**exp)
@@ -366,7 +367,7 @@ def get_coords(
     offset_thw: Coords = (0, 0, 0),
     device: torch.device = torch.device("cpu"),
     dtype: torch.dtype = _FP32,
-    time_positions: Optional[torch.Tensor] = None,
+    time_positions: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Build ``[T*H*W, 9]`` grid coords + (orig size, ref size) metadata."""
     ori_t, ori_h, ori_w = shape
@@ -472,7 +473,7 @@ class ModalityDispatcher:
 # MHC hyper-connections (pure-torch backend)
 # ============================================================
 
-MHCTensorTuple = Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+MHCTensorTuple = tuple[torch.Tensor, torch.Tensor, torch.Tensor]
 
 
 def _sigmoid_affine(

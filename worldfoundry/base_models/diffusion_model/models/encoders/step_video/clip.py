@@ -9,10 +9,11 @@ is :class:`~.step_llm.STEP1TextEncoder`.
 Borrowed Hunyuan CLIP graph, not Wan XLM-RoBERTa CLIP.
 """
 
+import os
+
 import torch
 import torch.nn as nn
 from transformers import BertConfig, BertModel, BertTokenizer
-import os
 
 
 def _load_local_bert_model(model_dir):

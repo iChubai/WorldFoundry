@@ -1,5 +1,5 @@
-from torch.utils.tensorboard import SummaryWriter
 from loguru import logger as loguru_logger
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Logger:
@@ -13,7 +13,7 @@ class Logger:
 
     def _print_training_status(self):
         metrics_data = [self.running_loss[k] / self.cfg.sum_freq for k in sorted(self.running_loss.keys())]
-        training_str = "[{:6d}, {}] ".format(self.total_steps + 1, self.scheduler.get_last_lr())
+        training_str = f"[{self.total_steps + 1:6d}, {self.scheduler.get_last_lr()}] "
         metrics_str = ("{:10.4f}, " * len(metrics_data)).format(*metrics_data)
 
         # print the training status

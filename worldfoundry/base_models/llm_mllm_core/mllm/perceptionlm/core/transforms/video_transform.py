@@ -1,8 +1,9 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import os
+from collections.abc import Callable
 from logging import getLogger
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 
 import torch
 from PIL import Image
@@ -17,7 +18,7 @@ logger = getLogger()
 def get_video_transform(
     image_res: int = 224,
     normalize_img: bool = True,
-) -> Tuple[Callable, int]:
+) -> tuple[Callable, int]:
     transforms = VideoTransform(
         size=image_res,
         normalize_img=normalize_img,
@@ -58,7 +59,7 @@ class VideoTransform(ImageTransform):
 
         return super()._transform_torch_tensor(frames)
 
-    def _process_multiple_images(self, image_paths: List[str]):
+    def _process_multiple_images(self, image_paths: list[str]):
         images = [Image.open(path).convert("RGB") for path in image_paths]
         processed_images = []
         for image in images:
@@ -67,7 +68,7 @@ class VideoTransform(ImageTransform):
         processed_images = torch.cat(processed_images, dim=0)
         return processed_images, (w, h)
 
-    def _process_multiple_images_pil(self, images: List[Image.Image]):
+    def _process_multiple_images_pil(self, images: list[Image.Image]):
         processed_images = []
         for image in images:
             image, (w, h) = super().__call__(image)

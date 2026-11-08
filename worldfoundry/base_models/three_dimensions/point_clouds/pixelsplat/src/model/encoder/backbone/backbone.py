@@ -41,7 +41,6 @@ class Backbone(nn.Module, ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass
 
     @property
     @abstractmethod
@@ -51,4 +50,3 @@ class Backbone(nn.Module, ABC, Generic[T]):
         Returns:
             The return value.
         """
-        pass

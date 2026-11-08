@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
-from timm.models.layers import DropPath
-
-from timm.models.layers import trunc_normal_
+from timm.models.layers import DropPath, trunc_normal_
 from torch.autograd import Function
-from torch.cuda.amp import custom_fwd, custom_bwd
+from torch.cuda.amp import custom_bwd, custom_fwd
 
 try:
     from torch.utils.cpp_extension import load

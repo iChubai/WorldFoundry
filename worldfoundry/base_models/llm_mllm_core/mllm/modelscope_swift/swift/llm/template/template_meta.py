@@ -36,15 +36,15 @@ class TemplateMeta:
     template_type: str
     prefix: Prompt
     prompt: Prompt
-    chat_sep: Optional[Prompt]
+    chat_sep: Prompt | None
     suffix: Prompt = field(default_factory=lambda: [["eos_token_id"]])
-    template_cls: Type[Template] = Template
-    system_prefix: Optional[Prompt] = None
-    default_system: Optional[str] = None
+    template_cls: type[Template] = Template
+    system_prefix: Prompt | None = None
+    default_system: str | None = None
     response_prefix: str = ""
 
     auto_add_bos: bool = False
-    stop_words: List[Word] = field(default_factory=list)
+    stop_words: list[Word] = field(default_factory=list)
     agent_template: str = "react_en"
 
     def to_generate_template_meta(self) -> "TemplateMeta":
@@ -95,7 +95,7 @@ class TemplateMeta:
         self.support_multi_round = self.chat_sep is not None
 
     @staticmethod
-    def _token_attr_to_id(tokenizer: PreTrainedTokenizerBase, value: Optional[Prompt]) -> Optional[Prompt]:
+    def _token_attr_to_id(tokenizer: PreTrainedTokenizerBase, value: Prompt | None) -> Prompt | None:
         """Turn `eos_token_id` to token id
 
         e.g. [['eos_token_id']] -> [[2]]
@@ -132,7 +132,7 @@ class TemplateMeta:
             if stop_token_id is not None:
                 self.stop_token_id = stop_token_id
 
-    def check_system(self, system: Optional[str]) -> None:
+    def check_system(self, system: str | None) -> None:
         if system is not None:
             assert self.support_system, (
                 f"The template does not support `system`, template_type: {self.template_type}, system: {system}"

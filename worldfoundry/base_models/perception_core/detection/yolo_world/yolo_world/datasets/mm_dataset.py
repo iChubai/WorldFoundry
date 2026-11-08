@@ -2,10 +2,11 @@
 import copy
 import json
 import logging
-from typing import Callable, List, Union
+from collections.abc import Callable
+from typing import List, Union
 
-from mmengine.logging import print_log
 from mmengine.dataset.base_dataset import BaseDataset, Compose, force_full_init
+from mmengine.logging import print_log
 from mmyolo.registry import DATASETS
 
 
@@ -15,10 +16,10 @@ class MultiModalDataset:
 
     def __init__(
         self,
-        dataset: Union[BaseDataset, dict],
+        dataset: BaseDataset | dict,
         class_text_path: str = None,
         test_mode: bool = True,
-        pipeline: List[Union[dict, Callable]] = [],
+        pipeline: list[dict | Callable] = [],
         lazy_init: bool = False,
     ) -> None:
         self.dataset: BaseDataset
@@ -30,7 +31,7 @@ class MultiModalDataset:
             raise TypeError(f"dataset must be a dict or a BaseDataset, but got {dataset}")
 
         if class_text_path is not None:
-            self.class_texts = json.load(open(class_text_path, "r"))
+            self.class_texts = json.load(open(class_text_path))
             # ori_classes = self.dataset.metainfo['classes']
             # assert len(ori_classes) == len(self.class_texts), \
             #     ('The number of classes in the dataset and the class text'
@@ -78,9 +79,7 @@ class MultiModalDataset:
 
         data_info = self.get_data_info(idx)
 
-        if hasattr(self.dataset, "test_mode") and not self.dataset.test_mode:
-            data_info["dataset"] = self
-        elif not self.test_mode:
+        if (hasattr(self.dataset, "test_mode") and not self.dataset.test_mode) or not self.test_mode:
             data_info["dataset"] = self
         return self.pipeline(data_info)
 
@@ -99,11 +98,11 @@ class MultiModalMixedDataset(MultiModalDataset):
 
     def __init__(
         self,
-        dataset: Union[BaseDataset, dict],
+        dataset: BaseDataset | dict,
         class_text_path: str = None,
         dataset_type: str = "detection",
         test_mode: bool = True,
-        pipeline: List[Union[dict, Callable]] = [],
+        pipeline: list[dict | Callable] = [],
         lazy_init: bool = False,
     ) -> None:
         self.dataset_type = dataset_type

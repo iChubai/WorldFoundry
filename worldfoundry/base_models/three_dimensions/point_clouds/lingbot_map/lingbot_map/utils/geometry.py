@@ -7,11 +7,11 @@
 """Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> geometry.py functionality."""
 
 import os
-import torch
-import numpy as np
-from scipy.spatial.transform import Rotation as R
 
+import numpy as np
+import torch
 from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Rotation as R
 
 try:
     from lietorch import SE3, Sim3

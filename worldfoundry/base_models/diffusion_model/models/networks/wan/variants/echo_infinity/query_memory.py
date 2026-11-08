@@ -138,7 +138,7 @@ class QueryMemoryEncoder(nn.Module):
         self.query_state = None
         self.has_history = False
         self._update_count = 0
-        total_params = sum((p.numel() for p in self.parameters()))
+        total_params = sum(p.numel() for p in self.parameters())
 
     def reset(self, batch_size=1, device=None, dtype=None):
         def _expand_init(init):
@@ -217,9 +217,7 @@ class QueryMemoryEncoder(nn.Module):
                 gate_means.append(gm)
             self.query_state = self.query_states[0]
             gate_str = ", ".join((f"g{i}={('res' if gm is None else f'{gm:.3f}')}" for i, gm in enumerate(gate_means)))
-            norm_str = ", ".join(
-                (f"g{i}={self.query_states[i].norm().item():.1f}" for i in range(self.num_query_groups))
-            )
+            norm_str = ", ".join(f"g{i}={self.query_states[i].norm().item():.1f}" for i in range(self.num_query_groups))
         else:
             new_state, gate_mean = _update_single_group(query_state, self.connector_proj, self.gate_linear)
             if self.use_vib:

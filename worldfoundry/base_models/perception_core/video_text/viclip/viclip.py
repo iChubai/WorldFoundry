@@ -1,14 +1,14 @@
-import os
 import logging
+import math
+import os
 
 import torch
 from einops import rearrange
 from torch import nn
-import math
 
 from .simple_tokenizer import SimpleTokenizer as _Tokenizer
-from .viclip_vision import clip_joint_l14
 from .viclip_text import clip_text_l14
+from .viclip_vision import clip_joint_l14
 
 logger = logging.getLogger(__name__)
 

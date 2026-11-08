@@ -36,7 +36,7 @@ def flatten_dict(d, parent_key="", sep="_"):
     return dict(items)
 
 
-def dataclass_from_dict(cls: Type[T], data: dict, strict: bool = True) -> T:
+def dataclass_from_dict(cls: type[T], data: dict, strict: bool = True) -> T:
     """
     Converts a dictionary to a dataclass instance, recursively for nested structures.
     """
@@ -56,7 +56,7 @@ def dataclass_to_dict(dataclass_instance: T) -> dict:
     return OmegaConf.to_container(OmegaConf.structured(dataclass_instance), resolve=True)
 
 
-def load_config_file(config_file, dataclass_cls: Type[T]) -> T:
+def load_config_file(config_file, dataclass_cls: type[T]) -> T:
     config = OmegaConf.to_container(OmegaConf.load(config_file), resolve=True)
     return dataclass_from_dict(dataclass_cls, config)
 

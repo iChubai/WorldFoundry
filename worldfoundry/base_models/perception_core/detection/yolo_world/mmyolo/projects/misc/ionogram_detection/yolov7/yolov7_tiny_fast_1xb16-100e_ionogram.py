@@ -2,7 +2,7 @@ _base_ = "./yolov7_l_fast_1xb16-100e_ionogram.py"
 
 # ======================== Modified parameters =======================
 # pre-train
-load_from = "https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_tiny_syncbn_fast_8x16b-300e_coco/yolov7_tiny_syncbn_fast_8x16b-300e_coco_20221126_102719-0ee5bbdf.pth"  # noqa
+load_from = "https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_tiny_syncbn_fast_8x16b-300e_coco/yolov7_tiny_syncbn_fast_8x16b-300e_coco_20221126_102719-0ee5bbdf.pth"
 
 # -----model related-----
 # Data augmentation

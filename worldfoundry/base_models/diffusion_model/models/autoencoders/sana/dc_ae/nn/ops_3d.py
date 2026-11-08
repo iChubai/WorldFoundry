@@ -10,7 +10,8 @@ Tensors are BCTHW.  2-D siblings are :mod:`.ops`.
 Used only by Sana temporal DC-AE, not MiniMax / Wan CNNs.
 """
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -18,6 +19,7 @@ import torch.nn.functional as F
 
 from worldfoundry.core.model_loading.checkpoints import submodule_state_dict
 from worldfoundry.core.nn import get_same_padding, val2tuple
+
 from .act import build_act
 from .norm import TritonRMSNorm2d, build_norm
 from .ops import IdentityLayer, OpSequential, ResidualBlock
@@ -26,7 +28,7 @@ from .ops import IdentityLayer, OpSequential, ResidualBlock
 def conv3d_split_channel(
     x: torch.Tensor,
     weight: torch.Tensor,
-    bias: Optional[torch.Tensor],
+    bias: torch.Tensor | None,
     stride: int | Sequence[int],
     padding: int | Sequence[int],
     dilation: int | Sequence[int],
@@ -72,7 +74,7 @@ def conv3d_split_channel(
 def custom_conv3d(
     input: torch.Tensor,
     weight: torch.Tensor,
-    bias: Optional[torch.Tensor],
+    bias: torch.Tensor | None,
     stride: Sequence[int],
     padding: int | Sequence[int],
     dilation: int | Sequence[int],
@@ -129,7 +131,7 @@ class ConvLayer3d(nn.Module):
         spatial_padding_mode: str = "zeros",
         temporal_padding_mode: str = "zeros",
         causal: bool = False,
-        causal_chunk_length: Optional[int] = None,
+        causal_chunk_length: int | None = None,
     ):
         """Init.
 
@@ -218,8 +220,8 @@ class ConvLayer3d(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -335,7 +337,7 @@ class ConvLayer3d(nn.Module):
         _str += f"  zero_out={self.zero_out}\n"
         _str += f"  causal={self.causal}\n"
         _str += f"  causal_chunk_length={self.causal_chunk_length}\n"
-        _str += f")"
+        _str += ")"
         return _str
 
 
@@ -348,16 +350,16 @@ class ResBlock3d(nn.Module):
         out_channels: int,
         kernel_size: int | tuple[int] = 3,
         stride: int | tuple[int] = 1,
-        mid_channels: Optional[int] = None,
+        mid_channels: int | None = None,
         expand_ratio: float = 1,
         use_bias: bool = False,
-        norm: tuple[Optional[str]] = ("bn2d", "bn2d"),
-        act_func: tuple[Optional[str]] = ("relu6", None),
+        norm: tuple[str | None] = ("bn2d", "bn2d"),
+        act_func: tuple[str | None] = ("relu6", None),
         zero_out: bool = False,
         spatial_padding_mode: str = "zeros",
         temporal_padding_mode: str = "zeros",
         causal: bool = False,
-        causal_chunk_length: Optional[int] = None,
+        causal_chunk_length: int | None = None,
     ):
         """Init.
 
@@ -425,8 +427,8 @@ class ResBlock3d(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -520,7 +522,7 @@ class ConvPixelUnshuffleDownSampleLayer3d(nn.Module):
         temporal_padding_mode: str = "zeros",
         zero_out: bool = False,
         causal: bool = False,
-        causal_chunk_length: Optional[int] = None,
+        causal_chunk_length: int | None = None,
     ):
         """Init.
 
@@ -567,8 +569,8 @@ class ConvPixelUnshuffleDownSampleLayer3d(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -618,7 +620,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3d(nn.Module):
             state_dict: The state dict.
             method: The method.
         """
-        pass
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward.
@@ -650,7 +651,7 @@ class ConvPixelShuffleUpSampleLayer3d(nn.Module):
         temporal_padding_mode: str = "zeros",
         zero_out: bool = False,
         causal: bool = False,
-        causal_chunk_length: Optional[int] = None,
+        causal_chunk_length: int | None = None,
     ):
         """Init.
 
@@ -698,8 +699,8 @@ class ConvPixelShuffleUpSampleLayer3d(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -749,7 +750,6 @@ class ChannelDuplicatingPixelShuffleUpSampleLayer3d(nn.Module):
             state_dict: The state dict.
             method: The method.
         """
-        pass
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward.
@@ -784,8 +784,8 @@ class ResidualBlock3d(ResidualBlock):
     def forward_main(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward main.
 
@@ -806,8 +806,8 @@ class ResidualBlock3d(ResidualBlock):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 
@@ -849,8 +849,8 @@ class OpSequential3d(OpSequential):
     def forward(
         self,
         x: torch.Tensor,
-        feature_cache: Optional[dict[str, torch.Tensor]] = None,
-        feature_key: Optional[str] = None,
+        feature_cache: dict[str, torch.Tensor] | None = None,
+        feature_key: str | None = None,
     ) -> torch.Tensor:
         """Forward.
 

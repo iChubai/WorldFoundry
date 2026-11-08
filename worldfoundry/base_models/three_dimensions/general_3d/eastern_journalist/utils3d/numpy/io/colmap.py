@@ -1,11 +1,11 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> io -> colmap.py functionality."""
 
-from typing import *
 from pathlib import Path
+from typing import *
 
 import numpy as np
-from ..transforms import matrix_to_quaternion
 
+from ..transforms import matrix_to_quaternion
 
 __all__ = [
     "read_extrinsics_from_colmap",
@@ -31,7 +31,7 @@ def write_extrinsics_as_colmap(
         camera_ids: List of int, camera ids. Length is N.
             If None, it will be set to [1, 2, ..., N].
     """
-    assert extrinsics.shape[1:] == (4, 4) and extrinsics.ndim == 3 or extrinsics.shape == (4, 4)
+    assert (extrinsics.shape[1:] == (4, 4) and extrinsics.ndim == 3) or extrinsics.shape == (4, 4)
     if extrinsics.ndim == 2:
         extrinsics = extrinsics[np.newaxis, ...]
     quats = matrix_to_quaternion(extrinsics[:, :3, :3])
@@ -45,7 +45,9 @@ def write_extrinsics_as_colmap(
     )
     with open(file, "w") as fp:
         print("# IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME", file=fp)
-        for i, (quat, t, name, camera_id) in enumerate(zip(quats.tolist(), trans.tolist(), image_names, camera_ids)):
+        for i, (quat, t, name, camera_id) in enumerate(
+            zip(quats.tolist(), trans.tolist(), image_names, camera_ids, strict=False)
+        ):
             # Colmap has wxyz order while scipy.spatial.transform.Rotation has xyzw order.
             qx, qy, qz, qw = quat
             tx, ty, tz = t
@@ -65,7 +67,7 @@ def write_intrinsics_as_colmap(
         height: Image height.
         normalized: Whether the intrinsics are normalized. If True, the intrinsics will unnormalized for writing.
     """
-    assert intrinsics.shape[1:] == (3, 3) and intrinsics.ndim == 3 or intrinsics.shape == (3, 3)
+    assert (intrinsics.shape[1:] == (3, 3) and intrinsics.ndim == 3) or intrinsics.shape == (3, 3)
     if intrinsics.ndim == 2:
         intrinsics = intrinsics[np.newaxis, ...]
     if normalized:

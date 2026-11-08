@@ -59,7 +59,7 @@ class ConfigDict(Dict):
         raise ex
 
 
-class SLConfig(object):
+class SLConfig:
     """
     config files.
     only support .py file as config now.
@@ -129,10 +129,10 @@ class SLConfig(object):
 
             cfg_dict = slload(filename)
         else:
-            raise IOError("Only py/yml/yaml/json type are supported now!")
+            raise OSError("Only py/yml/yaml/json type are supported now!")
 
         cfg_text = filename + "\n"
-        with open(filename, "r") as f:
+        with open(filename) as f:
             cfg_text += f.read()
 
         # parse the base file
@@ -236,7 +236,7 @@ class SLConfig(object):
         if cfg_text:
             text = cfg_text
         elif filename:
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 text = f.read()
         else:
             text = ""
@@ -291,7 +291,7 @@ class SLConfig(object):
                 k_str = f"'{k}'" if isinstance(k, str) else str(k)
                 attr_str = f"{k_str}: {v_str}"
             else:
-                attr_str = f"{str(k)}={v_str}"
+                attr_str = f"{k!s}={v_str}"
             attr_str = _indent(attr_str, indent)
 
             return attr_str
@@ -312,7 +312,7 @@ class SLConfig(object):
                     k_str = f"'{k}'" if isinstance(k, str) else str(k)
                     attr_str = f"{k_str}: {v_str}"
                 else:
-                    attr_str = f"{str(k)}={v_str}"
+                    attr_str = f"{k!s}={v_str}"
                 attr_str = _indent(attr_str, indent) + "]"
             else:
                 attr_str = _format_basic_types(k, v, use_mapping)
@@ -351,7 +351,7 @@ class SLConfig(object):
                         k_str = f"'{k}'" if isinstance(k, str) else str(k)
                         attr_str = f"{k_str}: dict({v_str}"
                     else:
-                        attr_str = f"{str(k)}=dict({v_str}"
+                        attr_str = f"{k!s}=dict({v_str}"
                     attr_str = _indent(attr_str, indent) + ")" + end
                 elif isinstance(v, list):
                     attr_str = _format_list(k, v, use_mapping) + end

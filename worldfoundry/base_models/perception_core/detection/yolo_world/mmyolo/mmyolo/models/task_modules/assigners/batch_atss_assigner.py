@@ -8,10 +8,11 @@ from mmdet.utils import ConfigType
 from torch import Tensor
 
 from mmyolo.registry import TASK_UTILS
+
 from .utils import select_candidates_in_gts, select_highest_overlaps, yolov6_iou_calculator
 
 
-def bbox_center_distance(bboxes: Tensor, priors: Tensor) -> Tuple[Tensor, Tensor]:
+def bbox_center_distance(bboxes: Tensor, priors: Tensor) -> tuple[Tensor, Tensor]:
     """Compute the center distance between bboxes and priors.
 
     Args:
@@ -68,7 +69,7 @@ class BatchATSSAssigner(nn.Module):
         self,
         pred_bboxes: Tensor,
         priors: Tensor,
-        num_level_priors: List,
+        num_level_priors: list,
         gt_labels: Tensor,
         gt_bboxes: Tensor,
         pad_bbox_flag: Tensor,
@@ -177,8 +178,8 @@ class BatchATSSAssigner(nn.Module):
         return assigned_result
 
     def select_topk_candidates(
-        self, distances: Tensor, num_level_priors: List[int], pad_bbox_flag: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+        self, distances: Tensor, num_level_priors: list[int], pad_bbox_flag: Tensor
+    ) -> tuple[Tensor, Tensor]:
         """Selecting candidates based on the center distance.
 
         Args:
@@ -203,7 +204,7 @@ class BatchATSSAssigner(nn.Module):
         distances = torch.split(distances, num_level_priors, dim=-1)
         pad_bbox_flag = pad_bbox_flag.repeat(1, 1, self.topk).bool()
 
-        for distances_per_level, priors_per_level in zip(distances, num_level_priors):
+        for distances_per_level, priors_per_level in zip(distances, num_level_priors, strict=False):
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
             end_index = start_idx + priors_per_level
@@ -227,8 +228,8 @@ class BatchATSSAssigner(nn.Module):
 
     @staticmethod
     def threshold_calculator(
-        is_in_candidate: List, candidate_idxs: Tensor, overlaps: Tensor, num_priors: int, batch_size: int, num_gt: int
-    ) -> Tuple[Tensor, Tensor]:
+        is_in_candidate: list, candidate_idxs: Tensor, overlaps: Tensor, num_priors: int, batch_size: int, num_gt: int
+    ) -> tuple[Tensor, Tensor]:
         """Get corresponding iou for the these candidates, and compute the mean
         and std, set mean + std as the iou threshold.
 
@@ -276,7 +277,7 @@ class BatchATSSAssigner(nn.Module):
         num_priors: int,
         batch_size: int,
         num_gt: int,
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Get target info.
 
         Args:

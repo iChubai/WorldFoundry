@@ -176,7 +176,7 @@ class CvnxtBlock(nn.Module):
         self.pwconv1 = nn.Linear(dim, expansion * dim)
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(expansion * dim, dim)
-        self.gamma = nn.Parameter(layer_scale * torch.ones((dim))) if layer_scale > 0.0 else 1.0
+        self.gamma = nn.Parameter(layer_scale * torch.ones(dim)) if layer_scale > 0.0 else 1.0
 
     def forward(self, x):
         input = x
@@ -307,7 +307,7 @@ class PositionEmbeddingSine(nn.Module):
             scale = 2 * pi
         self.scale = scale
 
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         if mask is None:
             mask = torch.zeros((x.size(0), x.size(2), x.size(3)), device=x.device, dtype=torch.bool)
         not_mask = ~mask
@@ -331,10 +331,10 @@ class PositionEmbeddingSine(nn.Module):
     def __repr__(self, _repr_indent=4):
         head = "Positional encoding " + self.__class__.__name__
         body = [
-            "num_pos_feats: {}".format(self.num_pos_feats),
-            "temperature: {}".format(self.temperature),
-            "normalize: {}".format(self.normalize),
-            "scale: {}".format(self.scale),
+            f"num_pos_feats: {self.num_pos_feats}",
+            f"temperature: {self.temperature}",
+            f"normalize: {self.normalize}",
+            f"scale: {self.scale}",
         ]
         # _repr_indent = 4
         lines = [head] + [" " * _repr_indent + line for line in body]

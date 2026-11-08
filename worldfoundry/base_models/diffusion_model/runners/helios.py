@@ -14,8 +14,9 @@
 
 import html
 import math
+from collections.abc import Callable
 from itertools import accumulate
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import regex as re
@@ -199,7 +200,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
 
         prompt_embeds = self.text_encoder(text_input_ids.to(device), mask.to(device)).last_hidden_state
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
-        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+        prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens, strict=False)]
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0
         )

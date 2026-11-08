@@ -1,38 +1,39 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> mesh.py functionality."""
 
-import torch
-from torch import Tensor
-import torch.nn.functional as F
 from typing import *
-from .transforms import angle_between, unproject_cv
-from .utils import lookup, csr_eliminate_zeros, csr_matrix_from_dense_indices, segment_roll
 
+import torch
+import torch.nn.functional as F
+from torch import Tensor
+
+from .transforms import angle_between, unproject_cv
+from .utils import csr_eliminate_zeros, csr_matrix_from_dense_indices, lookup, segment_roll
 
 __all__ = [
-    "triangulate_mesh",
+    "compute_boundaries",
     "compute_face_corner_angles",
     "compute_face_corner_normals",
     "compute_face_corner_tangents",
     "compute_face_normals",
     "compute_face_tangents",
+    "compute_mesh_laplacian",
+    "create_camera_frustum_mesh",
+    "create_cube_mesh",
+    "create_icosahedron_mesh",
+    "graph_connected_components",
+    "laplacian_hc_smooth_mesh",
+    "laplacian_smooth_mesh",
+    "merge_duplicate_vertices",
+    "mesh_connected_components",
+    "mesh_dual_graph",
     "mesh_edges",
     "mesh_half_edges",
-    "mesh_dual_graph",
-    "mesh_connected_components",
-    "graph_connected_components",
-    "compute_boundaries",
-    "remove_unused_vertices",
     "remove_corrupted_faces",
     "remove_isolated_pieces",
-    "merge_duplicate_vertices",
+    "remove_unused_vertices",
     "subdivide_mesh",
-    "compute_mesh_laplacian",
-    "laplacian_smooth_mesh",
     "taubin_smooth_mesh",
-    "laplacian_hc_smooth_mesh",
-    "create_cube_mesh",
-    "create_camera_frustum_mesh",
-    "create_icosahedron_mesh",
+    "triangulate_mesh",
 ]
 
 

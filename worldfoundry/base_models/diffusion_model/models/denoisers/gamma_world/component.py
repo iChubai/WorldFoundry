@@ -18,7 +18,6 @@ from ....components import ComponentBuildContext
 from ....contracts import DenoiserInput, DenoiserOutput
 from ....loaders import ModuleLoadSpec, NativeModuleLoader
 
-
 _BASE_NETWORK_CONFIG: dict[str, object] = {
     "max_img_h": 240,
     "max_img_w": 240,
@@ -135,10 +134,10 @@ class GammaWorldDenoiser:
         # cache only fits the local-attention variant and overflows halfway
         # through the released 48-latent-frame causal rollout.
         local_frames = local_attention if local_attention > 0 else int(latent_frames_per_view)
-        heads = int(getattr(self.net, "num_heads"))
-        channels = int(getattr(self.net, "model_channels"))
+        heads = int(self.net.num_heads)
+        channels = int(self.net.model_channels)
         return GammaCacheSpec(
-            num_layers=int(getattr(self.net, "num_layers", getattr(self.net, "num_blocks"))),
+            num_layers=int(getattr(self.net, "num_layers", self.net.num_blocks)),
             num_heads=heads,
             head_dim=channels // heads,
             local_frames=local_frames,

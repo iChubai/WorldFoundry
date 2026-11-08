@@ -13,7 +13,7 @@ from .low_precision_layernorm import LPLayerNorm
 
 
 class GPTMLP(nn.Module):
-    def __init__(self, d_model: int, mlp_ratio: int, device: Optional[str] = None):
+    def __init__(self, d_model: int, mlp_ratio: int, device: str | None = None):
         super().__init__()
         self.mlp_up = nn.Linear(d_model, mlp_ratio * d_model, device=device)
         self.mlp_act = nn.GELU()
@@ -31,14 +31,14 @@ class GPTBlock(nn.Module):
         d_model: int,
         n_heads: int,
         mlp_ratio: int,
-        attn_clip_qkv: Optional[float] = None,
+        attn_clip_qkv: float | None = None,
         attn_qk_ln: bool = False,
-        softmax_scale: Optional[float] = None,
+        softmax_scale: float | None = None,
         attn_pdrop: float = 0.0,
         alibi: bool = False,
         resid_pdrop: float = 0.0,
         low_precision_layernorm: bool = False,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs,
     ):
         del kwargs  # unused, just to capture any extra args from the config
@@ -69,11 +69,11 @@ class GPTBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        attn_bias: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.ByteTensor] = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
+        attn_bias: torch.Tensor | None = None,
+        attention_mask: torch.ByteTensor | None = None,
         is_causal: bool = True,
-    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor] | None]:
         a = self.ln_1(x)
         b, _, past_key_value = self.attn(
             a,

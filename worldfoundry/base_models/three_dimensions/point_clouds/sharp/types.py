@@ -30,7 +30,7 @@ class Gaussians3D(NamedTuple):
     colors: torch.Tensor
     opacities: torch.Tensor
 
-    def to(self, device: torch.device | str) -> "Gaussians3D":
+    def to(self, device: torch.device | str) -> Gaussians3D:
         return Gaussians3D(*(value.to(device) for value in self))
 
 

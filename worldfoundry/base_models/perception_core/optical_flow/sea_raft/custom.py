@@ -1,11 +1,11 @@
 """SEA-RAFT optical-flow visualization helpers."""
 
 import argparse
-import os
-import cv2
 import math
-import numpy as np
+import os
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

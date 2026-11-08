@@ -1,18 +1,18 @@
-import os
 import base64
+import os
 from pathlib import Path
-from PIL import Image
-import requests
+
+import cv2
 
 # 3rd party dependencies
 import numpy as np
-import cv2
+import requests
 import tensorflow as tf
 from deprecated import deprecated
+from PIL import Image
 
 # package dependencies
 from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import FaceDetector
-
 
 # --------------------------------------------------
 # configurations of dependencies

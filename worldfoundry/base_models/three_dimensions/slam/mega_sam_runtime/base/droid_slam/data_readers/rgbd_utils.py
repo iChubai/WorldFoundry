@@ -1,10 +1,9 @@
-import numpy as np
 import os.path as osp
 
+import geom.projective_ops as pops
+import numpy as np
 import torch
 from lietorch import SE3
-
-import geom.projective_ops as pops
 from scipy.spatial.transform import Rotation
 
 

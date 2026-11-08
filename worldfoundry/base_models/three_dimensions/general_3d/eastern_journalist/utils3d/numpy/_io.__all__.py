@@ -4,8 +4,8 @@
 __all__ = [
     "read_extrinsics_from_colmap",
     "read_intrinsics_from_colmap",
+    "read_obj",
     "write_extrinsics_as_colmap",
     "write_intrinsics_as_colmap",
-    "read_obj",
     "write_obj",
 ]

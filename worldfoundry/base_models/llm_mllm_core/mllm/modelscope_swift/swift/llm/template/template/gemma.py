@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import upper_bound
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -19,9 +20,9 @@ class GemmaTemplateMeta(TemplateMeta):
     prompt: Prompt = field(
         default_factory=lambda: ["<start_of_turn>user\n{{QUERY}}<end_of_turn>\n<start_of_turn>model\n"]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<end_of_turn>\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<end_of_turn>\n"])
     suffix: Prompt = field(default_factory=lambda: ["<end_of_turn>"])
-    system_prefix: Optional[Prompt] = field(
+    system_prefix: Prompt | None = field(
         default_factory=lambda: ["<bos><start_of_turn>system\n{{SYSTEM}}<end_of_turn>\n"]
     )
 
@@ -34,7 +35,7 @@ class PaliGemmaTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         if self.mode == "vllm":
             self.prompt = ["{{QUERY}}"]
@@ -43,7 +44,7 @@ class PaliGemmaTemplate(Template):
             self.prompt = ["{{QUERY}}\n"]
             return ["<image>" * self.processor.image_seq_length + "<bos>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         raw_image = inputs.images
         processor = self.processor
@@ -77,7 +78,7 @@ class Gemma3TextTemplateMeta(TemplateMeta):
     prompt: Prompt = field(
         default_factory=lambda: ["<start_of_turn>user\n{{QUERY}}<end_of_turn>\n<start_of_turn>model\n"]
     )
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<end_of_turn>\n"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<end_of_turn>\n"])
     suffix: Prompt = field(default_factory=lambda: ["<end_of_turn>"])
 
 
@@ -102,11 +103,11 @@ class Gemma3VisionTemplate(Gemma3Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return ["<start_of_image>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         from transformers.models.gemma3.processing_gemma3 import Gemma3ProcessorKwargs
 
         encoded = super()._encode(inputs)

@@ -3,7 +3,7 @@ import os
 from typing import List, Union
 
 
-def to_abspath(path: Union[str, List[str], None], check_path_exist: bool = False) -> Union[str, List[str], None]:
+def to_abspath(path: str | list[str] | None, check_path_exist: bool = False) -> str | list[str] | None:
     """Check the path for validity and convert it to an absolute path.
 
     Args:

@@ -3,22 +3,23 @@
 import numbers
 import random
 import warnings
-from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import torchvision.transforms.functional as F
 from torchvision.transforms import (
-    Normalize,
-    Compose,
-    RandomResizedCrop,
-    InterpolationMode,
-    ToTensor,
-    Resize,
     CenterCrop,
     ColorJitter,
+    Compose,
     Grayscale,
+    InterpolationMode,
+    Normalize,
+    RandomResizedCrop,
+    Resize,
+    ToTensor,
 )
 
 from .constants import OPENAI_DATASET_MEAN, OPENAI_DATASET_STD
@@ -29,10 +30,10 @@ from .utils import to_2tuple
 class PreprocessCfg:
     """Preprocess cfg implementation."""
 
-    size: Union[int, Tuple[int, int]] = 224
+    size: int | tuple[int, int] = 224
     mode: str = "RGB"
-    mean: Tuple[float, ...] = OPENAI_DATASET_MEAN
-    std: Tuple[float, ...] = OPENAI_DATASET_STD
+    mean: tuple[float, ...] = OPENAI_DATASET_MEAN
+    std: tuple[float, ...] = OPENAI_DATASET_STD
     interpolation: str = "bicubic"
     resize_mode: str = "shortest"
     fill_color: int = 0
@@ -56,8 +57,8 @@ _PREPROCESS_KEYS = set(asdict(PreprocessCfg()).keys())
 
 
 def merge_preprocess_dict(
-    base: Union[PreprocessCfg, Dict],
-    overlay: Dict,
+    base: PreprocessCfg | dict,
+    overlay: dict,
 ):
     """Merge overlay key-value pairs on top of base preprocess cfg or dict.
     Input dicts are filtered based on PreprocessCfg fields.
@@ -85,11 +86,11 @@ def merge_preprocess_kwargs(base: PreprocessCfg, **kwargs):
 class AugmentationCfg:
     """Augmentation cfg implementation."""
 
-    scale: Tuple[float, float] = (0.9, 1.0)
-    ratio: Optional[Tuple[float, float]] = None
-    color_jitter: Optional[Union[float, Tuple[float, float, float], Tuple[float, float, float, float]]] = None
-    re_prob: Optional[float] = None
-    re_count: Optional[int] = None
+    scale: tuple[float, float] = (0.9, 1.0)
+    ratio: tuple[float, float] | None = None
+    color_jitter: float | tuple[float, float, float] | tuple[float, float, float, float] | None = None
+    re_prob: float | None = None
+    re_count: int | None = None
     naflex: bool = False
     use_timm: bool = False
 
@@ -160,7 +161,7 @@ class NaFlexEvalTransformFactory:
         )
 
 
-def is_naflex_aug_cfg(aug_cfg: Optional[Union[Dict[str, Any], AugmentationCfg]]) -> bool:
+def is_naflex_aug_cfg(aug_cfg: dict[str, Any] | AugmentationCfg | None) -> bool:
     """Is naflex aug cfg.
 
     Args:
@@ -258,7 +259,7 @@ class ResizeKeepRatio:
         if random_aspect_prob > 0 and random.random() < random_aspect_prob:
             aspect_factor = random.uniform(random_aspect_range[0], random_aspect_range[1])
             ratio_factor = (ratio_factor[0] / aspect_factor, ratio_factor[1] * aspect_factor)
-        size = [round(x * f / ratio) for x, f in zip(source_size, ratio_factor)]
+        size = [round(x * f / ratio) for x, f in zip(source_size, ratio_factor, strict=False)]
         return size
 
     def __call__(self, img):
@@ -283,13 +284,13 @@ class ResizeKeepRatio:
 
     def __repr__(self):
         """Repr."""
-        format_string = self.__class__.__name__ + "(size={0}".format(self.size)
+        format_string = self.__class__.__name__ + f"(size={self.size}"
         format_string += f", interpolation={self.interpolation})"
         format_string += f", longest={self.longest:.3f})"
         return format_string
 
 
-def center_crop_or_pad(img: torch.Tensor, output_size: List[int], fill=0) -> torch.Tensor:
+def center_crop_or_pad(img: torch.Tensor, output_size: list[int], fill=0) -> torch.Tensor:
     """Center crops and/or pads the given image.
     If the image is torch Tensor, it is expected
     to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
@@ -450,7 +451,7 @@ class MaybeToTensor(ToTensor):
         return f"{self.__class__.__name__}()"
 
 
-class color_jitter(object):
+class color_jitter:
     """
     Apply Color Jitter to the PIL image with a specified probability.
     """
@@ -481,7 +482,7 @@ class color_jitter(object):
             return img
 
 
-class gray_scale(object):
+class gray_scale:
     """
     Apply Gray Scale to the PIL image with a specified probability.
     """
@@ -509,14 +510,14 @@ class gray_scale(object):
 
 
 def image_transform(
-    image_size: Union[int, Tuple[int, int]],
+    image_size: int | tuple[int, int],
     is_train: bool,
-    mean: Optional[Tuple[float, ...]] = None,
-    std: Optional[Tuple[float, ...]] = None,
-    resize_mode: Optional[str] = None,
-    interpolation: Optional[str] = None,
+    mean: tuple[float, ...] | None = None,
+    std: tuple[float, ...] | None = None,
+    resize_mode: str | None = None,
+    interpolation: str | None = None,
     fill_color: int = 0,
-    aug_cfg: Optional[Union[Dict[str, Any], AugmentationCfg]] = None,
+    aug_cfg: dict[str, Any] | AugmentationCfg | None = None,
 ):
     """Image transform.
 
@@ -650,7 +651,7 @@ def image_transform(
 def image_transform_v2(
     cfg: PreprocessCfg,
     is_train: bool,
-    aug_cfg: Optional[Union[Dict[str, Any], AugmentationCfg]] = None,
+    aug_cfg: dict[str, Any] | AugmentationCfg | None = None,
 ):
     """Image transform v2.
 

@@ -5,30 +5,30 @@ import torch.nn as nn
 from timm import create_model
 
 from .backbones.beit import (
-    _make_pretrained_beitl16_512,
-    _make_pretrained_beitl16_384,
     _make_pretrained_beitb16_384,
+    _make_pretrained_beitl16_384,
+    _make_pretrained_beitl16_512,
     forward_beit,
-)
-from .backbones.swin_common import (
-    forward_swin,
-)
-from .backbones.swin2 import (
-    _make_pretrained_swin2l24_384,
-    _make_pretrained_swin2b24_384,
-    _make_pretrained_swin2t16_256,
-)
-from .backbones.swin import (
-    _make_pretrained_swinl12_384,
 )
 from .backbones.levit import (
     _make_pretrained_levit_384,
     forward_levit,
 )
+from .backbones.swin import (
+    _make_pretrained_swinl12_384,
+)
+from .backbones.swin2 import (
+    _make_pretrained_swin2b24_384,
+    _make_pretrained_swin2l24_384,
+    _make_pretrained_swin2t16_256,
+)
+from .backbones.swin_common import (
+    forward_swin,
+)
 from .backbones.vit import (
+    _make_pretrained_vitb16_384,
     _make_pretrained_vitb_rn50_384,
     _make_pretrained_vitl16_384,
-    _make_pretrained_vitb16_384,
     forward_vit,
 )
 

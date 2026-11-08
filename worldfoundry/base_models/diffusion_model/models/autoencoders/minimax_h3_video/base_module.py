@@ -45,7 +45,7 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Optional[int] = None,
+        dim_out: int | None = None,
         mult: int = 4,
         activation_fn: str = "silu",
         bias: bool = True,
@@ -162,7 +162,7 @@ class RotaryEmbeddingND(nn.Module):
 
     def forward(self, img_ids):
         B, N, D = img_ids.shape
-        if D != self.n_dim:
+        if self.n_dim != D:
             raise ValueError(f"Expected {self.n_dim} dimensions, got {D}")
 
         with torch.autocast("cuda", enabled=False):
@@ -184,7 +184,7 @@ class TransformerBlock(nn.Module):
         self,
         heads: int,
         dim_head: int,
-        embed_dim: Optional[int] = None,
+        embed_dim: int | None = None,
         ffn_glu_balanced: bool = False,
         norm_type: str = "layer_norm",
         norm_affine: bool = True,
@@ -244,7 +244,7 @@ class TransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.FloatTensor,
-        rotary_pos_emb: Optional[torch.FloatTensor] = None,
+        rotary_pos_emb: torch.FloatTensor | None = None,
         pack_info: dict = {},
     ):
         norm_hidden_states = self.norm1(_vit_norm_input(self.norm1, hidden_states)).to(hidden_states.dtype)

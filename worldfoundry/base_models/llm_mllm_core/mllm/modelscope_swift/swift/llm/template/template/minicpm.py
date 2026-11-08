@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -21,14 +22,14 @@ from .qwen import Qwen2_5TemplateMeta, QwenTemplateMeta
 class MinicpmTemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: ["<s>{{SYSTEM}}"])
     prompt: Prompt = field(default_factory=lambda: ["<用户>{{QUERY}}<AI>"])
-    chat_sep: Optional[Prompt] = field(default_factory=list)
+    chat_sep: Prompt | None = field(default_factory=list)
     suffix: Prompt = field(default_factory=lambda: ["</s>"])
 
 
 register_template(MinicpmTemplateMeta(LLMTemplateType.minicpm))
 
 
-def _remove_idx(arr: List[int], idx_list: List[int]) -> List[int]:
+def _remove_idx(arr: list[int], idx_list: list[int]) -> list[int]:
     res = []
     idx_set = set(idx_list)
     for i, x in enumerate(arr):
@@ -45,13 +46,13 @@ class MiniCPMVTemplate(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if self.mode == "vllm":
             return ["(<image>./</image>)\n"]
         else:
             return [[-100]]
 
-    async def prepare_lmdeploy_turbomind_inputs(self, inputs: Dict[str, Any]) -> None:
+    async def prepare_lmdeploy_turbomind_inputs(self, inputs: dict[str, Any]) -> None:
         images = inputs.pop("images", None) or []
         if len(images) == 0:
             return
@@ -80,7 +81,7 @@ class MiniCPMVTemplate(Template):
         inputs["images"] = features
         await super().prepare_lmdeploy_turbomind_inputs(inputs)
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         input_ids = encoded["input_ids"]
@@ -131,11 +132,11 @@ class MiniCPMVTemplate(Template):
         }
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         inputs_embeds, _ = model.get_vllm_embedding(inputs)
         return {"inputs_embeds": inputs_embeds}
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = {}
         for k in ["pixel_values", "image_bound", "tgt_sizes"]:
             res[k] = self.gather_list(batch, k)
@@ -161,7 +162,7 @@ register_template(
 class MiniCPMV2_6Template(MiniCPMVTemplate):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type in {"image", "video"}
         max_num_frames = get_env_args("max_num_frames", int, 64)
         load_video = partial(load_video_minicpmv_mplug_owl3, max_num_frames=max_num_frames)
@@ -171,7 +172,7 @@ class MiniCPMV2_6Template(MiniCPMVTemplate):
         elif media_type == "video":
             return self.replace_video2image(load_video, inputs, lambda i: image_context)
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = Template._encode(self, inputs)
         images = inputs.images
         use_video = bool(inputs.videos)

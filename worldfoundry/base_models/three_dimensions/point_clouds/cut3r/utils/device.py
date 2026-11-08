@@ -89,7 +89,7 @@ def collate_with_cat(whatever, lists=False):
         if isinstance(elem, (bool, float, int, str)):
             return whatever
         if isinstance(elem, tuple):
-            return T(collate_with_cat(x, lists=lists) for x in zip(*whatever))
+            return T(collate_with_cat(x, lists=lists) for x in zip(*whatever, strict=False))
         if isinstance(elem, dict):
             return {k: collate_with_cat([e[k] for e in whatever], lists=lists) for k in elem}
 

@@ -34,14 +34,14 @@ class AttnImpl:
     use_flash_attn_keys = ["_flash_attn_2_enabled", "use_flash_attn", "_use_flash_attention_2"]
 
     @staticmethod
-    def to_use_flash_attn(attn_impl: Optional[str], auto_value: _T = None) -> Union[bool, _T]:
+    def to_use_flash_attn(attn_impl: str | None, auto_value: _T = None) -> bool | _T:
         if attn_impl is None:
             return auto_value
         return attn_impl == AttnImpl.flash_attn
 
     @staticmethod
     def update_attn_impl(
-        config: PretrainedConfig, attn_impl: Optional[str], attn_impl_keys: Optional[List[str]] = None
+        config: PretrainedConfig, attn_impl: str | None, attn_impl_keys: list[str] | None = None
     ) -> None:
         if attn_impl is None:
             return
@@ -68,10 +68,10 @@ class ModelInfo:
     quant_bits: int
 
     # extra
-    rope_scaling: Optional[Dict[str, Any]] = None
-    config: Optional[PretrainedConfig] = None
+    rope_scaling: dict[str, Any] | None = None
+    config: PretrainedConfig | None = None
     task_type: Literal["causal_lm", "seq_cls", "embedding", None] = None
-    num_labels: Optional[int] = None
+    num_labels: int | None = None
 
     def __post_init__(self):
         from .register import get_model_name
@@ -83,9 +83,7 @@ class HfConfigFactory:
     """This class is used to read config from config.json(maybe params.json also)"""
 
     @staticmethod
-    def get_torch_dtype(
-        config: Union[PretrainedConfig, Dict[str, Any]], quant_info: Dict[str, Any]
-    ) -> Optional[torch.dtype]:
+    def get_torch_dtype(config: PretrainedConfig | dict[str, Any], quant_info: dict[str, Any]) -> torch.dtype | None:
         for key in ["torch_dtype", "params_dtype"]:
             torch_dtype = HfConfigFactory.get_config_attr(config, key)
             if torch_dtype is not None:
@@ -97,8 +95,8 @@ class HfConfigFactory:
 
     @staticmethod
     def _get_config_attrs(
-        config: Union[PretrainedConfig, Dict[str, Any]], attr_name: str, parent_key: Optional[str] = None
-    ) -> List[Tuple[PretrainedConfig, Any]]:
+        config: PretrainedConfig | dict[str, Any], attr_name: str, parent_key: str | None = None
+    ) -> list[tuple[PretrainedConfig, Any]]:
         res = []
         if isinstance(config, dict):
             keys = config.keys()
@@ -121,7 +119,7 @@ class HfConfigFactory:
         return res
 
     @staticmethod
-    def get_config_attr(config: Union[PretrainedConfig, Dict[str, Any]], attr_name: str) -> Optional[Any]:
+    def get_config_attr(config: PretrainedConfig | dict[str, Any], attr_name: str) -> Any | None:
         """Get the value of the attribute named attr_name."""
         attrs = HfConfigFactory._get_config_attrs(config, attr_name)
         if len(attrs) == 0:
@@ -131,7 +129,7 @@ class HfConfigFactory:
 
     @staticmethod
     def set_config_attr(
-        config: Union[PretrainedConfig, Dict[str, Any]], attr_name: str, value: Any, ensure_set: bool = True
+        config: PretrainedConfig | dict[str, Any], attr_name: str, value: Any, ensure_set: bool = True
     ) -> int:
         """Set all the attr_name attributes to value."""
         attrs = HfConfigFactory._get_config_attrs(config, attr_name)
@@ -151,7 +149,7 @@ class HfConfigFactory:
                 setattr(module.config, attr_name, value)
 
     @staticmethod
-    def get_max_model_len(config: Union[PretrainedConfig, Dict[str, Any]]) -> Optional[int]:
+    def get_max_model_len(config: PretrainedConfig | dict[str, Any]) -> int | None:
         """Get the max length supported by the model"""
         INF = int(1e9)
         max_model_len = INF
@@ -185,7 +183,7 @@ class HfConfigFactory:
             pass
 
     @staticmethod
-    def to_torch_dtype(torch_dtype: Union[str, torch.dtype, None]) -> Optional[torch.dtype]:
+    def to_torch_dtype(torch_dtype: str | torch.dtype | None) -> torch.dtype | None:
         if torch_dtype is None:
             return None
         if isinstance(torch_dtype, str):
@@ -193,7 +191,7 @@ class HfConfigFactory:
         return torch_dtype
 
     @staticmethod
-    def get_quant_info(config: Union[PretrainedConfig, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def get_quant_info(config: PretrainedConfig | dict[str, Any]) -> dict[str, Any] | None:
         """Get quant_method, quant_bits, dtype. not support hqq/eetq now, support awq/gptq/bnb/aqlm"""
         if isinstance(config, dict):
             quantization_config = config.get("quantization_config")
@@ -229,11 +227,11 @@ class HfConfigFactory:
 
 def safe_snapshot_download(
     model_id_or_path: str,
-    revision: Optional[str] = None,
+    revision: str | None = None,
     download_model: bool = True,
-    use_hf: Optional[bool] = None,
-    hub_token: Optional[str] = None,
-    ignore_patterns: Optional[List[str]] = None,
+    use_hf: bool | None = None,
+    hub_token: str | None = None,
+    ignore_patterns: list[str] | None = None,
     check_local: bool = False,
     **kwargs,
 ) -> str:
@@ -303,9 +301,9 @@ def safe_snapshot_download(
 
 def git_clone_github(
     github_url: str,
-    local_repo_name: Optional[str] = None,
-    branch: Optional[str] = None,
-    commit_hash: Optional[str] = None,
+    local_repo_name: str | None = None,
+    branch: str | None = None,
+    commit_hash: str | None = None,
 ) -> str:
     if github_url.endswith(".git"):
         github_url = github_url[:-4]
@@ -338,10 +336,11 @@ def git_clone_github(
 
 
 def get_llm_model(model: torch.nn.Module, model_meta=None):
-    from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift import SwiftModel
-    from peft import PeftModel
-    from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import get_model_arch
     from accelerate.utils import extract_model_from_parallel
+    from peft import PeftModel
+
+    from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift import SwiftModel
+    from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import get_model_arch
 
     model = extract_model_from_parallel(model)
 
@@ -361,7 +360,7 @@ def get_llm_model(model: torch.nn.Module, model_meta=None):
     return llm_model
 
 
-def use_submodel_func(model, submodel_name: str, func_list: Optional[List[str]] = None) -> None:
+def use_submodel_func(model, submodel_name: str, func_list: list[str] | None = None) -> None:
     if func_list is None:
         func_list = ["generate", "get_input_embeddings", "gradient_checkpointing_enable", "forward"]
     submodel = getattr(model, submodel_name)

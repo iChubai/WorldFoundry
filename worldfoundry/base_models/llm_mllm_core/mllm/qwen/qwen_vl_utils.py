@@ -169,7 +169,7 @@ def smart_nframes(
         nframes = total_frames / video_fps * fps
         nframes = min(max(nframes, min_frames), max_frames)
         nframes = round_by_factor(nframes, FRAME_FACTOR)
-    if not (FRAME_FACTOR <= nframes and nframes <= total_frames):
+    if not (nframes >= FRAME_FACTOR and nframes <= total_frames):
         raise ValueError(f"nframes should in interval [{FRAME_FACTOR}, {total_frames}], but got {nframes}.")
     return nframes
 
@@ -198,7 +198,7 @@ def _read_video_torchvision(
     video, audio, info = io.read_video(
         video_path,
         start_pts=ele.get("video_start", 0.0),
-        end_pts=ele.get("video_end", None),
+        end_pts=ele.get("video_end"),
         pts_unit="sec",
         output_format="TCHW",
     )

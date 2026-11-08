@@ -9,12 +9,11 @@ https://github.com/ffrivera0/reloc3r/blob/main/reloc3r/pose_head.py
 import copy
 
 import torch
-
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 import torch.nn as nn
 import torch.nn.functional as F
 
 from uniception.models.prediction_heads.base import PredictionHeadInput, SummaryTaskOutput
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 class ResConvBlock(nn.Module):

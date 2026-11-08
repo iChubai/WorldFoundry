@@ -9,9 +9,8 @@ from mmdet.structures.bbox import HorizontalBoxes
 from mmdet.visualization import DetLocalVisualizer
 from mmdet.visualization.palette import _get_adaptive_scales, get_palette
 from mmengine.structures import InstanceData
-from torch import Tensor
-
 from mmyolo.registry import VISUALIZERS
+from torch import Tensor
 
 
 @VISUALIZERS.register_module()
@@ -31,9 +30,9 @@ class YOLOAssignerVisualizer(DetLocalVisualizer):
     def draw_grid(
         self,
         stride: int = 8,
-        line_styles: Union[str, List[str]] = ":",
-        colors: Union[str, tuple, List[str], List[tuple]] = (180, 180, 180),
-        line_widths: Union[Union[int, float], List[Union[int, float]]] = 1,
+        line_styles: str | list[str] = ":",
+        colors: str | tuple | list[str] | list[tuple] = (180, 180, 180),
+        line_widths: int | float | list[int | float] = 1,
     ):
         """Draw grids on image.
 
@@ -107,7 +106,7 @@ class YOLOAssignerVisualizer(DetLocalVisualizer):
             positions = bboxes[:, :2] + self.line_width
             areas = (bboxes[:, 3] - bboxes[:, 1]) * (bboxes[:, 2] - bboxes[:, 0])
             scales = _get_adaptive_scales(areas)
-            for i, (pos, label) in enumerate(zip(positions, labels)):
+            for i, (pos, label) in enumerate(zip(positions, labels, strict=False)):
                 label_text = classes[label] if classes is not None else f"class {label}"
 
                 self.draw_texts(
@@ -124,7 +123,7 @@ class YOLOAssignerVisualizer(DetLocalVisualizer):
         grid_y_inds: Tensor,
         class_inds: Tensor,
         stride: int,
-        bboxes: Union[Tensor, HorizontalBoxes],
+        bboxes: Tensor | HorizontalBoxes,
         retained_gt_inds: Tensor,
         offset: float = 0.5,
     ):
@@ -207,7 +206,7 @@ class YOLOAssignerVisualizer(DetLocalVisualizer):
     def draw_assign(
         self,
         image: np.ndarray,
-        assign_results: List[List[dict]],
+        assign_results: list[list[dict]],
         gt_instances: InstanceData,
         show_prior: bool = False,
         not_show_label: bool = False,

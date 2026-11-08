@@ -6,11 +6,12 @@ Kernel adapter for DreamZero blocks.  No action math here.
 """
 
 import contextlib
-import torch
-from torch.profiler import profile, ProfilerActivity
+import os
 import time
 from typing import Optional
-import os
+
+import torch
+from torch.profiler import ProfilerActivity, profile
 
 try:
     import flash_attn_interface
@@ -35,6 +36,7 @@ except ModuleNotFoundError:
 
 try:
     import transformer_engine
+
     from .cudnn_attention import DotProductAttention
 
     TRANSFORMER_ENGINE_AVAILABLE = True
@@ -42,6 +44,7 @@ except ModuleNotFoundError:
     TRANSFORMER_ENGINE_AVAILABLE = False
 
 import warnings
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.attention.sequence.varlen import flash_attention as _worldfoundry_varlen_attention
 
@@ -92,16 +95,16 @@ def flash_attention(
     q: torch.Tensor,
     k: torch.Tensor,
     v: torch.Tensor,
-    q_lens: Optional[torch.Tensor] = None,
-    k_lens: Optional[torch.Tensor] = None,
+    q_lens: torch.Tensor | None = None,
+    k_lens: torch.Tensor | None = None,
     dropout_p: float = 0.0,
-    softmax_scale: Optional[float] = None,
-    q_scale: Optional[float] = None,
+    softmax_scale: float | None = None,
+    q_scale: float | None = None,
     causal: bool = False,
-    window_size: Optional[tuple[int, int]] = None,
+    window_size: tuple[int, int] | None = None,
     deterministic: bool = False,
     dtype: torch.dtype = torch.bfloat16,
-    version: Optional[int] = None,
+    version: int | None = None,
 ):
     """
     q:              [B, Lq, Nq, C1].
@@ -166,7 +169,7 @@ def flash_attention(
         q = half(q.flatten(0, 1))
         q_lens = torch.tensor([lq] * b, dtype=torch.int32, device=q.device)
     else:
-        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens)]))
+        q = half(torch.cat([u[:v] for u, v in zip(q, q_lens, strict=False)]))
 
     # preprocess key, value
     if k_lens is None:
@@ -174,8 +177,8 @@ def flash_attention(
         v = half(v.flatten(0, 1))
         k_lens = torch.tensor([lk] * b, dtype=torch.int32, device=k.device)
     else:
-        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens)]))
-        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens)]))
+        k = half(torch.cat([u[:v] for u, v in zip(k, k_lens, strict=False)]))
+        v = half(torch.cat([u[:v] for u, v in zip(v, k_lens, strict=False)]))
 
     q = q.to(v.dtype)
     k = k.to(v.dtype)
@@ -234,13 +237,13 @@ class AttentionModule(torch.nn.Module):
         num_heads: int,
         head_dim: int,
         dropout_p: float = 0.0,
-        softmax_scale: Optional[float] = None,
-        q_scale: Optional[float] = None,
+        softmax_scale: float | None = None,
+        q_scale: float | None = None,
         causal: bool = False,
-        window_size: Optional[tuple[int, int]] = None,
+        window_size: tuple[int, int] | None = None,
         deterministic: bool = False,
         dtype: torch.dtype = torch.bfloat16,
-        backend: Optional[str] = None,
+        backend: str | None = None,
     ):
         """Init.
 
@@ -389,8 +392,8 @@ class AttentionModule(torch.nn.Module):
                 q: torch.Tensor,
                 k: torch.Tensor,
                 v: torch.Tensor,
-                q_lens: Optional[torch.Tensor],
-                k_lens: Optional[torch.Tensor],
+                q_lens: torch.Tensor | None,
+                k_lens: torch.Tensor | None,
             ) -> torch.Tensor:
                 """Helper function to flash attn impl.
 
@@ -430,8 +433,8 @@ class AttentionModule(torch.nn.Module):
         q: torch.Tensor,
         k: torch.Tensor,
         v: torch.Tensor,
-        q_lens: Optional[torch.Tensor] = None,
-        k_lens: Optional[torch.Tensor] = None,
+        q_lens: torch.Tensor | None = None,
+        k_lens: torch.Tensor | None = None,
     ):
         """Forward.
 

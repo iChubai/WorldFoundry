@@ -1,8 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import re
 from typing import TYPE_CHECKING, List, Tuple, Union
-
-import json
 
 from .base import BaseAgentTemplate
 
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class HermesAgentTemplate(BaseAgentTemplate):
-    def get_toolcall(self, response: str) -> List["Function"]:
+    def get_toolcall(self, response: str) -> list["Function"]:
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.infer import Function
 
         res_list = re.findall(r"<tool_call>(.+?)</tool_call>", response, re.DOTALL)
@@ -30,7 +29,7 @@ class HermesAgentTemplate(BaseAgentTemplate):
         self,
         assistant_content: str,
         tool_messages,
-    ) -> Tuple[str, "Prompt"]:
+    ) -> tuple[str, "Prompt"]:
         with_action = self.keyword.action in assistant_content and self.keyword.action_input in assistant_content
         if with_action:
             return super()._format_tool_responses(assistant_content, tool_messages)
@@ -52,7 +51,7 @@ class HermesAgentTemplate(BaseAgentTemplate):
             res.append(context)
         return assistant_content, res
 
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_descs = [json.dumps(self.wrap_tool(tool), ensure_ascii=False) for tool in tools]
         return (
             f"""{system}

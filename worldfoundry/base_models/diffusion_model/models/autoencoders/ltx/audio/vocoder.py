@@ -323,12 +323,12 @@ class Vocoder(torch.nn.Module):
         use_bias_at_final: Whether to use bias in the final conv layer.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        resblock_kernel_sizes: List[int] | None = None,
-        upsample_rates: List[int] | None = None,
-        upsample_kernel_sizes: List[int] | None = None,
-        resblock_dilation_sizes: List[List[int]] | None = None,
+        resblock_kernel_sizes: list[int] | None = None,
+        upsample_rates: list[int] | None = None,
+        upsample_kernel_sizes: list[int] | None = None,
+        resblock_dilation_sizes: list[list[int]] | None = None,
         upsample_initial_channel: int = 1024,
         resblock: str = "1",
         output_sampling_rate: int = 24000,

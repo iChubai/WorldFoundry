@@ -15,6 +15,7 @@
 
 from pathlib import Path
 from typing import Optional
+
 import numpy as np
 import torch
 from einops import rearrange, repeat
@@ -55,7 +56,7 @@ def export_ply(
     path: Path,
     shift_and_scale: bool = False,
     save_sh_dc_only: bool = True,
-    match_3dgs_mcmc_dev: Optional[bool] = False,
+    match_3dgs_mcmc_dev: bool | None = False,
 ):
     """Export ply.
 
@@ -138,10 +139,10 @@ def save_gaussian_ply(
     shift_and_scale: bool = False,
     save_sh_dc_only: bool = True,
     gs_views_interval: int = 1,
-    inv_opacity: Optional[bool] = True,
-    prune_by_depth_percent: Optional[float] = 1.0,
-    prune_border_gs: Optional[bool] = True,
-    match_3dgs_mcmc_dev: Optional[bool] = False,
+    inv_opacity: bool | None = True,
+    prune_by_depth_percent: float | None = 1.0,
+    prune_border_gs: bool | None = True,
+    match_3dgs_mcmc_dev: bool | None = False,
 ):
     """Save gaussian ply.
 

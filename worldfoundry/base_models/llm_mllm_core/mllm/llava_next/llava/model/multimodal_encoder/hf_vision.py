@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
+from transformers import AutoConfig, AutoImageProcessor, AutoModel, CLIPImageProcessor
 
-from transformers import AutoModel, AutoImageProcessor, AutoConfig, CLIPImageProcessor
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 
 
@@ -23,7 +23,7 @@ class HFVisionTower(nn.Module):
     def load_model(self):
         try:
             self.image_processor = AutoImageProcessor.from_pretrained(self.vision_tower_name)
-        except Exception as e:
+        except Exception:
             if "448" in self.vision_tower_name:
                 image_size = 448
                 # use image processor with conig

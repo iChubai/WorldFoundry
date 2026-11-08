@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 from ..blocks import (
     ConditionModulationBlock,
-    Mlp,  # noqa
+    Mlp,
 )
 from ..utils.camera import PoseDecoder, pose_encoding_to_camera
 from ..utils.geometry import geotrf
@@ -62,7 +62,6 @@ class LinearPts3d(nn.Module):
         Args:
             croconet: The croconet.
         """
-        pass
 
     def forward(self, decout, img_shape):
         """Forward.
@@ -156,7 +155,6 @@ class LinearPts3d_Desc(nn.Module):
         Args:
             croconet: The croconet.
         """
-        pass
 
     def forward(self, decout, img_shape):
         """Forward.
@@ -227,7 +225,6 @@ class LinearPts3dPoseDirect(nn.Module):
         Args:
             croconet: The croconet.
         """
-        pass
 
     def forward(self, decout, img_shape):
         """Forward.
@@ -336,7 +333,6 @@ class LinearPts3dPose(nn.Module):
         Args:
             croconet: The croconet.
         """
-        pass
 
     def forward(self, decout, img_shape, **kwargs):
         """Forward.

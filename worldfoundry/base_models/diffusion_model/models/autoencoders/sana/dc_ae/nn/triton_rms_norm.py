@@ -73,7 +73,7 @@ def _rms_norm_2d_fwd_fused(
     mask = cols < N
 
     x_sum_square = tl.zeros([BLOCK_SIZE], dtype=tl.float32)
-    for off in range(0, C):
+    for off in range(C):
         x = tl.load(X + off * N + cols, mask=mask, other=0.0).to(tl.float32)
         x_sum_square += x * x
     mean_square = x_sum_square / C
@@ -81,7 +81,7 @@ def _rms_norm_2d_fwd_fused(
     # Write rstd
     tl.store(Rrms + m * N + cols, rrms, mask=mask)
     # Normalize and apply linear transformation
-    for off in range(0, C):
+    for off in range(C):
         pos = off * N + cols
         w = tl.load(W + off)
         b = tl.load(B + off)
@@ -147,7 +147,7 @@ def _rms_norm_2d_bwd_dx_fused(
     rrms = tl.load(Rrms + cols, mask=mask, other=1)
     # Load data to SRAM
     c1 = tl.zeros([BLOCK_SIZE], dtype=tl.float32)
-    for off in range(0, C):
+    for off in range(C):
         pos = off * N + cols
         x = tl.load(X + pos, mask=mask, other=0).to(tl.float32)
         dy = tl.load(DY + pos, mask=mask, other=0).to(tl.float32)
@@ -163,7 +163,7 @@ def _rms_norm_2d_bwd_dx_fused(
         tl.store(DB + off, tl.sum(dy.to(w.dtype), axis=0))
 
     c1 /= C
-    for off in range(0, C):
+    for off in range(C):
         pos = off * N + cols
         x = tl.load(X + pos, mask=mask, other=0).to(tl.float32)
         dy = tl.load(DY + pos, mask=mask, other=0).to(tl.float32)

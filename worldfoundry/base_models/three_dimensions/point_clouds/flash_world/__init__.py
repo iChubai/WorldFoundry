@@ -2,8 +2,8 @@
 
 __all__ = [
     "AutoencoderKLWan",
-    "WanTransformer3DModel",
     "WANDecoderPixelAligned3DGSReconstructionModel",
+    "WanTransformer3DModel",
 ]
 
 

@@ -392,7 +392,7 @@ class FeatureFusionBlock(nn.Module):
         self.resConfUnit2 = ResidualConvUnit(features, activation)
 
     def forward(
-        self, x: torch.Tensor, residual: torch.Tensor | None = None, size: Tuple[int, int] | None = None
+        self, x: torch.Tensor, residual: torch.Tensor | None = None, size: tuple[int, int] | None = None
     ) -> torch.Tensor:
         """Forward.
 
@@ -417,7 +417,7 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: Tuple[int, int] | None = None,
+    size: tuple[int, int] | None = None,
     scale_factor: float | None = None,
     mode: str = "bilinear",
     align_corners: bool = True,

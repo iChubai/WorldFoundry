@@ -2,8 +2,8 @@
 
 from typing import Union
 
-import torch
 import numpy as np
+import torch
 
 from .model import CLIP, CustomTextCLIP
 from .transformer import TextTransformer, Transformer
@@ -16,7 +16,7 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
     Currently, the SigLIP source models are supported and a CustomTextCLIP destination model
     w/ timm image encoder.
     """
-    from timm.layers import resample_patch_embed, resample_abs_pos_embed
+    from timm.layers import resample_abs_pos_embed, resample_patch_embed
 
     def _n2p(w, t=True, idx=None):
         """Helper function to n2p.
@@ -93,7 +93,7 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
             return
 
         block_prefix = f"{prefix}MAPHead_0/"
-        mha_prefix = block_prefix + f"MultiHeadDotProductAttention_0/"
+        mha_prefix = block_prefix + "MultiHeadDotProductAttention_0/"
         module.attn_pool.latent.copy_(_n2p(w[f"{block_prefix}probe"], t=False))
         module.attn_pool.q.weight.copy_(_n2p(w[f"{mha_prefix}query/kernel"], t=False).flatten(1).T)
         module.attn_pool.q.bias.copy_(_n2p(w[f"{mha_prefix}query/bias"], t=False).reshape(-1))
@@ -244,7 +244,7 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
             else:
                 block_prefix = f"{prefix}encoderblock_{i}/"
                 idx = None
-            mha_prefix = block_prefix + f"MultiHeadDotProductAttention_0/"
+            mha_prefix = block_prefix + "MultiHeadDotProductAttention_0/"
             block.ln_1.weight.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/scale"], idx=idx))
             block.ln_1.bias.copy_(_n2p(w[f"{block_prefix}LayerNorm_0/bias"], idx=idx))
             block.attn.in_proj_weight.copy_(
@@ -356,7 +356,7 @@ def convert_mobile_clip_state_dict(model: CustomTextCLIP, state_dict, fastvit=Tr
     return out_dict
 
 
-def convert_state_dict(model: Union[CustomTextCLIP, CLIP], state_dict):
+def convert_state_dict(model: CustomTextCLIP | CLIP, state_dict):
     """Convert state dict.
 
     Args:

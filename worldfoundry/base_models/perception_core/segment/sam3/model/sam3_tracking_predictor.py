@@ -8,14 +8,19 @@ import logging
 from collections import OrderedDict
 
 import torch
+
+# isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_base import (
-    concat_points,
     NO_OBJ_SCORE,
     Sam3TrackerBase,
+    concat_points,
 )
+
+# isort: split
+from tqdm.auto import tqdm
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
 from worldfoundry.base_models.perception_core.segment.sam3.model.utils.sam2_utils import load_video_frames
-from tqdm.auto import tqdm
 
 
 class Sam3TrackerPredictor(Sam3TrackerBase):
@@ -1193,9 +1198,9 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
         new_obj_ids = [old_obj_ids[old_idx] for old_idx in remain_old_obj_inds]
         new_obj_inds = list(range(len(new_obj_ids)))
         # build new mappings
-        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds))
-        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds))
-        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids))
+        old_idx_to_new_idx = dict(zip(remain_old_obj_inds, new_obj_inds, strict=False))
+        inference_state["obj_id_to_idx"] = dict(zip(new_obj_ids, new_obj_inds, strict=False))
+        inference_state["obj_idx_to_id"] = dict(zip(new_obj_inds, new_obj_ids, strict=False))
         inference_state["obj_ids"] = new_obj_ids
 
         # Step 2: For per-object tensor storage, we shift their obj_idx in the dict keys.

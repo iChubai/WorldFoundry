@@ -16,7 +16,7 @@ SWIFT_TYPE_KEY = "swift_type"
 DEFAULT_ADAPTER = "default"
 
 
-class Invoke(object):
+class Invoke:
     KEY = "invoked_by"
     THIRD_PARTY = "third_party"
     PRETRAINED = "from_pretrained"

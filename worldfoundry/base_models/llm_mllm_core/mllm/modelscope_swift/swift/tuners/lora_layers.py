@@ -22,6 +22,7 @@ from peft.utils import _get_submodules, get_quantization_config
 from transformers import Conv1D
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from .peft import LoraConfig
 from .utils import ActivationMixin, ModulesToSaveWrapper, SwiftAdapter
 
@@ -158,7 +159,7 @@ def dispatch_default(
     lora_config: LoraConfig,
     module_key: str,
     **kwargs,
-) -> Optional[torch.nn.Module]:
+) -> torch.nn.Module | None:
     new_module = None
 
     if isinstance(target, BaseTunerLayer):
@@ -557,7 +558,7 @@ class MergedLinear(nn.Linear, LoRALayer):
         r: int = 0,
         lora_alpha: int = 1,
         lora_dropout: float = 0.0,
-        enable_lora: List[bool] = [False],
+        enable_lora: list[bool] = [False],
         fan_in_fan_out: bool = False,
         merge_weights: bool = True,
         bias: bool = True,
@@ -664,7 +665,7 @@ def mark_lora_as_trainable(model: nn.Module, adapter_name: str, bias: str = "non
         raise NotImplementedError
 
 
-def lora_state_dict(state_dict, adapter_name: str, bias: str = "none") -> Dict[str, torch.Tensor]:
+def lora_state_dict(state_dict, adapter_name: str, bias: str = "none") -> dict[str, torch.Tensor]:
     if bias == "none":
         to_return = {k: state_dict[k] for k in state_dict if "lora_" in k}
     elif bias == "all":

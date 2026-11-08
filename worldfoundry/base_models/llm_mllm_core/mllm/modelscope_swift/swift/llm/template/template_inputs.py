@@ -1,18 +1,17 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import json
-
-Tool = Dict[str, Union[str, Dict]]
-History = List[Union[Tuple[str, str], List[str]]]
-Message = Dict[str, Union[str, List[Dict[str, Any]]]]
-Messages = List[Message]
+Tool = dict[str, str | dict]
+History = list[tuple[str, str] | list[str]]
+Message = dict[str, str | list[dict[str, Any]]]
+Messages = list[Message]
 
 
-def messages_to_history(messages: Messages) -> Dict[str, Any]:
+def messages_to_history(messages: Messages) -> dict[str, Any]:
     system = None
     messages = messages.copy()
     if messages[0]["role"] == "system":
@@ -22,7 +21,7 @@ def messages_to_history(messages: Messages) -> Dict[str, Any]:
         messages.append({"role": "assistant", "content": None})
     history = []
     history_roles = []
-    for user_message, assistant_message in zip(messages[::2], messages[1::2]):
+    for user_message, assistant_message in zip(messages[::2], messages[1::2], strict=False):
         assert user_message["role"] in {"tool", "user"}, f"user_message {user_message}"
         assert assistant_message["role"] == "assistant", f"assistant_message: {assistant_message}"
         history.append([user_message["content"], assistant_message["content"]])
@@ -61,12 +60,12 @@ class InferRequest:
 
     messages: Messages
 
-    images: List[Union[str, Image.Image]] = field(default_factory=list)
-    audios: List[str] = field(default_factory=list)
-    videos: List[str] = field(default_factory=list)
+    images: list[str | Image.Image] = field(default_factory=list)
+    audios: list[str] = field(default_factory=list)
+    videos: list[str] = field(default_factory=list)
 
-    tools: Optional[List[Tool]] = None
-    objects: Dict[str, List[Any]] = field(default_factory=dict)
+    tools: list[Tool] | None = None
+    objects: dict[str, list[Any]] = field(default_factory=dict)
 
     def __post_init__(self):
         for key in ["images", "audios", "videos"]:
@@ -76,13 +75,13 @@ class InferRequest:
         assert isinstance(self.messages, list), f"messages: {self.messages}"
 
     @staticmethod
-    def remove_response(messages) -> Optional[str]:
+    def remove_response(messages) -> str | None:
         last_role = messages[-1]["role"] if messages else None
         if last_role == "assistant":
             return messages.pop()["content"]
 
     @staticmethod
-    def _to_printable(obj, key: Optional[str] = None):
+    def _to_printable(obj, key: str | None = None):
         if isinstance(obj, str) and key not in {"content", "text"} and len(obj) >= 1000:
             return f"<<<base64:{obj[:50]}..>>>"
         elif isinstance(obj, list):
@@ -109,7 +108,7 @@ class RolloutInferRequest(InferRequest):
     The strings can represent image URLs or Base64 encoded images.
     """
 
-    images: List[str] = field(default_factory=list)
+    images: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -119,25 +118,25 @@ class TemplateInputs(InferRequest):
     objects: Used for grounding tasks in a general format.
     """
 
-    rejected_response: Optional[str] = None
-    label: Optional[bool] = None
+    rejected_response: str | None = None
+    label: bool | None = None
 
 
 @dataclass
 class StdTemplateInputs:
     # only user/tool/assistant
-    messages: List[Dict[str, str]]
+    messages: list[dict[str, str]]
     # None: use default system; '': not use system
-    system: Optional[str] = None
-    tools: Optional[List[Tool]] = None
+    system: str | None = None
+    tools: list[Tool] | None = None
 
-    rejected_response: Optional[str] = None
-    label: Optional[int] = None
+    rejected_response: str | None = None
+    label: int | None = None
 
-    images: List[Union[str, Image.Image]] = field(default_factory=list)
-    audios: List[str] = field(default_factory=list)
-    videos: List[str] = field(default_factory=list)
-    objects: Dict[str, List[Any]] = field(default_factory=dict)
+    images: list[str | Image.Image] = field(default_factory=list)
+    audios: list[str] = field(default_factory=list)
+    videos: list[str] = field(default_factory=list)
+    objects: dict[str, list[Any]] = field(default_factory=dict)
 
     def __post_init__(self):
         self.image_idx = 0
@@ -162,7 +161,7 @@ class StdTemplateInputs:
         return bool(self.images or self.audios or self.videos or self.objects)
 
     @classmethod
-    def from_dict(cls, inputs: Dict[str, Any]) -> "StdTemplateInputs":
+    def from_dict(cls, inputs: dict[str, Any]) -> StdTemplateInputs:
         kwargs = {}
         for key in ["rejected_response", "label"]:
             if key in inputs:
@@ -199,7 +198,7 @@ class StdTemplateInputs:
         return cls(messages=messages, system=system, tools=tools, objects=objects, **kwargs, **media_kwargs)
 
     @staticmethod
-    def remove_messages_media(messages: Messages) -> Dict[str, Any]:
+    def remove_messages_media(messages: Messages) -> dict[str, Any]:
         res = {"images": [], "audios": [], "videos": []}
         for message in messages:
             content = message["content"]

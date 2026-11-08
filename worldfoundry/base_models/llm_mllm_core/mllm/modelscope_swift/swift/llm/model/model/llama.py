@@ -7,6 +7,7 @@ from transformers import AutoConfig
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_device
+
 from ..constant import LLMModelType, MLLMModelType
 from ..model_arch import ModelArch
 from ..register import (
@@ -21,7 +22,7 @@ from ..utils import ModelInfo, git_clone_github
 
 
 def get_model_tokenizer_llama(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     model_config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     model_config.pretraining_tp = 1
@@ -301,14 +302,14 @@ register_model(
 
 
 def get_model_tokenizer_omnli(
-    model_dir: str, model_info: ModelInfo, model_kwargs: Dict[str, Any], load_model: bool = True, **kwargs
+    model_dir: str, model_info: ModelInfo, model_kwargs: dict[str, Any], load_model: bool = True, **kwargs
 ):
     local_repo_path = kwargs.get("local_repo_path")
     if not local_repo_path:
         local_repo_path = git_clone_github("https://github.com/ictnlp/LLaMA-Omni")
     sys.path.append(local_repo_path)
-    from omni_speech.model import OmniSpeech2SLlamaForCausalLM, OmniSpeechLlamaForCausalLM
     import whisper
+    from omni_speech.model import OmniSpeech2SLlamaForCausalLM, OmniSpeechLlamaForCausalLM
 
     model_config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     model_config.speech_encoder = os.path.join(model_dir, "large-v3.pt")

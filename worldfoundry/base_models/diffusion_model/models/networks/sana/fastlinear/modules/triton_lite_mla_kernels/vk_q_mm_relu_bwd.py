@@ -138,7 +138,7 @@ def vk_q_mm_relu_bwd_kernel(
 
     vk = tl.load(vk_ptr + vk_offs, mask=c1_mask[:, None] & c_mask[None, :], other=0.0)  # C1, C
     grad_vk = tl.zeros((BLOCK_SIZE_C, BLOCK_SIZE_C1), dtype=tl.float32)
-    for n in range(0, tl.cdiv(N, BLOCK_SIZE_N)):
+    for n in range(tl.cdiv(N, BLOCK_SIZE_N)):
         n_mask = offs_n < N - n * BLOCK_SIZE_N
 
         grad_vk_q = tl.load(grad_vk_q_ptrs, mask=n_mask[:, None] & c1_mask[None, :], other=0.0)  # n, C1

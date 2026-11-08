@@ -3,8 +3,8 @@ _base_ = [
     "../../yolov6/yolov6_l_syncbn_fast_8xb32-300e_coco.py",
 ]
 
-checkpoint_file = "https://download.openmmlab.com/mmrazor/v1/bignas/attentive_mobilenet_subnet_8xb256_in1k_flops-0.93G_acc-80.81_20221229_200440-73d92cc6.pth"  # noqa
-fix_subnet = "https://download.openmmlab.com/mmrazor/v1/bignas/ATTENTIVE_SUBNET_A6.yaml"  # noqa
+checkpoint_file = "https://download.openmmlab.com/mmrazor/v1/bignas/attentive_mobilenet_subnet_8xb256_in1k_flops-0.93G_acc-80.81_20221229_200440-73d92cc6.pth"
+fix_subnet = "https://download.openmmlab.com/mmrazor/v1/bignas/ATTENTIVE_SUBNET_A6.yaml"
 deepen_factor = 1.2
 widen_factor = 1
 channels = [40, 128, 224]

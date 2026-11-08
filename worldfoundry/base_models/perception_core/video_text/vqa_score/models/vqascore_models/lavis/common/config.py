@@ -5,11 +5,12 @@ SPDX-License-Identifier: BSD-3-Clause
 For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-import logging
 import json
+import logging
 from typing import Dict
 
 from omegaconf import OmegaConf
+
 from ..common.registry import registry
 
 
@@ -59,7 +60,7 @@ class Config:
         model_cls = registry.get_model_class(model.arch)
         assert model_cls is not None, f"Model '{model.arch}' has not been registered."
 
-        model_type = kwargs.get("model.model_type", None)
+        model_type = kwargs.get("model.model_type")
         if not model_type:
             model_type = model.get("model_type", None)
         # else use the model type selected by user.
@@ -117,7 +118,7 @@ class Config:
         if has_equal:
             return opts
 
-        return [(opt + "=" + value) for opt, value in zip(opts[0::2], opts[1::2])]
+        return [(opt + "=" + value) for opt, value in zip(opts[0::2], opts[1::2], strict=False)]
 
     def get_config(self):
         return self.config
@@ -149,7 +150,7 @@ class Config:
             else:
                 logging.warning(f"No dataset named '{dataset}' in config. Skipping")
 
-        logging.info(f"\n======  Model Attributes  ======")
+        logging.info("\n======  Model Attributes  ======")
         logging.info(self._convert_node_to_json(self.config.model))
 
     def _convert_node_to_json(self, node):
@@ -263,7 +264,7 @@ def create_runner_config_validator():
     # add argumetns for training dataset ratios
     validator.add_argument(
         "train_dataset_ratios",
-        type=Dict[str, float],
+        type=dict[str, float],
         help="""Ratios of training dataset. This is used in iteration-based runner.
         Do not support for epoch-based runner because how to define an epoch becomes tricky.
         Default: None""",
@@ -289,14 +290,14 @@ def create_runner_config_validator():
         "lr_sched",
         type=str,
         choices=lr_scheds_choices,
-        help="Learning rate scheduler to use, from {}".format(lr_scheds_choices),
+        help=f"Learning rate scheduler to use, from {lr_scheds_choices}",
     )
     task_choices = registry.list_tasks()
     validator.add_argument(
         "task",
         type=str,
         choices=task_choices,
-        help="Task to use, from {}".format(task_choices),
+        help=f"Task to use, from {task_choices}",
     )
     # add arguments for init_lr
     validator.add_argument(

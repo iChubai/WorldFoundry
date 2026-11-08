@@ -184,8 +184,8 @@ def bilinear_splatting(
     data: torch.Tensor,
     uv: torch.Tensor,
     weight: torch.Tensor | None = None,
-    target_height: Optional[int] = None,
-    target_width: Optional[int] = None,
+    target_height: int | None = None,
+    target_width: int | None = None,
 ):
     """
     Forward warp using bilinear splatting.
@@ -336,8 +336,8 @@ def reproject(
     intrinsic2: torch.Tensor,
     normal1: torch.Tensor | None = None,
     filtering: Literal["normal", "none"] = "normal",
-    height2: Optional[int] = None,
-    width2: Optional[int] = None,
+    height2: int | None = None,
+    width2: int | None = None,
     mask1: torch.Tensor | None = None,
 ):
     """

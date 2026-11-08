@@ -6,8 +6,9 @@
 
 import logging
 import time
+from collections.abc import Callable
 from types import SimpleNamespace
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import torch
 import torch.nn as nn
@@ -21,7 +22,7 @@ from .utils import focal2fov, rad2deg
 logger = logging.getLogger(__name__)
 
 
-def get_trivial_estimation(data: Dict[str, torch.Tensor], camera_model: BaseCamera) -> BaseCamera:
+def get_trivial_estimation(data: dict[str, torch.Tensor], camera_model: BaseCamera) -> BaseCamera:
     """Get initial camera for optimization with roll=0, pitch=0, vfov=0.7 * max(h, w).
 
     Args:
@@ -62,7 +63,7 @@ def get_trivial_estimation(data: Dict[str, torch.Tensor], camera_model: BaseCame
     return camera, gravity
 
 
-def scaled_loss(x: torch.Tensor, fn: Callable, a: float) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def scaled_loss(x: torch.Tensor, fn: Callable, a: float) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Apply a loss function to a tensor and pre- and post-scale it.
 
     Args:
@@ -78,7 +79,7 @@ def scaled_loss(x: torch.Tensor, fn: Callable, a: float) -> Tuple[torch.Tensor, 
     return loss * a2, loss_d1, loss_d2 / a2
 
 
-def huber_loss(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def huber_loss(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """The classical robust Huber loss, with first and second derivatives."""
     mask = x <= 1
     sx = torch.sqrt(x + 1e-8)  # avoid nan in backward pass
@@ -161,7 +162,7 @@ class LMOptimizer(nn.Module):
         "verbose": False,
     }
 
-    def __init__(self, conf: Dict[str, Any]):
+    def __init__(self, conf: dict[str, Any]):
         """Initialize the LM optimizer."""
         super().__init__()
         self.conf = conf = SimpleNamespace(**{**self.default_conf, **conf})
@@ -185,7 +186,7 @@ class LMOptimizer(nn.Module):
         logger.debug(f"Using camera model: {camera_model} (with distortion: {self.camera_has_distortion})")
 
     def setup_optimization_and_priors(
-        self, data: Dict[str, torch.Tensor] = None, shared_intrinsics: bool = False
+        self, data: dict[str, torch.Tensor] = None, shared_intrinsics: bool = False
     ) -> None:
         """Setup the optimization and priors for the LM optimizer.
 
@@ -231,8 +232,8 @@ class LMOptimizer(nn.Module):
         logger.debug(f"Shared intrinsics:  {self.shared_intrinsics}")
 
     def calculate_residuals(
-        self, camera: BaseCamera, gravity: Gravity, data: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
+        self, camera: BaseCamera, gravity: Gravity, data: dict[str, torch.Tensor]
+    ) -> dict[str, torch.Tensor]:
         """Calculate the residuals for the optimization.
 
         Args:
@@ -259,8 +260,8 @@ class LMOptimizer(nn.Module):
         return residuals
 
     def calculate_costs(
-        self, residuals: torch.Tensor, data: Dict[str, torch.Tensor]
-    ) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+        self, residuals: torch.Tensor, data: dict[str, torch.Tensor]
+    ) -> tuple[dict[str, torch.Tensor], dict[str, torch.Tensor]]:
         """Calculate the costs and weights for the optimization.
 
         Args:
@@ -305,7 +306,7 @@ class LMOptimizer(nn.Module):
         residuals: torch.Tensor,
         weights: torch.Tensor,
         shared_intrinsics: bool,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Calculate the gradient and Hessian for given the Jacobian, residuals, and weights.
 
         Args:
@@ -361,11 +362,11 @@ class LMOptimizer(nn.Module):
         self,
         camera: BaseCamera,
         gravity: Gravity,
-        residuals: Dict[str, torch.Tensor],
-        weights: Dict[str, torch.Tensor],
+        residuals: dict[str, torch.Tensor],
+        weights: dict[str, torch.Tensor],
         as_rpf: bool = False,
         shared_intrinsics: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Calculate the gradient and Hessian for the optimization.
 
         Args:
@@ -431,9 +432,9 @@ class LMOptimizer(nn.Module):
         self,
         camera_opt: BaseCamera,
         gravity_opt: Gravity,
-        errors: Dict[str, torch.Tensor],
-        weights: Dict[str, torch.Tensor],
-    ) -> Dict[str, torch.Tensor]:
+        errors: dict[str, torch.Tensor],
+        weights: dict[str, torch.Tensor],
+    ) -> dict[str, torch.Tensor]:
         """Estimate the uncertainty of the optimized camera and gravity at the final step.
 
         Args:
@@ -485,7 +486,7 @@ class LMOptimizer(nn.Module):
             "vfov_uncertainty": torch.sqrt(fov_uncertainty / 2),
         }
 
-    def update_estimate(self, camera: BaseCamera, gravity: Gravity, delta: torch.Tensor) -> Tuple[BaseCamera, Gravity]:
+    def update_estimate(self, camera: BaseCamera, gravity: Gravity, delta: torch.Tensor) -> tuple[BaseCamera, Gravity]:
         """Update the camera and gravity estimates with the given delta.
 
         Args:
@@ -516,10 +517,10 @@ class LMOptimizer(nn.Module):
 
     def optimize(
         self,
-        data: Dict[str, torch.Tensor],
+        data: dict[str, torch.Tensor],
         camera_opt: BaseCamera,
         gravity_opt: Gravity,
-    ) -> Tuple[BaseCamera, Gravity, Dict[str, torch.Tensor]]:
+    ) -> tuple[BaseCamera, Gravity, dict[str, torch.Tensor]]:
         """Optimize the camera and gravity estimates.
 
         Args:
@@ -606,7 +607,7 @@ class LMOptimizer(nn.Module):
 
         return camera_opt, gravity_opt, infos
 
-    def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """Run the LM optimization."""
         camera_init, gravity_init = get_trivial_estimation(data, self.camera_model)
 

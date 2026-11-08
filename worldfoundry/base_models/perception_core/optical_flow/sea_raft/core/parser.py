@@ -1,10 +1,10 @@
-import json
 import argparse
+import json
 
 
 def json_to_args(json_path):
     # return a argparse.Namespace object
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
     args = argparse.Namespace()
     args_dict = args.__dict__

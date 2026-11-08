@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 The Qwen team, Alibaba Group and the HuggingFace Inc. team. All rights reserved.
 #
 # This code is based on EleutherAI's GPT-NeoX library and the GPT-NeoX
@@ -42,7 +41,6 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from transformers.image_processing_utils import BaseImageProcessor, BatchFeature
 from transformers.image_transforms import (
     convert_to_rgb,
@@ -67,7 +65,6 @@ from transformers.image_utils import (
 )
 from transformers.utils import TensorType, is_vision_available, logging
 
-
 logger = logging.get_logger(__name__)
 
 
@@ -75,7 +72,7 @@ if is_vision_available():
     from PIL import Image
 
 
-def make_batched_images(images) -> List[List[ImageInput]]:
+def make_batched_images(images) -> list[list[ImageInput]]:
     """
     Accepts images in list or nested list format, and makes a list of images for preprocessing.
 
@@ -99,7 +96,7 @@ def make_batched_images(images) -> List[List[ImageInput]]:
 
 
 # Copied from transformers.models.llava_next_video.image_processing_llava_next_video.make_batched_videos
-def make_batched_videos(videos) -> List[VideoInput]:
+def make_batched_videos(videos) -> list[VideoInput]:
     if isinstance(videos, (list, tuple)) and isinstance(videos[0], (list, tuple)) and is_valid_image(videos[0][0]):
         return videos
 
@@ -186,10 +183,10 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         do_resize: bool = True,
         resample: PILImageResampling = PILImageResampling.BICUBIC,
         do_rescale: bool = True,
-        rescale_factor: Union[int, float] = 1 / 255,
+        rescale_factor: int | float = 1 / 255,
         do_normalize: bool = True,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
         do_convert_rgb: bool = True,
         min_pixels: int = 56 * 56,
         max_pixels: int = 28 * 28 * 1280,
@@ -221,8 +218,8 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         do_rescale: bool = None,
         rescale_factor: float = None,
         do_normalize: bool = None,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
     ):
         """
         Differentiable version of image preprocessing using torch operations.
@@ -304,17 +301,17 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
 
     def _preprocess(
         self,
-        images: Union[ImageInput, VideoInput],
+        images: ImageInput | VideoInput,
         do_resize: bool = None,
         resample: PILImageResampling = None,
         do_rescale: bool = None,
         rescale_factor: float = None,
         do_normalize: bool = None,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
         do_convert_rgb: bool = None,
-        data_format: Optional[ChannelDimension] = ChannelDimension.FIRST,
-        input_data_format: Optional[Union[str, ChannelDimension]] = None,
+        data_format: ChannelDimension | None = ChannelDimension.FIRST,
+        input_data_format: str | ChannelDimension | None = None,
     ):
         """
         Preprocess an image or batch of images. Copy of the `preprocess` method from `CLIPImageProcessor`.
@@ -441,8 +438,8 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         do_rescale: bool = None,
         rescale_factor: float = None,
         do_normalize: bool = None,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
     ):
         """
         Differentiable preprocessing method for torch tensors.
@@ -479,17 +476,17 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         images: ImageInput,
         videos: VideoInput = None,
         do_resize: bool = None,
-        size: Dict[str, int] = None,
+        size: dict[str, int] = None,
         resample: PILImageResampling = None,
         do_rescale: bool = None,
         rescale_factor: float = None,
         do_normalize: bool = None,
-        image_mean: Optional[Union[float, List[float]]] = None,
-        image_std: Optional[Union[float, List[float]]] = None,
+        image_mean: float | list[float] | None = None,
+        image_std: float | list[float] | None = None,
         do_convert_rgb: bool = None,
-        return_tensors: Optional[Union[str, TensorType]] = None,
-        data_format: Optional[ChannelDimension] = ChannelDimension.FIRST,
-        input_data_format: Optional[Union[str, ChannelDimension]] = None,
+        return_tensors: str | TensorType | None = None,
+        data_format: ChannelDimension | None = ChannelDimension.FIRST,
+        input_data_format: str | ChannelDimension | None = None,
     ):
         """
         Args:

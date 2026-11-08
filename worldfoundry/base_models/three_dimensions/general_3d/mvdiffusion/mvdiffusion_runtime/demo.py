@@ -175,8 +175,8 @@ else:
                     parsed_parameters = PNGparameters.split("\n")
                     positive_prompt = parsed_parameters[0]
                     negative_prompt = parsed_parameters[1] if len(parsed_parameters) > 1 else ""
-                    print(f"Positive promts: " + positive_prompt)
-                    print(f"Negative promts: " + negative_prompt)
+                    print("Positive promts: " + positive_prompt)
+                    print("Negative promts: " + negative_prompt)
                     args.text = positive_prompt
         except Exception as exc:
             print(f"Warning: could not read PNG metadata with exiftool: {exc}")
@@ -200,7 +200,7 @@ if img is not None:
 
 if args.text_path is not None:
     prompt = []
-    with open(args.text_path, "r") as f:
+    with open(args.text_path) as f:
         for i, line in enumerate(f):
             prompt.append(line.strip())
     if len(prompt) < 8:
@@ -214,15 +214,15 @@ R = torch.tensor(Rs).cuda()[None]
 batch = {"images": images, "prompt": prompt, "R": R, "K": K}
 images_pred = model.inference(batch)
 # res_dir=os.path.join('outputs/',args.text[:20])
-res_dir = os.path.join("outputs/", f"results" + datetime.now().strftime("--%Y%m%d-%H%M%S"))
-print("saved to the folder: {}".format(res_dir))
+res_dir = os.path.join("outputs/", "results" + datetime.now().strftime("--%Y%m%d-%H%M%S"))
+print(f"saved to the folder: {res_dir}")
 os.makedirs(res_dir, exist_ok=True)
 with open(os.path.join(res_dir, "prompt.txt"), "w") as f:
     f.write(args.text)
 image_paths = []
 for i in range(8):
     im = Image.fromarray(images_pred[0, i])
-    image_path = os.path.join(res_dir, "{}.png".format(i))
+    image_path = os.path.join(res_dir, f"{i}.png")
     image_paths.append(image_path)
     im.save(image_path)
 generate_video(image_paths, res_dir, args.gen_video)

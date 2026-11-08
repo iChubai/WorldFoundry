@@ -18,6 +18,7 @@ import torch
 from einops import rearrange
 from torch import nn
 from torch.nn import functional as F
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
 
@@ -1216,7 +1217,7 @@ def rms_norm(input, normalized_shape, eps=1e-6):
     return input.to(dtype)
 
 
-class _LegacyDiagonalGaussianDistribution(object):
+class _LegacyDiagonalGaussianDistribution:
     """Diagonal gaussian distribution implementation."""
 
     def __init__(self, parameters, deterministic=False, rms_norm_mean=False, only_return_mean=False):
@@ -1342,7 +1343,6 @@ class AutoencoderKL(nn.Module):
     def convert_channel_last(self):
         """Convert channel last."""
         # Conv2d NCHW->NHWC
-        pass
 
     def naive_encode(self, x, is_init_image=True):
         """Naive encode.

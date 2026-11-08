@@ -6,9 +6,9 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.temp
 def calculate_loss_scale(
     query: str,
     response: str,
-    response_loss_scale_map: Dict[str, list],
-    query_loss_scale_map: Optional[Dict[str, list]] = None,
-) -> Tuple[List[str], List[float]]:
+    response_loss_scale_map: dict[str, list],
+    query_loss_scale_map: dict[str, list] | None = None,
+) -> tuple[list[str], list[float]]:
     """Calculate the loss scale by splitting the agent response.
 
     This algorithm comes from paper: https://arxiv.org/pdf/2309.00986.pdf

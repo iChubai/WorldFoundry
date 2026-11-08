@@ -14,7 +14,7 @@ from ..register import DatasetMeta, SubsetDataset, register_dataset
 
 
 class ShareGPT4oPreprocessor(MessagesPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         row = super().preprocess(row)
         image = row["images"]
         if not image:
@@ -48,7 +48,7 @@ register_dataset(
 
 
 class GPT4vDataset(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = "What is the caption of this image?"
         return super().preprocess(row)
 
@@ -77,7 +77,7 @@ register_dataset(
 
 
 class GarbagePreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = "Task: Classify household waste."
         return super().preprocess(row)
 
@@ -92,7 +92,7 @@ register_dataset(
 
 
 class SA1BPairedCaptionPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         prompt = ["图片中展示了什么", "讲述一下图片中内容", "告诉我里面有什么", "图片内容是啥"]
         response = row["global_caption"]
         query = np.random.choice(prompt)
@@ -128,7 +128,7 @@ class SA1BDenseCaptionPreprocessor(RowPreprocessor):
         "url": "images",
     }
 
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         prompt = ["图片中展示了什么", "讲述一下图片中内容", "告诉我里面有什么", "图片内容是啥"]
         response = ast.literal_eval(row["cap_seg"])
         response = response.get("global_caption")
@@ -162,7 +162,7 @@ register_dataset(
 
 
 class COCO2014Preprocess(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         caption = row["caption"]
         if "&&" in caption:
             caption = caption.split("&&")[0]
@@ -186,7 +186,7 @@ register_dataset(
 
 
 class MantisPreprocessor(MessagesPreprocessor):
-    def __init__(self, *, subset: str, columns: Optional[Dict[str, str]] = None) -> None:
+    def __init__(self, *, subset: str, columns: dict[str, str] | None = None) -> None:
         self.subset = subset
         super().__init__(columns=columns)
 
@@ -194,11 +194,11 @@ class MantisPreprocessor(MessagesPreprocessor):
         url = (
             f"https://www.modelscope.cn/api/v1/datasets/swift/Mantis-Instruct/repo?Revision="
             f"master&FilePath={self.subset}/train_images.zip"
-        )  # noqa
+        )
         self.local_dir = MediaResource.download(url, f"mantis_{self.subset}")
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         images = [os.path.join(self.local_dir, p["path"]) for p in row["images"]]
         if not all([os.path.exists(d) for d in images]):
             images = []
@@ -250,7 +250,7 @@ class LLaVADataPreprocessor(MessagesPreprocessor):
             self.all_folders[media_type] = MediaResource.download(media_type)
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if not row["images"]:
             return
         row = super().preprocess(row)
@@ -289,7 +289,7 @@ register_dataset(
 
 
 class PixelProsePreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         caption_prompt = [
             "Give the description of this image.",
             "Describe this picture",
@@ -320,7 +320,7 @@ register_dataset(
 
 
 class AIShell1Preprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = "语音转文本"
         row["response"] = row["Text:LABEL"].replace(" ", "")
         return super().preprocess(row)
@@ -350,7 +350,7 @@ class EmoSchemaPreprocessor(ResponsePreprocessor):
         self.mp4_set = [file[:-4] for file in os.listdir(self.local_dir) if file.endswith("mp4")]
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if row["video_idx"] not in self.mp4_set:
             return None
         transfer_to_option = {
@@ -369,7 +369,7 @@ class EmoSchemaPreprocessor(ResponsePreprocessor):
 
 
 class EmoSchemaClsPreprocessor(EmoSchemaPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if row["video_idx"] not in self.mp4_set:
             return None
         row = {
@@ -402,7 +402,7 @@ def _generate_url_list(_url, _range):
 
 
 class LLaVAVideo178KPreprocessor(MessagesPreprocessor):
-    def __init__(self, *, subset: str, columns: Optional[Dict[str, str]] = None) -> None:
+    def __init__(self, *, subset: str, columns: dict[str, str] | None = None) -> None:
         self.subset = subset
         super().__init__(columns=columns)
 
@@ -454,7 +454,7 @@ class LLaVAVideo178KPreprocessor(MessagesPreprocessor):
         self.local_dir = MediaResource.download(urls, f"llava_video_178k_{self.subset}", file_type="sharded")
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         file_path = os.path.join(self.local_dir, f"{row['videos']}")
         if not os.path.exists(file_path):
             return None
@@ -513,7 +513,7 @@ class MovieChat1KPreprocessor(ResponsePreprocessor):
             self.local_dir = MediaResource.download(url, "moviechat_1k_test", file_type="file")
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         file_path = os.path.join(self.local_dir, f"{row['info']['video_path']}")
         if not os.path.exists(file_path):
             return None
@@ -544,7 +544,7 @@ class VideoChatGPTPreprocessor(ResponsePreprocessor):
         self.local_dir = os.path.join(local_dir, "Test_Videos")
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         # only `.mp4`
         mp4_set = [file[:-4] for file in os.listdir(self.local_dir) if file.endswith("mp4")]
         if row["video_name"] not in mp4_set:
@@ -571,7 +571,7 @@ register_dataset(
 
 
 def preprocess_mind2web(dataset, **kwargs):
-    def preprocess_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess_row(row: dict[str, Any]) -> dict[str, Any]:
         raw_html = row["cleaned_html"]
         screenshot = row["screenshot"]
         row["screenshot"] = MediaResource.safe_save(screenshot, row["action_uid"] + ".jpg", "mind2web")
@@ -761,7 +761,7 @@ class ShareGPT4VPreprocessor(MessagesPreprocessor):
                 self.all_folders[media_type] = MediaResource.download(media_type)
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         image = row["image"]
         row.update(super().preprocess(row))
         if "coco/" in image:
@@ -803,7 +803,7 @@ register_dataset(
 
 
 class TextCapsPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         row["query"] = "What is the caption of this image?"
         if not os.path.exists(row["images"]["path"]):
             return None
@@ -811,7 +811,7 @@ class TextCapsPreprocessor(ResponsePreprocessor):
 
 
 class TextCapsEmbPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         row["query"] = ""
         if not os.path.exists(row["images"]["path"]):
             return None
@@ -855,7 +855,7 @@ class RefCOCOPreprocessor(ResponsePreprocessor, GroundingMixin):
         )
         return dataset
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         caption = row["captions"][0]
         bbox = row["bbox"]
         image_path = os.path.join(self.cache_dir, row["image_path"].replace("coco/train2014", "train2014"))
@@ -933,7 +933,7 @@ class LLaVAInstructPreprocessor(MessagesPreprocessor):
             self.all_folders[media_type] = MediaResource.download(media_type)
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         image = row["images"]
         if "coco/" in image:
             image = os.path.join(self.all_folders["coco"], image.replace("coco/", ""))
@@ -973,12 +973,11 @@ class LLaVAPretrainPreprocessor(MessagesPreprocessor):
                 "https://www.modelscope.cn/api/v1/datasets/AI-ModelScope/LLaVA-Pretrain/repo?"
                 "Revision=master&FilePath=images.zip"
             ),
-            # noqa
             "llava_pretrain",
         )
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         row.update(super().preprocess(row))
         if row["image"]:
             file_path = os.path.join(self.media_dir, row["image"])
@@ -1031,7 +1030,7 @@ register_dataset(
 
 
 class OcrvqaPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         idx = np.random.choice(range(len(row["questions"])))
         query = row["questions"][idx]
         response = row["answers"][idx]
@@ -1052,7 +1051,7 @@ register_dataset(
 
 
 class ScienceQAPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         query = row["question"]
         response = row["choices"][row["answer"]]
         solution = row["solution"]
@@ -1094,7 +1093,7 @@ class GritPreprocessor(RowPreprocessor, GroundingMixin):
         result.append(response[int(last_end) :])
         return "".join(result)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         images = row["images"]
         caption = row["caption"]
         ref_exps = row["ref_exps"]
@@ -1155,7 +1154,7 @@ class GQAPreprocessor(RowPreprocessor):
         self.local_cache = MediaResource.download("gqa")
         return super().prepare_dataset(dataset)
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         if os.path.join(self.local_cache, "images", row["imageId"] + ".jpg"):
             return {
                 "messages": [
@@ -1263,7 +1262,7 @@ class CocoPreprocessor(ResponsePreprocessor):
         "toothbrush",
     ]
 
-    def preprocess(self, row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         row["query"] = "Task: Object Detection"
         objects = row["objects"]
         objects["ref"] = [self.category[c] for c in objects["category"]]
@@ -1283,7 +1282,7 @@ register_dataset(
 
 
 class LLaVAMixSFTPreprocessor(RowPreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         messages = row["messages"]
         rounds = []
         for msg in messages:
@@ -1313,7 +1312,7 @@ register_dataset(
 
 
 class LatexocrPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = "Using LaTeX to perform OCR on the image."
         return super().preprocess(row)
 
@@ -1331,7 +1330,7 @@ register_dataset(
 
 
 class CapchaImagesPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         row["query"] = "recognize the content."
         return super().preprocess(row)
 
@@ -1347,7 +1346,7 @@ register_dataset(
 
 
 class ClevrPreprocessor(ResponsePreprocessor):
-    def preprocess(self, row: Dict[str, Any]) -> Dict[str, Any]:
+    def preprocess(self, row: dict[str, Any]) -> dict[str, Any]:
         query = row.get("query", "")
         query = (
             f"{query} Output the thinking process in <think> </think> and "

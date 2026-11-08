@@ -46,8 +46,8 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
 
     def __init__(
         self,
-        in_channels: List[int] = [256, 512, 1024],
-        out_channels: List[int] = [256, 512, 1024],
+        in_channels: list[int] = [256, 512, 1024],
+        out_channels: list[int] = [256, 512, 1024],
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         freeze_all: bool = False,

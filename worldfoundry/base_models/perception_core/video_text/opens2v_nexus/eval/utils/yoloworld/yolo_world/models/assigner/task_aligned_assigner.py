@@ -1,9 +1,9 @@
 # Copyright (c) Tencent Inc. All rights reserved.
 import torch
-from torch import Tensor
-from mmyolo.registry import TASK_UTILS
 from mmyolo.models.task_modules.assigners import BatchTaskAlignedAssigner
 from mmyolo.models.task_modules.assigners.utils import select_highest_overlaps
+from mmyolo.registry import TASK_UTILS
+from torch import Tensor
 
 
 @TASK_UTILS.register_module()

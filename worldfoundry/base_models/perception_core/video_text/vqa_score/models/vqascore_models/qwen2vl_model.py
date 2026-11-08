@@ -1,10 +1,13 @@
-import torch
-import numpy as np
-from PIL import Image
 from typing import List, Union
-from transformers import Qwen2VLForConditionalGeneration, Qwen2_5_VLForConditionalGeneration, AutoProcessor
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
+
+import numpy as np
+import torch
 from decord import VideoReader, cpu
+from PIL import Image
+from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration, Qwen2VLForConditionalGeneration
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
+
 from .vqa_model import VQAScoreModel
 
 QWEN2_VL_MODELS = {
@@ -132,7 +135,7 @@ class Qwen2VLModel(VQAScoreModel):
             self.model.parameters()
         ).device  # If there are multiple GPUs put the model on the first parameters GPU
 
-    def load_images(self, paths: List[str], fps: float = None) -> List[Union[torch.Tensor, List[torch.Tensor]]]:
+    def load_images(self, paths: list[str], fps: float = None) -> list[torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         fps = fps if fps is not None else self.model_info.get("fps", 8.0)
         for path in paths:
@@ -159,8 +162,8 @@ class Qwen2VLModel(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         fps=None,
         question_template: str = 'Does this image show "{}"?',  # "Does this image show \"{}\"? Answer the question with Yes or No",
         answer_template: str = "Yes",
@@ -172,7 +175,7 @@ class Qwen2VLModel(VQAScoreModel):
         processed_data = self.load_images(paths, fps)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers):
+        for data, question, answer in zip(processed_data, questions, answers, strict=False):
             messages = [{"role": "user", "content": [data, {"type": "text", "text": question}]}]
             text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             image_inputs, video_inputs = process_vision_info(messages)
@@ -198,13 +201,13 @@ class Qwen2VLModel(VQAScoreModel):
             lm_probs.append(lm_prob)
         return torch.tensor(lm_probs)
 
-    def generate(self, images: List[str], texts: List[str], fps=None, max_new_tokens: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], fps=None, max_new_tokens: int = 256) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         processed_data = self.load_images(images, fps)
 
         generated_texts = []
-        for data, text in zip(processed_data, texts):
+        for data, text in zip(processed_data, texts, strict=False):
             messages = [{"role": "user", "content": [data, {"type": "text", "text": text}]}]
 
             text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -217,7 +220,7 @@ class Qwen2VLModel(VQAScoreModel):
             with torch.inference_mode():
                 generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
                 generated_ids_trimmed = [
-                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
                 ]
                 text = self.processor.batch_decode(
                     generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False

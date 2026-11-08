@@ -96,14 +96,14 @@ class MeanMetric(Metric):
         }
 
 
-def compute_rouge_bleu(preds: List[str], labels: List[str]):
+def compute_rouge_bleu(preds: list[str], labels: list[str]):
     import jieba
     from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
     from rouge.rouge import Rouge
 
     score_dict = {key: MeanMetric() for key in ["rouge-1", "rouge-2", "rouge-l", "bleu-4"]}
 
-    for pred, label in zip(preds, labels):
+    for pred, label in zip(preds, labels, strict=False):
         hypothesis = list(jieba.cut(pred))
         reference = list(jieba.cut(label))
         if not hypothesis or not reference:
@@ -118,7 +118,7 @@ def compute_rouge_bleu(preds: List[str], labels: List[str]):
     return {k: round(v.compute()["value"] * 100, 6) for k, v in score_dict.items()}
 
 
-def compute_nlg_metrics(prediction) -> Dict[str, float]:
+def compute_nlg_metrics(prediction) -> dict[str, float]:
     preds, labels = prediction[0], prediction[1]
     new_preds, new_labels = [], []
     for i in range(preds.shape[0]):
@@ -129,7 +129,7 @@ def compute_nlg_metrics(prediction) -> Dict[str, float]:
 
 def compute_acc(
     preds, labels, *, acc_strategy: Literal["token", "seq"] = "token", is_encoder_decoder: bool = False
-) -> Dict[str, List[float]]:
+) -> dict[str, list[float]]:
     if isinstance(preds, torch.Tensor):
         if torch.is_floating_point(labels):
             return {}
@@ -156,7 +156,7 @@ def compute_acc_metrics(
     *,
     acc_strategy: Literal["token", "seq"] = "token",
     is_encoder_decoder: bool = False,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     metric = compute_acc(
         eval_prediction.predictions,
         eval_prediction.label_ids,

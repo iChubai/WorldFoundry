@@ -11,11 +11,12 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> dpt_head.py functionality."""
 
 import os
-from typing import List, Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from .head_act import activate_head
 from .utils import create_uv_grid, position_grid_to_embed
 
@@ -50,8 +51,8 @@ class DPTHead(nn.Module):
         activation: str = "inv_log",
         conf_activation: str = "expp1",
         features: int = 256,
-        out_channels: List[int] = [256, 512, 1024, 1024],
-        intermediate_layer_idx: List[int] = [4, 11, 17, 23],
+        out_channels: list[int] = [256, 512, 1024, 1024],
+        intermediate_layer_idx: list[int] = [4, 11, 17, 23],
         pos_embed: bool = True,
         feature_only: bool = False,
         down_ratio: int = 1,
@@ -134,11 +135,11 @@ class DPTHead(nn.Module):
 
     def forward(
         self,
-        aggregated_tokens_list: List[torch.Tensor],
+        aggregated_tokens_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frames_chunk_size: int = 8,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass through the DPT head, supports processing by chunking frames.
         Args:
@@ -191,12 +192,12 @@ class DPTHead(nn.Module):
 
     def _forward_impl(
         self,
-        aggregated_tokens_list: List[torch.Tensor],
+        aggregated_tokens_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frames_start_idx: int = None,
         frames_end_idx: int = None,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Implementation of the forward pass through the DPT head.
 
@@ -278,7 +279,7 @@ class DPTHead(nn.Module):
         pos_embed = pos_embed.permute(2, 0, 1)[None].expand(x.shape[0], -1, -1, -1)
         return x + pos_embed
 
-    def scratch_forward(self, features: List[torch.Tensor]) -> torch.Tensor:
+    def scratch_forward(self, features: list[torch.Tensor]) -> torch.Tensor:
         """
         Forward pass through the fusion blocks.
 
@@ -341,7 +342,7 @@ def _make_fusion_block(features: int, size: int = None, has_residual: bool = Tru
     )
 
 
-def _make_scratch(in_shape: List[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
+def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
     """Helper function to make scratch.
 
     Args:
@@ -500,7 +501,7 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: Tuple[int, int] = None,
+    size: tuple[int, int] = None,
     scale_factor: float = None,
     mode: str = "bilinear",
     align_corners: bool = True,

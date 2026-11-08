@@ -6,9 +6,9 @@
 
 """Module for base_models -> perception_core -> segment -> sam_v1 -> build_sam.py functionality."""
 
-import torch
-
 from functools import partial
+
+import torch
 
 from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer
 

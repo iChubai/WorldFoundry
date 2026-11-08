@@ -10,6 +10,7 @@ from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.torch_utils import find_sub_module
+
 from .utils import ActivationMixin, SwiftAdapter, SwiftConfig, SwiftOutput
 
 logger = get_logger()
@@ -39,15 +40,15 @@ class PromptConfig(SwiftConfig):
         extract_embedding(bool): Whether the embedding is extracted at final stage to keep the same dims with inputs
     """
 
-    dim: Union[int, List[int]] = field(default=None, metadata={"help": "The dimension of the hidden states"})
+    dim: int | list[int] = field(default=None, metadata={"help": "The dimension of the hidden states"})
 
     target_modules: str = field(default=None, metadata={"help": "The layer module to be replaced, in regex format"})
 
-    embedding_pos: Union[str, int] = field(default=None, metadata={"help": "The position of the embedding tensor"})
+    embedding_pos: str | int = field(default=None, metadata={"help": "The position of the embedding tensor"})
 
-    attention_mask_pos: Union[str, int] = field(default=None, metadata={"help": "The position of the attention mask"})
+    attention_mask_pos: str | int = field(default=None, metadata={"help": "The position of the attention mask"})
 
-    attention_mask_value: Union[float, int, bool] = field(
+    attention_mask_value: float | int | bool = field(
         default=0.0, metadata={"help": "The value to pad to the attention mask"}
     )
 
@@ -78,7 +79,7 @@ class Prompt(SwiftAdapter):
                 target_module_found = re.fullmatch(config.target_modules, module_key)
             else:
                 target_module_found = any(module_key.endswith(target_key) for target_key in config.target_modules)
-            if target_module_found:  # noqa
+            if target_module_found:
                 module = model.get_submodule(module_key)
 
                 def _forward(self, *args, **kwargs):

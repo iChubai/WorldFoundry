@@ -45,7 +45,7 @@ def format_one_sample(media_file=None, prompt="Describe the video in detail."):
     return sample
 
 
-class DictToObject(object):
+class DictToObject:
     def __init__(self, dictionary):
         for key, value in dictionary.items():
             setattr(self, key, value)

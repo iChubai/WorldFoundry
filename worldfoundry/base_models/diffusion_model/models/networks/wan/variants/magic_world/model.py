@@ -10,17 +10,17 @@ import math
 
 import torch
 import torch.nn as nn
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
+    SimpleAdapter,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_attention import (
     flash_attention,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.adapter import (
-    SimpleAdapter,
-)
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 __all__ = ["WanModel"]
 
@@ -647,7 +647,7 @@ class WanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             alpha = 0.3
             render_channels = 16
             new_x = []
-            for u, v in zip(x, y):
+            for u, v in zip(x, y, strict=False):
                 v_channels = v.shape[0]
                 if v_channels == render_channels:
                     new_x.append(torch.cat([u, v], dim=0))
@@ -672,7 +672,7 @@ class WanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
         # add control adapter
         if self.control_adapter is not None and y_camera is not None:
             y_camera = self.control_adapter(y_camera)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
 
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]

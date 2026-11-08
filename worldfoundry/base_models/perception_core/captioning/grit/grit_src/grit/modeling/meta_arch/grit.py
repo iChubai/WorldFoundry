@@ -1,9 +1,10 @@
 from typing import Dict, List, Optional, Tuple
+
 import torch
 from detectron2.config import configurable
-from detectron2.structures import ImageList, Instances, Boxes
 from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY
 from detectron2.modeling.meta_arch.rcnn import GeneralizedRCNN
+from detectron2.structures import Boxes, ImageList, Instances
 
 
 @META_ARCH_REGISTRY.register()
@@ -20,8 +21,8 @@ class GRiT(GeneralizedRCNN):
 
     def inference(
         self,
-        batched_inputs: Tuple[Dict[str, torch.Tensor]],
-        detected_instances: Optional[List[Instances]] = None,
+        batched_inputs: tuple[dict[str, torch.Tensor]],
+        detected_instances: list[Instances] | None = None,
         do_postprocess: bool = True,
     ):
         assert not self.training
@@ -42,7 +43,7 @@ class GRiT(GeneralizedRCNN):
         else:
             return results
 
-    def forward(self, batched_inputs: List[Dict[str, torch.Tensor]]):
+    def forward(self, batched_inputs: list[dict[str, torch.Tensor]]):
         if not self.training:
             return self.inference(batched_inputs)
 

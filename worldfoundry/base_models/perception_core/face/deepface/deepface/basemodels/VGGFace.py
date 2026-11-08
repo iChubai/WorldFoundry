@@ -1,6 +1,8 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 # ---------------------------------------
@@ -8,25 +10,25 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
-    from keras.models import Model, Sequential
     from keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
         Activation,
+        Convolution2D,
+        Dropout,
+        Flatten,
+        MaxPooling2D,
+        ZeroPadding2D,
     )
+    from keras.models import Model, Sequential
 else:
-    from tensorflow.keras.models import Model, Sequential
     from tensorflow.keras.layers import (
-        Convolution2D,
-        ZeroPadding2D,
-        MaxPooling2D,
-        Flatten,
-        Dropout,
         Activation,
+        Convolution2D,
+        Dropout,
+        Flatten,
+        MaxPooling2D,
+        ZeroPadding2D,
     )
+    from tensorflow.keras.models import Model, Sequential
 
 # ---------------------------------------
 

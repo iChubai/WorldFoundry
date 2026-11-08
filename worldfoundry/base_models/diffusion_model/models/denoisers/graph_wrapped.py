@@ -531,9 +531,9 @@ class GraphWrappedDenoiserMixin:
 
 
 __all__ = [
-    "acceleration_runtime_call",
     "FeatureCacheDenoiserMixin",
     "GraphWrappedDenoiserMixin",
+    "acceleration_runtime_call",
     "resolve_cuda_graph_option",
     "resolve_teacache_threshold",
     "validate_cuda_graph_options",

@@ -24,21 +24,21 @@ class GenerationArguments:
     """
 
     # generation config
-    max_new_tokens: Optional[int] = None  # Unlimited, constrained by max_model_len.
+    max_new_tokens: int | None = None  # Unlimited, constrained by max_model_len.
     # If it is None, use the parameters from generation_config.
-    temperature: Optional[float] = None  # Set to 0, which means do_sample is False.
-    top_k: Optional[int] = None
-    top_p: Optional[float] = None
-    repetition_penalty: Optional[float] = None
+    temperature: float | None = None  # Set to 0, which means do_sample is False.
+    top_k: int | None = None
+    top_p: float | None = None
+    repetition_penalty: float | None = None
     num_beams: int = 1
 
     stream: bool = False
-    stop_words: List[str] = field(default_factory=list)
+    stop_words: list[str] = field(default_factory=list)
     logprobs: bool = False
-    top_logprobs: Optional[int] = None
+    top_logprobs: int | None = None
 
     def get_request_config(self):
-        if getattr(self, "task_type") != "causal_lm":
+        if self.task_type != "causal_lm":
             return
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import RequestConfig
 

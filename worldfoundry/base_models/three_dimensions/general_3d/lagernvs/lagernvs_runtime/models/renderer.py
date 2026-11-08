@@ -12,8 +12,8 @@ import einops
 import torch
 import torch.nn as nn
 from models.layers.embeddings import (
-    init_weights_normal,
     PatchEmbed,
+    init_weights_normal,
 )
 from models.layers.final_layer import FinalLayer
 from models.layers.renderer_blocks import (

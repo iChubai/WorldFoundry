@@ -354,7 +354,7 @@ class MultiHeadMoELayerConfig:
     shared_expert_intermediate_sizes: int
     modality_specific_expert_intermediate_sizes: int
     shared_expert_params_dtype: torch.dtype
-    split_merge_intermediate_size: Optional[int]
+    split_merge_intermediate_size: int | None
     moe_config: MoEConfig
 
 
@@ -803,7 +803,7 @@ class Transformer(nn.Module):
         coords_mapping: torch.Tensor,
         modality_mapping: torch.Tensor,
         varlen_handler: VarlenHandler,
-        time_token_sequence: Optional[torch.Tensor] = None,
+        time_token_sequence: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # Single-GPU: no Ulysses dispatch; the whole packed stream is one CP shard.
         total_tokens = x.shape[0]
@@ -834,12 +834,12 @@ class Transformer(nn.Module):
 
 
 __all__ = [
+    "MLP",
     "AdapterConfig",
     "Attention",
     "AttentionConfig",
     "CoreMultiHeadMoE",
     "CoreMultiHeadMoEConfig",
-    "MLP",
     "MLPConfig",
     "MultiHeadMoELayer",
     "MultiHeadMoELayerConfig",
@@ -856,13 +856,13 @@ def _smoke() -> None:
     from dataclasses import replace
 
     from .config import (
-        AttentionSinksConfig,
-        MHCConfig,
-        Magi2PreviewConfig,
-        MoEConfig,
         MAGI2_MODALITY_AUDIO,
         MAGI2_MODALITY_TEXT,
         MAGI2_MODALITY_VIDEO,
+        AttentionSinksConfig,
+        Magi2PreviewConfig,
+        MHCConfig,
+        MoEConfig,
     )
     from .preview_layers import get_coords, seqlens2cu_seqlens
 

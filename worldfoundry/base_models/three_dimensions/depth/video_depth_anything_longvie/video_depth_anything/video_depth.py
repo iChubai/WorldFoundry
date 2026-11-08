@@ -13,24 +13,25 @@
 # limitations under the License.
 """Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> video_depth.py functionality."""
 
-import torch
-import torch.nn.functional as F
-import torch.nn as nn
-from torchvision.transforms import Compose
-import cv2
-from tqdm import tqdm
-import numpy as np
 import gc
 
+import cv2
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from models.vda.utils.util import compute_scale_and_shift, get_interpolate_frames
+from torchvision.transforms import Compose
+from tqdm import tqdm
+
 from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import DINOv2
-from .dpt_temporal import DPTHeadTemporal
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.transform import (
-    Resize,
     NormalizeImage,
     PrepareForNet,
+    Resize,
 )
 
-from models.vda.utils.util import compute_scale_and_shift, get_interpolate_frames
+from .dpt_temporal import DPTHeadTemporal
 
 # infer settings, do not change
 INFER_LEN = 32

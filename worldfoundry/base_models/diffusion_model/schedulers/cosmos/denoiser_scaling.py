@@ -41,7 +41,7 @@ class EDMScaling:
         """
         self.sigma_data = sigma_data
 
-    def __call__(self, sigma: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __call__(self, sigma: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Call.
 
         Args:
@@ -69,7 +69,7 @@ class RectifiedFlowScaling:
             raise ValueError("sigma_data must be 1.0 for RectifiedFlowScaling")
         self.t_scaling_factor = t_scaling_factor
 
-    def __call__(self, sigma: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __call__(self, sigma: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         t = sigma / (sigma + 1)
         return 1.0 - t, -t, 1.0 - t, t * self.t_scaling_factor
 

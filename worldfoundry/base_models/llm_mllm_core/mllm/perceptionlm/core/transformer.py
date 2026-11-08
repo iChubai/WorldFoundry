@@ -25,11 +25,11 @@ class InitStdFactor(Enum):
 class BaseTransformerArgs:
     dim: int = 512
     n_layers: int = 8
-    head_dim: Optional[int] = None
-    n_heads: Optional[int] = None
-    n_kv_heads: Optional[int] = None
+    head_dim: int | None = None
+    n_heads: int | None = None
+    n_kv_heads: int | None = None
 
-    ffn_dim_multiplier: Optional[float] = None
+    ffn_dim_multiplier: float | None = None
 
     multiple_of: int = 256
 
@@ -42,7 +42,7 @@ class BaseTransformerArgs:
     low_freq_factor: int = 1
     high_freq_factor: int = 32
 
-    init_base_std: Optional[float] = None
+    init_base_std: float | None = None
     init_std_factor: str = "disabled"
 
     max_seqlen: int = 1024
@@ -101,7 +101,7 @@ def apply_rotary_emb(
     xk: torch.Tensor,
     seq_dim: int,
     freqs_cis: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     xq_ = xq.reshape(*xq.shape[:-1], -1, 1, 2)  # B S H D -> B S H D/2 1 2
     xk_ = xk.reshape(*xk.shape[:-1], -1, 1, 2)  # B S H D -> B S H D/2 1 2
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_, seq_dim).float()  # S D/2 2 2 -> 1 S 1 D/2 2 2
@@ -140,7 +140,7 @@ def lengths_to_local_ids(lengths):
 def generate_doc_mask_mod(
     mask_mod: _mask_mod_signature,
     lengths: torch.Tensor,
-    kv_lengths: Optional[torch.Tensor] = None,
+    kv_lengths: torch.Tensor | None = None,
 ) -> _mask_mod_signature:
     """Generates mask mods that apply to inputs to flex attention in the sequence stacked
     format.
@@ -274,7 +274,7 @@ class RotaryEmbedding(torch.nn.Module):
 
         return torch.stack((cos, -sin, sin, cos), dim=-1).view(*freqs.size(), 2, 2)
 
-    def forward(self, seqlen: Optional[int] = None, tok_idx: Optional[torch.Tensor] = None):
+    def forward(self, seqlen: int | None = None, tok_idx: torch.Tensor | None = None):
         """
         Return freqs_cis corresponding to consecutive seqlen positions or the corresponding tok_idx positions
         Args:
@@ -379,8 +379,8 @@ class Attention(nn.Module):
         self,
         x: torch.Tensor,
         freq_cis: torch.Tensor,
-        tok_idx: Optional[torch.Tensor] = None,
-        mask: Optional[Union[BlockMask, AttentionBias, str]] = None,
+        tok_idx: torch.Tensor | None = None,
+        mask: BlockMask | AttentionBias | str | None = None,
         attn_impl: str = "sdpa",
     ) -> torch.Tensor:
         # B S D
@@ -463,7 +463,7 @@ class FeedForward(nn.Module):
         dim: int,
         hidden_dim: int,
         multiple_of: int,
-        ffn_dim_multiplier: Optional[float],
+        ffn_dim_multiplier: float | None,
         mp_size: int = 1,
     ):
         super().__init__()
@@ -554,8 +554,8 @@ class TransformerBlock(nn.Module):
         self,
         x: torch.Tensor,
         freq_cis: torch.Tensor,
-        tok_idx: Optional[torch.Tensor] = None,
-        mask: Optional[Union[BlockMask, AttentionBias, str]] = None,
+        tok_idx: torch.Tensor | None = None,
+        mask: BlockMask | AttentionBias | str | None = None,
         attn_impl: str = "sdpa",
     ) -> torch.Tensor:
         h = x + self.attention(
@@ -600,8 +600,8 @@ class BaseTransformer(nn.Module):
     def forward(
         self,
         h,
-        tok_idx: Optional[torch.Tensor] = None,
-        mask: Optional[Union[BlockMask, AttentionBias, str]] = None,
+        tok_idx: torch.Tensor | None = None,
+        mask: BlockMask | AttentionBias | str | None = None,
         attn_impl: str = "sdpa",
     ):
         freq_cis = self.rope_embeddings(seqlen=self.max_seqlen, tok_idx=tok_idx)

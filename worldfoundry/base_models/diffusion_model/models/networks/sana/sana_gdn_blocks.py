@@ -43,11 +43,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from worldfoundry.core.nn.blocks.layers import VisionAttention as Attention_
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution
-
-from worldfoundry.base_models.diffusion_model.models.networks.sana.liger_normalization import get_rmsnorm_class
 from worldfoundry.base_models.diffusion_model.models.networks.sana.chunking import (
     chunk_index_from_chunk_size,
     is_chunk_causal_request,
@@ -55,6 +51,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.chunking impo
     normalize_chunk_index,
     size1_chunk_position_indices,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.sana.liger_normalization import get_rmsnorm_class
+from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution
+from worldfoundry.core.nn.blocks.layers import VisionAttention as Attention_
 
 RMSNorm = get_rmsnorm_class()
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
@@ -880,7 +879,7 @@ class GDN(Attention_):
             Tensor of shape (B, N, C) after attention and projection.
         """
         del mask, block_mask
-        frame_valid_mask = kwargs.get("frame_valid_mask", None)
+        frame_valid_mask = kwargs.get("frame_valid_mask")
 
         if HW is None:
             raise ValueError("HW (T, H, W) must be provided for GDN attention.")
@@ -955,7 +954,7 @@ class GDN(Attention_):
 
         # Gate computation (use pre-computed gates when available to avoid
         # redundant work in dual-branch CamCtrl models).
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -1056,7 +1055,7 @@ class BidirectionalGDN(GDN):
             Tensor of shape (B, N, C) after attention and projection.
         """
         del mask, block_mask
-        frame_valid_mask = kwargs.get("frame_valid_mask", None)
+        frame_valid_mask = kwargs.get("frame_valid_mask")
 
         if HW is None:
             raise ValueError("HW (T, H, W) must be provided for GDN attention.")
@@ -1130,7 +1129,7 @@ class BidirectionalGDN(GDN):
             k_rot = k_rot * token_mask_qkv
 
         # Gate computation (use pre-computed gates when available).
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -1300,7 +1299,7 @@ def _forward_softmax_attn(
     T, H, W = HW
     S = H * W
 
-    frame_valid_mask = kwargs.get("frame_valid_mask", None)
+    frame_valid_mask = kwargs.get("frame_valid_mask")
     token_valid_mask, _, _ = GDN._prepare_frame_valid_masks(
         frame_valid_mask,
         B=B,

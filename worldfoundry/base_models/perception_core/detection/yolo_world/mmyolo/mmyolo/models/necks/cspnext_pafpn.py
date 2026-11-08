@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 import torch.nn as nn
 from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
@@ -8,6 +8,7 @@ from mmdet.models.backbones.csp_darknet import CSPLayer
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from .base_yolo_neck import BaseYOLONeck
 
 

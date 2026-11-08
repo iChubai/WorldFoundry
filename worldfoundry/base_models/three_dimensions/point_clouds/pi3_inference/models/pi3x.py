@@ -394,7 +394,7 @@ class Pi3X(nn.Module, PyTorchModelHubMixin):
 
     def _chunked_conv_head(self, head, feat, patch_h, patch_w, chunk_size=64):
         BN = feat.shape[0]
-        if BN <= chunk_size:
+        if chunk_size >= BN:
             return head(feat, patch_h=patch_h, patch_w=patch_w)
         outputs = [[] for _ in range(len(head.output_block))] if isinstance(head.output_block, nn.ModuleList) else []
         for i in range(0, BN, chunk_size):

@@ -1,10 +1,11 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> graph_utils.py functionality."""
 
-import torch
-import numpy as np
 from collections import OrderedDict
 
 import lietorch
+import numpy as np
+import torch
+
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.rgbd_utils import (
     compute_distance_matrix_flow,
     compute_distance_matrix_flow2,

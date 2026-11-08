@@ -217,16 +217,16 @@ def matrix_game4_egypt_recipe() -> NativeDiffusionRecipe:
 
 
 __all__ = [
+    "MATRIX_GAME4_EGYPT_PROMPT",
     "MATRIX_GAME4_REPO",
     "MATRIX_GAME4_REVISION",
-    "MATRIX_GAME4_EGYPT_PROMPT",
-    "matrix_game4_egypt_recipe",
     "MATRIX_GAME_35_CHECKPOINT_REPO",
     "MATRIX_GAME_35_CHECKPOINT_REVISION",
     "MATRIX_GAME_35_FIRST_PERSON_MODEL_ID",
     "MATRIX_GAME_35_THIRD_PERSON_MODEL_ID",
     "WAN22_TI2V_5B_REPO",
     "WAN22_TI2V_5B_REVISION",
+    "matrix_game4_egypt_recipe",
     "matrix_game_35_first_person_recipe",
     "matrix_game_35_third_person_recipe",
 ]

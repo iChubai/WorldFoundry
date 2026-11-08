@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -213,18 +212,18 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
         )
         raise
     tf_path = os.path.abspath(tf_checkpoint_path)
-    logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+    logger.info(f"Converting TensorFlow checkpoint from {tf_path}")
     # Load weights from TF model
     init_vars = tf.train.list_variables(tf_path)
     names = []
     arrays = []
     for name, shape in init_vars:
-        logger.info("Loading TF weight {} with shape {}".format(name, shape))
+        logger.info(f"Loading TF weight {name} with shape {shape}")
         array = tf.train.load_variable(tf_path, name)
         names.append(name)
         arrays.append(array)
 
-    for name, array in zip(names, arrays):
+    for name, array in zip(names, arrays, strict=False):
         name = name.split("/")
         # adam_v and adam_m are variables used in AdamWeightDecayOptimizer to calculated m and v
         # which are not required for using pretrained model
@@ -248,13 +247,13 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
             else:
                 scope_names = [m_name]
             if scope_names[0] == "kernel" or scope_names[0] == "gamma":
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             elif scope_names[0] == "output_bias" or scope_names[0] == "beta":
-                pointer = getattr(pointer, "bias")
+                pointer = pointer.bias
             elif scope_names[0] == "output_weights":
-                pointer = getattr(pointer, "weight")
+                pointer = pointer.weight
             elif scope_names[0] == "squad":
-                pointer = getattr(pointer, "classifier")
+                pointer = pointer.classifier
             else:
                 try:
                     pointer = getattr(pointer, scope_names[0])
@@ -265,7 +264,7 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
                 num = int(scope_names[1])
                 pointer = pointer[num]
         if m_name[-11:] == "_embeddings":
-            pointer = getattr(pointer, "weight")
+            pointer = pointer.weight
         elif m_name == "kernel":
             array = np.transpose(array)
         try:
@@ -275,7 +274,7 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
         except AssertionError as e:
             e.args += (pointer.shape, array.shape)
             raise
-        logger.info("Initialize PyTorch weight {}".format(name))
+        logger.info(f"Initialize PyTorch weight {name}")
         pointer.data = torch.from_numpy(array)
     return model
 
@@ -899,11 +898,11 @@ class BertForPreTrainingOutput(ModelOutput):
             heads.
     """
 
-    loss: Optional[torch.FloatTensor] = None
+    loss: torch.FloatTensor | None = None
     prediction_logits: torch.FloatTensor = None
     seq_relationship_logits: torch.FloatTensor = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
+    hidden_states: tuple[torch.FloatTensor] | None = None
+    attentions: tuple[torch.FloatTensor] | None = None
 
 
 BERT_START_DOCSTRING = r"""
@@ -1003,7 +1002,7 @@ class BertModel(BertPreTrainedModel):
             self.encoder.layer[layer].attention.prune_heads(heads)
 
     def get_extended_attention_mask(
-        self, attention_mask: Tensor, input_shape: Tuple[int], device: device, is_decoder: bool
+        self, attention_mask: Tensor, input_shape: tuple[int], device: device, is_decoder: bool
     ) -> Tensor:
         """
         Makes broadcastable attention and causal masks so that future and masked tokens are ignored.
@@ -1054,9 +1053,7 @@ class BertModel(BertPreTrainedModel):
                 extended_attention_mask = attention_mask[:, None, None, :]
         else:
             raise ValueError(
-                "Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(
-                    input_shape, attention_mask.shape
-                )
+                f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
             )
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
@@ -1463,8 +1460,8 @@ class BertLMHeadModel(BertPreTrainedModel):
             "input_ids": input_ids,
             "attention_mask": attention_mask,
             "past_key_values": past,
-            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states", None),
-            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask", None),
+            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states"),
+            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask"),
             "is_decoder": True,
         }
 
@@ -1477,8 +1474,8 @@ class BertLMHeadModel(BertPreTrainedModel):
 
 @dataclass
 class MaskedLMOutputWithDistill(MaskedLMOutput):
-    loss_aux: Optional[torch.FloatTensor] = None
-    loss_distill: Optional[torch.FloatTensor] = None
+    loss_aux: torch.FloatTensor | None = None
+    loss_distill: torch.FloatTensor | None = None
 
 
 @add_start_docstrings("""Bert Model with a `language modeling` head on top. """, BERT_START_DOCSTRING)

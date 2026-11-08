@@ -3,16 +3,16 @@
 import torch
 from einops import rearrange
 from torch import nn
-from .helpers import PerceiverResampler
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+)
 from torch.distributed.fsdp.wrap import (
     enable_wrap,
     wrap,
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
-from torch.distributed.fsdp import (
-    FullyShardedDataParallel as FSDP,
-)
 
+from .helpers import PerceiverResampler
 from .utils import apply_with_stopping_condition
 
 

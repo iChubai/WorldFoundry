@@ -1,12 +1,11 @@
 import logging
+from typing import List
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from scipy import interpolate
-from typing import List
-
 from torch import nn
 
 logger = logging.getLogger(__name__)
@@ -194,7 +193,7 @@ allgather_wgrad = AllGather.apply
 
 
 def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_model_prefix: str, skip_key: str):
-    uninitialized_encoder_weights: List[str] = []
+    uninitialized_encoder_weights: list[str] = []
     if decoder.__class__ != encoder.__class__:
         if issubclass(decoder.__class__, encoder.__class__):
             logger.info(
@@ -211,7 +210,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
         decoder_pointer: nn.Module,
         encoder_pointer: nn.Module,
         module_name: str,
-        uninitialized_encoder_weights: List[str],
+        uninitialized_encoder_weights: list[str],
         skip_key: str,
         depth=0,
     ):

@@ -109,7 +109,7 @@ def _segment_paint(
 ) -> torch.Tensor:
     mapping = torch.empty(output_size, dtype=dtype, device=device)
     offset = 0
-    for value, seqlen in zip(values, seqlens):
+    for value, seqlen in zip(values, seqlens, strict=False):
         mapping[offset : offset + seqlen] = int(value)
         offset += seqlen
     return mapping
@@ -143,13 +143,13 @@ class ModelInput:
     audio_feat_len: torch.Tensor | list[int]
     txt_feat: torch.Tensor  # (B, S, 5120) text feature
     txt_feat_len: torch.Tensor | list[int]
-    t: Optional[torch.Tensor] = None  # (B,) diffusion time (only if add_time_token)
-    per_token_video_t: Optional[torch.Tensor] = None  # (B, 1, T, H, W)
-    per_token_audio_t: Optional[torch.Tensor] = None  # (B, L, 1)
+    t: torch.Tensor | None = None  # (B,) diffusion time (only if add_time_token)
+    per_token_video_t: torch.Tensor | None = None  # (B, 1, T, H, W)
+    per_token_audio_t: torch.Tensor | None = None  # (B, L, 1)
     # Conditioning images: (B, M, C, 1, H, W) + one special token embedding each.
-    ref_image_feat: Optional[torch.Tensor] = None
-    ref_image_feat_len: Optional[torch.Tensor] = None  # (B, M, 2) holding (H, W)
-    ref_image_special_token_embedding: Optional[torch.Tensor] = None  # (B, M, D)
+    ref_image_feat: torch.Tensor | None = None
+    ref_image_feat_len: torch.Tensor | None = None  # (B, M, 2) holding (H, W)
+    ref_image_special_token_embedding: torch.Tensor | None = None  # (B, M, D)
 
 
 # ============================================================
@@ -172,16 +172,16 @@ class SingleData:
     patch_size: int
     t_patch_size: int
     spatial_rope_interpolation: Literal["inter", "extra"]
-    diffusion_t: Optional[torch.Tensor] = None
-    per_token_video_t: Optional[torch.Tensor] = None
-    per_token_audio_t: Optional[torch.Tensor] = None
+    diffusion_t: torch.Tensor | None = None
+    per_token_video_t: torch.Tensor | None = None
+    per_token_audio_t: torch.Tensor | None = None
     time_channel_dim: int = 0
     vae_first_latent_is_image: bool = True
     video_fps: float = 25.0
     time_pos_fps: float = 3.125
-    ref_image_feats: Optional[list[torch.Tensor]] = None
-    ref_image_feat_lens: Optional[list[list[int]]] = None
-    ref_image_special_tokens: Optional[list[torch.Tensor]] = None
+    ref_image_feats: list[torch.Tensor] | None = None
+    ref_image_feat_lens: list[list[int]] | None = None
+    ref_image_special_tokens: list[torch.Tensor] | None = None
 
     def __post_init__(self) -> None:
         self.video_token_num = self.video_x_t.shape[0]
@@ -197,7 +197,9 @@ class SingleData:
         # feat_lens holds the patch-grid (H, W) per image, so their product is the
         # token count that survived img2tokens for that image.
         self.ref_image_token_nums: list[int] = [int(math.prod(feat_len)) for feat_len in self.ref_image_feat_lens]
-        self.ref_image_feats = [feat[:num] for feat, num in zip(self.ref_image_feats, self.ref_image_token_nums)]
+        self.ref_image_feats = [
+            feat[:num] for feat, num in zip(self.ref_image_feats, self.ref_image_token_nums, strict=False)
+        ]
         self.num_ref_images = len(self.ref_image_feats)
         self.total_ref_image_feat_len = sum(self.ref_image_token_nums)
 
@@ -437,6 +439,7 @@ class SimplePackedData:
         for item, token_slice in zip(
             self.items,
             torch.split(token_sequence, [i.total_token_num for i in self.items], dim=0),
+            strict=False,
         ):
             video_flat = token_slice[: item.video_token_num, : item.video_channel]
             c_out = item.video_channel // (item.t_patch_size * item.patch_size * item.patch_size)
@@ -504,7 +507,7 @@ class Magi2PreviewDataProxy:
         """
         pT, pH, pW = self.t_patch_size, self.patch_size, self.patch_size
         kernel_size = (pT, pH, pW)
-        if not all(s >= k for s, k in zip(x_t.shape[2:], kernel_size)):
+        if not all(s >= k for s, k in zip(x_t.shape[2:], kernel_size, strict=False)):
             return torch.empty(
                 x_t.shape[0],
                 0,
@@ -635,14 +638,14 @@ class Magi2PreviewDataProxy:
         latent: torch.Tensor,  # (B, 48, T, H, W)
         audio_latent: torch.Tensor,  # (B, L, 64)
         context: torch.Tensor,  # (B, S, 5120)
-        per_token_video_t: Optional[torch.Tensor] = None,  # (B, 1, T, H, W)
-        per_token_audio_t: Optional[torch.Tensor] = None,  # (B, L, 1)
-        t: Optional[torch.Tensor] = None,  # (B,) diffusion time
-        audio_feat_len: Optional[torch.Tensor | list[int]] = None,
-        txt_feat_len: Optional[torch.Tensor | list[int]] = None,
-        ref_image_feat: Optional[torch.Tensor] = None,
-        ref_image_feat_len: Optional[torch.Tensor] = None,
-        ref_image_special_token_embedding: Optional[torch.Tensor] = None,
+        per_token_video_t: torch.Tensor | None = None,  # (B, 1, T, H, W)
+        per_token_audio_t: torch.Tensor | None = None,  # (B, L, 1)
+        t: torch.Tensor | None = None,  # (B,) diffusion time
+        audio_feat_len: torch.Tensor | list[int] | None = None,
+        txt_feat_len: torch.Tensor | list[int] | None = None,
+        ref_image_feat: torch.Tensor | None = None,
+        ref_image_feat_len: torch.Tensor | None = None,
+        ref_image_special_token_embedding: torch.Tensor | None = None,
     ) -> dict:
         """Build the ``Transformer.forward`` kwargs from raw latents.
 
@@ -766,8 +769,8 @@ def _smoke() -> None:
     """Tiny-config CPU round-trip: build inputs -> DiT -> unpack; assert shapes."""
     from .config import (
         AttentionSinksConfig,
-        MHCConfig,
         Magi2PreviewConfig,
+        MHCConfig,
         MoEConfig,
     )
     from .preview_dit import Transformer

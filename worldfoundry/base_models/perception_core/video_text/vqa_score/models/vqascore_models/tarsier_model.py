@@ -1,15 +1,14 @@
 import os
-import torch
-from typing import List
-import warnings
-import requests
 import tempfile
+import warnings
+from typing import List
 
-from .tarsier.tasks.utils import load_model_and_processor
-from .tarsier.dataset.utils import format_one_sample, get_visual_type
+import requests
+import torch
 import yaml
 
-
+from .tarsier.dataset.utils import format_one_sample, get_visual_type
+from .tarsier.tasks.utils import load_model_and_processor
 from .vqa_model import VQAScoreModel
 
 warnings.filterwarnings("ignore")
@@ -49,7 +48,7 @@ class TarsierModel(VQAScoreModel):
         model_path = self.model_info["model"]["path"]
         config_path = self.model_info["model"]["config"]
 
-        data_config = yaml.safe_load(open(config_path, "r"))
+        data_config = yaml.safe_load(open(config_path))
         self.model, self.processor = load_model_and_processor(model_path, data_config=data_config)
         self.model.eval()
 
@@ -110,8 +109,8 @@ class TarsierModel(VQAScoreModel):
 
     def forward(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         num_frames: int = 16,
         question_template: str = 'Does this video show "{}"? Answer the question with Yes or No.',
         answer_template: str = "Yes",
@@ -119,8 +118,8 @@ class TarsierModel(VQAScoreModel):
         assert len(images) == len(texts), "Number of images and texts must match"
 
         lm_probs = []
-        for path, text in zip(images, texts):
-            if not get_visual_type(path) in ["video", "gif"]:
+        for path, text in zip(images, texts, strict=False):
+            if get_visual_type(path) not in ["video", "gif"]:
                 print(f"This model supports only video inference. {path} is invalid")
                 lm_probs.append(0.0)
                 continue
@@ -156,13 +155,13 @@ class TarsierModel(VQAScoreModel):
         return torch.tensor(lm_probs)
 
     def generate(
-        self, images: List[str], texts: List[str], num_frames: int = 4, max_new_tokens: int = 256
-    ) -> List[str]:
+        self, images: list[str], texts: list[str], num_frames: int = 4, max_new_tokens: int = 256
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         generated_outputs = []
-        for path, text in zip(images, texts):
-            if not get_visual_type(path) in ["video", "gif"]:
+        for path, text in zip(images, texts, strict=False):
+            if get_visual_type(path) not in ["video", "gif"]:
                 print(f"This model supports only video inference. {path} is invalid")
                 generated_outputs.append("")
                 continue

@@ -3,7 +3,7 @@ _base_ = "./ppyoloe_s_fast_8xb32-300e_coco.py"
 # The pretrained model is geted and converted from official PPYOLOE.
 # https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.5/configs/ppyoloe/README.md
 checkpoint = (
-    "https://download.openmmlab.com/mmyolo/v0/ppyoloe/ppyoloe_pretrain/cspresnet_l_imagenet1k_pretrained-c0010e6c.pth"  # noqa
+    "https://download.openmmlab.com/mmyolo/v0/ppyoloe/ppyoloe_pretrain/cspresnet_l_imagenet1k_pretrained-c0010e6c.pth"
 )
 
 deepen_factor = 1.0

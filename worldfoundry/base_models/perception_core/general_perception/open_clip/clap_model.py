@@ -38,9 +38,9 @@ class CLAP(nn.Module):
         text_cfg: CLIPTextCfg,
         quick_gelu: bool = False,
         init_logit_scale: float = np.log(1 / 0.07),
-        init_logit_bias: Optional[float] = None,
+        init_logit_bias: float | None = None,
         nonscalar_logit_scale: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+        cast_dtype: torch.dtype | None = None,
         output_dict: bool = False,
     ):
         """Init.
@@ -142,7 +142,7 @@ class CLAP(nn.Module):
     def forward(
         self,
         audio=None,
-        text: Optional[torch.Tensor] = None,
+        text: torch.Tensor | None = None,
     ):
         """Forward.
 

@@ -1,21 +1,19 @@
-import loguru
-import torch
 import math
-import torch.nn as nn
-import torch.nn.functional as F
-from torch import einsum
-
-from einops.layers.torch import Rearrange
-from einops import rearrange
-
-from ...utils.utils import coords_grid, bilinear_sampler, upflow8
-from .attention import MultiHeadAttention, LinearPositionEmbeddingSine, ExpPositionEmbeddingSine
 from typing import Optional, Tuple
 
+import loguru
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from einops import rearrange
+from einops.layers.torch import Rearrange
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from torch import einsum
 
-from .gru import BasicUpdateBlock, GMAUpdateBlock
+from ...utils.utils import bilinear_sampler, coords_grid, upflow8
+from .attention import ExpPositionEmbeddingSine, LinearPositionEmbeddingSine, MultiHeadAttention
 from .gma import Attention
+from .gru import BasicUpdateBlock, GMAUpdateBlock
 from .sk import SKUpdateBlock6_Deep_nopoolres_AllDecoder
 
 
@@ -74,7 +72,7 @@ class CrossAttentionLayer(nn.Module):
             nn.Dropout(dropout),
         )
         self.flow_or_pe = flow_or_pe
-        print("[Decoder flow_or_pe setting is: {}]".format(self.flow_or_pe))
+        print(f"[Decoder flow_or_pe setting is: {self.flow_or_pe}]")
         self.no_sc = no_sc
         if self.no_sc:
             print("[No short cut in cost decoding]")
@@ -191,7 +189,7 @@ class MemoryDecoder(nn.Module):
                 nn.Conv2d(dim * 2, 64, 1, 1),
             )
         elif self.cfg.gt_r > 0:
-            print("[Using larger cost as gt, radius is {}]".format(self.cfg.gt_r))
+            print(f"[Using larger cost as gt, radius is {self.cfg.gt_r}]")
             # self.pretrain_head = nn.Conv2d(dim, self.cfg.gt_r**2, 1, 1)
             self.pretrain_head = nn.Sequential(
                 nn.Conv2d(dim, dim * 2, 1, 1),
@@ -234,7 +232,7 @@ class MemoryDecoder(nn.Module):
             self.update_block = BasicUpdateBlock(self.cfg, hidden_dim=128)
 
         if self.cfg.r_16 > 0:
-            print("[r_16 = {}]".format(self.cfg.r_16))
+            print(f"[r_16 = {self.cfg.r_16}]")
 
         if self.cfg.quater_refine:
             print("[Using Quater Refinement]")
@@ -423,7 +421,7 @@ class MemoryDecoder(nn.Module):
             cost_maps_patches = (cost_maps_patches - mean) / (var + 1.0e-6) ** 0.5
             cost_maps_patches = cost_maps_patches.reshape(Bs, 64, H_down, W_down)
 
-            for idx_h, idx_w in zip(range(H_down), range(W_down)):
+            for idx_h, idx_w in zip(range(H_down), range(W_down), strict=False):
                 query_coord = torch.zeros(B, 2, H_inner, W_inner, device=cost_memory.device)
                 query_coord[:, 0, :, :] = idx_w
                 query_coord[:, 1, :, :] = idx_h

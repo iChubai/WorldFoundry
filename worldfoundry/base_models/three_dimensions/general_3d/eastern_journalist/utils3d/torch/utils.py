@@ -1,31 +1,29 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> utils.py functionality."""
 
-from typing import *
-from numbers import Number
 from itertools import chain
-from numbers import Integral
+from numbers import Integral, Number
+from typing import *
 
 import torch
-from torch import Tensor
 import torch.nn.functional as F
+from torch import Tensor
 
-from .helpers import batched
 from ..helpers import no_warnings
-
+from .helpers import batched
 
 __all__ = [
-    "sliding_window",
-    "masked_min",
-    "masked_max",
+    "csr_eliminate_zeros",
+    "csr_matrix_from_dense_indices",
+    "group",
+    "group_as_segments",
     "lookup",
     "lookup_get",
     "lookup_set",
+    "masked_max",
+    "masked_min",
     "segment_roll",
     "segment_take",
-    "csr_matrix_from_dense_indices",
-    "csr_eliminate_zeros",
-    "group",
-    "group_as_segments",
+    "sliding_window",
 ]
 
 
@@ -301,7 +299,7 @@ def group(labels: Tensor, data: Optional[Tensor] = None) -> List[Tuple[Tensor, T
     if data is None:
         data = torch.arange(labels.shape[0], device=labels.device)
     data_groups = torch.split(data[torch.argsort(inv)], counts.tolist())
-    return list(zip(group_labels, data_groups))
+    return list(zip(group_labels, data_groups, strict=False))
 
 
 def group_as_segments(labels: Tensor, data: Optional[Tensor] = None) -> Tuple[Tensor, Tensor, Tensor]:

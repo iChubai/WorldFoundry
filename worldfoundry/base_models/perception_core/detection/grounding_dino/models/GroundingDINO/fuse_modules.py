@@ -313,8 +313,8 @@ class BiAttentionBlock(nn.Module):
 
         # add layer scale for training stability
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
-        self.gamma_v = nn.Parameter(init_values * torch.ones((v_dim)), requires_grad=True)
-        self.gamma_l = nn.Parameter(init_values * torch.ones((l_dim)), requires_grad=True)
+        self.gamma_v = nn.Parameter(init_values * torch.ones(v_dim), requires_grad=True)
+        self.gamma_l = nn.Parameter(init_values * torch.ones(l_dim), requires_grad=True)
 
     def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):
         """Forward.

@@ -35,7 +35,7 @@ from .tag_class import tra_array
 
 
 def read_json(rpath):
-    with open(rpath, "r") as f:
+    with open(rpath) as f:
         return json.load(f)
 
 
@@ -272,7 +272,7 @@ from typing import List
 
 
 def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_model_prefix: str, skip_key: str):
-    uninitialized_encoder_weights: List[str] = []
+    uninitialized_encoder_weights: list[str] = []
     if decoder.__class__ != encoder.__class__:
         logger.info(
             f"{decoder.__class__} and {encoder.__class__} are not equal. In this case make sure that all encoder weights are correctly initialized."
@@ -282,7 +282,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
         decoder_pointer: nn.Module,
         encoder_pointer: nn.Module,
         module_name: str,
-        uninitialized_encoder_weights: List[str],
+        uninitialized_encoder_weights: list[str],
         skip_key: str,
         depth=0,
     ):

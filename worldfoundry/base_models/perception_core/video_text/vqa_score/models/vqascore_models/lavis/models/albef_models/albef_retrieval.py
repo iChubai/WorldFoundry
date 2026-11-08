@@ -9,16 +9,33 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
+
+# isort: split
 from ...models.albef_models import AlbefBase, compute_sim_matrix
+
+# isort: split
+# isort: split
 from ...models.albef_models.albef_outputs import (
     AlbefIntermediateOutput,
     AlbefOutput,
     AlbefSimilarity,
 )
+
+# isort: split
+# isort: split
 from ...models.base_model import MomentumDistilationMixin, SharedQueueMixin
+
+# isort: split
+# isort: split
 from ...models.med import XBertEncoder
+
+# isort: split
+# isort: split
 from ...models.vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 
 

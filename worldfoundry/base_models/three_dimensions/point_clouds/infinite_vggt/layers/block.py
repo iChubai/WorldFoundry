@@ -2,15 +2,17 @@
 
 import logging
 import os
-from typing import Callable, List, Any, Tuple, Dict, Union
 import warnings
+from collections.abc import Callable
+from typing import Any, Dict, List, Tuple, Union
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
+
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
 
 from .attention import Attention
-from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 XFORMERS_AVAILABLE = False
 
@@ -97,7 +99,7 @@ class Block(nn.Module):
 
     def forward(
         self, x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
-    ) -> Union[Tensor, Tuple[Tensor, Dict]]:
+    ) -> Tensor | tuple[Tensor, dict]:
         """Forward.
 
         Args:
@@ -114,7 +116,7 @@ class Block(nn.Module):
 
         def attn_residual_func(
             x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
-        ) -> Union[Tensor, Tuple[Tensor, Dict]]:
+        ) -> Tensor | tuple[Tensor, dict]:
             """Attn residual func.
 
             Args:
@@ -256,7 +258,7 @@ def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None
     return x_plus_residual
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 def get_attn_bias_and_cat(x_list, branges=None):
@@ -264,10 +266,10 @@ def get_attn_bias_and_cat(x_list, branges=None):
     this will perform the index select, cat the tensors, and provide the attn_bias from cache
     """
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
         attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
@@ -284,7 +286,7 @@ def get_attn_bias_and_cat(x_list, branges=None):
 
 
 def drop_add_residual_stochastic_depth_list(
-    x_list: List[Tensor],
+    x_list: list[Tensor],
     residual_func: Callable[[Tensor, Any], Tensor],
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
@@ -312,7 +314,9 @@ def drop_add_residual_stochastic_depth_list(
     residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
 
     outputs = []
-    for x, brange, residual, residual_scale_factor in zip(x_list, branges, residual_list, residual_scale_factors):
+    for x, brange, residual, residual_scale_factor in zip(
+        x_list, branges, residual_list, residual_scale_factors, strict=False
+    ):
         outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
     return outputs
 
@@ -320,7 +324,7 @@ def drop_add_residual_stochastic_depth_list(
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
 
-    def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """

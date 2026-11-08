@@ -41,7 +41,7 @@ class PoseSimOTAAssigner(SimOTAAssigner):
         self,
         pred_instances: InstanceData,
         gt_instances: InstanceData,
-        gt_instances_ignore: Optional[InstanceData] = None,
+        gt_instances_ignore: InstanceData | None = None,
         **kwargs,
     ) -> AssignResult:
         """Assign gt to priors using SimOTA.
@@ -170,7 +170,7 @@ class PoseSimOTAAssigner(SimOTAAssigner):
 
     def dynamic_k_matching(
         self, cost: Tensor, pairwise_ious: Tensor, pairwise_oks: Tensor, num_gt: int, valid_mask: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """Use IoU and matching cost to calculate the dynamic top-k positive
         targets."""
         matching_matrix = torch.zeros_like(cost, dtype=torch.uint8)

@@ -143,7 +143,6 @@ class SolverTerm(ABC):
             solver: The solver.
         """
         # Default implementation do nothing.
-        pass
 
 
 class DenseDepthFlowTerm(SolverTerm):

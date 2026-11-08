@@ -4,15 +4,15 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 import torch.nn as nn
 from safetensors.torch import load_file
 
 from .config import RepEncoderConfig
-
 
 CHECKPOINT_FILENAME = "model.safetensors"
 CONFIG_FILENAME = "config.json"

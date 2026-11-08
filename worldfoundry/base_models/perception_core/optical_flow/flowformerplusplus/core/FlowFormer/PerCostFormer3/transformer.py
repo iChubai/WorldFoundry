@@ -2,16 +2,15 @@ import loguru
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange
+from einops.layers.torch import Rearrange
 from torch import einsum
 
-from einops.layers.torch import Rearrange
-from einops import rearrange
-
-from ..encoders import twins_svt_large, convnext_large
-from .twins import PosConv
-from .encoder import MemoryEncoder
-from .decoder import MemoryDecoder
+from ..encoders import convnext_large, twins_svt_large
 from .cnn import BasicEncoder
+from .decoder import MemoryDecoder
+from .encoder import MemoryEncoder
+from .twins import PosConv
 
 
 class FlowFormer(nn.Module):

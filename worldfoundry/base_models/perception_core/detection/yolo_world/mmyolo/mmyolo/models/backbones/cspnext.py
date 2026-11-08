@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Sequence, Union
+from collections.abc import Sequence
+from typing import List, Union
 
 import torch.nn as nn
 from mmcv.cnn import ConvModule, DepthwiseSeparableConvModule
@@ -8,6 +9,7 @@ from mmdet.models.backbones.csp_darknet import CSPLayer
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from ..layers import SPPFBottleneck
 from .base_backbone import BaseBackbone
 
@@ -78,7 +80,7 @@ class CSPNeXt(BaseBackbone):
         input_channels: int = 3,
         out_indices: Sequence[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
         arch_ovewrite: dict = None,

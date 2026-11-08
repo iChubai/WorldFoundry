@@ -24,5 +24,5 @@ def import_model_class_by_version(version: str) -> Type[Union["MoGeModelV1", "Mo
     except ModuleNotFoundError:
         raise ValueError(f'Model version "{version}" not found.')
 
-    cls = getattr(module, "MoGeModel")
+    cls = module.MoGeModel
     return cls

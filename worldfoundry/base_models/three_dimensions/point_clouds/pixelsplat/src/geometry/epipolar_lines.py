@@ -1,7 +1,8 @@
 """Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> geometry -> epipolar_lines.py functionality."""
 
 import itertools
-from typing import Iterable, Literal, Optional, TypedDict
+from collections.abc import Iterable
+from typing import Literal, Optional, TypedDict
 
 import torch
 from einops import einsum, repeat
@@ -184,8 +185,8 @@ def project_rays(
     directions: Float[Tensor, "*#batch 3"],
     extrinsics: Float[Tensor, "*#batch 4 4"],
     intrinsics: Float[Tensor, "*#batch 3 3"],
-    near: Optional[Float[Tensor, "*#batch"]] = None,
-    far: Optional[Float[Tensor, "*#batch"]] = None,
+    near: Float[Tensor, "*#batch"] | None = None,
+    far: Float[Tensor, "*#batch"] | None = None,
     epsilon: float = 1e-6,
 ) -> RaySegmentProjection:
     """Project rays.

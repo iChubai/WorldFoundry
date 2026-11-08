@@ -1,14 +1,12 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_frontend.py functionality."""
 
-import torch
 import lietorch
 import numpy as np
-
-from lietorch import SE3
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
-
+import torch
 from cuda_timer import CudaTimer
+from lietorch import SE3
 
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
 
 ENABLE_TIMING = False
 

@@ -9,6 +9,7 @@ import torch.nn as nn
 from PIL import Image
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..base import Template
 from ..constant import LLMTemplateType, MLLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -20,9 +21,9 @@ from ..utils import Prompt, findall
 class DeepseekTemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: [["bos_token_id"]])
     prompt: Prompt = field(default_factory=lambda: ["User: {{QUERY}}\n\nAssistant:"])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: [["eos_token_id"]])
+    chat_sep: Prompt | None = field(default_factory=lambda: [["eos_token_id"]])
     suffix: Prompt = field(default_factory=lambda: [["eos_token_id"]])
-    system_prefix: Optional[Prompt] = field(default_factory=lambda: [["bos_token_id"], "{{SYSTEM}}\n\n"])
+    system_prefix: Prompt | None = field(default_factory=lambda: [["bos_token_id"], "{{SYSTEM}}\n\n"])
 
 
 register_template(
@@ -57,7 +58,7 @@ class DeepseekVLTemplate(Template):
 
     image_token_num_per_image: int = 576
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         is_janus = getattr(self, "is_janus", False)
 
         encoded = super()._encode(inputs)
@@ -110,7 +111,7 @@ class DeepseekVLTemplate(Template):
             encoded = {"input_ids": input_ids, "labels": labels, "generate_mode": inputs.generate_mode}
             return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         if not inputs.get("generate_mode"):
             inputs["pixel_values"] = inputs["pixel_values"].to(dtype=self.model_info.torch_dtype)
             inputs_embeds = model.prepare_inputs_embeds(**inputs)
@@ -118,7 +119,7 @@ class DeepseekVLTemplate(Template):
         else:
             return inputs
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         gene_img_list = [b.get("generate_mode") for b in batch]
         if all(gene_img_list):
             generate_mode = True
@@ -197,7 +198,7 @@ class DeepseekVLTemplate(Template):
 
             return {"sequences": generated_tokens}
 
-    def decode(self, generate_ids: List[int], **kwargs) -> Any:
+    def decode(self, generate_ids: list[int], **kwargs) -> Any:
         if "template_inputs" not in kwargs or not kwargs["template_inputs"].generate_mode:
             return super().decode(generate_ids, **kwargs)
         else:
@@ -228,7 +229,7 @@ class DeepseekVLTemplate(Template):
 
 @dataclass
 class DeepseekVLTemplateMeta(DeepseekTemplateMeta):
-    default_system: Optional[str] = (
+    default_system: str | None = (
         "You are a helpful language and vision assistant. "
         "You are able to understand the visual content that the user provides, "
         "and assist the user with a variety of tasks using natural language."
@@ -255,7 +256,7 @@ register_template(DeepseekVLTemplateMeta(MLLMTemplateType.deepseek_janus, templa
 class DeepseekV2_5TemplateMeta(TemplateMeta):
     prefix: Prompt = field(default_factory=lambda: ["<｜begin▁of▁sentence｜>{{SYSTEM}}"])
     prompt: Prompt = field(default_factory=lambda: ["<｜User｜>{{QUERY}}<｜Assistant｜>"])
-    chat_sep: Optional[Prompt] = field(default_factory=lambda: ["<｜end▁of▁sentence｜>"])
+    chat_sep: Prompt | None = field(default_factory=lambda: ["<｜end▁of▁sentence｜>"])
     suffix: Prompt = field(default_factory=lambda: ["<｜end▁of▁sentence｜>"])
 
 
@@ -279,7 +280,7 @@ class DeepseekVL2Template(DeepseekVLTemplate):
     image_placeholder = ["<image>\n"]
     placeholder_tokens = ["<image>"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         from deepseek_vl2.models.processing_deepseek_vl_v2 import VLChatProcessorOutput
 
         encoded = Template._encode(self, inputs)
@@ -292,7 +293,7 @@ class DeepseekVL2Template(DeepseekVLTemplate):
             "<image>" * len(images), images, cropping=len(images) <= 2
         )
         new_num_tokens = 0
-        for idx, n_image_tokens in zip(idx_list, num_image_tokens):
+        for idx, n_image_tokens in zip(idx_list, num_image_tokens, strict=False):
             image_tokens = [processor.image_token_id] * n_image_tokens
             input_ids = input_ids[:idx] + image_tokens + input_ids[idx + 1 :]
             if labels is not None:
@@ -313,7 +314,7 @@ class DeepseekVL2Template(DeepseekVLTemplate):
         encoded = {"output": output, "input_ids": input_ids, "labels": labels}
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         inputs["images_seq_mask"] = inputs["images_seq_mask"].to(torch.bool)
         inputs["images_spatial_crop"] = inputs["images_spatial_crop"].to(torch.long)
         inputs_embeds = model.prepare_inputs_embeds(**inputs)

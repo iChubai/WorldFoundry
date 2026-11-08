@@ -1,11 +1,11 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
 from typing import List, Optional, Tuple
 
-import json
-
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import Messages
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.template.utils import ContextType
+
 from .utils import calculate_loss_scale
 
 
@@ -26,15 +26,15 @@ class LossScale:
         if self.loss_scale_config is not None:
             path = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(path, "config", self.loss_scale_config)
-            with open(config_path, "r", encoding="utf-8") as json_file:
+            with open(config_path, encoding="utf-8") as json_file:
                 self.loss_scale_map = json.load(json_file)
         else:
             self.loss_scale_map = None
         self._set_keep_loss_scale()
 
     def get_loss_scale(
-        self, context: str, context_type: ContextType, is_last_round: bool, *, query: Optional[str] = None
-    ) -> Tuple[List[str], List[float]]:
+        self, context: str, context_type: ContextType, is_last_round: bool, *, query: str | None = None
+    ) -> tuple[list[str], list[float]]:
         """Calculate loss scale
 
         Args:
@@ -53,13 +53,13 @@ class LossScale:
         return [context], [loss_scale]
 
     def __call__(
-        self, context_list: List[str], context_types: List[ContextType], messages: Messages, **kwargs
-    ) -> Tuple[List[str], List[float]]:
+        self, context_list: list[str], context_types: list[ContextType], messages: Messages, **kwargs
+    ) -> tuple[list[str], list[float]]:
         res_context_list = []
         res_loss_scale = []
         i = 0
         n_round = len(messages) // 2
-        for context, context_type in zip(context_list, context_types):
+        for context, context_type in zip(context_list, context_types, strict=False):
             is_last_round = i + 1 == n_round
             if context_type == ContextType.RESPONSE:
                 query = messages[2 * i]["content"]
@@ -82,9 +82,7 @@ class LastRoundLossScale(LossScale):
 class AgentFlanLossScale(LossScale):
     loss_scale_config = "agentflan.json"
 
-    def get_loss_scale(
-        self, context: str, context_type: ContextType, is_last_round: bool, *, query: Optional[str] = None
-    ):
+    def get_loss_scale(self, context: str, context_type: ContextType, is_last_round: bool, *, query: str | None = None):
         if context_type == ContextType.RESPONSE:
             return calculate_loss_scale(query, context, self.loss_scale_map["response"], self.loss_scale_map["query"])
         return super().get_loss_scale(context, context_type, is_last_round)
@@ -93,9 +91,7 @@ class AgentFlanLossScale(LossScale):
 class REACTLossScale(LossScale):
     loss_scale_config = "react.json"
 
-    def get_loss_scale(
-        self, context: str, context_type: ContextType, is_last_round: bool, *, query: Optional[str] = None
-    ):
+    def get_loss_scale(self, context: str, context_type: ContextType, is_last_round: bool, *, query: str | None = None):
         if context_type == ContextType.RESPONSE:
             return calculate_loss_scale(query, context, self.loss_scale_map)
         return super().get_loss_scale(context, context_type, is_last_round)

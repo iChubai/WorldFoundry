@@ -35,10 +35,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
-from worldfoundry.core.model_loading.model_configuration import (
-    NativeConfigMixin,
-    register_to_config,
-)
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video.h15 import (
     CausalConv3d,
@@ -46,6 +42,10 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video.
     RMS_norm,
     forward_with_checkpointing,
     swish,
+)
+from worldfoundry.core.model_loading.model_configuration import (
+    NativeConfigMixin,
+    register_to_config,
 )
 
 

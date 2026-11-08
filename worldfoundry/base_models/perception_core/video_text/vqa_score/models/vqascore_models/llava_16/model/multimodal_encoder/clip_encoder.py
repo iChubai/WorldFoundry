@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-
-from transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
+from transformers import CLIPImageProcessor, CLIPVisionConfig, CLIPVisionModel
 
 
 class CLIPVisionTower(nn.Module):
@@ -14,9 +13,7 @@ class CLIPVisionTower(nn.Module):
         self.select_layer = args.mm_vision_select_layer
         self.select_feature = getattr(args, "mm_vision_select_feature", "patch")
 
-        if not delay_load:
-            self.load_model()
-        elif getattr(args, "unfreeze_mm_vision_tower", False):
+        if not delay_load or getattr(args, "unfreeze_mm_vision_tower", False):
             self.load_model()
         else:
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)

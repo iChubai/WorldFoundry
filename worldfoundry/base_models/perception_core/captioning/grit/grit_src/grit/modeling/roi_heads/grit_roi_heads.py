@@ -1,26 +1,23 @@
+import logging
 import math
-import torch
 from typing import Dict, List, Optional, Tuple, Union
 
+import torch
 from detectron2.config import configurable
+from detectron2.layers import batched_nms
+from detectron2.modeling.box_regression import Box2BoxTransform
+from detectron2.modeling.poolers import ROIPooler
+from detectron2.modeling.roi_heads.cascade_rcnn import CascadeROIHeads, _ScaleGradient
+from detectron2.modeling.roi_heads.roi_heads import ROI_HEADS_REGISTRY, StandardROIHeads
 from detectron2.structures import Boxes, Instances, pairwise_iou
 from detectron2.utils.events import get_event_storage
-
-from detectron2.modeling.box_regression import Box2BoxTransform
-from detectron2.modeling.roi_heads.roi_heads import ROI_HEADS_REGISTRY, StandardROIHeads
-from detectron2.modeling.roi_heads.cascade_rcnn import CascadeROIHeads, _ScaleGradient
-from detectron2.modeling.poolers import ROIPooler
-from detectron2.layers import batched_nms
-from .grit_fast_rcnn import GRiTFastRCNNOutputLayers
-
-from ..text.text_decoder import TransformerDecoderTextualHead, GRiTTextDecoder, AutoRegressiveBeamSearch
-from ..text.load_text_token import LoadTextTokens
 from transformers import BertTokenizer
 
 from ..obj_description import ObjDescription
 from ..soft_nms import batched_soft_nms
-
-import logging
+from ..text.load_text_token import LoadTextTokens
+from ..text.text_decoder import AutoRegressiveBeamSearch, GRiTTextDecoder, TransformerDecoderTextualHead
+from .grit_fast_rcnn import GRiTFastRCNNOutputLayers
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +50,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         self.tokenizer = tokenizer
 
         assert test_task in train_task, (
-            "GRiT has not been trained on {} task, please verify the task name or train a new GRiT on {} task".format(
-                test_task, test_task
-            )
+            f"GRiT has not been trained on {test_task} task, please verify the task name or train a new GRiT on {test_task} task"
         )
         task_begin_tokens = {}
         for i, task in enumerate(train_task):
@@ -122,7 +117,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         del ret["box_predictors"]
         cascade_bbox_reg_weights = cfg.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS
         box_predictors = []
-        for box_head, bbox_reg_weights in zip(ret["box_heads"], cascade_bbox_reg_weights):
+        for box_head, bbox_reg_weights in zip(ret["box_heads"], cascade_bbox_reg_weights, strict=False):
             box_predictors.append(
                 GRiTFastRCNNOutputLayers(
                     cfg, box_head.output_shape, box2box_transform=Box2BoxTransform(weights=bbox_reg_weights)
@@ -150,7 +145,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
                 all_background = False
 
         if all_background:
-            logger.info("all proposals are background at stage {}".format(stage))
+            logger.info(f"all proposals are background at stage {stage}")
             proposals[0].proposal_boxes.tensor[0, :] = targets[0].gt_boxes.tensor[0, :]
             proposals[0].gt_boxes.tensor[0, :] = targets[0].gt_boxes.tensor[0, :]
             proposals[0].objectness_logits[0] = math.log((1.0 - 1e-10) / (1 - (1.0 - 1e-10)))
@@ -215,9 +210,9 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
             storage = get_event_storage()
             # RoI Head losses (For the proposal generator loss, please find it in grit.py)
             for stage, (predictor, predictions, proposals) in enumerate(head_outputs):
-                with storage.name_scope("stage{}".format(stage)):
+                with storage.name_scope(f"stage{stage}"):
                     stage_losses = predictor.losses((predictions[0], predictions[1]), proposals)
-                losses.update({k + "_stage{}".format(stage): v for k, v in stage_losses.items()})
+                losses.update({k + f"_stage{stage}": v for k, v in stage_losses.items()})
             # Text Decoder loss
             losses.update({"text_decoder_loss": text_decoder_loss})
             return losses
@@ -226,14 +221,14 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
             logits_per_stage = [(h[1][0],) for h in head_outputs]
             scores = [
                 sum(list(scores_per_image)) * (1.0 / self.num_cascade_stages)
-                for scores_per_image in zip(*scores_per_stage)
+                for scores_per_image in zip(*scores_per_stage, strict=False)
             ]
             logits = [
                 sum(list(logits_per_image)) * (1.0 / self.num_cascade_stages)
-                for logits_per_image in zip(*logits_per_stage)
+                for logits_per_image in zip(*logits_per_stage, strict=False)
             ]
             if self.mult_proposal_score:
-                scores = [(s * ps[:, None]) ** 0.5 for s, ps in zip(scores, proposal_scores)]
+                scores = [(s * ps[:, None]) ** 0.5 for s, ps in zip(scores, proposal_scores, strict=False)]
             predictor, predictions, proposals = head_outputs[-1]
             boxes = predictor.predict_boxes((predictions[0], predictions[1]), proposals)
             assert len(boxes) == 1
@@ -352,7 +347,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         Add  "gt_object_description" and "foreground" to detectron2's _match_and_label_boxes
         """
         num_fg_samples, num_bg_samples = [], []
-        for proposals_per_image, targets_per_image in zip(proposals, targets):
+        for proposals_per_image, targets_per_image in zip(proposals, targets, strict=False):
             match_quality_matrix = pairwise_iou(targets_per_image.gt_boxes, proposals_per_image.proposal_boxes)
             # proposal_labels are 0 or 1
             matched_idxs, proposal_labels = self.proposal_matchers[stage](match_quality_matrix)
@@ -380,21 +375,21 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         # Log the number of fg/bg samples in each stage
         storage = get_event_storage()
         storage.put_scalar(
-            "stage{}/roi_head/num_fg_samples".format(stage),
+            f"stage{stage}/roi_head/num_fg_samples",
             sum(num_fg_samples) / len(num_fg_samples),
         )
         storage.put_scalar(
-            "stage{}/roi_head/num_bg_samples".format(stage),
+            f"stage{stage}/roi_head/num_bg_samples",
             sum(num_bg_samples) / len(num_bg_samples),
         )
         return proposals
 
     def fast_rcnn_inference_GRiT(
         self,
-        boxes: List[torch.Tensor],
-        scores: List[torch.Tensor],
-        logits: List[torch.Tensor],
-        image_shapes: List[Tuple[int, int]],
+        boxes: list[torch.Tensor],
+        scores: list[torch.Tensor],
+        logits: list[torch.Tensor],
+        image_shapes: list[tuple[int, int]],
         score_thresh: float,
         nms_thresh: float,
         topk_per_image: int,
@@ -412,7 +407,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
                 soft_nms_enabled,
             )
             for scores_per_image, boxes_per_image, image_shape, logits_per_image in zip(
-                scores, boxes, image_shapes, logits
+                scores, boxes, image_shapes, logits, strict=False
             )
         ]
         return [x[0] for x in result_per_image], [x[1] for x in result_per_image]
@@ -422,7 +417,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         boxes,
         scores,
         logits,
-        image_shape: Tuple[int, int],
+        image_shape: tuple[int, int],
         score_thresh: float,
         nms_thresh: float,
         topk_per_image: int,
@@ -493,7 +488,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
     def _create_proposals_from_boxes(self, boxes, image_sizes, logits):
         boxes = [Boxes(b.detach()) for b in boxes]
         proposals = []
-        for boxes_per_image, image_size, logit in zip(boxes, image_sizes, logits):
+        for boxes_per_image, image_size, logit in zip(boxes, image_sizes, logits, strict=False):
             boxes_per_image.clip(image_size)
             if self.training:
                 inds = boxes_per_image.nonempty()

@@ -2,10 +2,11 @@ import copy
 import math
 import random
 from collections import OrderedDict
+from collections.abc import Callable, Sequence
 from dataclasses import asdict
 from functools import partial
 from logging import getLogger
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -18,15 +19,14 @@ from torch.nn.init import constant_, xavier_normal_, xavier_uniform_
 from torch.nn.parameter import Parameter
 from torch.utils.checkpoint import checkpoint
 
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_encoder.rope import Rope2D
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_encoder.config import (
+    PE_TEXT_CONFIG,
+    PE_VISION_CONFIG,
     PEConfig,
     PETextConfig,
-    PE_VISION_CONFIG,
-    PE_TEXT_CONFIG,
     fetch_pe_checkpoint,
 )
-
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_encoder.rope import Rope2D
 
 logger = getLogger()
 
@@ -96,7 +96,7 @@ class SelfAttention(nn.Module):
         self,
         embed_dim: int,
         num_heads: int,
-        rope: Optional[nn.Module] = None,
+        rope: nn.Module | None = None,
     ):
         super(SelfAttention, self).__init__()
         self.embed_dim = embed_dim
@@ -150,7 +150,7 @@ class ResidualAttentionBlock(nn.Module):
         act_layer: Callable = nn.GELU,
         norm_layer: Callable = nn.LayerNorm,
         drop_path: float = 0.0,
-        rope: Optional[nn.Module] = None,
+        rope: nn.Module | None = None,
     ):
         super().__init__()
 
@@ -182,7 +182,7 @@ class ResidualAttentionBlock(nn.Module):
     def _call_attn(
         self,
         q_x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ):
         if attn_mask is not None:
             # Leave boolean masks as is
@@ -197,7 +197,7 @@ class ResidualAttentionBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
     ):
         x = x + self.drop_path1(self.ls_1(self._call_attn(self.ln_1(x), attn_mask=attn_mask)))
         x = x + self.drop_path2(self.ls_2(self.mlp(self.ln_2(x))))
@@ -215,7 +215,7 @@ class Transformer(nn.Module):
         act_layer: Callable = nn.GELU,
         norm_layer: Callable = nn.LayerNorm,
         drop_path: float = 0.0,
-        rope: Optional[nn.Module] = None,
+        rope: nn.Module | None = None,
     ):
         super().__init__()
         self.width = width
@@ -251,7 +251,7 @@ class Transformer(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        attn_mask: Optional[torch.Tensor] = None,
+        attn_mask: torch.Tensor | None = None,
         layer_idx: int = -1,
     ):
         stop_idx = (self.layers + layer_idx) % self.layers
@@ -287,7 +287,7 @@ class VisionTransformer(nn.Module):
         use_abs_posemb: bool = True,
         use_rope2d: bool = True,
         use_cls_token: bool = False,
-        output_dim: Optional[int] = 1280,
+        output_dim: int | None = 1280,
         attn_pooler_heads: int = 8,
         pool_type: Literal["attn", "tok", "avg", "none"] = "attn",
     ):
@@ -402,7 +402,7 @@ class VisionTransformer(nn.Module):
         self.layers = self.transformer.layers
 
     @classmethod
-    def from_config(cls, name: str, pretrained: bool = False, checkpoint_path: Optional[str] = None, **kwdargs):
+    def from_config(cls, name: str, pretrained: bool = False, checkpoint_path: str | None = None, **kwdargs):
         if name not in PE_VISION_CONFIG:
             raise RuntimeError(f"{name} not found in configs.")
 
@@ -596,7 +596,7 @@ class TextTransformer(nn.Module):
         additive_mask = torch.repeat_interleave(additive_mask, self.heads, 0)
         return additive_mask
 
-    def text_global_pool(self, x, text: Optional[torch.Tensor] = None, pool_type: str = "argmax"):
+    def text_global_pool(self, x, text: torch.Tensor | None = None, pool_type: str = "argmax"):
         if pool_type == "first":
             pooled, tokens = x[:, 0], x[:, 1:]
         elif pool_type == "last":
@@ -660,8 +660,8 @@ class CLIP(TextTransformer):
 
     def forward(
         self,
-        image: Optional[torch.Tensor] = None,
-        text: Optional[torch.Tensor] = None,
+        image: torch.Tensor | None = None,
+        text: torch.Tensor | None = None,
     ):
         image_features = self.encode_image(image, normalize=True) if image is not None else None
         text_features = self.encode_text(text, normalize=True) if text is not None else None
@@ -672,7 +672,7 @@ class CLIP(TextTransformer):
         cls,
         name: str,
         pretrained: bool = False,
-        checkpoint_path: Optional[str] = None,  # To load your own
+        checkpoint_path: str | None = None,  # To load your own
     ):
         if name not in PE_VISION_CONFIG or name not in PE_TEXT_CONFIG:
             raise RuntimeError(f"{name} not found in configs.")

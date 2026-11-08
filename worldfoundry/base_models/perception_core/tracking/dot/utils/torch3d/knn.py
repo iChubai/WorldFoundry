@@ -12,7 +12,6 @@ from _torch3d import _C
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 
-
 _KNN = namedtuple("KNN", "dists idx knn")
 
 
@@ -107,8 +106,8 @@ class _knn_points(Function):
 def knn_points(
     p1: torch.Tensor,
     p2: torch.Tensor,
-    lengths1: Union[torch.Tensor, None] = None,
-    lengths2: Union[torch.Tensor, None] = None,
+    lengths1: torch.Tensor | None = None,
+    lengths2: torch.Tensor | None = None,
     norm: int = 2,
     K: int = 1,
     version: int = -1,
@@ -181,7 +180,7 @@ def knn_points(
     return _KNN(dists=p1_dists, idx=p1_idx, knn=p2_nn if return_nn else None)
 
 
-def knn_gather(x: torch.Tensor, idx: torch.Tensor, lengths: Union[torch.Tensor, None] = None):
+def knn_gather(x: torch.Tensor, idx: torch.Tensor, lengths: torch.Tensor | None = None):
     """
     A helper function for knn that allows indexing a tensor x with the indices `idx`
     returned by `knn_points`.

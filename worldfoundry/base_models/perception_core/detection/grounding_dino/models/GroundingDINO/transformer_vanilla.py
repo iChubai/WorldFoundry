@@ -119,7 +119,7 @@ class TransformerEncoderLayer(nn.Module):
         self.normalize_before = normalize_before
         self.nhead = nhead
 
-    def with_pos_embed(self, tensor, pos: Optional[Tensor]):
+    def with_pos_embed(self, tensor, pos: Tensor | None):
         """With pos embed.
 
         Args:
@@ -131,9 +131,9 @@ class TransformerEncoderLayer(nn.Module):
     def forward(
         self,
         src,
-        src_mask: Optional[Tensor] = None,
-        src_key_padding_mask: Optional[Tensor] = None,
-        pos: Optional[Tensor] = None,
+        src_mask: Tensor | None = None,
+        src_key_padding_mask: Tensor | None = None,
+        pos: Tensor | None = None,
     ):
         """Forward.
 

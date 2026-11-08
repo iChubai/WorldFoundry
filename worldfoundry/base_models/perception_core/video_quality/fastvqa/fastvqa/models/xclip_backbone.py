@@ -1,21 +1,15 @@
-from timm.models.layers import trunc_normal_
-import torch
-from torch import nn
-
-from timm.models.layers import trunc_normal_
-from torch.utils.checkpoint import checkpoint_sequential
-
-
-import numpy as np
-
 import copy
+import math
 from collections import OrderedDict
 from typing import Tuple, Union
-from timm.models.layers import trunc_normal_
+
+import numpy as np
+import torch
 import torch.nn.functional as F
 from einops import rearrange
+from timm.models.layers import trunc_normal_
+from torch import nn
 from torch.utils.checkpoint import checkpoint_sequential
-import math
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
@@ -159,7 +153,7 @@ class CLIP(nn.Module):
         embed_dim: int,
         # vision
         image_resolution: int,
-        vision_layers: Union[Tuple[int, int, int, int], int],
+        vision_layers: tuple[int, int, int, int] | int,
         vision_width: int,
         vision_patch_size: int,
         # text
@@ -524,6 +518,7 @@ class VideoSpecificPrompt(nn.Module):
 
 
 from collections import OrderedDict
+
 from timm.models.layers import trunc_normal_
 
 
@@ -599,7 +594,7 @@ class XCLIP(CLIP):
         embed_dim: int,
         # vision
         image_resolution: int,
-        vision_layers: Union[Tuple[int, int, int, int], int],
+        vision_layers: tuple[int, int, int, int] | int,
         vision_width: int,
         vision_patch_size: int,
         # text
@@ -791,7 +786,7 @@ def build_x_clip_model(
     vocab_size = state_dict["token_embedding.weight"].shape[0]
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
-    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith(f"transformer.resblocks")))
+    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")))
 
     model = XCLIP(
         embed_dim,

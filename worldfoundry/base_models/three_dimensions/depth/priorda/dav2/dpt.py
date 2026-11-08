@@ -9,12 +9,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.transforms import Compose
 
+from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_priorda_dav2 import DINOv2
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.blocks import (
     FeatureFusionBlock,
     _make_scratch,
 )
 
-from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_priorda_dav2 import DINOv2
 from .transform import NormalizeImage, Resize
 
 

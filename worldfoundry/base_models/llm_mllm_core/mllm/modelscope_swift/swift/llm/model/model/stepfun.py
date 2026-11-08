@@ -6,6 +6,7 @@ import sys
 from transformers import AutoModel
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import TemplateType
+
 from ..constant import MLLMModelType
 from ..model_arch import ModelArch
 from ..register import (

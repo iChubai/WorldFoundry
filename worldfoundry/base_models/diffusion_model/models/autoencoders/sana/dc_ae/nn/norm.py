@@ -160,7 +160,7 @@ REGISTERED_NORM_DICT: dict[str, type] = {
 }
 
 
-def build_norm(name="bn2d", num_features=None, **kwargs) -> Optional[nn.Module]:
+def build_norm(name="bn2d", num_features=None, **kwargs) -> nn.Module | None:
     """Build norm.
 
     Args:
@@ -182,7 +182,7 @@ def build_norm(name="bn2d", num_features=None, **kwargs) -> Optional[nn.Module]:
         return None
 
 
-def set_norm_eps(model: nn.Module, eps: Optional[float] = None) -> None:
+def set_norm_eps(model: nn.Module, eps: float | None = None) -> None:
     """Set norm eps.
 
     Args:

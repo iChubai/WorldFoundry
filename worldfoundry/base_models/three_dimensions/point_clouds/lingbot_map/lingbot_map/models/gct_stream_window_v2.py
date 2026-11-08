@@ -10,9 +10,10 @@ Provides streaming inference functionality:
 
 import logging
 import os
+from typing import Any, Dict, List, Optional
+
 import torch
 import torch.nn as nn
-from typing import Optional, Dict, Any, List
 from tqdm.auto import tqdm
 
 # Debug switch: export LINGBOT_DEBUG_KV=1 to print per-frame KV cache stats in
@@ -20,13 +21,13 @@ from tqdm.auto import tqdm
 # every N frames.
 _KV_DEBUG = os.environ.get("LINGBOT_DEBUG_KV", "")
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import quat_to_mat, mat_to_quat
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import mat_to_quat, quat_to_mat
 
-from ..heads.camera_head import CameraCausalHead
-from .gct_base import GCTBase
 from ..aggregator.stream import AggregatorStream
-from ..utils.pose_enc import pose_encoding_to_extri_intri
+from ..heads.camera_head import CameraCausalHead
 from ..utils.geometry import closed_form_inverse_se3
+from ..utils.pose_enc import pose_encoding_to_extri_intri
+from .gct_base import GCTBase
 
 logger = logging.getLogger(__name__)
 
@@ -355,8 +356,8 @@ class GCTStream(GCTBase):
     def _aggregate_features(
         self,
         images: torch.Tensor,
-        num_frame_for_scale: Optional[int] = None,
-        sliding_window_size: Optional[int] = None,
+        num_frame_for_scale: int | None = None,
+        sliding_window_size: int | None = None,
         num_frame_per_block: int = 1,
         **kwargs,
     ) -> tuple:
@@ -485,7 +486,7 @@ class GCTStream(GCTBase):
                     sliding_window=self.kv_cache_sliding_window,
                 )
 
-    def get_kv_cache_info(self) -> Dict[str, Any]:
+    def get_kv_cache_info(self) -> dict[str, Any]:
         """
         Get information about current KV cache state.
 
@@ -515,12 +516,12 @@ class GCTStream(GCTBase):
     def inference_streaming(
         self,
         images: torch.Tensor,
-        num_scale_frames: Optional[int] = None,
+        num_scale_frames: int | None = None,
         keyframe_interval: int = 1,
-        output_device: Optional[torch.device] = None,
+        output_device: torch.device | None = None,
         flow_threshold: float = 0.0,
         max_non_keyframe_gap: int = 30,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Streaming inference: process scale frames first, then frame-by-frame.
 
@@ -758,10 +759,10 @@ class GCTStream(GCTBase):
 
     def _stitch_windows(
         self,
-        windows: List[Dict],
+        windows: list[dict],
         window_size: int,
         overlap: int,
-    ) -> Dict:
+    ) -> dict:
         """Concatenate per-window predictions while de-duplicating overlaps.
 
         For each temporal key the method builds a slice table first — every
@@ -776,7 +777,7 @@ class GCTStream(GCTBase):
 
         n_win = len(windows)
         all_keys = list(windows[0].keys())
-        stitched: Dict = {}
+        stitched: dict = {}
 
         for key in all_keys:
             values = [w.get(key) for w in windows]
@@ -832,8 +833,8 @@ class GCTStream(GCTBase):
 
     @staticmethod
     def _pairwise_alignment(
-        prev_pred: Dict,
-        curr_pred: Dict,
+        prev_pred: dict,
+        curr_pred: dict,
         overlap: int,
         batch_size: int,
         device: torch.device,
@@ -918,14 +919,14 @@ class GCTStream(GCTBase):
 
     @staticmethod
     def _warp_predictions(
-        pred: Dict,
+        pred: dict,
         R: torch.Tensor,
         t: torch.Tensor,
         s: torch.Tensor,
         batch_size: int,
-    ) -> Dict:
+    ) -> dict:
         """Apply a similarity transform (s, R, t) to one window's predictions."""
-        warped: Dict = {}
+        warped: dict = {}
 
         # Pose encoding: center + quaternion + intrinsics
         pe = pred.get("pose_enc")
@@ -973,9 +974,9 @@ class GCTStream(GCTBase):
 
     def _align_and_stitch_windows(
         self,
-        windows: List[Dict],
+        windows: list[dict],
         scale_mode: str = "median",
-    ) -> Dict:
+    ) -> dict:
         """Bring all windows into the first window's coordinate frame, then stitch.
 
         Iterates over consecutive window pairs, estimates the pairwise
@@ -996,9 +997,9 @@ class GCTStream(GCTBase):
         overlap = getattr(self, "_last_overlap_size", 0)
         win_sz = getattr(self, "_last_window_size", -1)
 
-        warped_windows: List[Dict] = []
-        per_window_scales: List[torch.Tensor] = []
-        per_window_transforms: List[torch.Tensor] = []
+        warped_windows: list[dict] = []
+        per_window_scales: list[torch.Tensor] = []
+        per_window_transforms: list[torch.Tensor] = []
 
         for idx, raw in enumerate(windows):
             if idx == 0:
@@ -1038,15 +1039,15 @@ class GCTStream(GCTBase):
         self,
         images: torch.Tensor,
         window_size: int = 16,
-        overlap_size: Optional[int] = None,
-        overlap_keyframes: Optional[int] = None,
-        num_scale_frames: Optional[int] = None,
+        overlap_size: int | None = None,
+        overlap_keyframes: int | None = None,
+        num_scale_frames: int | None = None,
         scale_mode: str = "median",
-        output_device: Optional[torch.device] = None,
+        output_device: torch.device | None = None,
         keyframe_interval: int = 1,
         flow_threshold: float = 0.0,
         max_non_keyframe_gap: int = 30,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Windowed inference with keyframe detection and cross-window alignment.
 
@@ -1153,7 +1154,7 @@ class GCTStream(GCTBase):
             Args:
                 w_lists: The w lists.
             """
-            pred: Dict = {"pose_enc": torch.cat(w_lists["pose_enc"], dim=1)}
+            pred: dict = {"pose_enc": torch.cat(w_lists["pose_enc"], dim=1)}
             if w_lists["depth"]:
                 pred["depth"] = torch.cat(w_lists["depth"], dim=1)
             if w_lists["depth_conf"]:
@@ -1183,7 +1184,7 @@ class GCTStream(GCTBase):
         # Flow-based mode: dynamic windows (can't precompute window list)
         # ================================================================
         if use_flow_keyframe:
-            all_window_predictions: List[Dict] = []
+            all_window_predictions: list[dict] = []
             cursor = 0
             window_idx = 0
             pbar = tqdm(total=S, desc="Windowed inference (flow)", initial=0)
@@ -1301,7 +1302,7 @@ class GCTStream(GCTBase):
                     if end_idx == S:
                         break
 
-            all_window_predictions: List[Dict] = []
+            all_window_predictions: list[dict] = []
             for start, end in tqdm(windows, desc="Windowed inference"):
                 # Slice on whichever device `images` lives on, then move just
                 # this window to the model device.  Keeps peak memory at one

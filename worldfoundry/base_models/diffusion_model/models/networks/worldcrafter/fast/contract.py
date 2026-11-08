@@ -11,9 +11,9 @@ table from the conditioning tensors that will actually enter the transformer.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
 
 import torch
 

@@ -168,7 +168,7 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
             pairwise_ious = self.iou_calculator(decoded_bboxes, gt_bboxes)
         else:
             ious = []
-            for box, gt in zip(decoded_bboxes, gt_bboxes):
+            for box, gt in zip(decoded_bboxes, gt_bboxes, strict=False):
                 iou = self.iou_calculator(box, gt)
                 ious.append(iou)
             pairwise_ious = torch.stack(ious, dim=0)
@@ -221,7 +221,7 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
 
     def dynamic_k_matching(
         self, cost_matrix: Tensor, pairwise_ious: Tensor, pad_bbox_flag: int
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Use IoU and matching cost to calculate the dynamic top-k positive
         targets.
 

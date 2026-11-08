@@ -5,12 +5,15 @@ per-block audio injection.  Adds audio / motion conditioning.  No VACE
 or linear attn.
 """
 
+from typing import Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple
+
 from worldfoundry.core.model_loading import hash_state_dict_keys
+
 from ..model import (
     CrossAttention,
     DiTBlock,
@@ -65,10 +68,10 @@ def rope_precompute(x, grid_sizes, freqs, start=None):
     # loop over samples
     output = torch.view_as_complex(x.detach().reshape(b, s, n, -1, 2).to(torch.float64))
     seq_bucket = [0]
-    if not type(grid_sizes) is list:
+    if type(grid_sizes) is not list:
         grid_sizes = [grid_sizes]
     for g in grid_sizes:
-        if not type(g) is list:
+        if type(g) is not list:
             g = [torch.zeros_like(g), g]
         batch_size = g[0].shape[0]
         for i in range(batch_size):
@@ -414,7 +417,7 @@ class AudioInjector_WAN(nn.Module):
         super().__init__()
         self.injected_block_id = {}
         audio_injector_id = 0
-        for mod_name, mod in zip(all_modules_names, all_modules):
+        for mod_name, mod in zip(all_modules_names, all_modules, strict=False):
             if isinstance(mod, DiTBlock):
                 for inject_id in inject_layer:
                     if f"transformer_blocks.{inject_id}" in mod_name:
@@ -537,7 +540,7 @@ class WanS2VModel(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         num_layers: int,
         cond_dim: int,
@@ -735,7 +738,7 @@ class WanS2VModel(torch.nn.Module):
             residual_out = rearrange(residual_out, "(b t) n c -> b (t n) c", t=num_frames)
             hidden_states[:, :original_seq_len] = hidden_states[:, :original_seq_len] + residual_out
             if use_unified_sequence_parallel:
-                from xfuser.core.distributed import get_sequence_parallel_world_size, get_sequence_parallel_rank
+                from xfuser.core.distributed import get_sequence_parallel_rank, get_sequence_parallel_world_size
 
                 hidden_states = torch.chunk(hidden_states, get_sequence_parallel_world_size(), dim=1)[
                     get_sequence_parallel_rank()
@@ -918,7 +921,6 @@ class WanS2VModelStateDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_civitai(self, state_dict):
         """From civitai.

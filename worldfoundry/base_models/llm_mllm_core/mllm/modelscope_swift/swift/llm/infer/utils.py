@@ -7,6 +7,7 @@ from typing import List, Literal, Optional
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import extra_tuners
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners import Swift
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
+
 from ..utils import Messages
 
 logger = get_logger()
@@ -15,12 +16,12 @@ logger = get_logger()
 @dataclass
 class InferCliState:
     # None: use default-system. '': not use system.
-    system: Optional[str] = None
+    system: str | None = None
     messages: Messages = field(default_factory=list)  # not including system
 
-    images: List[str] = field(default_factory=list)
-    audios: List[str] = field(default_factory=list)
-    videos: List[str] = field(default_factory=list)
+    images: list[str] = field(default_factory=list)
+    audios: list[str] = field(default_factory=list)
+    videos: list[str] = field(default_factory=list)
 
     multiline_mode: bool = False
     input_system: bool = False
@@ -89,7 +90,7 @@ class InferCliState:
             text = input(f"<<<{addi_prompt} ")
         return text
 
-    def check_query(self, query: str) -> Optional[str]:
+    def check_query(self, query: str) -> str | None:
         query_std = query.strip().lower()
         if self.input_system:
             if query == "default-system":

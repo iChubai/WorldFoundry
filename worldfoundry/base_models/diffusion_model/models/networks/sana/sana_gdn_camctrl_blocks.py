@@ -48,12 +48,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution
-
 from worldfoundry.base_models.diffusion_model.models.networks.sana.chunking import (
     is_chunk_causal_request,
     normalize_chunk_index,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolution import ShortConvolution
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 from .sana_camctrl_blocks import _maybe_drop_cam_branch, prepare_prope_fns
@@ -114,7 +113,7 @@ def _prepare_softmax_main_qkv_post_rope(
     T, H_sp, W_sp = HW
     S = H_sp * W_sp
 
-    frame_valid_mask = kwargs.get("frame_valid_mask", None)
+    frame_valid_mask = kwargs.get("frame_valid_mask")
     token_valid_mask, _, _ = GDN._prepare_frame_valid_masks(
         frame_valid_mask,
         B=B,
@@ -764,7 +763,7 @@ class _GDNUCPEBase(GDN):
             qkv_b = torch.cat(
                 [
                     bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
-                    for bias, weight in zip(biases, (q_w, k_w, v_w))
+                    for bias, weight in zip(biases, (q_w, k_w, v_w), strict=False)
                 ]
             )
         qkv_cam = F.linear(x, qkv_w, qkv_b)
@@ -808,7 +807,7 @@ class _GDNUCPEBase(GDN):
 
         # UCPE per-ray transforms — reuse model-level cache when available
         # to avoid recomputing _process_camera_conditions_ucpe per block.
-        cached_fns = kwargs.get("prope_fns", None)
+        cached_fns = kwargs.get("prope_fns")
         if cached_fns is not None:
             apply_fn_q, apply_fn_kv, apply_fn_o = cached_fns
         else:
@@ -987,7 +986,7 @@ class _GDNUCPEBase(GDN):
         # Compute masks once; pass token_valid_mask to _prepare_cam_qkv for
         # pre-conv masking and reuse here for post-UCPE masking + gate masking.
         token_valid_mask, beta_valid_mask, decay_valid_mask = self._prepare_frame_valid_masks(
-            kwargs.get("frame_valid_mask", None),
+            kwargs.get("frame_valid_mask"),
             B=B,
             T=T,
             S=S,
@@ -1014,7 +1013,7 @@ class _GDNUCPEBase(GDN):
             k_cam_trans = k_cam_trans * token_mask_qkv
 
         # Shared GDN gates (use pre-computed when available).
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -1170,7 +1169,7 @@ class BidirectionalGDNUCPELiteLA(_GDNUCPEBase, BidirectionalGDN):
         dtype_orig = x.dtype
 
         token_valid_mask, beta_valid_mask, decay_valid_mask = self._prepare_frame_valid_masks(
-            kwargs.get("frame_valid_mask", None),
+            kwargs.get("frame_valid_mask"),
             B=B,
             T=T,
             S=S,
@@ -1195,7 +1194,7 @@ class BidirectionalGDNUCPELiteLA(_GDNUCPEBase, BidirectionalGDN):
             k_cam_trans = k_cam_trans * token_mask_qkv
 
         # Shared GDN gates (use pre-computed when available).
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -1379,7 +1378,7 @@ class BidirectionalGDNUCPESinglePathLiteLA(BidirectionalGDNUCPELiteLAPostUCPERen
         dtype_orig = x.dtype
 
         token_valid_mask, beta_valid_mask, decay_valid_mask = self._prepare_frame_valid_masks(
-            kwargs.get("frame_valid_mask", None),
+            kwargs.get("frame_valid_mask"),
             B=B,
             T=T,
             S=S,
@@ -1402,7 +1401,7 @@ class BidirectionalGDNUCPESinglePathLiteLA(BidirectionalGDNUCPELiteLAPostUCPERen
             q_cam_trans = q_cam_trans * token_mask_qkv
             k_cam_trans = k_cam_trans * token_mask_qkv
 
-        precomputed_gates = kwargs.get("precomputed_gates", None)
+        precomputed_gates = kwargs.get("precomputed_gates")
         if precomputed_gates is not None:
             beta, decay = precomputed_gates
         else:
@@ -1522,7 +1521,7 @@ def _prepare_cam_qkv_softmax(
         qkv_b = torch.cat(
             [
                 bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
-                for bias, weight in zip(biases, (q_w, k_w, v_w))
+                for bias, weight in zip(biases, (q_w, k_w, v_w), strict=False)
             ]
         )
     qkv_cam = F.linear(x, qkv_w, qkv_b)
@@ -1547,7 +1546,7 @@ def _prepare_cam_qkv_softmax(
     k_cam = k_cam.permute(0, 2, 3, 1).contiguous()
     v_cam = v_cam.permute(0, 2, 3, 1).contiguous()
 
-    cached_fns = kwargs.get("prope_fns", None)
+    cached_fns = kwargs.get("prope_fns")
     if cached_fns is not None:
         apply_fn_q, apply_fn_kv, apply_fn_o = cached_fns
     else:
@@ -1594,7 +1593,7 @@ def _forward_cam_branch_softmax(
     S = H * W
 
     token_valid_mask, _, _ = self._prepare_frame_valid_masks(
-        kwargs.get("frame_valid_mask", None),
+        kwargs.get("frame_valid_mask"),
         B=B,
         T=T,
         S=S,

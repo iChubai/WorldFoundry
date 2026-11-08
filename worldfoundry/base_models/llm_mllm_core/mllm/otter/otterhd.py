@@ -1,11 +1,13 @@
-from transformers import FuyuForCausalLM, AutoTokenizer, FuyuImageProcessor, FuyuProcessor
-from PIL import Image
-from .base_model import BaseModel
-import torch
-import numpy as np
-import warnings
-import io
 import base64
+import io
+import warnings
+
+import numpy as np
+import torch
+from PIL import Image
+from transformers import AutoTokenizer, FuyuForCausalLM, FuyuImageProcessor, FuyuProcessor
+
+from .base_model import BaseModel
 
 warnings.filterwarnings("ignore")
 

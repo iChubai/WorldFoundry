@@ -1,11 +1,10 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
-
-from .raft_utils.update import BasicUpdateBlock
-from .raft_utils.extractor import BasicEncoder
 from .raft_utils.corr import CorrBlock
+from .raft_utils.extractor import BasicEncoder
+from .raft_utils.update import BasicUpdateBlock
 from .raft_utils.utils import coords_grid
 
 

@@ -3,12 +3,12 @@
 import logging
 import os
 import warnings
+from typing import Dict, Optional, Tuple, Union
 
 import torch
-from torch import Tensor
-from torch import nn
 import torch.nn.functional as F
-from typing import Union, Tuple, Dict, Optional
+from torch import Tensor, nn
+
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 XFORMERS_AVAILABLE = False
@@ -69,7 +69,7 @@ class Attention(nn.Module):
 
     def eviction(
         self, k: torch.Tensor, v: torch.Tensor, cache_budget: int, num_anchor_tokens: int
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Evicts tokens from the key-value cache based on key cosine similarity.
 
@@ -84,7 +84,7 @@ class Attention(nn.Module):
         """
         B, H, N, D = k.shape
 
-        if N <= cache_budget:
+        if cache_budget >= N:
             return k, v
 
         anchor_k, candidate_k = k.split([num_anchor_tokens, N - num_anchor_tokens], dim=2)
@@ -112,7 +112,7 @@ class Attention(nn.Module):
 
     def forward(
         self, x: torch.Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, Tuple]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, tuple]:
         """Forward.
 
         Args:

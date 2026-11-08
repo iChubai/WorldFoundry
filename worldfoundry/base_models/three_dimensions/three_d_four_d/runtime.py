@@ -7,9 +7,10 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import yaml
 
@@ -168,7 +169,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "ThreeDFourDRuntimeSynthesis":
+    ) -> ThreeDFourDRuntimeSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -1114,7 +1115,7 @@ def _build_monst3r_rerun_recording(
         static=True,
     )
     for frame_id, (depth_path, pose, intrinsic) in enumerate(
-        zip(depth_paths[:frame_count], poses, intrinsics[:frame_count])
+        zip(depth_paths[:frame_count], poses, intrinsics[:frame_count], strict=False)
     ):
         if hasattr(rr, "set_time"):
             rr.set_time("frame", sequence=frame_id)

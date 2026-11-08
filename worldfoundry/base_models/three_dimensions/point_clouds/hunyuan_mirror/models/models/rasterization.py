@@ -1,18 +1,18 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> models -> rasterization.py functionality."""
 
 from typing import Dict, Tuple
+
 import numpy as np
 import torch
 import torch.nn as nn
-from torch import Tensor
 from einops import rearrange
-
 from gsplat.rendering import rasterization
 from gsplat.strategy import DefaultStrategy
+from torch import Tensor
 
+from ..utils import act_gs, sh_utils
 from ..utils.frustum import calculate_unprojected_mask
 from ..utils.geometry import depth_to_world_coords_points
-from ..utils import sh_utils, act_gs
 
 
 class Rasterizer:
@@ -62,7 +62,7 @@ class Rasterizer:
         width: int,
         height: int,
         **kwargs,
-    ) -> Tuple[Tensor, Tensor, Dict]:
+    ) -> tuple[Tensor, Tensor, dict]:
         """Rasterize splats.
 
         Args:
@@ -208,11 +208,11 @@ class GaussianSplatRenderer(nn.Module):
         self,
         gs_feats: torch.Tensor,  # [B, S, 3, H, W]
         images: torch.Tensor,  # [B, S+V, 3, H, W]
-        predictions: Dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
-        views: Dict[str, torch.Tensor],
-        context_predictions: Dict[str, torch.Tensor],
+        predictions: dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
+        views: dict[str, torch.Tensor],
+        context_predictions: dict[str, torch.Tensor],
         is_inference: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Returns predictions with the following fields filled:
         - rendered_colors / rendered_depths / (rendered_alphas during training)

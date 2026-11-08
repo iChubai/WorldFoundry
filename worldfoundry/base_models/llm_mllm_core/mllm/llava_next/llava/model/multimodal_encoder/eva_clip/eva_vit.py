@@ -2,11 +2,13 @@
 # Adapted from https://github.com/baaivision/EVA/tree/master/EVA-CLIP
 """
 
-from math import pi
-import torch
-from torch import nn
-from einops import rearrange, repeat
 import logging
+from math import pi
+
+import torch
+from einops import rearrange, repeat
+from torch import nn
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 
 
@@ -16,7 +18,7 @@ def broadcat(tensors, dim=-1):
     assert len(shape_lens) == 1, "tensors must all have the same number of dimensions"
     shape_len = list(shape_lens)[0]
     dim = (dim + shape_len) if dim < 0 else dim
-    dims = list(zip(*map(lambda t: list(t.shape), tensors)))
+    dims = list(zip(*map(lambda t: list(t.shape), tensors), strict=False))
     expandable_dims = [(i, val) for i, val in enumerate(dims) if i != dim]
     assert all([*map(lambda t: len(set(t[1])) <= 2, expandable_dims)]), (
         "invalid dimensions for broadcastable concatentation"
@@ -24,8 +26,8 @@ def broadcat(tensors, dim=-1):
     max_dims = list(map(lambda t: (t[0], max(t[1])), expandable_dims))
     expanded_dims = list(map(lambda t: (t[0], (t[1],) * num_tensors), max_dims))
     expanded_dims.insert(dim, (dim, dims[dim]))
-    expandable_shapes = list(zip(*map(lambda t: t[1], expanded_dims)))
-    tensors = list(map(lambda t: t[0].expand(*t[1]), zip(tensors, expandable_shapes)))
+    expandable_shapes = list(zip(*map(lambda t: t[1], expanded_dims), strict=False))
+    tensors = list(map(lambda t: t[0].expand(*t[1]), zip(tensors, expandable_shapes, strict=False)))
     return torch.cat(tensors, dim=dim)
 
 
@@ -156,6 +158,7 @@ class PatchDropout(nn.Module):
 # --------------------------------------------------------
 import math
 import os
+
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -190,7 +193,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
     def extra_repr(self) -> str:
-        return "p={}".format(self.drop_prob)
+        return f"p={self.drop_prob}"
 
 
 class Mlp(nn.Module):
@@ -469,8 +472,8 @@ class Block(nn.Module):
             self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, subln=subln, drop=drop)
 
         if init_values is not None and init_values > 0:
-            self.gamma_1 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
-            self.gamma_2 = nn.Parameter(init_values * torch.ones((dim)), requires_grad=True)
+            self.gamma_1 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
+            self.gamma_2 = nn.Parameter(init_values * torch.ones(dim), requires_grad=True)
         else:
             self.gamma_1, self.gamma_2 = None, None
 
@@ -516,7 +519,7 @@ class PatchEmbed(nn.Module):
     def forward(self, x, **kwargs):
         B, C, H, W = x.shape
         # FIXME look at relaxing size constraints
-        assert H == self.img_size[0] and W == self.img_size[1], (
+        assert self.img_size[0] == H and self.img_size[1] == W, (
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x).flatten(2).transpose(1, 2)
@@ -834,16 +837,16 @@ except:
 
 @dataclass
 class CLIPVisionCfg:
-    layers: Union[Tuple[int, int, int, int], int] = 12
+    layers: tuple[int, int, int, int] | int = 12
     width: int = 768
     head_width: int = 64
     mlp_ratio: float = 4.0
     patch_size: int = 16
-    image_size: Union[Tuple[int, int], int] = 224
-    ls_init_value: Optional[float] = None  # layer scale initial value
+    image_size: tuple[int, int] | int = 224
+    ls_init_value: float | None = None  # layer scale initial value
     patch_dropout: float = 0.0  # what fraction of patches to dropout during training (0 would mean disabled and no patches dropped) - 0.5 to 0.75 recommended in the paper for optimal results
     global_average_pool: bool = False  # whether to global average pool the last embedding layer, instead of using CLS token (https://arxiv.org/abs/2205.01580)
-    drop_path_rate: Optional[float] = None  # drop path rate
+    drop_path_rate: float | None = None  # drop path rate
     timm_model_name: str = None  # a valid model name overrides layers, width, patch_size
     timm_model_pretrained: bool = False  # use (imagenet) pretrained weights for named model
     timm_pool: str = "avg"  # feature pooling for timm model ('abs_attn', 'rot_attn', 'avg', '')

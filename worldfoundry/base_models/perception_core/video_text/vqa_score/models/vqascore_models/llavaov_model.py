@@ -1,20 +1,22 @@
-import torch
+import copy
+from typing import List, Union
+
 import cv2
 import numpy as np
-from PIL import Image
-from typing import List, Union
-import copy
+import torch
 from decord import VideoReader, cpu
+from PIL import Image
 
-from .vqa_model import VQAScoreModel
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import process_images, tokenizer_image_token
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    IMAGE_TOKEN_INDEX,
     DEFAULT_IMAGE_TOKEN,
     IGNORE_INDEX,
+    IMAGE_TOKEN_INDEX,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import process_images, tokenizer_image_token
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+
+from .vqa_model import VQAScoreModel
 
 LLAVA_OV_MODELS = {
     "llava-onevision-qwen2-7b-si": {
@@ -60,7 +62,7 @@ class LLaVAOneVisionModel(VQAScoreModel):
         )
         self.model.eval()
 
-    def load_images(self, paths: List[str], num_frames: int = 16) -> List[Union[torch.Tensor, List[torch.Tensor]]]:
+    def load_images(self, paths: list[str], num_frames: int = 16) -> list[torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         for path in paths:
             if path.startswith(("http://", "https://")):
@@ -105,8 +107,8 @@ class LLaVAOneVisionModel(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         num_frames: int = 16,
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
         answer_template: str = "Yes",
@@ -123,7 +125,7 @@ class LLaVAOneVisionModel(VQAScoreModel):
         prompts = [qs for qs in questions]
 
         lm_probs = []
-        for data, prompt, answer in zip(processed_data, prompts, answers):
+        for data, prompt, answer in zip(processed_data, prompts, answers, strict=False):
             if isinstance(data, torch.Tensor) and data.dim() == 4:  # Video
                 image_sizes = [data.shape[2:] for _ in range(data.shape[0])]
                 modalities = ["video"]
@@ -159,16 +161,16 @@ class LLaVAOneVisionModel(VQAScoreModel):
 
     def generate(
         self,
-        images: List[str],
-        texts: List[str],
+        images: list[str],
+        texts: list[str],
         num_frames: int = 12,
         max_new_tokens: int = 256,
-    ) -> List[str]:
+    ) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
         texts = [self.format_question(text) for text in texts]
         processed_data = self.load_images(images, num_frames)
         generated_texts = []
-        for data, prompt in zip(processed_data, texts):
+        for data, prompt in zip(processed_data, texts, strict=False):
             if isinstance(data, torch.Tensor) and data.dim() == 4:  # Video
                 image_sizes = [data.shape[2:] for _ in range(data.shape[0])]
                 modalities = ["video"]

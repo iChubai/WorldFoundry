@@ -9,18 +9,20 @@
 #   https://github.com/Robbyant/lingbot-depth/blob/main/mdm/model/dinov2_rgbd/models/vision_transformer.py
 
 import math
+from collections.abc import Callable
+from functools import partial
+from typing import Literal
+
 import torch
 from torch import nn
-from functools import partial
 from torch.nn.init import trunc_normal_
-from typing import Literal
+
+from .attention import MemEffAttention
+from .block import NestedTensorBlock as Block
+from .mask_utils import _compute_depth_invalid_mask, depth_masking
 from .mlp import Mlp
 from .patch_embed import PatchEmbed
 from .swiglu_ffn import SwiGLUFFNFused
-from .attention import MemEffAttention
-from .block import NestedTensorBlock as Block
-from .mask_utils import depth_masking, _compute_depth_invalid_mask
-from typing import Callable
 
 
 def named_apply(fn: Callable, module: nn.Module, name="", depth_first=True, include_root=False) -> nn.Module:
@@ -290,7 +292,7 @@ class PriorDinoVisionTransformer(nn.Module):
                 x = self.process_attention(x, blk, attn_type="local", shape_info=(B, S))
                 local_x = x
 
-        processed_list = [torch.cat([self.norm(l), self.norm(c)], dim=-1) for l, c in zip(local_x, x)]
+        processed_list = [torch.cat([self.norm(l), self.norm(c)], dim=-1) for l, c in zip(local_x, x, strict=False)]
 
         h_img, w_img = x_img.shape[-2:]
         ph, pw = h_img // self.patch_size, w_img // self.patch_size

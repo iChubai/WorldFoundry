@@ -13,13 +13,14 @@ during unpickling. This way, any previously exported pickles will remain
 usable even if the original code is no longer available, or if the current
 version of the code is not consistent with what was originally pickled."""
 
-import sys
-import pickle
-import io
-import inspect
 import copy
-import uuid
+import inspect
+import io
+import pickle
+import sys
 import types
+import uuid
+
 from src import dnnlib
 
 # ----------------------------------------------------------------------------
@@ -220,7 +221,7 @@ def _reconstruct_persistent_obj(meta):
 
 def _module_to_src(module):
     r"""Query the source code of a given Python module."""
-    src = _module_to_src_dict.get(module, None)
+    src = _module_to_src_dict.get(module)
     if src is None:
         src = inspect.getsource(module)
         _module_to_src_dict[module] = src
@@ -230,7 +231,7 @@ def _module_to_src(module):
 
 def _src_to_module(src):
     r"""Get or create a Python module for the given source code."""
-    module = _src_to_module_dict.get(src, None)
+    module = _src_to_module_dict.get(src)
     if module is None:
         module_name = "_imported_module_" + uuid.uuid4().hex
         module = types.ModuleType(module_name)

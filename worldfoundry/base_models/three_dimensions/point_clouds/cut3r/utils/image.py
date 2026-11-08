@@ -15,10 +15,10 @@ import torchvision.transforms as tvf
 from PIL.ImageOps import exif_transpose
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-import cv2  # noqa
+import cv2
 
 try:
-    from pillow_heif import register_heif_opener  # noqa
+    from pillow_heif import register_heif_opener
 
     register_heif_opener()
     heif_support_enabled = True
@@ -45,7 +45,7 @@ def imread_cv2(path, options=cv2.IMREAD_COLOR):
         options = cv2.IMREAD_ANYDEPTH
     img = cv2.imread(path, options)
     if img is None:
-        raise IOError(f"Could not load image={path} with {options=}")
+        raise OSError(f"Could not load image={path} with {options=}")
     if img.ndim == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
@@ -84,9 +84,9 @@ def _resize_pil_image(img, long_edge_size):
         long_edge_size: The long edge size.
     """
     S = max(img.size)
-    if S > long_edge_size:
+    if long_edge_size < S:
         interp = PIL.Image.LANCZOS
-    elif S <= long_edge_size:
+    elif long_edge_size >= S:
         interp = PIL.Image.BICUBIC
     new_size = tuple(int(round(x * long_edge_size / S)) for x in img.size)
     return img.resize(new_size, interp)

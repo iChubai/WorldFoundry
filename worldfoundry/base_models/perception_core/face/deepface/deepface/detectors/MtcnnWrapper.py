@@ -1,4 +1,5 @@
 import cv2
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.detectors import FaceDetector
 
 

@@ -32,12 +32,12 @@ class QuantizeArguments:
     # awq: 4; gptq: 2,3,4,8
     quant_bits: Literal[1, 2, 3, 4, 8, "float8"] = None
     # hqq
-    hqq_axis: Optional[int] = None
+    hqq_axis: int | None = None
     # bnb
     bnb_4bit_compute_dtype: Literal["float16", "bfloat16", "float32", None] = None
     bnb_4bit_quant_type: Literal["fp4", "nf4"] = "nf4"
     bnb_4bit_use_double_quant: bool = True
-    bnb_4bit_quant_storage: Optional[str] = None
+    bnb_4bit_quant_storage: str | None = None
 
     def get_quantization_config(self):
         if self.quant_method is None or self.quant_method in {"awq", "gptq"}:

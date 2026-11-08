@@ -1,9 +1,11 @@
+from functools import partial
+
 import torch
 import torch.nn as nn
 from einops import rearrange
-from functools import partial
-from .layers import Mlp, Block, Attention
 from torch.utils.checkpoint import checkpoint
+
+from .layers import Attention, Block, Mlp
 
 
 class TransformerDecoder(nn.Module):

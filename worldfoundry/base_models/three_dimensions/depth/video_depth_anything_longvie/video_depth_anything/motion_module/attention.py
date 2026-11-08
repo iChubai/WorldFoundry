@@ -47,15 +47,15 @@ class CrossAttention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
         bias=False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
-        added_kv_proj_dim: Optional[int] = None,
-        norm_num_groups: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
+        norm_num_groups: int | None = None,
     ):
         """Init.
 
@@ -392,7 +392,7 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Optional[int] = None,
+        dim_out: int | None = None,
         mult: int = 4,
         dropout: float = 0.0,
         activation_fn: str = "geglu",
@@ -574,7 +574,7 @@ def apply_rotary_emb(
     xq: torch.Tensor,
     xk: torch.Tensor,
     freqs_cis: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Apply rotary emb.
 
     Args:

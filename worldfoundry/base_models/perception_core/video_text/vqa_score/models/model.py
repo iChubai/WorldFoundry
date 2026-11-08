@@ -1,8 +1,9 @@
+import os
 from abc import ABC, abstractmethod
 from typing import List
-import os
-import torch
+
 import numpy as np
+import torch
 from PIL import Image
 
 from ..constants import HF_CACHE_DIR
@@ -28,14 +29,11 @@ class ScoreModel(ABC):
     @abstractmethod
     def load_model(self):
         """Load the model, tokenizer, and etc."""
-        pass
 
     @abstractmethod
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
-        pass
 
     @abstractmethod
-    def forward(self, images: List[str], texts: List[str]) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
-        pass

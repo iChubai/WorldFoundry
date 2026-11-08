@@ -77,9 +77,9 @@ class MultilingualPromptFormat:
             font_path: The font path.
             color_path: The color path.
         """
-        with open(font_path, "r") as f:
+        with open(font_path) as f:
             self.font_dict = json.load(f)
-        with open(color_path, "r") as f:
+        with open(color_path) as f:
             self.color_dict = json.load(f)
 
     def format_prompt(self, texts, styles):
@@ -88,7 +88,7 @@ class MultilingualPromptFormat:
         """
 
         prompt = ""
-        for text, style in zip(texts, styles):
+        for text, style in zip(texts, styles, strict=False):
             text_prompt = f'Text "{text}"'
 
             attr_list = []

@@ -1,13 +1,13 @@
-import os
-import cv2
-import json
-import base64
 import argparse
-from openai import OpenAI
+import base64
+import json
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
-from tenacity import retry, wait_exponential, stop_after_attempt
 
+import cv2
+from openai import OpenAI
+from tenacity import retry, stop_after_attempt, wait_exponential
+from tqdm import tqdm
 
 prompt = """
 Your task is to determine how realistic the given video clip appears, based on 16 extracted frames. Consider the following aspects in your evaluation:

@@ -12,15 +12,13 @@ import math
 import os
 import warnings
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict, Any
+from typing import Any, Dict, Optional, Tuple
 
 import torch
-from torch import Tensor, device, dtype, nn
-import torch.utils.checkpoint
-from torch import nn
-from torch.nn import CrossEntropyLoss
 import torch.nn.functional as F
-
+import torch.utils.checkpoint
+from torch import Tensor, device, dtype, nn
+from torch.nn import CrossEntropyLoss
 from transformers.activations import ACT2FN
 from transformers.file_utils import (
     ModelOutput,
@@ -50,8 +48,8 @@ except ImportError:  # pragma: no cover - compatibility with older transformers
         find_pruneable_heads_and_indices,
         prune_linear_layer,
     )
-from transformers.utils import logging
 from transformers.models.bert.configuration_bert import BertConfig
+from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
@@ -658,7 +656,7 @@ class BertModel(BertPreTrainedModel):
     def get_extended_attention_mask(
         self,
         attention_mask: Tensor,
-        input_shape: Tuple[int],
+        input_shape: tuple[int],
         device: device,
         is_decoder: bool,
         has_query: bool = False,
@@ -725,9 +723,7 @@ class BertModel(BertPreTrainedModel):
                 extended_attention_mask = attention_mask[:, None, None, :]
         else:
             raise ValueError(
-                "Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(
-                    input_shape, attention_mask.shape
-                )
+                f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
             )
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
@@ -1019,8 +1015,8 @@ class BertLMHeadModel(BertPreTrainedModel):
             "query_embeds": query_embeds,
             "attention_mask": attention_mask,
             "past_key_values": past,
-            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states", None),
-            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask", None),
+            "encoder_hidden_states": model_kwargs.get("encoder_hidden_states"),
+            "encoder_attention_mask": model_kwargs.get("encoder_attention_mask"),
             "is_decoder": True,
         }
 

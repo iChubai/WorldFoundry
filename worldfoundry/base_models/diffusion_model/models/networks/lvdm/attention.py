@@ -6,12 +6,12 @@ SpatialTransformer rearranges ``B C T H W`` → ``(B·T) (H·W) C`` for
 """
 
 import importlib.util
+from functools import partial
 
 import torch
-from torch import nn, einsum
 import torch.nn.functional as F
 from einops import rearrange, repeat
-from functools import partial
+from torch import einsum, nn
 
 xformers = None
 if importlib.util.find_spec("xformers") is not None:
@@ -21,12 +21,12 @@ if importlib.util.find_spec("xformers") is not None:
     XFORMERS_IS_AVAILBLE = True
 else:
     XFORMERS_IS_AVAILBLE = False
+from worldfoundry.core.nn.diffusion.convolution import zero_module
 from worldfoundry.core.nn.diffusion.utils import (
     checkpoint,
-    exists,
     default,
+    exists,
 )
-from worldfoundry.core.nn.diffusion.convolution import zero_module
 
 
 class RelativePosition(nn.Module):

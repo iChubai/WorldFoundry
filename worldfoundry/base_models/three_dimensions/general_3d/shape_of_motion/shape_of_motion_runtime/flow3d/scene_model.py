@@ -4,11 +4,10 @@ import roma
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from gsplat.rendering import rasterization
-from gsplat.rendering import rasterization_2dgs
+from gsplat.rendering import rasterization, rasterization_2dgs
 from torch import Tensor
 
-from flow3d.params import GaussianParams, MotionBases, CameraScales, CameraPoses
+from flow3d.params import CameraPoses, CameraScales, GaussianParams, MotionBases
 
 
 class SceneModel(nn.Module):
@@ -141,11 +140,9 @@ class SceneModel(nn.Module):
                 F.pad(means, (0, 1), value=1.0),
             )
             quats = roma.quat_xyzw_to_wxyz(
-                (
-                    roma.quat_product(
-                        roma.rotmat_to_unitquat(transfms[..., :3, :3]),
-                        roma.quat_wxyz_to_xyzw(quats[:, None]),
-                    )
+                roma.quat_product(
+                    roma.rotmat_to_unitquat(transfms[..., :3, :3]),
+                    roma.quat_wxyz_to_xyzw(quats[:, None]),
                 )
             )
             quats = F.normalize(quats, p=2, dim=-1)

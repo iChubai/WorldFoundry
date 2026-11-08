@@ -62,7 +62,7 @@ class LTXModel(torch.nn.Module):
 
     TRANSFORMER_BLOCK_CLS = BasicAVTransformerBlock
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         model_type: LTXModelType = LTXModelType.AudioVideo,

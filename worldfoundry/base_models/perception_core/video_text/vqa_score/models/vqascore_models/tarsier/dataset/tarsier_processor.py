@@ -1,15 +1,14 @@
 from typing import List, Union
-from PIL import Image
 
 import torch
-
+from PIL import Image
+from transformers import Qwen2VLImageProcessor
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import ImageInput, get_image_size, to_numpy_array
+from transformers.models.qwen2_vl.image_processing_qwen2_vl import smart_resize
 from transformers.processing_utils import ProcessingKwargs, ProcessorMixin, Unpack, _validate_images_text_input_order
 from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
 from transformers.utils import logging
-from transformers import Qwen2VLImageProcessor
-from transformers.models.qwen2_vl.image_processing_qwen2_vl import smart_resize
 
 logger = logging.get_logger(__name__)
 
@@ -115,7 +114,10 @@ class TarsierProcessor(ProcessorMixin):
             add_generation_prompt=add_generation_prompt,
             strip_final_eos=strip_final_eos,
         )
-        labels = [-100 if j == 0 else i for i, j in zip(text_inputs["input_ids"], text_inputs["assistant_masks"])]
+        labels = [
+            -100 if j == 0 else i
+            for i, j in zip(text_inputs["input_ids"], text_inputs["assistant_masks"], strict=False)
+        ]
         labels = labels[: self.max_seq_len]
         input_ids = text_inputs["input_ids"][: self.max_seq_len]
 
@@ -134,7 +136,7 @@ class TarsierProcessor(ProcessorMixin):
             outputs["image_grid_thw"] = torch.stack(image_grid_thw)
         return outputs
 
-    def preprocess_image(self, pil_img: Union[Image.Image, List[Image.Image]], image_processing_config):
+    def preprocess_image(self, pil_img: Image.Image | list[Image.Image], image_processing_config):
         if image_processing_config is None:
             return pil_img
         images = pil_img

@@ -55,8 +55,8 @@ class MMDoubleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -149,9 +149,9 @@ class MMDoubleStreamBlock(nn.Module):
         attn_param=None,
         is_flash=False,
         block_idx=None,
-        kv_cache: Optional[dict] = None,
+        kv_cache: dict | None = None,
         cache_txt: bool = False,
-    ) -> Tuple[torch.Tensor]:
+    ) -> tuple[torch.Tensor]:
         (txt_q, txt_k, txt_v, txt_mod1_gate, txt_mod2_shift, txt_mod2_scale, txt_mod2_gate) = self.modulate_txt(
             vec_txt, txt
         )
@@ -182,11 +182,11 @@ class MMDoubleStreamBlock(nn.Module):
         freqs_cis: tuple = None,
         attn_param=None,
         block_idx=None,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-        kv_cache: Optional[dict] = None,
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+        kv_cache: dict | None = None,
         cache_vision: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         (img_q, img_k, img_v, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate) = self.modulate_img(
             vec, img
         )
@@ -230,9 +230,9 @@ class MMDoubleStreamBlock(nn.Module):
         attn_param=None,
         is_flash=False,
         block_idx=None,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         (txt_q, txt_k, txt_v, txt_mod1_gate, txt_mod2_shift, txt_mod2_scale, txt_mod2_gate) = self.modulate_txt(
             vec_txt, txt
         )
@@ -302,7 +302,7 @@ class MMDoubleStreamBlock(nn.Module):
         attn_param=None,
         is_flash=False,
         block_idx=None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         (img_q, img_k, img_v, img_mod1_gate, img_mod2_shift, img_mod2_scale, img_mod2_gate) = self.modulate_img(
             vec, img
         )
@@ -674,9 +674,9 @@ class ARHunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
         vision_states: torch.Tensor = None,
         mask_type="t2v",
         extra_kwargs=None,
-        kv_cache: Optional[dict] = None,
-        cache_txt: Optional[bool] = False,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        kv_cache: dict | None = None,
+        cache_txt: bool | None = False,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if cache_txt:
             _kv_cache_new = []
             transformer_num_layers = len(self.double_blocks)
@@ -711,19 +711,19 @@ class ARHunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
         hidden_states: torch.Tensor,
         timestep: torch.LongTensor,
         timestep_r=None,
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         return_dict: bool = False,
         mask_type="t2v",
         extra_kwargs=None,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-        kv_cache: Optional[dict] = None,
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+        kv_cache: dict | None = None,
         cache_vision: bool = False,
         rope_temporal_size=4,
         start_rope_start_idx=0,
-        action: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        action: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if cache_vision:
             _kv_cache_new = []
             transformer_num_layers = len(self.double_blocks)
@@ -813,17 +813,17 @@ class ARHunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
         vision_states: torch.Tensor = None,
         output_features=False,
         output_features_stride=8,
-        attention_kwargs: Optional[Dict[str, Any]] = None,
-        freqs_cos: Optional[torch.Tensor] = None,
-        freqs_sin: Optional[torch.Tensor] = None,
+        attention_kwargs: dict[str, Any] | None = None,
+        freqs_cos: torch.Tensor | None = None,
+        freqs_sin: torch.Tensor | None = None,
         return_dict: bool = False,
         guidance=None,
         mask_type="t2v",
         extra_kwargs=None,
-        viewmats: Optional[torch.Tensor] = None,
-        Ks: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        viewmats: torch.Tensor | None = None,
+        Ks: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
+    ) -> torch.Tensor | dict[str, torch.Tensor]:
         if guidance is None:
             guidance = torch.tensor([6016.0], device=hidden_states.device, dtype=torch.bfloat16)
         img = x = hidden_states

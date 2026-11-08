@@ -1,15 +1,17 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
+import json
 import os
+from collections.abc import AsyncIterator, Iterator
 from copy import deepcopy
 from dataclasses import asdict
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
-import json
 from dacite import from_dict
 from requests.exceptions import HTTPError
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
+
 from ..protocol import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -28,8 +30,8 @@ class InferClient(InferEngine):
         port: int = 8000,
         api_key: str = "EMPTY",
         *,
-        base_url: Optional[str] = None,
-        timeout: Optional[int] = 3600,
+        base_url: str | None = None,
+        timeout: int | None = 3600,
     ) -> None:
         """
         Initialize the InferClient.
@@ -64,7 +66,7 @@ class InferClient(InferEngine):
         coro = self.get_model_list_async()
         return self.safe_asyncio_run(coro)
 
-    def _get_request_kwargs(self) -> Dict[str, Any]:
+    def _get_request_kwargs(self) -> dict[str, Any]:
         request_kwargs = {}
         if isinstance(self.timeout, (int, float)) and self.timeout > 0:
             request_kwargs["timeout"] = self.timeout
@@ -81,13 +83,13 @@ class InferClient(InferEngine):
 
     def infer(
         self,
-        infer_requests: List[InferRequest],
-        request_config: Optional[RequestConfig] = None,
-        metrics: Optional[List[Metric]] = None,
+        infer_requests: list[InferRequest],
+        request_config: RequestConfig | None = None,
+        metrics: list[Metric] | None = None,
         *,
-        model: Optional[str] = None,
-        use_tqdm: Optional[bool] = None,
-    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+        model: str | None = None,
+        use_tqdm: bool | None = None,
+    ) -> list[ChatCompletionResponse | Iterator[ChatCompletionStreamResponse]]:
         """
         Perform inference using the specified model.
 
@@ -105,7 +107,7 @@ class InferClient(InferEngine):
         return super().infer(infer_requests, request_config, metrics, model=model, use_tqdm=use_tqdm)
 
     @staticmethod
-    def _prepare_request_data(model: str, infer_request: InferRequest, request_config: RequestConfig) -> Dict[str, Any]:
+    def _prepare_request_data(model: str, infer_request: InferRequest, request_config: RequestConfig) -> dict[str, Any]:
         if not isinstance(infer_request, dict):
             infer_request = asdict(infer_request)
         res = asdict(ChatCompletionRequest(model, **infer_request, **asdict(request_config)))
@@ -117,7 +119,7 @@ class InferClient(InferEngine):
         return res
 
     @staticmethod
-    def _parse_stream_data(data: bytes) -> Optional[str]:
+    def _parse_stream_data(data: bytes) -> str | None:
         data = data.decode(encoding="utf-8")
         data = data.strip()
         if len(data) == 0:
@@ -128,10 +130,10 @@ class InferClient(InferEngine):
     async def infer_async(
         self,
         infer_request: InferRequest,
-        request_config: Optional[RequestConfig] = None,
+        request_config: RequestConfig | None = None,
         *,
-        model: Optional[str] = None,
-    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
+        model: str | None = None,
+    ) -> ChatCompletionResponse | AsyncIterator[ChatCompletionStreamResponse]:
         request_config = deepcopy(request_config or RequestConfig())
         if model is None:
             if len(self.models) == 1:

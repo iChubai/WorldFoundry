@@ -5,7 +5,7 @@ from .base import BaseAgentTemplate
 
 
 class ReactGRPOAgentTemplate(BaseAgentTemplate):
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_names = []
         tool_descs = []
         for tool in tools:
@@ -37,4 +37,4 @@ Final Answer: the final answer to the original input question
 
 Begin!
 """
-        )  # noqa
+        )

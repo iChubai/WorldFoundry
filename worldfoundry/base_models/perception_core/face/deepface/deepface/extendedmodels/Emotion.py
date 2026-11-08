@@ -1,6 +1,8 @@
 import os
+
 import gdown
 import tensorflow as tf
+
 from worldfoundry.base_models.perception_core.face.deepface.deepface.commons import functions
 
 # -------------------------------------------
@@ -10,18 +12,18 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 tf_version = int(tf.__version__.split(".", maxsplit=1)[0])
 
 if tf_version == 1:
+    from keras.layers import AveragePooling2D, Conv2D, Dense, Dropout, Flatten, MaxPooling2D
     from keras.models import Sequential
-    from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, Flatten, Dense, Dropout
 elif tf_version == 2:
-    from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import (
-        Conv2D,
-        MaxPooling2D,
         AveragePooling2D,
-        Flatten,
+        Conv2D,
         Dense,
         Dropout,
+        Flatten,
+        MaxPooling2D,
     )
+    from tensorflow.keras.models import Sequential
 # -------------------------------------------
 
 # Labels for the emotions that can be detected by the model.

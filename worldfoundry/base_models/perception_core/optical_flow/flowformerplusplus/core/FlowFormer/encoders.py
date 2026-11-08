@@ -1,7 +1,8 @@
+import numpy as np
+import timm
 import torch
 import torch.nn as nn
-import timm
-import numpy as np
+
 # from .twins_ft import _twins_svt_large_jihao
 
 
@@ -22,7 +23,7 @@ class twins_svt_large(nn.Module):
     def forward(self, x, data=None, layer=2):
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block)
+            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block, strict=False)
         ):
             x, size = embed(x)
             x = drop(x)
@@ -44,7 +45,7 @@ class twins_svt_large(nn.Module):
         res = []
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block)
+            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block, strict=False)
         ):
             x, size = embed(x)
             if i == layer - 1:
@@ -66,7 +67,7 @@ class twins_svt_large(nn.Module):
         num = 0
 
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block)
+            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block, strict=False)
         ):
             for param in embed.parameters():
                 num += np.prod(param.size())
@@ -89,7 +90,7 @@ class twins_svt_large_context(nn.Module):
     def forward(self, x, data=None, layer=2):
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
-            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block)
+            zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block, strict=False)
         ):
             x, size = embed(x)
             x = drop(x)

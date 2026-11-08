@@ -8,6 +8,7 @@ from mmdet.models.backbones.csp_darknet import CSPLayer, Focus
 from mmdet.utils import ConfigType, OptMultiConfig
 
 from mmyolo.registry import MODELS
+
 from ..layers import CSPLayerWithTwoConv, SPPFBottleneck
 from ..utils import make_divisible, make_round
 from .base_backbone import BaseBackbone
@@ -77,11 +78,11 @@ class YOLOv5CSPDarknet(BaseBackbone):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="SiLU", inplace=True),
@@ -222,11 +223,11 @@ class YOLOv8CSPDarknet(BaseBackbone):
         self,
         arch: str = "P5",
         last_stage_out_channels: int = 1024,
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="SiLU", inplace=True),
@@ -368,14 +369,14 @@ class YOLOXCSPDarknet(BaseBackbone):
     def __init__(
         self,
         arch: str = "P5",
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         input_channels: int = 3,
-        out_indices: Tuple[int] = (2, 3, 4),
+        out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         use_depthwise: bool = False,
-        spp_kernal_sizes: Tuple[int] = (5, 9, 13),
+        spp_kernal_sizes: tuple[int] = (5, 9, 13),
         norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
         act_cfg: ConfigType = dict(type="SiLU", inplace=True),
         norm_eval: bool = False,

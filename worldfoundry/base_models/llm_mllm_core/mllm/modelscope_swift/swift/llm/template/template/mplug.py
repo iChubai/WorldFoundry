@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_env_args
+
 from ..base import Template
 from ..constant import MLLMTemplateType
 from ..register import TemplateMeta, register_template
@@ -19,11 +20,11 @@ from .qwen import QwenTemplateMeta
 class mPlugOwl2Template(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type == "image"
         return [[-200]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         from mplug_owl2.mm_utils import process_images
 
         processor = self.processor
@@ -43,7 +44,7 @@ class mPlugOwl2Template(Template):
             res["images"] = images
         return res
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         images = [b["images"] for b in batch if "images" in b]
         if images:
@@ -79,7 +80,7 @@ class mPlugOwl3Template(Template):
 
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         assert media_type in {"image", "video"}
         max_num_frames = get_env_args("max_num_frames", int, 16)
         load_video = partial(load_video_minicpmv_mplug_owl3, max_num_frames=max_num_frames)
@@ -88,7 +89,7 @@ class mPlugOwl3Template(Template):
         elif media_type == "video":
             return self.replace_video2image(load_video, inputs, lambda i: [[-100]]) + ["\n"]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         images = inputs.images
         videos = inputs.videos
@@ -129,7 +130,7 @@ class mPlugOwl3Template(Template):
         encoded["labels"] = labels
         return encoded
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         if "media_offset" in inputs:
             media_offset = []
             cusum_offset = 0
@@ -153,7 +154,7 @@ class mPlugOwl3Template(Template):
             inputs["image_embeds"] = torch.concat(image_embeds)
         return inputs
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = self.fetch_inputs(batch, ["media_offset", "pixel_values"])
         for b in batch:
             b.pop("pixel_values", None)
@@ -164,7 +165,7 @@ class mPlugOwl3Template(Template):
 class mPlugOwl3_241101Template(mPlugOwl3Template):
     version = "241101"
 
-    def _post_encode(self, model: nn.Module, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_encode(self, model: nn.Module, inputs: dict[str, Any]) -> dict[str, Any]:
         if "pixel_values" in inputs:
             pixel_values = inputs.pop("pixel_values")
             inputs["image_embeds"] = torch.concat([model.forward_image(pv) for pv in pixel_values])
@@ -176,8 +177,8 @@ class mPlugOwl3_241101Template(mPlugOwl3Template):
 @dataclass
 class mPlugOwl3TemplateMeta(QwenTemplateMeta):
     prefix: Prompt = field(default_factory=lambda: ["<|im_start|>system\n{{SYSTEM}}<|im_end|>\n"])
-    default_system: Optional[str] = None
-    system_prefix: Optional[Prompt] = None
+    default_system: str | None = None
+    system_prefix: Prompt | None = None
 
 
 register_template(mPlugOwl3TemplateMeta(MLLMTemplateType.mplug_owl3, template_cls=mPlugOwl3Template))
@@ -188,11 +189,11 @@ register_template(mPlugOwl3TemplateMeta(MLLMTemplateType.mplug_owl3_241101, temp
 class DocOwl2Template(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
-    ) -> List[Context]:
+    ) -> list[Context]:
         if media_type == "image":
             return [f"<img {index + 1}>", [-200]]
 
-    def _encode(self, inputs: StdTemplateInputs) -> Dict[str, Any]:
+    def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)
         if inputs.images:
             image_tensor, patch_positions, _ = self.processor._process_image(inputs.images)
@@ -200,7 +201,7 @@ class DocOwl2Template(Template):
             encoded.update({"images": image_tensor, "patch_positions": patch_positions})
         return encoded
 
-    def _data_collator(self, batch: List[Dict[str, Any]], *, padding_to: Optional[int] = None) -> Dict[str, Any]:
+    def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         keys = ["images", "patch_positions"]
         res = self.fetch_inputs(batch, keys)
         for key in keys:

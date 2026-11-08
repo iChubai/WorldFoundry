@@ -14,13 +14,13 @@ img_scales = [(640, 640), (320, 320), (960, 960)]
 
 #                                LoadImageFromFile
 #              /                        |                          \
-#          Resize                     Resize                       Resize  # noqa
+#          Resize                     Resize                       Resize
 #        /      \                    /      \                    /        \
-#  RandomFlip RandomFlip      RandomFlip RandomFlip        RandomFlip RandomFlip # noqa
+#  RandomFlip RandomFlip      RandomFlip RandomFlip        RandomFlip RandomFlip
 #      |          |                |         |                  |         |
 #  LoadAnn    LoadAnn           LoadAnn    LoadAnn           LoadAnn    LoadAnn
 #      |          |                |         |                  |         |
-#  PackDetIn  PackDetIn         PackDetIn  PackDetIn        PackDetIn  PackDetIn # noqa
+#  PackDetIn  PackDetIn         PackDetIn  PackDetIn        PackDetIn  PackDetIn
 
 tta_pipeline = [
     dict(type="LoadImageFromFile", backend_args=_backend_args),

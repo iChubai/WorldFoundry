@@ -4,8 +4,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import torch
 
@@ -18,7 +19,6 @@ from .trajectory_fov import (
     FRUSTUM_SAMPLES_PER_AXIS,
     select_trajectory_fov_history,
 )
-
 
 NUM_LATENT_FRAMES_PER_CHUNK = 9
 VAE_SCALE_FACTOR_TEMPORAL = 4
@@ -437,13 +437,13 @@ class RepEncoderInferenceMemoryProvider:
 
 __all__ = [
     "HISTORY_SOURCE_BUDGET",
-    "RepEncoderInferenceBatchSelection",
-    "RepEncoderInferenceMemoryProvider",
-    "RepEncoderInferenceProviderConfig",
-    "RepEncoderInferenceRenderRecord",
     "NUM_LATENT_FRAMES_PER_CHUNK",
     "RECENT_LOCAL_SLOT",
     "TARGET_SLOTS",
     "VAE_SCALE_FACTOR_TEMPORAL",
     "WINDOW_NUM_FRAMES",
+    "RepEncoderInferenceBatchSelection",
+    "RepEncoderInferenceMemoryProvider",
+    "RepEncoderInferenceProviderConfig",
+    "RepEncoderInferenceRenderRecord",
 ]

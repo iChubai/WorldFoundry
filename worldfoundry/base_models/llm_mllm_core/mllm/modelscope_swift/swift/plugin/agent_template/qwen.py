@@ -26,7 +26,7 @@ class QwenEnAgentTemplate(BaseAgentTemplate):
             )
         return tool_names, tool_descs
 
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_names, tool_descs = self._get_tool_names_descs(tools)
         return (
             f"""{system}
@@ -45,7 +45,7 @@ class QwenEnAgentTemplate(BaseAgentTemplate):
 ✿ARGS✿: The input of the tool
 ✿RESULT✿: Tool results
 ✿RETURN✿: Reply based on tool results. Images need to be rendered as ![](url)"""
-        )  # noqa
+        )
 
 
 class QwenZhAgentTemplate(BaseAgentTemplate):
@@ -64,7 +64,7 @@ class QwenZhAgentTemplate(BaseAgentTemplate):
             )
         return tool_names, tool_descs
 
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_names, tool_descs = self._get_tool_names_descs(tools)
         return (
             f"""{system}
@@ -83,11 +83,11 @@ class QwenZhAgentTemplate(BaseAgentTemplate):
 ✿ARGS✿: 工具输入
 ✿RESULT✿: 工具结果
 ✿RETURN✿: 根据工具结果进行回复，需将图片用![](url)渲染出来"""
-        )  # noqa
+        )
 
 
 class QwenEnParallelAgentTemplate(QwenEnAgentTemplate):
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_names, tool_descs = self._get_tool_names_descs(tools)
         return (
             f"""{system}
@@ -114,11 +114,11 @@ class QwenEnParallelAgentTemplate(QwenEnAgentTemplate):
 ...
 ✿RESULT✿: he result of tool N
 ✿RETURN✿: Reply based on tool results. Images need to be rendered as ![](url)"""
-        )  # noqa
+        )
 
 
 class QwenZhParallelAgentTemplate(QwenZhAgentTemplate):
-    def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
+    def _format_tools(self, tools: list[str | dict], system: str, user_message=None) -> str:
         tool_names, tool_descs = self._get_tool_names_descs(tools)
         return (
             f"""{system}
@@ -145,4 +145,4 @@ class QwenZhParallelAgentTemplate(QwenZhAgentTemplate):
 ...
 ✿RESULT✿: 工具N的结果
 ✿RETURN✿: 根据工具结果进行回复，需将图片用![](url)渲染出来"""
-        )  # noqa
+        )

@@ -9,8 +9,9 @@ import sys
 import tempfile
 import time
 from collections import OrderedDict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import cv2
 import numpy as np
@@ -75,7 +76,7 @@ def valid_pose_cache(path: Path) -> bool:
         with np.load(path) as data:
             poses = data["cam_c2w"]
             return poses.ndim == 3 and poses.shape[1:] == (4, 4) and poses.shape[0] >= 2
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False
 
 

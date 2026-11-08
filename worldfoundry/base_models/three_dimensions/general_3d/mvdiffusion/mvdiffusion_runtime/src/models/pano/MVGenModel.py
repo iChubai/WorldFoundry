@@ -2,8 +2,9 @@
 
 import torch
 import torch.nn as nn
-from .modules import CPAttn
 from einops import rearrange
+
+from .modules import CPAttn
 from .utils import get_correspondences
 
 
@@ -77,7 +78,7 @@ class MultiViewBaseModel(nn.Module):
         down_block_res_samples = (hidden_states,)
         for i, downsample_block in enumerate(self.unet.down_blocks):
             if hasattr(downsample_block, "has_cross_attention") and downsample_block.has_cross_attention:
-                for resnet, attn in zip(downsample_block.resnets, downsample_block.attentions):
+                for resnet, attn in zip(downsample_block.resnets, downsample_block.attentions, strict=False):
                     hidden_states = resnet(hidden_states, emb)
 
                     hidden_states = attn(hidden_states, encoder_hidden_states=prompt_embd).sample
@@ -102,7 +103,7 @@ class MultiViewBaseModel(nn.Module):
         if m > 1:
             hidden_states = self.cp_blocks_mid(hidden_states, correspondences, img_h, img_w, R, K, m)
 
-        for attn, resnet in zip(self.unet.mid_block.attentions, self.unet.mid_block.resnets[1:]):
+        for attn, resnet in zip(self.unet.mid_block.attentions, self.unet.mid_block.resnets[1:], strict=False):
             hidden_states = attn(hidden_states, encoder_hidden_states=prompt_embd).sample
             hidden_states = resnet(hidden_states, emb)
 
@@ -114,7 +115,7 @@ class MultiViewBaseModel(nn.Module):
             down_block_res_samples = down_block_res_samples[: -len(upsample_block.resnets)]
 
             if hasattr(upsample_block, "has_cross_attention") and upsample_block.has_cross_attention:
-                for resnet, attn in zip(upsample_block.resnets, upsample_block.attentions):
+                for resnet, attn in zip(upsample_block.resnets, upsample_block.attentions, strict=False):
                     res_hidden_states = res_samples[-1]
                     res_samples = res_samples[:-1]
                     hidden_states = torch.cat([hidden_states, res_hidden_states], dim=1)

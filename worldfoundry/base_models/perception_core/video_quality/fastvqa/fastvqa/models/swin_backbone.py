@@ -1,14 +1,14 @@
+import math
+from functools import lru_cache, reduce
+from operator import mul
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-import numpy as np
-from timm.models.layers import DropPath, trunc_normal_
-import math
-
-from functools import reduce, lru_cache
-from operator import mul
 from einops import rearrange
+from timm.models.layers import DropPath, trunc_normal_
 
 
 def fragment_infos(D, H, W, fragments=7, device="cuda"):
@@ -494,7 +494,7 @@ class PatchMerging(nn.Module):
 
 
 # cache each stage results
-@lru_cache()
+@lru_cache
 def compute_mask(D, H, W, window_size, shift_size, device):
     img_mask = torch.zeros((1, D, H, W, 1), device=device)  # 1 Dp Hp Wp 1
     cnt = 0
@@ -518,7 +518,7 @@ def compute_mask(D, H, W, window_size, shift_size, device):
     mask_windows = window_partition(img_mask, window_size)  # nW, ws[0]*ws[1]*ws[2], 1
     mask_windows = mask_windows.squeeze(-1)  # nW, ws[0]*ws[1]*ws[2]
     attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
-    attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
+    attn_mask = attn_mask.masked_fill(attn_mask != 0, (-100.0)).masked_fill(attn_mask == 0, 0.0)
     return attn_mask
 
 
@@ -777,7 +777,7 @@ class SwinTransformer3D(nn.Module):
 
         if self.frozen_stages >= 1:
             self.pos_drop.eval()
-            for i in range(0, self.frozen_stages):
+            for i in range(self.frozen_stages):
                 m = self.layers[i]
                 m.eval()
                 for param in m.parameters():

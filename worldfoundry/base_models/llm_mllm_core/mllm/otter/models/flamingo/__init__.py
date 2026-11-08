@@ -6,7 +6,6 @@ from transformers.utils import (
     is_torch_available,
 )
 
-
 _import_structure = {
     "configuration_flamingo": [
         "FlamingoConfig",

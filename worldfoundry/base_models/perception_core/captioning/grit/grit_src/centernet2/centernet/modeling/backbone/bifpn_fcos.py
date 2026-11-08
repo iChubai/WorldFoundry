@@ -2,12 +2,11 @@
 # The original file is under 2-clause BSD License for academic use, and *non-commercial use*.
 import torch
 import torch.nn.functional as F
+from detectron2.layers import Conv2d, ShapeSpec, get_norm
+from detectron2.modeling import BACKBONE_REGISTRY
+from detectron2.modeling.backbone import Backbone, build_resnet_backbone
 from torch import nn
 
-from detectron2.layers import Conv2d, ShapeSpec, get_norm
-
-from detectron2.modeling.backbone import Backbone, build_resnet_backbone
-from detectron2.modeling import BACKBONE_REGISTRY
 from .dlafpn import dla34
 
 __all__ = []
@@ -155,18 +154,18 @@ class SingleBiFPN(Backbone):
                 in_channels = node_info[input_offset]
                 if in_channels != out_channels:
                     lateral_conv = Conv2d(in_channels, out_channels, kernel_size=1, norm=get_norm(norm, out_channels))
-                    self.add_module("lateral_{}_f{}".format(input_offset, feat_level), lateral_conv)
+                    self.add_module(f"lateral_{input_offset}_f{feat_level}", lateral_conv)
             node_info.append(out_channels)
             num_output_connections.append(0)
 
             # generate attention weights
-            name = "weights_f{}_{}".format(feat_level, inputs_offsets_str)
+            name = f"weights_f{feat_level}_{inputs_offsets_str}"
             self.__setattr__(
                 name, nn.Parameter(torch.ones(len(inputs_offsets), dtype=torch.float32), requires_grad=True)
             )
 
             # generate convolutions after combination
-            name = "outputs_f{}_{}".format(feat_level, inputs_offsets_str)
+            name = f"outputs_f{feat_level}_{inputs_offsets_str}"
             self.add_module(
                 name,
                 Conv2d(
@@ -206,7 +205,7 @@ class SingleBiFPN(Backbone):
 
                 # reduction
                 if input_node.size(1) != self.out_channels:
-                    name = "lateral_{}_f{}".format(input_offset, feat_level)
+                    name = f"lateral_{input_offset}_f{feat_level}"
                     input_node = self.__getattr__(name)(input_node)
 
                 # maybe downsample
@@ -229,7 +228,7 @@ class SingleBiFPN(Backbone):
                 input_nodes.append(input_node)
 
             # attention
-            name = "weights_f{}_{}".format(feat_level, inputs_offsets_str)
+            name = f"weights_f{feat_level}_{inputs_offsets_str}"
             weights = F.relu(self.__getattr__(name))
             norm_weights = weights / (weights.sum() + 0.0001)
 
@@ -237,7 +236,7 @@ class SingleBiFPN(Backbone):
             new_node = (norm_weights * new_node).sum(dim=-1)
             new_node = swish(new_node)
 
-            name = "outputs_f{}_{}".format(feat_level, inputs_offsets_str)
+            name = f"outputs_f{feat_level}_{inputs_offsets_str}"
             feats.append(self.__getattr__(name)(new_node))
 
             num_output_connections.append(0)
@@ -294,12 +293,12 @@ class BiFPN(Backbone):
         self.in_features = in_features
 
         # generate output features
-        self._out_features = ["p{}".format(split_name(name)[1]) for name in in_features]
+        self._out_features = [f"p{split_name(name)[1]}" for name in in_features]
         self._out_feature_strides = {
             out_name: bottom_up_output_shapes[in_name].stride
-            for out_name, in_name in zip(self._out_features, in_features)
+            for out_name, in_name in zip(self._out_features, in_features, strict=False)
         }
-        self._out_feature_channels = {k: out_channels for k in self._out_features}
+        self._out_feature_channels = dict.fromkeys(self._out_features, out_channels)
 
         # build bifpn
         self.repeated_bifpn = nn.ModuleList()
@@ -332,7 +331,7 @@ class BiFPN(Backbone):
         for bifpn in self.repeated_bifpn:
             feats = bifpn(feats)
 
-        return dict(zip(self._out_features, feats))
+        return dict(zip(self._out_features, feats, strict=False))
 
 
 def _assert_strides_are_log2_contiguous(strides):
@@ -340,7 +339,7 @@ def _assert_strides_are_log2_contiguous(strides):
     Assert that each stride is 2x times its preceding stride, i.e. "contiguous in log2".
     """
     for i, stride in enumerate(strides[1:], 1):
-        assert stride == 2 * strides[i - 1], "Strides {} {} are not log2 contiguous".format(stride, strides[i - 1])
+        assert stride == 2 * strides[i - 1], f"Strides {stride} {strides[i - 1]} are not log2 contiguous"
 
 
 @BACKBONE_REGISTRY.register()

@@ -15,7 +15,7 @@ Used by DreamX-World recipes; runner VAE38 path is
 from __future__ import annotations
 
 import inspect
-from typing import Sequence
+from collections.abc import Sequence
 
 import torch
 from torch import nn
@@ -78,7 +78,7 @@ class AutoencoderKLWan3_8(WanAutoencoderAdapterMixin, nn.Module):
         cls,
         pretrained_model_path: str,
         additional_kwargs: dict | None = None,
-    ) -> "AutoencoderKLWan3_8":
+    ) -> AutoencoderKLWan3_8:
         parameters = set(inspect.signature(cls.__init__).parameters) - {"self", "cls"}
         config = {key: value for key, value in (additional_kwargs or {}).items() if key in parameters}
         return load_model(

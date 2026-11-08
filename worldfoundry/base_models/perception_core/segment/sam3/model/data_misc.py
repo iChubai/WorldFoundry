@@ -7,13 +7,14 @@ Misc functions, including distributed helpers.
 
 import collections
 import re
-from dataclasses import dataclass, field as field_ptr_behaviour, fields, is_dataclass
-from typing import Any, get_args, get_origin, List, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import field as field_ptr_behaviour
+from typing import Any, List, Optional, Union, get_args, get_origin
 
 import torch
 
-
-MyTensor = Union[torch.Tensor, List[Any]]
+MyTensor = Union[torch.Tensor, list[Any]]
 
 
 class NestedTensor:
@@ -145,16 +146,16 @@ class FindStage:
 
     # We track the object ids referred to by this query.
     # This is beneficial for tracking in videos without the need for pointers.
-    object_ids: Optional[List[List]] = None  # List of objects per query
+    object_ids: list[list] | None = None  # List of objects per query
 
     # Multiplex-specific fields (used by sam3_demo_multiplex)
-    img_ids_np: Optional[Any] = None
-    input_boxes_before_embed: Optional[MyTensor] = None
+    img_ids_np: Any | None = None
+    input_boxes_before_embed: MyTensor | None = None
     input_boxes_before_embed__type = torch.float
-    input_points_before_embed: Optional[MyTensor] = None
+    input_points_before_embed: MyTensor | None = None
     input_points_before_embed__type = torch.float
-    ptrs: Optional[Any] = None
-    ptrs_seg: Optional[Any] = None
+    ptrs: Any | None = None
+    ptrs_seg: Any | None = None
 
 
 @dataclass
@@ -178,14 +179,14 @@ class BatchedFindTarget:
     repeated_boxes__type = torch.float
 
     # Target Segmentation masks
-    segments: Optional[MyTensor]
+    segments: MyTensor | None
     segments__type = torch.bool
 
     # Target Semantic Segmentation masks
-    semantic_segments: Optional[MyTensor]
+    semantic_segments: MyTensor | None
     semantic_segments__type = torch.bool
 
-    is_valid_segment: Optional[MyTensor]
+    is_valid_segment: MyTensor | None
     is_valid_segment__type = torch.bool
 
     # Whether annotations are exhaustive for each query
@@ -231,7 +232,7 @@ class BatchedInferenceMetadata:
     # get_text_input: List[Optional[str]]
 
     # Adding for TA conditional inference
-    is_conditioning_only: List[Optional[bool]]
+    is_conditioning_only: list[bool | None]
 
 
 @dataclass
@@ -239,12 +240,12 @@ class BatchedDatapoint:
     """Batched datapoint implementation."""
 
     img_batch: torch.Tensor
-    find_text_batch: List[str]
-    find_inputs: List[FindStage]
-    find_targets: List[BatchedFindTarget]
-    find_metadatas: List[BatchedInferenceMetadata]
-    raw_images: Optional[List[Any]] = None
-    get_queries: Optional[Any] = None
+    find_text_batch: list[str]
+    find_inputs: list[FindStage]
+    find_targets: list[BatchedFindTarget]
+    find_metadatas: list[BatchedInferenceMetadata]
+    raw_images: list[Any] | None = None
+    get_queries: Any | None = None
 
 
 def convert_my_tensors(obj):

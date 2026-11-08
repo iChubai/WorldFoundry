@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta, abstractmethod
-from typing import List, Sequence, Union
+from collections.abc import Sequence
+from typing import List, Union
 
 import torch
 import torch.nn as nn
@@ -82,7 +83,7 @@ class BaseBackbone(BaseModule, metaclass=ABCMeta):
         input_channels: int = 3,
         out_indices: Sequence[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        plugins: Union[dict, List[dict]] = None,
+        plugins: dict | list[dict] = None,
         norm_cfg: ConfigType = None,
         act_cfg: ConfigType = None,
         norm_eval: bool = False,
@@ -123,7 +124,6 @@ class BaseBackbone(BaseModule, metaclass=ABCMeta):
     @abstractmethod
     def build_stem_layer(self):
         """Build a stem layer."""
-        pass
 
     @abstractmethod
     def build_stage_layer(self, stage_idx: int, setting: list):
@@ -133,7 +133,6 @@ class BaseBackbone(BaseModule, metaclass=ABCMeta):
             stage_idx (int): The index of a stage layer.
             setting (list): The architecture setting of a stage layer.
         """
-        pass
 
     def make_stage_plugins(self, plugins, stage_idx, setting):
         """Make plugins for backbone ``stage_idx`` th stage.

@@ -1,12 +1,14 @@
 """Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> normal_utils.py functionality."""
 
+import math
+import os
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import os, cv2
-import matplotlib.pyplot as plt
-import math
 from torch import Tensor
 
 
@@ -134,8 +136,8 @@ def _getProjectionMatrix(znear, zfar, fovX, fovY, device="cuda"):
         fovY: The fovy.
         device: The device.
     """
-    tanHalfFovY = math.tan((fovY / 2))
-    tanHalfFovX = math.tan((fovX / 2))
+    tanHalfFovY = math.tan(fovY / 2)
+    tanHalfFovX = math.tan(fovX / 2)
 
     top = tanHalfFovY * znear
     bottom = -top

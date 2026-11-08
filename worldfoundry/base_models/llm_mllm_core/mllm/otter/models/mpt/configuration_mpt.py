@@ -1,9 +1,10 @@
 """A HuggingFace-style model configuration."""
 
 from typing import Dict, Optional, Union
+
 from transformers import PretrainedConfig
 
-attn_config_defaults: Dict = {
+attn_config_defaults: dict = {
     "attn_type": "multihead_attention",
     "attn_pdrop": 0.0,
     "attn_impl": "triton",
@@ -15,7 +16,7 @@ attn_config_defaults: Dict = {
     "alibi": False,
     "alibi_bias_max": 8,
 }
-init_config_defaults: Dict = {
+init_config_defaults: dict = {
     "name": "kaiming_normal_",
     "fan_mode": "fan_in",
     "init_nonlinearity": "relu",
@@ -41,15 +42,15 @@ class MPTConfig(PretrainedConfig):
         resid_pdrop: float = 0.0,
         emb_pdrop: float = 0.0,
         learned_pos_emb: bool = True,
-        attn_config: Dict = attn_config_defaults,
+        attn_config: dict = attn_config_defaults,
         init_device: str = "cpu",
-        logit_scale: Optional[Union[float, str]] = None,
+        logit_scale: float | str | None = None,
         no_bias: bool = False,
         verbose: int = 0,
         embedding_fraction: float = 1.0,
         norm_type: str = "low_precision_layernorm",
         use_cache: bool = False,
-        init_config: Dict = init_config_defaults,
+        init_config: dict = init_config_defaults,
         **kwargs,
     ):
         """The MPT configuration class.
@@ -124,10 +125,8 @@ class MPTConfig(PretrainedConfig):
         self.norm_type = norm_type
         self.use_cache = use_cache
         self.init_config = init_config
-        if "name" in kwargs:
-            del kwargs["name"]
-        if "loss_fn" in kwargs:
-            del kwargs["loss_fn"]
+        kwargs.pop("name", None)
+        kwargs.pop("loss_fn", None)
         super().__init__(**kwargs)
         self._validate_config()
 
@@ -143,14 +142,12 @@ class MPTConfig(PretrainedConfig):
         if self.d_model % self.n_heads != 0:
             raise ValueError("d_model must be divisible by n_heads")
         if any(
-            (
-                prob < 0 or prob > 1
-                for prob in [
-                    self.attn_config["attn_pdrop"],
-                    self.resid_pdrop,
-                    self.emb_pdrop,
-                ]
-            )
+            prob < 0 or prob > 1
+            for prob in [
+                self.attn_config["attn_pdrop"],
+                self.resid_pdrop,
+                self.emb_pdrop,
+            ]
         ):
             raise ValueError(
                 "self.attn_config['attn_pdrop'], resid_pdrop, emb_pdrop are probabilities and must be between 0 and 1"
@@ -179,5 +176,5 @@ class MPTConfig(PretrainedConfig):
             raise ValueError(f"self.init_config={self.init_config!r} 'name' needs to be set.")
         if not self.learned_pos_emb and (not self.attn_config["alibi"]):
             raise ValueError(
-                f"Positional information must be provided to the model using either learned_pos_emb or alibi."
+                "Positional information must be provided to the model using either learned_pos_emb or alibi."
             )

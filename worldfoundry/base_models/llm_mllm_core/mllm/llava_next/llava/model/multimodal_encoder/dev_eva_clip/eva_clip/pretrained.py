@@ -212,14 +212,14 @@ def list_pretrained(as_str: bool = False):
     """returns list of pretrained models
     Returns a tuple (model_name, pretrain_tag) by default or 'name:tag' if as_str == True
     """
-    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED.keys() for t in _PRETRAINED[k].keys()]
+    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED for t in _PRETRAINED[k].keys()]
 
 
 def list_pretrained_models_by_tag(tag: str):
     """return all models having the specified pretrain tag"""
     models = []
     tag = _clean_tag(tag)
-    for k in _PRETRAINED.keys():
+    for k in _PRETRAINED:
         if tag in _PRETRAINED[k]:
             models.append(k)
     return models
@@ -253,7 +253,7 @@ def get_pretrained_url(model: str, tag: str):
 
 def download_pretrained_from_url(
     url: str,
-    cache_dir: Union[str, None] = None,
+    cache_dir: str | None = None,
 ):
     if not cache_dir:
         cache_dir = os.path.expanduser("~/.cache/clip")
@@ -296,7 +296,7 @@ def download_pretrained_from_url(
     if expected_sha256 and not hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(
         expected_sha256
     ):
-        raise RuntimeError(f"Model has been downloaded but the SHA256 checksum does not not match")
+        raise RuntimeError("Model has been downloaded but the SHA256 checksum does not not match")
 
     return download_target
 
@@ -314,7 +314,7 @@ def download_pretrained_from_hf(
     model_id: str,
     filename: str = "open_clip_pytorch_model.bin",
     revision=None,
-    cache_dir: Union[str, None] = None,
+    cache_dir: str | None = None,
 ):
     has_hf_hub(True)
     cached_file = hf_hub_download(model_id, filename, revision=revision, cache_dir=cache_dir)
@@ -322,9 +322,9 @@ def download_pretrained_from_hf(
 
 
 def download_pretrained(
-    cfg: Dict,
+    cfg: dict,
     force_hf_hub: bool = False,
-    cache_dir: Union[str, None] = None,
+    cache_dir: str | None = None,
 ):
     target = ""
     if not cfg:

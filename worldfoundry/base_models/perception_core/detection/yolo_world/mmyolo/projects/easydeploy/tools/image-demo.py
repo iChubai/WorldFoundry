@@ -12,7 +12,6 @@ from mmcv.transforms import Compose
 from mmdet.utils import get_test_pipeline_cfg
 from mmengine.config import Config, ConfigDict
 from mmengine.utils import ProgressBar, path
-
 from mmyolo.utils import register_all_modules
 from mmyolo.utils.misc import get_file_list
 
@@ -114,7 +113,7 @@ def main():
         bboxes[:, 1::2].clamp_(0, h)
         bboxes = bboxes.round().int()
 
-        for bbox, score, label in zip(bboxes, scores, labels):
+        for bbox, score, label in zip(bboxes, scores, labels, strict=False):
             bbox = bbox.tolist()
             color = colors[label]
 

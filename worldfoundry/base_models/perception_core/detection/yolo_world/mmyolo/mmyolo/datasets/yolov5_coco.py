@@ -11,7 +11,7 @@ class BatchShapePolicyDataset(BaseDetDataset):
     pixels during batch inference process, which does not require the image
     scales of all batches to be the same throughout validation."""
 
-    def __init__(self, *args, batch_shapes_cfg: Optional[dict] = None, **kwargs):
+    def __init__(self, *args, batch_shapes_cfg: dict | None = None, **kwargs):
         self.batch_shapes_cfg = batch_shapes_cfg
         super().__init__(*args, **kwargs)
 
@@ -59,5 +59,3 @@ class YOLOv5CocoDataset(BatchShapePolicyDataset, CocoDataset):
     We only add `BatchShapePolicy` function compared with CocoDataset. See
     `mmyolo/datasets/utils.py#BatchShapePolicy` for details
     """
-
-    pass

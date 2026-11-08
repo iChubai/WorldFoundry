@@ -81,8 +81,8 @@ class RotaryEmbedding(Module):
     def __init__(
         self,
         dim,
-        custom_freqs: Optional[Tensor] = None,
-        freqs_for: Union[Literal["lang"], Literal["pixel"], Literal["constant"]] = "lang",
+        custom_freqs: Tensor | None = None,
+        freqs_for: Literal["lang"] | Literal["pixel"] | Literal["constant"] = "lang",
         theta=10000,
         max_freq=10,
         num_freqs=1,
@@ -218,7 +218,7 @@ class RotaryEmbedding(Module):
 
         return rotated_q, rotated_k
 
-    def get_scale(self, t: Tensor, seq_len: Optional[int] = None, offset=0):
+    def get_scale(self, t: Tensor, seq_len: int | None = None, offset=0):
         assert self.use_xpos
 
         should_cache = self.cache_if_possible and exists(seq_len)

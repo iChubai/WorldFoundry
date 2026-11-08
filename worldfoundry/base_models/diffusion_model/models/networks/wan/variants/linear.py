@@ -16,10 +16,10 @@ import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
-from worldfoundry.core.nn.blocks.convolutional_mlp import GLUMBConvTemp, Mlp
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linear_attention import flash_attention
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+from worldfoundry.core.nn.blocks.convolutional_mlp import GLUMBConvTemp, Mlp
 
 __all__ = ["WanModel"]
 
@@ -762,8 +762,8 @@ class WanAttentionBlock(nn.Module):
         self.qk_norm = qk_norm
         self.cross_attn_norm = cross_attn_norm
         self.eps = eps
-        self.attn_hook: Optional[AttentionHook] = None
-        self.block_hook: Optional[BlockHook] = None
+        self.attn_hook: AttentionHook | None = None
+        self.block_hook: BlockHook | None = None
 
         # layers
         self.norm1 = WanLayerNorm(dim, eps)
@@ -1089,7 +1089,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -1155,10 +1155,10 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 
@@ -1381,7 +1381,7 @@ class WanLinearAttentionModel(WanModel):
             self.freqs = self.freqs.to(device)
 
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
         # embeddings
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]

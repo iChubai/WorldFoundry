@@ -1,14 +1,13 @@
+import json
 import os
 import re
 from typing import Dict, List, Union
-
-import json
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferRequest
 
 
 class ORM:
-    def __call__(self, **kwargs) -> List[float]:
+    def __call__(self, **kwargs) -> list[float]:
         raise NotImplementedError
 
 
@@ -107,13 +106,13 @@ class ReactORM(ORM):
         action, action_input = ReactORM.parse_action(text)
         return action, action_input
 
-    def __call__(self, infer_requests: List[Union[InferRequest, Dict]], solution: List[str], **kwargs) -> List[float]:
+    def __call__(self, infer_requests: list[InferRequest | dict], solution: list[str], **kwargs) -> list[float]:
         rewards = []
         if not isinstance(infer_requests[0], str):
             predictions = [request["messages"][-1]["content"] for request in infer_requests]
         else:
             predictions = infer_requests
-        for prediction, ground_truth in zip(predictions, solution):
+        for prediction, ground_truth in zip(predictions, solution, strict=False):
             if prediction.endswith("Observation:"):
                 prediction = prediction[: prediction.index("Observation:")].strip()
             action_ref = []
@@ -166,7 +165,7 @@ class MathORM(ORM):
             self.evaluator = MATHEvaluator()
 
     @staticmethod
-    def check_terminate(answers: Union[str, List[str]]) -> List[bool]:
+    def check_terminate(answers: str | list[str]) -> list[bool]:
         if isinstance(answers, str):
             answers = [answers]
         results = []
@@ -212,12 +211,10 @@ class MathORM(ORM):
             value = False
         return value
 
-    def __call__(
-        self, infer_requests: List[Union[InferRequest, Dict]], ground_truths: List[str], **kwargs
-    ) -> List[float]:
+    def __call__(self, infer_requests: list[InferRequest | dict], ground_truths: list[str], **kwargs) -> list[float]:
         rewards = []
         predictions = [request.messages[-1]["content"] for request in infer_requests]
-        for prediction, ground_truth in zip(predictions, ground_truths):
+        for prediction, ground_truth in zip(predictions, ground_truths, strict=False):
             if "# Answer" in prediction:
                 prediction = prediction.split("# Answer")[1]
             if "# Answer" in ground_truth:
@@ -242,12 +239,12 @@ class MathAccuracy(ORM):
             "The math_verify package is required but not installed. Please install it using 'pip install math_verify'."
         )
 
-    def __call__(self, completions, solution, **kwargs) -> List[float]:
+    def __call__(self, completions, solution, **kwargs) -> list[float]:
         from latex2sympy2_extended import NormalizationConfig
         from math_verify import LatexExtractionConfig, parse, verify
 
         rewards = []
-        for content, sol in zip(completions, solution):
+        for content, sol in zip(completions, solution, strict=False):
             gold_parsed = parse(sol, extraction_mode="first_match")
             if len(gold_parsed) != 0:
                 # We require the answer to be provided in correct latex (no malformed operators)
@@ -283,7 +280,7 @@ class MathAccuracy(ORM):
 
 
 class Format(ORM):
-    def __call__(self, completions, **kwargs) -> List[float]:
+    def __call__(self, completions, **kwargs) -> list[float]:
         """Reward function that checks if the completion has a specific format."""
         pattern = r"^<think>.*?</think>\s*<answer>.*?</answer>(?![\s\S])"
         matches = [re.match(pattern, content, re.DOTALL | re.MULTILINE) for content in completions]
@@ -291,7 +288,7 @@ class Format(ORM):
 
 
 class ReActFormat(ORM):
-    def __call__(self, completions, **kwargs) -> List[float]:
+    def __call__(self, completions, **kwargs) -> list[float]:
         """Reward function that checks if the completion has a specific format."""
         pattern = r"^<think>.*?</think>\s*Action:.*?Action Input:.*?$"
         matches = [re.match(pattern, content, re.DOTALL | re.MULTILINE) for content in completions]
@@ -324,10 +321,10 @@ class CosineReward(ORM):
 
         return max_value - (max_value - min_value) * (1 - math.cos(t * math.pi / T)) / 2
 
-    def __call__(self, completions, solution, **kwargs) -> List[float]:
+    def __call__(self, completions, solution, **kwargs) -> list[float]:
         acc_rewards = self.accuracy_orm(completions, solution, **kwargs)
         rewards = []
-        for content, acc_reward in zip(completions, acc_rewards):
+        for content, acc_reward in zip(completions, acc_rewards, strict=False):
             is_correct = acc_reward >= 1.0
             if is_correct:
                 # Swap min/max for correct answers
@@ -351,9 +348,9 @@ class RepetitionPenalty(ORM):
     @staticmethod
     def zipngram(text: str, ngram_size: int):
         words = text.lower().split()
-        return zip(*[words[i:] for i in range(ngram_size)])
+        return zip(*[words[i:] for i in range(ngram_size)], strict=False)
 
-    def __call__(self, completions, **kwargs) -> List[float]:
+    def __call__(self, completions, **kwargs) -> list[float]:
         """
         reward function the penalizes repetitions
 
@@ -388,7 +385,7 @@ class SoftOverlong(ORM):
         self.soft_max_length = soft_max_length
         self.soft_cache_length = soft_cache_length
 
-    def __call__(self, completions, **kwargs) -> List[float]:
+    def __call__(self, completions, **kwargs) -> list[float]:
         rewards = []
         for completion in completions:
             completion_length = len(self.tokenizer.encode(completion))

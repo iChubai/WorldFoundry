@@ -57,7 +57,6 @@ class InputProcessor:
 
     def __init__(self):
         """Init."""
-        pass
 
     # -----------------------------
     # Public API
@@ -182,7 +181,7 @@ class InputProcessor:
         -> processed_images, out_sizes, out_intrinsics, out_extrinsics
         """
         try:
-            processed_images, out_sizes, out_intrinsics, out_extrinsics = zip(*results)
+            processed_images, out_sizes, out_intrinsics, out_extrinsics = zip(*results, strict=False)
         except Exception as e:
             raise RuntimeError(
                 f"Unexpected results structure from parallel_execution: {type(results)} / sample: {results[0]}"
@@ -208,7 +207,7 @@ class InputProcessor:
 
         center_crop = T.CenterCrop((min_h, min_w))
         new_imgs, new_sizes, new_ixts = [], [], []
-        for img_t, (H, W), K in zip(processed_images, out_sizes, out_intrinsics):
+        for img_t, (H, W), K in zip(processed_images, out_sizes, out_intrinsics, strict=False):
             crop_top = max(0, (H - min_h) // 2)
             crop_left = max(0, (W - min_w) // 2)
             new_imgs.append(center_crop(img_t))
@@ -281,7 +280,7 @@ class InputProcessor:
         # Convert to tensor & normalize
         img_tensor = self._normalize_image(pil_img)
         _, H, W = img_tensor.shape
-        assert (W, H) == (w, h), "Tensor size mismatch with PIL image size after processing."
+        assert (w, h) == (W, H), "Tensor size mismatch with PIL image size after processing."
 
         # Return: (img_tensor, (H, W), intrinsic, extrinsic)
         return img_tensor, (H, W), intrinsic, extrinsic

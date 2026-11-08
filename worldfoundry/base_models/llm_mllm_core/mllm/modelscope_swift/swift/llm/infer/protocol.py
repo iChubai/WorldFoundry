@@ -1,6 +1,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import base64
 import io
+import json
 import os
 import time
 import uuid
@@ -8,7 +9,6 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field, fields
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-import json
 from PIL import Image
 from pydantic import BaseModel
 
@@ -32,7 +32,7 @@ class Model:
 
 @dataclass
 class ModelList:
-    data: List[Model]
+    data: list[Model]
     object: str = "list"
 
 
@@ -46,8 +46,8 @@ class CompletionRequestMixin:
 class ChatCompletionRequestMixin:
     model: str
     messages: Messages
-    tools: Optional[List[Tool]] = None
-    tool_choice: Optional[Union[str, Dict]] = None
+    tools: list[Tool] | None = None
+    tool_choice: str | dict | None = None
 
     def __post_init__(self):
         if self.tool_choice is None:
@@ -66,13 +66,13 @@ class ChatCompletionRequestMixin:
 
 @dataclass
 class MultiModalRequestMixin:
-    images: List[str] = field(default_factory=list)
-    audios: List[str] = field(default_factory=list)
-    videos: List[str] = field(default_factory=list)
-    objects: Dict[str, List[Any]] = field(default_factory=dict)
+    images: list[str] = field(default_factory=list)
+    audios: list[str] = field(default_factory=list)
+    videos: list[str] = field(default_factory=list)
+    objects: dict[str, list[Any]] = field(default_factory=dict)
 
     @staticmethod
-    def to_base64(mm_data: Union[str, Image.Image, bytes]) -> str:
+    def to_base64(mm_data: str | Image.Image | bytes) -> str:
         if isinstance(mm_data, dict) and "bytes" in mm_data:
             mm_data = mm_data["bytes"] or mm_data["path"]
         if isinstance(mm_data, str) and not os.path.isfile(mm_data):
@@ -152,7 +152,7 @@ class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletio
                     new_value = {"url": new_value}
                 item[key_origin] = new_value
 
-    def parse(self) -> Tuple["InferRequest", "RequestConfig"]:
+    def parse(self) -> tuple["InferRequest", "RequestConfig"]:
         data = asdict(self)
         res = []
         for cls_type in [InferRequest, RequestConfig]:
@@ -179,7 +179,7 @@ class UsageInfo:
 @dataclass
 class Function:
     name: str
-    arguments: Optional[str]
+    arguments: str | None
 
     def __post_init__(self):
         if not isinstance(self.arguments, str):
@@ -198,8 +198,8 @@ class ChatCompletionMessageToolCall:
 @dataclass
 class ChatMessage:
     role: Literal["system", "user", "assistant"]
-    content: Union[str, List[Dict[str, Any]], int, float]
-    tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
+    content: str | list[dict[str, Any]] | int | float
+    tool_calls: list[ChatCompletionMessageToolCall] | None = None
 
 
 @dataclass
@@ -207,7 +207,7 @@ class ChatCompletionResponseChoice:
     index: int
     message: ChatMessage
     finish_reason: Literal["stop", "length", None]
-    logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
+    logprobs: dict[str, list[dict[str, Any]]] | None = None
 
     def to_cmpl_choice(self) -> "CompletionResponseChoice":
         self = deepcopy(self)
@@ -220,13 +220,13 @@ class CompletionResponseChoice:
     index: int
     text: str
     finish_reason: Literal["stop", "length", None]
-    logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
+    logprobs: dict[str, list[dict[str, Any]]] | None = None
 
 
 @dataclass
 class ChatCompletionResponse:
     model: str
-    choices: List[ChatCompletionResponseChoice]
+    choices: list[ChatCompletionResponseChoice]
     usage: UsageInfo
     id: str = field(default_factory=lambda: f"chatcmpl-{random_uuid()}")
     object: str = "chat.completion"
@@ -242,7 +242,7 @@ class ChatCompletionResponse:
 @dataclass
 class CompletionResponse:
     model: str
-    choices: List[CompletionResponseChoice]
+    choices: list[CompletionResponseChoice]
     usage: UsageInfo
     id: str = field(default_factory=lambda: f"cmpl-{random_uuid()}")
     object: str = "text_completion"
@@ -252,8 +252,8 @@ class CompletionResponse:
 @dataclass
 class DeltaMessage:
     role: Literal["system", "user", "assistant", None] = None
-    content: Optional[str] = None
-    tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
+    content: str | None = None
+    tool_calls: list[ChatCompletionMessageToolCall] | None = None
 
 
 @dataclass
@@ -261,7 +261,7 @@ class ChatCompletionResponseStreamChoice:
     index: int
     delta: DeltaMessage
     finish_reason: Literal["stop", "length", None]
-    logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
+    logprobs: dict[str, list[dict[str, Any]]] | None = None
 
     def to_cmpl_choice(self) -> "CompletionResponseStreamChoice":
         self = deepcopy(self)
@@ -274,14 +274,14 @@ class CompletionResponseStreamChoice:
     index: int
     text: str
     finish_reason: Literal["stop", "length", None]
-    logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
+    logprobs: dict[str, list[dict[str, Any]]] | None = None
 
 
 @dataclass
 class ChatCompletionStreamResponse:
     model: str
-    choices: List[ChatCompletionResponseStreamChoice]
-    usage: Optional[UsageInfo] = None
+    choices: list[ChatCompletionResponseStreamChoice]
+    usage: UsageInfo | None = None
     id: str = field(default_factory=lambda: f"chatcmpl-{random_uuid()}")
     object: str = "chat.completion.chunk"
     created: int = field(default_factory=lambda: int(time.time()))
@@ -296,8 +296,8 @@ class ChatCompletionStreamResponse:
 @dataclass
 class CompletionStreamResponse:
     model: str
-    choices: List[CompletionResponseStreamChoice]
-    usage: Optional[UsageInfo] = None
+    choices: list[CompletionResponseStreamChoice]
+    usage: UsageInfo | None = None
     id: str = field(default_factory=lambda: f"cmpl-{random_uuid()}")
     object: str = "text_completion.chunk"
     created: int = field(default_factory=lambda: int(time.time()))

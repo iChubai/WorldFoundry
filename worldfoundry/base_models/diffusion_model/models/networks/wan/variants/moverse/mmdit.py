@@ -10,22 +10,22 @@ from typing import List, Optional, Set, Tuple
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.attention.sequence.varlen import (
-    attention,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
     WanRMSNorm,
     rope_params,
     sinusoidal_embedding_1d,
 )
+from worldfoundry.core.attention.sequence.varlen import (
+    attention,
+)
+
+from .attention import WAN_CROSSATTENTION_CLASSES
 from .causal import (
-    causal_rope_apply,
-    CausalWanAttentionBlock,
     CausalHead,
+    CausalWanAttentionBlock,
+    causal_rope_apply,
 )
 from .normalization import WanLayerNorm
-from .attention import WAN_CROSSATTENTION_CLASSES
-
 
 # ---------------------------------------------------------------------------
 # Self-attention projection module (Q/K/V/O + optional RMSNorm)
@@ -120,7 +120,7 @@ class CausalMMDiTDoubleBlock(nn.Module):
         kv_cache=None,
         crossattn_cache=None,  # cross-attn cache dict (inference)
         current_start: int = 0,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         B, S_x, _ = x.shape
         n, d = self.num_heads, self.head_dim
         num_frames = e_x.shape[1]
@@ -245,7 +245,7 @@ class CausalMMDiTModel(nn.Module):
     def __init__(
         self,
         model_type: str = "t2v",
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
         text_len: int = 512,
         in_dim: int = 16,
         dim: int = 1536,
@@ -260,7 +260,7 @@ class CausalMMDiTModel(nn.Module):
         qk_norm: bool = True,
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
-        double_stream_layers: Optional[List[int]] = None,
+        double_stream_layers: list[int] | None = None,
         causal_rope_fn=None,
     ):
         super().__init__()
@@ -283,7 +283,7 @@ class CausalMMDiTModel(nn.Module):
         self.local_attn_size = local_attn_size
         self.sink_size = sink_size
         self.eps = eps
-        self.double_stream_layers: Set[int] = set(double_stream_layers)
+        self.double_stream_layers: set[int] = set(double_stream_layers)
 
         # ── Patch embeddings (separate per stream) ───────────────────────────
         self.patch_embedding = nn.Conv3d(in_dim, dim, kernel_size=patch_size, stride=patch_size)
@@ -392,10 +392,10 @@ class CausalMMDiTModel(nn.Module):
     def unpatchify(self, x_list, grid_sizes):
         c = self.out_dim
         out = []
-        for u, v in zip(x_list, grid_sizes.tolist()):
+        for u, v in zip(x_list, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

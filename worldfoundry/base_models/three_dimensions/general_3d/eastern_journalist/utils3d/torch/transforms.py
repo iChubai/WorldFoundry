@@ -1,68 +1,67 @@
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> transforms.py functionality."""
 
-from typing import *
-from numbers import Number
 import itertools
+from numbers import Number
+from typing import *
 
 import torch
-from torch import Tensor
 import torch.nn.functional as F
+from torch import Tensor
 
 from .helpers import batched, totensor
 
-
 __all__ = [
-    "perspective_from_fov",
-    "perspective_from_window",
-    "intrinsics_from_fov",
-    "intrinsics_from_focal_center",
-    "focal_to_fov",
-    "fov_to_focal",
-    "intrinsics_to_fov",
-    "view_look_at",
-    "extrinsics_look_at",
-    "perspective_to_intrinsics",
-    "intrinsics_to_perspective",
-    "extrinsics_to_view",
-    "view_to_extrinsics",
-    "normalize_intrinsics",
-    "denormalize_intrinsics",
-    "crop_intrinsics",
-    "pixel_to_uv",
-    "pixel_to_ndc",
-    "uv_to_pixel",
-    "depth_linear_to_buffer",
-    "depth_buffer_to_linear",
-    "project_gl",
-    "project_cv",
-    "unproject_gl",
-    "unproject_cv",
-    "project",
-    "unproject",
-    "skew_symmetric",
-    "rotation_matrix_from_vectors",
-    "euler_axis_angle_rotation",
-    "euler_angles_to_matrix",
-    "matrix_to_euler_angles",
-    "matrix_to_quaternion",
-    "quaternion_to_matrix",
-    "matrix_to_axis_angle",
+    "angle_between",
     "axis_angle_to_matrix",
     "axis_angle_to_quaternion",
-    "quaternion_to_axis_angle",
-    "make_affine_matrix",
-    "random_rotation_matrix",
+    "crop_intrinsics",
+    "denormalize_intrinsics",
+    "depth_buffer_to_linear",
+    "depth_linear_to_buffer",
+    "euler_angles_to_matrix",
+    "euler_axis_angle_rotation",
+    "extrinsics_look_at",
+    "extrinsics_to_essential",
+    "extrinsics_to_view",
+    "focal_to_fov",
+    "fov_to_focal",
+    "interpolate_se3_matrix",
+    "intrinsics_from_focal_center",
+    "intrinsics_from_fov",
+    "intrinsics_to_fov",
+    "intrinsics_to_perspective",
     "lerp",
+    "make_affine_matrix",
+    "matrix_to_axis_angle",
+    "matrix_to_euler_angles",
+    "matrix_to_quaternion",
+    "normalize_intrinsics",
+    "perspective_from_fov",
+    "perspective_from_window",
+    "perspective_to_intrinsics",
+    "pixel_to_ndc",
+    "pixel_to_uv",
+    "project",
+    "project_cv",
+    "project_gl",
+    "quaternion_to_axis_angle",
+    "quaternion_to_matrix",
+    "random_rotation_matrix",
+    "rotate_2d",
+    "rotation_matrix_2d",
+    "rotation_matrix_from_vectors",
+    "scale_2d",
+    "skew_symmetric",
     "slerp",
     "slerp_rotation_matrix",
-    "interpolate_se3_matrix",
-    "extrinsics_to_essential",
-    "rotation_matrix_2d",
-    "rotate_2d",
-    "translate_2d",
-    "scale_2d",
     "transform_points",
-    "angle_between",
+    "translate_2d",
+    "unproject",
+    "unproject_cv",
+    "unproject_gl",
+    "uv_to_pixel",
+    "view_look_at",
+    "view_to_extrinsics",
 ]
 
 
@@ -1482,18 +1481,23 @@ def transform_points(x: Tensor, *Ts: Tensor) -> Tensor:
         subscripts, squeezed_operands = [], []
         for i, m in enumerate(operands):
             squeezable = tuple(
-                b_m == 1 and b > 1 for b_m, b in zip(m.shape[:-2], batch_shape[len(batch_shape) - (m.ndim - 2) :])
+                b_m == 1 and b > 1
+                for b_m, b in zip(m.shape[:-2], batch_shape[len(batch_shape) - (m.ndim - 2) :], strict=False)
             )
             squeezed_operands.append(m.squeeze(axis=tuple(j for j, s in enumerate(squeezable) if s)))
             subscripts.append(
                 (
-                    *tuple(j for j, s in zip(batch_subscripts[len(batch_shape) - (m.ndim - 2) :], squeezable) if not s),
+                    *tuple(
+                        j
+                        for j, s in zip(batch_subscripts[len(batch_shape) - (m.ndim - 2) :], squeezable, strict=False)
+                        if not s
+                    ),
                     i,
                     i + 1,
                 )
             )
         y = torch.einsum(
-            *itertools.chain(*zip(squeezed_operands, subscripts)),
+            *itertools.chain(*zip(squeezed_operands, subscripts, strict=False)),
             (*range(offset, offset + len(batch_shape)), 0, len(operands)),
         )
         y = y.squeeze(-1)

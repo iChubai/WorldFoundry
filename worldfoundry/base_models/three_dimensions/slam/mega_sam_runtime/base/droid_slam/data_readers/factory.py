@@ -1,17 +1,12 @@
-import pickle
 import os
 import os.path as osp
+import pickle
+
+from .stream import ImageStream, RGBDStream, StereoStream
 
 # RGBD-Dataset
-from .tartan import TartanAir
-
-from .stream import ImageStream
-from .stream import StereoStream
-from .stream import RGBDStream
-
 # streaming datasets for inference
-from .tartan import TartanAirStream
-from .tartan import TartanAirTestStream
+from .tartan import TartanAir, TartanAirStream, TartanAirTestStream
 
 
 def dataset_factory(dataset_list, **kwargs):
@@ -25,7 +20,7 @@ def dataset_factory(dataset_list, **kwargs):
         # cache datasets for faster future loading
         db = dataset_map[key][0](**kwargs)
 
-        print("Dataset {} has {} images".format(key, len(db)))
+        print(f"Dataset {key} has {len(db)} images")
         db_list.append(db)
 
     return ConcatDataset(db_list)

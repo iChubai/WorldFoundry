@@ -7,9 +7,9 @@
 """Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> utils -> geometry.py functionality."""
 
 import os
-import torch
-import numpy as np
 
+import numpy as np
+import torch
 
 from ..dependency.distortion import apply_distortion, iterative_undistortion, single_undistortion
 

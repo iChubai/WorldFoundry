@@ -1,9 +1,10 @@
-import torch
-import numpy as np
-from PIL import Image
 from typing import List, Union
-from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
+
+import numpy as np
+import torch
 from decord import VideoReader, cpu
+from PIL import Image
+from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
 
 from .vqa_model import VQAScoreModel
 
@@ -55,8 +56,8 @@ class PaliGemmaModel(VQAScoreModel):
         self.processor = AutoProcessor.from_pretrained(processor_path)
 
     def load_images(
-        self, paths: List[str], num_frames: int = 16
-    ) -> List[Union[Image.Image, torch.Tensor, List[torch.Tensor]]]:
+        self, paths: list[str], num_frames: int = 16
+    ) -> list[Image.Image | torch.Tensor | list[torch.Tensor]]:
         processed_data = []
         for path in paths:
             if path.lower().endswith((".mp4", ".avi", ".mov", ".mkv")):  # Video file
@@ -82,8 +83,8 @@ class PaliGemmaModel(VQAScoreModel):
 
     def forward(
         self,
-        paths: List[str],
-        texts: List[str],
+        paths: list[str],
+        texts: list[str],
         question_template: str = 'Does this figure show "{}"? Please answer yes or no.',
         answer_template: str = "Yes",
     ) -> torch.Tensor:
@@ -94,7 +95,7 @@ class PaliGemmaModel(VQAScoreModel):
         processed_data = self.load_images(paths)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers):
+        for data, question, answer in zip(processed_data, questions, answers, strict=False):
             model_inputs = self.processor(text=question, images=data, return_tensors="pt")
             model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
             input_len = model_inputs["input_ids"].shape[-1]
@@ -112,13 +113,13 @@ class PaliGemmaModel(VQAScoreModel):
 
         return torch.tensor(lm_probs)
 
-    def generate(self, images: List[str], texts: List[str], max_new_tokens: int = 256) -> List[str]:
+    def generate(self, images: list[str], texts: list[str], max_new_tokens: int = 256) -> list[str]:
         assert len(images) == len(texts), "Number of paths and texts must match"
 
         processed_data = self.load_images(images)
 
         generated_texts = []
-        for data, text in zip(processed_data, texts):
+        for data, text in zip(processed_data, texts, strict=False):
             model_inputs = self.processor(text=text, images=data, return_tensors="pt")
             model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
 

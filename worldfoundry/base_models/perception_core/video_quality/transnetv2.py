@@ -8,15 +8,16 @@ from pathlib import Path
 # Set MPS fallback before PyTorch imports.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
+import gc
+import random
+import warnings
+from typing import Any, Dict, List, Optional, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as functional
-import numpy as np
-import random
-import warnings
-import gc
 from tqdm import tqdm
-from typing import List, Dict, Any, Optional, Union
 
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
 
@@ -76,7 +77,7 @@ class TransNetV2(nn.Module):
         self.memory_efficient = True  # Always enable memory optimizations
 
         if use_resnet_features or use_resnet_like_top or use_convex_comb_reg or frame_similarity_on_last_layer:
-            raise NotImplemented("Some options not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Some options not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
 
         self.SDDCNN = nn.ModuleList(
             [StackedDDCNNV2(in_filters=3, n_blocks=S, filters=F, stochastic_depth_drop_prob=0.0)]
@@ -359,7 +360,7 @@ class TransNetV2(nn.Module):
             )
 
         if not quiet:
-            print("Extracting frames from {}".format(video_fn))
+            print(f"Extracting frames from {video_fn}")
 
         video_stream, err = (
             ffmpeg.input(video_fn)
@@ -395,11 +396,11 @@ class TransNetV2(nn.Module):
 
     def predictions_to_scenes_with_data(
         self,
-        predictions: Union[np.ndarray, torch.Tensor],
-        fps: Optional[float] = None,
-        video_path: Optional[str] = None,
+        predictions: np.ndarray | torch.Tensor,
+        fps: float | None = None,
+        video_path: str | None = None,
         threshold: float = 0.5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Convert predictions to structured scene data with timestamps and metadata
 
@@ -455,7 +456,7 @@ class TransNetV2(nn.Module):
 
         return output_data
 
-    def analyze_video(self, video_path: str, threshold: float = 0.5, quiet: bool = False) -> Dict[str, Any]:
+    def analyze_video(self, video_path: str, threshold: float = 0.5, quiet: bool = False) -> dict[str, Any]:
         """
         Comprehensive video analysis with raw predictions and scene data.
 
@@ -516,7 +517,7 @@ class TransNetV2(nn.Module):
         scenes = self.detect_scenes(video_path, threshold)
         return len(scenes)
 
-    def get_scene_timestamps(self, video_path: str, threshold: float = 0.5) -> List[tuple]:
+    def get_scene_timestamps(self, video_path: str, threshold: float = 0.5) -> list[tuple]:
         """
         Get the timestamps of scene boundaries.
 
@@ -536,7 +537,7 @@ class TransNetV2(nn.Module):
         scenes = self.detect_scenes(video_path, threshold)
         return [(float(scene["start_time"]), float(scene["end_time"])) for scene in scenes]
 
-    def detect_scenes(self, video_path: str, threshold: float = 0.5) -> List[Dict[str, Any]]:
+    def detect_scenes(self, video_path: str, threshold: float = 0.5) -> list[dict[str, Any]]:
         """
         Detect scene boundaries in a video.
 
@@ -590,7 +591,7 @@ class StackedDDCNNV2(nn.Module):
         super(StackedDDCNNV2, self).__init__()
 
         if use_octave_conv:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
 
         assert pool_type == "max" or pool_type == "avg"
         if use_octave_conv and pool_type == "max":
@@ -643,7 +644,7 @@ class DilatedDCNNV2(nn.Module):
         super(DilatedDCNNV2, self).__init__()
 
         if octave_conv:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
 
         assert not (octave_conv and batch_norm)
 
@@ -686,9 +687,9 @@ class Conv3DConfigurable(nn.Module):
         super(Conv3DConfigurable, self).__init__()
 
         if octave:
-            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
         if kernel_initializer is not None:
-            raise NotImplemented("Kernel initializers are not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Kernel initializers are not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
 
         assert not (separable and octave)
 
@@ -737,7 +738,7 @@ class FrameSimilarity(nn.Module):
         super(FrameSimilarity, self).__init__()
 
         if stop_gradient:
-            raise NotImplemented("Stop gradient not implemented in Pytorch version of Transnet!")
+            raise NotImplemented("Stop gradient not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
 
         self.projection = nn.Linear(in_filters, similarity_dim, bias=use_bias)
         self.fc = nn.Linear(lookup_window, output_dim)

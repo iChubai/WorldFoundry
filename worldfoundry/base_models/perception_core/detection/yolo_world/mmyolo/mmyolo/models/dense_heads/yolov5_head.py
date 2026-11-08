@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import math
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -17,10 +18,11 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS, TASK_UTILS
+
 from ..utils import make_divisible
 
 
-def get_prior_xy_info(index: int, num_base_priors: int, featmap_sizes: int) -> Tuple[int, int, int]:
+def get_prior_xy_info(index: int, num_base_priors: int, featmap_sizes: int) -> tuple[int, int, int]:
     """Get prior index and xy index in feature map by flatten index."""
     _, featmap_w = featmap_sizes
     priors = index % num_base_priors
@@ -53,7 +55,7 @@ class YOLOv5HeadModule(BaseModule):
     def __init__(
         self,
         num_classes: int,
-        in_channels: Union[int, Sequence],
+        in_channels: int | Sequence,
         widen_factor: float = 1.0,
         num_base_priors: int = 3,
         featmap_strides: Sequence[int] = (8, 16, 32),
@@ -86,7 +88,7 @@ class YOLOv5HeadModule(BaseModule):
     def init_weights(self):
         """Initialize the bias of YOLOv5 head."""
         super().init_weights()
-        for mi, s in zip(self.convs_pred, self.featmap_strides):  # from
+        for mi, s in zip(self.convs_pred, self.featmap_strides, strict=False):  # from
             b = mi.bias.data.view(self.num_base_priors, -1)
             # obj (8 objects per 640 image)
             b.data[:, 4] += math.log(8 / (640 / s) ** 2)
@@ -98,7 +100,7 @@ class YOLOv5HeadModule(BaseModule):
 
             mi.bias.data = b.view(-1)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -111,7 +113,7 @@ class YOLOv5HeadModule(BaseModule):
         assert len(x) == self.num_levels
         return multi_apply(self.forward_single, x, self.convs_pred)
 
-    def forward_single(self, x: Tensor, convs: nn.Module) -> Tuple[Tensor, Tensor, Tensor]:
+    def forward_single(self, x: Tensor, convs: nn.Module) -> tuple[Tensor, Tensor, Tensor]:
         """Forward feature of a single scale level."""
 
         pred_map = convs(x)
@@ -176,7 +178,7 @@ class YOLOv5Head(BaseDenseHead):
         prior_match_thr: float = 4.0,
         near_neighbor_thr: float = 0.5,
         ignore_iof_thr: float = -1.0,
-        obj_level_weights: List[float] = [4.0, 1.0, 0.4],
+        obj_level_weights: list[float] = [4.0, 1.0, 0.4],
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -248,7 +250,7 @@ class YOLOv5Head(BaseDenseHead):
         prior_inds = torch.arange(self.num_base_priors).float().view(self.num_base_priors, 1)
         self.register_buffer("prior_inds", prior_inds, persistent=False)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -262,14 +264,14 @@ class YOLOv5Head(BaseDenseHead):
 
     def predict_by_feat(
         self,
-        cls_scores: List[Tensor],
-        bbox_preds: List[Tensor],
-        objectnesses: Optional[List[Tensor]] = None,
-        batch_img_metas: Optional[List[dict]] = None,
-        cfg: Optional[ConfigDict] = None,
+        cls_scores: list[Tensor],
+        bbox_preds: list[Tensor],
+        objectnesses: list[Tensor] | None = None,
+        batch_img_metas: list[dict] | None = None,
+        cfg: ConfigDict | None = None,
         rescale: bool = True,
         with_nms: bool = True,
-    ) -> List[InstanceData]:
+    ) -> list[InstanceData]:
         """Transform a batch of output features extracted by the head into
         bbox results.
         Args:
@@ -330,7 +332,7 @@ class YOLOv5Head(BaseDenseHead):
 
         mlvl_strides = [
             flatten_priors.new_full((featmap_size.numel() * self.num_base_priors,), stride)
-            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides)
+            for featmap_size, stride in zip(featmap_sizes, self.featmap_strides, strict=False)
         ]
         flatten_stride = torch.cat(mlvl_strides)
 
@@ -352,7 +354,7 @@ class YOLOv5Head(BaseDenseHead):
 
         results_list = []
         for bboxes, scores, objectness, img_meta in zip(
-            flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas
+            flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas, strict=False
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
@@ -413,7 +415,7 @@ class YOLOv5Head(BaseDenseHead):
             results_list.append(results)
         return results_list
 
-    def loss(self, x: Tuple[Tensor], batch_data_samples: Union[list, dict]) -> dict:
+    def loss(self, x: tuple[Tensor], batch_data_samples: list | dict) -> dict:
         """Perform forward propagation and loss calculation of the detection
         head on the features of the upstream network.
 

@@ -1,17 +1,21 @@
 from collections import OrderedDict
 
+# isort: split
 from geom.ba import BA_f_train, BA_train
-from geom.graph_utils import graph_to_edge_list, keyframe_indicies
+
+# isort: split
 import geom.projective_ops as pops
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from geom.graph_utils import graph_to_edge_list, keyframe_indicies
 from lietorch import SE3
 from modules.clipping import GradientClip
 from modules.corr import CorrBlock
 from modules.extractor import BasicEncoder
 from modules.gru import ConvGRU
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_mean
 
 

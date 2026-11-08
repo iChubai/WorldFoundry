@@ -6,19 +6,22 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
+import json
 import os
 import time
-import json
-import torch
+
 import numpy as np
+import torch
 from src import dnnlib
 
-from . import metric_utils
-from . import frechet_inception_distance
-from . import kernel_inception_distance
-from . import inception_score
-from . import video_inception_score
-from . import frechet_video_distance
+from . import (
+    frechet_inception_distance,
+    frechet_video_distance,
+    inception_score,
+    kernel_inception_distance,
+    metric_utils,
+    video_inception_score,
+)
 
 # ----------------------------------------------------------------------------
 
@@ -101,7 +104,7 @@ def report_metric(result_dict, run_dir=None, snapshot_pkl=None):
     if not os.path.exists(run_dir):
         os.makedirs(run_dir)
     if run_dir is not None and os.path.isdir(run_dir):
-        with open(os.path.join(run_dir, f"metric-{metric}.jsonl"), "at") as f:
+        with open(os.path.join(run_dir, f"metric-{metric}.jsonl"), "a") as f:
             f.write(jsonl_line + "\n")
 
 

@@ -58,7 +58,7 @@ def reduce_masked_mean(x, mask, dim=None, keepdim=False):
     # x and mask are the same shape, or at least broadcastably so < actually it's safer if you disallow broadcasting
     # returns shape-1
     # axis can be a list of axes
-    for a, b in zip(x.size(), mask.size()):
+    for a, b in zip(x.size(), mask.size(), strict=False):
         assert a == b  # some shape mismatch!
     prod = x * mask
     if dim is None:

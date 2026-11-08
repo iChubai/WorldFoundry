@@ -9,7 +9,7 @@ from modelscope.hub.utils.utils import get_cache_dir
 from PIL import Image, ImageDraw, ImageFont
 
 
-def _shuffle_colors(nums: List[Any]) -> List[Any]:
+def _shuffle_colors(nums: list[Any]) -> list[Any]:
     if len(nums) == 1:
         return nums
 
@@ -20,7 +20,7 @@ def _shuffle_colors(nums: List[Any]) -> List[Any]:
     left = _shuffle_colors(left)
     right = _shuffle_colors(right)
     new_nums = []
-    for x, y in zip(left, right):
+    for x, y in zip(left, right, strict=False):
         new_nums += [x, y]
     new_nums += left[len(right) :] or right[len(left) :]
     return new_nums
@@ -49,7 +49,7 @@ colors = generate_colors()
 color_mapping = {}
 
 
-def _calculate_brightness(image, region: List[int]):
+def _calculate_brightness(image, region: list[int]):
     cropped_image = image.crop(region)
     grayscale_image = cropped_image.convert("L")
     pixels = list(grayscale_image.getdata())
@@ -58,7 +58,7 @@ def _calculate_brightness(image, region: List[int]):
 
 
 def draw_bbox(
-    image: Image.Image, ref: List[str], bbox: List[List[int]], norm_bbox: Literal["norm1000", "none"] = "norm1000"
+    image: Image.Image, ref: list[str], bbox: list[list[int]], norm_bbox: Literal["norm1000", "none"] = "norm1000"
 ):
     bbox = deepcopy(bbox)
     font_path = "https://modelscope.cn/models/Qwen/Qwen-VL-Chat/resolve/master/SimSun.ttf"
@@ -75,7 +75,7 @@ def draw_bbox(
     draw = ImageDraw.Draw(image)
     # draw bbox
     assert len(ref) == len(bbox), f"len(refs): {len(ref)}, len(bboxes): {len(bbox)}"
-    for (left, top, right, bottom), box_ref in zip(bbox, ref):
+    for (left, top, right, bottom), box_ref in zip(bbox, ref, strict=False):
         if box_ref not in color_mapping:
             color_mapping[box_ref] = colors[len(color_mapping) % len(colors)]
         color = color_mapping[box_ref]
@@ -83,7 +83,7 @@ def draw_bbox(
     # draw text
     file_path = download_file(font_path)
     font = ImageFont.truetype(file_path, 20)
-    for (left, top, _, _), box_ref in zip(bbox, ref):
+    for (left, top, _, _), box_ref in zip(bbox, ref, strict=False):
         brightness = _calculate_brightness(
             image, [left, top, min(left + 100, image.width), min(top + 20, image.height)]
         )

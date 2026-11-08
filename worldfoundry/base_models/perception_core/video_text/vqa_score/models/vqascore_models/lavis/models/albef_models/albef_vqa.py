@@ -11,13 +11,30 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from ...common.utils import get_abs_path, is_url
+
+# isort: split
 from ...models.albef_models import AlbefBase
+
+# isort: split
+# isort: split
 from ...models.albef_models.albef_outputs import AlbefIntermediateOutput, AlbefOutput
+
+# isort: split
+# isort: split
 from ...models.base_model import MomentumDistilationMixin, tile
+
+# isort: split
+# isort: split
 from ...models.med import BertConfig, BertLMHeadModel, XBertEncoder
+
+# isort: split
+# isort: split
 from ...models.vit import VisionTransformerEncoder, interpolate_pos_embed
+
+# isort: split
 from ...common.dist_utils import download_cached_file
 
 

@@ -12,8 +12,8 @@ from typing import Union
 import torch
 import torch.nn as nn
 
-from . import vision_transformer as vits
 from . import convnext
+from . import vision_transformer as vits
 
 logger = logging.getLogger("dinov3")
 

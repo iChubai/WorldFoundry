@@ -10,13 +10,8 @@ import math
 from typing import Any
 
 import torch
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from torch import nn
 
-from worldfoundry.core.attention.sequence.varlen import (
-    attention,
-    flash_attention,
-)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
     WanLayerNorm,
     WanRMSNorm,
@@ -24,6 +19,11 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 i
     rope_params,
     sinusoidal_embedding_1d,
 )
+from worldfoundry.core.attention.sequence.varlen import (
+    attention,
+    flash_attention,
+)
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 
 class _AffineWanLayerNorm(WanLayerNorm):
@@ -834,7 +834,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
             return features
         action_features = [self.act_control_adapter(sample.unsqueeze(0)) for sample in actions]
         output = []
-        for feature, action in zip(features, action_features):
+        for feature, action in zip(features, action_features, strict=False):
             if feature.shape[2] > action.shape[2]:
                 offset = feature.shape[2] - action.shape[2]
                 feature = torch.cat(
@@ -1048,7 +1048,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
         grid_sizes: torch.Tensor,
     ) -> list[torch.Tensor]:
         output = []
-        for sample, grid in zip(value, grid_sizes.tolist()):
+        for sample, grid in zip(value, grid_sizes.tolist(), strict=False):
             sample = sample[: math.prod(grid)].view(
                 *grid,
                 *self.patch_size,
@@ -1057,7 +1057,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
             sample = torch.einsum("fhwpqrc->cfphqwr", sample)
             sample = sample.reshape(
                 self.out_dim,
-                *[left * right for left, right in zip(grid, self.patch_size)],
+                *[left * right for left, right in zip(grid, self.patch_size, strict=False)],
             )
             output.append(sample)
         return output

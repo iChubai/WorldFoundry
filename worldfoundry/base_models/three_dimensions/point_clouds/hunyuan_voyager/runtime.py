@@ -355,7 +355,7 @@ class HunyuanWorldVoyagerRepresentation:
         os.makedirs(video_input_dir, exist_ok=True)
 
         value_list = []
-        for i, (render, mask, depth) in enumerate(zip(render_list, mask_list, depth_list)):
+        for i, (render, mask, depth) in enumerate(zip(render_list, mask_list, depth_list, strict=False)):
             # Sky part is the region where depth_max is, also included in mask
             mask = mask > 0
             # depth_max = np.max(depth)
@@ -394,14 +394,14 @@ class HunyuanWorldVoyagerRepresentation:
 
             if i == 0:
                 if separate:
-                    ref_image_path = os.path.join(video_output_dir, f"ref_image.png")
+                    ref_image_path = os.path.join(video_output_dir, "ref_image.png")
                     imageio.imwrite(ref_image_path, ref_image)
-                    ref_depth_path = os.path.join(video_output_dir, f"ref_depth.exr")
+                    ref_depth_path = os.path.join(video_output_dir, "ref_depth.exr")
                     pyexr.write(ref_depth_path, depth)
                 else:
                     ref_image = np.concatenate([ref_image, depth], axis=-3)
-                    ref_image_path = os.path.join(video_output_dir, f"ref_image.png")
+                    ref_image_path = os.path.join(video_output_dir, "ref_image.png")
                     imageio.imwrite(ref_image_path, ref_image)
 
-        with open(os.path.join(video_output_dir, f"depth_range.json"), "w") as f:
+        with open(os.path.join(video_output_dir, "depth_range.json"), "w") as f:
             json.dump(value_list, f)

@@ -7,9 +7,10 @@ from einops import einsum, rearrange
 from jaxtyping import Float
 from torch import Tensor, nn
 
-from ....geometry.projection import get_world_rays
 from worldfoundry.base_models.three_dimensions.point_clouds.pixelsplat.src.misc.sh_rotation import rotate_sh
 from worldfoundry.core.geometry.transforms import rotation_matrix_to_quaternion_xyzw
+
+from ....geometry.projection import get_world_rays
 from .gaussians import build_covariance, quaternion_to_matrix
 
 

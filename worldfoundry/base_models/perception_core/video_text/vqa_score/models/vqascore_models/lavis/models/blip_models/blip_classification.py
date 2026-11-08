@@ -9,15 +9,27 @@ from copy import deepcopy
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from ..base_model import MomentumDistilationMixin
+
+# isort: split
 from .blip import BlipBase
+
+# isort: split
 from .blip_outputs import (
     BlipIntermediateOutput,
     BlipOutputWithLogits,
 )
+
+# isort: split
 from ..med import XBertEncoder
+
+# isort: split
+# isort: split
 from ..vit import VisionTransformerEncoder
+
+# isort: split
 from torch import nn
 
 
@@ -147,7 +159,7 @@ class BlipClassification(BlipBase, MomentumDistilationMixin):
         alpha = cfg.get("alpha", 0.4)
         max_txt_len = cfg.get("max_txt_len", 40)
 
-        assert num_classes > 1, "Invalid number of classes provided, found {}".format(num_classes)
+        assert num_classes > 1, f"Invalid number of classes provided, found {num_classes}"
 
         model = cls(
             image_encoder=image_encoder,

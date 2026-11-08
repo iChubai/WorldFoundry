@@ -6,11 +6,11 @@
 
 """Module for base_models -> perception_core -> segment -> mobile_sam -> build_sam.py functionality."""
 
-import torch
-
 from functools import partial
 
-from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer, TinyViT
+import torch
+
+from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TinyViT, TwoWayTransformer
 
 
 def build_sam_vit_h(checkpoint=None):

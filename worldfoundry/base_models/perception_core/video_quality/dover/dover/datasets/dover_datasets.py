@@ -359,7 +359,7 @@ class ViewDecompositionDataset(torch.utils.data.Dataset):
             self.video_infos = self.ann_file
         else:
             try:
-                with open(self.ann_file, "r") as fin:
+                with open(self.ann_file) as fin:
                     for line in fin:
                         line_split = line.strip().split(",")
                         filename, a, t, label = line_split

@@ -12,9 +12,8 @@ from transformers import (
     Qwen2_5_VLForConditionalGeneration,
 )
 
-from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.quantize.nf4 import qwen_load_kwargs
-
 from worldfoundry.base_models.diffusion_model.kandinsky6_types import TextEmbeds
+from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.quantize.nf4 import qwen_load_kwargs
 
 _PROMPT_TEMPLATE = "\n".join(
     [

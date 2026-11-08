@@ -7,6 +7,7 @@ For full license text, see the LICENSE file in the repo root or https://opensour
 
 import torch
 import torch.nn.functional as F
+
 from ...common.registry import registry
 from .blip2_qformer import Blip2Qformer
 

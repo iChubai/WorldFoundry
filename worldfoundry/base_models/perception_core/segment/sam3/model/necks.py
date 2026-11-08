@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
+
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
 
 
@@ -102,12 +103,12 @@ class Sam3DualViTDetNeck(nn.Module):
             self.sam2_convs = deepcopy(self.convs)
 
     def forward(
-        self, tensor_list: List[torch.Tensor]
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        Optional[List[torch.Tensor]],
-        Optional[List[torch.Tensor]],
+        self, tensor_list: list[torch.Tensor]
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[torch.Tensor] | None,
+        list[torch.Tensor] | None,
     ]:
         """Forward.
 
@@ -246,7 +247,7 @@ class Sam3TriViTDetNeck(nn.Module):
         x_data = getattr(x, "tensors", x)
         x_mask = getattr(x, "mask", None)
         for _, (conv, interactive_conv, propagation_conv) in enumerate(
-            zip(self.convs, self.interactive_convs, self.propagation_convs)
+            zip(self.convs, self.interactive_convs, self.propagation_convs, strict=False)
         ):
             if need_sam3_out:
                 sam3_conv_out = conv(x_data)

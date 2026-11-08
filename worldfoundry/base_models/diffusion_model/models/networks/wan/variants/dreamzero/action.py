@@ -5,20 +5,23 @@ Adds action conditioning.  No VACE, causal, or linear attn.
 """
 
 # Inference-only DreamZero runtime retained in-tree.
-from .attention import (
-    AttentionModule,
-)
+import math
+import os
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .action_encoder import (
     SinusoidalPositionalEncoding,
     swish,
 )
-from .model import WanRMSNorm, WanLayerNorm, WAN_CROSSATTENTION_CLASSES, rope_params, MLPProj, sinusoidal_embedding_1d
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-import torch.nn as nn
-import torch.nn.functional as F
-import torch
-import math
-import os
+from .attention import (
+    AttentionModule,
+)
+from .model import WAN_CROSSATTENTION_CLASSES, MLPProj, WanLayerNorm, WanRMSNorm, rope_params, sinusoidal_embedding_1d
 
 ENABLE_TENSORRT = os.getenv("ENABLE_TENSORRT", "False").lower() == "true"
 
@@ -445,7 +448,7 @@ class CausalWanAttentionBlock(nn.Module):
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, e):
             x = x + self.cross_attn(self.norm3(x), context)
-            y = self.ffn((self.norm2(x) * (1 + e[4].squeeze(2)) + e[3].squeeze(2)))
+            y = self.ffn(self.norm2(x) * (1 + e[4].squeeze(2)) + e[3].squeeze(2))
             x = x + (y * e[5].squeeze(2))
             return x
 
@@ -712,7 +715,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             action_register_length = None
 
         # time embeddings: expand to exactly seq_len so e matches x (5B: frame_seqlen=50, 1 frame -> 50 tokens)
-        if F <= seq_len:
+        if seq_len >= F:
             repeat = (seq_len + F - 1) // F
             timestep = timestep.repeat_interleave(repeat, dim=1)[:, :seq_len]
         else:
@@ -960,7 +963,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         assert x.shape[1] == math.prod(grid_size)
         x = x.view(B, *grid_size, *self.patch_size, c)
         x = torch.einsum("bfhwpqrc->bcfphqwr", x)
-        x = x.reshape(B, c, *[i * j for i, j in zip(grid_size, self.patch_size)])
+        x = x.reshape(B, c, *[i * j for i, j in zip(grid_size, self.patch_size, strict=False)])
         return x
 
     def _create_freqs(

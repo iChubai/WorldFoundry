@@ -11,7 +11,8 @@
 
 """Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> ffn_layers.py functionality."""
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
+from typing import List, Optional
 
 import torch.nn.functional as F
 from torch import Tensor, nn
@@ -19,7 +20,7 @@ from torch import Tensor, nn
 from .utils import cat_keep_shapes, uncat_with_shapes
 
 
-class ListForwardMixin(object):
+class ListForwardMixin:
     """List forward mixin implementation."""
 
     def forward(self, x: Tensor):
@@ -30,7 +31,7 @@ class ListForwardMixin(object):
         """
         raise NotImplementedError
 
-    def forward_list(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_list(self, x_list: list[Tensor]) -> list[Tensor]:
         """Forward list.
 
         Args:
@@ -50,8 +51,8 @@ class Mlp(nn.Module, ListForwardMixin):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float = 0.0,
         bias: bool = True,
@@ -102,9 +103,9 @@ class SwiGLUFFN(nn.Module, ListForwardMixin):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Optional[Callable[..., nn.Module]] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
         align_to: int = 8,

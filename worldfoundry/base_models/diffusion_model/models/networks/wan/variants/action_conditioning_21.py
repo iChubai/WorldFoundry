@@ -7,19 +7,26 @@ cross-attended (flex / flash) into spatial tokens.
 Action encoder only.  The host transformer is :mod:`.action_21`.
 """
 
-from typing import Any, List, Tuple, Optional, Union, Dict
+import math
 import os
-from einops import rearrange
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
+from einops import rearrange
+from torch.nn.attention.flex_attention import flex_attention
+
 from worldfoundry.core.attention import (
     apply_nd_rotary_embedding as apply_rotary_emb,
+)
+from worldfoundry.core.attention import (
     get_nd_rotary_pos_embed,
+)
+from worldfoundry.core.attention import (
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
-import math
-from torch.nn.attention.flex_attention import flex_attention
-from .causal_cache import read_kv_cache_positions, commit_kv_cache_positions
+
+from .causal_cache import commit_kv_cache_positions, read_kv_cache_positions
 
 try:
     import flash_attn_interface as _flash_attn_interface

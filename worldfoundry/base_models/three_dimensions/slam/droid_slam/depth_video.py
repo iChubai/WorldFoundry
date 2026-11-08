@@ -1,15 +1,18 @@
 """Module for base_models -> three_dimensions -> slam -> droid_slam -> depth_video.py functionality."""
 
-import numpy as np
-import torch
-import lietorch
-import droid_backends
-
-from torch.multiprocessing import Process, Queue, Lock, Value
 from collections import OrderedDict
 
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import cvx_upsample
+import lietorch
+import numpy as np
+import torch
+from torch.multiprocessing import Lock, Process, Queue, Value
+
+# isort: split
+# droid_backends is a compiled PyTorch extension; it loads after torch.
+import droid_backends
+
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import cvx_upsample
 
 
 class DepthVideo:

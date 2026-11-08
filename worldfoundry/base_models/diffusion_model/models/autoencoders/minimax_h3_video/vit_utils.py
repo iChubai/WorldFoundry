@@ -65,7 +65,7 @@ def create_token_ids(patch_dims, device, dtype, id_type="length_normalized", fla
     if "area_normalized" in id_type_list or id_type == "area_normalized":
         raise NotImplementedError("area_normalized id_type is not supported in this inference-only bundle")
 
-    for _dim_size, _id_type in zip(patch_dims, id_type_list):
+    for _dim_size, _id_type in zip(patch_dims, id_type_list, strict=False):
         if isinstance(_dim_size, torch.Tensor):
             coords_list.append(_dim_size.to(device=device, dtype=dtype))
             continue
@@ -91,7 +91,7 @@ def _rotate_half(x: torch.Tensor) -> torch.Tensor:
     return torch.cat((-x2, x1), dim=-1)
 
 
-def _apply_rotary_pos_emb_impl(t: torch.Tensor, rotary_pos_emb: Tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+def _apply_rotary_pos_emb_impl(t: torch.Tensor, rotary_pos_emb: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
     cos, sin = rotary_pos_emb[:2]
 
     if cos.dim() != 4:
@@ -118,7 +118,7 @@ def _apply_rotary_pos_emb_impl(t: torch.Tensor, rotary_pos_emb: Tuple[torch.Tens
 
 
 def prepare_rotary_pos_emb(
-    rotary_pos_emb: Tuple[torch.Tensor, torch.Tensor],
+    rotary_pos_emb: tuple[torch.Tensor, torch.Tensor],
     *,
     dtype: torch.dtype,
 ) -> tuple[torch.Tensor, ...]:

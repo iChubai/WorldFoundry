@@ -6,24 +6,26 @@ Sink / query memory banks are in sibling modules.
 Adds causal attention.  No VACE or linear attn.
 """
 
+import math
+import os
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex_attention
+
+from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
+
 from .attention import attention
 from .model import (
+    WAN_CROSSATTENTION_CLASSES,
+    MLPProj,
+    WanLayerNorm,
     WanRMSNorm,
     rope_apply,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
-    MLPProj,
     sinusoidal_embedding_1d,
 )
-from torch.nn.attention.flex_attention import create_block_mask, flex_attention
-from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
-from torch.nn.attention.flex_attention import BlockMask
-import os
-import torch.nn as nn
-import torch
-import math
-import torch.distributed as dist
 
 flex_attention = torch.compile(flex_attention, dynamic=False, mode="max-autotune-no-cudagraphs")
 
@@ -117,7 +119,7 @@ class CausalWanSelfAttention(nn.Module):
             pmax: The pmax.
             num_frame_per_block: The num frame per block.
         """
-        is_bulk_forward = B > num_frame_per_block
+        is_bulk_forward = num_frame_per_block < B
         q_last_pos = min(current_start_frame + B - 1, pmax - 1)
         q_start_pos = q_last_pos - B + 1
         local_end_pos = q_last_pos
@@ -1028,8 +1030,9 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         Args:
             memory_kwargs: The memory kwargs.
         """
-        from .query_memory import QueryMemoryEncoder
         from types import SimpleNamespace
+
+        from .query_memory import QueryMemoryEncoder
 
         if isinstance(memory_kwargs, dict):
             memory_kwargs = SimpleNamespace(**memory_kwargs)
@@ -1154,7 +1157,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             num_frames * frame_seqlen, total_length, step=attention_block_size, device=device, dtype=torch.long
         )
         noisy_image_end_list = noisy_image_start_list + attention_block_size
-        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list)):
+        for block_index, (start, end) in enumerate(zip(noisy_image_start_list, noisy_image_end_list, strict=False)):
             noise_noise_starts[start:end] = start
             noise_noise_ends[start:end] = end
             noise_context_ends[start:end] = block_index * attention_block_size
@@ -1322,7 +1325,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -1528,7 +1531,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             clip_fea: The clip fea.
             y: The y.
         """
-        pass
         raise NotImplementedError()
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
@@ -1563,7 +1565,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                     local_attn_size=self.local_attn_size,
                 )
         if y is not None:
-            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+            x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
         x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
         grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])
         x = [u.flatten(2).transpose(1, 2) for u in x]
@@ -1629,7 +1631,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
     def forward(self, *args, **kwargs):
         """Forward."""
-        if kwargs.get("kv_cache", None) is not None:
+        if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         else:
             return self._forward_train(*args, **kwargs)
@@ -1643,10 +1645,10 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         """
         c = self.out_dim
         out = []
-        for u, v in zip(x, grid_sizes.tolist()):
+        for u, v in zip(x, grid_sizes.tolist(), strict=False):
             u = u[: math.prod(v)].view(*v, *self.patch_size, c)
             u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size)])
+            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
             out.append(u)
         return out
 

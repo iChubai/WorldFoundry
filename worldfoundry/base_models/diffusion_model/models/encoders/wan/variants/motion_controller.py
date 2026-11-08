@@ -13,6 +13,7 @@ Wan control family, sibling of :mod:`.s2v_audio`.
 
 import torch
 import torch.nn as nn
+
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 
 
@@ -63,7 +64,6 @@ class WanMotionControllerModelDictConverter:
 
     def __init__(self):
         """Init."""
-        pass
 
     def from_diffusers(self, state_dict):
         """From diffusers.

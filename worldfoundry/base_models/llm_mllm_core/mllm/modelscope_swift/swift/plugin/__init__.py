@@ -4,15 +4,17 @@ from typing import TYPE_CHECKING
 from worldfoundry.core.utils.python.lazy_module import _LazyModule
 
 if TYPE_CHECKING:
+    from .agent_template import agent_templates
     from .callback import extra_callbacks
     from .loss import LOSS_MAPPING, get_loss_func
     from .loss_scale import loss_scale_map
-    from .metric import InferStats, MeanMetric, Metric, compute_acc, get_metric, compute_rouge_bleu
-    from .agent_template import agent_templates
-    from .tuner import Tuner, extra_tuners, PeftTuner
-    from .prm import prms, PRM
-    from .orm import orms, ORM
+    from .metric import InferStats, MeanMetric, Metric, compute_acc, compute_rouge_bleu, get_metric
     from .multi_turn import multi_turns
+    from .orm import ORM, orms
+    from .prm import PRM, prms
+    from .tuner import PeftTuner, Tuner, extra_tuners
+
+    # isort: split
     from .rm_plugin import rm_plugins
 
 else:

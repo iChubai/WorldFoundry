@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import torch
@@ -19,7 +19,7 @@ import torch
 class ZBufferResult:
     """Cached z-buffer result for recoloring with different point colors."""
 
-    __slots__ = ("H", "W", "valid", "order", "unique_flat", "first_idx", "depth_img", "mask_img")
+    __slots__ = ("H", "W", "depth_img", "first_idx", "mask_img", "order", "unique_flat", "valid")
 
     def __init__(
         self,

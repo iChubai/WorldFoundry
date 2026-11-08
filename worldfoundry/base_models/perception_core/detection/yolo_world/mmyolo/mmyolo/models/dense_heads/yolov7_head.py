@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -12,6 +13,7 @@ from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmyolo.registry import MODELS
+
 from ..layers import ImplicitA, ImplicitM
 from ..task_modules.assigners.batch_yolov7_assigner import BatchYOLOv7Assigner
 from .yolov5_head import YOLOv5Head, YOLOv5HeadModule
@@ -35,7 +37,7 @@ class YOLOv7HeadModule(YOLOv5HeadModule):
     def init_weights(self):
         """Initialize the bias of YOLOv7 head."""
         super(YOLOv5HeadModule, self).init_weights()
-        for mi, s in zip(self.convs_pred, self.featmap_strides):  # from
+        for mi, s in zip(self.convs_pred, self.featmap_strides, strict=False):  # from
             mi = mi[1]  # nn.Conv2d
 
             b = mi.bias.data.view(self.num_base_priors, -1)
@@ -107,7 +109,7 @@ class YOLOv7p6HeadModule(YOLOv5HeadModule):
     def init_weights(self):
         """Initialize the bias of YOLOv5 head."""
         super(YOLOv5HeadModule, self).init_weights()
-        for mi, aux, s in zip(self.main_convs_pred, self.aux_convs_pred, self.featmap_strides):  # from
+        for mi, aux, s in zip(self.main_convs_pred, self.aux_convs_pred, self.featmap_strides, strict=False):  # from
             mi = mi[2]  # nn.Conv2d
             b = mi.bias.data.view(3, -1)
             # obj (8 objects per 640 image)
@@ -123,7 +125,7 @@ class YOLOv7p6HeadModule(YOLOv5HeadModule):
                 b.data[:, 5:] += math.log(0.6 / (self.num_classes - 0.99))
                 mi.bias.data = b.view(-1)
 
-    def forward(self, x: Tuple[Tensor]) -> Tuple[List]:
+    def forward(self, x: tuple[Tensor]) -> tuple[list]:
         """Forward features from the upstream network.
 
         Args:
@@ -137,8 +139,8 @@ class YOLOv7p6HeadModule(YOLOv5HeadModule):
         return multi_apply(self.forward_single, x, self.main_convs_pred, self.aux_convs_pred)
 
     def forward_single(
-        self, x: Tensor, convs: nn.Module, aux_convs: Optional[nn.Module]
-    ) -> Tuple[Union[Tensor, List], Union[Tensor, List], Union[Tensor, List]]:
+        self, x: Tensor, convs: nn.Module, aux_convs: nn.Module | None
+    ) -> tuple[Tensor | list, Tensor | list, Tensor | list]:
         """Forward feature of a single scale level."""
 
         pred_map = convs(x)
@@ -198,9 +200,9 @@ class YOLOv7Head(YOLOv5Head):
 
     def loss_by_feat(
         self,
-        cls_scores: Sequence[Union[Tensor, List]],
-        bbox_preds: Sequence[Union[Tensor, List]],
-        objectnesses: Sequence[Union[Tensor, List]],
+        cls_scores: Sequence[Tensor | list],
+        bbox_preds: Sequence[Tensor | list],
+        objectnesses: Sequence[Tensor | list],
         batch_gt_instances: Sequence[InstanceData],
         batch_img_metas: Sequence[dict],
         batch_gt_instances_ignore: OptInstanceList = None,
@@ -236,9 +238,9 @@ class YOLOv7Head(YOLOv5Head):
             batch_size = cls_scores[0][0].shape[0]
             device = cls_scores[0][0].device
 
-            bbox_preds_main, bbox_preds_aux = zip(*bbox_preds)
-            objectnesses_main, objectnesses_aux = zip(*objectnesses)
-            cls_scores_main, cls_scores_aux = zip(*cls_scores)
+            bbox_preds_main, bbox_preds_aux = zip(*bbox_preds, strict=False)
+            objectnesses_main, objectnesses_aux = zip(*objectnesses, strict=False)
+            cls_scores_main, cls_scores_aux = zip(*cls_scores, strict=False)
 
             head_preds = self._merge_predict_results(bbox_preds_main, objectnesses_main, cls_scores_main)
             head_preds_aux = self._merge_predict_results(bbox_preds_aux, objectnesses_aux, cls_scores_aux)
@@ -359,7 +361,7 @@ class YOLOv7Head(YOLOv5Head):
 
     def _merge_predict_results(
         self, bbox_preds: Sequence[Tensor], objectnesses: Sequence[Tensor], cls_scores: Sequence[Tensor]
-    ) -> List[Tensor]:
+    ) -> list[Tensor]:
         """Merge predict output from 3 heads.
 
         Args:
@@ -377,7 +379,7 @@ class YOLOv7Head(YOLOv5Head):
               List[Tensor]: Merged output.
         """
         head_preds = []
-        for bbox_pred, objectness, cls_score in zip(bbox_preds, objectnesses, cls_scores):
+        for bbox_pred, objectness, cls_score in zip(bbox_preds, objectnesses, cls_scores, strict=False):
             b, _, h, w = bbox_pred.shape
             bbox_pred = bbox_pred.reshape(b, self.num_base_priors, -1, h, w)
             objectness = objectness.reshape(b, self.num_base_priors, -1, h, w)

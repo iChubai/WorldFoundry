@@ -1,7 +1,7 @@
 """Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> utils -> geometry.py functionality."""
 
-import torch
 import numpy as np
+import torch
 
 
 def depth_to_camera_coords(depthmap, camera_intrinsics):

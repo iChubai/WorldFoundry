@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 LOW_RANK_DIM = 64
 LOW_RANK_SCALE = 32.0 / LOW_RANK_DIM
 EXPECTED_LOW_RANK_MODULES = 438

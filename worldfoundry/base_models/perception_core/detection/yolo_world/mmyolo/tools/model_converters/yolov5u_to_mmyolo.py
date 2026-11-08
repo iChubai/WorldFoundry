@@ -61,7 +61,7 @@ def convert(src, dst):
             new_key = new_key.replace(".cv2", ".short_conv")
             new_key = new_key.replace(".cv3", ".final_conv")
 
-        if "bbox_head.head_module.dfl.conv.weight" == new_key:
+        if new_key == "bbox_head.head_module.dfl.conv.weight":
             print('Drop "bbox_head.head_module.dfl.conv.weight", because it is useless')
             continue
         state_dict[new_key] = weight

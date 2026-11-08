@@ -40,7 +40,7 @@ class ExpMomentumEMA(MMDET_ExpMomentumEMA):
         momentum: float = 0.0002,
         gamma: int = 2000,
         interval=1,
-        device: Optional[torch.device] = None,
+        device: torch.device | None = None,
         update_buffers: bool = False,
     ):
         super().__init__(
@@ -85,6 +85,6 @@ class ExpMomentumEMA(MMDET_ExpMomentumEMA):
         if not self.update_buffers:
             # If not update the buffers,
             # keep the buffers in sync with the source model.
-            for b_avg, b_src in zip(self.module.buffers(), self.src_buffers):
+            for b_avg, b_src in zip(self.module.buffers(), self.src_buffers, strict=False):
                 b_avg.data.copy_(b_src.data)
         self.steps += 1

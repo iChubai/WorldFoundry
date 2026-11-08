@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from PIL import ImageFile
 import torch.nn.functional as F
+from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 

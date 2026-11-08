@@ -186,7 +186,7 @@ class Block(nn.Module):
 
 
 @torch.jit.export
-def get_abs_pos(abs_pos: torch.Tensor, has_cls_token: bool, hw: List[int]) -> torch.Tensor:
+def get_abs_pos(abs_pos: torch.Tensor, has_cls_token: bool, hw: list[int]) -> torch.Tensor:
     """
     Calculate absolute positional embeddings. If needed, resize embeddings and remove cls_token
         dimension for the original embeddings.
@@ -232,8 +232,8 @@ class ImageEncoderViT(nn.Module):
         depth: int,
         num_heads: int,
         mlp_ratio: float,
-        neck_dims: List[int],
-        act_layer: Type[nn.Module],
+        neck_dims: list[int],
+        act_layer: type[nn.Module],
     ) -> None:
         """
         Args:

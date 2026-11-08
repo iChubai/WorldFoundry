@@ -14,8 +14,8 @@ from transformers.file_utils import ModelOutput
 from .blocks import (
     Block,
     DecoderBlock,
-)  # noqa
-from .croco_base import CrocoConfig, CroCoNet  # noqa
+)
+from .croco_base import CrocoConfig, CroCoNet
 from .heads import head_factory
 from .patch_embed import get_patch_embed
 from .utils.misc import (
@@ -30,8 +30,8 @@ class ARCroco3DStereoOutput(ModelOutput):
     Custom output class for ARCroco3DStereo.
     """
 
-    ress: Optional[List[Any]] = None
-    views: Optional[List[Any]] = None
+    ress: list[Any] | None = None
+    views: list[Any] | None = None
 
 
 def strip_module(state_dict):
@@ -661,7 +661,7 @@ class ARCroco3DStereo(CroCoNet):
             f_img = torch.cat([f_pose, f_img], dim=1)
             pos_img = torch.cat([pos_pose, pos_img], dim=1)
         final_output.append((f_state, f_img))
-        for blk_state, blk_img in zip(self.dec_blocks_state, self.dec_blocks):
+        for blk_state, blk_img in zip(self.dec_blocks_state, self.dec_blocks, strict=False):
             f_state, _ = blk_state(*final_output[-1][::+1], pos_state, pos_img)
             f_img, _ = blk_img(*final_output[-1][::-1], pos_img, pos_state)
             final_output.append((f_state, f_img))
@@ -670,7 +670,7 @@ class ARCroco3DStereo(CroCoNet):
             self.dec_norm_state(final_output[-1][0]),
             self.dec_norm(final_output[-1][1]),
         )
-        return zip(*final_output)
+        return zip(*final_output, strict=False)
 
     def _downstream_head(self, decout, img_shape, **kwargs):
         """Helper function to downstream head.
@@ -680,7 +680,7 @@ class ARCroco3DStereo(CroCoNet):
             img_shape: The img shape.
         """
         B, S, D = decout[-1].shape
-        head = getattr(self, "head")
+        head = self.head
         return head(decout, img_shape, **kwargs)
 
     def _init_state(self, image_tokens, image_pos):

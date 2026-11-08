@@ -1,29 +1,26 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # this file is from https://github.com/ucbdrive/dla/blob/master/dla.py.
 
 import math
 import os
 from os.path import join
-import numpy as np
 
-import torch
-from torch import nn
-import torch.nn.functional as F
 import fvcore.nn.weight_init as weight_init
-
-from detectron2.modeling.backbone import FPN
-from detectron2.layers import ShapeSpec, ModulatedDeformConv, Conv2d
-from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
+import numpy as np
+import torch
+import torch.nn.functional as F
+from detectron2.layers import Conv2d, ModulatedDeformConv, ShapeSpec
 from detectron2.layers.batch_norm import get_norm
-from detectron2.modeling.backbone import Backbone
+from detectron2.modeling.backbone import FPN, Backbone
+from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
+from torch import nn
 
 WEB_ROOT = "http://dl.yf.io/dla/models"
 
 
 def get_model_url(data, name, hash):
-    return join("http://dl.yf.io/dla/models", data, "{}-{}.pth".format(name, hash))
+    return join("http://dl.yf.io/dla/models", data, f"{name}-{hash}.pth")
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -206,7 +203,7 @@ class DLA(Backbone):
         self.cfg = cfg
         self.channels = channels
 
-        self._out_features = ["dla{}".format(i) for i in range(6)]
+        self._out_features = [f"dla{i}" for i in range(6)]
         self._out_feature_channels = {k: channels[i] for i, k in enumerate(self._out_features)}
         self._out_feature_strides = {k: 2**i for i, k in enumerate(self._out_features)}
 
@@ -276,9 +273,9 @@ class DLA(Backbone):
         y = {}
         x = self.base_layer(x)
         for i in range(6):
-            name = "level{}".format(i)
+            name = f"level{i}"
             x = getattr(self, name)(x)
-            y["dla{}".format(i)] = x
+            y[f"dla{i}"] = x
         return y
 
 
@@ -364,10 +361,10 @@ class DLAUP(Backbone):
         in_channels = [input_shapes[f].channels for f in in_features]
         in_levels = [int(math.log2(input_shapes[f].stride)) for f in in_features]
         self.in_features = in_features
-        out_features = ["dlaup{}".format(l) for l in in_levels]
+        out_features = [f"dlaup{l}" for l in in_levels]
         self._out_features = out_features
-        self._out_feature_channels = {"dlaup{}".format(l): in_channels[i] for i, l in enumerate(in_levels)}
-        self._out_feature_strides = {"dlaup{}".format(l): 2**l for l in in_levels}
+        self._out_feature_channels = {f"dlaup{l}": in_channels[i] for i, l in enumerate(in_levels)}
+        self._out_feature_strides = {f"dlaup{l}": 2**l for l in in_levels}
 
         print("self._out_features", self._out_features)
         print("self._out_feature_channels", self._out_feature_channels)
@@ -384,7 +381,7 @@ class DLAUP(Backbone):
             j = -i - 2
             setattr(
                 self,
-                "ida_{}".format(i),
+                f"ida_{i}",
                 IDAUp(channels[j], in_channels[j:], scales[j:] // scales[j], norm=norm, node_type=node_type),
             )
             scales[j + 1 :] = scales[j]
@@ -399,11 +396,11 @@ class DLAUP(Backbone):
         layers = [bottom_up_features[f] for f in self.in_features]
         out = [layers[-1]]  # start with 32
         for i in range(len(layers) - 1):
-            ida = getattr(self, "ida_{}".format(i))
+            ida = getattr(self, f"ida_{i}")
             ida(layers, len(layers) - i - 2, len(layers))
             out.insert(0, layers[-1])
         ret = {}
-        for k, v in zip(self._out_features, out):
+        for k, v in zip(self._out_features, out, strict=False):
             ret[k] = v
         # import pdb; pdb.set_trace()
         return ret
@@ -445,7 +442,7 @@ def build_dla_fpn3_backbone(cfg, input_shape: ShapeSpec):
     """
 
     depth_to_creator = {"dla34": dla34}
-    bottom_up = depth_to_creator["dla{}".format(cfg.MODEL.DLA.NUM_LAYERS)](cfg)
+    bottom_up = depth_to_creator[f"dla{cfg.MODEL.DLA.NUM_LAYERS}"](cfg)
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
 
@@ -471,7 +468,7 @@ def build_dla_fpn5_backbone(cfg, input_shape: ShapeSpec):
     """
 
     depth_to_creator = {"dla34": dla34}
-    bottom_up = depth_to_creator["dla{}".format(cfg.MODEL.DLA.NUM_LAYERS)](cfg)
+    bottom_up = depth_to_creator[f"dla{cfg.MODEL.DLA.NUM_LAYERS}"](cfg)
     in_features = cfg.MODEL.FPN.IN_FEATURES
     out_channels = cfg.MODEL.FPN.OUT_CHANNELS
     in_channels_top = bottom_up.output_shape()["dla5"].channels
@@ -498,7 +495,7 @@ def build_dlaup_backbone(cfg, input_shape: ShapeSpec):
     """
 
     depth_to_creator = {"dla34": dla34}
-    bottom_up = depth_to_creator["dla{}".format(cfg.MODEL.DLA.NUM_LAYERS)](cfg)
+    bottom_up = depth_to_creator[f"dla{cfg.MODEL.DLA.NUM_LAYERS}"](cfg)
 
     backbone = DLAUP(
         bottom_up=bottom_up,

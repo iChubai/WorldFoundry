@@ -2,7 +2,6 @@
 
 import torch.nn as nn
 
-
 __all__ = ["repvit_m1"]
 
 
@@ -26,9 +25,9 @@ def _make_divisible(v, divisor, min_value=None):
     return new_v
 
 
+import torch
 from timm.models.layers import SqueezeExcite
 
-import torch
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d
 
 

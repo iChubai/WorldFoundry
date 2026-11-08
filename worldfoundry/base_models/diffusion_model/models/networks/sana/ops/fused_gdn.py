@@ -33,8 +33,6 @@ Precision knob: env var ``FUSED_GDN_PRECISION`` or ``PRECISION_OVERRIDE``:
   0=IEEE fp32 dots, 1=TF32, 2=bf16 TC + fp32 state [default], 3=bf16 TC + bf16 state.
 """
 
-# ruff: noqa: E501
-
 from __future__ import annotations
 
 import os

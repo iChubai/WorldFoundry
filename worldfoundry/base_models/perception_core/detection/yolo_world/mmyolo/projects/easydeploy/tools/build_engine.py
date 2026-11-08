@@ -17,9 +17,9 @@ warnings.filterwarnings(action="ignore", category=DeprecationWarning)
 class EngineBuilder:
     def __init__(
         self,
-        checkpoint: Union[str, Path],
-        opt_shape: Union[Tuple, List] = (1, 3, 640, 640),
-        device: Optional[Union[str, int, torch.device]] = None,
+        checkpoint: str | Path,
+        opt_shape: tuple | list = (1, 3, 640, 640),
+        device: str | int | torch.device | None = None,
     ) -> None:
         checkpoint = Path(checkpoint) if isinstance(checkpoint, str) else checkpoint
         assert checkpoint.exists() and checkpoint.suffix == ".onnx"
@@ -32,9 +32,7 @@ class EngineBuilder:
         self.opt_shape = np.array(opt_shape, dtype=np.float32)
         self.device = device
 
-    def __build_engine(
-        self, scale: Optional[List[List]] = None, fp16: bool = True, with_profiling: bool = True
-    ) -> None:
+    def __build_engine(self, scale: list[list] | None = None, fp16: bool = True, with_profiling: bool = True) -> None:
         logger = trt.Logger(trt.Logger.WARNING)
         trt.init_libnvinfer_plugins(logger, namespace="")
         builder = trt.Builder(logger)
@@ -44,7 +42,7 @@ class EngineBuilder:
         network = builder.create_network(flag)
         parser = trt.OnnxParser(network, logger)
         if not parser.parse_from_file(str(self.checkpoint)):
-            raise RuntimeError(f"failed to load ONNX file: {str(self.checkpoint)}")
+            raise RuntimeError(f"failed to load ONNX file: {self.checkpoint!s}")
         inputs = [network.get_input(i) for i in range(network.num_inputs)]
         outputs = [network.get_output(i) for i in range(network.num_outputs)]
         profile = None
@@ -54,7 +52,7 @@ class EngineBuilder:
             if scale is None:
                 scale = np.array([[1, 1, 0.5, 0.5], [1, 1, 1, 1], [4, 1, 1.5, 1.5]], dtype=np.float32)
                 scale = (self.opt_shape * scale).astype(np.int32)
-            elif isinstance(scale, List):
+            elif isinstance(scale, list):
                 scale = np.array(scale, dtype=np.int32)
                 assert scale.shape[0] == 3, "Input a wrong scale list"
             else:
@@ -75,9 +73,9 @@ class EngineBuilder:
             config.profiling_verbosity = trt.ProfilingVerbosity.DETAILED
         with builder.build_engine(network, config) as engine:
             self.weight.write_bytes(engine.serialize())
-        logger.log(trt.Logger.WARNING, f"Build tensorrt engine finish.\nSave in {str(self.weight.absolute())}")
+        logger.log(trt.Logger.WARNING, f"Build tensorrt engine finish.\nSave in {self.weight.absolute()!s}")
 
-    def build(self, scale: Optional[List[List]] = None, fp16: bool = True, with_profiling=True):
+    def build(self, scale: list[list] | None = None, fp16: bool = True, with_profiling=True):
         self.__build_engine(scale, fp16, with_profiling)
 
 

@@ -2,15 +2,15 @@
 # This file is adapted from the AllenNLP library at https://github.com/allenai/allennlp
 # Copyright by the AllenNLP authors.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
+import builtins
+import fnmatch
 import json
 import logging
 import os
 import shutil
+import sys
 import tempfile
-import fnmatch
 from functools import wraps
 from hashlib import sha256
 from io import open
@@ -75,13 +75,13 @@ def filename_to_url(filename, cache_dir=None):
 
     cache_path = os.path.join(cache_dir, filename)
     if not os.path.exists(cache_path):
-        raise EnvironmentError("file {} not found".format(cache_path))
+        raise OSError(f"file {cache_path} not found")
 
     meta_path = cache_path + ".json"
     if not os.path.exists(meta_path):
-        raise EnvironmentError("file {} not found".format(meta_path))
+        raise OSError(f"file {meta_path} not found")
 
-    with open(meta_path, encoding="utf-8") as meta_file:
+    with builtins.open(meta_path, encoding="utf-8") as meta_file:
         metadata = json.load(meta_file)
     url = metadata["url"]
     etag = metadata["etag"]
@@ -113,17 +113,17 @@ def cached_path(url_or_filename, cache_dir=None):
         return url_or_filename
     elif parsed.scheme == "":
         # File, but it doesn't exist.
-        raise EnvironmentError("file {} not found".format(url_or_filename))
+        raise OSError(f"file {url_or_filename} not found")
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
 
 
 def split_s3_path(url):
     """Split a full s3 path into the bucket name and path."""
     parsed = urlparse(url)
     if not parsed.netloc or not parsed.path:
-        raise ValueError("bad s3 path {}".format(url))
+        raise ValueError(f"bad s3 path {url}")
     bucket_name = parsed.netloc
     s3_path = parsed.path
     # Remove '/' at beginning of path.
@@ -144,7 +144,7 @@ def s3_request(func):
             return func(url, *args, **kwargs)
         except ClientError as exc:
             if int(exc.response["Error"]["Code"]) == 404:
-                raise EnvironmentError("file {} not found".format(url))
+                raise OSError(f"file {url} not found")
             else:
                 raise
 
@@ -205,7 +205,7 @@ def get_from_cache(url, cache_dir=None):
                 etag = None
             else:
                 etag = response.headers.get("ETag")
-        except EnvironmentError:
+        except OSError:
             etag = None
 
     if sys.version_info[0] == 2 and etag is not None:
@@ -241,13 +241,13 @@ def get_from_cache(url, cache_dir=None):
             temp_file.seek(0)
 
             logger.info("copying %s to cache at %s", temp_file.name, cache_path)
-            with open(cache_path, "wb") as cache_file:
+            with builtins.open(cache_path, "wb") as cache_file:
                 shutil.copyfileobj(temp_file, cache_file)
 
             logger.info("creating metadata file for %s", cache_path)
             meta = {"url": url, "etag": etag}
             meta_path = cache_path + ".json"
-            with open(meta_path, "w") as meta_file:
+            with builtins.open(meta_path, "w") as meta_file:
                 output_string = json.dumps(meta)
                 meta_file.write(output_string)
 

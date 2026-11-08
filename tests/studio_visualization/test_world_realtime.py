@@ -2577,6 +2577,12 @@ def test_interactive_call_kwargs_add_realtime_axes_only_when_declared() -> None:
     assert with_axes["realtime_segments"] == without_axes["realtime_segments"]
 
 
+def test_interactive_call_kwargs_do_not_replay_previous_chunk_axes() -> None:
+    base = {"realtime_axes": {"yaw": [0.5] * 4}, "num_inference_steps": 4}
+    step = realtime_backend._interactive_call_kwargs(base, [], seed=4)
+    assert step == {"num_inference_steps": 4, "seed": 4}
+
+
 def test_axes_datachannel_feeds_input_without_restarting_the_session(monkeypatch: pytest.MonkeyPatch) -> None:
     peers_created: list[Any] = []
 

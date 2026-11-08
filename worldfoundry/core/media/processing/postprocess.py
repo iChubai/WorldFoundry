@@ -8,7 +8,8 @@ chunk types that a generator, processors, and a sink can exchange
 without copying frames. NumPy and PIL RGB frame lists are accepted so
 Studio can use the same boundary without a tensor stack.
 
-Not this module: NVIDIA RTX VSR lives in
+Not this module: preset names resolve in
+:mod:`worldfoundry.core.media.processing.presets`. NVIDIA RTX VSR lives in
 :mod:`worldfoundry.core.media.processing.rtx` and is imported only
 when a preset selects it. Encode / decode lives in
 :mod:`worldfoundry.core.media.codecs.video` and
@@ -128,6 +129,9 @@ class VideoPostProcessor(ABC):
         """Declare the spec this processor emits; default is identity (no resize)."""
 
         return input_spec
+
+    def probe(self, input_spec: VideoSpec | None) -> None:  # noqa: B027  # optional hook; no-op without a runtime
+        """Fail before serving when the processor cannot run; ``input_spec`` is the expected stream, if known."""
 
     @abstractmethod
     def start(self, spec: VideoSpec) -> VideoPostProcessorSession:

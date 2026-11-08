@@ -158,6 +158,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/test_video_window.py \
 	tests/core/test_video_postprocess.py \
 	tests/core/test_video_postprocess_rtx.py \
+	tests/core/test_postprocess_presets.py \
 	tests/pipelines/test_native_output_contracts.py \
 	tests/pipelines/test_non_native_output_contracts.py \
 	tests/pipelines/test_non_native_batch_outputs.py \

@@ -23,6 +23,7 @@ Public surface: :class:`RTXVideoSuperResolutionConfig`,
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
 import sys
 from collections.abc import Sequence
@@ -39,6 +40,8 @@ from worldfoundry.core.media.processing.postprocess import (
     VideoSpec,
     VideoTensorLayout,
 )
+
+logger = logging.getLogger(__name__)
 
 RTXVideoSuperResolutionQuality = Literal[
     "BICUBIC",
@@ -196,6 +199,23 @@ class RTXVideoSuperResolutionPostProcessor(VideoPostProcessor):
         """Delegate geometry to the config so the chain can size the sink first."""
 
         return self.config.output_spec(input_spec)
+
+    def probe(self, input_spec: VideoSpec | None) -> None:
+        """Load the native effect and process one frame on the configured device."""
+
+        capability = require_rtx_vfx_runtime(
+            device=self.config.device,
+            config=self.config,
+            input_spec=input_spec,
+            run_inference=True,
+        )
+        logger.info(
+            "RTX postprocess probe passed quality=%s device=cuda:%d gpu=%s nvidia_vfx=%s",
+            self.config.quality,
+            self.config.device,
+            capability.gpu_name or "unknown",
+            capability.package_version or "unknown",
+        )
 
     def start(self, spec: VideoSpec) -> VideoPostProcessorSession:
         """Open a session; the native effect is created later in ``prepare``."""

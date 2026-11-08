@@ -530,7 +530,6 @@ class TimestepEmbedder(nn.Module):
 
     @property
     def dtype(self):
-        # 返回模型参数的数据类型
         return next(self.parameters()).dtype
 
 
@@ -565,7 +564,6 @@ class SizeEmbedder(TimestepEmbedder):
 
     @property
     def dtype(self):
-        # 返回模型参数的数据类型
         return next(self.parameters()).dtype
 
 

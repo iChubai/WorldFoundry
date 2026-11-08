@@ -23,7 +23,7 @@ from contextlib import contextmanager
 
 
 def compress_video(input_file, output_file, out_size):
-    """使用 ffmpeg 压缩视频文件。"""
+    """Compress a video file with ffmpeg."""
     command = [
         "ffmpeg",
         "-i",
@@ -45,15 +45,13 @@ def compress_video(input_file, output_file, out_size):
 
 @contextmanager
 def set_run_dtype(x, dtype=None):
-    # 保存原始环境变量的值（如果存在）
+    # Record the input dtype and the run dtype for the duration of the context.
     npu_config.original_run_dtype = x.dtype
-    # 设置环境变量为指定的值
     npu_config.current_run_dtype = dtype
     try:
         # Yield control back to the body of the `with` statement
         yield
     finally:
-        # 恢复原始的环境变量值
         npu_config.current_run_dtype = None
         npu_config.original_run_dtype = None
 
@@ -141,14 +139,11 @@ class NPUConfig:
 
     def bind_thread_to_cpu(self):
         total_cores = self.get_total_cores()
-        # 每个卡的核心数量
+        # CPU cores per device, assuming 8 devices per node
         cores_per_rank = total_cores // 8
-        # 计算本地rank
         local_rank = self.rank % 8
-        # 计算当前 rank 的 CPU 核范围
         start_core = local_rank * cores_per_rank
         end_core = start_core + cores_per_rank - 1
-        # 构建 CPU 核范围字符串
         cpu_cores_range = f"{start_core}-{end_core}"
         pid = os.getpid()
         command = f"taskset -cp {cpu_cores_range} {pid}"
@@ -217,14 +212,14 @@ class NPUConfig:
         if os.path.exists(file_name) and self.load_pickle:
             with open(file_name, "rb") as file:
                 # self.mm[file_name] = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
-                # # 使用 mmap 进行数据读取
+                # # Read the data through mmap
                 # loaded_data = pickle.loads(self.mm[file_name][:])
                 loaded_data = pickle.load(file)
                 return loaded_data
         else:
             data = function()
             if not self.use_small_dataset and self.rank % self.N_NPU_PER_NODE == 0:
-                # 只需要rank0保存文件
+                # Only the first rank of each node writes the file.
                 os.makedirs(self.pickle_save_path, exist_ok=True)
                 with open(file_name, "wb") as file:
                     pickle.dump(data, file, pickle.HIGHEST_PROTOCOL)
@@ -241,11 +236,10 @@ class NPUConfig:
         return torch_npu.npu_format_cast(x, 2)
 
     def calc_grad_norm(self, model):
-        # 计算并打印梯度范数
+        # Gradient norm computation is disabled; this returns 0.
         # model_engine = accelerator.deepspeed_engine_wrapped.engine
         # gradients = model_engine.get_gradients()
         # grad_norm = get_grad_norm(gradients)
-        # 计算并打印梯度范数
         grad_norm = 0
         # for name, param in model.named_parameters():
         #     grad_data = deepspeed.utils.safe_get_full_grad(param)

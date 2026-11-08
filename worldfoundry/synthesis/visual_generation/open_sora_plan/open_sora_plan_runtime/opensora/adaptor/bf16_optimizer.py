@@ -60,7 +60,7 @@ class BF16_Optimizer(ZeROOptimizer):
     ):
         # super().__init__()
         # base_class = ZeROOptimizer.__bases__[0]
-        # # 直接调用基类的 __init__ 方法
+        # # Call the base class __init__ directly
         # base_class.__init__()
         see_memory_usage("begin bf16_optimizer", force=True)
         self.timers = timers

@@ -907,7 +907,7 @@ class Octree:
             bbox = (center, half_size)
         self.center, self.half_size = bbox
 
-        self.children = []  # 存储子节点
+        self.children = []  # Child nodes
         self.max_points = max_points
 
         if len(self.indices) > self.max_points:

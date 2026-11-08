@@ -1948,7 +1948,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         self.timers(OPTIMIZER_ALLGATHER_TIMER).start()
 
         # if dist.get_rank(group=self.dp_process_group) == 0:
-        #     pdb.set_trace()  # 或者使用其他调试工具
+        #     pdb.set_trace()  # or another debugger
 
         # Gather the updated weights from everyone.
         # Then all partitions of the model parameters are updated and ready for next round forward.

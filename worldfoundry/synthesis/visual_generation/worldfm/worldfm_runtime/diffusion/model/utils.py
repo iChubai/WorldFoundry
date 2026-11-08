@@ -258,13 +258,12 @@ def get_mask(batch, length, mask_ratio, device, mask_type=None, data_info=None, 
         else:
             N = data_info["N"][0]
             img = data_info["ori_img"]
-            # 获取原图的尺寸信息
             _, C, H, W = img.shape
             if mask_type == "fft":
-                # 对图片进行reshape，将其变为patch (3, H/N, N, W/N, N)
+                # Split the image into N x N patches: (batch, C, H/N, N, W/N, N)
                 reshaped_image = img.reshape((batch, -1, H // N, N, W // N, N))
                 fft_image = torch.fft.fftn(reshaped_image, dim=(3, 5))
-                # 取绝对值并求和获取频率强度
+                # Frequency strength per patch: sum of FFT magnitudes
                 strength = torch.sum(torch.abs(fft_image), dim=(1, 3, 5)).reshape(
                     (
                         batch,
@@ -276,7 +275,7 @@ def get_mask(batch, length, mask_ratio, device, mask_type=None, data_info=None, 
                     1, 1, 3, 3
                 )
                 laplacian_kernel = laplacian_kernel.repeat(C, 1, 1, 1)
-                # 对图片进行reshape，将其变为patch (3, H/N, N, W/N, N)
+                # Split the image into N x N patches: (-1, C, N, N)
                 reshaped_image = img.reshape(-1, C, H // N, N, W // N, N).permute(0, 2, 4, 1, 3, 5).reshape(-1, C, N, N)
                 laplacian_response = F.conv2d(reshaped_image, laplacian_kernel, padding=1, groups=C)
                 strength = laplacian_response.sum(dim=[1, 2, 3]).reshape(
@@ -286,7 +285,7 @@ def get_mask(batch, length, mask_ratio, device, mask_type=None, data_info=None, 
                     )
                 )
 
-        # 对频率强度进行归一化，然后使用torch.multinomial进行采样
+        # Sample the token order with probabilities proportional to the normalized strength.
         probabilities = strength / (strength.max(dim=1)[0][:, None] + 1e-5)
         ids_shuffle = torch.multinomial(probabilities.clip(1e-5, 1), length, replacement=False)
         ids_keep = ids_shuffle[:, :len_keep]

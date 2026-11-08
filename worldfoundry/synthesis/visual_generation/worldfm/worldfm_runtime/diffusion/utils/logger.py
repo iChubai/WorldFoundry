@@ -86,16 +86,14 @@ def get_logger(name, log_file=None, log_level=logging.INFO):
 
 
 def rename_file_with_creation_time(file_path):
-    # 获取文件的创建时间
+    # Append the file's creation time to its name.
     creation_time = os.path.getctime(file_path)
     creation_time_str = datetime.fromtimestamp(creation_time).strftime("%Y-%m-%d_%H-%M-%S")
 
-    # 构建新的文件名
     dir_name, file_name = os.path.split(file_path)
     name, ext = os.path.splitext(file_name)
     new_file_name = f"{name}_{creation_time_str}{ext}"
     new_file_path = os.path.join(dir_name, new_file_name)
 
-    # 重命名文件
     os.rename(file_path, new_file_path)
     print(f"File renamed to: {new_file_path}")

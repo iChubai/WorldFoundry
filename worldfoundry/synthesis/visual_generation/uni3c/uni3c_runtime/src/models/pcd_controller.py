@@ -20,11 +20,11 @@ class MaskCamEmbed(nn.Module):
     def __init__(self, controlnet_cfg) -> None:
         super().__init__()
 
-        # padding bug fixed
+        # F.pad order: left, right, top, bottom, front, back (time).
         if controlnet_cfg.get("interp", False):
-            self.mask_padding = [0, 0, 0, 0, 3, 3]  # 左右上下前后, I2V-interp，首尾帧
+            self.mask_padding = [0, 0, 0, 0, 3, 3]  # I2V interpolation: first and last frames
         else:
-            self.mask_padding = [0, 0, 0, 0, 3, 0]  # 左右上下前后, I2V
+            self.mask_padding = [0, 0, 0, 0, 3, 0]  # I2V
         add_channels = controlnet_cfg.get("add_channels", 1)
         mid_channels = controlnet_cfg.get("mid_channels", 64)
         self.mask_proj = nn.Sequential(

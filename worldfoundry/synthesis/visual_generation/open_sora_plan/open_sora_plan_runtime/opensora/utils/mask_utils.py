@@ -38,7 +38,7 @@ def save_mask_to_video(mask, save_path="mask.mp4", fps=24):
     writer = imageio.get_writer(save_path, fps=fps, codec="libx264", quality=6)
     for t in range(T):
         frame = mask[t, 0].cpu().numpy() * 255
-        frame = frame.astype(np.uint8)  # 确保数据类型是 uint8
+        frame = frame.astype(np.uint8)
         writer.append_data(frame)
     writer.close()
 

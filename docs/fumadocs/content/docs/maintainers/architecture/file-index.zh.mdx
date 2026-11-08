@@ -20,16 +20,16 @@ description: WorldFoundry 各包的“源码目录 → 职责”速查表，含�
           </div>
         </div>
         <p>面向用户的命令：TUI、evaluate、embodied、run、validate、zoo、preflight、reporting。调度到编排层，不承载模型推理或打分。</p>
-        <p className="pi-kv-read"><span>首读</span> <code>cli/main.py:1888</code> <code>main()</code>；子命令树在 <code>cli/main.py:1088</code></p>
+        <p className="pi-kv-read"><span>首读</span> <code>cli/main.py:304</code> <code>main()</code>；子命令树在 <code>cli/main.py:183</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
           <div className="pi-kv-names">
-            <code>worldfoundry/cli/tui*.py</code>
+            <code>worldfoundry/cli/tui</code>
           </div>
         </div>
-        <p>引导式发现 TUI（discovery、brand、app）。</p>
-        <p className="pi-kv-read"><span>首读</span> <code>cli/tui.py</code>、<code>cli/tui_app.py</code></p>
+        <p>引导式发现 TUI 包（launcher、Textual app、表单控件、brand）。与 MCP 共用的 catalog 行、推理变体与命令构建在 <code>cli/catalog.py</code>、<code>cli/inference_variants.py</code>、<code>cli/command_builders.py</code>。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>cli/tui/launcher.py</code>、<code>cli/tui/app.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">

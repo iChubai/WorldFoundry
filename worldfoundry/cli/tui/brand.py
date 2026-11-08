@@ -34,7 +34,7 @@ _BLOCK_MASKS = tuple(
 def logo_asset_path() -> Path:
     """Locate the packaged official logo."""
     try:
-        asset = resources.files("worldfoundry.cli.assets").joinpath("openenvision_logo.png")
+        asset = resources.files("worldfoundry.cli.tui.assets").joinpath("openenvision_logo.png")
         with resources.as_file(asset) as path:
             return Path(path)
     except (ModuleNotFoundError, FileNotFoundError, TypeError):

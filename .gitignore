@@ -377,7 +377,7 @@ worldfoundry/data/models/runtime/configs/*/assets/
 worldfoundry/data/models/runtime/configs/*/data/
 worldfoundry/data/models/validation/
 worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime/sky_img/
-worldfoundry/cli/assets/*.png
+worldfoundry/cli/tui/assets/*.png
 worldfoundry/studio/assets/*.png
 worldfoundry/studio/assets/vendor/
 
@@ -422,7 +422,7 @@ worldfoundry/studio/assets/vendor/
 *.key
 *.p12
 *.pfx
-!worldfoundry/cli/assets/openenvision_logo.png
+!worldfoundry/cli/tui/assets/openenvision_logo.png
 !worldfoundry/data/benchmarks/assets/**/*.npz
 !docs/fumadocs/public/wechat_qr*.png
 /worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/

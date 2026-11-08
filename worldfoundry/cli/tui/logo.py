@@ -13,7 +13,7 @@ from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Static
 
-from .tui_brand import brand_logo_aspect_ratio, brand_logo_image, render_brand_logo
+from .brand import brand_logo_aspect_ratio, brand_logo_image, render_brand_logo
 
 try:
     from textual_image._terminal import get_cell_size

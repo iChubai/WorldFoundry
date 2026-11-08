@@ -46,29 +46,27 @@ from textual.widgets import (
 
 from worldfoundry.core.io.paths import checkpoint_root_path, conda_envs_root_path
 
-from .tui_brand import brand_logo_aspect_ratio
-from .tui_discovery import (
-    ASTRA_CAM_TYPE_OPTIONS,
-    INFER_VARIANT_TO_MODEL,
-    TUI_ACTIONS,
-    BenchmarkCatalogRow,
-    InferControlSpec,
-    ModelCatalogRow,
+from ..catalog import BenchmarkCatalogRow, ModelCatalogRow, is_infer_model_row, load_catalog
+from ..command_builders import (
     build_model_benchmark_command,
     build_model_infer_command,
     build_studio_command,
     format_shell_command,
-    infer_control_fields,
-    infer_control_specs,
+)
+from ..inference_variants import (
+    INFER_VARIANT_TO_MODEL,
     infer_model_variant_ids,
     infer_variant_label,
     infer_variant_options,
-    is_infer_model_row,
-    load_tui_catalog,
     resolve_infer_model_variant,
 )
-from .tui_icons import icons
-from .tui_logo import BrandLogo, logo_cell_aspect_ratio
+from .brand import brand_logo_aspect_ratio
+from .controls import ASTRA_CAM_TYPE_OPTIONS, InferControlSpec, infer_control_fields, infer_control_specs
+from .icons import icons
+from .logo import BrandLogo, logo_cell_aspect_ratio
+
+TUI_ACTIONS = ("infer", "eval", "ui")
+"""Available TUI action modes."""
 
 # ── Module constants ──────────────────────────────────────────────
 
@@ -182,7 +180,7 @@ class WorldFoundryTui(App[None]):
         ckpt_type: Active checkpoint variant / function selector value.
     """
 
-    CSS_PATH = str(Path(__file__).with_name("tui_app.tcss"))
+    CSS_PATH = str(Path(__file__).with_name("app.tcss"))
     TITLE = "WorldFoundry"
     SUB_TITLE = "Inference · Evaluation · Studio"
     ENABLE_COMMAND_PALETTE = True
@@ -284,7 +282,7 @@ class WorldFoundryTui(App[None]):
             conda_envs_root or os.environ.get("WORLDFOUNDRY_CONDA_ENVS_ROOT") or DEFAULT_CONDA_ENVS_ROOT
         )
         # ── Load catalog ──
-        self.catalog = load_tui_catalog(
+        self.catalog = load_catalog(
             model_manifest_dir=self.model_manifest_dir,
             benchmark_manifest_dir=self.benchmark_manifest_dir,
             runtime_profile_dir=self.runtime_profile_dir,
@@ -1123,7 +1121,7 @@ class WorldFoundryTui(App[None]):
         self.notify("Refreshing catalogs…", timeout=2)
         try:
             catalog = await asyncio.to_thread(
-                load_tui_catalog,
+                load_catalog,
                 model_manifest_dir=self.model_manifest_dir,
                 benchmark_manifest_dir=self.benchmark_manifest_dir,
                 runtime_profile_dir=self.runtime_profile_dir,

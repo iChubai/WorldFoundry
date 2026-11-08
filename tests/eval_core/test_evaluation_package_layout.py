@@ -53,8 +53,8 @@ def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
     for core_nn_module in ("inventory.py", "normalization.py", "patching.py", "transformer.py"):
         assert (core_nn_root / core_nn_module).is_file()
     assert not any(path.name == "qa" for path in (REPO_ROOT / "scripts").iterdir() if path.is_dir())
-    assert (REPO_ROOT / "worldfoundry/cli/tui.py").is_file()
-    assert (REPO_ROOT / "worldfoundry/cli/tui_discovery.py").is_file()
+    assert (REPO_ROOT / "worldfoundry/cli/tui/launcher.py").is_file()
+    assert (REPO_ROOT / "worldfoundry/cli/catalog.py").is_file()
     assert (tasks_root / "catalog" / "__init__.py").is_file()
     assert not (tasks_root / "catalog" / "benchmark_discovery.py").exists()
     assert not (tasks_root / "catalog" / "discovery.py").exists()

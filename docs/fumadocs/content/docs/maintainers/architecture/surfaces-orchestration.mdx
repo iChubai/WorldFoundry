@@ -11,9 +11,9 @@ Read [Workflow](/docs/maintainers/architecture/workflow) first for where these p
 
 ## CLI and TUI
 
-The console entry is `worldfoundry/cli/main.py:1888` `main()`. It builds a subcommand tree starting at `cli/main.py:1088`:
+The console entry is `worldfoundry/cli/main.py:304` `main()`. It builds a subcommand tree starting at `cli/main.py:183`:
 
-- **`tui`** — launches the guided-discovery TUI. The TUI lives in `cli/tui.py` (`main` at `:131`) with its app, discovery, brand, and icon helpers in the `cli/tui_*.py` files. It drives the same catalog and orchestration calls as the CLI; it is presentation, not a second runtime.
+- **`tui`** — launches the guided-discovery TUI. The TUI lives in the `cli/tui/` package (`launcher.py` `main` at `:147`, plus the Textual `app.py`, form `controls.py`, and brand/logo/icon helpers); the catalog rows, inference variants, and command builders it shares with MCP are `cli/catalog.py`, `cli/inference_variants.py`, and `cli/command_builders.py`. It drives the same catalog and orchestration calls as the CLI; it is presentation, not a second runtime.
 - **`evaluate`** — normalizes inputs, picks a run mode, returns one `EvaluateRunResult`.
 - **`run`** — model run: resolves a model runner, generates, then scores.
 - **`validate`** — validates benchmark metadata loading without running a model.

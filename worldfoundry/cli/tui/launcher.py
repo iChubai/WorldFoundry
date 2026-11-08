@@ -1,6 +1,6 @@
 """CLI entry-point and argument parser for the WorldFoundry TUI.
 
-Provides the ``worldfoundry-tui`` command-line interface that can launch the
+Provides the ``wf tui`` command-line interface that can launch the
 full Textual TUI app, a standard-library fallback dashboard, or perform
 one-off actions like printing a command or writing a suite plan.
 """
@@ -13,27 +13,24 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from .help import WorldFoundryArgumentParser
-from .tui_brand import render_fallback_header
-from .tui_discovery import (
-    INFER_VARIANT_GROUPS,
-    INFER_VARIANT_TO_MODEL,
+from ..catalog import is_infer_model_row, load_catalog
+from ..command_builders import (
     build_model_benchmark_command,
     build_model_infer_command,
     build_studio_command,
     build_suite_command,
     format_shell_command,
-    infer_control_fields,
-    infer_variant_options,
-    is_infer_model_row,
-    load_tui_catalog,
 )
+from ..help import WorldFoundryArgumentParser
+from ..inference_variants import INFER_VARIANT_GROUPS, INFER_VARIANT_TO_MODEL, infer_variant_options
+from .brand import render_fallback_header
+from .controls import infer_control_fields
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the ``worldfoundry-tui`` argument parser with inference, evaluation, and Studio flags."""
+    """Build the ``wf tui`` argument parser with inference, evaluation, and Studio flags."""
     parser = WorldFoundryArgumentParser(
-        prog="worldfoundry-tui",
+        prog="wf tui",
         description="Launch real WorldFoundry model inference, benchmark evaluation, and Studio commands.",
     )
     parser.add_argument("--model-manifest-dir", type=Path)
@@ -165,7 +162,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ── Catalog JSON mode ────────────────────────────────────────────
     if args.catalog_json:
-        catalog = load_tui_catalog(
+        catalog = load_catalog(
             model_manifest_dir=args.model_manifest_dir,
             benchmark_manifest_dir=args.benchmark_manifest_dir,
             runtime_profile_dir=args.runtime_profile_dir,
@@ -176,7 +173,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ── Suite-plan mode ──────────────────────────────────────────────
     if args.write_suite_plan:
-        catalog = load_tui_catalog(
+        catalog = load_catalog(
             model_manifest_dir=args.model_manifest_dir,
             benchmark_manifest_dir=args.benchmark_manifest_dir,
             runtime_profile_dir=args.runtime_profile_dir,
@@ -194,7 +191,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ── Print-command mode ──────────────────────────────────────────
     if args.print_command:
-        catalog = load_tui_catalog(
+        catalog = load_catalog(
             model_manifest_dir=args.model_manifest_dir,
             benchmark_manifest_dir=args.benchmark_manifest_dir,
             runtime_profile_dir=args.runtime_profile_dir,
@@ -215,7 +212,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ── Fallback dashboard mode ──────────────────────────────────────
     if args.fallback:
-        catalog = load_tui_catalog(
+        catalog = load_catalog(
             model_manifest_dir=args.model_manifest_dir,
             benchmark_manifest_dir=args.benchmark_manifest_dir,
             runtime_profile_dir=args.runtime_profile_dir,
@@ -226,10 +223,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ── Full Textual TUI ────────────────────────────────────────────
     try:
-        from .tui_app import WorldFoundryTui
+        from .app import WorldFoundryTui
     except ImportError as exc:
         # NOTE: Textual is optional — gracefully fall back when it is not installed.
-        catalog = load_tui_catalog(
+        catalog = load_catalog(
             model_manifest_dir=args.model_manifest_dir,
             benchmark_manifest_dir=args.benchmark_manifest_dir,
             runtime_profile_dir=args.runtime_profile_dir,
@@ -333,7 +330,7 @@ def _render_fallback_dashboard(catalog, args, *, notice: str | None = None) -> s
     """Build a plain-text dashboard string for the ``--fallback`` mode.
 
     Args:
-        catalog: The loaded :class:`TuiCatalog`.
+        catalog: The loaded :class:`Catalog`.
         args: Parsed CLI namespace.
         notice: Optional message to display (e.g. Textual import error).
 

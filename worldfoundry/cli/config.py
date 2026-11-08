@@ -23,7 +23,7 @@ from .utils import json_dump, parse_key_value_strings
 CONFIG_SCHEMA_VERSION = "worldfoundry-example-config"
 DEFAULT_CONFIG_DIR = REPO_ROOT / "configs"
 _ENV_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-(.*?))?\}|\$([A-Za-z_][A-Za-z0-9_]*)")
-_SUPPORTED_ENTRYPOINTS = {"worldfoundry", "worldfoundry-eval"}
+_SUPPORTED_ENTRYPOINTS = {"wf"}
 
 
 # ── Config loading and expansion ────────────────────────────────

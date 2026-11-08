@@ -175,3 +175,23 @@ def resolve_cli_benchmark_for_materialize(task_type: str, benchmark_name: str) -
         f"Use `{prog} run --benchmark <id> --model <id>` or "
         f"`{prog} task materialize` with a filesystem task YAML."
     )
+
+
+def add_generation_cache_args(parser: argparse.ArgumentParser, *, namespace: str) -> None:
+    """Add generation-cache ``--generation-cache-*`` arguments to a parser."""
+    parser.add_argument(
+        "--generation-cache-dir",
+        type=Path,
+        help="Optional SQLite generation-result cache directory for deterministic model outputs.",
+    )
+    parser.add_argument(
+        "--generation-cache-mode",
+        choices=["off", "read", "write", "read-write", "refresh"],
+        default="off",
+        help="Generation cache mode. read-write reuses hits and stores new successful outputs.",
+    )
+    parser.add_argument(
+        "--generation-cache-namespace",
+        default=namespace,
+        help="Namespace inside the generation-result cache database.",
+    )

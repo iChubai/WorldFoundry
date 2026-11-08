@@ -7,6 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 cli_main = importlib.import_module("worldfoundry.cli.main")
+cli_embodied = importlib.import_module("worldfoundry.cli.embodied")
 
 
 def _load_docker_runner():
@@ -33,9 +34,9 @@ def test_embodied_accept_license_flags_merge_with_existing_environment(monkeypat
     )
     monkeypatch.setenv("WORLDFOUNDRY_ACCEPTED_LICENSES", "existing-license")
 
-    cli_main._accept_embodied_licenses(args.accept_license)
+    cli_embodied._accept_embodied_licenses(args.accept_license)
 
-    assert args.func is cli_main._handle_embodied_run
+    assert args.func is cli_embodied._handle_embodied_run
     assert os.environ["WORLDFOUNDRY_ACCEPTED_LICENSES"] == ("existing-license,behavior-dataset-tos")
 
 

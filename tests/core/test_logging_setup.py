@@ -355,17 +355,17 @@ def test_print_to_file_keeps_stdout_and_stderr_separate(tmp_path):
 def test_cli_output_run_gets_isolated_lifecycle_log(isolated_logging, tmp_path, monkeypatch):
     """Output-owning CLI commands receive one generated run ID and JSONL file."""
     pytest.importorskip("yaml")
-    from worldfoundry.cli.main import _prepare_cli_run_observability, _write_cli_run_lifecycle
+    from worldfoundry.cli.observability import prepare_cli_run_observability, write_cli_run_lifecycle
 
     monkeypatch.delenv(_LOG_FILE_ENV, raising=False)
     args = Namespace(command="run", output_dir=tmp_path, run_id=None, benchmark_id="vbench", model_id="demo-model")
-    state = _prepare_cli_run_observability(args, explicit_log_file=None)
+    state = prepare_cli_run_observability(args, explicit_log_file=None)
     assert state is not None
     event_path, run_id, _ = state
     assert args.run_id == run_id
     assert event_path == tmp_path / "logs" / run_id / "events.jsonl"
 
-    _write_cli_run_lifecycle(
+    write_cli_run_lifecycle(
         state,
         event="run.finished",
         level="INFO",
@@ -378,14 +378,14 @@ def test_cli_output_run_gets_isolated_lifecycle_log(isolated_logging, tmp_path, 
 
 
 def test_cli_logging_flag_pre_scan():
-    """``_extract_logging_flags`` strips the global flags wherever they appear
+    """``extract_logging_flags`` strips the global flags wherever they appear
     and returns them. Requires the CLI import chain (``yaml``)."""
     pytest.importorskip("yaml")
-    from worldfoundry.cli.main import _extract_logging_flags
+    from worldfoundry.cli.observability import extract_logging_flags
 
     # The pre-scan grew a ``verbose`` slot (``-v``/``--verbose``) and now
     # returns a 5-tuple: (level, log_file, log_json, verbose, rest).
-    level, log_file, log_json, verbose, rest = _extract_logging_flags(
+    level, log_file, log_json, verbose, rest = extract_logging_flags(
         ["--log-level", "DEBUG", "run", "--log-file=/tmp/x.log", "--log-json"]
     )
     assert level == "DEBUG"
@@ -394,9 +394,7 @@ def test_cli_logging_flag_pre_scan():
     assert verbose is False
     assert rest == ["run"]
 
-    level, log_file, log_json, verbose, rest = _extract_logging_flags(
-        ["-v", "zoo", "benchmark-run", "--verbose"]
-    )
+    level, log_file, log_json, verbose, rest = extract_logging_flags(["-v", "zoo", "benchmark-run", "--verbose"])
     assert level is None and log_file is None and log_json is None
     assert verbose is True
     assert rest == ["zoo", "benchmark-run"]

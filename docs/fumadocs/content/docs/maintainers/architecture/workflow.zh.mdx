@@ -9,7 +9,7 @@ description: 从 CLI 输入到 artifacts、metrics、scorecard 和 report 的端
 
 ## 入口
 
-控制台入口是 `worldfoundry/cli/main.py:1888` `main()`。多数 evaluate 与仅模型运行接着进入 `evaluation/tasks/execution/orchestration/evaluate.py` 的 `run_evaluate()`（`:1071`）。**model-plus-benchmark 不走这个 facade**：编排调用 `execute_prepared_evaluation()` → `model_benchmark.py` 里的 `run_model_benchmark()`。CLI 会分发到以下四种形态之一：
+控制台入口是 `worldfoundry/cli/main.py:304` `main()`。多数 evaluate 与仅模型运行接着进入 `evaluation/tasks/execution/orchestration/evaluate.py` 的 `run_evaluate()`（`:1071`）。**model-plus-benchmark 不走这个 facade**：编排调用 `execute_prepared_evaluation()` → `model_benchmark.py` 里的 `run_model_benchmark()`。CLI 会分发到以下四种形态之一：
 
 - **evaluate** — 归一化输入、选择 run mode，返回一个 `EvaluateRunResult`。
 - **existing outputs** — 通过 `existing_results.py` 评分磁盘上已有 artifact，不加载模型。

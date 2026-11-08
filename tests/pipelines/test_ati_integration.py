@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from worldfoundry.cli.main import _handle_direct_model_run
 from worldfoundry.cli.model_run import _field_kind
+from worldfoundry.cli.run import _handle_direct_model_run
 from worldfoundry.pipelines.ati.pipeline_ati import ATIPipeline
 
 

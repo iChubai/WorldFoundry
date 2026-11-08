@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from worldfoundry.cli import main
-from worldfoundry.cli.tui_discovery import build_model_benchmark_command
+from worldfoundry.cli.command_builders import build_model_benchmark_command
 from worldfoundry.evaluation.api import ArtifactRef, GenerationResult
 from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_generation import (
     BENCHMARK_GENERATION_ADAPTERS,

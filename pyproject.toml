@@ -697,8 +697,8 @@ include-package-data = true
 ]
 "worldfoundry.base_models.three_dimensions.depth.vigeo" = ["PROVENANCE.md"]
 "*" = ["*.npy", "*.npz"]
-"worldfoundry.cli" = [
-    "tui_app.tcss",
+"worldfoundry.cli.tui" = [
+    "app.tcss",
     "assets/*.png",
 ]
 "worldfoundry.data" = [

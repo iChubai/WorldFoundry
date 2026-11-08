@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Any
 
-from worldfoundry.cli.tui_discovery import load_tui_catalog
+from worldfoundry.cli.catalog import load_catalog
 
 from .context import MCPToolContext, get_default_context
 from .query import matches_query
@@ -34,7 +34,7 @@ def _load_catalog(ctx: MCPToolContext) -> Any:
         cached = _catalog_cache.get(key)
         if cached is not None and now - cached[0] < _CATALOG_CACHE_TTL_S:
             return cached[1]
-    catalog = load_tui_catalog(
+    catalog = load_catalog(
         model_manifest_dir=ctx.model_manifest_dir,
         benchmark_manifest_dir=ctx.benchmark_manifest_dir,
     )

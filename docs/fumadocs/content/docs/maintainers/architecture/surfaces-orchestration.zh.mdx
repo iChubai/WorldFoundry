@@ -11,9 +11,9 @@ request 产生之后落到哪里，先读 [工作流](/zh/docs/maintainers/archi
 
 ## CLI 与 TUI
 
-控制台入口是 `worldfoundry/cli/main.py:1888` `main()`。它在 `cli/main.py:1088` 起构建子命令树：
+控制台入口是 `worldfoundry/cli/main.py:304` `main()`。它在 `cli/main.py:183` 起构建子命令树：
 
-- **`tui`** —— 启动引导式发现 TUI。TUI 在 `cli/tui.py`（`main` 在 `:131`），app、discovery、brand、icon 助手在 `cli/tui_*.py`。它驱动与 CLI 相同的 catalog 与编排调用，只是展示，不是第二套 runtime。
+- **`tui`** —— 启动引导式发现 TUI。TUI 在 `cli/tui/` 包里（`launcher.py` 的 `main` 在 `:147`，另有 Textual `app.py`、表单 `controls.py` 与 brand/logo/icon 助手）；它与 MCP 共用的 catalog 行、推理变体与命令构建分别在 `cli/catalog.py`、`cli/inference_variants.py`、`cli/command_builders.py`。它驱动与 CLI 相同的 catalog 与编排调用，只是展示，不是第二套 runtime。
 - **`evaluate`** —— 归一化输入、选择 run mode、返回一个 `EvaluateRunResult`。
 - **`run`** —— 模型运行：解析 runner、生成、再打分。
 - **`validate`** —— 不跑模型即校验 benchmark metadata 加载。

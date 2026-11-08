@@ -20,16 +20,16 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>User-facing commands: TUI, evaluate, embodied, run, validate, zoo, preflight, reporting. Dispatches into orchestration, never owns model inference or scoring.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>cli/main.py:1888</code> <code>main()</code>; subcommand tree at <code>cli/main.py:1088</code></p>
+        <p className="pi-kv-read"><span>First file</span> <code>cli/main.py:304</code> <code>main()</code>; subcommand tree at <code>cli/main.py:183</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
           <div className="pi-kv-names">
-            <code>worldfoundry/cli/tui*.py</code>
+            <code>worldfoundry/cli/tui</code>
           </div>
         </div>
-        <p>Guided-discovery TUI surfaces (discovery, brand, app).</p>
-        <p className="pi-kv-read"><span>First file</span> <code>cli/tui.py</code>, <code>cli/tui_app.py</code></p>
+        <p>Guided-discovery TUI package (launcher, Textual app, form controls, brand). Catalog rows, inference variants, and command builders shared with MCP live in <code>cli/catalog.py</code>, <code>cli/inference_variants.py</code>, and <code>cli/command_builders.py</code>.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>cli/tui/launcher.py</code>, <code>cli/tui/app.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">

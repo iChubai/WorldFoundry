@@ -11,7 +11,8 @@ assembled latents once. Realtime callers use ``open_stream`` directly and
 decode each committed block themselves.
 
 Inputs: WindowedDenoiser plus canonical RunnerComponents, prediction_mode
-(flow / distilled-x0), fixed_timesteps, and context_timestep.
+(flow / distilled-x0), fixed_timesteps, optional first_block_timesteps, and
+context_timestep.
 Output: DiffusionOutput, or one BCTHW latent block per ``AutoregressiveStream.step``;
 metadata includes block_size / n_views / prediction_mode.
 Must not: let a model package own KV-cache windows or bypass
@@ -72,8 +73,11 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
     """Own block traversal, CFG, solver updates, and KV-cache lifetime.
 
     ``prediction_mode`` may be only ``flow`` or ``distilled-x0``; the latter requires fixed_timesteps.
-    Construction: non-WindowedDenoiser → :exc:`TypeError`; illegal mode or missing
-    fixed_timesteps → :exc:`ValueError`.
+    ``first_block_timesteps`` (distilled-x0 only) replaces fixed_timesteps for the first
+    noisy block of a rollout; later blocks keep fixed_timesteps, whose length the request's
+    ``num_inference_steps`` must match.
+    Construction: non-WindowedDenoiser → :exc:`TypeError`; illegal mode, missing
+    fixed_timesteps, or first_block_timesteps outside distilled-x0 → :exc:`ValueError`.
     """
 
     def __init__(
@@ -81,6 +85,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         *,
         prediction_mode: str = "flow",
         fixed_timesteps: Sequence[int] = (),
+        first_block_timesteps: Sequence[int] = (),
         context_timestep: int = 0,
         renoise_dtype: torch.dtype | None = None,
         guidance_mode: str = "standard",
@@ -94,10 +99,13 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         if self.prediction_mode not in {"flow", "distilled-x0"}:
             raise ValueError(f"unsupported window prediction mode: {prediction_mode!r}")
         self.fixed_timesteps = tuple(int(value) for value in fixed_timesteps)
+        self.first_block_timesteps = tuple(int(value) for value in first_block_timesteps)
         self.context_timestep = int(context_timestep)
         self.renoise_dtype = renoise_dtype
         if self.prediction_mode == "distilled-x0" and not self.fixed_timesteps:
             raise ValueError("distilled-x0 execution requires fixed_timesteps")
+        if self.first_block_timesteps and self.prediction_mode != "distilled-x0":
+            raise ValueError("first_block_timesteps requires distilled-x0 execution")
         self._active_stream: AutoregressiveStream | None = None
 
     def _prepare_context(
@@ -326,6 +334,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         block_noise: Tensor,
         *,
         positive: Mapping[str, object],
+        timesteps: Sequence[int],
     ) -> Tensor:
         if context.request.sampling.num_inference_steps != len(self.fixed_timesteps):
             raise ValueError(
@@ -333,8 +342,8 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             )
         noisy = block_noise.clone()
         shift = float(context.request.sampling.scheduler_options.get("shift", 5.0))
-        for index, timestep in enumerate(self.fixed_timesteps):
-            next_timestep = self.fixed_timesteps[index + 1] if index + 1 < len(self.fixed_timesteps) else 0
+        for index, timestep in enumerate(timesteps):
+            next_timestep = timesteps[index + 1] if index + 1 < len(timesteps) else 0
             # Gamma's released few-step configuration names the unwarped
             # training indices [1000, 750, 500, 250].  Its official
             # BaseModel.warp_denoising_step path converts those indices to
@@ -722,6 +731,11 @@ class AutoregressiveStream:
                     context,
                     block_noise,
                     positive=positive,
+                    timesteps=(
+                        runner.first_block_timesteps
+                        if self._completed_blocks == 0 and runner.first_block_timesteps
+                        else runner.fixed_timesteps
+                    ),
                 )
             state.output_by_view[:, :, :, start:end] = rearrange(
                 block, "B C (V T) H W -> B C V T H W", V=n_views

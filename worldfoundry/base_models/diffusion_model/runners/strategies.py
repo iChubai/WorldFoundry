@@ -426,6 +426,7 @@ def build_autoregressive_window_strategy(
         extensions=context.extensions,
         prediction_mode=str(options.get("prediction_mode", "flow")),
         fixed_timesteps=tuple(int(value) for value in options.get("fixed_timesteps", ())),
+        first_block_timesteps=tuple(int(value) for value in options.get("first_block_timesteps", ())),
         context_timestep=int(options.get("context_timestep", 0)),
         renoise_dtype=(parse_torch_dtype(options["renoise_dtype"]) if "renoise_dtype" in options else None),
         guidance_mode=str(options.get("guidance_mode", "standard")),

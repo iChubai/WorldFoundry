@@ -884,8 +884,8 @@ def build_background(
     npz_path: str,
     mask_dir: str,
     device: str = "cuda",
-    target_height: int = None,
-    target_width: int = None,
+    target_height: int | None = None,
+    target_width: int | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """Load background RGB, depth, masks and return 3D point cloud.
 

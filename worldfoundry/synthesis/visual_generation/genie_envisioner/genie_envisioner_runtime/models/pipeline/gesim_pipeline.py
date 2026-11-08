@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 ### This file is modified from https://github.com/huggingface/diffusers/blob/f064b3bf73e479051ed4255d98afad4259a6f012/src/diffusers/pipelines/cosmos/pipeline_cosmos2_video2world.py
-
-
 import inspect
 from collections.abc import Callable
+from typing import ClassVar
 
 import torch
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
@@ -143,9 +141,9 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     """
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
     # We mark safety_checker as optional here to get around some test failures, but it is not really optional
-    _optional_components = ["safety_checker"]
+    _optional_components: ClassVar[list] = ["safety_checker"]
 
     def __init__(
         self,
@@ -189,7 +187,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline._get_t5_prompt_embeds
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
@@ -365,9 +363,9 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     def infer(
         self,
         image: PipelineImageInput = None,
-        video: list[PipelineImageInput] = None,  # input video is (b v) t c h w (t is ahead of c)
-        cond_to_concat: list[PipelineImageInput] = None,  # (b v) c t h w, could have different t than video t
-        prompt: str | list[str] = None,
+        video: list[PipelineImageInput] | None = None,  # input video is (b v) t c h w (t is ahead of c)
+        cond_to_concat: list[PipelineImageInput] | None = None,  # (b v) c t h w, could have different t than video t
+        prompt: str | list[str] | None = None,
         negative_prompt: str | list[str] | None = None,
         height: int = 704,
         width: int = 1280,

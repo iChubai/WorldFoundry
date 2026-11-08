@@ -8,7 +8,7 @@ and world model are video-only here.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 
@@ -27,7 +27,7 @@ class VideoActionBatch:
     # Plain ``torch.Tensor`` fields whose torch methods propagate generically. ``actions`` is an
     # ``ActionTensors`` container handled explicitly in ``to``/``pin_memory``/``clone`` below (it
     # implements the same methods), so device moves and copies still reach it.
-    _TENSOR_ATTRIBUTES = ["video"]
+    _TENSOR_ATTRIBUTES: ClassVar[list] = ["video"]
 
     video: torch.Tensor  # (B, T, C, H, W) uint8
     actions: ActionTensors

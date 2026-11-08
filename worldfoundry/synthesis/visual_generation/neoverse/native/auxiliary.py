@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -219,7 +220,7 @@ class CameraTrajectory:
         use_first_frame: Whether to use the first frame as reference
     """
 
-    VALID_TRAJECTORY_TYPES = {
+    VALID_TRAJECTORY_TYPES: ClassVar[set] = {
         "pan_left",
         "pan_right",
         "tilt_up",

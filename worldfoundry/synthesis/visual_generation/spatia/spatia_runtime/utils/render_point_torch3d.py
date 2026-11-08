@@ -119,7 +119,7 @@ def render_multi_view_pointcloud(
     point_radius: float = 0.01,
     batch_size: int = 64,
     max_retry_attempts: int = 3,
-    max_points_to_render: int = None,
+    max_points_to_render: int | None = None,
     verbose: bool = False,
     downsample_points: bool = False,
     voxel_size: float = 0.01,

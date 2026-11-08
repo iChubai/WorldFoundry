@@ -83,7 +83,7 @@ class BaseDataset(Dataset):
         transform: object,
         traj_names: str,
         normalize: bool = True,
-        predefined_index: list = None,
+        predefined_index: list | None = None,
         goals_per_obs: int = 1,
     ):
         self.data_folder = data_folder
@@ -235,7 +235,7 @@ class RECONVIDDataset(BaseDataset):
         transform: object,
         traj_names: str = "traj_names.txt",
         normalize: bool = True,
-        predefined_index: list = None,
+        predefined_index: list | None = None,
         mode: str = "training",
         video_length: int = 16,
     ):
@@ -317,7 +317,7 @@ class RECONEvalDataset(BaseDataset):
         transform: object,
         traj_names: str,
         normalize: bool = True,
-        predefined_index: list = None,
+        predefined_index: list | None = None,
         mode: str = "training",
         video_length: int = 20,
     ):

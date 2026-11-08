@@ -8,7 +8,7 @@ import re
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.core.io.paths import resolve_data_path, resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
@@ -286,7 +286,7 @@ class Wan21Fun1P3BCameraRuntime(_WanFunCameraRuntime):
     CONFIG = "wan2.1/wan_civitai.yaml"
     BASE_COMPONENT_REPO = "Wan-AI/Wan2.1-T2V-1.3B"
     IMAGE_ENCODER_COMPONENT_REPO = "Wan-AI/Wan2.1-I2V-14B-480P"
-    TRANSFORMER_CONFIG_OVERRIDES = {
+    TRANSFORMER_CONFIG_OVERRIDES: ClassVar[dict] = {
         "model_type": "i2v",
         "in_dim": 32,
         "add_control_adapter": True,

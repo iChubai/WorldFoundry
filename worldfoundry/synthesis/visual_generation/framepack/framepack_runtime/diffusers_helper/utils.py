@@ -3,6 +3,7 @@ import glob
 import json
 import os
 import random
+from typing import ClassVar
 
 import cv2
 import einops
@@ -668,7 +669,7 @@ from threading import Lock, Thread
 
 
 class Listener:
-    task_queue = []
+    task_queue: ClassVar[list] = []
     lock = Lock()
     thread = None
 

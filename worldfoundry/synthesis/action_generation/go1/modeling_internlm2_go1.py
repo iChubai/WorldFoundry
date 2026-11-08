@@ -2,6 +2,7 @@
 
 import math
 import warnings
+from typing import ClassVar
 
 import torch
 from einops import rearrange
@@ -463,7 +464,7 @@ class InternLM2ModelGO1(InternLM2Model):
 class InternLM2ForCausalLMGO1(InternLM2ForCausalLM):
     _auto_class = "AutoModelForCausalLM"
 
-    _tied_weights_keys = ["output.weight"]
+    _tied_weights_keys: ClassVar[list] = ["output.weight"]
 
     def __init__(self, config, output_logits: bool = True):
         super().__init__(config)

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -309,7 +310,7 @@ class DexboticVLMModel(DexboticPretrainedModel):
 
 class DexboticForCausalLM(DexboticPretrainedModel, GenerationMixin):
     config_class = DexboticConfig
-    _tied_weights_keys = {}
+    _tied_weights_keys: ClassVar[dict] = {}
 
     def __init__(self, config: DexboticConfig):
         super().__init__(config)

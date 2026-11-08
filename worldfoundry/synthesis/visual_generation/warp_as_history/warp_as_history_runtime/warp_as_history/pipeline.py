@@ -2179,8 +2179,8 @@ class WarpAsHistoryPipeline(HeliosPipeline):
     def stage2_sample(
         self,
         latents: torch.Tensor = None,
-        pyramid_num_stages: int = None,
-        pyramid_num_inference_steps_list: list[int] = None,
+        pyramid_num_stages: int | None = None,
+        pyramid_num_inference_steps_list: list[int] | None = None,
         prompt_embeds: torch.Tensor = None,
         negative_prompt_embeds: torch.Tensor = None,
         guidance_scale: float | None = 5.0,

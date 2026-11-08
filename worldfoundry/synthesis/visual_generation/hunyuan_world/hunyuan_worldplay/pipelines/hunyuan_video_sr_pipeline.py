@@ -83,7 +83,7 @@ class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
         embedded_guidance_scale: float | None = None,
         base_resolution: str = "480p",
         text_encoder_2: TextEncoder | None = None,
-        progress_bar_config: dict[str, Any] = None,
+        progress_bar_config: dict[str, Any] | None = None,
         vision_num_semantic_tokens=729,
         vision_states_dim=1152,
         glyph_byT5_v2=True,

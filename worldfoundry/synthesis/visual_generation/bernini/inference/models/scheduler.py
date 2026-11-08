@@ -42,7 +42,7 @@ class FlowMatchScheduler:
         self,
         num_inference_steps: int = 100,
         denoising_strength: float = 1.0,
-        shift: float = None,
+        shift: float | None = None,
         device=None,
         dtype: torch.dtype = torch.bfloat16,
     ):

@@ -1,5 +1,7 @@
 """Shared checkpoint-compatible inference layers for LingBot-VLA v2."""
 
+from typing import ClassVar
+
 import einops
 import torch
 import torch.nn.functional as F
@@ -45,7 +47,7 @@ logger = logging.get_logger(__name__)
 
 class QwenvlWithExpertConfig(PretrainedConfig):
     model_type = "QwenvlWithExpertModel"
-    sub_configs = {"qwenvl_config": AutoConfig, "qwen_expert_config": AutoConfig}
+    sub_configs: ClassVar[dict] = {"qwenvl_config": AutoConfig, "qwen_expert_config": AutoConfig}
 
     def __init__(
         self,
@@ -412,10 +414,10 @@ class QwenvlWithExpertModel(PreTrainedModel):
         position_ids: torch.LongTensor | None = None,
         vlm_position_ids: torch.LongTensor | None = None,
         past_key_values: list[torch.FloatTensor] | Cache | None = None,
-        inputs_embeds: list[torch.FloatTensor] = None,
+        inputs_embeds: list[torch.FloatTensor] | None = None,
         use_cache: bool | None = None,
         fill_kv_cache: bool | None = None,
-        ada_cond: list[torch.FloatTensor] = None,
+        ada_cond: list[torch.FloatTensor] | None = None,
     ):
         """
         Args:

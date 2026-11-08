@@ -154,7 +154,7 @@ def generate(
     num_inference_steps: int = 30,
     seed: int = 42,
     mixed_precision: str = "bf16",
-    save_intermediate_dir: str = None,
+    save_intermediate_dir: str | None = None,
 ) -> Image.Image:
     """Generate a 360° panorama from a perspective image.
 

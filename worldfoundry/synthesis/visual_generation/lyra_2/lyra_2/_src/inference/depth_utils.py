@@ -198,7 +198,7 @@ def load_da3_from_custom_checkpoint(
 
 def load_da3_model(
     da3_model_name: str,
-    da3_model_path_custom: str = None,
+    da3_model_path_custom: str | None = None,
     device: str = "cuda",
 ):
     """Load a DepthAnything3 model, optionally from a custom checkpoint."""

@@ -924,7 +924,7 @@ def merge_video_foregrounds(
     stream3r_session=None,
     stream3r_frames_fed: int = 0,
     video_frames=None,
-    video_fps: float = None,
+    video_fps: float | None = None,
     stride: int = 1,
     save_depth_maps: bool = True,
     save_rendered_frames: bool = True,
@@ -973,7 +973,7 @@ def merge_video_foregrounds(
     # ========== Step 1: 加载输入帧和模型 ==========
     _log("[Step 1] Loading video and models...")
     if video_frames is not None:
-        frames = list(video_frames) if isinstance(video_frames, np.ndarray) else list(video_frames)
+        frames = list(video_frames)
         if len(frames) == 0:
             raise ValueError("video_frames is empty")
         fps = float(video_fps) if video_fps is not None and np.isfinite(video_fps) and float(video_fps) > 0 else 16.0
@@ -1403,15 +1403,15 @@ def merge_video_foregrounds(
 def main(
     mode: str = "video",
     # 通用配置
-    dynamic_object_prompts: list = None,
+    dynamic_object_prompts: list | None = None,
     sam3_model_path: str = "ckpts/facebook--sam3/sam3.pt",
     device: str = "cuda",
     # 图片模式配置
-    image1_path: str = None,
-    image2_path: str = None,
+    image1_path: str | None = None,
+    image2_path: str | None = None,
     # 视频模式配置
-    video_path: str = None,
-    output_dir: str = None,
+    video_path: str | None = None,
+    output_dir: str | None = None,
     rotation_angle: float = 20.0,
     depth_outlier_std_scale: float = 3.0,
     conf_threshold: float = DEFAULT_CONF_THRESHOLD,

@@ -63,7 +63,7 @@ class Attention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        cross_attention_dim: int = None,
+        cross_attention_dim: int | None = None,
         nheads: int = 8,
         head_dim: int = 64,
         dropout: float = 0.0,
@@ -82,7 +82,7 @@ class Attention(nn.Module):
         rescale_output_factor: float = 1.0,
         residual_connection: bool = False,
         processor=None,
-        out_dim: int = None,
+        out_dim: int | None = None,
     ):
         super().__init__()
 

@@ -680,7 +680,7 @@ class WANDiffusionModel(InferenceModel):
         condition = condition.edit_data_type(DataType.IMAGE if is_image_batch else DataType.VIDEO)
         return raw_state, latent_state, condition
 
-    def _normalize_video_databatch_inplace(self, data_batch: dict[str, Tensor], input_key: str = None) -> None:
+    def _normalize_video_databatch_inplace(self, data_batch: dict[str, Tensor], input_key: str | None = None) -> None:
         """
         Normalizes video data in-place on a CUDA device to reduce data loading overhead.
 
@@ -725,7 +725,7 @@ class WANDiffusionModel(InferenceModel):
                 data_batch[input_key] = data_batch[input_key].to(**self.tensor_kwargs) / 127.5 - 1.0
                 data_batch[IS_PREPROCESSED_KEY] = True
 
-    def _augment_image_dim_inplace(self, data_batch: dict[str, Tensor], input_key: str = None) -> None:
+    def _augment_image_dim_inplace(self, data_batch: dict[str, Tensor], input_key: str | None = None) -> None:
         input_key = self.input_image_key if input_key is None else input_key
         if input_key in data_batch:
             # Check if the data has already been augmented and avoid re-augmenting

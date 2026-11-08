@@ -15,6 +15,7 @@
 """PyTorch Phi model."""
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -819,7 +820,7 @@ class PhiPreTrainedModel(PreTrainedModel):
     config_class = PhiConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["PhiDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["PhiDecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -1076,7 +1077,7 @@ class PhiModel(PhiPreTrainedModel):
 
 
 class PhiForCausalLM(PhiPreTrainedModel):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
         super().__init__(config)

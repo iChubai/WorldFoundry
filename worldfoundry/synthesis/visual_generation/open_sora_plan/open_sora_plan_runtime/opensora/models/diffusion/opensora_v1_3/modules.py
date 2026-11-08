@@ -393,9 +393,9 @@ class BasicTransformerBlock(nn.Module):
         encoder_hidden_states: torch.FloatTensor | None = None,
         encoder_attention_mask: torch.FloatTensor | None = None,
         timestep: torch.LongTensor | None = None,
-        frame: int = None,
-        height: int = None,
-        width: int = None,
+        frame: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
     ) -> torch.FloatTensor:
         # 0. Self-Attention
         batch_size = hidden_states.shape[1]

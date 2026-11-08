@@ -15,7 +15,7 @@ from __future__ import annotations
 # limitations under the License.
 import math
 from functools import lru_cache
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -191,7 +191,7 @@ class HeliosAttnProcessor:
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         query, key, value = _get_qkv_projections(attn, hidden_states, encoder_hidden_states)
 
@@ -254,7 +254,7 @@ class HeliosAttnProcessor:
 
 class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = HeliosAttnProcessor
-    _available_processors = [HeliosAttnProcessor]
+    _available_processors: ClassVar[list] = [HeliosAttnProcessor]
 
     def __init__(
         self,
@@ -369,7 +369,7 @@ class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         return self.processor(
@@ -535,7 +535,7 @@ class HeliosTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         if temb.ndim == 4:
             shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
@@ -642,7 +642,7 @@ class HeliosTransformer3DModel(
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",
@@ -650,8 +650,8 @@ class HeliosTransformer3DModel(
         "condition_embedder",
         "norm",
     ]
-    _no_split_modules = ["HeliosTransformerBlock", "HeliosOutputNorm"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["HeliosTransformerBlock", "HeliosOutputNorm"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "norm1",
@@ -659,9 +659,9 @@ class HeliosTransformer3DModel(
         "norm3",
         "history_key_scale",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["HeliosTransformerBlock"]
-    _cp_plan = {
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["HeliosTransformerBlock"]
+    _cp_plan: ClassVar[dict] = {
         # Input split at attn level and ffn level.
         "blocks.*.attn1": {
             "hidden_states": ContextParallelInput(split_dim=1, expected_dims=3, split_output=False),

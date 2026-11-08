@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -64,10 +64,10 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     library implements for all the pipelines (such as downloading or saving, running on a particular device, etc.)
     """
 
-    _optional_components = []
+    _optional_components: ClassVar[list] = []
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",
@@ -109,7 +109,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,

@@ -435,7 +435,7 @@ class SlicedWassersteinDistance(nn.Module):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
-        seed: int = None,
+        seed: int | None = None,
     ) -> torch.Tensor:
         """
         Compute Sliced Wasserstein-2 distance.
@@ -534,8 +534,8 @@ class MPGEnhancement(nn.Module):
     def __init__(
         self,
         obs_feature_dim: int,
-        action_feature_dim: int = None,
-        embedding_dim: int = None,
+        action_feature_dim: int | None = None,
+        embedding_dim: int | None = None,
         num_projections: int = 32,
         lambda_strength: float = 0.0,
         use_stop_gradient: bool = True,

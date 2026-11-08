@@ -2,7 +2,7 @@
 MolmoAct2 configuration
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from transformers import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation
@@ -171,14 +171,14 @@ class MolmoAct2TextConfig(PretrainedConfig):
 
     model_type = "molmoact2_text"
     base_config_key = "text_config"
-    keys_to_ignore_at_inference = ["past_key_values"]
-    base_model_tp_plan = {
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
+    base_model_tp_plan: ClassVar[dict] = {
         "blocks.*.self_attn.att_proj": "colwise",
         "blocks.*.self_attn.attn_out": "rowwise",
         "blocks.*.mlp.ff_proj": "colwise",
         "blocks.*.mlp.ff_out": "rowwise",
     }
-    base_model_pp_plan = {
+    base_model_pp_plan: ClassVar[dict] = {
         "wte": (["input_ids"], ["inputs_embeds"]),
         "blocks": (["hidden_states", "attention_mask"], ["hidden_states"]),
         "ln_f": (["hidden_states"], ["hidden_states"]),
@@ -201,7 +201,7 @@ class MolmoAct2TextConfig(PretrainedConfig):
         residual_dropout: float = 0.0,
         max_position_embeddings: int = 4096,
         rope_theta: float = 1000000.0,
-        rope_scaling: dict[str, Any] = None,
+        rope_scaling: dict[str, Any] | None = None,
         rope_scaling_layers: list[int] | None = None,
         use_qk_norm: bool = False,
         qk_norm_type: str = "olmo",
@@ -338,7 +338,7 @@ class MolmoAct2Config(PretrainedConfig):
     ```"""
 
     model_type = "molmoact2"
-    sub_configs = {
+    sub_configs: ClassVar[dict] = {
         "text_config": MolmoAct2TextConfig,
         "vit_config": MolmoAct2VitConfig,
         "adapter_config": MolmoAct2AdapterConfig,
@@ -351,14 +351,14 @@ class MolmoAct2Config(PretrainedConfig):
         adapter_config: MolmoAct2AdapterConfig = None,
         text_config: MolmoAct2TextConfig = None,
         action_expert_config: MolmoAct2ActionExpertConfig = None,
-        image_start_token_id: int = None,
-        low_res_image_start_token_id: int = None,
-        image_end_token_id: int = None,
-        image_low_res_id: int = None,
-        image_patch_id: int = None,
-        image_col_id: int = None,
-        frame_start_token_id: int = None,
-        frame_end_token_id: int = None,
+        image_start_token_id: int | None = None,
+        low_res_image_start_token_id: int | None = None,
+        image_end_token_id: int | None = None,
+        image_low_res_id: int | None = None,
+        image_patch_id: int | None = None,
+        image_col_id: int | None = None,
+        frame_start_token_id: int | None = None,
+        frame_end_token_id: int | None = None,
         use_frame_special_tokens: bool = True,
         initializer_range: float = 0.02,
         add_action_expert: bool = True,
@@ -379,19 +379,19 @@ class MolmoAct2Config(PretrainedConfig):
         action_expert_depth_gate: bool = False,
         action_expert_depth_gate_per_layer: bool = False,
         action_expert_depth_gate_init_bias: float = -4.0,
-        action_output_token_id: int = None,
-        action_start_token_id: int = None,
-        action_end_token_id: int = None,
-        action_token_start_id: int = None,
+        action_output_token_id: int | None = None,
+        action_start_token_id: int | None = None,
+        action_end_token_id: int | None = None,
+        action_token_start_id: int | None = None,
         num_action_tokens: int = 2048,
-        depth_output_token_id: int = None,
-        depth_start_token_id: int = None,
-        depth_end_token_id: int = None,
-        depth_token_start_id: int = None,
+        depth_output_token_id: int | None = None,
+        depth_start_token_id: int | None = None,
+        depth_end_token_id: int | None = None,
+        depth_token_start_id: int | None = None,
         num_depth_tokens: int = 0,
-        state_start_token_id: int = None,
-        state_end_token_id: int = None,
-        state_token_start_id: int = None,
+        state_start_token_id: int | None = None,
+        state_end_token_id: int | None = None,
+        state_token_start_id: int | None = None,
         num_state_tokens: int = 256,
         add_setup_tokens: bool = True,
         add_control_tokens: bool = True,

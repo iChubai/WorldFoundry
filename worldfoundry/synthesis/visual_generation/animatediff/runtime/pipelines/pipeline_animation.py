@@ -1,8 +1,8 @@
 # Adapted from https://github.com/showlab/Tune-A-Video/blob/main/tuneavideo/pipelines/pipeline_tuneavideo.py
-
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -41,7 +41,7 @@ class AnimationPipelineOutput(BaseOutput):
 
 
 class AnimationPipeline(DiffusionPipeline):
-    _optional_components = []
+    _optional_components: ClassVar[list] = []
 
     def __init__(
         self,

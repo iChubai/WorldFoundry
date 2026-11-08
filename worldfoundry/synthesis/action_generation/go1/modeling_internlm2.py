@@ -19,6 +19,7 @@ import math
 import queue
 import threading
 import warnings
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -708,7 +709,7 @@ class InternLM2PreTrainedModel(PreTrainedModel):
     config_class = InternLM2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["InternLM2DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["InternLM2DecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
 
@@ -988,7 +989,7 @@ class InternLM2Model(InternLM2PreTrainedModel):
 class InternLM2ForCausalLM(InternLM2PreTrainedModel):
     _auto_class = "AutoModelForCausalLM"
 
-    _tied_weights_keys = ["output.weight"]
+    _tied_weights_keys: ClassVar[list] = ["output.weight"]
 
     def __init__(self, config):
         super().__init__(config)

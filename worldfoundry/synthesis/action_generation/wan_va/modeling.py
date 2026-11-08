@@ -552,15 +552,15 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         # "patch_embedding",
         "patch_embedding_mlp",
         "condition_embedder",
         "condition_embedder_action",
         "norm",
     ]
-    _no_split_modules = ["WanTransformerBlock"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["WanTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "scale_shift_table_action",
@@ -574,8 +574,8 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
         "action_norm3",
         "text_norm3",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["WanTransformerBlock"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["WanTransformerBlock"]
 
     @register_to_config
     def __init__(

@@ -519,7 +519,7 @@ class CustomMLP(torch.nn.Module):
     """
 
     def __init__(
-        self, model_config: ModelConfig, engine_config: EngineConfig, layer_number: int, input_size: int = None
+        self, model_config: ModelConfig, engine_config: EngineConfig, layer_number: int, input_size: int | None = None
     ):
         super().__init__()
 

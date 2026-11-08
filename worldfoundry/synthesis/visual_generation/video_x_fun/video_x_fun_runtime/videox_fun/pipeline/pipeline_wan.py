@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from diffusers import FlowMatchEulerDiscreteScheduler
@@ -61,10 +61,10 @@ class WanPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     library implements for all the pipelines (such as downloading or saving, running on a particular device, etc.)
     """
 
-    _optional_components = []
+    _optional_components: ClassVar[list] = []
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",

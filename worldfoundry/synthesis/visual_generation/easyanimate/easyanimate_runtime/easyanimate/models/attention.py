@@ -291,7 +291,7 @@ class TemporalTransformerBlock(nn.Module):
         encoder_hidden_states: torch.FloatTensor | None = None,
         encoder_attention_mask: torch.FloatTensor | None = None,
         timestep: torch.LongTensor | None = None,
-        cross_attention_kwargs: dict[str, Any] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         class_labels: torch.LongTensor | None = None,
         num_frames: int = 16,
         height: int = 32,
@@ -594,7 +594,7 @@ class SelfAttentionTemporalTransformerBlock(nn.Module):
         encoder_hidden_states: torch.FloatTensor | None = None,
         encoder_attention_mask: torch.FloatTensor | None = None,
         timestep: torch.LongTensor | None = None,
-        cross_attention_kwargs: dict[str, Any] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         class_labels: torch.LongTensor | None = None,
     ) -> torch.FloatTensor:
         # Notice that normalization is always applied before the real computation in the following blocks.

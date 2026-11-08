@@ -1,6 +1,7 @@
 """Legacy Qwen2.5-VL inference layers required by v2 checkpoint structure."""
 
 from collections.abc import Callable
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -169,7 +170,7 @@ class Qwen2_5_VLPreTrainedModel(PreTrainedModel):
     config_class = Qwen2_5_VLConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -303,9 +304,9 @@ class Qwen2_5_VLTextModel(Qwen2_5_VLPreTrainedModel):
 
 
 class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
     config_class = Qwen2_5_VLConfig
-    _no_split_modules = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
     get_input_embeddings = _Qwen2_5_VLForConditionalGeneration.get_input_embeddings
     set_input_embeddings = _Qwen2_5_VLForConditionalGeneration.set_input_embeddings
     get_output_embeddings = _Qwen2_5_VLForConditionalGeneration.get_output_embeddings

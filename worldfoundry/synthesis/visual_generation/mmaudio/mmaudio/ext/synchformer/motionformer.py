@@ -41,13 +41,13 @@ class MotionFormer(VisionTransformer):
     def __init__(
         self,
         extract_features: bool = False,
-        ckpt_path: str = None,
-        factorize_space_time: bool = None,
-        agg_space_module: str = None,
-        agg_time_module: str = None,
+        ckpt_path: str | None = None,
+        factorize_space_time: bool | None = None,
+        agg_space_module: str | None = None,
+        agg_time_module: str | None = None,
         add_global_repr: bool = True,
-        agg_segments_module: str = None,
-        max_segments: int = None,
+        agg_segments_module: str | None = None,
+        max_segments: int | None = None,
     ):
         self.extract_features = extract_features
         self.ckpt_path = ckpt_path
@@ -264,8 +264,8 @@ class BaseEncoderLayer(nn.TransformerEncoderLayer):
     def __init__(
         self,
         add_pos_emb: bool = False,
-        pos_emb_drop: float = None,
-        pos_max_len: int = None,
+        pos_emb_drop: float | None = None,
+        pos_max_len: int | None = None,
         *args_transformer_enc,
         **kwargs_transformer_enc,
     ):
@@ -381,7 +381,7 @@ class TemporalTransformerEncoderLayer(BaseEncoderLayer):
 
 
 class AveragePooling(nn.Module):
-    def __init__(self, avg_pattern: str, then_permute_pattern: str = None) -> None:
+    def __init__(self, avg_pattern: str, then_permute_pattern: str | None = None) -> None:
         """patterns are e.g. "bs t d -> bs d" """
         super().__init__()
         # TODO: need to register them as buffers (but fails because these are strings)

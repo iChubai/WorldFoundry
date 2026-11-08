@@ -1,5 +1,6 @@
-# Inference-only RoboFlamingo source retained in-tree.
+from typing import ClassVar
 
+# Inference-only RoboFlamingo source retained in-tree.
 import numpy as np
 import torch
 import torch.nn as nn
@@ -45,7 +46,7 @@ class DictOfTensorMixin(nn.Module):
 
 
 class LinearNormalizer(DictOfTensorMixin):
-    avaliable_modes = ["limits", "gaussian"]
+    avaliable_modes: ClassVar[list] = ["limits", "gaussian"]
 
     def __call__(self, x: dict | torch.Tensor | np.ndarray) -> torch.Tensor:
         return self.normalize(x)
@@ -74,7 +75,7 @@ class LinearNormalizer(DictOfTensorMixin):
 
 
 class SingleFieldLinearNormalizer(DictOfTensorMixin):
-    avaliable_modes = ["limits", "gaussian"]
+    avaliable_modes: ClassVar[list] = ["limits", "gaussian"]
 
     def normalize(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         return _normalize(x, self.params_dict, forward=True)

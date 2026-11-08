@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from functools import partial
+from typing import ClassVar
 
 import einops
 import torch
@@ -399,8 +400,8 @@ class Qwen2PreTrainedModel(PreTrainedModel):
     config_class = Qwen2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2DecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer"]
+    _skip_keys_device_placement: ClassVar[list] = ["past_key_values"]
     _supports_flash_attn_2 = True
     _supports_sdpa = True
     _supports_flex_attn = True
@@ -788,9 +789,9 @@ class KwargsForCausalLM(FlashAttentionKwargs):
 
 
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
-    _tp_plan = {"lm_head": "colwise_rep"}
-    _pp_plan = {"lm_head": (["hidden_states"], ["logits"])}
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
+    _tp_plan: ClassVar[dict] = {"lm_head": "colwise_rep"}
+    _pp_plan: ClassVar[dict] = {"lm_head": (["hidden_states"], ["logits"])}
 
     def __init__(self, config, eval, **kwargs):
         super().__init__(config)
@@ -908,7 +909,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
 
 class QwenvlWithExpertConfig(PretrainedConfig):
     model_type = "QwenvlWithExpertModel"
-    sub_configs = {"qwenvl_config": AutoConfig, "qwen_expert_config": AutoConfig}
+    sub_configs: ClassVar[dict] = {"qwenvl_config": AutoConfig, "qwen_expert_config": AutoConfig}
 
     def __init__(
         self,
@@ -1212,10 +1213,10 @@ class QwenvlWithExpertModel(PreTrainedModel):
         position_ids: torch.LongTensor | None = None,
         vlm_position_ids: torch.LongTensor | None = None,
         past_key_values: list[torch.FloatTensor] | Cache | None = None,
-        inputs_embeds: list[torch.FloatTensor] = None,
+        inputs_embeds: list[torch.FloatTensor] | None = None,
         use_cache: bool | None = None,
         fill_kv_cache: bool | None = None,
-        ada_cond: list[torch.FloatTensor] = None,
+        ada_cond: list[torch.FloatTensor] | None = None,
         norm_qkv: bool = False,
     ):
         """
@@ -1353,13 +1354,13 @@ class QwenvlWithExpertModel(PreTrainedModel):
 
 class QwenVLA_Config(PretrainedConfig):
     model_type = "torch_qwenvla"
-    architectures = ["LingbotVlaPolicy"]
+    architectures: ClassVar[list] = ["LingbotVlaPolicy"]
 
 
 class LingbotVlaPolicy(nn.Module):
     config_class = QwenVLA_Config
     name = "torch_lingbot_vla"
-    _no_split_modules = ["Qwen2DecoderLayer", "FixQwen2RMSNorm"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer", "FixQwen2RMSNorm"]
 
     def __init__(
         self,

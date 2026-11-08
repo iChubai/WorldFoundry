@@ -1,6 +1,6 @@
 import math
 from inspect import isfunction
-from typing import Any
+from typing import Any, ClassVar
 from typing import List as List
 from typing import Optional as Optional
 
@@ -206,7 +206,7 @@ class MemoryEfficientCrossAttention(nn.Module):  # We are using this implementat
 
 
 class BasicTransformerBlock(nn.Module):
-    ATTENTION_MODES = {
+    ATTENTION_MODES: ClassVar[dict] = {
         "softmax": CrossAttention,  # Vanilla attention
         "softmax-xformers": MemoryEfficientCrossAttention,  # Ampere
     }

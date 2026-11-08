@@ -12,14 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import contextlib
 import html
 import math
 from collections.abc import Callable
 from enum import Enum
 from itertools import accumulate
-from typing import Any, Literal, Optional
+from typing import Any, ClassVar, Literal, Optional
 
 import regex as re
 import torch
@@ -158,8 +157,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
     """
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
-    _optional_components = ["transformer"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _optional_components: ClassVar[list] = ["transformer"]
 
     def __init__(
         self,
@@ -184,7 +183,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 226,
         device: torch.device | None = None,
@@ -1367,7 +1366,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         is_amplify_first_chunk: bool = False,
         # ------------ Callback ------------
         callback_on_step_end: Optional[callable] = None,  # noqa: UP045 - callable is a function in the upstream annotation.
-        callback_on_step_end_tensor_inputs: list = None,
+        callback_on_step_end_tensor_inputs: list | None = None,
         progress_bar=None,
     ):
         batch_size = latents.shape[0]
@@ -1491,8 +1490,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
     def stage2_sample(
         self,
         latents: torch.Tensor = None,
-        stage2_num_stages: int = None,
-        stage2_num_inference_steps_list: list[int] = None,
+        stage2_num_stages: int | None = None,
+        stage2_num_inference_steps_list: list[int] | None = None,
         prompt_embeds: torch.Tensor = None,
         negative_prompt_embeds: torch.Tensor = None,
         guidance_scale: float | None = 5.0,
@@ -1538,7 +1537,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         is_amplify_first_chunk: bool = False,
         # ------------ Callback ------------
         callback_on_step_end: Optional[callable] = None,  # noqa: UP045 - callable is a function in the upstream annotation.
-        callback_on_step_end_tensor_inputs: list = None,
+        callback_on_step_end_tensor_inputs: list | None = None,
         progress_bar=None,
     ):
         num_frames, height, width = (
@@ -1860,8 +1859,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 384,
         width: int = 640,
         num_frames: int = 73,

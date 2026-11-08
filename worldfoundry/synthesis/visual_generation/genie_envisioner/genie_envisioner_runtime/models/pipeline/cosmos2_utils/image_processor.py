@@ -116,7 +116,7 @@ class VaeImageProcessor(ConfigMixin):
         vae_scale_factor: int = 8,
         vae_latent_channels: int = 4,
         resample: str = "lanczos",
-        reducing_gap: int = None,
+        reducing_gap: int | None = None,
         do_normalize: bool = True,
         do_binarize: bool = False,
         do_convert_rgb: bool = False,

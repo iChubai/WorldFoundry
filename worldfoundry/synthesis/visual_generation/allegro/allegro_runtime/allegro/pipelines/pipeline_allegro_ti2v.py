@@ -1,12 +1,10 @@
 # Adapted from Open-Sora-Plan
-
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 # --------------------------------------------------------
 # References:
 # Open-Sora-Plan: https://github.com/PKU-YuanGroup/Open-Sora-Plan
 # --------------------------------------------------------
-
 import html
 import inspect
 import math
@@ -16,6 +14,7 @@ import re
 import urllib.parse as ul
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import ftfy
 import numpy as np
@@ -142,7 +141,7 @@ class AllegroTI2VPipeline(DiffusionPipeline):
         r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
     )
 
-    _optional_components = ["tokenizer", "text_encoder", "vae", "transformer", "scheduler"]
+    _optional_components: ClassVar[list] = ["tokenizer", "text_encoder", "vae", "transformer", "scheduler"]
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
     def __init__(
@@ -579,10 +578,10 @@ class AllegroTI2VPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         negative_prompt: str = "",
         num_inference_steps: int = 100,
-        timesteps: list[int] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 7.5,
         num_images_per_prompt: int | None = 1,
         num_frames: int | None = None,

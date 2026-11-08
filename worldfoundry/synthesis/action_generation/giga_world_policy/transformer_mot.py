@@ -3,9 +3,8 @@
 # Mixture-of-Transformers (MoT) for world-action policy.
 # Action stream (state + action) and visual stream (ref + future) use separate
 # transformer parameters with global self-attention across both streams.
-
 import math
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -541,9 +540,14 @@ class CasualWorldActionTransformer_MoT(
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ["patch_embedding", "condition_embedder", "action_condition_embedder", "norm"]
-    _no_split_modules = ["WanMoTTransformerBlock"]
-    _keep_in_fp32_modules = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
+        "patch_embedding",
+        "condition_embedder",
+        "action_condition_embedder",
+        "norm",
+    ]
+    _no_split_modules: ClassVar[list] = ["WanMoTTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "action_scale_shift_table",
@@ -551,7 +555,7 @@ class CasualWorldActionTransformer_MoT(
         "norm2",
         "norm3",
     ]
-    _repeated_blocks = ["WanMoTTransformerBlock"]
+    _repeated_blocks: ClassVar[list] = ["WanMoTTransformerBlock"]
 
     @register_to_config
     def __init__(

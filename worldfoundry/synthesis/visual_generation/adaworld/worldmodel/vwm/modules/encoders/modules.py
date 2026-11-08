@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from typing import ClassVar
 
 import kornia
 import numpy as np
@@ -56,8 +57,8 @@ class AbstractEmbModel(nn.Module):
 
 
 class GeneralConditioner(nn.Module):
-    OUTPUT_DIM2KEYS = {2: "vector", 3: "crossattn", 4: "concat", 5: "concat"}
-    KEY2CATDIM = {"vector": 1, "crossattn": 2, "concat": 1}
+    OUTPUT_DIM2KEYS: ClassVar[dict] = {2: "vector", 3: "crossattn", 4: "concat", 5: "concat"}
+    KEY2CATDIM: ClassVar[dict] = {"vector": 1, "crossattn": 2, "concat": 1}
 
     def __init__(self, emb_models: list | ListConfig):
         super().__init__()

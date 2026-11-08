@@ -63,7 +63,7 @@ def download_url(input_path):
     return output_path
 
 
-def recursively_find(root_dir: str, ext: list = None, relative_path: str = None):
+def recursively_find(root_dir: str, ext: list | None = None, relative_path: str | None = None):
     all_fnames = [os.path.join(root, fname) for root, _dirs, files in os.walk(root_dir) for fname in files]
     if relative_path is not None:
         all_fnames = [os.path.relpath(fname, relative_path) for fname in all_fnames]

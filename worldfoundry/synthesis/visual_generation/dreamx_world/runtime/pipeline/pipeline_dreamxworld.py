@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
@@ -60,10 +60,10 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
     library implements for all the pipelines (such as downloading or saving, running on a particular device, etc.)
     """
 
-    _optional_components = ["transformer_2"]
+    _optional_components: ClassVar[list] = ["transformer_2"]
     model_cpu_offload_seq = "text_encoder->transformer_2->transformer->vae"
 
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",

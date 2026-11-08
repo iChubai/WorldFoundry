@@ -325,7 +325,7 @@ class ConvTranspose3dReduced(nn.Module):
         kernel_size,
         stride,
         padding,
-        hidden_channels: int = None,
+        hidden_channels: int | None = None,
         use_channel_reduction: bool = True,
     ):
         super().__init__()

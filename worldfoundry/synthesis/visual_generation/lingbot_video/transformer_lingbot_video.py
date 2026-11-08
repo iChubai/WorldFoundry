@@ -1,6 +1,7 @@
 import inspect
 import math
 import os
+from typing import ClassVar
 
 import torch
 import torch.distributed as dist
@@ -970,8 +971,8 @@ class LingBotVideoBlock(nn.Module):
 
 class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
     _supports_gradient_checkpointing = False
-    _no_split_modules = ["LingBotVideoBlock"]
-    _keep_in_fp32_modules = list(LINGBOT_VIDEO_FP32_MODULES)
+    _no_split_modules: ClassVar[list] = ["LingBotVideoBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = list(LINGBOT_VIDEO_FP32_MODULES)
 
     def to(self, *args, **kwargs):
         device, dtype, non_blocking, _ = torch._C._nn._parse_to(*args, **kwargs)

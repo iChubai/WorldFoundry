@@ -273,7 +273,7 @@ class LTXVideoTransformerBlock(nn.Module):
         temb: torch.Tensor,
         image_rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
         encoder_attention_mask: torch.Tensor | None = None,
-        n_view: int = None,
+        n_view: int | None = None,
         cross_view_attn: bool = False,
         self_attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
@@ -452,9 +452,9 @@ class LTXVideoTransformer3DModel(ModelMixin, ConfigMixin, FromOriginalModelMixin
         video_states_buffer=None,
         video_attention_mask: torch.Tensor = None,
         history_action_state: torch.Tensor = None,
-        num_frames: int = None,
-        height: int = None,
-        width: int = None,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         if return_video or store_buffer:

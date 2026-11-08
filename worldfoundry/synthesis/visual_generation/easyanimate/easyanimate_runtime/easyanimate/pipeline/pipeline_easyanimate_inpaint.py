@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -272,14 +272,14 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
     """
 
     model_cpu_offload_seq = "text_encoder->text_encoder_2->clip_image_encoder->transformer->vae"
-    _optional_components = [
+    _optional_components: ClassVar[list] = [
         "text_encoder_2",
         "tokenizer_2",
         "text_encoder",
         "tokenizer",
         "clip_image_encoder",
     ]
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",
@@ -1000,7 +1000,7 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         video_length: int | None = None,
         video: torch.FloatTensor = None,
         mask_video: torch.FloatTensor = None,

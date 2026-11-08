@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import html
 import os
 import re
 import urllib.parse as ul
+from typing import ClassVar
 
 import ftfy
 import torch
@@ -25,7 +25,7 @@ from transformers import AutoTokenizer, T5EncoderModel
 
 
 class T5Embedder:
-    available_models = ["t5-v1_1-xxl"]
+    available_models: ClassVar[list] = ["t5-v1_1-xxl"]
     bad_punct_regex = re.compile(
         r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
     )

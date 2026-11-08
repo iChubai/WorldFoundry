@@ -1,6 +1,7 @@
 import inspect
 import math
 from collections.abc import Callable
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -120,10 +121,10 @@ def retrieve_timesteps(
 
 
 class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
-    _optional_components = []
+    _optional_components: ClassVar[list] = []
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",
@@ -167,7 +168,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 226,
         device: torch.device | None = None,
@@ -449,7 +450,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
     @torch.no_grad()
     def __call__(
         self,
-        controlnet_frames: list[Image.Image] = None,
+        controlnet_frames: list[Image.Image] | None = None,
         prompt: str | list[str] | None = None,
         negative_prompt: str | list[str] | None = None,
         height: int = 480,

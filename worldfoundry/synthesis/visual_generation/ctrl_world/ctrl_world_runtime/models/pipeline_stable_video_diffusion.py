@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 import PIL.Image
@@ -168,7 +168,7 @@ class StableVideoDiffusionPipeline(DiffusionPipeline):
     """
 
     model_cpu_offload_seq = "image_encoder->unet->vae"
-    _callback_tensor_inputs = ["latents"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents"]
 
     def __init__(
         self,

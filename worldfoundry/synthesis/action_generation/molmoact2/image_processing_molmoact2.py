@@ -1,5 +1,7 @@
 """Image processor class for MolmoAct2"""
 
+from typing import ClassVar
+
 import einops
 import numpy as np
 import torch
@@ -366,7 +368,7 @@ class MolmoAct2ImageProcessor(BaseImageProcessor):
             The pooling size of the vision adapter.
     """
 
-    model_input_names = ["pixel_values", "image_token_pooling", "image_grids", "image_num_crops"]
+    model_input_names: ClassVar[list] = ["pixel_values", "image_token_pooling", "image_grids", "image_num_crops"]
 
     def __init__(
         self,

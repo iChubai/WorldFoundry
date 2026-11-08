@@ -321,7 +321,7 @@ def _blend(dst_rgb, dst_a, field, bgr, alpha):
     dst_a[:] = dst_a + a * (1.0 - dst_a)
 
 
-def draw_joystick(frame_bgr, center, radius: int, vec2, label: str = None):
+def draw_joystick(frame_bgr, center, radius: int, vec2, label: str | None = None):
     """Draw a blue-ring joystick HUD onto a BGR uint8 frame in-place."""
     import cv2
     import numpy as np
@@ -421,8 +421,8 @@ def draw_joystick(frame_bgr, center, radius: int, vec2, label: str = None):
 
 def _extract_move_rot_from_c2ws(
     c2ws_absolute,
-    move_scale: float = None,
-    rot_scale: float = None,
+    move_scale: float | None = None,
+    rot_scale: float | None = None,
     percentile: float = 90.0,
 ):
     """Extract per-frame (move_xy, rot_xy) 2D joystick vectors in [-1,1] from absolute c2w sequence.
@@ -546,7 +546,7 @@ def add_joystick_overlay_from_c2ws(
     c2ws_absolute,
     smooth_alpha: float = 0.3,
     move_scale: float = 1.0,
-    rot_scale: float = None,
+    rot_scale: float | None = None,
     label_left: str = "Move",
     label_right: str = "Rotate",
 ):
@@ -600,7 +600,7 @@ def _load_gt_video_rgb_for_viz(
     video_path: str,
     height: int,
     width: int,
-    num_target_frames: int = None,
+    num_target_frames: int | None = None,
     target_frame_indices=None,
     target_fps: int = 24,
     source_fps: int = 30,

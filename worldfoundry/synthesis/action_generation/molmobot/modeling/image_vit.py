@@ -433,7 +433,7 @@ class VisionTransformer(nn.Module):
         x = x + torch.cat([cls_emb[None, :, :], pos_emb[None, :, :]], dim=1).to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int | None = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """
@@ -506,7 +506,7 @@ class SiglipVisionTransformer(nn.Module):
         x = x + pos_emb[None, :, :].to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int | None = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """
@@ -580,7 +580,7 @@ class DinoVisionTransformer(nn.Module):
         x = x + torch.cat([cls_emb[None, :, :], pos_emb[None, :, :]], dim=1).to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int | None = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """

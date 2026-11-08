@@ -13,7 +13,7 @@
 # limitations under the License.
 import html
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import PIL
 import regex as re
@@ -139,7 +139,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     """
 
     model_cpu_offload_seq = "text_encoder->image_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
         self,
@@ -217,7 +217,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -507,8 +507,8 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         render_video: torch.Tensor,
         render_mask: torch.Tensor,
         camera_embedding: torch.Tensor = None,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int | None = None,
         width: int | None = None,
         max_resolution: int = 768 * 768,

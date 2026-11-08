@@ -415,7 +415,7 @@ class LatentRecon(nn.Module):
         gaussians = torch.cat([pos, opacity, scale, rotation, rgbs], dim=-1)  # [B, N, 14]
         return gaussians
 
-    def get_time_embedding(self, time_embeddings: torch.Tensor, V: int, num_input_multi_views: int = None):
+    def get_time_embedding(self, time_embeddings: torch.Tensor, V: int, num_input_multi_views: int | None = None):
         # Split into input and target time embeddings
         if self.opt.time_embedding_vae:
             num_in_times = V

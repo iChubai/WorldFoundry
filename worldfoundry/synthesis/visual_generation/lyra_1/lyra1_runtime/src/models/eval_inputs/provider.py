@@ -326,11 +326,11 @@ class Provider(Dataset):
 
     def _get_indices_static_multi_view(
         self,
-        start_frame: int = None,
-        end_frame: int = None,
-        total_num_frames: int = None,
+        start_frame: int | None = None,
+        end_frame: int | None = None,
+        total_num_frames: int | None = None,
         mirror_frames: bool = False,
-        num_input_multi_views: int = None,
+        num_input_multi_views: int | None = None,
     ):
         frame_indices_views = []
         # Create multiple frame indices for each view index, can create duplicates across views for overlap

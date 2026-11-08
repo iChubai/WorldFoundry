@@ -200,9 +200,9 @@ def ray_condition(K, c2w, H, W, device, flip_flag=None, get_batch_index=True):
 def mirror_frame_indices(
     sampling_num_frames: int,
     total_num_frames: int,
-    video_mirror_clip_length: int = None,
+    video_mirror_clip_length: int | None = None,
     stride: int = 1,
-    start_index: int = None,
+    start_index: int | None = None,
     return_target: bool = False,
 ):
     if video_mirror_clip_length is None:

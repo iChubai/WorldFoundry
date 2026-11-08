@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterable
+from typing import ClassVar
 
 import torch
 from einops import rearrange
@@ -90,7 +91,7 @@ class Conv2DWrapper(torch.nn.Conv2d):
 
 
 class VideoDecoder(Decoder):
-    available_time_modes = ["all", "conv-only", "attn-only"]
+    available_time_modes: ClassVar[list] = ["all", "conv-only", "attn-only"]
 
     def __init__(
         self,

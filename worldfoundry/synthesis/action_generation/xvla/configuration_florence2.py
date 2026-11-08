@@ -14,6 +14,7 @@
 """Florence-2 configuration."""
 
 import warnings
+from typing import ClassVar
 
 from transformers.configuration_utils import PretrainedConfig
 from transformers.utils import logging
@@ -77,7 +78,7 @@ class Florence2VisionConfig(PretrainedConfig):
     ```"""
 
     model_type = "davit"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,
@@ -194,8 +195,8 @@ class Florence2LanguageConfig(PretrainedConfig):
     ```"""
 
     model_type = "florence2_language"
-    keys_to_ignore_at_inference = ["past_key_values"]
-    attribute_map = {"num_attention_heads": "encoder_attention_heads", "hidden_size": "d_model"}
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
+    attribute_map: ClassVar[dict] = {"num_attention_heads": "encoder_attention_heads", "hidden_size": "d_model"}
 
     def __init__(
         self,

@@ -108,7 +108,7 @@ class LatentPlannerModel(ActionExpertPretrainedModel):
 
     def forward(
         self,
-        vlm_key_values_downsample: tuple[tuple[torch.FloatTensor]] = None,
+        vlm_key_values_downsample: tuple[tuple[torch.FloatTensor]] | None = None,
         attention_mask: torch.Tensor = None,
     ):
         B = attention_mask.shape[0]

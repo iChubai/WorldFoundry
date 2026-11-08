@@ -26,6 +26,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import (
+    ClassVar,
     Final,
     Literal,
     Optional,
@@ -1060,8 +1061,8 @@ class _HunYuanVLMoTInnerPreTrainedModel(PreTrainedModel):
 
     config_class = HunYuanVLMoTConfig
     base_model_prefix = "model"
-    _no_split_modules = ["HunYuanVLMoTDecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values"]
+    _no_split_modules: ClassVar[list] = ["HunYuanVLMoTDecoderLayer"]
+    _skip_keys_device_placement: ClassVar[list] = ["past_key_values"]
     # Our MoT attention selects external FA2 or PyTorch SDPA internally.
     # Keep Transformers from imposing a package-level attention backend.
     _supports_sdpa = False
@@ -1175,7 +1176,7 @@ class _HunYuanVLMoTTextModel(_HunYuanVLMoTInnerPreTrainedModel):
 class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, GenerationMixin):
     """Text decoder + lm_head for generation (inner component)."""
 
-    _tied_weights_keys = {"lm_head.weight": "model.embed_tokens.weight"}
+    _tied_weights_keys: ClassVar[dict] = {"lm_head.weight": "model.embed_tokens.weight"}
 
     def __init__(self, config: HunYuanVLMoTConfig):
         super().__init__(config)

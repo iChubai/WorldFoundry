@@ -12,12 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # Adapted from diffusers/models/transformers/transformer_wan.py for Bernini
 # inference: variable-length attention with cu_seqlens, optional Ulysses
 # sequence parallel, and latents that are patch-embedded by the caller.
-
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -408,9 +407,9 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
     """
 
     _supports_gradient_checkpointing = False
-    _skip_layerwise_casting_patterns = ["patch_embedding", "condition_embedder", "norm"]
-    _no_split_modules = ["WanTransformerBlock"]
-    _keep_in_fp32_modules = ["time_embedder", "scale_shift_table", "norm1", "norm2", "norm3"]
+    _skip_layerwise_casting_patterns: ClassVar[list] = ["patch_embedding", "condition_embedder", "norm"]
+    _no_split_modules: ClassVar[list] = ["WanTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = ["time_embedder", "scale_shift_table", "norm1", "norm2", "norm3"]
 
     @register_to_config
     def __init__(

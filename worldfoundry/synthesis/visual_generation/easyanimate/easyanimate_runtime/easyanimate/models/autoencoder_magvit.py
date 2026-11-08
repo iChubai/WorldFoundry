@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # Copyright 2024 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import torch
 import torch.nn as nn
 from diffusers.configuration_utils import ConfigMixin, register_to_config
@@ -95,8 +96,8 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
         ch_mult=[1, 2, 4, 4],
         block_out_channels=[128, 256, 512, 512],
         use_gc_blocks=None,
-        down_block_types: tuple = None,
-        up_block_types: tuple = None,
+        down_block_types: tuple | None = None,
+        up_block_types: tuple | None = None,
         mid_block_type: str = "MidBlock3D",
         mid_block_use_attention: bool = True,
         mid_block_attention_type: str = "3d",
@@ -544,7 +545,7 @@ class AutoencoderKLCogVideoX(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     """
 
     _supports_gradient_checkpointing = True
-    _no_split_modules = ["CogVideoXResnetBlock3D"]
+    _no_split_modules: ClassVar[list] = ["CogVideoXResnetBlock3D"]
 
     @register_to_config
     def __init__(

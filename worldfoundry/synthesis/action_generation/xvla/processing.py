@@ -7,7 +7,7 @@ Adapted from ``models/processing_xvla.py`` in 2toINF/X-VLA at revision
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from transformers import ProcessorMixin
@@ -16,7 +16,7 @@ from transformers import ProcessorMixin
 class XVLAProcessor(ProcessorMixin):
     """Combine a Florence-2 image processor and BART tokenizer for X-VLA."""
 
-    attributes = ["image_processor", "tokenizer"]
+    attributes: ClassVar[list] = ["image_processor", "tokenizer"]
     image_processor_class = "AutoImageProcessor"
     tokenizer_class = ("BartTokenizer", "BartTokenizerFast")
     num_views = 3

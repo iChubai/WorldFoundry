@@ -13,7 +13,7 @@ def init_model(config, ckpt, load_ckpt: bool = True):
     return model
 
 
-def load_model_from_config(config, ckpt: str = None):
+def load_model_from_config(config, ckpt: str | None = None):
     model = instantiate_from_config(config.model)
 
     if ckpt is not None:
@@ -106,7 +106,7 @@ def get_sampler(sampler, steps, discretization_config, guider_config, n_context_
     return sampler
 
 
-def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_embeddings: list = None):
+def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_embeddings: list | None = None):
     if force_uc_zero_embeddings is None:
         force_uc_zero_embeddings = []
     num_context = len(value_dict["img_seq"]) - 1

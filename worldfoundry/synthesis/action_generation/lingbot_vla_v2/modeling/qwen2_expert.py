@@ -1,5 +1,7 @@
 """Qwen2 action expert and routed-MoE inference layers."""
 
+from typing import ClassVar
+
 import torch
 import torch.nn.functional as F
 import transformers.models.qwen2.modeling_qwen2 as hf_qwen2
@@ -413,9 +415,9 @@ class Qwen2Model(Qwen2PreTrainedModel):
 
 
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
-    _tp_plan = {"lm_head": "colwise_rep"}
-    _pp_plan = {"lm_head": (["hidden_states"], ["logits"])}
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
+    _tp_plan: ClassVar[dict] = {"lm_head": "colwise_rep"}
+    _pp_plan: ClassVar[dict] = {"lm_head": (["hidden_states"], ["logits"])}
     get_input_embeddings = _Qwen2ForCausalLM.get_input_embeddings
     set_input_embeddings = _Qwen2ForCausalLM.set_input_embeddings
     get_output_embeddings = _Qwen2ForCausalLM.get_output_embeddings

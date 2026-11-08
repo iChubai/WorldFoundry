@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from einops import repeat
 
 from vwm.modules.attention import *
@@ -12,7 +14,7 @@ class TimeMixSequential(nn.Sequential):
 
 
 class VideoTransformerBlock(nn.Module):
-    ATTENTION_MODES = {
+    ATTENTION_MODES: ClassVar[dict] = {
         "softmax": CrossAttention,  # Vanilla attention
         "softmax-xformers": MemoryEfficientCrossAttention,  # Ampere
     }
@@ -79,7 +81,7 @@ class VideoTransformerBlock(nn.Module):
 
         del use_checkpoint
 
-    def forward(self, x: torch.Tensor, context: torch.Tensor = None, timesteps: int = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, context: torch.Tensor = None, timesteps: int | None = None) -> torch.Tensor:
         return self._forward(x, context, timesteps=timesteps)
 
     def _forward(self, x, context=None, timesteps=None):

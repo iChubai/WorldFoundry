@@ -43,7 +43,7 @@ class CogVideoXControlnet(ModelMixin, ConfigMixin, PeftAdapterMixin):
         temporal_interpolation_scale: float = 1.0,
         use_rotary_positional_embeddings: bool = False,
         use_learned_positional_embeddings: bool = False,
-        out_proj_dim: int = None,
+        out_proj_dim: int | None = None,
         out_proj_dim_zero_init: bool = False,
     ):
         super().__init__()

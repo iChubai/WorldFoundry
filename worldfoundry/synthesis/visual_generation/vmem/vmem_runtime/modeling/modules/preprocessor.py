@@ -51,8 +51,8 @@ class Dust3rPipeline:
     def infer_cameras_and_points(
         self,
         img_paths: list[str],
-        Ks: list[list] = None,
-        c2ws: list[list] = None,
+        Ks: list[list] | None = None,
+        c2ws: list[list] | None = None,
         batch_size: int = 16,
         schedule: str = "cosine",
         lr: float = 0.01,

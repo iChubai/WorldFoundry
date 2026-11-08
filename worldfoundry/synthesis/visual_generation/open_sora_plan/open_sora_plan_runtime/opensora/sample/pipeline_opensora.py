@@ -1,6 +1,7 @@
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -112,13 +113,13 @@ def retrieve_timesteps(
 
 class OpenSoraPipeline(DiffusionPipeline):
     model_cpu_offload_seq = "text_encoder->text_encoder_2->transformer->vae"
-    _optional_components = [
+    _optional_components: ClassVar[list] = [
         "text_encoder_2",
         "tokenizer_2",
         "text_encoder",
         "tokenizer",
     ]
-    _callback_tensor_inputs = [
+    _callback_tensor_inputs: ClassVar[list] = [
         "latents",
         "prompt_embeds",
         "negative_prompt_embeds",
@@ -466,12 +467,12 @@ class OpenSoraPipeline(DiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_frames: int | None = None,
         height: int | None = None,
         width: int | None = None,
         num_inference_steps: int | None = 50,
-        timesteps: list[int] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float | None = 5.0,
         negative_prompt: str | list[str] | None = None,
         num_samples_per_prompt: int | None = 1,

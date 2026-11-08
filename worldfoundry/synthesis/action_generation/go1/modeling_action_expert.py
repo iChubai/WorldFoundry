@@ -2,6 +2,7 @@
 
 import math
 import warnings
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -503,7 +504,7 @@ class ActionExpertPretrainedModel(PreTrainedModel):
     config_class = ActionExpertConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["ActionExpertDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["ActionExpertDecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
 
@@ -618,7 +619,7 @@ class ActionExpertModel(ActionExpertPretrainedModel):
         state_action_traj: torch.FloatTensor,
         # vlm related inputs
         attention_mask: torch.Tensor = None,
-        vlm_key_values: tuple[tuple[torch.FloatTensor]] = None,
+        vlm_key_values: tuple[tuple[torch.FloatTensor]] | None = None,
         position_ids: torch.LongTensor | None = None,
         # output related args
         past_key_values: list[torch.FloatTensor] | None = None,

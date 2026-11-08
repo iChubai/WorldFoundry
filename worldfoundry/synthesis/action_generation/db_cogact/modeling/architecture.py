@@ -1,5 +1,6 @@
-# Inference-only DB-CogACT source retained in-tree.
+from typing import ClassVar
 
+# Inference-only DB-CogACT source retained in-tree.
 import torch
 import torch.nn as nn
 
@@ -44,7 +45,7 @@ class CogActModel(DexboticVLMModel):
 
 class CogACTForCausalLM(DexboticForCausalLM, ActionOutputForCausalLM):
     config_class = CogActConfig
-    _tied_weights_keys = {}
+    _tied_weights_keys: ClassVar[dict] = {}
 
     def _real_init(self, config: CogActConfig):
         self.model = CogActModel(config)

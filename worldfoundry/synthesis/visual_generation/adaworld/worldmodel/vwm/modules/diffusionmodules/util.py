@@ -8,6 +8,7 @@ https://github.com/openai/guided-diffusion/blob/0ba878e517b276c45d1195eb29f6f5f7
 """
 
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -110,7 +111,7 @@ def avg_pool_nd(dims, *args, **kwargs):
 
 
 class AlphaBlender(nn.Module):
-    strategies = ["learned", "fixed", "learned_with_images"]
+    strategies: ClassVar[list] = ["learned", "fixed", "learned_with_images"]
 
     def __init__(self, alpha: float, merge_strategy: str, rearrange_pattern: str):
         super().__init__()

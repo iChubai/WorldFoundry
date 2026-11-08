@@ -6,7 +6,7 @@ import re
 from contextlib import nullcontext
 from dataclasses import dataclass
 from threading import Lock
-from typing import Any
+from typing import Any, ClassVar
 
 import loguru
 import numpy as np
@@ -90,7 +90,7 @@ class HunyuanWorldPlayRuntime:
         flow_shift: float = 7.0,
         guidance_scale: float = 6.0,
         embedded_guidance_scale: float | None = None,
-        progress_bar_config: dict[str, Any] = None,
+        progress_bar_config: dict[str, Any] | None = None,
         vision_num_semantic_tokens: int = 729,
         vision_states_dim: int = 1152,
         glyph_byT5_v2: bool = True,
@@ -239,7 +239,7 @@ class HunyuanWorldPlayRuntime:
 
 class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeline):
     model_cpu_offload_seq = "text_encoder->text_encoder_2->byt5_model->transformer->vae"
-    _optional_components = ["text_encoder_2", "byt5_model", "byt5_tokenizer"]
+    _optional_components: ClassVar[list] = ["text_encoder_2", "byt5_model", "byt5_tokenizer"]
 
     def __init__(
         self,
@@ -251,7 +251,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
         flow_shift: float = 7.0,
         guidance_scale: float = 6.0,
         embedded_guidance_scale: float | None = None,
-        progress_bar_config: dict[str, Any] = None,
+        progress_bar_config: dict[str, Any] | None = None,
         vision_num_semantic_tokens=729,
         vision_states_dim=1152,
         glyph_byT5_v2=True,

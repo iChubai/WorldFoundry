@@ -29,7 +29,7 @@ class Normalizer:
     def __init__(
         self,
         norm_stats: dict[str, dict[str, np.ndarray]],
-        data_type: str = None,
+        data_type: str | None = None,
         norm_type: dict[str, str] | None = None,
     ):
         self.norm_stats = dict_apply(lambda x: np.array(x).astype(np.float32), norm_stats)

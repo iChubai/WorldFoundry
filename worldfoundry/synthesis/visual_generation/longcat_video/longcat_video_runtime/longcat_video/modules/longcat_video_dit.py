@@ -163,7 +163,7 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
         enable_flashattn2: bool = False,
         enable_xformers: bool = False,
         enable_bsa: bool = False,
-        bsa_params: dict = None,
+        bsa_params: dict | None = None,
         cp_split_hw: list[int] | None = None,
         text_tokens_zero_pad: bool = False,
     ) -> None:

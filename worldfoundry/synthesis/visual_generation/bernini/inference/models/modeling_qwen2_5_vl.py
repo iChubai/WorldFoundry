@@ -47,7 +47,7 @@ import os
 from dataclasses import dataclass
 from functools import partial
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.distributed as dist
@@ -643,7 +643,7 @@ class Qwen2_5_VLPreTrainedModel(PreTrainedModel):
     config_class = Qwen2_5_VLConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -664,7 +664,7 @@ class Qwen2_5_VLPreTrainedModel(PreTrainedModel):
 
 class Qwen2_5_VisionTransformerPretrainedModel(Qwen2_5_VLPreTrainedModel):
     config_class = Qwen2_5_VLVisionConfig
-    _no_split_modules = ["Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLVisionBlock"]
 
     def __init__(self, config, *inputs, **kwargs) -> None:
         super().__init__(config, *inputs, **kwargs)
@@ -1969,9 +1969,9 @@ QWEN2_5_VL_INPUTS_DOCSTRING = r"""
 
 
 class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
     config_class = Qwen2_5_VLConfig
-    _no_split_modules = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
 
     def __init__(self, config):
         super().__init__(config)

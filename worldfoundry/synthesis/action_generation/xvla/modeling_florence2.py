@@ -24,6 +24,7 @@ buffer names remain compatible with the released X-VLA checkpoints.
 
 import math
 from collections import OrderedDict
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -1089,8 +1090,8 @@ class Florence2LanguagePreTrainedModel(PreTrainedModel):
     config_class = Florence2LanguageConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = False
-    _keys_to_ignore_on_load_unexpected = ["encoder.version"]
-    _no_split_modules = [r"Florence2EncoderLayer"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["encoder.version"]
+    _no_split_modules: ClassVar[list] = [r"Florence2EncoderLayer"]
     _supports_flash_attn_2 = True
     _supports_sdpa = True
 
@@ -1292,7 +1293,7 @@ class Florence2LanguageEncoderModel(Florence2LanguagePreTrainedModel):
     # an explicit target -> source mapping.  A mapping remains iterable by
     # target key in Transformers 4, so this representation supports both
     # loader generations without version-specific branches.
-    _tied_weights_keys = {
+    _tied_weights_keys: ClassVar[dict] = {
         "encoder.embed_tokens.weight": "shared.weight",
     }
 
@@ -1324,10 +1325,10 @@ class Florence2LanguageEncoder(Florence2LanguagePreTrainedModel):
     """Encoder-only language container retaining released checkpoint names."""
 
     base_model_prefix = "model"
-    _tied_weights_keys = {
+    _tied_weights_keys: ClassVar[dict] = {
         "model.encoder.embed_tokens.weight": "model.shared.weight",
     }
-    _keys_to_ignore_on_load_missing = ["final_logits_bias"]
+    _keys_to_ignore_on_load_missing: ClassVar[list] = ["final_logits_bias"]
 
     def __init__(self, config: Florence2LanguageConfig):
         super().__init__(config)
@@ -1397,7 +1398,7 @@ class Florence2ForConditionalGeneration(Florence2PreTrainedModel):
     decoder, LM head, label/loss path, or autoregressive ``generate`` method.
     """
 
-    _tied_weights_keys = {
+    _tied_weights_keys: ClassVar[dict] = {
         "language_model.model.encoder.embed_tokens.weight": "language_model.model.shared.weight",
     }
 

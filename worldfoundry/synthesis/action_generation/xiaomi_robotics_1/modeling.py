@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -167,7 +167,7 @@ class XR1Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
     """Checkpoint-compatible Qwen wrapper reduced to policy inference outputs."""
 
     _checkpoint_conversion_mapping: dict[str, str] = {}
-    _tied_weights_keys = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
+    _tied_weights_keys: ClassVar[dict] = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
     accepts_loss_kwargs = False
 
     def __init__(

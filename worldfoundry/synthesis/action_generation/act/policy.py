@@ -4,13 +4,13 @@ from __future__ import annotations
 import pickle
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 
 class _DatasetStatsUnpickler(pickle.Unpickler):
     """Restricted loader for the NumPy arrays in official ACT statistics."""
 
-    _ALLOWED_GLOBALS = {
+    _ALLOWED_GLOBALS: ClassVar[set] = {
         ("numpy", "dtype"),
         ("numpy", "ndarray"),
         ("numpy.core.multiarray", "_reconstruct"),

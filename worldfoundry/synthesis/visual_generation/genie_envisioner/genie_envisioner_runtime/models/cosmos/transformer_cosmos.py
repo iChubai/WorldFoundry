@@ -14,6 +14,8 @@
 
 """Native Cosmos component."""
 
+from typing import ClassVar
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -604,9 +606,9 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ["patch_embed", "final_layer", "norm"]
-    _no_split_modules = ["CosmosTransformerBlock"]
-    _keep_in_fp32_modules = ["learnable_pos_embed"]
+    _skip_layerwise_casting_patterns: ClassVar[list] = ["patch_embed", "final_layer", "norm"]
+    _no_split_modules: ClassVar[list] = ["CosmosTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = ["learnable_pos_embed"]
 
     @register_to_config
     def __init__(

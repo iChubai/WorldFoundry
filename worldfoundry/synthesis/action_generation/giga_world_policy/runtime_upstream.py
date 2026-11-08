@@ -3,6 +3,7 @@ import os
 import time
 import types
 from pathlib import Path
+from typing import ClassVar
 
 # ---------------------------------------------------------------------------
 # Default inference paths. Keep empty for the open-source config; pass paths via
@@ -96,8 +97,8 @@ def retrieve_latents(
 
 class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     model_cpu_offload_seq = "text_encoder->image_encoder->transformer->transformer_2->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
-    _optional_components = ["transformer", "transformer_2", "image_encoder", "image_processor"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _optional_components: ClassVar[list] = ["transformer", "transformer_2", "image_encoder", "image_processor"]
 
     def __init__(
         self,
@@ -134,7 +135,7 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -421,8 +422,8 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         image: PipelineImageInput,
         action_chunk: int,
         state: torch.Tensor | None = None,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 832,
         num_frames: int = 81,

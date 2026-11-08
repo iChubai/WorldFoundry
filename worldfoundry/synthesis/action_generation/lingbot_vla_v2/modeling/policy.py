@@ -1,5 +1,7 @@
 """LingBot-VLA v2 policy architecture for inference."""
 
+from typing import ClassVar
+
 import einops
 import torch
 from torch import Tensor, nn
@@ -291,10 +293,10 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
         position_ids: torch.LongTensor | None = None,
         vlm_position_ids: torch.LongTensor | None = None,
         past_key_values: list[torch.FloatTensor] | Cache | None = None,
-        inputs_embeds: list[torch.FloatTensor] = None,
+        inputs_embeds: list[torch.FloatTensor] | None = None,
         use_cache: bool | None = None,
         fill_kv_cache: bool | None = None,
-        ada_cond: list[torch.FloatTensor] = None,
+        ada_cond: list[torch.FloatTensor] | None = None,
         visual_pos_masks: torch.Tensor | None = None,
         deepstack_visual_embeds: list[torch.Tensor] | None = None,
     ):
@@ -875,7 +877,7 @@ class FlowMatchingV2(FlowMatchingV1):
 class LingbotVlaV2Policy(PreTrainedModel):
     config_class = LingbotVLAV2Config
     name = "torch_lingbot_vla_v2"
-    _no_split_modules = ["Qwen2DecoderLayer", "FixQwen2RMSNorm", "FixAdaRMSNorm"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer", "FixQwen2RMSNorm", "FixAdaRMSNorm"]
 
     def __init__(self, config: LingbotVLAV2Config, eval: bool = False):
         super().__init__(config)

@@ -4,7 +4,7 @@ import os
 import tempfile
 from functools import partial
 from shutil import copyfile
-from typing import Any
+from typing import Any, ClassVar
 
 import flax.linen as nn
 import jax
@@ -950,8 +950,8 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
         attention_mask=None,
         segment_ids=None,
         position_ids=None,
-        params: dict = None,
-        past_key_values: dict = None,
+        params: dict | None = None,
+        past_key_values: dict | None = None,
         dropout_rng: jax.random.PRNGKey = None,
         train: bool = False,
         output_attentions: bool | None = None,
@@ -1327,7 +1327,7 @@ class LLaMATokenizer(PreTrainedTokenizer):
 
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names: ClassVar[list] = ["input_ids", "attention_mask"]
 
     def __init__(
         self,

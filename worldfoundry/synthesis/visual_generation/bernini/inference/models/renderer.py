@@ -32,7 +32,7 @@ class BerniniRendererConfig(PretrainedConfig):
 
     def __init__(
         self,
-        wan22_base: str = None,
+        wan22_base: str | None = None,
         skip_transformer_1: bool = False,
         skip_transformer_2: bool = False,
         switch_dit_boundary: float = 0.875,

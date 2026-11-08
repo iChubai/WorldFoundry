@@ -147,13 +147,13 @@ class MMDoubleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple = None,
+        freqs_cis: tuple | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         if condition_type == "token_replace":
             img_mod1, token_replace_img_mod1 = self.img_mod(vec, secondary_value=token_replace_vec)
@@ -307,10 +307,10 @@ class MMDoubleStreamBlock(nn.Module):
         img: torch.Tensor,
         txt: torch.Tensor,
         vec: torch.Tensor,
-        freqs_cis: tuple = None,
-        condition_type: str = None,
+        freqs_cis: tuple | None = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ):
         if condition_type == "token_replace":
             img_mod1, token_replace_img_mod1 = self.img_mod(vec, secondary_value=token_replace_vec)
@@ -418,8 +418,8 @@ class MMDoubleStreamBlock(nn.Module):
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
-        frist_frame_token_num: int = None,
+        condition_type: str | None = None,
+        frist_frame_token_num: int | None = None,
     ):
         img_mod2_shift, img_mod2_scale, img_mod2_gate = img_mod2
         txt_mod2_shift, txt_mod2_scale, txt_mod2_gate = txt_mod2
@@ -487,13 +487,13 @@ class MMDoubleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple = None,
+        freqs_cis: tuple | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ):
         ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
         q, k, v, img_q, img_k, img_mod1_gate, txt_mod1_gate, img_mod2, txt_mod2, tr_mod1 = (
@@ -562,13 +562,13 @@ class MMDoubleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple = None,
+        freqs_cis: tuple | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
         no_attn_recompute: bool = False,
     ):
         if no_attn_recompute:
@@ -622,7 +622,7 @@ class MMSingleStreamBlock(nn.Module):
         mlp_act_type: str = "gelu_tanh",
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
-        qk_scale: float = None,
+        qk_scale: float | None = None,
         action_config: dict = {},
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
@@ -682,13 +682,13 @@ class MMSingleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> torch.Tensor:
         if condition_type == "token_replace":
             mod, tr_mod = self.modulation(vec, secondary_value=token_replace_vec)
@@ -779,10 +779,10 @@ class MMSingleStreamBlock(nn.Module):
         x: torch.Tensor,
         vec: torch.Tensor,
         txt_len: int,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
-        condition_type: str = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> torch.Tensor:
         if condition_type == "token_replace":
             mod, tr_mod = self.modulation(vec, secondary_value=token_replace_vec)
@@ -834,9 +834,9 @@ class MMSingleStreamBlock(nn.Module):
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ):
         # attention computation end
         if (mouse_condition is not None) and (keyboard_condition is not None):
@@ -865,13 +865,13 @@ class MMSingleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
     ) -> torch.Tensor:
         ckpt_kwargs: dict[str, Any] = {"use_reentrant": False}
         q, k, v, img_q, img_k, mod_gate, mlp, tr_mod_gate = torch.utils.checkpoint.checkpoint(
@@ -938,13 +938,13 @@ class MMSingleStreamBlock(nn.Module):
         cu_seqlens_kv: torch.Tensor | None = None,
         max_seqlen_q: int | None = None,
         max_seqlen_kv: int | None = None,
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         kwargs=None,
         mouse_condition=None,
         keyboard_condition=None,
-        condition_type: str = None,
+        condition_type: str | None = None,
         token_replace_vec: torch.Tensor = None,
-        frist_frame_token_num: int = None,
+        frist_frame_token_num: int | None = None,
         no_attn_recompute: bool = False,
     ) -> torch.Tensor:
         if no_attn_recompute:
@@ -999,7 +999,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         text_states_dim_2,
         patch_size: list = [1, 2, 2],
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
-        out_channels: int = None,
+        out_channels: int | None = None,
         hidden_size: int = 3072,
         heads_num: int = 24,
         mlp_width_ratio: float = 4.0,

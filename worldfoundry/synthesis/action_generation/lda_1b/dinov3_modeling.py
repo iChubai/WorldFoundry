@@ -18,9 +18,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from collections.abc import Callable
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -435,12 +435,12 @@ class DINOv3ViTPreTrainedModel(PreTrainedModel):
     base_model_prefix = "dinov3_vit"
     main_input_name = "pixel_values"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["DINOv3ViTLayer"]
+    _no_split_modules: ClassVar[list] = ["DINOv3ViTLayer"]
     _supports_sdpa = True
     _supports_flash_attn = True
     _supports_flex_attn = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs: ClassVar[dict] = {
         "hidden_states": DINOv3ViTLayer,
         "attentions": DINOv3ViTAttention,
     }

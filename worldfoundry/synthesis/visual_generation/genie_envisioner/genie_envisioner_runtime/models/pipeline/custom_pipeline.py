@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -167,8 +166,8 @@ def update_init_latents(init_latents, n_prev, new_latents):
 ### Modified From diffusers/pipelines/ltx/pipeline_ltx.py
 class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
     model_cpu_offload_seq = "text_encoder->transformer->vae"
-    _optional_components = []
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _optional_components: ClassVar[list] = []
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
         self,
@@ -225,7 +224,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 128,
         device: torch.device | None = None,
@@ -577,14 +576,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         self,
         image: PipelineImageInput = None,
         n_prev: int = 4,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         negative_prompt: str | list[str] | None = None,
         height: int = 192,
         width: int = 256,
         chunk: int = 8,
         frame_rate: int = 30,
         num_inference_steps: int = 50,
-        timesteps: list[int] = None,
+        timesteps: list[int] | None = None,
         guidance_scale: float = 3,
         num_videos_per_prompt: int | None = 1,
         generator: torch.Generator | list[torch.Generator] | None = None,
@@ -604,7 +603,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         action_chunk: int = 57,
         action_dim: int = 14,
         return_video: bool = True,
-        noise_seed: int = None,
+        noise_seed: int | None = None,
         history_action_state: torch.Tensor = None,
         pixel_wise_timestep: bool = True,
         n_chunk: int = 1,

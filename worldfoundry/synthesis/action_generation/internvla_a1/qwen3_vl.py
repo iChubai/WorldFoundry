@@ -20,11 +20,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import torch
 import torch.nn as nn
@@ -630,7 +629,7 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
 
 class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLVisionConfig
-    _no_split_modules = ["Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLVisionBlock"]
 
     def __init__(self, config, *inputs, **kwargs) -> None:
         super().__init__(config, *inputs, **kwargs)
@@ -1335,7 +1334,7 @@ class Qwen3VLCausalLMOutputWithPast(ModelOutput):
 
 
 class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel, GenerationMixin):
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # Transformers 5 represents tied weights as target->source mappings;
     # Transformers 4.57 (the release environment) used a target-name list.
     _tied_weights_keys = (

@@ -606,10 +606,10 @@ class Lyra2WanModel(nn.Module):
 
         token_chunks: list[torch.Tensor] = []
         freq_chunks: list[torch.Tensor] = []
-        cam_chunks: list[torch.Tensor] = [] if camera is not None else []
+        cam_chunks: list[torch.Tensor] = []
         use_buffer_tokens = bool(self.use_correspondence and buffer_B_C_T_H_W is not None)
-        buf_chunks: list[torch.Tensor] = [] if use_buffer_tokens else []
-        buf_validity_chunks: list[torch.Tensor] = [] if use_buffer_tokens else []
+        buf_chunks: list[torch.Tensor] = []
+        buf_validity_chunks: list[torch.Tensor] = []
         buf_splits = None
         buffer_full_match = False
         if buffer_B_C_T_H_W is not None:

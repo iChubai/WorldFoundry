@@ -239,10 +239,10 @@ def save(
     optimizer: Optimizer = None,
     lr_scheduler: _LRScheduler = None,
     sampler=None,
-    epoch: int = None,
-    step: int = None,
-    global_step: int = None,
-    batch_size: int = None,
+    epoch: int | None = None,
+    step: int | None = None,
+    global_step: int | None = None,
+    batch_size: int | None = None,
 ):
     save_dir = os.path.join(save_dir, f"epoch{epoch}-global_step{global_step}")
     os.makedirs(os.path.join(save_dir, "model"), exist_ok=True)

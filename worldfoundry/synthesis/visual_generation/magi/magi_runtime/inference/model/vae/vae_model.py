@@ -143,7 +143,7 @@ class VideoTokenizerABC(ABC):
         tile_sample_min_length: int = 16,
         spatial_tile_overlap_factor: float = 0.25,
         temporal_tile_overlap_factor: float = 0,
-        allow_spatial_tiling: bool = None,
+        allow_spatial_tiling: bool | None = None,
         verbose: bool = False,
         parallel_group: torch.distributed.ProcessGroup = None,
     ) -> torch.Tensor:
@@ -185,7 +185,7 @@ class VideoTokenizerABC(ABC):
         tile_sample_min_length: int = 16,
         spatial_tile_overlap_factor: float = 0.25,
         temporal_tile_overlap_factor: float = 0,
-        allow_spatial_tiling: bool = None,
+        allow_spatial_tiling: bool | None = None,
         verbose: bool = False,
         parallel_group: torch.distributed.ProcessGroup = None,
     ) -> torch.Tensor:

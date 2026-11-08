@@ -8,7 +8,7 @@ import pickle
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.core.io.paths import resolve_data_path, resolve_worldfoundry_path
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
@@ -70,7 +70,7 @@ def _strict_local_path(location: str | None, label: str, *, required: bool = Tru
 class _RestrictedStatsUnpickler(pickle.Unpickler):
     """Load the upstream numeric stats pickle without arbitrary globals."""
 
-    _ALLOWED = {
+    _ALLOWED: ClassVar[set] = {
         ("numpy", "dtype"),
         ("numpy", "ndarray"),
         ("numpy.core.multiarray", "_reconstruct"),

@@ -4,6 +4,7 @@ import os
 import warnings
 from collections.abc import Callable
 from functools import partial
+from typing import ClassVar
 from urllib.parse import urlparse
 
 import einops
@@ -533,7 +534,7 @@ class MolmoAct2VideoProcessorKwargs(VideosKwargs, total=False):
 
 class MolmoAct2VideoProcessor(BaseVideoProcessor):
     resample = PILImageResampling.BILINEAR
-    size = {"height": 378, "width": 378}
+    size: ClassVar[dict] = {"height": 378, "width": 378}
     image_mean = IMAGENET_STANDARD_MEAN
     image_std = IMAGENET_STANDARD_STD
     do_resize = True
@@ -541,13 +542,13 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
     do_normalize = True
     do_convert_rgb = True
     patch_size = 14
-    pooling_size = [3, 3]
+    pooling_size: ClassVar[list] = [3, 3]
     do_sample_frames = True
     frame_sample_mode = "uniform_last_frame"
     max_fps = 2
     sampling_fps = 2
     valid_kwargs = MolmoAct2VideoProcessorKwargs
-    model_input_names = ["pixel_values_videos", "video_token_pooling", "video_grids"]
+    model_input_names: ClassVar[list] = ["pixel_values_videos", "video_token_pooling", "video_grids"]
 
     def __init__(self, **kwargs: Unpack[MolmoAct2VideoProcessorKwargs]):
         super().__init__(**kwargs)

@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import gc
 import os
 import tempfile
+from typing import ClassVar
 
 import ffmpeg
 import torch
@@ -34,7 +34,7 @@ class SingletonMeta(type):
     Singleton metaclass
     """
 
-    _instances = {}
+    _instances: ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

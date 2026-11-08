@@ -53,7 +53,7 @@ class OpenSoraT2V_v1_3(ModelMixin, ConfigMixin):
         upcast_attention: bool = False,
         norm_elementwise_affine: bool = False,
         norm_eps: float = 1e-6,
-        caption_channels: int = None,
+        caption_channels: int | None = None,
         interpolation_scale_h: float = 1.0,
         interpolation_scale_w: float = 1.0,
         interpolation_scale_t: float = 1.0,

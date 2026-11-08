@@ -65,7 +65,7 @@ def _apply_joystick_hud(video_np: np.ndarray, p: dict) -> np.ndarray:
         return video_np
 
 
-def _write_pred_outputs(output_dir: Path, video_np: np.ndarray, fps: int = 24, params: dict = None) -> None:
+def _write_pred_outputs(output_dir: Path, video_np: np.ndarray, fps: int = 24, params: dict | None = None) -> None:
     """Write geo_pred.mp4 + 5 sample frames (mirrors the legacy inline block)."""
     # EVOKE_DUMP_PRED_PNG=1 -> also dump every pred frame as lossless png. Off by default; this is for
     #   pixel-level benchmarks (IQA / optical flow / reprojection all read the frames back), where the

@@ -1,6 +1,5 @@
 # Adpted from LayerPano3D
 # https://huggingface.co/ysmikey/Layerpano3D-FLUX-Panorama-LoRA/blob/main/pipeline_flux.py
-
 # Copyright 2024 Black Forest Labs and The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -189,8 +187,8 @@ class FluxPipeline(
     """
 
     model_cpu_offload_seq = "text_encoder->text_encoder_2->image_encoder->transformer->vae"
-    _optional_components = ["image_encoder", "feature_extractor"]
-    _callback_tensor_inputs = ["latents", "prompt_embeds"]
+    _optional_components: ClassVar[list] = ["image_encoder", "feature_extractor"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds"]
 
     def __init__(
         self,
@@ -230,7 +228,7 @@ class FluxPipeline(
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_images_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -653,9 +651,9 @@ class FluxPipeline(
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         prompt_2: str | list[str] | None = None,
-        negative_prompt: str | list[str] = None,
+        negative_prompt: str | list[str] | None = None,
         negative_prompt_2: str | list[str] | None = None,
         true_cfg_scale: float = 1.0,
         height: int | None = None,

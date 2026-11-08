@@ -1,6 +1,7 @@
 import math
 import warnings
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -109,7 +110,7 @@ class GO1Model(PreTrainedModel):
     config_class = GO1ModelConfig
     main_input_name = "pixel_values"
     base_model_prefix = "language_model"
-    _no_split_modules = [
+    _no_split_modules: ClassVar[list] = [
         "InternVisionModel",
         "InternLM2DecoderLayerGO1",
         "ActionExpertDecoderLayer",
@@ -445,7 +446,7 @@ class GO1Model(PreTrainedModel):
         position_ids: torch.LongTensor | None = None,
         image_flags: torch.LongTensor | None = None,
         state: torch.Tensor = None,
-        ctrl_freqs: int = None,
+        ctrl_freqs: int | None = None,
         action_gts: torch.Tensor = None,
         return_dict: bool | None = None,
         labels: torch.LongTensor | None = None,

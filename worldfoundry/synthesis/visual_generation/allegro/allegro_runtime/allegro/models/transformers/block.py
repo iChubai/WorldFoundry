@@ -1054,11 +1054,11 @@ class BasicTransformerBlock(nn.Module):
         encoder_hidden_states: torch.FloatTensor | None = None,
         encoder_attention_mask: torch.FloatTensor | None = None,
         timestep: torch.LongTensor | None = None,
-        cross_attention_kwargs: dict[str, Any] = None,
+        cross_attention_kwargs: dict[str, Any] | None = None,
         class_labels: torch.LongTensor | None = None,
-        frame: int = None,
-        height: int = None,
-        width: int = None,
+        frame: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
     ) -> torch.FloatTensor:
         # Notice that normalization is always applied before the real computation in the following blocks.
         cross_attention_kwargs = cross_attention_kwargs if cross_attention_kwargs is not None else {}
@@ -1178,8 +1178,8 @@ class AdaLayerNormSingle(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        added_cond_kwargs: dict[str, torch.Tensor] = None,
-        batch_size: int = None,
+        added_cond_kwargs: dict[str, torch.Tensor] | None = None,
+        batch_size: int | None = None,
         hidden_dtype: torch.dtype | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # No modulation happening here.

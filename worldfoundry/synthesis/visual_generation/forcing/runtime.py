@@ -8,7 +8,7 @@ import sys
 import tempfile
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -277,7 +277,7 @@ class _ForcingRuntime:
     """Shared in-tree runtime bridge for forcing-family official runners."""
 
     MODEL_ID: str | None = None
-    DISPLAY_NAMES = {
+    DISPLAY_NAMES: ClassVar[dict] = {
         "self-forcing": "Self-Forcing",
         "causal-forcing": "Causal-Forcing",
         "rolling-forcing": "RollingForcing",

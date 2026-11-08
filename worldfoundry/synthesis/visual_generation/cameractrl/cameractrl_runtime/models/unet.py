@@ -1049,7 +1049,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         class_labels: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         cross_attention_kwargs: dict[str, Any] | None = None,
-        pose_embedding_features: list[torch.Tensor] = None,
+        pose_embedding_features: list[torch.Tensor] | None = None,
         return_dict: bool = True,
         # support controlnet
         down_block_additional_residuals: tuple[torch.Tensor] | None = None,

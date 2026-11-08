@@ -1,6 +1,7 @@
 """Checkpoint-compatible Qwen3-VL inference layers."""
 
 from collections.abc import Callable
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -258,9 +259,9 @@ class Qwen3VLModel(_Qwen3VLModel):
 
 
 class Qwen3VLForConditionalGeneration(_Qwen3VLForConditionalGeneration, GenerationMixin):
-    _tied_weights_keys = ["lm_head.weight"]
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
     config_class = Qwen3VLConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
 
     def __init__(self, config):
         Qwen3VLPreTrainedModel.__init__(self, config)

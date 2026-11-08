@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -201,8 +200,8 @@ class FluxFillPipeline(
     """
 
     model_cpu_offload_seq = "text_encoder->text_encoder_2->transformer->vae"
-    _optional_components = []
-    _callback_tensor_inputs = ["latents", "prompt_embeds"]
+    _optional_components: ClassVar[list] = []
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds"]
 
     def __init__(
         self,
@@ -247,7 +246,7 @@ class FluxFillPipeline(
     # Copied from diffusers.pipelines.flux.pipeline_flux.FluxPipeline._get_t5_prompt_embeds
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_images_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -752,7 +751,7 @@ class FluxFillPipeline(
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         prompt_2: str | list[str] | None = None,
         image: torch.FloatTensor | None = None,
         mask_image: torch.FloatTensor | None = None,

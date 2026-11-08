@@ -2,6 +2,8 @@
 Processor class for MolmoAct2.
 """
 
+from typing import ClassVar
+
 import numpy as np
 from transformers import AutoTokenizer
 from transformers.feature_extraction_utils import BatchFeature
@@ -50,7 +52,7 @@ class MolmoAct2ProcessorKwargs(ProcessingKwargs, total=False):
 
     images_kwargs: MolmoAct2ImagesKwargs
     videos_kwargs: MolmoAct2VideoProcessorKwargs
-    _defaults = {
+    _defaults = {  # noqa: RUF012 - TypedDict subclass; Transformers reads these defaults and ClassVar is invalid here.
         "text_kwargs": {
             "padding": False,
             "return_mm_token_type_ids": True,
@@ -60,8 +62,8 @@ class MolmoAct2ProcessorKwargs(ProcessingKwargs, total=False):
 
 
 class MolmoAct2Processor(ProcessorMixin):
-    attributes = ["image_processor", "video_processor", "tokenizer"]
-    optional_attributes = [
+    attributes: ClassVar[list] = ["image_processor", "video_processor", "tokenizer"]
+    optional_attributes: ClassVar[list] = [
         "chat_template",
         "time_mode",
         "image_use_col_tokens",

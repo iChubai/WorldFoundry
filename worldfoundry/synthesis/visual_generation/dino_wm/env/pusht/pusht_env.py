@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # env import
 import gym
 
@@ -350,7 +352,7 @@ def pymunk_to_shapely(body, shapes):
 
 
 class PushTEnv(gym.Env):
-    metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 10}
+    metadata: ClassVar[dict] = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 10}
     reward_range = (0.0, 1.0)
 
     def __init__(
@@ -1116,7 +1118,7 @@ class PushTKeypointsEnv(PushTEnv):
         draw_keypoints=False,
         reset_to_state=None,
         render_action=False,
-        local_keypoint_map: dict[str, np.ndarray] = None,
+        local_keypoint_map: dict[str, np.ndarray] | None = None,
         color_map: dict[str, np.ndarray] | None = None,
     ):
         super().__init__(

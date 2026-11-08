@@ -1,5 +1,7 @@
 """Depth Anything 3 Gaussian reconstructor used by NeoVerse inference."""
 
+from typing import ClassVar
+
 import torch.nn as nn
 
 from worldfoundry.core.model_loading import hash_state_dict_keys
@@ -36,8 +38,8 @@ class DepthAnything3Reconstructor(nn.Module):
     Splatting representations compatible with the existing pipeline.
     """
 
-    IMAGENET_MEAN = [0.485, 0.456, 0.406]
-    IMAGENET_STD = [0.229, 0.224, 0.225]
+    IMAGENET_MEAN: ClassVar[list] = [0.485, 0.456, 0.406]
+    IMAGENET_STD: ClassVar[list] = [0.229, 0.224, 0.225]
     PATCH_SIZE = 14
 
     def __init__(self, model_name="da3-giant", gaussian_scale=0.0001, **kwargs):

@@ -43,7 +43,7 @@ class BaseEvalInputDataset(Dataset):
         transform: object,
         traj_names: str,
         normalize: bool = True,
-        predefined_index: list = None,
+        predefined_index: list | None = None,
     ):
         self.data_folder = data_folder
         self.data_split_folder = data_split_folder
@@ -137,7 +137,7 @@ class EvalDataset(BaseEvalInputDataset):
         transform: object,
         traj_names: str,
         normalize: bool = True,
-        predefined_index: list = None,
+        predefined_index: list | None = None,
     ):
         super().__init__(
             data_folder,

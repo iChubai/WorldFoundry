@@ -119,7 +119,7 @@ def predict_equirectangular(
     equirect_image: Image.Image,
     device: torch.device,
     face_size: int = 768,
-    depth_predictions: dict = None,
+    depth_predictions: dict | None = None,
 ) -> SplatFile:
     """Predict Gaussians from an equirectangular image using 6 cubemap faces.
 

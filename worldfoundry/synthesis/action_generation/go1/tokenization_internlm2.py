@@ -18,7 +18,7 @@
 
 import os
 from shutil import copyfile
-from typing import Any
+from typing import Any, ClassVar
 
 import sentencepiece as spm
 from transformers.tokenization_utils import PreTrainedTokenizer
@@ -43,7 +43,7 @@ class InternLM2Tokenizer(PreTrainedTokenizer):
 
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names: ClassVar[list] = ["input_ids", "attention_mask"]
     _auto_class = "AutoTokenizer"
 
     def __init__(

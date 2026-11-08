@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import inspect
 import itertools
 import json
@@ -21,7 +20,7 @@ import re
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, ClassVar
 
 import safetensors
 import torch
@@ -164,7 +163,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
     """
 
     config_name = CONFIG_NAME
-    _automatically_saved_args = ["_diffusers_version", "_class_name", "_name_or_path"]
+    _automatically_saved_args: ClassVar[list] = ["_diffusers_version", "_class_name", "_name_or_path"]
     _supports_gradient_checkpointing = False
     _keys_to_ignore_on_load_unexpected = None
     _no_split_modules = None

@@ -64,7 +64,7 @@ def load_video(video_path: str, max_frames: int = 81):
     return frames_list
 
 
-def load_images(image_paths: list[str], max_frames: int = None):
+def load_images(image_paths: list[str], max_frames: int | None = None):
     frames_list = []
     max_frames = len(image_paths) if max_frames is None else min(max_frames, len(image_paths))
     for i in range(max_frames):
@@ -119,7 +119,7 @@ def filter_depth_outliers(depth_map, valid_mask, method="iqr", iqr_factor=1.5, p
 class DepthPredictDA3:
     """Depth estimation + pose extraction using Depth-Anything-3."""
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None):
         self.config = {**DEFAULT_CONFIG, **(config or {})}
         logger.info("DepthPredictDA3 init, model_path=%s", self.config["model_path"])
 

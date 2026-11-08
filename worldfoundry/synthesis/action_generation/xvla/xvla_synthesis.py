@@ -1,7 +1,7 @@
 """WorldFoundry synthesis facade for X-VLA."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.core.model_loading.checkpoints import select_profile_checkpoint, selected_checkpoint_options
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
@@ -17,7 +17,7 @@ class XVLASynthesis(OfficialPolicySynthesis, ActionModelSynthesis):
     """Profile-backed direct X-VLA action generation."""
 
     MODEL_ID = "xvla"
-    CHECKPOINT_ALIASES = {
+    CHECKPOINT_ALIASES: ClassVar[dict] = {
         "widowx": "widowx_checkpoint",
         "bridge": "widowx_checkpoint",
         "google": "google_robot_checkpoint",

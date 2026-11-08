@@ -13,7 +13,7 @@ from .transform_base import InvertibleModalityTransform, ModalityTransform
 class RotationTransform:
     """Adapted from https://github.com/real-stanford/diffusion_policy/blob/548a52bbb105518058e27bf34dcf90bf6f73681a/diffusion_policy/model/common/rotation_transformer.py"""
 
-    valid_reps = ["axis_angle", "euler_angles", "quaternion", "rotation_6d", "matrix"]
+    valid_reps: ClassVar[list] = ["axis_angle", "euler_angles", "quaternion", "rotation_6d", "matrix"]
 
     def __init__(self, from_rep="axis_angle", to_rep="rotation_6d"):
         """
@@ -79,7 +79,7 @@ class RotationTransform:
 
 
 class Normalizer:
-    valid_modes = ["q99", "mean_std", "min_max", "binary", "scale"]
+    valid_modes: ClassVar[list] = ["q99", "mean_std", "min_max", "binary", "scale"]
 
     def __init__(self, mode: str, statistics: dict):
         self.mode = mode
@@ -208,7 +208,7 @@ class PerHorizonNormalizer:
             Format: {"q01": [[h0_vals], [h1_vals], ...], "q99": [[h0_vals], [h1_vals], ...], ...}
     """
 
-    valid_modes = ["q99", "mean_std", "min_max", "binary", "scale"]
+    valid_modes: ClassVar[list] = ["q99", "mean_std", "min_max", "binary", "scale"]
 
     def __init__(self, mode: str, statistics: dict):
         self.mode = mode

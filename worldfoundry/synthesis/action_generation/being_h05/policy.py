@@ -154,17 +154,17 @@ class BeingHPolicy(BasePolicy):
         device: int | str = "cuda" if torch.cuda.is_available() else "cpu",
         torch_dtype: str | torch.dtype | None = "auto",
         # MPG overrides
-        use_mpg: bool = None,
-        mpg_lambda: float = None,
-        mpg_num_projections: int = None,
-        mpg_refinement_iters: int = None,
-        mpg_gate_temperature: float = None,
+        use_mpg: bool | None = None,
+        mpg_lambda: float | None = None,
+        mpg_num_projections: int | None = None,
+        mpg_refinement_iters: int | None = None,
+        mpg_gate_temperature: float | None = None,
         # Flow matching parameter override
-        num_inference_timesteps: int = None,
+        num_inference_timesteps: int | None = None,
         # RTC parameter
         enable_rtc: bool = True,
         # Metadata variant selection
-        metadata_variant: str = None,
+        metadata_variant: str | None = None,
         stats_selection_mode: str = "auto",
         # WorldFoundry runtime memory control
         attention_mask_kind: str = "dense",

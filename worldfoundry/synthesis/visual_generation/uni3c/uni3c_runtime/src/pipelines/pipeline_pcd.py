@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import html
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import PIL
 import regex as re
@@ -153,7 +152,7 @@ class PCDControllerPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     """
 
     model_cpu_offload_seq = "text_encoder->image_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
         self,
@@ -184,7 +183,7 @@ class PCDControllerPipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -464,8 +463,8 @@ class PCDControllerPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         render_video: torch.Tensor,
         render_mask: torch.Tensor,
         camera_embedding: torch.Tensor = None,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 768,
         num_frames: int = 81,

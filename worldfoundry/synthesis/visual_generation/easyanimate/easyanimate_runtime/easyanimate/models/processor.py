@@ -336,9 +336,9 @@ class EasyAnimateSWAttnProcessor2_0:
         encoder_hidden_states: torch.Tensor,
         attention_mask: torch.Tensor | None = None,
         image_rotary_emb: torch.Tensor | None = None,
-        num_frames: int = None,
-        height: int = None,
-        width: int = None,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
         attn2: Attention = None,
     ) -> torch.Tensor:
         text_seq_length = encoder_hidden_states.size(1)

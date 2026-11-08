@@ -246,10 +246,10 @@ class PipelineUnit:
         self,
         seperate_cfg: bool = False,
         take_over: bool = False,
-        input_params: tuple[str] = None,
-        input_params_posi: dict[str, str] = None,
-        input_params_nega: dict[str, str] = None,
-        onload_model_names: tuple[str] = None,
+        input_params: tuple[str] | None = None,
+        input_params_posi: dict[str, str] | None = None,
+        input_params_nega: dict[str, str] | None = None,
+        onload_model_names: tuple[str] | None = None,
     ):
         self.seperate_cfg = seperate_cfg
         self.take_over = take_over

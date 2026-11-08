@@ -1039,7 +1039,7 @@ def generate_blue_noise_tile(size: int, rng: np.random.Generator) -> np.ndarray:
 
 def compute_iteration_plan(
     num_frames: int,
-    frames_per_iter: int = None,
+    frames_per_iter: int | None = None,
 ) -> list[tuple[int, int, int]]:
     """
     Compute the iteration plan for generating num_frames (T2V mode, no overlap).

@@ -46,7 +46,7 @@ def create_model_and_transforms(
     tokenizer_path: str,
     cross_attn_every_n_layers: int = 1,
     use_local_files: bool = True,
-    decoder_layers_attr_name: str = None,
+    decoder_layers_attr_name: str | None = None,
     # this is the window size sampled from the episode
     window_size: int = 32,
     use_gripper=False,

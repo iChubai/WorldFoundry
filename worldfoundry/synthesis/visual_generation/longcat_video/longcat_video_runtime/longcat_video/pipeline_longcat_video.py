@@ -141,7 +141,7 @@ class LongCatVideoPipeline:
 
     def _get_t5_prompt_embeds(
         self,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_videos_per_prompt: int = 1,
         max_sequence_length: int = 512,
         device: torch.device | None = None,
@@ -449,8 +449,8 @@ class LongCatVideoPipeline:
     @torch.no_grad()
     def generate_t2v(
         self,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 480,
         width: int = 832,
         num_frames: int = 93,
@@ -678,8 +678,8 @@ class LongCatVideoPipeline:
     def generate_i2v(
         self,
         image: PipelineImageInput,
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         resolution: Literal["480p", "720p"] = "480p",
         num_frames: int = 93,
         num_inference_steps: int = 50,
@@ -901,8 +901,8 @@ class LongCatVideoPipeline:
     def generate_vc(
         self,
         video: list[Image.Image],
-        prompt: str | list[str] = None,
-        negative_prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         resolution: Literal["480p", "720p"] = "480p",
         num_frames: int = 93,
         num_cond_frames: int = 13,
@@ -1177,7 +1177,7 @@ class LongCatVideoPipeline:
         self,
         image: PipelineImageInput | None = None,
         video: list[Image.Image] | None = None,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         stage1_video: str | None = None,
         num_cond_frames: int = 0,
         num_inference_steps: int = 50,

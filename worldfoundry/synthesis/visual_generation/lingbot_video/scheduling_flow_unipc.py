@@ -1,4 +1,5 @@
 import math
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -63,7 +64,7 @@ class FlowUniPCMultistepScheduler(SchedulerMixin, ConfigMixin):
             sigma is the same as the last sigma in the training schedule. If `zero`, the final sigma is set to 0.
     """
 
-    _compatibles = [e.name for e in KarrasDiffusionSchedulers]
+    _compatibles: ClassVar[list] = [e.name for e in KarrasDiffusionSchedulers]
     order = 1
 
     @register_to_config
@@ -325,7 +326,7 @@ class FlowUniPCMultistepScheduler(SchedulerMixin, ConfigMixin):
         model_output: torch.Tensor,
         *args,
         sample: torch.Tensor = None,
-        order: int = None,  # pyright: ignore
+        order: int | None = None,  # pyright: ignore
         **kwargs,
     ) -> torch.Tensor:
         """
@@ -455,7 +456,7 @@ class FlowUniPCMultistepScheduler(SchedulerMixin, ConfigMixin):
         *args,
         last_sample: torch.Tensor = None,
         this_sample: torch.Tensor = None,
-        order: int = None,  # pyright: ignore
+        order: int | None = None,  # pyright: ignore
         **kwargs,
     ) -> torch.Tensor:
         """

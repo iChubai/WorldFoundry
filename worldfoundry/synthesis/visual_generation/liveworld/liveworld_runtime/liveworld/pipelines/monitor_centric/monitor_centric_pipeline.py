@@ -4153,7 +4153,7 @@ def _resolve_data_path(value: str, config_dir: Path) -> str:
 _DATA_PATH_KEYS = ("geometry_file_name", "first_frame_image", "entities_file", "storyline_file")
 
 
-def load_monitor_centric_config(config_path: str, system_config_path: str = None) -> dict:
+def load_monitor_centric_config(config_path: str, system_config_path: str | None = None) -> dict:
     """Load YAML config with system defaults merging and path resolution.
 
     Args:

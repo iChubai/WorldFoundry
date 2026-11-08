@@ -334,13 +334,13 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        conditional_pixel_values_path: str | list[str] = None,
-        conditional_pixel_values_indices: int | list[int] = None,
+        conditional_pixel_values_path: str | list[str] | None = None,
+        conditional_pixel_values_indices: int | list[int] | None = None,
         mask_type: str | MaskType = None,
         crop_for_hw: bool = False,
         max_hxw: int = 236544,
         noise_strength: float | None = 0.0,
-        prompt: str | list[str] = None,
+        prompt: str | list[str] | None = None,
         num_frames: int | None = None,
         height: int | None = None,
         width: int | None = None,

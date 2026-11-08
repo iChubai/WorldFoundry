@@ -232,8 +232,8 @@ class BerniniRendererPipeline:
     def from_pretrained(
         cls,
         config_dir: str,
-        high_noise_ckpt: str = None,
-        low_noise_ckpt: str = None,
+        high_noise_ckpt: str | None = None,
+        low_noise_ckpt: str | None = None,
         device="cuda",
         load_ckpt_weights: bool = True,
         **config_overrides,
@@ -288,8 +288,8 @@ class BerniniRendererPipeline:
         flow_shift: float = 5.0,
         seed: int = 42,
         fps: int = 16,
-        vae_fps: int = None,
-        vit_fps: int = None,
+        vae_fps: int | None = None,
+        vit_fps: int | None = None,
         eta: float = 0.5,
         norm_threshold=(50.0, 50.0),
         momentum: float = -0.5,
@@ -413,7 +413,7 @@ class BerniniPipeline:
     def from_pretrained(
         cls,
         config_dir: str,
-        ckpt: str = None,
+        ckpt: str | None = None,
         device="cuda",
         **config_overrides,
     ) -> "BerniniPipeline":
@@ -508,7 +508,7 @@ class BerniniPipeline:
         video=None,
         image=None,
         images=None,
-        max_duration: int = None,
+        max_duration: int | None = None,
     ):
         from .data_utils import generate_unified_inputs
 

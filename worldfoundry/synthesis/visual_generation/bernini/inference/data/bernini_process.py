@@ -89,7 +89,7 @@ def packing_vae(
     image_inputs: "dict[str, Any]",
     video_inputs: "dict[str, Any]",
     noise_sigma: float,
-    max_vae_frames: int = None,
+    max_vae_frames: int | None = None,
     interpolate_src_id: bool = True,
     max_trained_src_id: int = 5,
 ):
@@ -202,7 +202,7 @@ def bernini_process_sample(
     text_dropout_rate: float,
     img_dropout_rate: float,
     video_dropout_rate: float,
-    max_vae_frames: int = None,
+    max_vae_frames: int | None = None,
     noise_sigma=torch.tensor(0),
     noise_timestep=torch.tensor(0),
     noise_sigma_low=None,

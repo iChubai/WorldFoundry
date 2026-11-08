@@ -101,7 +101,7 @@ class HRDTRuntime:
                     f"H-RDT checkpoint directory {direct} does not contain "
                     f"{tuple(self.config.model_files)} or {self.config.model_relative_dir}"
                 )
-            snapshot = direct if model_dir != direct else direct
+            snapshot = direct
         else:
             try:
                 snapshot = resolve_local_hf_model_path(location, required_files=root_files)

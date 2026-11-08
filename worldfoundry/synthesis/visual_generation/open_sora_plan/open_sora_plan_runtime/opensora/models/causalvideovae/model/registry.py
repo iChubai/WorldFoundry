@@ -1,5 +1,8 @@
+from typing import ClassVar
+
+
 class ModelRegistry:
-    _models = {}
+    _models: ClassVar[dict] = {}
 
     @classmethod
     def register(cls, model_name):

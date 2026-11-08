@@ -2,6 +2,7 @@
 # X-WAM joint world-action extensions copyright the X-WAM contributors.
 # WorldFoundry modifications: inference-only path, core attention, and explicit mixed-dtype boundaries.
 import math
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -285,8 +286,8 @@ class XWAMModel(ModelMixin, ConfigMixin):
     optional extra modality branches (e.g. depth).
     """
 
-    ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
-    _no_split_modules = ["WanAttentionBlock"]
+    ignore_for_config: ClassVar[list] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
+    _no_split_modules: ClassVar[list] = ["WanAttentionBlock"]
 
     @register_to_config
     def __init__(

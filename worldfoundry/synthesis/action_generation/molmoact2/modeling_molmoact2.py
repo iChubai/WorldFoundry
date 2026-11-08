@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import numpy as np
 import torch
@@ -1623,7 +1623,7 @@ class MolmoAct2VisionTransformer(nn.Module):
         x = x + pos_emb[None, :, :].to(x.dtype)
         return x
 
-    def forward(self, x: torch.Tensor, patch_num: int = None) -> list[torch.Tensor]:
+    def forward(self, x: torch.Tensor, patch_num: int | None = None) -> list[torch.Tensor]:
         """
         : param x: (batch_size, num_patch, n_pixels)
         """
@@ -2299,7 +2299,7 @@ class MolmoAct2PreTrainedModel(PreTrainedModel):
     config: MolmoAct2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = [
+    _no_split_modules: ClassVar[list] = [
         "MolmoAct2DecoderLayer",
         "MolmoAct2PostNormDecoderLayer",
         "MolmoAct2VisionBlock",
@@ -2311,7 +2311,7 @@ class MolmoAct2PreTrainedModel(PreTrainedModel):
 
     _can_compile_fullgraph = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs: ClassVar[dict] = {
         "hidden_states": MolmoAct2DecoderLayer,
         "attentions": MolmoAct2Attention,
     }
@@ -2339,7 +2339,7 @@ class MolmoAct2PreTrainedModel(PreTrainedModel):
 
 class MolmoAct2TextModel(MolmoAct2PreTrainedModel):
     config: MolmoAct2TextConfig
-    _no_split_modules = ["MolmoAct2DecoderLayer", "MolmoAct2PostNormDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["MolmoAct2DecoderLayer", "MolmoAct2PostNormDecoderLayer"]
 
     def __init__(self, config: MolmoAct2TextConfig):
         super().__init__(config)
@@ -2542,7 +2542,7 @@ def token_type_ids_mask_function(
 
 class MolmoAct2Model(MolmoAct2PreTrainedModel):
     base_model_prefix = ""
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: MolmoAct2Config
@@ -3466,8 +3466,8 @@ class MolmoAct2Model(MolmoAct2PreTrainedModel):
 
 
 class MolmoAct2ForConditionalGeneration(MolmoAct2PreTrainedModel, GenerationMixin):
-    _checkpoint_conversion_mapping = {}
-    _tied_weights_keys = []  # Weights are not tied
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
+    _tied_weights_keys: ClassVar[list] = []  # Weights are not tied
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: MolmoAct2Config

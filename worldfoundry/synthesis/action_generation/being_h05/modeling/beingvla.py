@@ -1,8 +1,8 @@
 # Inference-only Being-H0.5 runtime retained in-tree.
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-
 import os
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -177,7 +177,7 @@ class BeingH(PreTrainedModel):
     config_class = BeingHConfig
     main_input_name = "pixel_values"
     base_model_prefix = "beingh"
-    _no_split_modules = ["InternVisionModel", "InternLM2DecoderLayer", "Qwen2DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["InternVisionModel", "InternLM2DecoderLayer", "Qwen2DecoderLayer"]
 
     _supports_flash_attn_2 = True
     supports_gradient_checkpointing = False

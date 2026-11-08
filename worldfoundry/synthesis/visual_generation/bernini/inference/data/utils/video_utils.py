@@ -45,9 +45,9 @@ def smart_video_nframes(
     total_frames: int,
     video_fps: int | float,
     fps: int = 2.0,
-    frame_factor: int = None,
-    min_frames: int = None,
-    max_frames: int = None,
+    frame_factor: int | None = None,
+    min_frames: int | None = None,
+    max_frames: int | None = None,
     add_one: bool = False,
 ) -> torch.Tensor:
     nframes = total_frames / video_fps * fps

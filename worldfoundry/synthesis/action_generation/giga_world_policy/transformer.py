@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -172,7 +171,7 @@ class WanAttnProcessor2_0:
 
 class WanAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = WanAttnProcessor
-    _available_processors = [WanAttnProcessor]
+    _available_processors: ClassVar[list] = [WanAttnProcessor]
 
     def __init__(
         self,
@@ -572,12 +571,12 @@ class CasualWorldActionTransformer(
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ["patch_embedding", "condition_embedder", "norm"]
-    _no_split_modules = ["WanTransformerBlock"]
-    _keep_in_fp32_modules = ["time_embedder", "scale_shift_table", "norm1", "norm2", "norm3"]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["WanTransformerBlock"]
-    _cp_plan = {
+    _skip_layerwise_casting_patterns: ClassVar[list] = ["patch_embedding", "condition_embedder", "norm"]
+    _no_split_modules: ClassVar[list] = ["WanTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = ["time_embedder", "scale_shift_table", "norm1", "norm2", "norm3"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["WanTransformerBlock"]
+    _cp_plan: ClassVar[dict] = {
         "rope": {
             0: ContextParallelInput(split_dim=1, expected_dims=4, split_output=True),
             1: ContextParallelInput(split_dim=1, expected_dims=4, split_output=True),

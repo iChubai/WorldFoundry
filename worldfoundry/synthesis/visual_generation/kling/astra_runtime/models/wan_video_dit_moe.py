@@ -81,7 +81,12 @@ class MultiModalMoE(nn.Module):
     """简化的多模态MoE - 只保留专家，不包含router"""
 
     def __init__(
-        self, unified_dim: int = 30, hidden_dim: int = 60, output_dim: int = None, num_experts: int = 4, top_k: int = 2
+        self,
+        unified_dim: int = 30,
+        hidden_dim: int = 60,
+        output_dim: int | None = None,
+        num_experts: int = 4,
+        top_k: int = 2,
     ):
         super().__init__()
         self.unified_dim = unified_dim

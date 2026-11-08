@@ -1,9 +1,9 @@
 # Inference-only Being-H0.5 runtime retained in-tree.
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-
 import random
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -93,17 +93,17 @@ class BaseDataConfig(ABC):
 
 
 class LiberoOriginDataConfig(BaseDataConfig):
-    VIDEO_KEYS = ["video.top_view"]
-    VIDEO_SOURCE_COLUMNS = {"video.top_view": "observation.images.image"}
-    STATE_KEYS = ["state.state"]
-    ACTION_KEYS = ["action.action"]
+    VIDEO_KEYS: ClassVar[list] = ["video.top_view"]
+    VIDEO_SOURCE_COLUMNS: ClassVar[dict] = {"video.top_view": "observation.images.image"}
+    STATE_KEYS: ClassVar[list] = ["state.state"]
+    ACTION_KEYS: ClassVar[list] = ["action.action"]
 
-    LANGUAGE_KEYS = ["language.instruction"]
+    LANGUAGE_KEYS: ClassVar[list] = ["language.instruction"]
 
-    state_normalization_modes = {"state.state": "min_max"}
-    action_normalization_modes = {"action.action": "min_max"}
+    state_normalization_modes: ClassVar[dict] = {"state.state": "min_max"}
+    action_normalization_modes: ClassVar[dict] = {"action.action": "min_max"}
 
-    state_action_type = {
+    state_action_type: ClassVar[dict] = {
         "state.state": "7-d absolute state (xyz,roll,pitch,yaw,pad) + 1-d gripper pos",
         "action.action": "6-d relative action (xyz,roll,pitch,yaw) + 1-d gripper pos",
     }
@@ -130,13 +130,13 @@ class LiberoOriginDataConfig(BaseDataConfig):
 
 
 class LiberoNoNormDataConfig(LiberoOriginDataConfig):
-    VIDEO_KEYS = ["video.top_view", "video.wrist_view"]
-    VIDEO_SOURCE_COLUMNS = {
+    VIDEO_KEYS: ClassVar[list] = ["video.top_view", "video.wrist_view"]
+    VIDEO_SOURCE_COLUMNS: ClassVar[dict] = {
         "video.top_view": "observation.images.image",
         "video.wrist_view": "observation.images.wrist_image",
     }
-    STATE_KEYS = ["state.eef_position", "state.eef_rotation", "state.libero_gripper_position"]
-    ACTION_KEYS = ["action.eef_position", "action.eef_rotation", "action.gripper_position"]
+    STATE_KEYS: ClassVar[list] = ["state.eef_position", "state.eef_rotation", "state.libero_gripper_position"]
+    ACTION_KEYS: ClassVar[list] = ["action.eef_position", "action.eef_rotation", "action.gripper_position"]
 
     UNIFIED_MAPPING: dict[str, tuple[int, int]] = {
         "state.eef_position": (0, 3),
@@ -147,9 +147,9 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
         "action.gripper_position": (18, 19),
     }
 
-    state_normalization_modes = {}
+    state_normalization_modes: ClassVar[dict] = {}
 
-    action_normalization_modes = {}
+    action_normalization_modes: ClassVar[dict] = {}
 
     def get_feature_meta(self):
         return {
@@ -188,20 +188,20 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
 
 
 class RobocasaHumanDataConfig(BaseDataConfig):
-    VIDEO_KEYS = ["video.left_view", "video.right_view", "video.wrist_view"]
-    VIDEO_SOURCE_COLUMNS = {
+    VIDEO_KEYS: ClassVar[list] = ["video.left_view", "video.right_view", "video.wrist_view"]
+    VIDEO_SOURCE_COLUMNS: ClassVar[dict] = {
         "video.left_view": "observation.images.left_view",
         "video.right_view": "observation.images.right_view",
         "video.wrist_view": "observation.images.wrist_view",
     }
-    STATE_KEYS = [
+    STATE_KEYS: ClassVar[list] = [
         "state.eef_position",
         "state.eef_rotation",
         "state.gripper_qpos",
         "state.base_position",
         "state.base_rotation",
     ]
-    ACTION_KEYS = [
+    ACTION_KEYS: ClassVar[list] = [
         "action.eef_position",
         "action.eef_rotation",
         "action.gripper_position",
@@ -222,12 +222,12 @@ class RobocasaHumanDataConfig(BaseDataConfig):
         "action.control_mode": (74, 75),
     }
 
-    LANGUAGE_KEYS = ["language.instruction"]
+    LANGUAGE_KEYS: ClassVar[list] = ["language.instruction"]
 
-    state_normalization_modes = {}
+    state_normalization_modes: ClassVar[dict] = {}
     # action_normalization_modes = {}
 
-    action_normalization_modes = {
+    action_normalization_modes: ClassVar[dict] = {
         # "action.end_effector_position": "min_max",
         # "action.end_effector_rotation": "min_max",
         "action.gripper_position": "binary",

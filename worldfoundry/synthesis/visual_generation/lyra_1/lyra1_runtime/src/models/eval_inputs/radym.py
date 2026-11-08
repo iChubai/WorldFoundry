@@ -168,7 +168,7 @@ class Radym(BaseDataset):
     def num_views(self, video_idx: int) -> int:
         return 1 if self.n_views == -1 else self.n_views
 
-    def num_frames(self, video_idx: int, view_idx: int = None) -> int:
+    def num_frames(self, video_idx: int, view_idx: int | None = None) -> int:
         if view_idx is None:
             view_idx = self.start_view_idx
         return len(self._get_mp4_reader(video_idx, "rgb", view_idx))

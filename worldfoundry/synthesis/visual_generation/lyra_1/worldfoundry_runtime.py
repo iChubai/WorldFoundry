@@ -7,7 +7,7 @@ import random
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -24,7 +24,7 @@ class Lyra1Runtime:
     MODEL_ID = "lyra-1"
     DISPLAY_NAME = "Lyra-1"
     BLOCKED_REASONS: tuple[str, ...] = ()
-    MULTI_TRAJECTORY_INDEX = {
+    MULTI_TRAJECTORY_INDEX: ClassVar[dict] = {
         "left": 0,
         "right": 1,
         "up": 2,
@@ -34,7 +34,7 @@ class Lyra1Runtime:
         "clockwise": 5,
         "counterclockwise": 5,
     }
-    _MULTI_TRAJECTORIES = {
+    _MULTI_TRAJECTORIES: ClassVar[dict] = {
         "left": (0, (0.2, 0.3)),
         "right": (1, (0.2, 0.3)),
         "up": (2, (0.1, 0.2)),

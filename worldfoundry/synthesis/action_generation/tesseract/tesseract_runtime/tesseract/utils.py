@@ -35,7 +35,7 @@ def prepare_rotary_positional_embeddings(
     num_frames: int,
     vae_scale_factor_spatial: int = 8,
     patch_size: int = 2,
-    patch_size_t: int = None,
+    patch_size_t: int | None = None,
     attention_head_dim: int = 64,
     device: torch.device | None = None,
     base_height: int = 480,

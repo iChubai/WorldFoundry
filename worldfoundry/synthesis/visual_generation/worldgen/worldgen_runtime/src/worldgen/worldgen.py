@@ -18,7 +18,7 @@ class WorldGen:
         mode: str = "t2s",
         use_sharp: bool = False,
         inpaint_bg: bool = False,
-        lora_path: str = None,
+        lora_path: str | None = None,
         resolution: int = 1600,
         device: torch.device = "cuda",
         low_vram: bool | None = None,

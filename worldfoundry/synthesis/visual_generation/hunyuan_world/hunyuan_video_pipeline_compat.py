@@ -26,7 +26,7 @@ expressed as native recipes.
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 import torch
@@ -169,9 +169,9 @@ class HunyuanVideoPipeline(DiffusionPipeline):
     """
 
     model_cpu_offload_seq = "text_encoder->text_encoder_2->transformer->vae"
-    _optional_components = ["text_encoder_2"]
-    _exclude_from_cpu_offload = ["transformer"]
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _optional_components: ClassVar[list] = ["text_encoder_2"]
+    _exclude_from_cpu_offload: ClassVar[list] = ["transformer"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
         self,
@@ -180,7 +180,7 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         transformer: HYVideoDiffusionTransformer,
         scheduler: KarrasDiffusionSchedulers,
         text_encoder_2: TextEncoder | None = None,
-        progress_bar_config: dict[str, Any] = None,
+        progress_bar_config: dict[str, Any] | None = None,
         args=None,
     ):
         """Init.
@@ -675,8 +675,8 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         video_length: int,
         data_type: str = "video",
         num_inference_steps: int = 50,
-        timesteps: list[int] = None,
-        sigmas: list[float] = None,
+        timesteps: list[int] | None = None,
+        sigmas: list[float] | None = None,
         guidance_scale: float = 7.5,
         negative_prompt: str | list[str] | None = None,
         num_videos_per_prompt: int | None = 1,
@@ -697,7 +697,7 @@ class HunyuanVideoPipeline(DiffusionPipeline):
         | MultiPipelineCallbacks
         | None = None,
         callback_on_step_end_tensor_inputs: list[str] = ["latents"],
-        freqs_cis: tuple[torch.Tensor, torch.Tensor] = None,
+        freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
         n_tokens: int | None = None,

@@ -20,10 +20,10 @@
 # PixArt: https://github.com/PixArt-alpha/PixArt-alpha
 # T5:     https://github.com/google-research/text-to-text-transfer-transformer
 # --------------------------------------------------------
-
 import html
 import re
 from pathlib import Path
+from typing import ClassVar
 
 import ftfy
 import torch
@@ -33,7 +33,7 @@ from opensora.registry import MODELS
 
 
 class T5Embedder:
-    available_models = ["DeepFloyd/t5-v1_1-xxl"]
+    available_models: ClassVar[list] = ["DeepFloyd/t5-v1_1-xxl"]
 
     def __init__(
         self,

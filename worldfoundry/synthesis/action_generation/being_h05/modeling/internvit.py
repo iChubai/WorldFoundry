@@ -1,11 +1,11 @@
+from typing import ClassVar
+
 # Inference-only Being-H0.5 runtime retained in-tree.
 # --------------------------------------------------------
 # InternVL
 # Copyright (c) 2024 OpenGVLab
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
-
-
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -384,7 +384,7 @@ class InternVisionModel(PreTrainedModel):
     _supports_flash_attn_2 = True
     supports_gradient_checkpointing = True
     config_class = InternVisionConfig
-    _no_split_modules = ["InternVisionEncoderLayer"]
+    _no_split_modules: ClassVar[list] = ["InternVisionEncoderLayer"]
 
     def __init__(self, config: InternVisionConfig):
         super().__init__(config)

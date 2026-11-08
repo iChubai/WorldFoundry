@@ -1,6 +1,7 @@
 """Native Cosmos component."""
 
 from collections.abc import Callable
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -361,9 +362,9 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ["patch_embed", "final_layer", "norm"]
-    _no_split_modules = ["CosmosTransformerBlock"]
-    _keep_in_fp32_modules = ["learnable_pos_embed"]
+    _skip_layerwise_casting_patterns: ClassVar[list] = ["patch_embed", "final_layer", "norm"]
+    _no_split_modules: ClassVar[list] = ["CosmosTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = ["learnable_pos_embed"]
 
     @register_to_config
     def __init__(
@@ -493,9 +494,9 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         padding_mask: torch.Tensor | None = None,
         return_dict: bool = True,
         n_view: int = 1,
-        num_frames: int = None,
-        height: int = None,
-        width: int = None,
+        num_frames: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
         return_video: bool = True,
         action_states: torch.Tensor = None,
         action_timestep: torch.LongTensor = None,

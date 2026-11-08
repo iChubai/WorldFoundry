@@ -29,6 +29,8 @@ mlp}``, plus the MoT extensions ``input_layernorm_v`` /
 ``mlp_v`` for the modality-aware variant) can be dropped in.
 """
 
+from typing import ClassVar
+
 import torch
 from torch import nn
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
@@ -127,7 +129,7 @@ class HyDualTowerConfig(PretrainedConfig):
     """
 
     model_type = "hy_dual_tower"
-    sub_configs = {"vlm_config": AutoConfig, "expert_config": AutoConfig}
+    sub_configs: ClassVar[dict] = {"vlm_config": AutoConfig, "expert_config": AutoConfig}
 
     def __init__(
         self,
@@ -302,10 +304,10 @@ class HyDualTower(PreTrainedModel):
         attention_mask: torch.Tensor | None = None,
         position_ids: torch.LongTensor | None = None,
         past_key_values: list[torch.FloatTensor] | Cache | None = None,
-        inputs_embeds: list[torch.FloatTensor] = None,
+        inputs_embeds: list[torch.FloatTensor] | None = None,
         use_cache: bool | None = None,
         fill_kv_cache: bool | None = None,
-        modality_masks: list[torch.FloatTensor] = None,
+        modality_masks: list[torch.FloatTensor] | None = None,
     ):
         models = [self.vlm.language_model.model, self.expert.model]
         att_vis_output = []

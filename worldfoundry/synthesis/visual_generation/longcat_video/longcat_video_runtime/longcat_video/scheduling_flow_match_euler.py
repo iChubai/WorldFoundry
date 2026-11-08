@@ -16,6 +16,7 @@
 
 import math
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -83,7 +84,7 @@ class FlowMatchEulerDiscreteScheduler(SchedulerMixin, ConfigMixin):
             Whether to use stochastic sampling.
     """
 
-    _compatibles = []
+    _compatibles: ClassVar[list] = []
     order = 1
 
     @register_to_config

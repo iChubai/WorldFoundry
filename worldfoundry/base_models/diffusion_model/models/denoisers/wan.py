@@ -2549,6 +2549,7 @@ def build_self_forcing_wan21_denoiser(
             config=SELF_FORCING_WAN21_T2V_1P3B_CONFIG,
             state_dict_converter=convert_self_forcing_generator_state_dict,
             layer_container="blocks",
+            compile_regions=("blocks",),
         ),
         context.require_checkpoint(),
         context.policy,

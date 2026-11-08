@@ -12,6 +12,7 @@ from ..api_runtime import load_api_pipeline_from_pretrained, resolve_api_key
 from ..pipeline_utils import PipelineABC
 
 _API_KEY_ENV = ("KLING_API_KEY", "KLING_ACCESS_TOKEN")
+_VIDEO_URL_KEYS = ("video_url", "url", "download_url")
 
 logger = logging.getLogger(__name__)
 
@@ -114,24 +115,12 @@ class KlingApiPipeline(PipelineABC):
 
     def _extract_video_url(self, response: dict[str, Any]) -> str | None:
         """Extract video url for KlingApiPipeline."""
-        candidates = [
-            response.get("video_url"),
-            response.get("url"),
-            response.get("download_url"),
-            response.get("data", {}).get("video_url"),
-            response.get("data", {}).get("url"),
-            response.get("data", {}).get("download_url"),
-        ]
+        data = response.get("data", {})
+        candidates = [response.get(key) for key in _VIDEO_URL_KEYS] + [data.get(key) for key in _VIDEO_URL_KEYS]
 
-        task_result = response.get("task_result") or response.get("data", {}).get("task_result")
+        task_result = response.get("task_result") or data.get("task_result")
         if isinstance(task_result, dict):
-            candidates.extend(
-                [
-                    task_result.get("video_url"),
-                    task_result.get("url"),
-                    task_result.get("download_url"),
-                ]
-            )
+            candidates.extend(task_result.get(key) for key in _VIDEO_URL_KEYS)
             videos = task_result.get("videos")
             if isinstance(videos, list) and videos:
                 first_item = videos[0]
@@ -146,10 +135,7 @@ class KlingApiPipeline(PipelineABC):
                         ]
                     )
 
-        for candidate in candidates:
-            if candidate:
-                return candidate
-        return None
+        return next((candidate for candidate in candidates if candidate), None)
 
     def _poll_task_status(
         self,
@@ -174,11 +160,12 @@ class KlingApiPipeline(PipelineABC):
                 logger.info("Kling task %s: %s", task_id, status)
                 last_status = status
 
-            if video_url and not any(marker in status for marker in failed_markers):
-                return task_info
-            if any(marker in status for marker in completed_markers):
-                return task_info
-            if any(marker in status for marker in failed_markers):
+            # Stop at the first video URL or terminal status; callers read the outcome from task_info.
+            if (
+                video_url
+                or any(marker in status for marker in completed_markers)
+                or any(marker in status for marker in failed_markers)
+            ):
                 return task_info
 
             time.sleep(poll_interval)

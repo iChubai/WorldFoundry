@@ -209,13 +209,11 @@ class Sora2Pipeline(PipelineABC):
         openai_client = self.synthesis_model.client
 
         completed_statuses = ("completed", "succeeded", "success", "done")
+        failed_statuses = ("failed", "error")
         retry_count = 0
         last_status = None
 
-        while video.status.lower() not in [s.lower() for s in completed_statuses] and video.status.lower() not in [
-            "failed",
-            "error",
-        ]:
+        while video.status.lower() not in completed_statuses and video.status.lower() not in failed_statuses:
             if retry_count >= max_retries:
                 raise TimeoutError(f"Sora2 video polling reached the maximum number of retries ({max_retries}).")
 
@@ -223,19 +221,17 @@ class Sora2Pipeline(PipelineABC):
 
             progress_raw = getattr(video, "progress", 0)
             progress = progress_raw if progress_raw is not None else 0
-            status_lower = video.status.lower()
-
             if video.status != last_status:
                 logger.info("Sora2 video %s: %s (progress %.1f%%)", video.id, video.status, progress)
                 last_status = video.status
 
-            if status_lower in [s.lower() for s in completed_statuses]:
+            if video.status.lower() in completed_statuses:
                 break
 
             time.sleep(poll_interval)
             retry_count += 1
 
-        if video.status.lower() in ["failed", "error"]:
+        if video.status.lower() in failed_statuses:
             error_msg = getattr(getattr(video, "error", None), "message", "Unknown error")
             raise RuntimeError(f"Failed to generate Sora2 video: {error_msg}")
 

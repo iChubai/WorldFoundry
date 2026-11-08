@@ -2,7 +2,6 @@
 
 import os
 import pathlib
-from typing import List, Tuple, Union
 
 import numpy as np
 import torch as th
@@ -79,7 +78,7 @@ def calculate_path_statistics(
         Tuple[np.ndarray, ...]: Tuple containing mean and sigma for each packet.
     """
     mu, sigma = None, None
-    if path.endswith(".npz") or path.endswith(".npy"):
+    if path.endswith((".npz", ".npy")):
         with np.load(path) as fp:
             mu = fp["mu"][:]
             sigma = fp["sigma"][:]

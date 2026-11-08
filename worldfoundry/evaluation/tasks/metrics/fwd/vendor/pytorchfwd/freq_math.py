@@ -1,7 +1,6 @@
 """Wavelet utils."""
 
 from itertools import product
-from typing import Optional
 
 import numpy as np
 import ptwt
@@ -161,7 +160,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     # Product might be almost singular
     covmean = linalg.sqrtm(sigma1.dot(sigma2))
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))

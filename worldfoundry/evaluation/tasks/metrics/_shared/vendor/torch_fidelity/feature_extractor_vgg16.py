@@ -39,7 +39,7 @@ class FeatureExtractorVGG16(FeatureExtractorBase):
             feature_extractor_internal_dtype (str): dtype to use inside the feature extractor. Specifying it may improve
                 numerical precision in some cases. Supported values are 'float32' (default), and 'float64'.
         """
-        super(FeatureExtractorVGG16, self).__init__(name, features_list)
+        super().__init__(name, features_list)
         vassert(
             feature_extractor_internal_dtype in ("float32", "float64", None),
             "Only 32-bit floats are supported for internal dtype of this feature extractor",

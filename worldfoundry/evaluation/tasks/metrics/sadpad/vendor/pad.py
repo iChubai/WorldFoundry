@@ -44,7 +44,7 @@ def into_grid_prob_2d(pdf_real, pdf_gen, n_points, pooling):
 def get_PaD(HCS_real, HCS_gen, text_list, n_points):
     print("calculating stats to get PaD")
     pooling = torch.nn.AvgPool2d(kernel_size=2, stride=1)
-    corr_total_num = len([a for a in combinations(np.arange(len(text_list)), 2)])
+    corr_total_num = len(list(combinations(np.arange(len(text_list)), 2)))
     pad_results = torch.zeros((corr_total_num, 2))
     eps = 1e-10
 

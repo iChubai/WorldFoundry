@@ -48,7 +48,7 @@ class FeatureExtractorDinoV2(FeatureExtractorBase):
             feature_extractor_internal_dtype (str): dtype to use inside the feature extractor. Specifying it may improve
                 numerical precision in some cases. Supported values are 'float32' (default), and 'float64'.
         """
-        super(FeatureExtractorDinoV2, self).__init__(name, features_list)
+        super().__init__(name, features_list)
         vassert(
             feature_extractor_internal_dtype in ("float32", "float64", None),
             "Only 32-bit floats are supported for internal dtype of this feature extractor",
@@ -59,24 +59,24 @@ class FeatureExtractorDinoV2(FeatureExtractorBase):
 
         os.environ["XFORMERS_DISABLED"] = "1"
 
-        with redirect_stdout(sys.stderr):
-            with (
-                CleanStderr(
-                    [
-                        "xFormers not available",
-                        "xFormers is disabled",
-                        "Using cache found in",
-                    ],
-                    sys.stderr,
-                ),
-                warnings.catch_warnings(),
-            ):
-                warnings.filterwarnings("ignore", message="xFormers is not available")
-                warnings.filterwarnings("ignore", message="xFormers is disabled")
-                if feature_extractor_weights_path is None:
-                    self.model = torch.hub.load("facebookresearch/dinov2", MODEL_METADATA[name])
-                else:
-                    raise NotImplementedError
+        with (
+            redirect_stdout(sys.stderr),
+            CleanStderr(
+                [
+                    "xFormers not available",
+                    "xFormers is disabled",
+                    "Using cache found in",
+                ],
+                sys.stderr,
+            ),
+            warnings.catch_warnings(),
+        ):
+            warnings.filterwarnings("ignore", message="xFormers is not available")
+            warnings.filterwarnings("ignore", message="xFormers is disabled")
+            if feature_extractor_weights_path is None:
+                self.model = torch.hub.load("facebookresearch/dinov2", MODEL_METADATA[name])
+            else:
+                raise NotImplementedError
 
         self.to(self.feature_extractor_internal_dtype)
         self.requires_grad_(False)

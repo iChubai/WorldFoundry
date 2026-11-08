@@ -25,7 +25,7 @@ def torch_maybe_compile(module, dummy_input, verbose):
 def torch_atomic_save(what, path):
     path = os.path.expanduser(path)
     path_dir = os.path.dirname(path)
-    fp = tempfile.NamedTemporaryFile(delete=False, dir=path_dir)
+    fp = tempfile.NamedTemporaryFile(delete=False, dir=path_dir)  # noqa: SIM115 - The temporary file outlives the handle: it is renamed or removed in the finally block.
     try:
         torch.save(what, fp)
         fp.close()

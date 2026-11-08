@@ -22,10 +22,8 @@ from multiprocessing import cpu_count
 
 import numpy as np
 import torch
-import torchvision.transforms as TF
 from PIL import Image
 from scipy import linalg
-from torch.nn.functional import adaptive_avg_pool2d
 from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 
 try:
@@ -156,7 +154,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     # Product might be almost singular
     covmean = linalg.sqrtm(sigma1.dot(sigma2))
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -226,7 +224,7 @@ def calculate_fid_given_paths(paths, batch_size, max_size, device, dims):
     for source in paths:
         for p in (source,) if isinstance(source, (str, os.PathLike)) else source:
             if not os.path.exists(p):
-                raise RuntimeError("Invalid path: %s" % p)
+                raise RuntimeError(f"Invalid path: {p}")
 
     model = resnet50().to(device)
 

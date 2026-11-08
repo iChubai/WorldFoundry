@@ -1,10 +1,6 @@
 from collections.abc import Sequence
-from dataclasses import dataclass
-from typing import Optional
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 ##########################################################################################
@@ -61,7 +57,7 @@ class AutoEncoderConfig:
 
 class AutoEncoder(nn.Module):
     def __init__(self, config: AutoEncoderConfig, ckpt: str | None = None):
-        super(AutoEncoder, self).__init__()
+        super().__init__()
         self.config = config
 
         # ------- Encoder -------
@@ -101,10 +97,7 @@ class AutoEncoder(nn.Module):
         decoder_layers = []
         reversed_conv_layers = list(reversed(config.conv_layers))
         for i in range(len(reversed_conv_layers) - 1):
-            if i == 1 or i == 3:
-                output_padding = 1
-            else:
-                output_padding = 0
+            output_padding = 1 if i == 1 or i == 3 else 0
 
             decoder_layers.append(
                 nn.ConvTranspose2d(
@@ -141,7 +134,7 @@ class AutoEncoder(nn.Module):
         return latent
 
     def forward(self, input_ids: Tensor, position_ids: Tensor | None = None, labels: Tensor | None = None) -> Tensor:
-        labels = labels if labels != None else input_ids
+        labels = labels if labels != None else input_ids  # noqa: E711 - Tensor operand; keep the upstream comparison.
 
         # Encoding
         # print('what is feeded to the encoder is of shape', input_ids.shape)

@@ -15,7 +15,7 @@ class FeatureExtractorBase(nn.Module):
 
             features_list (list): List of feature names, provided by the subclassed feature extractor.
         """
-        super(FeatureExtractorBase, self).__init__()
+        super().__init__()
         vassert(type(name) is str, "Feature extractor name must be a string")
         vassert(type(features_list) in (list, tuple), "Wrong features list type")
         vassert(
@@ -69,7 +69,7 @@ class FeatureExtractorBase(nn.Module):
             type(features) is tuple and len(features) == len(self.features_list),
             "Features must be the output of forward function",
         )
-        return dict(((name, feature) for name, feature in zip(self.features_list, features, strict=False)))
+        return dict(zip(self.features_list, features, strict=False))
 
     def forward(self, input):
         """

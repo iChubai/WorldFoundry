@@ -56,7 +56,7 @@ class FeatureExtractorInceptionV3(FeatureExtractorBase):
             feature_extractor_internal_dtype (str): dtype to use inside the feature extractor. Specifying it may improve
                 numerical precision in some cases. Supported values are 'float32' (default), and 'float64'.
         """
-        super(FeatureExtractorInceptionV3, self).__init__(name, features_list)
+        super().__init__(name, features_list)
         vassert(
             feature_extractor_internal_dtype in ("float32", "float64", None),
             "Only 32 and 64 bit floats are supported for internal dtype of this feature extractor",
@@ -231,7 +231,7 @@ class BasicConv2d(nn.Module):
     """Original BasicConv2d block"""
 
     def __init__(self, in_channels, out_channels, **kwargs):
-        super(BasicConv2d, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
         self.bn = nn.BatchNorm2d(out_channels, eps=0.001)
 
@@ -245,7 +245,7 @@ class InceptionA(nn.Module):
     """Block from torchvision patched to be compatible with TensorFlow implementation"""
 
     def __init__(self, in_channels, pool_features):
-        super(InceptionA, self).__init__()
+        super().__init__()
         self.branch1x1 = BasicConv2d(in_channels, 64, kernel_size=1)
 
         self.branch5x5_1 = BasicConv2d(in_channels, 48, kernel_size=1)
@@ -279,7 +279,7 @@ class InceptionB(nn.Module):
     """Original block"""
 
     def __init__(self, in_channels):
-        super(InceptionB, self).__init__()
+        super().__init__()
         self.branch3x3 = BasicConv2d(in_channels, 384, kernel_size=3, stride=2)
 
         self.branch3x3dbl_1 = BasicConv2d(in_channels, 64, kernel_size=1)
@@ -303,7 +303,7 @@ class InceptionC(nn.Module):
     """Block from torchvision patched to be compatible with TensorFlow implementation"""
 
     def __init__(self, in_channels, channels_7x7):
-        super(InceptionC, self).__init__()
+        super().__init__()
         self.branch1x1 = BasicConv2d(in_channels, 192, kernel_size=1)
 
         c7 = channels_7x7
@@ -344,7 +344,7 @@ class InceptionD(nn.Module):
     """Original block"""
 
     def __init__(self, in_channels):
-        super(InceptionD, self).__init__()
+        super().__init__()
         self.branch3x3_1 = BasicConv2d(in_channels, 192, kernel_size=1)
         self.branch3x3_2 = BasicConv2d(192, 320, kernel_size=3, stride=2)
 
@@ -371,7 +371,7 @@ class InceptionE_1(nn.Module):
     """First InceptionE block from torchvision patched to be compatible with TensorFlow implementation"""
 
     def __init__(self, in_channels):
-        super(InceptionE_1, self).__init__()
+        super().__init__()
         self.branch1x1 = BasicConv2d(in_channels, 320, kernel_size=1)
 
         self.branch3x3_1 = BasicConv2d(in_channels, 384, kernel_size=1)
@@ -415,7 +415,7 @@ class InceptionE_2(nn.Module):
     """Second InceptionE block from torchvision patched to be compatible with TensorFlow implementation"""
 
     def __init__(self, in_channels):
-        super(InceptionE_2, self).__init__()
+        super().__init__()
         self.branch1x1 = BasicConv2d(in_channels, 320, kernel_size=1)
 
         self.branch3x3_1 = BasicConv2d(in_channels, 384, kernel_size=1)

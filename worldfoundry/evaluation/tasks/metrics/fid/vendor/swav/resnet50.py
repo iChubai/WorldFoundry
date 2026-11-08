@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+from typing import ClassVar
+
 import torch
 import torch.nn as nn
 
@@ -38,7 +40,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class BasicBlock(nn.Module):
     expansion = 1
-    __constants__ = ["downsample"]
+    __constants__: ClassVar[list[str]] = ["downsample"]
 
     def __init__(
         self,
@@ -51,7 +53,7 @@ class BasicBlock(nn.Module):
         dilation=1,
         norm_layer=None,
     ):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
@@ -88,7 +90,7 @@ class BasicBlock(nn.Module):
 
 class Bottleneck(nn.Module):
     expansion = 4
-    __constants__ = ["downsample"]
+    __constants__: ClassVar[list[str]] = ["downsample"]
 
     def __init__(
         self,
@@ -101,7 +103,7 @@ class Bottleneck(nn.Module):
         dilation=1,
         norm_layer=None,
     ):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         width = int(planes * (base_width / 64.0)) * groups
@@ -156,7 +158,7 @@ class ResNet(nn.Module):
         nmb_prototypes=0,
         eval_mode=False,
     ):
-        super(ResNet, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -323,7 +325,7 @@ class ResNet(nn.Module):
         start_idx = 0
         for end_idx in idx_crops:
             _out = self.forward_backbone(torch.cat(inputs[start_idx:end_idx]).cuda(non_blocking=True))
-            if start_idx == 0:
+            if start_idx == 0:  # noqa: SIM108 - The first crop group binds `output`.
                 output = _out
             else:
                 output = torch.cat((output, _out))
@@ -333,7 +335,7 @@ class ResNet(nn.Module):
 
 class MultiPrototypes(nn.Module):
     def __init__(self, output_dim, nmb_prototypes):
-        super(MultiPrototypes, self).__init__()
+        super().__init__()
         self.nmb_heads = len(nmb_prototypes)
         for i, k in enumerate(nmb_prototypes):
             self.add_module("prototypes" + str(i), nn.Linear(output_dim, k, bias=False))

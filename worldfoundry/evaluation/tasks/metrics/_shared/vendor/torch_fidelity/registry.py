@@ -18,11 +18,11 @@ from .noise import (
 from .sample_similarity_base import SampleSimilarityBase
 from .sample_similarity_lpips import SampleSimilarityLPIPS
 
-DATASETS_REGISTRY = dict()
-FEATURE_EXTRACTORS_REGISTRY = dict()
-SAMPLE_SIMILARITY_REGISTRY = dict()
-NOISE_SOURCE_REGISTRY = dict()
-INTERPOLATION_REGISTRY = dict()
+DATASETS_REGISTRY = {}
+FEATURE_EXTRACTORS_REGISTRY = {}
+SAMPLE_SIMILARITY_REGISTRY = {}
+NOISE_SOURCE_REGISTRY = {}
+INTERPOLATION_REGISTRY = {}
 
 
 def register_dataset(name, fn_create):

@@ -23,7 +23,7 @@ def get_SaD(HCS_real, HCS_gen, text_list, n_points):
     sad_result = np.zeros((total_num, 3))  # KL(P,Q) JSD, MI(P,Q)
     eps = 1e-10
 
-    for index, text in tqdm(enumerate(text_list), total=total_num):
+    for index, _text in tqdm(enumerate(text_list), total=total_num):
         attr_real = HCS_real[:, index].detach().cpu().numpy()
         attr_gen = HCS_gen[:, index].detach().cpu().numpy()
         pdf_real, pdf_gen = kde_1d(attr_real, attr_gen)

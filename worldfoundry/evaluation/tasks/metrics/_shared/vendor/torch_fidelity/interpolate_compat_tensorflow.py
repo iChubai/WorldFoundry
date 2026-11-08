@@ -77,7 +77,7 @@ def interpolate_bilinear_2d_like_tensorflow1x(input, size=None, scale_factor=Non
                 for i in range(dim)
             ]
         else:
-            return [int(math.floor(float(input.size(i + 2)) * scale_factors[i])) for i in range(dim)]
+            return [int(math.floor(float(input.size(i + 2)) * scale_factors[i])) for i in range(dim)]  # noqa: RUF046 - Scale factors are caller-provided and may be tensors.
 
     def tf_calculate_resize_scale(in_size, out_size):
         if align_corners:
@@ -136,9 +136,6 @@ def interpolate_bilinear_2d_like_tensorflow1x(input, size=None, scale_factor=Non
 
         return out
 
-    if method == "slow":
-        out = resample_manually()
-    else:
-        out = resample_using_grid_sample()
+    out = resample_manually() if method == "slow" else resample_using_grid_sample()
 
     return out

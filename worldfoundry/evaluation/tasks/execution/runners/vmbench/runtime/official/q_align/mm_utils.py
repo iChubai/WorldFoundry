@@ -3,8 +3,10 @@ from io import BytesIO
 
 import torch
 from PIL import Image
-from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from transformers import StoppingCriteria
+
+# isort: split
+from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 
 
 def load_image_from_base64(image):

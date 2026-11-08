@@ -1,9 +1,12 @@
-import json
 import os
 
-from worldfoundry.core.distributed.collectives.evaluation import print0
-
+# isort: split
 from .utils import init_submodules, save_json
+
+# isort: split
+import json
+
+from worldfoundry.core.distributed.collectives.evaluation import print0
 
 # Empirical bounds for normalization (higher is better unless noted)
 _EMPIRICAL_BOUNDS = {

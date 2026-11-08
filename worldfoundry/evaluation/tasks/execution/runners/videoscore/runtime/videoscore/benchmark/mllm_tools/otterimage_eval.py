@@ -1,9 +1,10 @@
 import os
 from typing import ClassVar
 
-from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterImage as OtterImageModel
-
 from .mllm_utils import merge_images
+
+# isort: split
+from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterImage as OtterImageModel
 
 
 class OtterImage:

@@ -25,8 +25,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "VideoMAEv2"))
 # NOTE: Do not comment `import models`, it is used to register models
 import models  # noqa: F401
 import utils
-from bench_utils.cas_utils import final_merge, final_test
 from dataset import build_dataset
+
+# isort: split
+from bench_utils.cas_utils import final_merge, final_test
 
 
 def get_args():

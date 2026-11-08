@@ -5,20 +5,34 @@ import numpy as np
 import torch
 from easydict import EasyDict as edict
 
-from evaluation.aesthetic_quality import EvaluateLaionAesthetic, get_aesthetic_model
+# isort: split
 from evaluation.consistency_3D import EvaluateErrBetweenTwoImage
-from evaluation.dynamic_degree import DynamicDegree, EvaluateDynamicDegree
-from evaluation.imaging_quality import MUSIQ, EvaluateImagingQuality
-from evaluation.motion_smoothness import EvaluateMotionSmoothness, MotionSmoothness
-from evaluation.temporal_clip_consistency import EvaluateTemporalClipConsistency
+
+# isort: split
 from evaluation.temporal_dino_consistency import EvaluateTemporalDinoConsistency
+
+# isort: split
+from evaluation.temporal_clip_consistency import EvaluateTemporalClipConsistency
+
+# isort: split
+from evaluation.motion_smoothness import EvaluateMotionSmoothness, MotionSmoothness
+
+# isort: split
+from evaluation.dynamic_degree import DynamicDegree, EvaluateDynamicDegree
+
+# isort: split
+from evaluation.aesthetic_quality import EvaluateLaionAesthetic, get_aesthetic_model
+
+# isort: split
+from evaluation.imaging_quality import MUSIQ, EvaluateImagingQuality
+
+# isort: split
 from evaluation.text_video_consistency import (
     EvaluateTextVideoConsistency,
     SimpleTokenizer,
     ViCLIP,
     get_video_feature,
 )
-from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
 )
@@ -28,8 +42,13 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.base_models.perception_core.general_perception.dino_embeddings import load_dino_vitb16_feature_model
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerOnlinePredictor
 from worldfoundry.base_models.perception_core.video_text.viclip import checkpoint_path as viclip_checkpoint_path
+
+# isort: split
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerOnlinePredictor
+
+# isort: split
+from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.core.io import list_numbered_frame_paths
 
 

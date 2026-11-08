@@ -15,9 +15,15 @@ from data_collector import TaskDataCollector
 from gemini_evaluator import GeminiEvaluator
 from gemini_evaluator_ensemble import GeminiEnsembleEvaluator
 from gemini_evaluator_evidence import GeminiEvidenceEvaluator
-from gemini_gpt_double_ensemble import GeminiGPTDoubleEnsemble
+
+# isort: split
 from gemini_gpt_evaluator import GeminiGPTEvaluator
+
+# isort: split
 from gpt_evaluator import GPTEvaluator
+
+# isort: split
+from gemini_gpt_double_ensemble import GeminiGPTDoubleEnsemble
 
 
 class EvaluationRunner:

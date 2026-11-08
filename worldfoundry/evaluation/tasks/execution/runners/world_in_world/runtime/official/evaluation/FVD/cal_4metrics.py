@@ -1,9 +1,11 @@
 import torch
 import torch.nn.functional as F
 
-from .calculate_lpips import calculate_lpips
 from .calculate_psnr import calculate_psnr
 from .calculate_ssim import calculate_ssim
+
+# isort: split
+from .calculate_lpips import calculate_lpips
 
 
 def evaluate_video_metrics(

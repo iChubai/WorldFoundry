@@ -1,6 +1,5 @@
 import argparse
 import os
-import random
 import shutil
 
 import numpy as np
@@ -10,6 +9,10 @@ import torch.distributed as dist
 import torch.nn as nn
 import tqdm
 from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn
+
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
+
+# isort: split
 from quality_metrics import (
     MotionSmoothness,
     background_consistency,
@@ -18,8 +21,10 @@ from quality_metrics import (
     subject_consistency,
 )
 
+# isort: split
+import random
+
 from worldfoundry.base_models.capabilities import vbench_asset_path
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 
 def _first_env(*names):

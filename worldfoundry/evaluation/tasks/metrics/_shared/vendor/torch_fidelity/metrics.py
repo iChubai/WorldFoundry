@@ -7,8 +7,14 @@ from .metric_fid import (
 from .metric_isc import isc_featuresdict_to_metric
 from .metric_kid import kid_featuresdict_to_metric
 from .metric_mind import mind_featuresdict_to_metric
-from .metric_ppl import calculate_ppl
+
+# isort: split
 from .metric_prc import prc_featuresdict_to_metric
+
+# isort: split
+from .metric_ppl import calculate_ppl
+
+# isort: split
 from .utils import (
     create_feature_extractor,
     extract_featuresdict_from_input_id_cached,

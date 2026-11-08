@@ -10,16 +10,21 @@ import numpy as np
 import torch
 from decord import VideoReader
 from PIL import Image, ImageSequence
-from scenedetect import SceneManager, open_video
-from scenedetect.detectors import ContentDetector
 from torchvision import transforms
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize
 
-from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.base_models.perception_core.detection.yolo_world import config_path as yolo_world_config_path
 from worldfoundry.base_models.perception_core.human_anatomy.vit_detector import config_path as vit_detector_config_path
-from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker import checkpoint_path as cotracker_checkpoint_path
+
+# isort: split
+from scenedetect import SceneManager, open_video
+from scenedetect.detectors import ContentDetector
+
+from worldfoundry.base_models.capabilities import vbench_asset_path
+from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
 
 try:
     from torchvision.transforms import InterpolationMode

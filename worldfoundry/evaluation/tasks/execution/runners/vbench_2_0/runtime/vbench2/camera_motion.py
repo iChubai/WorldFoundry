@@ -8,14 +8,17 @@ decord.bridge.set_bridge("torch")
 from math import ceil  # noqa: E402 - Follows the decord torch bridge setup.
 
 from tqdm import tqdm  # noqa: E402 - Follows the decord torch bridge setup.
-from vbench2.utils import (  # noqa: E402 - Follows the decord torch bridge setup.
-    load_dimension_info,
-    split_video_into_scenes,
-)
 
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker import (  # noqa: E402 - Follows the decord torch bridge setup.
     CoTrackerPredictor,
     Visualizer,
+)
+
+# isort: split
+from vbench2.utils import (  # noqa: E402 - Follows the decord torch bridge setup.
+    load_dimension_info,
+    split_video_into_scenes,
 )
 
 

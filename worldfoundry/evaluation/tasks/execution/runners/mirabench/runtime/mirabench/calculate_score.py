@@ -7,9 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import torch
-from evaluation import metrics_calculator
 from tqdm import tqdm
 
+# isort: split
+from evaluation import metrics_calculator
+
+# isort: split
 from worldfoundry.core.io import extract_video_frames_to_directory
 
 THREE_D_METRICS = frozenset(

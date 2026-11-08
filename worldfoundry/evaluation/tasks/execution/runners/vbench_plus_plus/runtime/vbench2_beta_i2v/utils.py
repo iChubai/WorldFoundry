@@ -4,20 +4,25 @@ import os
 
 import numpy as np
 import torch
-from decord import VideoReader
-from PIL import Image, ImageSequence
-from torchvision import transforms
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
 
-from worldfoundry.base_models.capabilities import vbench_asset_path, vbench_dino_hub_config
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
 )
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
-from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
+
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker import checkpoint_path as cotracker_checkpoint_path
+
+# isort: split
+from decord import VideoReader
+from PIL import Image, ImageSequence
+from torchvision import transforms
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+
+from worldfoundry.base_models.capabilities import vbench_asset_path, vbench_dino_hub_config
+from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
 
 try:
     from torchvision.transforms import InterpolationMode

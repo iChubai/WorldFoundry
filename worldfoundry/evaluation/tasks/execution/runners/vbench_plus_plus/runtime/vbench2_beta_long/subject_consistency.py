@@ -1,4 +1,3 @@
-import logging
 import os
 
 import torch
@@ -8,6 +7,10 @@ from PIL import Image
 from tqdm import tqdm
 from vbench.subject_consistency import compute_subject_consistency, subject_consistency
 from vbench.utils import load_video
+
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
+
+# isort: split
 from vbench2_beta_long.utils import (
     create_video_from_first_frames,
     dinov2_transform,
@@ -18,7 +21,8 @@ from vbench2_beta_long.utils import (
     reorganize_clips_results,
 )
 
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
+# isort: split
+import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

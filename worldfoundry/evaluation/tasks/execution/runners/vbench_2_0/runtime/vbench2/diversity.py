@@ -1,8 +1,12 @@
 import torch
 from torch import nn
 from torchvision.models import vgg19
-from tqdm import tqdm
+
+# isort: split
 from vbench2.utils import get_frames, load_dimension_info
+
+# isort: split
+from tqdm import tqdm
 
 
 class VGG(nn.Module):

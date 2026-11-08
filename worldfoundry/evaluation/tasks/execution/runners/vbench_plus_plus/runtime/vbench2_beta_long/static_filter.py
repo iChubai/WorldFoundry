@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 # Provider initialization uses the runtime's logging configuration.
 from vbench.utils import load_json  # noqa: E402
-from vbench2_beta_long.utils import get_prompt_from_filename  # noqa: E402
 
 from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402
     RAFT,
@@ -26,6 +25,9 @@ from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa
     checkpoint_path as raft_checkpoint_path,
 )
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset  # noqa: E402
+
+# isort: split
+from vbench2_beta_long.utils import get_prompt_from_filename  # noqa: E402
 
 CUR_PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEVICE = "cuda"

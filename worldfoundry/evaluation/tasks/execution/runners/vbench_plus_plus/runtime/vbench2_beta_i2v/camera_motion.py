@@ -4,9 +4,12 @@ from math import ceil
 import numpy as np
 import torch
 from tqdm import tqdm
-from vbench2_beta_i2v.utils import load_dimension_info, load_video
 
+# isort: split
 from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
+
+# isort: split
+from vbench2_beta_i2v.utils import load_dimension_info, load_video
 
 
 def transform(vector):

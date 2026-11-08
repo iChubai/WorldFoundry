@@ -4,10 +4,12 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+# isort: split
+from .utils import clip_transform, load_dimension_info, read_frames_decord_by_fps
+
+# isort: split
 from worldfoundry.base_models.perception_core.video_text.viclip import ViCLIP
 from worldfoundry.base_models.perception_core.video_text.viclip.simple_tokenizer import SimpleTokenizer
-
-from .utils import clip_transform, load_dimension_info, read_frames_decord_by_fps
 
 cultures = [
     "African",

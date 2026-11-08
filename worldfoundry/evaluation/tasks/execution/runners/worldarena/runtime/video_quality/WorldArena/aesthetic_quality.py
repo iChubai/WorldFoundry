@@ -1,5 +1,10 @@
 import torch
 import torch.nn.functional as F
+
+# isort: split
+from .utils import clip_transform, load_dimension_info, load_video
+
+# isort: split
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
@@ -14,8 +19,6 @@ from worldfoundry.core.execution.device import get_current_torch_device
 from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
     load_laion_aesthetic_linear_head,
 )
-
-from .utils import clip_transform, load_dimension_info, load_video
 
 batch_size = 32
 

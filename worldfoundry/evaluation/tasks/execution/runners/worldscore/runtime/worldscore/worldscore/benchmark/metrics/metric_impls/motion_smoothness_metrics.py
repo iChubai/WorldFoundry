@@ -4,11 +4,14 @@ import cv2
 import numpy as np
 import torch
 
-import worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.config as cfg
-from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import InputPadder, Model
+# isort: split
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
+
+# isort: split
+import worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.config as cfg
+from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import InputPadder, Model
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.torchmetrics.lpips_metrics import (
     LearnedPerceptualImagePatchSimilarityMetric,
 )

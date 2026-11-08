@@ -6,15 +6,18 @@ import torch
 decord.bridge.set_bridge("torch")
 from collections import Counter  # noqa: E402 - Follows the decord torch bridge setup.
 
-from tqdm import tqdm  # noqa: E402 - Follows the decord torch bridge setup.
-from vbench2.utils import load_dimension_info  # noqa: E402 - Follows the decord torch bridge setup.
-
 from worldfoundry.base_models.perception_core.face.arcface import (  # noqa: E402 - Follows the decord torch bridge setup.
     resnet_face18,
 )
 from worldfoundry.base_models.perception_core.face.retinaface import (  # noqa: E402 - Follows the decord torch bridge setup.
     load_retinaface_state_dict,
 )
+
+# isort: split
+from vbench2.utils import load_dimension_info  # noqa: E402 - Follows the decord torch bridge setup.
+
+# isort: split
+from tqdm import tqdm  # noqa: E402 - Follows the decord torch bridge setup.
 
 
 def most_frequent_number(numbers):

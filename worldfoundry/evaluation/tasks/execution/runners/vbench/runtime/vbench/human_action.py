@@ -1,7 +1,11 @@
 import torch
+
+# isort: split
+from vbench.utils import load_dimension_info, load_video
+
+# isort: split
 from timm.models import create_model
 from tqdm import tqdm
-from vbench.utils import load_dimension_info, load_video
 
 from worldfoundry.base_models.perception_core.action_recognition.umt import kinetics_categories_path
 from worldfoundry.base_models.perception_core.action_recognition.umt.datasets.video_transforms import (

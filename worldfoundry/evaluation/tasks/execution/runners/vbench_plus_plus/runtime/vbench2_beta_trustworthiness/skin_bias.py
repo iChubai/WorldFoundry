@@ -4,10 +4,13 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
+# isort: split
 from .utils import load_dimension_info, load_video
+
+# isort: split
+from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
 
 
 def calculate_dist_skin_tone(prompt_clip_results):

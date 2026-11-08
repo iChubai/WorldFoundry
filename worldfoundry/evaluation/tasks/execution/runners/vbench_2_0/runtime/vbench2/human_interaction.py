@@ -4,7 +4,6 @@ import warnings
 
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from vbench2.utils import load_dimension_info
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
     DEFAULT_IMAGE_TOKEN,
@@ -18,6 +17,9 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder 
 from worldfoundry.core.execution.device import resolve_inference_dtype
 from worldfoundry.core.io import sample_video_frames
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
+
+# isort: split
+from vbench2.utils import load_dimension_info
 
 warnings.filterwarnings("ignore")
 

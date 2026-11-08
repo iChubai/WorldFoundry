@@ -2,9 +2,6 @@ import argparse
 import os
 import re
 
-# Load spaCy's small English model
-# make sure to run: python -m spacy download en_core_web_sm
-import spacy
 import torch
 from PIL import Image
 
@@ -22,9 +19,16 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
     clean_state_dict,
     get_phrases_from_posmap,
 )
+
+# isort: split
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
+
+# isort: split
+# Load spaCy's small English model
+# make sure to run: python -m spacy download en_core_web_sm
+import spacy
 
 nlp = spacy.load("en_core_web_sm")
 

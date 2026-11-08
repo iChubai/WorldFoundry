@@ -17,9 +17,11 @@ import os
 import warnings
 
 import torch
-from q_align.model import *  # noqa: F403 - Preserve the upstream model namespace exports.
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from transformers.models.clip.image_processing_clip import CLIPImageProcessor
+
+# isort: split
+from q_align.model import *  # noqa: F403 - Preserve the upstream model namespace exports.
 
 
 def load_pretrained_model(

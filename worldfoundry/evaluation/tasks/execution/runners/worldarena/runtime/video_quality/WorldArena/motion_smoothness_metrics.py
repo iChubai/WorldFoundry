@@ -9,15 +9,18 @@ from tqdm import tqdm
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import config as cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.benchmark.utils.padder import InputPadder
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model, convert
+from worldfoundry.core.execution.device import get_current_torch_device
+
+# isort: split
+from .utils import load_dimension_info, read_video_frames_cv2
+
+# isort: split
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
     get_world_size,
 )
-from worldfoundry.core.execution.device import get_current_torch_device
-
-from .utils import load_dimension_info, read_video_frames_cv2
 
 """==========Model setting=========="""
 TTA = True

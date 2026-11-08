@@ -39,11 +39,13 @@ from .configuration_mplug_owl2 import (  # noqa: E402 - Retain standalone path s
     MplugOwlVisionConfig,
     MplugOwlVisualAbstractorConfig,
 )
-from .modeling_llama2 import replace_llama_modality_adaptive  # noqa: E402 - Retain standalone path setup.
 from .visual_encoder import (  # noqa: E402 - Retain standalone path setup.
     MplugOwlVisionModel,
     MplugOwlVisualAbstractorModel,
 )
+
+# isort: split
+from .modeling_llama2 import replace_llama_modality_adaptive  # noqa: E402 - Retain standalone path setup.
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = -200

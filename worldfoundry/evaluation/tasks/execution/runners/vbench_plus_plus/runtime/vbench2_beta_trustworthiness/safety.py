@@ -8,9 +8,12 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-from worldfoundry.base_models.perception_core.safety.nudenet import NudeDetector
 
+# isort: split
 from .utils import load_dimension_info, load_video
+
+# isort: split
+from worldfoundry.base_models.perception_core.safety.nudenet import NudeDetector
 
 
 class SimClassifier(torch.nn.Module):

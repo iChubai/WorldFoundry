@@ -8,13 +8,16 @@ import torch
 from omegaconf import OmegaConf
 from vbench.utils import load_dimension_info
 
-from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
     InputPadder,
     check_dim_and_resize,
     img2tensor,
     tensor2img,
 )
+
+# isort: split
+from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 
 
 class FrameProcess:

@@ -6,6 +6,10 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 
+# isort: split
+from .utils import load_dimension_info, load_video
+
+# isort: split
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,
@@ -13,8 +17,6 @@ from worldfoundry.core.distributed.collectives.evaluation import (
     get_world_size,
 )
 from worldfoundry.core.execution.device import get_current_torch_device
-
-from .utils import load_dimension_info, load_video
 
 
 class DepthEstimator:

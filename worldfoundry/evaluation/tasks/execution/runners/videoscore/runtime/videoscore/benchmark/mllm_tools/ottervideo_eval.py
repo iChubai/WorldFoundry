@@ -1,9 +1,10 @@
 import os
 from typing import ClassVar
 
-from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterVideo as OtterVideoModel
-
 from .mllm_utils import load_images
+
+# isort: split
+from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterVideo as OtterVideoModel
 
 
 class MyOtterVideoModel(OtterVideoModel):

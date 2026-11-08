@@ -17,12 +17,19 @@ from functools import partial
 from pathlib import Path
 
 import deepspeed
-
-# NOTE: Do not comment `import models`, it is used to register models
-import models  # noqa: F401
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+from timm.data.mixup import Mixup
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.models import create_model
+from timm.utils import ModelEma
+
+# isort: split
+# NOTE: Do not comment `import models`, it is used to register models
+import models  # noqa: F401
+
+# isort: split
 import utils
 from dataset import build_dataset
 from engine_for_finetuning import (
@@ -36,10 +43,6 @@ from optim_factory import (
     create_optimizer,
     get_parameter_groups,
 )
-from timm.data.mixup import Mixup
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
-from timm.models import create_model
-from timm.utils import ModelEma
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import multiple_samples_collate
 

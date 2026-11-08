@@ -5,6 +5,38 @@ import os
 import cv2
 import numpy as np
 import torch
+from PIL import Image
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2, build_sam2_video_predictor
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    checkpoint_path as sam2_checkpoint_path,
+)
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    config_name as sam2_config_name,
+)
+
+# isort: split
+from grounded_sam2_utils.mask_dictionary_model import MaskDictionaryModel, ObjectInfo
+
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
+    checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
+    config_path as grounding_dino_config_path,
+)
+
+# isort: split
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor
+
+# isort: split
 from bench_utils.tcs_utils import (
     get_appear_objects,
     get_disappear_objects,
@@ -18,25 +50,8 @@ from bench_utils.tcs_utils import (
     load_model,
     transform_pil,
 )
-from grounded_sam2_utils.mask_dictionary_model import MaskDictionaryModel, ObjectInfo
-from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
-    checkpoint_path as grounding_dino_checkpoint_path,
-)
-from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
-    config_path as grounding_dino_config_path,
-)
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    checkpoint_path as sam2_checkpoint_path,
-)
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    config_name as sam2_config_name,
-)
-from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2, build_sam2_video_predictor
-from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor
 from worldfoundry.base_models.perception_core.tracking.cotracker.paths import (
     checkpoint_path as cotracker_checkpoint_path,
 )

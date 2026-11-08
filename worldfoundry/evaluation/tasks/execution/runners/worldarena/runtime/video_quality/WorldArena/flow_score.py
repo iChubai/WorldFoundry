@@ -7,6 +7,10 @@ import torch
 from easydict import EasyDict as edict
 from tqdm import tqdm
 
+# isort: split
+from .utils import load_dimension_info
+
+# isort: split
 from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
 from worldfoundry.core.distributed.collectives.evaluation import (
@@ -16,8 +20,6 @@ from worldfoundry.core.distributed.collectives.evaluation import (
     get_world_size,
 )
 from worldfoundry.core.execution.device import get_current_torch_device
-
-from .utils import load_dimension_info
 
 
 class FlowScore:

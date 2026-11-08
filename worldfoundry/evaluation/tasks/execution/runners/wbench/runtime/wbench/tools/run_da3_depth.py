@@ -32,9 +32,12 @@ import tempfile
 import time
 from pathlib import Path
 
+# isort: split
+import src.compat  # noqa: F401 — stub optional deps (moviepy, trimesh, plyfile, etc.)
+
+# isort: split
 import cv2
 import numpy as np
-import src.compat  # noqa: F401 — stub optional deps (moviepy, trimesh, plyfile, etc.)
 
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api import DepthAnything3

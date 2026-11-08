@@ -1,14 +1,22 @@
+import torch
+import torch.nn as nn
+from PIL import Image
+
+# isort: split
+from q_align.model.builder import load_pretrained_model
+
+# isort: split
+from q_align.constants import IMAGE_TOKEN_INDEX
+
+# isort: split
+from q_align.mm_utils import tokenizer_image_token
+
+# isort: split
 import json
 import os
 
 import numpy as np
-import torch
-import torch.nn as nn
 from decord import VideoReader
-from PIL import Image
-from q_align.constants import IMAGE_TOKEN_INDEX
-from q_align.mm_utils import tokenizer_image_token
-from q_align.model.builder import load_pretrained_model
 from tqdm import tqdm
 
 

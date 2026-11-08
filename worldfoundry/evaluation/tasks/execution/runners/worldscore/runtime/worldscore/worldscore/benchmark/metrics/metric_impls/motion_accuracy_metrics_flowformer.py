@@ -1,16 +1,42 @@
-# Grounding DINO
-import argparse
 import os
-import re
 
 import cv2
 import numpy as np
+import torch
+from PIL import Image
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    checkpoint_path as sam2_checkpoint_path,
+)
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    config_name as sam2_config_name,
+)
+
+# isort: split
+from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
+
+# isort: split
+import re
+
+from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus import (
+    build_flowformer,
+    checkpoint_path,
+    get_cfg,
+)
+
+# isort: split
+from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
+
+# isort: split
+# Grounding DINO
+import argparse
 
 # Load spaCy's small English model
 # make sure to run: python -m spacy download en_core_web_sm
 import spacy
-import torch
-from PIL import Image
 from torchvision.transforms import ToPILImage
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
@@ -26,20 +52,7 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
     clean_state_dict,
     get_phrases_from_posmap,
 )
-from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus import (
-    build_flowformer,
-    checkpoint_path,
-    get_cfg,
-)
-from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils.utils import InputPadder
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    checkpoint_path as sam2_checkpoint_path,
-)
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    config_name as sam2_config_name,
-)
-from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
 
 # segment anything
 from worldfoundry.base_models.perception_core.segment.sam_v1 import (

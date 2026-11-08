@@ -9,21 +9,24 @@ from tqdm import tqdm
 
 decord.bridge.set_bridge("torch")
 
-from vbench2.utils import (  # noqa: E402 - Follows the decord torch bridge setup.
-    load_dimension_info,
-    split_video_into_scenes,
-)
-
-from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402 - Follows the decord torch bridge setup.
-    RAFT,
-    InputPadder,
-)
 from worldfoundry.base_models.perception_core.tracking.cotracker import (  # noqa: E402 - Follows the decord torch bridge setup.
     CoTrackerPredictor,
     Visualizer,
 )
 
+# isort: split
+from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402 - Follows the decord torch bridge setup.
+    RAFT,
+    InputPadder,
+)
+
 from .dense_match.patch_auto_evaluate import PatchAutoEvaluate  # noqa: E402 - Follows the decord torch bridge setup.
+
+# isort: split
+from vbench2.utils import (  # noqa: E402 - Follows the decord torch bridge setup.
+    load_dimension_info,
+    split_video_into_scenes,
+)
 
 
 def transform_class360(vector, min_reso, factor=0.008):  # 768*0.05

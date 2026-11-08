@@ -2,6 +2,10 @@ from pyiqa.archs.musiq_arch import MUSIQ
 from torchvision import transforms
 from tqdm import tqdm
 
+# isort: split
+from .utils import load_dimension_info, load_video
+
+# isort: split
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,
@@ -9,8 +13,6 @@ from worldfoundry.core.distributed.collectives.evaluation import (
     get_world_size,
 )
 from worldfoundry.core.execution.device import get_current_torch_device
-
-from .utils import load_dimension_info, load_video
 
 
 def transform(images, preprocess_mode="shorter"):

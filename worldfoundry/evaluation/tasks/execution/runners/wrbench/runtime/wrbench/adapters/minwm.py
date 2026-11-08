@@ -5,8 +5,14 @@ from pathlib import Path
 import numpy as np
 
 from wrbench.adapters._utils import adapter_taxonomy_metadata, ensure_work_dir, model_target_trajectory, write_json
-from wrbench.adapters.base import register
+
+# isort: split
 from wrbench.adapters.minwm_camera_patch import apply_launcher_to_command, write_rotation_step_patch
+
+# isort: split
+from wrbench.adapters.base import register
+
+# isort: split
 from wrbench.contracts import (
     build_command_template,
     require_execution_contract,

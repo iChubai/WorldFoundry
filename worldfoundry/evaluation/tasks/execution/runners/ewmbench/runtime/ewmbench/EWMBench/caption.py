@@ -2,10 +2,14 @@ import json
 import os
 
 import torch
+
+# isort: split
+from EWMBench.utils import load_dimension_info
+
+# isort: split
 from tqdm import tqdm
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
-from EWMBench.utils import load_dimension_info
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
 from worldfoundry.core.execution.device import get_current_torch_device, resolve_inference_dtype
 from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens

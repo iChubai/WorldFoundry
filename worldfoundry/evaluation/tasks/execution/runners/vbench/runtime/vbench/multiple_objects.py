@@ -1,11 +1,17 @@
-import logging
-
 import torch
-from torchvision import transforms
 from tqdm import tqdm
+
+# isort: split
 from vbench.utils import load_dimension_info, load_video
 
+# isort: split
 from worldfoundry.base_models.perception_core.captioning.grit.model import DenseCaptioning
+
+# isort: split
+import logging
+
+from torchvision import transforms
+
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,

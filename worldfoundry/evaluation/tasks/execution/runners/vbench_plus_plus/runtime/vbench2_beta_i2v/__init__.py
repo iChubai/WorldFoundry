@@ -5,10 +5,13 @@ import sys
 # Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_i2v", sys.modules[__name__])
 
-from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench  # noqa: E402
-
 from .utils import init_submodules, save_json  # noqa: E402
+
+# isort: split
 from .utils import load_json as load_json  # noqa: E402
+
+# isort: split
+from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench  # noqa: E402
 
 
 class VBenchI2V(VBench):

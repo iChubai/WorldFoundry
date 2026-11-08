@@ -51,7 +51,7 @@ from worldfoundry.base_models.diffusion_model.models.denoisers.wan import (  # n
 from worldfoundry.base_models.diffusion_model.runners.autoregressive import (  # noqa: E402
     AutoregressiveWindowRunner,
 )
-from worldfoundry.pipelines.forcing import NativeSelfForcingPipeline  # noqa: E402
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline  # noqa: E402
 
 BLOCK_SIZE = 3
 

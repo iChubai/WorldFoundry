@@ -2444,6 +2444,7 @@ class SelfForcingWanDenoiser:
         timestep_shift: float = 5.0,
         compute_dtype: torch.dtype = torch.bfloat16,
     ) -> None:
+        """Wrap ``model`` with ``block_size``-frame blocks over a ``cache_frames``-frame global cache."""
         if min(int(block_size), int(cache_frames)) <= 0:
             raise ValueError("Self-Forcing block_size and cache_frames must be positive")
         if int(cache_frames) % int(block_size):
@@ -2494,6 +2495,7 @@ class SelfForcingWanDenoiser:
         )
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
+        """Denoise one latent block, or commit it to the cache, and return its x0 prediction."""
         conditioning = model_input.conditioning
         cache = conditioning.get("kv_cache")
         if not isinstance(cache, Mapping):

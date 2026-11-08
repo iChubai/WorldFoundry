@@ -1,3 +1,5 @@
+"""Native Self-Forcing checkpoint loading, recipe, rollout and public pipeline contracts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,7 +50,7 @@ from worldfoundry.base_models.diffusion_model.runners.strategies import (
 )
 from worldfoundry.base_models.diffusion_model.schedulers.wan import WanFlowMatchEulerScheduler
 from worldfoundry.core.nn import FlowMatchScheduler
-from worldfoundry.pipelines.forcing import NativeSelfForcingPipeline
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline
 
 TINY_CONFIG = {
     "model_type": "t2v",

@@ -543,7 +543,8 @@ def test_lingbot_map_representation_uses_base_model_runtime():
     wrapper = REPO_ROOT / "worldfoundry/base_models/three_dimensions/point_clouds/lingbot_map/runtime.py"
     text = wrapper.read_text(encoding="utf-8")
 
-    assert "Path(__file__).resolve().parent" in text
+    assert "from .lingbot_map.models.gct_stream import GCTStream" in text
+    assert "sys.path" not in text
     assert not (
         REPO_ROOT / "worldfoundry/representations/point_clouds_generation/lingbot_map/lingbot_map_runtime"
     ).exists()

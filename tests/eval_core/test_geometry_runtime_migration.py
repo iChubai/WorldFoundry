@@ -50,13 +50,14 @@ def test_pi3_model_loading_and_geometry_outputs_survive_migration(monkeypatch) -
     np.testing.assert_array_equal(result["camera_poses"][0, 0], np.eye(4))
 
 
-def test_lingbot_runtime_locates_its_bundled_model() -> None:
-    from worldfoundry.base_models.three_dimensions.point_clouds.lingbot_map import (
-        runtime,
-    )
+def test_lingbot_runtime_imports_its_bundled_model() -> None:
+    from worldfoundry.base_models.three_dimensions.point_clouds.lingbot_map import runtime
 
-    assert runtime._runtime_root() == Path(runtime.__file__).resolve().parent
-    assert (runtime._runtime_root() / "lingbot_map/models/gct_stream.py").is_file()
+    spec = importlib.util.find_spec(
+        "worldfoundry.base_models.three_dimensions.point_clouds.lingbot_map.lingbot_map.models.gct_stream"
+    )
+    assert spec is not None
+    assert Path(spec.origin).parent.parent.parent == Path(runtime.__file__).resolve().parent
 
 
 @pytest.mark.parametrize("version", (1, 2))

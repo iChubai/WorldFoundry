@@ -645,6 +645,7 @@ def _forcing_wan21_t2v_1p3b_recipe(
     block_size: int,
     fixed_timesteps: tuple[int, ...],
     first_block_timesteps: tuple[int, ...] = (),
+    renoise_dtype: str | None = None,
     image_to_video: bool = False,
     capability: str,
     metadata: dict[str, object],
@@ -674,6 +675,8 @@ def _forcing_wan21_t2v_1p3b_recipe(
     if first_block_timesteps:
         execution_options["first_block_timesteps"] = first_block_timesteps
     execution_options["context_timestep"] = 0
+    if renoise_dtype is not None:
+        execution_options["renoise_dtype"] = renoise_dtype
     capabilities = {"text-to-video", "causal-generation", capability}
     if image_to_video:
         capabilities.add("image-to-video")
@@ -782,7 +785,12 @@ def _causal_forcing_recipe(
     first_block_timesteps: tuple[int, ...] = (),
     image_to_video: bool = False,
 ) -> NativeDiffusionRecipe:
-    """Return one released Causal-Forcing generator on the shared forcing rollout."""
+    """Return one released Causal-Forcing generator on the shared forcing rollout.
+
+    The official scheduler re-noises a one-frame block of one sample in bf16 (see
+    ``AutoregressiveWindowRunner._renoise_in_dtype``), so frame-wise students
+    re-noise in bf16; three-frame blocks keep the float32 re-noise.
+    """
 
     return _forcing_wan21_t2v_1p3b_recipe(
         model_id=model_id,
@@ -796,6 +804,7 @@ def _causal_forcing_recipe(
         block_size=block_size,
         fixed_timesteps=fixed_timesteps,
         first_block_timesteps=first_block_timesteps,
+        renoise_dtype="bfloat16" if block_size == 1 else None,
         image_to_video=image_to_video,
         capability="causal-forcing",
         metadata={

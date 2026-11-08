@@ -73,6 +73,10 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
     """Own block traversal, CFG, solver updates, and KV-cache lifetime.
 
     ``prediction_mode`` may be only ``flow`` or ``distilled-x0``; the latter requires fixed_timesteps.
+    ``renoise_dtype`` (distilled-x0) draws the re-noise in that dtype and mixes it with the
+    clean block as the official FlowMatchScheduler.add_noise does: a block with batch x
+    frames == 1 computes in ``renoise_dtype`` (bf16 for frame-wise bf16 students), a larger
+    block computes in float32; see :meth:`_renoise_in_dtype`.
     ``first_block_timesteps`` (distilled-x0 only) replaces fixed_timesteps for the first
     noisy block of a rollout; later blocks keep fixed_timesteps, whose length the request's
     ``num_inference_steps`` must match.
@@ -381,11 +385,32 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     torch.tensor(next_timestep / 1000.0, device=clean.device),
                     shift,
                 )
-                reference = clean if self.renoise_dtype is None else clean.to(self.renoise_dtype)
-                noisy = add_flow_noise(
-                    reference, self._noise_like(reference, context.generator), sigma
-                ).to(block_noise.dtype)
+                if self.renoise_dtype is None:
+                    noisy = add_flow_noise(
+                        clean, self._noise_like(clean, context.generator), sigma
+                    ).to(block_noise.dtype)
+                else:
+                    reference = clean.to(self.renoise_dtype)
+                    noise = self._noise_like(reference, context.generator)
+                    noisy = self._renoise_in_dtype(reference, noise, sigma).to(block_noise.dtype)
         return clean
+
+    @staticmethod
+    def _renoise_in_dtype(reference: Tensor, noise: Tensor, sigma: Tensor) -> Tensor:
+        """Re-noise ``renoise_dtype`` operands with the official FlowMatchScheduler.add_noise promotion.
+
+        The official scheduler keeps a float32 sigma that is 0-dim when the block's
+        timestep tensor has one element (batch x block frames == 1) and per-frame
+        otherwise. A 0-dim float32 sigma leaves a bf16 block in bf16 arithmetic; a
+        per-frame sigma promotes it to float32. The result is cast to ``noise``'s dtype.
+        """
+        batch, _, frames = reference.shape[:3]
+        weight = sigma.to(device=reference.device, dtype=torch.float32)
+        if batch * frames == 1:
+            weight = weight.reshape(())
+        else:
+            weight = weight.reshape(1, 1, 1, 1, 1).expand(batch, 1, frames, 1, 1)
+        return ((1 - weight) * reference + weight * noise).type_as(noise)
 
     @torch.no_grad()
     def open_stream(self, request: DiffusionRequest) -> AutoregressiveStream:

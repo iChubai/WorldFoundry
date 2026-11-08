@@ -150,6 +150,8 @@ def test_causal_forcing_recipe_declares_released_variant(model_id: str) -> None:
     if first_steps:
         expected_options["first_block_timesteps"] = first_steps
     expected_options["context_timestep"] = 0
+    if block_size == 1:
+        expected_options["renoise_dtype"] = "bfloat16"
     assert recipe.execution.strategy == "autoregressive-window"
     assert dict(recipe.execution.options) == expected_options
 
@@ -346,6 +348,7 @@ def test_causal_forcing_rollout_follows_official_block_schedule(model_id: str) -
     runner = _runner(factory(), block_size=block_size, cache_frames=6, extensions=(recorder,))
     assert runner.fixed_timesteps == steps
     assert runner.first_block_timesteps == first_steps
+    assert runner.renoise_dtype == (torch.bfloat16 if block_size == 1 else None)
 
     # 21 pixel frames → 6 latent frames: two chunk-wise blocks or six frame-wise blocks.
     output = runner.run(_request(21, len(steps)))

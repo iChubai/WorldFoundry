@@ -101,3 +101,42 @@ def test_matrix_game_2_control_history_terminal_row_enters_next_causal_window() 
         hook.remove()
     assert torch.count_nonzero(groups[0]).item() == 0
     assert torch.count_nonzero(groups[1]).item() > 0
+
+
+def test_realtime_mouse_axis_reaches_matrix_game_2_mouse_condition() -> None:
+    import torch
+
+    from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_2_runtime.realtime import (
+        MatrixGame2RealtimeSession,
+    )
+
+    session = object.__new__(MatrixGame2RealtimeSession)
+    session.runtime = SimpleNamespace(mode="universal")
+    session.device = torch.device("cpu")
+    session.dtype = torch.float32
+    session._keyboard_history = None
+    session._mouse_history = None
+    spec = session.realtime_spec()
+    resampler = RealtimeControlResampler(fps=12, start_time=100, realtime_keys=spec.keys, axes=spec.axes)
+    resampler.sample_input_chunk(9, wall_time=100)
+    assert resampler.on_edge(arrival_time=100.70, event="keydown", key="i")
+    # 12 px right on frame 0, 80 px right on frame 1 (beyond the limit), 20 px down on frame 3.
+    for stamp, samples in (
+        (100.76, {"mouse_x": 12.0}),
+        (100.84, {"mouse_x": 80.0}),
+        (101.01, {"mouse_y": 20.0}),
+    ):
+        assert resampler.on_axis(arrival_time=stamp, samples=samples)
+    chunk = resampler.sample_input_chunk(9, wall_time=101)
+    segments = [{"duration": end - start, "keys": sorted(keys)} for start, end, keys in chunk.segments]
+
+    session._append_actions(
+        session._actions_for_frames([], segments, num_frames=9),
+        session._camera_offsets(chunk.axes, num_frames=9),
+    )
+
+    expected = torch.zeros(9, 2)
+    expected[:, 0] = 0.1  # The held I key looks up on every frame.
+    expected[3, 0] = 0.05  # Moving the mouse down looks down.
+    expected[:2, 1] = torch.tensor([0.03, 0.1])
+    torch.testing.assert_close(session._mouse_history, expected)

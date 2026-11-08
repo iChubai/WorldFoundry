@@ -2578,6 +2578,93 @@ def test_interactive_call_kwargs_add_realtime_axes_only_when_declared() -> None:
     assert with_axes["realtime_segments"] == without_axes["realtime_segments"]
 
 
+def test_interactive_call_kwargs_do_not_replay_previous_chunk_axes() -> None:
+    base = {"realtime_axes": {"yaw": [0.5] * 4}, "num_inference_steps": 4}
+    step = realtime_backend._interactive_call_kwargs(base, [], seed=4)
+    assert step == {"num_inference_steps": 4, "seed": 4}
+
+
+def test_mouse_axis_message_reaches_matrix_game_2_stream_realtime(tmp_path: Path) -> None:
+    from worldfoundry.pipelines.matrix_game.pipeline_matrix_game_2 import MatrixGame2Pipeline
+    from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_2_runtime.realtime import (
+        MatrixGame2RealtimeSession,
+    )
+
+    declaring_session = object.__new__(MatrixGame2RealtimeSession)
+    declaring_session.runtime = types.SimpleNamespace(mode="universal")
+    spec = declaring_session.realtime_spec()
+    generate_calls: list[dict[str, Any]] = []
+
+    class RecordingSession:
+        """MG2-like resident session that declares the universal camera axes."""
+
+        def realtime_spec(self) -> RealtimeSpec:
+            return spec
+
+        def configure(self, image: Image.Image, *, seed: int) -> dict[str, Any]:
+            del image, seed
+            return {"status": "configured", "realtime_spec": spec.to_payload()}
+
+        def generate(self, **kwargs: Any) -> dict[str, Any]:
+            generate_calls.append(kwargs)
+            return {"video": np.zeros((9, 6, 8, 3), dtype=np.uint8), "realtime_spec": spec.to_payload()}
+
+        def reset(self) -> None:
+            pass
+
+    pipeline = MatrixGame2Pipeline(device="cpu")
+    pipeline._realtime_session = RecordingSession()
+    manager = StudioManager(workspace_root=str(tmp_path / "studio"))
+    driver = _Driver(cast(Any, pipeline))
+    # A cached context keeps the configured stream state between Studio actions.
+    context = driver.load_pipeline(manager, find_entry("matrix-game-2"), None)
+    manager.pipeline_cache[context.cache_key] = context
+    cast(Any, driver).load_pipeline = lambda *_args, **_kwargs: context
+    cast(Any, manager).runtime_driver_for = lambda _entry: driver
+    seed_path = tmp_path / "seed.png"
+    Image.new("RGB", (8, 6), "red").save(seed_path)
+    runtime = ResidentWorldRuntime(
+        manager=manager,
+        entry=find_entry("matrix-game-2"),
+        launch_config=StudioLaunchConfig(model_id="matrix-game-2", frontend="world"),
+        fps=12,
+    )
+
+    async def exercise() -> None:
+        await runtime.configure(prompt="", image_path=str(seed_path), video_path="")
+        assert runtime.realtime_spec.axes == spec.axes
+        sink = _AxisSink()
+        active = _ActiveSocket(
+            socket=sink,
+            resampler=RealtimeControlResampler(
+                fps=runtime.realtime_spec.resolved_input_fps,
+                start_time=asyncio.get_running_loop().time(),
+                realtime_keys=runtime.realtime_spec.keys,
+                axes=runtime.realtime_spec.axes,
+            ),
+            frame_packets=asyncio.Queue(maxsize=16),
+        )
+        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=12, chunk_frames=9)
+        await peers._handle_socket_message(active, json.dumps({"type": "axis", "source": "mouse", "dx": 8.0}))
+        worker = asyncio.create_task(peers._socket_generation_worker(active))
+        try:
+            await asyncio.wait_for(_wait_for_condition(lambda: bool(generate_calls)), 10)
+        finally:
+            active.closed = True
+            worker.cancel()
+            await asyncio.gather(worker, return_exceptions=True)
+            await runtime.close()
+        assert not any(message["type"] == "error" for message in sink.messages)
+
+    asyncio.run(exercise())
+
+    realtime_axes = generate_calls[0]["realtime_axes"]
+    assert set(realtime_axes) == {axis.name for axis in spec.axes}
+    assert all(len(values) == 9 for values in realtime_axes.values())
+    assert sum(realtime_axes["camera_yaw"]) == pytest.approx(0.02)
+    assert not any(realtime_axes["camera_pitch"])
+
+
 class _FakeChannel:
     readyState = "open"
 

@@ -895,6 +895,8 @@ def _interactive_call_kwargs(
     control_axes: Mapping[str, list[float]] | None = None,
 ) -> dict[str, Any]:
     values = {**base, "seed": int(seed)}
+    # Axis values belong to one chunk; a chunk without sampled axes must not replay the previous ones.
+    values.pop("realtime_axes", None)
     if control_segments is not None:
         values["realtime_segments"] = [
             {

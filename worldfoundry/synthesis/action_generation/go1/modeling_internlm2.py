@@ -1218,8 +1218,8 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
         """
         Return a generator in format: (response, history)
         Eg.
-        ('你好，有什么可以帮助您的吗', [('你好', '你好，有什么可以帮助您的吗')])
-        ('你好，有什么可以帮助您的吗？', [('你好', '你好，有什么可以帮助您的吗？')])
+        ('Hello, how can I help you', [('Hello', 'Hello, how can I help you')])
+        ('Hello, how can I help you?', [('Hello', 'Hello, how can I help you?')])
         """
         if BaseStreamer is None:
             raise ModuleNotFoundError(

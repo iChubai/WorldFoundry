@@ -149,7 +149,7 @@ Several commands can reach the evaluation core, but they start from different us
             <code>zoo</code>
           </div>
         </div>
-        <p><code>models</code>, <code>model-specs</code>, <code>model-show</code>, <code>model-download</code>, <code>embodied-assets</code>, <code>benchmarks</code>, <code>benchmark-specs</code>, <code>benchmark-show</code>, <code>benchmark-run</code>.</p>
+        <p><code>models</code>, <code>model-specs</code>, <code>model-show</code>, <code>model-download</code>, <code>embodied-assets</code>, <code>benchmarks</code>, <code>benchmark-specs</code>, <code>benchmark-show</code>, <code>benchmark-fetch</code>, <code>benchmark-run</code>.</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -499,6 +499,16 @@ worldfoundry-eval zoo benchmark-run \
 ```
 
 Benchmark-specific inputs such as data roots, score directories, prompt manifests, judge credentials, and metric subsets live on the corresponding [Benchmark Hub](/docs/evaluation/benchmark-hub) page.
+
+Some official runners execute upstream code pinned by the catalog (`repo_url`, `repo_revision`, `repo_subdir`) instead of a vendored copy. The runner fetches that revision into `${WORLDFOUNDRY_CACHE_DIR}/sources/<benchmark-id>/<revision>` on first use; prefetch it while online with:
+
+```bash
+worldfoundry-eval zoo benchmark-fetch \
+  --benchmark-id camerabench \
+  --json
+```
+
+To run an existing checkout of that revision instead, point the benchmark's `runtime_root_env` variable, such as `WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT`, at its `repo_subdir` directory.
 
 For HarnessEval-W, `--result-model-id` selects a model without changing the official common-case cohort. See [HarnessEval-W](/docs/evaluation/benchmark-hub/harnesseval-w) for Python execution, cached scoring and model prerequisites.
 

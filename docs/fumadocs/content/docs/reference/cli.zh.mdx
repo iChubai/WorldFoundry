@@ -146,7 +146,7 @@ worldfoundry-eval run self-forcing --print-config --json
             <code>zoo</code>
           </div>
         </div>
-        <p><code>models</code>、<code>model-specs</code>、<code>model-show</code>、<code>model-download</code>、<code>embodied-assets</code>、<code>benchmarks</code>、<code>benchmark-specs</code>、<code>benchmark-show</code>、<code>benchmark-run</code>。</p>
+        <p><code>models</code>、<code>model-specs</code>、<code>model-show</code>、<code>model-download</code>、<code>embodied-assets</code>、<code>benchmarks</code>、<code>benchmark-specs</code>、<code>benchmark-show</code>、<code>benchmark-fetch</code>、<code>benchmark-run</code>。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -490,6 +490,16 @@ worldfoundry-eval zoo benchmark-run \
 ```
 
 Data root、score directory、prompt manifest、judge credential、metric subset 等 benchmark 专属输入见对应的 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) 页面。
+
+部分官方 runner 执行的是 catalog 固定的上游代码（`repo_url`、`repo_revision`、`repo_subdir`），而不是仓内拷贝。runner 首次用到时把该 revision 拉取到 `${WORLDFOUNDRY_CACHE_DIR}/sources/<benchmark-id>/<revision>`；也可以在联网时提前拉取：
+
+```bash
+worldfoundry-eval zoo benchmark-fetch \
+  --benchmark-id camerabench \
+  --json
+```
+
+如果要改用该 revision 已有的本地 checkout，把该 benchmark 的 `runtime_root_env` 变量（例如 `WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT`）指向其中的 `repo_subdir` 目录。
 
 ### 6. 回放原生 Wan 执行路径与请求批处理
 

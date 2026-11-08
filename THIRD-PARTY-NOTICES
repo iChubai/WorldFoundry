@@ -340,17 +340,6 @@ AlayaLab Evoke
   Apache-2.0 ViGeo implementation under
   ``worldfoundry/base_models/three_dimensions/depth/vigeo``.
 
-NVIDIA AnyFlow
-  Copyright 2026 NVIDIA CORPORATION & AFFILIATES
-  License: Apache License 2.0
-  Source: https://github.com/NVlabs/AnyFlow
-  Source revision: d2acf7373a45173082ec47eb16553a373b10f856
-
-  ``worldfoundry/base_models/diffusion_model/models/networks/wan/variants/anyflow.py``
-  contains a modified copy of the AnyFlow FlowMap/FAR Wan transformer.  The
-  local file retains the NVIDIA copyright, Apache-2.0 license notice, and SPDX
-  identifier.
-
 SenseFlow
   License: Apache License 2.0
   Source: https://github.com/XingtongGe/SenseFlow

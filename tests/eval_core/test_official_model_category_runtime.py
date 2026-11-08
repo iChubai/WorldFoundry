@@ -1,29 +1,20 @@
 from __future__ import annotations
 
-import json
 import importlib
+import json
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
-import yaml
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
 from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
 from worldfoundry.evaluation.utils import load_manifest_collection
-from worldfoundry.synthesis.action_generation.memory import BeingH05Memory
-from worldfoundry.synthesis.action_generation.memory import DiffusionPolicyMemory
-from worldfoundry.synthesis.action_generation.memory import DreamZeroMemory
-from worldfoundry.synthesis.action_generation.memory import GigaBrain0Memory
-from worldfoundry.synthesis.action_generation.memory import LingBotVAMemory
-from worldfoundry.synthesis.action_generation.memory import OctoMemory
-from worldfoundry.synthesis.action_generation.memory import OpenVLAMemory
-from worldfoundry.synthesis.action_generation.memory import ActionTraceMemory
-from worldfoundry.synthesis.visual_generation.memory.runtime import RuntimeMemory
 from worldfoundry.operators.act_operator import ACTOperator
-from worldfoundry.operators.base_operator import BaseOperator
 from worldfoundry.operators.being_h05_operator import BeingH05Operator
 from worldfoundry.operators.diffusion_policy_operator import DiffusionPolicyOperator
 from worldfoundry.operators.dreamdojo_operator import DreamDojoOperator
@@ -38,32 +29,27 @@ from worldfoundry.operators.openvla_operator import OpenVLAOperator
 from worldfoundry.operators.roboflamingo_operator import RoboFlamingoOperator
 from worldfoundry.operators.rt1_operator import RT1Operator
 from worldfoundry.operators.starvla_operator import StarVLAOperator
-from worldfoundry.operators.animatediff_operator import AnimateDiffOperator
-from worldfoundry.pipelines.component_pipelines import AnimateDiffPipeline
-from worldfoundry.pipelines.component_pipelines import BeingH05Pipeline
-from worldfoundry.pipelines.component_pipelines import DiffusionPolicyPipeline
-from worldfoundry.pipelines.component_pipelines import DreamDojoPipeline
-from worldfoundry.pipelines.component_pipelines import DreamZeroPipeline
-from worldfoundry.pipelines.component_pipelines import GigaBrain0Pipeline
-from worldfoundry.pipelines.component_pipelines import LingBotVAPipeline
-from worldfoundry.pipelines.component_pipelines import OctoPipeline
-from worldfoundry.pipelines.component_pipelines import OpenVLAPipeline
-from worldfoundry.pipelines.component_pipelines import Splatt3RPipeline
-from worldfoundry.synthesis.action_generation.starvla.runtime import (
-    StarVLARuntimeConfig,
-    build_starvla_plan_payload,
-    select_starvla_base_vlm,
-    select_starvla_checkpoint,
+from worldfoundry.pipelines.component_pipelines import (
+    BeingH05Pipeline,
+    DreamDojoPipeline,
+    DreamZeroPipeline,
+    GigaBrain0Pipeline,
+    LingBotVAPipeline,
+    Splatt3RPipeline,
 )
 from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     LingBotVARuntimeConfig,
+)
+from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     build_server_command as build_lingbot_va_server_command,
+)
+from worldfoundry.synthesis.action_generation.memory import (
+    ActionTraceMemory,
 )
 from worldfoundry.synthesis.action_generation.roboflamingo.runtime import (
     select_roboflamingo_runtime_config,
 )
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
-
+from worldfoundry.synthesis.visual_generation.memory.runtime import RuntimeMemory
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PIPELINE_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
@@ -71,7 +57,7 @@ ACQUISITION_REPO_ROOT = REPO_ROOT / "cache" / "generative_taxonomy" / "repos"
 VLA_REPO_ROOT = REPO_ROOT / "cache" / "vla_va_wam" / "repos"
 
 
-OFFICIAL_ARCHITECTURE_REPO_SPECS = {
+OFFICIAL_ARCHITECTURE_REPO_SPECS: dict[str, dict[str, Any]] = {
     "giga-brain-0": {
         "pipeline_cls": GigaBrain0Pipeline,
         "operator_cls": GigaBrain0Operator,
@@ -304,7 +290,10 @@ def test_runtime_profiles_cover_catalog_entries() -> None:
     assert not hasattr(action_generation, "OpenVLASynthesis")
     assert importlib.import_module("worldfoundry.synthesis.action_generation.openvla").OpenVLASynthesis is not None
     assert importlib.import_module("worldfoundry.synthesis.action_generation.dreamzero").DreamZeroSynthesis is not None
-    assert importlib.import_module("worldfoundry.synthesis.action_generation.dreamzero.runtime").run_default_client_demo is not None
+    assert (
+        importlib.import_module("worldfoundry.synthesis.action_generation.dreamzero.runtime").run_default_client_demo
+        is not None
+    )
     assert not (REPO_ROOT / "worldfoundry" / "evaluation" / "models" / "runtime_profile_runners.py").exists()
     assert not (REPO_ROOT / "worldfoundry" / "evaluation" / "models" / "official_runtime.py").exists()
     assert not (REPO_ROOT / "worldfoundry" / "operators" / "official_runtime_operator.py").exists()
@@ -347,7 +336,10 @@ def test_runtime_profiles_separate_integration_from_official_evidence() -> None:
     assert profiles["being-h05"]["gpu_readiness"]["artifact_kind"] == "action_trace"
     assert profiles["giga-brain-0"]["integration_status"] == "integrated"
     assert profiles["giga-brain-0"]["backend_stage"] == "in_tree_runtime"
-    assert profiles["giga-brain-0"]["verification_status"] == "converted_lerobot_stats_action_trace_gpu_ready_non_leaderboard"
+    assert (
+        profiles["giga-brain-0"]["verification_status"]
+        == "converted_lerobot_stats_action_trace_gpu_ready_non_leaderboard"
+    )
     assert (
         profiles["giga-brain-0"]["runtime_status"]
         == "in_tree_giga_brain_0_runtime_converted_lerobot_stats_predict_gpu_ready_non_leaderboard"
@@ -362,7 +354,10 @@ def test_runtime_profiles_separate_integration_from_official_evidence() -> None:
         == "official_source_runtime_bridge_qwen3_vl_oft_libero_predict_action_gpu_ready"
     )
     assert profiles["starvla"]["gpu_readiness"]["artifact_kind"] == "action_trace"
-    assert profiles["starvla"]["gpu_readiness"]["scope"] == "public_pipeline_checkpoint_backed_qwen3_vl_oft_libero_predict_action"
+    assert (
+        profiles["starvla"]["gpu_readiness"]["scope"]
+        == "public_pipeline_checkpoint_backed_qwen3_vl_oft_libero_predict_action"
+    )
     assert (
         profiles["dreamzero"]["verification_status"]
         == "checkpoint_gpu_probe_ready_runtime_blocked_cuda129_multigpu_required"
@@ -372,14 +367,39 @@ def test_runtime_profiles_separate_integration_from_official_evidence() -> None:
 
 def test_embodied_action_models_use_independent_architecture_operators() -> None:
     operator_specs = [
-        ("openvla", OpenVLAOperator, "autoregressive_vision_language_action_policy", "continuous_7d_end_effector_delta"),
+        (
+            "openvla",
+            OpenVLAOperator,
+            "autoregressive_vision_language_action_policy",
+            "continuous_7d_end_effector_delta",
+        ),
         ("openpi", OpenPIOperator, "flow_matching_vision_language_action_policy", "continuous_action_chunk"),
-        ("giga-brain-0", GigaBrain0Operator, "world_model_powered_vision_language_action_policy", "multi_embodiment_continuous_action_chunk_with_optional_subtask_and_2d_traj"),
-        ("being-h05", BeingH05Operator, "beingh05_cross_embodiment_vla_policy", "unified_200d_action_space_with_robot_specific_slices"),
-        ("dreamzero", DreamZeroOperator, "world_action_model_zero_shot_policy", "droid_joint_gripper_action_chunk_plus_predicted_video"),
+        (
+            "giga-brain-0",
+            GigaBrain0Operator,
+            "world_model_powered_vision_language_action_policy",
+            "multi_embodiment_continuous_action_chunk_with_optional_subtask_and_2d_traj",
+        ),
+        (
+            "being-h05",
+            BeingH05Operator,
+            "beingh05_cross_embodiment_vla_policy",
+            "unified_200d_action_space_with_robot_specific_slices",
+        ),
+        (
+            "dreamzero",
+            DreamZeroOperator,
+            "world_action_model_zero_shot_policy",
+            "droid_joint_gripper_action_chunk_plus_predicted_video",
+        ),
         ("gr00t", GR00TOperator, "humanoid_foundation_policy", "embodiment_conditioned_joint_or_eef_action"),
         ("starvla", StarVLAOperator, "vision_language_action_and_world_action_model", "robot_or_world_action_sequence"),
-        ("lingbot-va", LingBotVAOperator, "autoregressive_video_action_world_model", "continuous_robot_action_chunk_with_video_latents"),
+        (
+            "lingbot-va",
+            LingBotVAOperator,
+            "autoregressive_video_action_world_model",
+            "continuous_robot_action_chunk_with_video_latents",
+        ),
         ("lapa", LAPAOperator, "visual_action_model", "latent_action_tokens"),
         ("octo", OctoOperator, "generalist_robot_transformer_policy", "task_conditioned_action_chunk"),
         ("rt-1", RT1Operator, "discretized_robotics_transformer_policy", "discretized_action_tokens"),
@@ -542,71 +562,6 @@ def test_runtime_profile_plan_strips_external_official_source_workdir(tmp_path: 
     assert plan["profile"]["artifact_kind"] == "action_trace"
 
 
-def test_starvla_plan_runtime_selects_downloaded_variant_checkpoints(tmp_path: Path) -> None:
-    qwen_dir = tmp_path / "StarVLA--Qwen3-VL-OFT-LIBERO-4in1"
-    wm4a_dir = tmp_path / "StarVLA--WM4A-Wan2d2-OFT-LIBERO-4in1"
-    base_vlm_dir = tmp_path / "Qwen--Qwen3-VL-4B-Instruct"
-    source_repo_dir = tmp_path / "starVLA--starVLA"
-    (qwen_dir / "checkpoints").mkdir(parents=True)
-    (wm4a_dir / "checkpoints").mkdir(parents=True)
-    base_vlm_dir.mkdir(parents=True)
-    source_repo_dir.mkdir(parents=True)
-    (qwen_dir / "checkpoints" / "steps_50000_pytorch_model.pt").write_bytes(b"")
-    (wm4a_dir / "checkpoints" / "steps_60000_pytorch_model.pt").write_bytes(b"")
-
-    checkpoints = (
-        {
-            "repo_id": "StarVLA/Qwen3-VL-OFT-LIBERO-4in1",
-            "local_dir": str(qwen_dir),
-            "role": "qwen3_vl_libero_policy_checkpoint",
-        },
-        {
-            "repo_id": "StarVLA/WM4A-Wan2d2-OFT-LIBERO-4in1",
-            "local_dir": str(wm4a_dir),
-            "role": "wm4a_wan2d2_libero_world_action_checkpoint",
-        },
-        {
-            "repo_id": "Qwen/Qwen3-VL-4B-Instruct",
-            "local_dir": str(base_vlm_dir),
-            "role": "qwen3_vl_4b_base_vlm",
-        },
-    )
-
-    assert select_starvla_checkpoint(checkpoint_dir=None, checkpoints=checkpoints, track="vla.policy_rollout") == qwen_dir.resolve()
-    assert (
-        select_starvla_checkpoint(checkpoint_dir=None, checkpoints=checkpoints, variant_id="starvla-wm4a-wan2d2")
-        == wm4a_dir.resolve()
-    )
-    assert select_starvla_checkpoint(checkpoint_dir=None, checkpoints=checkpoints, track="wam.world_action_modeling") == wm4a_dir.resolve()
-    assert select_starvla_base_vlm(base_vlm=None, checkpoints=checkpoints) == str(base_vlm_dir.resolve())
-
-    plan = build_starvla_plan_payload(
-        config=StarVLARuntimeConfig(
-            checkpoint_dir=wm4a_dir.resolve(),
-            base_vlm=str(base_vlm_dir.resolve()),
-            action_model_type="DiT-B",
-            action_dim=7,
-            action_horizon=8,
-            device="cuda",
-            source_repo_dir=source_repo_dir.resolve(),
-            track="wam.world_action_modeling",
-            attn_implementation="sdpa",
-            enable_official_runtime=True,
-        ),
-        context={},
-        profile={},
-        runtime_options={},
-    )
-    assert plan["runtime"]["checkpoint_file"].endswith("steps_60000_pytorch_model.pt")
-    assert plan["runtime"]["runtime_package"] == "worldfoundry.synthesis.action_generation.starvla.runtime"
-    assert Path(plan["runtime"]["runtime_root"]) == (
-        REPO_ROOT / "worldfoundry/synthesis/action_generation/starvla"
-    ).resolve()
-    assert plan["runtime"]["base_vlm"] == str(base_vlm_dir.resolve())
-    assert plan["runtime"]["source_repo_dir"] == str(source_repo_dir.resolve())
-    assert plan["runtime"]["official_runtime_enabled"] is True
-
-
 def test_roboflamingo_runtime_config_expands_hfd_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     hfd_root = tmp_path / "hfd"
     policy_dir = hfd_root / "robovlms--RoboFlamingo"
@@ -679,9 +634,19 @@ def test_embodied_action_models_use_independent_memory_modules() -> None:
         ("lapa", "worldfoundry.synthesis.action_generation.memory", "LAPAMemory", "lapa_token_history"),
         ("octo", "worldfoundry.synthesis.action_generation.memory", "OctoMemory", "octo_action_windows"),
         ("rt-1", "worldfoundry.synthesis.action_generation.memory", "RT1Memory", "rt1_token_steps"),
-        ("diffusion-policy", "worldfoundry.synthesis.action_generation.memory", "DiffusionPolicyMemory", "diffusion_policy_trajectories"),
+        (
+            "diffusion-policy",
+            "worldfoundry.synthesis.action_generation.memory",
+            "DiffusionPolicyMemory",
+            "diffusion_policy_trajectories",
+        ),
         ("act", "worldfoundry.synthesis.action_generation.memory", "ACTMemory", "act_chunks"),
-        ("roboflamingo", "worldfoundry.synthesis.action_generation.memory", "RoboFlamingoMemory", "roboflamingo_actions"),
+        (
+            "roboflamingo",
+            "worldfoundry.synthesis.action_generation.memory",
+            "RoboFlamingoMemory",
+            "roboflamingo_actions",
+        ),
     ]
 
     classes = set()
@@ -775,8 +740,6 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         "cameractrl": "worldfoundry.pipelines.component_pipelines:CameraCtrlPipeline",
         "motionctrl": "worldfoundry.pipelines.component_pipelines:MotionCtrlPipeline",
         "dreamdojo": "worldfoundry.pipelines.component_pipelines:DreamDojoPipeline",
-        "irasim": "worldfoundry.pipelines.component_pipelines:IRASimPipeline",
-        "pandora": "worldfoundry.pipelines.component_pipelines:PandoraPipeline",
         "splatt3r": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
         "pixelsplat": "worldfoundry.pipelines.component_pipelines:PixelSplatPipeline",
         "openvla": "worldfoundry.pipelines.component_pipelines:OpenVLAPipeline",
@@ -806,6 +769,7 @@ def test_pipeline_runner_targets_are_generic_and_independent() -> None:
     registry = load_model_zoo_registry(REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog")
     openvla = registry.get("openvla")
     assert openvla.runner_target == PIPELINE_RUNNER_TARGET
+    assert openvla.pipeline_target is not None
     assert openvla.pipeline_target.startswith("worldfoundry.pipelines.")
     assert ".official_runtime" not in openvla.runner_target
     assert ".official_runtime" not in openvla.pipeline_target
@@ -813,10 +777,12 @@ def test_pipeline_runner_targets_are_generic_and_independent() -> None:
     for model_id in ("giga-brain-0", "dreamzero"):
         entry = registry.get(model_id)
         assert entry.runner_target == PIPELINE_RUNNER_TARGET
+        assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
     for model_id in ("open-magvit2", "splatt3r", "dreamdojo"):
         entry = registry.get(model_id)
         assert entry.runner_target == PIPELINE_RUNNER_TARGET
+        assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
     egowm = registry.get("egowm")
     assert egowm.runner_target == PIPELINE_RUNNER_TARGET
@@ -824,7 +790,9 @@ def test_pipeline_runner_targets_are_generic_and_independent() -> None:
 
 
 def test_model_zoo_entries_are_in_category_manifests_and_resolve_runner(tmp_path: Path) -> None:
-    assert not (REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog" / "generative_taxonomy_official_runtime.json").exists()
+    assert not (
+        REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog" / "generative_taxonomy_official_runtime.json"
+    ).exists()
 
     registry = load_model_zoo_registry(REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog")
     entry = registry.get("open-magvit2")

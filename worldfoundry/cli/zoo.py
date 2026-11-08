@@ -1095,6 +1095,31 @@ def _handle_zoo_benchmark_run(args: argparse.Namespace) -> int:
     return 0 if _benchmark_run_cli_success(result) else 1
 
 
+def _handle_zoo_benchmark_fetch(args: argparse.Namespace) -> int:
+    """Fetch the official upstream sources a benchmark runtime pins into the source cache."""
+    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evaluation.tasks.execution.framework.official_sources import benchmark_source_spec
+    from worldfoundry.evaluation.tasks.execution.framework.source_cache import ensure_source
+
+    entry = load_benchmark_zoo_registry(args.manifest_dir).get(args.benchmark_id)
+    spec = benchmark_source_spec(entry.benchmark_id, entry.runner_runtime or {})
+    path = ensure_source(spec)
+    payload = {
+        "benchmark_id": entry.benchmark_id,
+        "url": spec.url,
+        "revision": spec.revision,
+        "subdir": spec.subdir,
+        "path": str(path),
+    }
+    if args.json:
+        json_dump(payload)
+    elif terminal_enabled():
+        print_details(entry.name or entry.benchmark_id, payload)
+    else:
+        print(path)
+    return 0
+
+
 # ── Parser registration ─────────────────────────────────────────
 
 
@@ -1224,6 +1249,15 @@ def register_zoo_subparser(subparsers: argparse._SubParsersAction) -> None:
     zoo_benchmark_show_parser.add_argument("--include-spec", action="store_true")
     zoo_benchmark_show_parser.add_argument("--json", action="store_true")
     zoo_benchmark_show_parser.set_defaults(func=_handle_zoo_benchmark_show)
+
+    zoo_benchmark_fetch_parser = zoo_subparsers.add_parser(
+        "benchmark-fetch",
+        help="Fetch the official upstream sources a benchmark pins into the WorldFoundry source cache",
+    )
+    zoo_benchmark_fetch_parser.add_argument("--manifest-dir", type=Path, default=DEFAULT_BENCHMARK_ZOO_DIR)
+    zoo_benchmark_fetch_parser.add_argument("--benchmark-id", required=True)
+    zoo_benchmark_fetch_parser.add_argument("--json", action="store_true")
+    zoo_benchmark_fetch_parser.set_defaults(func=_handle_zoo_benchmark_fetch)
 
     zoo_benchmark_run_parser = zoo_subparsers.add_parser(
         "benchmark-run",

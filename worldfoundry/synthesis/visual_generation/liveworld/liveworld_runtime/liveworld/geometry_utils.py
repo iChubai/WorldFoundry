@@ -153,30 +153,28 @@ def save_image(image: np.ndarray, path: str | Path, rgb: bool = True) -> None:
 # ============================================================================
 
 
-def scale_intrinsics(K: np.ndarray, from_size: tuple[int, int], to_size: tuple[int, int]) -> np.ndarray:
+def scale_intrinsics(K: np.ndarray, scale_x, scale_y) -> np.ndarray:
     """
-    Scale intrinsics from one image size to another.
+    Scale intrinsics by per-axis factors, or from a source to a target size when both arguments are tuples.
 
     Args:
-        K: Intrinsics matrix (3, 3).
-        from_size: Source size (H, W).
-        to_size: Target size (H, W).
+        K: [3, 3] intrinsic matrix
+        scale_x: Scale factor for x (width), or source (h, w) tuple
+        scale_y: Scale factor for y (height), or target (h, w) tuple
 
     Returns:
-        Scaled intrinsics matrix (3, 3).
+        K_scaled: [3, 3] scaled intrinsic matrix
     """
-    from_h, from_w = from_size
-    to_h, to_w = to_size
-
-    scale_x = to_w / from_w
-    scale_y = to_h / from_h
-
+    if isinstance(scale_x, tuple) and isinstance(scale_y, tuple):
+        from_h, from_w = scale_x
+        to_h, to_w = scale_y
+        scale_x = to_w / from_w
+        scale_y = to_h / from_h
     K_scaled = K.copy()
     K_scaled[0, 0] *= scale_x  # fx
     K_scaled[1, 1] *= scale_y  # fy
     K_scaled[0, 2] *= scale_x  # cx
     K_scaled[1, 2] *= scale_y  # cy
-
     return K_scaled
 
 
@@ -317,15 +315,7 @@ class TrajectoryGenerator:
             max_angle: Maximum yaw in degrees.
             num_cycles: Number of sweep cycles.
         """
-        poses = []
-        for i in range(total_frames):
-            t = i / (total_frames - 1) if total_frames > 1 else 0
-            angle = max_angle * np.sin(2 * np.pi * num_cycles * t)
-            r_relative = R.from_euler("y", angle, degrees=True).as_matrix()
-            new_c2w = initial_c2w.copy()
-            new_c2w[:3, :3] = initial_c2w[:3, :3] @ r_relative
-            poses.append(new_c2w)
-        return np.array(poses)
+        return TrajectoryGenerator._sinusoidal_sweep(initial_c2w, total_frames, "y", max_angle, num_cycles)
 
     @staticmethod
     def _path_pitch_sweep(
@@ -338,11 +328,18 @@ class TrajectoryGenerator:
             max_angle: Maximum pitch in degrees.
             num_cycles: Number of sweep cycles.
         """
+        return TrajectoryGenerator._sinusoidal_sweep(initial_c2w, total_frames, "x", max_angle, num_cycles)
+
+    @staticmethod
+    def _sinusoidal_sweep(
+        initial_c2w: np.ndarray, total_frames: int, axis: str, max_angle: float, num_cycles: float
+    ) -> np.ndarray:
+        """Rotate about the camera ``axis`` by ``max_angle * sin(2 * pi * num_cycles * t)`` degrees."""
         poses = []
         for i in range(total_frames):
             t = i / (total_frames - 1) if total_frames > 1 else 0
             angle = max_angle * np.sin(2 * np.pi * num_cycles * t)
-            r_relative = R.from_euler("x", angle, degrees=True).as_matrix()
+            r_relative = R.from_euler(axis, angle, degrees=True).as_matrix()
             new_c2w = initial_c2w.copy()
             new_c2w[:3, :3] = initial_c2w[:3, :3] @ r_relative
             poses.append(new_c2w)
@@ -1352,10 +1349,8 @@ def select_reference_frames(
         stats["best_iou"] = 0.0
         return RefSelectionResult([], [], stats)
 
-    # Pre-compute occupancy for all target frames
-    target_occs = []
-    for idx in target_list:
-        occ = _occupancy_from_frame(
+    def frame_occupancy(idx: int) -> set[tuple[int, int, int]]:
+        return _occupancy_from_frame(
             depth=depths[idx],
             K=intrinsics[idx],
             c2w=poses_c2w[idx],
@@ -1363,20 +1358,9 @@ def select_reference_frames(
             valid_mask=None if valid_masks is None else valid_masks[idx],
             dynamic_mask=None if dynamic_masks is None else dynamic_masks[idx],
         )
-        target_occs.append(occ)
 
-    # Pre-compute occupancy for all candidate frames
-    candidate_occs = {}
-    for idx in candidates:
-        occ = _occupancy_from_frame(
-            depth=depths[idx],
-            K=intrinsics[idx],
-            c2w=poses_c2w[idx],
-            voxel_size=voxel_size,
-            valid_mask=None if valid_masks is None else valid_masks[idx],
-            dynamic_mask=None if dynamic_masks is None else dynamic_masks[idx],
-        )
-        candidate_occs[idx] = occ
+    target_occs = [frame_occupancy(idx) for idx in target_list]
+    candidate_occs = {idx: frame_occupancy(idx) for idx in candidates}
 
     # For each candidate, compute max IoU across all target frames
     scored = []
@@ -1440,31 +1424,6 @@ def render_projection(
         fill_holes_kernel=fill_holes_kernel,
         device=device,
     )
-
-
-def scale_intrinsics(K: np.ndarray, scale_x, scale_y) -> np.ndarray:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
-    """
-    Scale intrinsic matrix for different resolutions.
-
-    Args:
-        K: [3, 3] intrinsic matrix
-        scale_x: Scale factor for x (width), or source (h, w) tuple
-        scale_y: Scale factor for y (height), or target (h, w) tuple
-
-    Returns:
-        K_scaled: [3, 3] scaled intrinsic matrix
-    """
-    if isinstance(scale_x, tuple) and isinstance(scale_y, tuple):
-        from_h, from_w = scale_x
-        to_h, to_w = scale_y
-        scale_x = to_w / from_w
-        scale_y = to_h / from_h
-    K_scaled = K.copy()
-    K_scaled[0, 0] *= scale_x  # fx
-    K_scaled[1, 1] *= scale_y  # fy
-    K_scaled[0, 2] *= scale_x  # cx
-    K_scaled[1, 2] *= scale_y  # cy
-    return K_scaled
 
 
 # =============================================================================
@@ -1587,10 +1546,9 @@ def _limit_points_by_density(
 # Reference Frame Retrieval
 # =============================================================================
 def _voxel_downsample(points: np.ndarray, voxel_size: float) -> np.ndarray:
-    """Voxel grid downsampling: keep one point per voxel cell.
+    """Voxel grid downsampling: keep the first point of each occupied voxel cell.
 
-    Much better than random subsampling for preserving spatial structure.
-    Returns the centroid of points in each occupied voxel.
+    Preserves spatial structure better than random subsampling.
     """
     if len(points) == 0 or voxel_size <= 0:
         return points
@@ -1631,17 +1589,16 @@ def compute_3d_iou_batched(
 ) -> list[tuple[int, float]]:
     """Batch compute 3D IoU between a target point cloud and multiple histories.
 
-    Pre-step: voxel downsample all point clouds (same voxel_size as IoU) to
-    drastically reduce point count while preserving spatial structure, then
-    deterministically trim (if needed) and compute IoU on GPU.
+    All point clouds are first voxel-downsampled with the IoU voxel size, which
+    sharply reduces the point count while preserving spatial structure; IoU is
+    then computed on ``device``, falling back to NumPy on CUDA out-of-memory.
 
     Args:
         target_points: Target point cloud (N, 3)
         hist_points_list: List of (frame_idx, points) tuples
         voxel_size: Voxel size for discretization
         device: Device for computation
-        max_points: Max points per frame after voxel downsample (deterministic
-            trim if still too many). 0 = no limit.
+        max_points: Unused.
     """
     if len(target_points) == 0 or len(hist_points_list) == 0:
         return []

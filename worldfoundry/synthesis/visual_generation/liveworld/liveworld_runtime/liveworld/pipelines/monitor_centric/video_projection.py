@@ -154,10 +154,7 @@ def estimate_depth_and_intrinsics(
 
     extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], image_tensor.shape[-2:])
 
-    w2c_34 = extrinsic[0, 0].cpu().numpy()
-    w2c = np.eye(4, dtype=np.float32)
-    w2c[:3, :] = w2c_34
-    c2w = np.linalg.inv(w2c).astype(np.float32)
+    c2w = _c2w_from_extrinsic(extrinsic[0, 0])
     intrinsics = intrinsic[0, 0].cpu().numpy().astype(np.float32)
 
     wp = predictions.get("world_points")
@@ -180,14 +177,26 @@ def estimate_depth_and_intrinsics(
     elif conf.ndim == 3:
         conf = conf[0]
 
-    proc_h, proc_w = wp.shape[:2]
-    w2c = np.linalg.inv(c2w)
-    pts_cam = (w2c[:3, :3] @ wp.reshape(-1, 3).T).T + w2c[:3, 3]
-    depth = pts_cam[:, 2].reshape(proc_h, proc_w).astype(np.float32)
+    depth = _world_points_to_depth(wp, c2w)
 
     pts3d = None
 
     return depth, intrinsics, pts3d, c2w, conf.astype(np.float32)
+
+
+def _c2w_from_extrinsic(extrinsic: torch.Tensor) -> np.ndarray:
+    """Invert a [3, 4] world-to-camera extrinsic into a float32 [4, 4] camera-to-world matrix."""
+    w2c = np.eye(4, dtype=np.float32)
+    w2c[:3, :] = extrinsic.cpu().numpy()
+    return np.linalg.inv(w2c).astype(np.float32)
+
+
+def _world_points_to_depth(world_points: np.ndarray, c2w: np.ndarray) -> np.ndarray:
+    """Return the float32 camera Z-depth [H, W] of world points [H, W, 3] seen from ``c2w``."""
+    proc_h, proc_w = world_points.shape[:2]
+    w2c = np.linalg.inv(c2w)
+    pts_cam = (w2c[:3, :3] @ world_points.reshape(-1, 3).T).T + w2c[:3, 3]
+    return pts_cam[:, 2].reshape(proc_h, proc_w).astype(np.float32)
 
 
 def _extract_depth_from_preds(preds: dict, frame_count: int):
@@ -214,10 +223,7 @@ def _extract_depth_from_preds(preds: dict, frame_count: int):
     pose_enc = cur.get("_pose_enc_tensor")
     if pose_enc is not None:
         extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc, cur["_image_shape"])
-        w2c_34 = extrinsic[0, -1].cpu().numpy()  # last frame
-        w2c = np.eye(4, dtype=np.float32)
-        w2c[:3, :] = w2c_34
-        c2w = np.linalg.inv(w2c).astype(np.float32)
+        c2w = _c2w_from_extrinsic(extrinsic[0, -1])  # last frame
         intrinsics = intrinsic[0, -1].cpu().numpy().astype(np.float32)
     else:
         c2w = np.eye(4, dtype=np.float32)
@@ -239,10 +245,7 @@ def _extract_depth_from_preds(preds: dict, frame_count: int):
     elif conf.ndim == 4:
         conf = conf[0, 0]
 
-    proc_h, proc_w = wp[0].shape[:2]
-    w2c = np.linalg.inv(c2w)
-    pts_cam = (w2c[:3, :3] @ wp[0].reshape(-1, 3).T).T + w2c[:3, 3]
-    depth = pts_cam[:, 2].reshape(proc_h, proc_w).astype(np.float32)
+    depth = _world_points_to_depth(wp[0], c2w)
 
     return depth, intrinsics, None, c2w, conf.astype(np.float32)
 
@@ -530,6 +533,19 @@ def unproject_to_pointcloud(
     return points_valid, colors_valid
 
 
+def _resize_mask(mask: np.ndarray, size_wh: tuple[int, int]) -> np.ndarray:
+    """Resize a boolean mask to ``size_wh`` (W, H) with nearest-neighbor sampling."""
+    return cv2.resize(mask.astype(np.uint8), size_wh, interpolation=cv2.INTER_NEAREST).astype(bool)
+
+
+def _union_instance_masks(instance_masks: dict, frame_idx: int, shape: tuple[int, int]) -> np.ndarray:
+    """Union the frame ``frame_idx`` masks of all instances ({obj_id: (T, H, W) bool}) into one (H, W) mask."""
+    mask = np.zeros(shape, dtype=bool)
+    for inst_masks in instance_masks.values():
+        mask |= inst_masks[frame_idx]
+    return mask
+
+
 def save_pointcloud_ply(path: str, points: np.ndarray, colors: np.ndarray):
     """Save a point cloud as an ASCII PLY file."""
     with open(path, "w") as f:
@@ -755,30 +771,18 @@ def update_dynamic_object_depth(
 
     if (depth_H1, depth_W1) != (H, W):
         print(f"\n[Step 4.5] Resizing masks to match depth size ({depth_W1}x{depth_H1})...")
-        sky_mask1 = cv2.resize(
-            sky_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
-        foreground_mask1 = cv2.resize(
-            foreground_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
-        background_mask1 = cv2.resize(
-            background_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
+        sky_mask1 = _resize_mask(sky_mask1, (depth_W1, depth_H1))
+        foreground_mask1 = _resize_mask(foreground_mask1, (depth_W1, depth_H1))
+        background_mask1 = _resize_mask(background_mask1, (depth_W1, depth_H1))
         # Point colors come from the resized image.
         image1_resized = cv2.resize(image1, (depth_W1, depth_H1), interpolation=cv2.INTER_LINEAR)
     else:
         image1_resized = image1
 
     if (depth_H2, depth_W2) != (H, W):
-        sky_mask2 = cv2.resize(
-            sky_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
-        foreground_mask2 = cv2.resize(
-            foreground_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
-        background_mask2 = cv2.resize(
-            background_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
-        ).astype(bool)
+        sky_mask2 = _resize_mask(sky_mask2, (depth_W2, depth_H2))
+        foreground_mask2 = _resize_mask(foreground_mask2, (depth_W2, depth_H2))
+        background_mask2 = _resize_mask(background_mask2, (depth_W2, depth_H2))
         image2_resized = cv2.resize(image2, (depth_W2, depth_H2), interpolation=cv2.INTER_LINEAR)
     else:
         image2_resized = image2
@@ -1082,9 +1086,7 @@ def merge_video_foregrounds(
 
     # Build foreground mask from per-instance masks or fallback to per-frame SAM3.
     if instance_masks_dict:
-        foreground_mask1 = np.zeros((H, W), dtype=bool)
-        for obj_id, inst_masks in instance_masks_dict.items():  # noqa: B007 - The loop variable is read outside the loop.
-            foreground_mask1 |= inst_masks[0]
+        foreground_mask1 = _union_instance_masks(instance_masks_dict, 0, (H, W))
         _log(f"  Foreground mask (from {len(instance_masks_dict)} instances): {foreground_mask1.sum()} pixels")
     else:
         _log("  Segmenting foreground...")
@@ -1137,9 +1139,7 @@ def merge_video_foregrounds(
 
         # Build fg mask from per-instance masks or fallback to per-frame SAM3.
         if instance_masks_dict:
-            fg_mask_i = np.zeros((H, W), dtype=bool)
-            for obj_id, inst_masks in instance_masks_dict.items():  # noqa: B007 - The loop variable is read outside the loop.
-                fg_mask_i |= inst_masks[frame_idx]
+            fg_mask_i = _union_instance_masks(instance_masks_dict, frame_idx, (H, W))
         else:
             fg_mask_i = segment_with_sam3(frame, dynamic_object_prompts, sam3_segmenter)
 

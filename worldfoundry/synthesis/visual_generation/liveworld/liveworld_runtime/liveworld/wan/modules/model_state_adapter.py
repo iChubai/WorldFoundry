@@ -828,14 +828,12 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
 
         self.gradient_checkpointing = False
 
-    # 在 CausalWanModel 内部添加或替换该方法
     def _set_gradient_checkpointing(self, *args, **kwargs):
         """
-        兼容 Diffusers 新旧两个调用方式：
-        - 旧: _set_gradient_checkpointing(value: bool)
-        - 新: _set_gradient_checkpointing(enable: bool = True, gradient_checkpointing_func: Optional[Callable] = None)
+        Set gradient checkpointing on every submodule; accepts both Diffusers calling conventions:
+        - older: _set_gradient_checkpointing(value: bool)
+        - newer: _set_gradient_checkpointing(enable: bool = True, gradient_checkpointing_func: Optional[Callable] = None)
         """
-        # 1) 解析参数，兼容两种风格
         if "enable" in kwargs or "gradient_checkpointing_func" in kwargs:
             enable = kwargs.get("enable", True)
             grad_ckpt_func = kwargs.get("gradient_checkpointing_func")
@@ -846,21 +844,19 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
             enable = True
             grad_ckpt_func = None
 
-        # 2) 递归地把设置应用到子模块（如果它们支持）
         def _apply(module):
-            # 一些自定义模块用这个 flag
+            # Custom modules read this flag.
             if hasattr(module, "gradient_checkpointing"):
                 module.gradient_checkpointing = enable
 
-            # Diffusers/Transformers 常见写法：提供 set_gradient_checkpointing 方法
+            # Diffusers/Transformers modules expose set_gradient_checkpointing.
             if enable and hasattr(module, "set_gradient_checkpointing"):
-                # 新接口希望传函数；旧接口通常不需要
+                # The newer API takes the checkpointing function; the older one only takes enable.
                 try:
-                    module.set_gradient_checkpointing(grad_ckpt_func)  # 新式
+                    module.set_gradient_checkpointing(grad_ckpt_func)
                 except TypeError:
-                    module.set_gradient_checkpointing(enable=True)  # 旧式兜底
+                    module.set_gradient_checkpointing(enable=True)
 
-        # 把设置应用到整棵模型
         for m in self.modules():
             _apply(m)
 

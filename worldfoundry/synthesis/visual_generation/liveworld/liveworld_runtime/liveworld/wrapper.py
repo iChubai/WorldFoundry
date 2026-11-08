@@ -123,7 +123,7 @@ class WanVAEWrapper(torch.nn.Module):
 
         if new_target_video_length is not None:
             self.target_video_length = new_target_video_length
-        # 将输入直接转换到目标 dtype/device，避免频繁 cpu<->cuda 拷贝触发大块缓存
+        # Convert once to the target device and dtype to avoid repeated CPU/GPU copies.
         img = img.to(device="cuda", dtype=torch.bfloat16)
         h, w = img.shape[1:]
         lat_h = h // self.vae_stride[1]
@@ -138,19 +138,19 @@ class WanVAEWrapper(torch.nn.Module):
             dtype=torch.bfloat16,
         )
 
-        #! 只有普通I2V，才不用生成第一帧
+        #! Only plain I2V keeps the first frame as a given condition.
         msk[:, 1:] = 0
 
-        #! 其他所有情况，就算是把第一帧加到KVCache里，也是denoise的一部分。
+        #! Otherwise the first frame is denoised too, even when it is added to the KV cache.
         if add_first_to_kvcache:
             msk[:, 0:] = 0
 
         msk = torch.concat(
             [torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]], dim=1
-        )  # 首帧是1，后续20都是0
+        )  # Plain I2V: 1 for the first frame, 0 for the remaining 20.
         msk = msk.view(1, msk.shape[1] // 4, 4, lat_h, lat_w)
         msk = msk.transpose(1, 2)[0]
-        #! 如果是普通I2V
+        #! Plain I2V
         if not add_first_to_kvcache:
             vae_encode_out = self.encode(
                 [
@@ -173,7 +173,7 @@ class WanVAEWrapper(torch.nn.Module):
                         dim=1,  # [3, F, H, W]
                     )
                 ],
-            )[0]  # [1帧img, 其余全 0]
+            )[0]  # [first frame image, zeros]
 
         else:
             vae_encode_out = self.encode(
@@ -194,7 +194,7 @@ class WanVAEWrapper(torch.nn.Module):
                 ],
             )[0]
 
-        # msk: [1帧1,后面都是0],维度4
+        # msk: 4 channels; plain I2V has 1 on the first frame and 0 elsewhere.
 
         vae_encode_out = torch.concat([msk, vae_encode_out]).to(torch.bfloat16)
         return vae_encode_out  # [20, 21, H, W]

@@ -1,13 +1,11 @@
 """
-LiveWorld 通用工具函数
-
-整合了 LiveWorld 数据处理、推理、训练中常用的工具函数:
-- 图像处理: resize, crop, normalize
-- 相机/内参: scale_intrinsics, intrinsics 操作
-- 轨迹生成: TrajectoryGenerator
-- 几何工具: 点云构建、投影、坐标变换
-- 视频 I/O: 加载、保存视频
-- 深度可视化
+Shared LiveWorld utilities for data processing, inference and training:
+- image processing: resize, crop, normalize
+- camera intrinsics: scale_intrinsics and related helpers
+- trajectory generation: TrajectoryGenerator
+- geometry: point cloud construction, projection, coordinate transforms
+- video I/O: load and save videos
+- depth visualization
 """
 
 from __future__ import annotations
@@ -25,20 +23,20 @@ from scipy.spatial.transform import Rotation as R
 from .utils import save_video_h264
 
 # ============================================================================
-# 图像处理工具
+# Image processing
 # ============================================================================
 
 
 def resize_short_edge(image: np.ndarray, short_edge: int) -> np.ndarray:
     """
-    将图片短边 resize 到指定长度，保持宽高比
+    Resize the short edge of an image to ``short_edge``, keeping the aspect ratio.
 
     Args:
-        image: 输入图片 (H, W, C) 或 (H, W)
-        short_edge: 目标短边长度
+        image: Image (H, W, C) or (H, W).
+        short_edge: Target short-edge length.
 
     Returns:
-        resize 后的图片
+        Resized image.
     """
     h, w = image.shape[:2]
 
@@ -54,15 +52,15 @@ def resize_short_edge(image: np.ndarray, short_edge: int) -> np.ndarray:
 
 def center_crop(image: np.ndarray, target_h: int, target_w: int) -> np.ndarray:
     """
-    对图片进行中心裁剪
+    Center-crop an image.
 
     Args:
-        image: 输入图片 (H, W, C) 或 (H, W)
-        target_h: 目标高度
-        target_w: 目标宽度
+        image: Image (H, W, C) or (H, W).
+        target_h: Target height.
+        target_w: Target width.
 
     Returns:
-        裁剪后的图片
+        Cropped image.
     """
     h, w = image.shape[:2]
 
@@ -77,15 +75,15 @@ def center_crop(image: np.ndarray, target_h: int, target_w: int) -> np.ndarray:
 
 def resize_short_edge_and_center_crop(image: np.ndarray, target_h: int, target_w: int) -> np.ndarray:
     """
-    将图片短边 resize 到目标短边长度，然后 center crop 到目标尺寸
+    Resize the short edge to ``min(target_h, target_w)``, then center-crop to the target size.
 
     Args:
-        image: 输入图片 (H, W, C)
-        target_h: 目标高度
-        target_w: 目标宽度
+        image: Image (H, W, C).
+        target_h: Target height.
+        target_w: Target width.
 
     Returns:
-        处理后的图片 (target_h, target_w, C)
+        Image (target_h, target_w, C).
     """
     target_short = min(target_h, target_w)
     resized = resize_short_edge(image, target_short)
@@ -94,15 +92,15 @@ def resize_short_edge_and_center_crop(image: np.ndarray, target_h: int, target_w
 
 def resize_image(image: np.ndarray, size: int | tuple[int, int], interpolation: int = cv2.INTER_LINEAR) -> np.ndarray:
     """
-    Resize 图片到指定尺寸
+    Resize an image to a fixed size.
 
     Args:
-        image: 输入图片 (H, W, C) 或 (H, W)
-        size: 目标尺寸，int 表示 (size, size)，tuple 表示 (H, W)
-        interpolation: 插值方法
+        image: Image (H, W, C) or (H, W).
+        size: Target size; an int means (size, size), a tuple means (H, W).
+        interpolation: OpenCV interpolation flag.
 
     Returns:
-        resize 后的图片
+        Resized image.
     """
     if isinstance(size, int):
         target_h, target_w = size, size
@@ -114,13 +112,14 @@ def resize_image(image: np.ndarray, size: int | tuple[int, int], interpolation: 
 
 def load_image(path: str | Path, rgb: bool = True) -> np.ndarray:
     """
-    加载图片
+    Load an image file.
 
     Args:
-        path: 图片路径
+        path: Image path.
+        rgb: Convert from OpenCV BGR to RGB.
 
     Returns:
-        图片数组 (H, W, C)
+        Image array (H, W, C).
     """
     image = cv2.imread(str(path))
     if image is None:
@@ -132,11 +131,12 @@ def load_image(path: str | Path, rgb: bool = True) -> np.ndarray:
 
 def save_image(image: np.ndarray, path: str | Path, rgb: bool = True) -> None:
     """
-    保存图片
+    Save an image, creating the parent directory; non-uint8 input is clipped to [0, 255].
 
     Args:
-        image: 图片数组 (H, W, C)
-        path: 保存路径
+        image: Image array (H, W, C).
+        path: Output path.
+        rgb: Treat 3-channel input as RGB and convert it to BGR for OpenCV.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -149,21 +149,21 @@ def save_image(image: np.ndarray, path: str | Path, rgb: bool = True) -> None:
 
 
 # ============================================================================
-# 相机/内参工具
+# Camera intrinsics
 # ============================================================================
 
 
 def scale_intrinsics(K: np.ndarray, from_size: tuple[int, int], to_size: tuple[int, int]) -> np.ndarray:
     """
-    将内参从一个尺寸缩放到另一个尺寸
+    Scale intrinsics from one image size to another.
 
     Args:
-        K: 内参矩阵 (3, 3)
-        from_size: 原始尺寸 (H, W)
-        to_size: 目标尺寸 (H, W)
+        K: Intrinsics matrix (3, 3).
+        from_size: Source size (H, W).
+        to_size: Target size (H, W).
 
     Returns:
-        缩放后的内参矩阵 (3, 3)
+        Scaled intrinsics matrix (3, 3).
     """
     from_h, from_w = from_size
     to_h, to_w = to_size
@@ -182,15 +182,15 @@ def scale_intrinsics(K: np.ndarray, from_size: tuple[int, int], to_size: tuple[i
 
 def scale_intrinsics_batch(intrinsics: np.ndarray, from_size: tuple[int, int], to_size: tuple[int, int]) -> np.ndarray:
     """
-    批量缩放内参
+    Scale one or a batch of intrinsics matrices.
 
     Args:
-        intrinsics: 内参矩阵 (N, 3, 3) 或 (3, 3)
-        from_size: 原始尺寸 (H, W)
-        to_size: 目标尺寸 (H, W)
+        intrinsics: Intrinsics (N, 3, 3) or (3, 3).
+        from_size: Source size (H, W).
+        to_size: Target size (H, W).
 
     Returns:
-        缩放后的内参矩阵
+        Scaled intrinsics with the input shape.
     """
     if intrinsics.ndim == 2:
         return scale_intrinsics(intrinsics, from_size, to_size)
@@ -200,28 +200,28 @@ def scale_intrinsics_batch(intrinsics: np.ndarray, from_size: tuple[int, int], t
 
 def make_intrinsics(fx: float, fy: float, cx: float, cy: float) -> np.ndarray:
     """
-    构建内参矩阵
+    Build a float32 intrinsics matrix.
 
     Args:
-        fx, fy: 焦距
-        cx, cy: 主点
+        fx, fy: Focal lengths in pixels.
+        cx, cy: Principal point in pixels.
 
     Returns:
-        内参矩阵 (3, 3)
+        Intrinsics matrix (3, 3).
     """
     return np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]], dtype=np.float32)
 
 
 def intrinsics_to_fov(K: np.ndarray, size: tuple[int, int]) -> tuple[float, float]:
     """
-    从内参计算视场角 (FOV)
+    Compute the field of view from intrinsics.
 
     Args:
-        K: 内参矩阵 (3, 3)
-        size: 图像尺寸 (H, W)
+        K: Intrinsics matrix (3, 3).
+        size: Image size (H, W).
 
     Returns:
-        (fov_x, fov_y) 以角度为单位
+        (fov_x, fov_y) in degrees.
     """
     h, w = size
     fx, fy = K[0, 0], K[1, 1]
@@ -231,40 +231,40 @@ def intrinsics_to_fov(K: np.ndarray, size: tuple[int, int]) -> tuple[float, floa
 
 
 # ============================================================================
-# 相机轨迹生成
+# Camera trajectory generation
 # ============================================================================
 
 
 class TrajectoryGenerator:
     """
-    相机轨迹生成器工具类
+    Camera trajectory generator.
 
-    输入：初始位姿 (4x4 c2w matrix), 总帧数
-    输出：轨迹列表 (N, 4, 4)
+    Input: initial pose (4x4 c2w matrix) and frame count.
+    Output: trajectory (N, 4, 4).
 
-    支持的轨迹模式:
-    - yaw_sweep_pause_return: 向右转 -> 停顿 -> 转回
-    - yaw_sweep: 左右摇摆
-    - pitch_sweep: 上下摇摆
-    - orbit: 绕点做圆周运动
-    - dolly_forward: 向前推进
-    - dolly_zoom: 推拉变焦
-    - static: 静止不动
+    Modes:
+    - yaw_sweep_pause_return: turn right -> pause -> turn back
+    - yaw_sweep: sinusoidal left-right sweep
+    - pitch_sweep: sinusoidal up-down sweep
+    - orbit: circle around the initial position
+    - dolly_forward: move forward
+    - dolly_zoom: move forward and optionally back
+    - static: stay still
     """
 
     @staticmethod
     def generate(initial_c2w: np.ndarray, total_frames: int, mode: str = "yaw_sweep", **kwargs) -> np.ndarray:
         """
-        统一入口函数
+        Generate a trajectory with the ``_path_<mode>`` method.
 
         Args:
-            initial_c2w: 初始位姿 (4, 4) c2w 矩阵
-            total_frames: 总帧数
-            mode: 轨迹模式名称
-            **kwargs: 传递给具体路径函数的参数
+            initial_c2w: Initial c2w pose (4, 4).
+            total_frames: Number of frames.
+            mode: Trajectory mode name.
+            **kwargs: Arguments forwarded to the mode method.
 
         Returns:
-            轨迹数组 (N, 4, 4)
+            Trajectory (N, 4, 4).
         """
         method = getattr(TrajectoryGenerator, f"_path_{mode}", None)
         if not method:
@@ -274,7 +274,7 @@ class TrajectoryGenerator:
 
     @staticmethod
     def _path_static(initial_c2w: np.ndarray, total_frames: int, **kwargs) -> np.ndarray:
-        """静止不动"""
+        """Repeat the initial pose."""
         return np.stack([initial_c2w.copy() for _ in range(total_frames)], axis=0)
 
     @staticmethod
@@ -282,11 +282,11 @@ class TrajectoryGenerator:
         initial_c2w: np.ndarray, total_frames: int, max_angle: float = -90, pause_ratio: float = 0.2
     ) -> np.ndarray:
         """
-        向右转 -> 停顿 -> 转回原位
+        Turn right -> pause -> turn back to the initial pose.
 
         Args:
-            max_angle: 最大旋转角度，负数向右
-            pause_ratio: 停顿时间占总时长的比例
+            max_angle: Maximum yaw in degrees; negative turns right.
+            pause_ratio: Fraction of the frames spent paused.
         """
         poses = []
 
@@ -311,11 +311,11 @@ class TrajectoryGenerator:
         initial_c2w: np.ndarray, total_frames: int, max_angle: float = 30, num_cycles: float = 1.0
     ) -> np.ndarray:
         """
-        左右摇摆轨迹
+        Sinusoidal left-right (yaw) sweep.
 
         Args:
-            max_angle: 最大摇摆角度
-            num_cycles: 摇摆周期数
+            max_angle: Maximum yaw in degrees.
+            num_cycles: Number of sweep cycles.
         """
         poses = []
         for i in range(total_frames):
@@ -332,11 +332,11 @@ class TrajectoryGenerator:
         initial_c2w: np.ndarray, total_frames: int, max_angle: float = 15, num_cycles: float = 1.0
     ) -> np.ndarray:
         """
-        上下摇摆轨迹
+        Sinusoidal up-down (pitch) sweep.
 
         Args:
-            max_angle: 最大摇摆角度
-            num_cycles: 摇摆周期数
+            max_angle: Maximum pitch in degrees.
+            num_cycles: Number of sweep cycles.
         """
         poses = []
         for i in range(total_frames):
@@ -357,12 +357,12 @@ class TrajectoryGenerator:
         num_cycles: float = 1.0,
     ) -> np.ndarray:
         """
-        绕初始位置做圆周运动
+        Circle around the initial position.
 
         Args:
-            radius: 圆周半径
-            height_var: 高度变化幅度
-            num_cycles: 圆周数
+            radius: Circle radius.
+            height_var: Amplitude of the vertical offset.
+            num_cycles: Number of circles.
         """
         poses = []
         center = initial_c2w[:3, 3].copy()
@@ -388,10 +388,10 @@ class TrajectoryGenerator:
     @staticmethod
     def _path_dolly_forward(initial_c2w: np.ndarray, total_frames: int, distance: float = 1.0) -> np.ndarray:
         """
-        向前推进的轨迹
+        Translate the camera along ``-c2w[:3, 2]``.
 
         Args:
-            distance: 推进距离
+            distance: Total travel distance.
         """
         poses = []
         for i in range(total_frames):
@@ -407,17 +407,17 @@ class TrajectoryGenerator:
         initial_c2w: np.ndarray, total_frames: int, distance: float = 1.0, return_back: bool = True
     ) -> np.ndarray:
         """
-        推拉变焦轨迹
+        Translate the camera along ``-c2w[:3, 2]`` and optionally back.
 
         Args:
-            distance: 推进距离
-            return_back: 是否返回
+            distance: Maximum travel distance.
+            return_back: Return to the initial pose in the second half.
         """
         poses = []
         for i in range(total_frames):
             if return_back:
                 t = i / (total_frames - 1) if total_frames > 1 else 0
-                # 前半段前进，后半段后退
+                # Forward in the first half, back in the second half.
                 progress = t * 2 if t < 0.5 else (1 - t) * 2
             else:
                 progress = i / (total_frames - 1) if total_frames > 1 else 0
@@ -430,7 +430,7 @@ class TrajectoryGenerator:
 
 
 # ============================================================================
-# 几何工具 - 点云和投影
+# Geometry: point clouds and projection
 # ============================================================================
 
 
@@ -438,17 +438,17 @@ def unproject_depth_to_points(
     depth: np.ndarray, K: np.ndarray, mask: np.ndarray | None = None, return_pixels: bool = False
 ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     """
-    深度图反投影为相机坐标系3D点
+    Unproject a depth map to 3D points in camera coordinates; pixels with depth <= 0 are skipped.
 
     Args:
-        depth: 深度图 (H, W)
-        K: 内参矩阵 (3, 3)
-        mask: 有效像素 mask (H, W)
-        return_pixels: 是否返回像素坐标
+        depth: Depth map (H, W).
+        K: Intrinsics matrix (3, 3).
+        mask: Valid-pixel mask (H, W).
+        return_pixels: Also return the pixel coordinates.
 
     Returns:
-        points: 3D点 (N, 3)
-        pixels: (可选) 像素坐标 (N, 2)
+        points: 3D points (N, 3).
+        pixels: (optional) pixel coordinates (N, 2) as (x, y).
     """
     if depth.ndim != 2:
         raise ValueError("depth must be HxW")
@@ -479,14 +479,14 @@ def unproject_depth_to_points(
 
 def transform_points(points: np.ndarray, transform: np.ndarray) -> np.ndarray:
     """
-    使用4x4变换矩阵变换3D点
+    Apply a 4x4 transform to 3D points.
 
     Args:
-        points: 3D点 (N, 3)
-        transform: 变换矩阵 (4, 4)
+        points: 3D points (N, 3).
+        transform: Transform matrix (4, 4).
 
     Returns:
-        变换后的点 (N, 3)
+        Transformed points (N, 3).
     """
     if points.ndim != 2 or points.shape[1] != 3:
         raise ValueError("points must be Nx3")
@@ -501,15 +501,15 @@ def transform_points(points: np.ndarray, transform: np.ndarray) -> np.ndarray:
 
 def project_points(points: np.ndarray, K: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
-    将相机坐标系3D点投影到像素坐标
+    Project camera-space 3D points to pixel coordinates.
 
     Args:
-        points: 3D点 (N, 3)
-        K: 内参矩阵 (3, 3)
+        points: 3D points (N, 3).
+        K: Intrinsics matrix (3, 3).
 
     Returns:
-        uv: 像素坐标 (N, 2)
-        z: 深度 (N,)
+        uv: Pixel coordinates (N, 2); NaN for points with z <= 0.
+        z: Depth (N,).
     """
     if points.ndim != 2 or points.shape[1] != 3:
         raise ValueError("points must be Nx3")
@@ -529,14 +529,14 @@ def project_points(points: np.ndarray, K: np.ndarray) -> tuple[np.ndarray, np.nd
 
 def voxel_downsample(points: np.ndarray, voxel_size: float) -> np.ndarray:
     """
-    体素下采样
+    Voxel-downsample points, keeping one point per occupied voxel.
 
     Args:
-        points: 3D点 (N, 3)
-        voxel_size: 体素大小
+        points: 3D points (N, 3).
+        voxel_size: Voxel edge length; <= 0 disables downsampling.
 
     Returns:
-        下采样后的点 (M, 3)
+        Downsampled points (M, 3).
     """
     if voxel_size <= 0:
         return points.astype(np.float32)
@@ -550,14 +550,14 @@ def voxel_downsample(points: np.ndarray, voxel_size: float) -> np.ndarray:
 
 def voxel_indices(points: np.ndarray, voxel_size: float) -> np.ndarray:
     """
-    计算每个点所属的 voxel 索引
+    Compute the integer voxel index of each point.
 
     Args:
-        points: 3D点 (N, 3)
-        voxel_size: 体素大小
+        points: 3D points (N, 3).
+        voxel_size: Voxel edge length.
 
     Returns:
-        体素索引 (N, 3)
+        Voxel indices (N, 3).
     """
     if points.size == 0:
         return np.zeros((0, 3), dtype=np.int32)
@@ -567,7 +567,7 @@ def voxel_indices(points: np.ndarray, voxel_size: float) -> np.ndarray:
 
 
 # ============================================================================
-# 视频 I/O
+# Video I/O
 # ============================================================================
 
 VIDEO_EXTS = (".mp4", ".mov", ".avi", ".mkv", ".webm")
@@ -581,17 +581,17 @@ def load_video_frames(
     target_size: int | tuple[int, int] | None = None,
 ) -> list[np.ndarray]:
     """
-    加载视频帧
+    Load RGB video frames.
 
     Args:
-        video_path: 视频路径
-        start: 起始帧索引
-        stride: 帧间隔
-        max_frames: 最大帧数
-        target_size: 目标尺寸，int 表示 (size, size)，tuple 表示 (W, H)
+        video_path: Video path.
+        start: Index of the first frame.
+        stride: Frame step.
+        max_frames: Maximum number of frames.
+        target_size: Resize target; an int means (size, size), a tuple means (W, H).
 
     Returns:
-        帧列表 [np.ndarray]
+        List of frames.
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -624,12 +624,12 @@ def load_video_frames(
 
 def save_video(frames: np.ndarray, out_path: str | Path, fps: float = 16.0) -> None:
     """
-    保存帧序列为 mp4 视频
+    Save frames as an H.264 mp4 video.
 
     Args:
-        frames: 帧数组 (N, H, W, C)
-        out_path: 输出路径
-        fps: 帧率
+        frames: Frames (N, H, W, C).
+        out_path: Output path.
+        fps: Frame rate.
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -639,13 +639,13 @@ def save_video(frames: np.ndarray, out_path: str | Path, fps: float = 16.0) -> N
 
 def get_video_info(video_path: str | Path) -> dict:
     """
-    获取视频信息
+    Read video metadata.
 
     Args:
-        video_path: 视频路径
+        video_path: Video path.
 
     Returns:
-        包含 fps, frame_count, width, height 的字典
+        Dict with fps (16.0 when unknown), frame_count, width and height.
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -667,14 +667,14 @@ def get_video_info(video_path: str | Path) -> dict:
 
 def list_video_files(video_dir: str | Path, recursive: bool = True) -> list[Path]:
     """
-    列出目录中的视频文件
+    List video files in a directory.
 
     Args:
-        video_dir: 目录路径
-        recursive: 是否递归搜索
+        video_dir: Directory path.
+        recursive: Search subdirectories.
 
     Returns:
-        视频文件路径列表
+        Sorted video file paths.
     """
     root = Path(video_dir)
     if not root.is_dir():
@@ -691,7 +691,7 @@ def list_video_files(video_dir: str | Path, recursive: bool = True) -> list[Path
 
 
 # ============================================================================
-# 深度可视化
+# Depth visualization
 # ============================================================================
 
 
@@ -702,16 +702,16 @@ def visualize_depth(
     max_depth: float | None = None,
 ) -> np.ndarray:
     """
-    深度图可视化
+    Colorize a depth map.
 
     Args:
-        depth: 深度图 (H, W)
-        colormap: OpenCV colormap
-        min_depth: 最小深度值 (用于归一化)
-        max_depth: 最大深度值 (用于归一化)
+        depth: Depth map (H, W).
+        colormap: OpenCV colormap.
+        min_depth: Normalization minimum; defaults to the depth minimum.
+        max_depth: Normalization maximum; defaults to the depth maximum.
 
     Returns:
-        彩色深度图 (H, W, 3) RGB
+        RGB depth visualization (H, W, 3).
     """
     if min_depth is None:
         min_depth = depth.min()
@@ -727,19 +727,19 @@ def visualize_depth(
 
 def save_depth_visualization(depth: np.ndarray, out_path: str | Path, colormap: int = cv2.COLORMAP_VIRIDIS) -> None:
     """
-    保存深度可视化图
+    Save a colorized depth map.
 
     Args:
-        depth: 深度图 (H, W)
-        out_path: 输出路径
-        colormap: OpenCV colormap
+        depth: Depth map (H, W).
+        out_path: Output path.
+        colormap: OpenCV colormap.
     """
     d_vis = visualize_depth(depth, colormap)
     save_image(d_vis, out_path)
 
 
 # ============================================================================
-# 点云 I/O
+# Point cloud I/O
 # ============================================================================
 
 
@@ -749,12 +749,12 @@ def save_point_cloud_ply(
     colors: np.ndarray,
 ) -> None:
     """
-    保存点云为 PLY 文件
+    Save a point cloud as an ASCII PLY file.
 
     Args:
-        save_path: 保存路径
-        points: 点坐标 (N, 3)
-        colors: 点颜色 (N, 3) uint8 RGB
+        save_path: Output path.
+        points: Point coordinates (N, 3).
+        colors: Point colors (N, 3), uint8 RGB or floats in [0, 1].
     """
     save_path = Path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -787,21 +787,19 @@ def save_point_cloud_ply(
 
 
 # ============================================================================
-# 数据类型定义
+# Data types
 # ============================================================================
 
 
 @dataclass
 class VideoGeometry:
     """
-    视频几何信息
-
-    由 MapAnything 估计得到，包含:
-    - frames: RGB帧 (L, H, W, 3)
-    - depths: 深度图 (L, H, W)
-    - intrinsics: 相机内参 (L, 3, 3)
-    - poses_c2w: 相机位姿，camera-to-world (L, 4, 4)
-    - masks: 有效区域mask (L, H, W)
+    Per-frame video geometry estimated by MapAnything:
+    - frames: RGB frames (L, H, W, 3)
+    - depths: depth maps (L, H, W)
+    - intrinsics: camera intrinsics (L, 3, 3)
+    - poses_c2w: camera-to-world poses (L, 4, 4)
+    - masks: valid-region masks (L, H, W)
     """
 
     frames: np.ndarray
@@ -815,19 +813,19 @@ class VideoGeometry:
 
 
 # ============================================================================
-# 便捷函数
+# Geometry file helpers
 # ============================================================================
 
 
 def load_geometry_npz(path: str | Path) -> dict:
     """
-    加载 geometry.npz 文件
+    Load a geometry.npz file.
 
     Args:
-        path: npz 文件路径
+        path: npz file path.
 
     Returns:
-        包含几何信息的字典
+        Dict of the stored arrays.
     """
     data = np.load(str(path))
     return {key: data[key] for key in data.files}
@@ -843,16 +841,16 @@ def save_geometry_npz(
     **kwargs,
 ) -> None:
     """
-    保存 geometry.npz 文件
+    Save a geometry.npz file.
 
     Args:
-        path: 输出路径
-        depths: 深度图 (N, H, W)
-        poses_c2w: 位姿 (N, 4, 4)
-        intrinsics: 内参 (N, 3, 3) 或 (3, 3)
-        processed_size: 处理后的尺寸 (H, W)
-        original_size: 原始尺寸 (H, W)
-        **kwargs: 其他要保存的数据
+        path: Output path.
+        depths: Depth maps (N, H, W).
+        poses_c2w: Camera-to-world poses (N, 4, 4).
+        intrinsics: Intrinsics (N, 3, 3) or (3, 3).
+        processed_size: Processed size (H, W).
+        original_size: Original size (H, W).
+        **kwargs: Additional arrays to store.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -875,16 +873,16 @@ def make_comparison_image(
     images: list[np.ndarray], axis: int = 1, gap: int = 0, gap_color: tuple[int, int, int] = (255, 255, 255)
 ) -> np.ndarray:
     """
-    创建对比图
+    Concatenate images into one comparison image.
 
     Args:
-        images: 图片列表
-        axis: 拼接方向，0=垂直，1=水平
-        gap: 图片间隔
-        gap_color: 间隔颜色 (R, G, B)
+        images: Images with matching sizes.
+        axis: Concatenation axis; 0 = vertical, 1 = horizontal.
+        gap: Gap width in pixels between images.
+        gap_color: Gap color (R, G, B).
 
     Returns:
-        拼接后的图片
+        Concatenated image.
     """
     if not images:
         raise ValueError("images list is empty")
@@ -907,7 +905,7 @@ def make_comparison_image(
 
 
 # ============================================================================
-# Pipeline 工具函数 (从 pipeline_unified_backbone.py 移入)
+# Pipeline utilities
 # ============================================================================
 
 

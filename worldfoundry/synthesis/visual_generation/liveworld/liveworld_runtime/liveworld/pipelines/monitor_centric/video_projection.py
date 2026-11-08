@@ -1,20 +1,21 @@
 """
-动态物体深度更新脚本
+Merge moving-object depth into a static scene point cloud.
 
-功能1 - 两张图片模式:
-输入：两张图片，第二张和第一张的区别是运动物体的深度不同（相机位置和视角完全一样）
-输出：将第二帧中运动物体的点云合并到第一帧的点云中
+Two-image mode:
+Input: two images taken from the same camera pose that differ only in the depth of moving objects.
+Output: the first-frame point cloud with the moving-object points of the second frame merged in.
 
-功能2 - 视频模式:
-输入：一个视频，每帧除了前景物体深度不同外，背景完全静止
-输出：把每帧的前景物体点云都合并到第一帧点云中，从偏移视角渲染出视频
+Video mode:
+Input: a video whose background is static and whose foreground objects move.
+Output: the foreground points of every frame merged into the first-frame point cloud, rendered as a
+video from an offset viewpoint.
 
-流程：
-1. 用 STream3R 估计深度和内参
-2. 用 SAM3 分割前景（动态物体）和背景
-3. 计算背景区域的深度尺度差异（用于 scale 对齐）
-4. 将前景物体的点云（经过 scale 对齐）合并到第一帧的点云中
-5. (视频模式) 从偏移视角渲染累积点云
+Steps:
+1. Estimate depth and intrinsics with STream3R.
+2. Segment the foreground (moving objects) and background with SAM3.
+3. Estimate the depth scale between frames on the background.
+4. Merge the scale-aligned foreground points into the first-frame point cloud.
+5. (Video mode) Render the accumulated point cloud from an offset viewpoint.
 """
 
 import json
@@ -48,13 +49,13 @@ MIN_SCALE_VALID_PIXELS = 100
 
 
 def load_image(path: str) -> np.ndarray:
-    """加载图片为 RGB numpy array"""
+    """Load an image as an RGB numpy array."""
     img = Image.open(path).convert("RGB")
     return np.array(img)
 
 
 def load_video_frames(video_path: str) -> list:
-    """加载视频所有帧为 RGB numpy array 列表"""
+    """Load all video frames as RGB numpy arrays."""
     cap = cv2.VideoCapture(video_path)
     frames = []
     while True:
@@ -68,7 +69,7 @@ def load_video_frames(video_path: str) -> list:
 
 
 def get_video_fps(video_path: str) -> float:
-    """获取视频帧率"""
+    """Return the video frame rate."""
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
@@ -89,7 +90,7 @@ def _normalize_conf_threshold(conf_threshold: float, verbose: bool = True) -> fl
 
 
 def load_stream3r_model(device: str = "cuda", model_path: str = "ckpts/yslan--STream3R"):
-    """加载 STream3R 模型（只加载一次）"""
+    """Load a STream3R model in eval mode on ``device``."""
     model = STream3R.from_pretrained(model_path)
     model = model.to(device=torch.device(device))
     model.eval()
@@ -126,13 +127,13 @@ def estimate_depth_and_intrinsics(
     conf_thresh_percentile: float = 40.0,
 ):
     """
-    使用 STream3R 估计单张图片的深度和内参 (独立模式，无 session)
+    Estimate depth and intrinsics of a single image with STream3R, without a session.
 
     Args:
         image: RGB image [H, W, 3]
-        model: 已加载的 STream3R 模型
-        process_res: STream3R 处理分辨率上限 (default: 518)
-        conf_thresh_percentile: 保留参数，当前未使用
+        model: Loaded STream3R model
+        process_res: Ignored (with a warning) unless 518; the official preprocessing sets the size.
+        conf_thresh_percentile: Unused.
 
     Returns:
         depth: [H, W] float32, Z-depth
@@ -331,7 +332,7 @@ def estimate_all_depths_with_session(
 
 
 def load_sam3_segmenter(sam3_model_path: str):
-    """加载 SAM3 分割器（只加载一次）"""
+    """Create a SAM3 video segmenter."""
     segmenter = Sam3VideoSegmenter(
         checkpoint_path=sam3_model_path,
     )
@@ -344,20 +345,20 @@ def segment_with_sam3(
     segmenter,
 ) -> np.ndarray:
     """
-    使用 SAM3 分割指定物体
+    Segment the prompted objects with SAM3.
 
     Args:
         image: RGB image [H, W, 3]
-        prompts: 要分割的物体名称列表，如 ["car", "person"]
-        segmenter: 已加载的 SAM3 分割器
+        prompts: Object names to segment, for example ["car", "person"]
+        segmenter: Loaded SAM3 segmenter
 
     Returns:
-        mask: [H, W] bool, True 表示被分割的物体区域
+        mask: [H, W] bool, True on segmented objects; all False when nothing is found or segmentation fails.
     """
     if not prompts:
         return np.zeros(image.shape[:2], dtype=bool)
 
-    # SAM3 需要 PIL Image 列表
+    # SAM3 takes a list of PIL images.
     pil_image = Image.fromarray(image)
 
     try:
@@ -390,27 +391,27 @@ def compute_scale_factor(
     verbose: bool = True,
 ) -> float:
     """
-    计算背景区域的深度尺度因子
+    Estimate the depth scale between two frames on the background.
 
-    由于深度模型对两张图片分别估计，尺度可能不一致。
-    我们用背景区域（静态区域）来计算尺度对齐因子。
+    Depth is estimated per image, so the scales can differ; the static background
+    gives the alignment factor.
 
     Args:
-        depth1: 第一张图的深度 [H, W]
-        depth2: 第二张图的深度 [H, W]
-        background_mask: 背景区域 mask [H, W], True 表示背景
-        conf1: 第一张图置信度 [H, W] (optional)
-        conf2: 第二张图置信度 [H, W] (optional)
-        conf_threshold: 置信度阈值，低于阈值的像素不参与 scale 估计
-        min_valid_pixels: 最小有效像素数
+        depth1: Depth of the first image [H, W]
+        depth2: Depth of the second image [H, W]
+        background_mask: Background mask [H, W], True on background
+        conf1: Confidence of the first image [H, W] (optional)
+        conf2: Confidence of the second image [H, W] (optional)
+        conf_threshold: Pixels below this confidence are excluded from the estimate
+        min_valid_pixels: Minimum number of valid pixels
 
     Returns:
-        scale: depth2 * scale ≈ depth1 (在背景区域)
+        scale: depth2 * scale ~= depth1 on the background
     """
     _log = print if verbose else (lambda *a, **k: None)
     conf_threshold = _normalize_conf_threshold(conf_threshold, verbose=verbose)
 
-    # 基础有效区域（不含置信度）
+    # Valid background pixels before the confidence filter.
     base_valid = background_mask & (depth1 > 0.1) & (depth2 > 0.1) & np.isfinite(depth1) & np.isfinite(depth2)
     base_valid_pixels = int(base_valid.sum())
     if base_valid_pixels < min_valid_pixels:
@@ -477,28 +478,26 @@ def unproject_to_pointcloud(
     depth_outlier_std_scale: float = 3.0,
 ) -> tuple:
     """
-    将深度图 unproject 到相机坐标系下的点云
+    Unproject a depth map to a point cloud in camera coordinates.
 
     Args:
         depth: [H, W] Z-depth
         rgb: [H, W, 3] RGB colors
         intrinsics: [3, 3] camera intrinsics
-        mask: [H, W] bool, 只提取 mask=True 的点 (optional)
+        mask: [H, W] bool, keep only pixels where mask is True (optional)
         conf: [H, W] confidence map (optional)
-        conf_threshold: 置信度阈值，低于此值的点被过滤 (default: 0.1)
-        filter_depth_outliers: 是否过滤深度离群点 (default: False)
-        depth_outlier_std_scale: 标准差倍数，mean ± std_scale * std (default: 3.0)
+        conf_threshold: Points at or below this confidence are dropped (default: 0.1)
+        filter_depth_outliers: Drop depth outliers inside ``mask`` (default: False)
+        depth_outlier_std_scale: Keep depths within mean +/- std_scale * std (default: 3.0)
 
     Returns:
-        points: [N, 3] 点云坐标（相机坐标系）
-        colors: [N, 3] 点云颜色
+        points: [N, 3] points in camera coordinates
+        colors: [N, 3] point colors
     """
     H, W = depth.shape
 
-    # 创建像素网格
     u, v = np.meshgrid(np.arange(W), np.arange(H))
 
-    # 相机坐标系下的点
     fx, fy = intrinsics[0, 0], intrinsics[1, 1]
     cx, cy = intrinsics[0, 2], intrinsics[1, 2]
 
@@ -508,24 +507,20 @@ def unproject_to_pointcloud(
 
     points = np.stack([x, y, z], axis=-1)  # [H, W, 3]
 
-    # 有效性 mask
     valid = (z > 0.1) & np.isfinite(z)
     if mask is not None:
         valid = valid & mask
     if conf is not None:
         valid = valid & (conf > conf_threshold)
 
-    # 基于深度的离群点过滤（针对 mask 区域内的点）
+    # Depth outlier filtering over the masked points; needs more than 10 points for statistics.
     if filter_depth_outliers and mask is not None:
-        # 计算 mask 区域内有效深度的统计信息
         valid_depths = z[valid]
-        if len(valid_depths) > 10:  # 至少有足够的点才做统计
-            # 用 mean ± std_scale * std 过滤离群点
+        if len(valid_depths) > 10:
             mean_depth = np.mean(valid_depths)
             std_depth = np.std(valid_depths)
             lower_bound = mean_depth - depth_outlier_std_scale * std_depth
             upper_bound = mean_depth + depth_outlier_std_scale * std_depth
-            # 过滤深度离群点
             depth_inlier = (z >= lower_bound) & (z <= upper_bound)
             valid = valid & depth_inlier
 
@@ -536,7 +531,7 @@ def unproject_to_pointcloud(
 
 
 def save_pointcloud_ply(path: str, points: np.ndarray, colors: np.ndarray):
-    """保存点云为 PLY 格式"""
+    """Save a point cloud as an ASCII PLY file."""
     with open(path, "w") as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")
@@ -554,7 +549,7 @@ def save_pointcloud_ply(path: str, points: np.ndarray, colors: np.ndarray):
 
 
 def save_depth_visualization(depth: np.ndarray, path: str):
-    """保存深度图可视化"""
+    """Save a VIRIDIS depth visualization; invalid pixels are black and an all-invalid map writes nothing."""
     valid = (depth > 0) & np.isfinite(depth)
     if not valid.any():
         return
@@ -576,17 +571,17 @@ def render_pointcloud(
     camera_pose: np.ndarray = None,
 ) -> np.ndarray:
     """
-    渲染点云到图像
+    Render a point cloud to an image with a per-pixel z-buffer.
 
     Args:
-        points: [N, 3] 世界坐标系下的点
-        colors: [N, 3] RGB 颜色
-        intrinsics: [3, 3] 相机内参
+        points: [N, 3] points in world coordinates
+        colors: [N, 3] RGB colors
+        intrinsics: [3, 3] camera intrinsics
         image_size: (H, W)
-        camera_pose: [4, 4] camera-to-world 变换矩阵
+        camera_pose: [4, 4] camera-to-world transform; None means the points are already in camera coordinates
 
     Returns:
-        image: [H, W, 3] 渲染的图像
+        image: [H, W, 3] rendered image
     """
     H, W = image_size
 
@@ -599,7 +594,7 @@ def render_pointcloud(
     else:
         points_cam = points
 
-    # 过滤掉相机后面的点
+    # Drop points behind the camera.
     valid_depth = points_cam[:, 2] > 0.1
     points_cam = points_cam[valid_depth]
     colors_valid = colors[valid_depth]
@@ -607,7 +602,7 @@ def render_pointcloud(
     if len(points_cam) == 0:
         return np.zeros((H, W, 3), dtype=np.uint8)
 
-    # 投影到图像平面
+    # Project to the image plane.
     fx, fy = intrinsics[0, 0], intrinsics[1, 1]
     cx, cy = intrinsics[0, 2], intrinsics[1, 2]
 
@@ -618,7 +613,7 @@ def render_pointcloud(
     u = (fx * x / z + cx).astype(np.int32)
     v = (fy * y / z + cy).astype(np.int32)
 
-    # 过滤超出图像范围的点
+    # Drop points outside the image.
     valid = (u >= 0) & (u < W) & (v >= 0) & (v < H)
     u = u[valid]
     v = v[valid]
@@ -628,18 +623,17 @@ def render_pointcloud(
     if len(u) == 0:
         return np.zeros((H, W, 3), dtype=np.uint8)
 
-    # 创建深度缓冲区和颜色缓冲区
     depth_buffer = np.full((H, W), np.inf)
     image = np.zeros((H, W, 3), dtype=np.uint8)
 
-    # 按深度排序（远到近）
+    # Sort far to near.
     sort_idx = np.argsort(-z)
     u = u[sort_idx]
     v = v[sort_idx]
     z = z[sort_idx]
     colors_valid = colors_valid[sort_idx]
 
-    # 渲染（近的点覆盖远的点）
+    # Nearer points overwrite farther ones.
     for i in range(len(u)):
         if z[i] < depth_buffer[v[i], u[i]]:
             depth_buffer[v[i], u[i]] = z[i]
@@ -657,15 +651,15 @@ def update_dynamic_object_depth(
     device: str = "cuda",
 ):
     """
-    主函数：将第二帧中动态物体的点云更新到第一帧的点云中
+    Merge the moving-object points of the second image into the first-image point cloud.
 
     Args:
-        image1_path: 第一张图片路径（原始帧）
-        image2_path: 第二张图片路径（动态物体移动后）
-        dynamic_object_prompts: 动态物体名称列表，如 ["car", "person"]
-        output_dir: 输出目录
-        sam3_model_path: SAM3 模型路径
-        device: 计算设备
+        image1_path: First image (original frame)
+        image2_path: Second image (after the objects moved)
+        dynamic_object_prompts: Names of the moving objects, for example ["car", "person"]
+        output_dir: Output directory
+        sam3_model_path: SAM3 checkpoint path
+        device: Compute device
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -679,7 +673,7 @@ def update_dynamic_object_depth(
     print(f"Output: {output_dir}")
     print()
 
-    # ========== Step 1: 加载图片和模型 ==========
+    # ========== Step 1: Load images and models ==========
     print("[Step 1/6] Loading images and models...")
     image1 = load_image(image1_path)
     image2 = load_image(image2_path)
@@ -688,7 +682,7 @@ def update_dynamic_object_depth(
     H, W = image1.shape[:2]
     print(f"  Image size: {W}x{H}")
 
-    # 保存输入图片
+    # Save the inputs.
     cv2.imwrite(str(output_dir / "input_image1.png"), cv2.cvtColor(image1, cv2.COLOR_RGB2BGR))
     cv2.imwrite(str(output_dir / "input_image2.png"), cv2.cvtColor(image2, cv2.COLOR_RGB2BGR))
 
@@ -698,7 +692,7 @@ def update_dynamic_object_depth(
     print("  Loading SAM3 segmenter...")
     sam3_segmenter = load_sam3_segmenter(sam3_model_path)
 
-    # ========== Step 2: 估计深度 ==========
+    # ========== Step 2: Estimate depth ==========
     print("\n[Step 2/6] Estimating depth with STream3R...")
 
     print("  Processing image 1...")
@@ -709,22 +703,21 @@ def update_dynamic_object_depth(
     depth2, intrinsics2, pts3d_2, c2w_2, conf2 = estimate_depth_and_intrinsics(image2, stream3r_model, device)
     print(f"    Depth range: [{depth2[depth2 > 0].min():.2f}, {depth2.max():.2f}]")
 
-    # 保存深度可视化
     save_depth_visualization(depth1, str(output_dir / "depth1.png"))
     save_depth_visualization(depth2, str(output_dir / "depth2.png"))
 
-    # 释放 STream3R 模型
+    # Release STream3R.
     del stream3r_model
     torch.cuda.empty_cache()
 
-    # ========== Step 3: 分割天空 ==========
+    # ========== Step 3: Segment the sky ==========
     print("\n[Step 3/6] Segmenting sky with SAM3...")
     sky_mask1 = segment_with_sam3(image1, ["sky"], sam3_segmenter)
     sky_mask2 = segment_with_sam3(image2, ["sky"], sam3_segmenter)
     print(f"  Sky pixels in image 1: {sky_mask1.sum()} ({sky_mask1.sum() / sky_mask1.size * 100:.1f}%)")
     print(f"  Sky pixels in image 2: {sky_mask2.sum()} ({sky_mask2.sum() / sky_mask2.size * 100:.1f}%)")
 
-    # ========== Step 4: 分割动态物体 ==========
+    # ========== Step 4: Segment moving objects ==========
     print("\n[Step 4/6] Segmenting dynamic objects with SAM3...")
     foreground_mask1 = segment_with_sam3(image1, dynamic_object_prompts, sam3_segmenter)
     foreground_mask2 = segment_with_sam3(image2, dynamic_object_prompts, sam3_segmenter)
@@ -735,11 +728,10 @@ def update_dynamic_object_depth(
         f"  Foreground pixels in image 2: {foreground_mask2.sum()} ({foreground_mask2.sum() / foreground_mask2.size * 100:.1f}%)"
     )
 
-    # 释放 SAM3 分割器
+    # Release SAM3.
     del sam3_segmenter
     torch.cuda.empty_cache()
 
-    # 保存分割可视化
     def save_mask_vis(image, mask, path, color=[255, 0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
         vis = image.copy()
         overlay = image.copy()
@@ -752,12 +744,12 @@ def update_dynamic_object_depth(
     save_mask_vis(image1, sky_mask1, str(output_dir / "sky_mask1.png"), color=[0, 0, 255])
     save_mask_vis(image2, sky_mask2, str(output_dir / "sky_mask2.png"), color=[0, 0, 255])
 
-    # 背景 mask = 非前景 且 非天空
+    # Background = neither foreground nor sky.
     background_mask1 = (~foreground_mask1) & (~sky_mask1)
     background_mask2 = (~foreground_mask2) & (~sky_mask2)
 
-    # ========== Step 4.5: 调整 mask 尺寸以匹配深度图 ==========
-    # 深度图尺寸可能与原图不同，需要 resize masks
+    # ========== Step 4.5: Resize masks to the depth resolution ==========
+    # The depth map can be smaller than the input image.
     depth_H1, depth_W1 = depth1.shape
     depth_H2, depth_W2 = depth2.shape
 
@@ -772,7 +764,7 @@ def update_dynamic_object_depth(
         background_mask1 = cv2.resize(
             background_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
         ).astype(bool)
-        # 也需要 resize image1 用于点云颜色
+        # Point colors come from the resized image.
         image1_resized = cv2.resize(image1, (depth_W1, depth_H1), interpolation=cv2.INTER_LINEAR)
     else:
         image1_resized = image1
@@ -791,61 +783,54 @@ def update_dynamic_object_depth(
     else:
         image2_resized = image2
 
-    # ========== Step 5: 计算深度尺度因子 ==========
+    # ========== Step 5: Estimate the depth scale ==========
     print("\n[Step 5/6] Computing depth scale factor from background...")
 
-    # 用两张图的背景区域交集来计算 scale
+    # Use the background shared by both images.
     common_background = background_mask1 & background_mask2
     scale = compute_scale_factor(depth1, depth2, common_background)
 
-    # 对第二张图的深度进行 scale 对齐
+    # Align the second depth map to the first.
     depth2_scaled = depth2 * scale
     print(f"  Scaled depth2 range: [{depth2_scaled[depth2_scaled > 0].min():.2f}, {depth2_scaled.max():.2f}]")
 
-    # ========== Step 6: 构建并合并点云 ==========
+    # ========== Step 6: Build and merge point clouds ==========
     print("\n[Step 6/6] Building and merging point clouds...")
 
-    # 第一帧：背景点云（排除天空和前景）
-    # 我们用第一帧的背景作为基础
+    # The first-image background (without sky and foreground) is the base cloud.
     points_bg1, colors_bg1 = unproject_to_pointcloud(depth1, image1_resized, intrinsics1, mask=background_mask1)
     print(f"  Image 1 background points: {len(points_bg1)}")
 
-    # 第一帧：前景点云
     points_fg1, colors_fg1 = unproject_to_pointcloud(depth1, image1_resized, intrinsics1, mask=foreground_mask1)
     print(f"  Image 1 foreground points: {len(points_fg1)}")
 
-    # 第二帧：前景点云（使用 scaled depth）
-    # 注意：我们用 depth2_scaled 和 intrinsics1（因为相机参数应该一致）
-    # 实际上由于模型可能估计出略微不同的内参，我们用 intrinsics2 然后做变换
+    # Second-image foreground from the scaled depth; both images share the camera, so intrinsics1 is used.
     points_fg2, colors_fg2 = unproject_to_pointcloud(
         depth2_scaled,
         image2_resized,
         intrinsics1,
-        mask=foreground_mask2,  # 使用 intrinsics1 保持一致
+        mask=foreground_mask2,
     )
     print(f"  Image 2 foreground points (scaled): {len(points_fg2)}")
 
-    # 合并点云：第一帧背景 + 第二帧前景
-    # 这样就把运动后的前景物体放到了第一帧的场景中
+    # First-image background + second-image foreground places the moved objects in the first scene.
     merged_points = np.concatenate([points_bg1, points_fg2], axis=0)
     merged_colors = np.concatenate([colors_bg1, colors_fg2], axis=0)
     print(f"  Merged point cloud: {len(merged_points)} points")
 
-    # 也保存完整的第一帧点云（背景+原始前景）作为对比
+    # Full first-image cloud (background + original foreground) for comparison.
     complete_points1 = np.concatenate([points_bg1, points_fg1], axis=0)
     complete_colors1 = np.concatenate([colors_bg1, colors_fg1], axis=0)
 
-    # ========== 保存结果 ==========
+    # ========== Save results ==========
     print("\n[Saving results...]")
 
-    # 保存点云
     save_pointcloud_ply(str(output_dir / "pointcloud_image1_complete.ply"), complete_points1, complete_colors1)
     save_pointcloud_ply(str(output_dir / "pointcloud_image1_background.ply"), points_bg1, colors_bg1)
     save_pointcloud_ply(str(output_dir / "pointcloud_image1_foreground.ply"), points_fg1, colors_fg1)
     save_pointcloud_ply(str(output_dir / "pointcloud_image2_foreground_scaled.ply"), points_fg2, colors_fg2)
     save_pointcloud_ply(str(output_dir / "pointcloud_merged.ply"), merged_points, merged_colors)
 
-    # 保存元数据
     metadata = {
         "image1_path": str(image1_path),
         "image2_path": str(image2_path),
@@ -866,7 +851,6 @@ def update_dynamic_object_depth(
     with open(output_dir / "metadata.json", "w") as f:
         json.dump(metadata, f, indent=2)
 
-    # 保存深度数据
     np.savez(
         output_dir / "depth_data.npz",
         depth1=depth1,
@@ -889,15 +873,15 @@ def update_dynamic_object_depth(
     print("Done!")
     print("=" * 60)
     print(f"Output directory: {output_dir}")
-    print("  - pointcloud_image1_complete.ply: 第一帧完整点云")
-    print("  - pointcloud_image1_background.ply: 第一帧背景点云")
-    print("  - pointcloud_image1_foreground.ply: 第一帧前景点云")
-    print("  - pointcloud_image2_foreground_scaled.ply: 第二帧前景点云（scaled）")
-    print("  - pointcloud_merged.ply: 合并后的点云（第一帧背景 + 第二帧前景）")
-    print("  - depth1.png, depth2.png: 深度可视化")
-    print("  - foreground_mask1.png, foreground_mask2.png: 前景分割可视化")
-    print("  - metadata.json: 元数据")
-    print("  - depth_data.npz: 深度数据")
+    print("  - pointcloud_image1_complete.ply: full first-image point cloud")
+    print("  - pointcloud_image1_background.ply: first-image background point cloud")
+    print("  - pointcloud_image1_foreground.ply: first-image foreground point cloud")
+    print("  - pointcloud_image2_foreground_scaled.ply: second-image foreground point cloud (scaled)")
+    print("  - pointcloud_merged.ply: merged point cloud (first-image background + second-image foreground)")
+    print("  - depth1.png, depth2.png: depth visualizations")
+    print("  - foreground_mask1.png, foreground_mask2.png: foreground segmentation visualizations")
+    print("  - metadata.json: metadata")
+    print("  - depth_data.npz: depth data")
     print(f"\nScale factor: {scale:.4f}")
     print(f"Merged points: {len(merged_points)}")
 
@@ -934,23 +918,24 @@ def merge_video_foregrounds(
     skip_background: bool = False,
 ):
     """
-    视频模式：把视频每帧的前景物体合并到第一帧的点云中，并从偏移视角渲染
+    Video mode: merge the foreground objects of every frame into the first-frame point cloud and render
+    it from an offset viewpoint.
 
     Args:
-        video_path: 输入视频路径（当 video_frames 为空时必需）
-        video_frames: 可选，直接提供 RGB 帧序列，跳过 mp4 读取
-        video_fps: 可选，video_frames 对应帧率
-        dynamic_object_prompts: 前景物体名称列表
-        output_dir: 输出目录
-        sam3_model_path: SAM3 模型路径
-        rotation_angle: 相机偏移角度（度）
-        depth_outlier_std_scale: 深度离群点过滤的标准差倍数 (default: 3.0)
-        conf_threshold: 置信度阈值（必须在合法范围内）
-        device: 计算设备
-        save_depth_maps: 是否保存每帧深度可视化图
-        save_rendered_frames: 是否保存渲染帧 PNG 序列
-        save_rendered_video: 是否保存 rendered_merged.mp4
-        save_final_merged_pointcloud: 是否保存 final_merged_pointcloud.ply
+        video_path: Input video path (required when video_frames is None)
+        video_frames: Optional RGB frames that replace reading the video file
+        video_fps: Optional frame rate of video_frames
+        dynamic_object_prompts: Foreground object names
+        output_dir: Output directory
+        sam3_model_path: SAM3 checkpoint path
+        rotation_angle: Camera offset angle in degrees
+        depth_outlier_std_scale: Standard-deviation multiplier for depth outlier filtering (default: 3.0)
+        conf_threshold: Confidence threshold; must lie in [MIN_CONF_THRESHOLD, MAX_CONF_THRESHOLD]
+        device: Compute device
+        save_depth_maps: Save per-frame depth visualizations
+        save_rendered_frames: Save rendered frames as PNG files
+        save_rendered_video: Save rendered_merged.mp4
+        save_final_merged_pointcloud: Save final_merged_pointcloud.ply
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -970,7 +955,7 @@ def merge_video_foregrounds(
     if fg_mask_erode > 0:
         _log("  Note: fg_mask_erode is ignored; foreground points are kept without erosion.")
 
-    # ========== Step 1: 加载输入帧和模型 ==========
+    # ========== Step 1: Load frames and models ==========
     _log("[Step 1] Loading video and models...")
     if video_frames is not None:
         frames = list(video_frames)
@@ -1018,7 +1003,7 @@ def merge_video_foregrounds(
     else:
         _log("  Reusing shared SAM3 segmenter")
 
-    # ========== Step 2: 用 StreamSession 估计所有帧的深度 ==========
+    # ========== Step 2: Estimate depth for all frames with a StreamSession ==========
     _log("\n[Step 2] Estimating depth for all frames (session mode)...")
 
     depth_results, stream3r_frames_fed = estimate_all_depths_with_session(
@@ -1031,10 +1016,9 @@ def merge_video_foregrounds(
     )
     _log(f"  Got depth for {len(depth_results)} frames via session (total fed: {stream3r_frames_fed})")
 
-    # ========== Step 3: 逐帧分割 + 点云提取 ==========
+    # ========== Step 3: Per-frame segmentation and point extraction ==========
     _log("\n[Step 3] Segmenting and extracting point clouds...")
 
-    # 创建深度图保存目录（可选）
     depths_dir = output_dir / "depths"
     if save_depth_maps:
         depths_dir.mkdir(exist_ok=True)
@@ -1073,7 +1057,7 @@ def merge_video_foregrounds(
     depth_H_raw, depth_W_raw = depth1_raw.shape
     _log(f"  Raw depth size: {depth_W_raw}x{depth_H_raw}")
 
-    # 把深度、置信度和内参 rescale 到原视频分辨率
+    # Rescale depth, confidence and intrinsics to the video resolution.
     if (depth_H_raw, depth_W_raw) != (H, W):
         _log(f"  Rescaling depth and intrinsics to original size ({W}x{H})...")
         depth1 = cv2.resize(depth1_raw, (W, H), interpolation=cv2.INTER_LINEAR)
@@ -1132,7 +1116,7 @@ def merge_video_foregrounds(
     )
     _log(f"  Foreground points: {len(points_fg1)}")
 
-    # -- 处理后续帧 --
+    # -- Remaining frames --
     all_foreground_points = [points_fg1]
     all_foreground_colors = [colors_fg1]
 
@@ -1218,71 +1202,67 @@ def merge_video_foregrounds(
             total_pts = sum(len(p) for p in inst_pts_list)
             _log(f"    obj_{obj_id}: {total_pts} total points across {num_frames} frames")
 
-    # 释放模型显存 (only if we loaded them ourselves)
+    # Release models created here.
     if _owns_stream3r:
         del stream3r_model
     if _owns_sam3:
         del sam3_segmenter
     torch.cuda.empty_cache()
 
-    # ========== Step 4: 渲染每一帧（可选） ==========
+    # ========== Step 4: Render every frame (optional) ==========
     need_rendering = save_rendered_video or save_rendered_frames
     rendered_frames = []
 
     if need_rendering:
         _log("\n[Step 4] Rendering frames...")
 
-        # 如果 rotation_angle == 0，直接用原视角；否则从上方俯视
+        # rotation_angle == 0 keeps the original view; otherwise look down at the scene from above.
         if abs(rotation_angle) < 1e-6:
-            # 原视角：点云本身就在相机坐标系下，不需要变换
+            # The points are already in the original camera frame.
             c2w_render = None
             _log("  Using original viewpoint (no rotation)")
         else:
-            # 计算点云中心（用于确定观察目标）
+            # The point cloud center is the look-at target.
             bg_parts = [points_bg1] if points_bg1 is not None else []
             all_pts = np.concatenate(bg_parts + all_foreground_points, axis=0)
             center = all_pts.mean(axis=0)
             _log(f"  Point cloud center: [{center[0]:.2f}, {center[1]:.2f}, {center[2]:.2f}]")
 
-            # 从上方俯视：相机在场景上方，往下看
-            # rotation_angle 这里表示俯视角度（60度 = 从上方60度往下看）
-            elevation_angle = np.radians(rotation_angle)  # 仰角（从水平面往上的角度）
+            # rotation_angle is the elevation above the horizontal plane (60 = looking down from 60 degrees).
+            elevation_angle = np.radians(rotation_angle)
 
-            # 相机距离场景中心的距离（不要太远）
-            cam_distance = center[2] * 2  # 用较近的距离
+            cam_distance = center[2] * 2
 
-            # 相机位置：在场景中心的后上方
-            # x 不变，y 往上移动，z 往后移动（靠近相机原点）
+            # Place the camera above and behind the center (toward the original camera origin).
+            # Camera y points down, so moving up subtracts from y.
             cam_pos = np.array(
                 [
-                    center[0],  # x 保持不变
-                    center[1] - cam_distance * np.sin(elevation_angle),  # y 往上（相机坐标系 y 向下，所以减）
-                    center[2] - cam_distance * np.cos(elevation_angle),  # z 往后（靠近相机原点）
+                    center[0],
+                    center[1] - cam_distance * np.sin(elevation_angle),
+                    center[2] - cam_distance * np.cos(elevation_angle),
                 ]
             )
 
-            # 构建相机到世界的变换矩阵
-            # 相机看向场景中心
+            # Build a look-at camera-to-world matrix toward the center.
             forward = center - cam_pos
             forward = forward / np.linalg.norm(forward)
 
-            # 定义世界坐标系的上方向（相机坐标系 y 向下，所以用 -y）
+            # World up is -y because camera y points down.
             world_up = np.array([0, -1, 0])
 
-            # 计算 right 和 up
             right = np.cross(forward, world_up)
             if np.linalg.norm(right) < 1e-6:  # noqa: SIM108 - Branches carry per-case comments.
-                # forward 和 world_up 平行，用 x 轴作为 right
+                # forward is parallel to world_up; use the x axis as right.
                 right = np.array([1, 0, 0])
             else:
                 right = right / np.linalg.norm(right)
             up = np.cross(right, forward)
             up = up / np.linalg.norm(up)
 
-            # 构建 c2w 矩阵（相机坐标系：x=right, y=down, z=forward）
+            # OpenCV camera axes: x = right, y = down, z = forward.
             c2w_render = np.eye(4)
             c2w_render[:3, 0] = right
-            c2w_render[:3, 1] = -up  # 相机 y 轴向下
+            c2w_render[:3, 1] = -up
             c2w_render[:3, 2] = forward
             c2w_render[:3, 3] = cam_pos
 
@@ -1290,11 +1270,10 @@ def merge_video_foregrounds(
             _log(f"  Elevation angle: {rotation_angle}°")
 
         for frame_idx in tqdm(range(num_frames), desc="Rendering", disable=not verbose):
-            # 当前帧的前景（不累积）
+            # Foreground of the current frame only (not accumulated).
             current_fg_points = all_foreground_points[frame_idx]
             current_fg_colors = all_foreground_colors[frame_idx]
 
-            # 合并背景和当前帧前景
             if points_bg1 is not None:
                 merged_points = np.concatenate([points_bg1, current_fg_points], axis=0)
                 merged_colors = np.concatenate([colors_bg1, current_fg_colors], axis=0)
@@ -1302,7 +1281,7 @@ def merge_video_foregrounds(
                 merged_points = current_fg_points
                 merged_colors = current_fg_colors
 
-            # 渲染（使用原视频分辨率）
+            # Render at the video resolution.
             rendered = render_pointcloud(
                 merged_points,
                 merged_colors,
@@ -1315,10 +1294,9 @@ def merge_video_foregrounds(
     else:
         _log("\n[Step 4] Skipping rendering (render outputs disabled)")
 
-    # ========== Step 5: 保存输出 ==========
+    # ========== Step 5: Save outputs ==========
     _log("\n[Step 5] Saving outputs...")
 
-    # 保存渲染视频（可选）
     if save_rendered_video:
         output_video_path = output_dir / "rendered_merged.mp4"
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -1329,7 +1307,7 @@ def merge_video_foregrounds(
         out.release()
         _log(f"  Saved: {output_video_path}")
 
-    # 保存最终合并的点云（可选）
+    # Final merged point cloud: background plus the foreground of every frame.
     final_fg_points = np.concatenate(all_foreground_points, axis=0)
     final_fg_colors = np.concatenate(all_foreground_colors, axis=0)
     if points_bg1 is not None:
@@ -1345,7 +1323,6 @@ def merge_video_foregrounds(
 
     num_bg = len(points_bg1) if points_bg1 is not None else 0
 
-    # 保存元数据
     metadata = {
         "video_path": str(video_path) if video_path is not None else "<in_memory>",
         "video_source": source_desc,
@@ -1365,7 +1342,6 @@ def merge_video_foregrounds(
         json.dump(metadata, f, indent=2)
     _log(f"  Saved: {output_dir / 'metadata.json'}")
 
-    # 保存每帧渲染结果（可选）
     if save_rendered_frames:
         frames_dir = output_dir / "rendered_frames"
         frames_dir.mkdir(exist_ok=True)
@@ -1402,14 +1378,14 @@ def merge_video_foregrounds(
 
 def main(
     mode: str = "video",
-    # 通用配置
+    # Shared settings
     dynamic_object_prompts: list | None = None,
     sam3_model_path: str = "ckpts/facebook--sam3/sam3.pt",
     device: str = "cuda",
-    # 图片模式配置
+    # Image mode
     image1_path: str | None = None,
     image2_path: str | None = None,
-    # 视频模式配置
+    # Video mode
     video_path: str | None = None,
     output_dir: str | None = None,
     rotation_angle: float = 20.0,
@@ -1417,20 +1393,20 @@ def main(
     conf_threshold: float = DEFAULT_CONF_THRESHOLD,
 ):
     """
-    主函数入口
+    Run image mode or video mode.
 
     Args:
-        mode: "image" 或 "video"
-        dynamic_object_prompts: 动态物体类别名称列表
-        sam3_model_path: SAM3 模型路径
-        device: 计算设备
-        image1_path: 图片模式 - 第一张图片路径
-        image2_path: 图片模式 - 第二张图片路径
-        video_path: 视频模式 - 视频路径
-        output_dir: 输出目录
-        rotation_angle: 视频模式 - 相机俯视角度
-        depth_outlier_std_scale: 深度离群点过滤的标准差倍数
-        conf_threshold: 置信度阈值 (default: 0.10，超范围会直接报错)
+        mode: "image" or "video"
+        dynamic_object_prompts: Moving-object class names (default ["car"])
+        sam3_model_path: SAM3 checkpoint path
+        device: Compute device
+        image1_path: Image mode - first image
+        image2_path: Image mode - second image
+        video_path: Video mode - video path
+        output_dir: Output directory
+        rotation_angle: Video mode - camera elevation angle in degrees
+        depth_outlier_std_scale: Standard-deviation multiplier for depth outlier filtering
+        conf_threshold: Confidence threshold (default: 0.10); out-of-range values raise ValueError
     """
     if dynamic_object_prompts is None:
         dynamic_object_prompts = ["car"]
@@ -1467,38 +1443,36 @@ def main(
 
 
 if __name__ == "__main__":
-    # ========== 超参数配置 ==========
+    # ========== Settings ==========
 
-    # 模式选择: "image" 或 "video"
+    # "image" or "video"
     mode = "video"
 
-    # 动态物体类别名称（用于 SAM3 分割）
-    dynamic_object_prompts = ["car"]  # 例如: ["car", "person", "dog"]
+    # Moving-object class names for SAM3, for example ["car", "person", "dog"].
+    dynamic_object_prompts = ["car"]
 
-    # SAM3 模型路径
     sam3_model_path = "ckpts/facebook--sam3/sam3.pt"
 
-    # 计算设备
     device = "cuda"
 
-    # 深度离群点过滤的标准差倍数 (mean ± std_scale * std)
+    # Keep depths within mean +/- std_scale * std.
     depth_outlier_std_scale = 3.0
 
-    # 置信度阈值 (0.0 = 不过滤, 越大过滤越严格)
+    # Confidence threshold (0.0 disables filtering; larger values filter more).
     conf_threshold = 0.4
 
-    # ========== 图片模式配置 ==========
+    # ========== Image mode ==========
     image1_path = "example_imgs/first_frame/car_wild_far.png"
     image2_path = "example_imgs/first_frame/car_wild_near.png"
     image_output_dir = "outputs/dynamic_depth_update"
 
-    # ========== 视频模式配置 ==========
+    # ========== Video mode ==========
     video_path = "example_imgs/videos/name_car_wild_far_step_unknown_idx_0.mp4"
     video_output_dir = "outputs/event_video_proj"
-    rotation_angle = 20  # 从上方俯视角度（度）
-    # rotation_angle = 0  # 从上方俯视角度（度）
+    rotation_angle = 20  # Elevation angle in degrees.
+    # rotation_angle = 0  # Original viewpoint.
 
-    # ========== 运行 ==========
+    # ========== Run ==========
     if mode == "image":
         result = main(
             mode=mode,

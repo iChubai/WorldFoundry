@@ -18,12 +18,11 @@ _COMMON = (
         "num_frames",
         "Frames",
         kind="integer",
-        default=124,
         description="Aligned to 17n+5 frames, between 124 and 345, at 24 fps.",
     ),
     InferenceFieldSpec("height", "Height", kind="integer", description="Optional multiple of 32."),
     InferenceFieldSpec("width", "Width", kind="integer", description="Optional multiple of 32."),
-    InferenceFieldSpec("seed", "Seed", kind="integer", default=42),
+    InferenceFieldSpec("seed", "Seed", kind="integer"),
     InferenceFieldSpec("weights_path", "HyperFlow weights", kind="path", target="load_kwargs", default=_WEIGHTS),
     InferenceFieldSpec("python_executable", "Inference Python", kind="path", target="load_kwargs"),
     InferenceFieldSpec("gpus", "GPUs", kind="integer", target="load_kwargs", default=1),
@@ -40,7 +39,7 @@ def _task(workflow, label, extra=()):
         label,
         (*_COMMON, *extra),
         _OUTPUTS,
-        default_call_kwargs={"workflow": workflow, "num_frames": 124, "seed": 42, "return_dict": True},
+        default_call_kwargs={"workflow": workflow, "return_dict": True},
     )
 
 

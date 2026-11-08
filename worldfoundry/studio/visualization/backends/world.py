@@ -30,7 +30,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from PIL import Image
 
-from worldfoundry.runtime.inference_catalog import (
+from worldfoundry.runtime.inference_specs.lingbot_world import (
     LINGBOT_VARIANT_BASE_ACT_PREVIEW,
     LINGBOT_VARIANT_BASE_CAM,
 )

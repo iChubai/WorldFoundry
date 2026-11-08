@@ -28,7 +28,7 @@ from worldfoundry.base_models.diffusion_model.extensions.depth_guidance import D
 from worldfoundry.base_models.perception_core.segment.scene_segmentation import SceneSegmenter
 from worldfoundry.core.geometry.surfels import GaussianSurfels
 from worldfoundry.core.io.paths import checkpoint_root_path
-from worldfoundry.runtime.wonderworld_inference_spec import WONDERWORLD_NEGATIVE_PROMPT
+from worldfoundry.runtime.inference_specs.wonderworld import WONDERWORLD_NEGATIVE_PROMPT
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 

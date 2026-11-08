@@ -45,7 +45,7 @@ MATRIX_GAME4_EGYPT_INFERENCE_SPEC = ModelInferenceSpec(
                     kind="number",
                     description="Omit to preserve source FPS; tensors default to 20 FPS.",
                 ),
-                InferenceFieldSpec("seed", "Seed", kind="integer", default=42),
+                InferenceFieldSpec("seed", "Seed", kind="integer"),
             ),
             outputs=(InferenceArtifactSpec("matrix-game-4-egypt.mp4", "generated_video", required=True, preview=True),),
             default_call_kwargs={
@@ -53,7 +53,6 @@ MATRIX_GAME4_EGYPT_INFERENCE_SPEC = ModelInferenceSpec(
                 "width": 864,
                 "num_inference_steps": 2,
                 "guidance_scale": 1.0,
-                "seed": 42,
                 "return_dict": True,
             },
             description="One RGB frame then four-frame causal chunks; tail padding is removed from output.",

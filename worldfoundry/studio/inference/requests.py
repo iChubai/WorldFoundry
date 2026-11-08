@@ -19,13 +19,15 @@ from worldfoundry.core.execution.inference import (
 )
 from worldfoundry.runtime.inference_catalog import (
     ASSET_GATED_WORLD_RUNTIME_MODEL_IDS,
+    generic_model_inference_spec,
+    get_model_inference_spec,
+    model_inference_spec,
+)
+from worldfoundry.runtime.inference_specs.lingbot_world import (
     LINGBOT_VARIANT_BASE_ACT_PREVIEW,
     LINGBOT_VARIANT_BASE_CAM,
     LINGBOT_VARIANT_FAST,
     LINGBOT_WORLD_MODEL_ID,
-    generic_model_inference_spec,
-    get_model_inference_spec,
-    model_inference_spec,
 )
 from worldfoundry.runtime.interactive_inference_catalog import interactive_task_for_variant
 from worldfoundry.studio.inference.catalog import (

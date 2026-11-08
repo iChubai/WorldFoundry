@@ -13,7 +13,7 @@ from worldfoundry.cli.inference_variants import (
     is_script_infer_model_id,
     resolve_infer_model_variant,
 )
-from worldfoundry.runtime.inference_catalog import (
+from worldfoundry.runtime.inference_specs.lingbot_world import (
     LINGBOT_VARIANT_BASE_ACT_PREVIEW,
     LINGBOT_VARIANT_BASE_CAM,
     LINGBOT_VARIANT_FAST,

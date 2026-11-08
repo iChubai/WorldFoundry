@@ -14,10 +14,10 @@ _BASE = str(hfd_root_path("MiniMaxAI--MiniMax-H3"))
 _FLEX = str(hfd_root_path("Pika-Labs--Pika-H3-Flex"))
 _COMMON = (
     InferenceFieldSpec("prompt", "Prompt", target="prompt", required=True),
-    InferenceFieldSpec("num_frames", "Frames", kind="integer", default=124),
+    InferenceFieldSpec("num_frames", "Frames", kind="integer"),
     InferenceFieldSpec("short_edge", "Short edge", kind="integer", default=768),
     InferenceFieldSpec("aspect_ratio", "Aspect ratio", default="16:9"),
-    InferenceFieldSpec("seed", "Seed", kind="integer", default=0),
+    InferenceFieldSpec("seed", "Seed", kind="integer"),
     InferenceFieldSpec("adapter_task", "Adapter", target="load_kwargs", default="fl2va"),
     InferenceFieldSpec("base_model_path", "MiniMax-H3 base", kind="path", target="load_kwargs", default=_BASE),
 )
@@ -34,7 +34,7 @@ def _task(task_id: str, label: str, extra=()) -> InferenceTaskProfile:
         label,
         (*_COMMON, *extra),
         _OUTPUTS,
-        default_call_kwargs={"task": task_id, "num_frames": 124, "seed": 0, "return_dict": True},
+        default_call_kwargs={"task": task_id, "return_dict": True},
     )
 
 

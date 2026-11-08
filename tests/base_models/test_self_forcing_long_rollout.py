@@ -339,6 +339,17 @@ def test_long_rollout_builder_reads_kv_window_from_the_runtime_policy(
     with pytest.raises(ValueError, match="unsupported Self-Forcing kv_window"):
         build(kv_window="window21")
 
+    causal = ComponentBuildContext(
+        model_id="causal-forcing-chunkwise",
+        key=ComponentKey(ComponentKind.DENOISER),
+        policy=RuntimePolicy(
+            device="cpu", dtype=torch.float32, options={"kv_window": SELF_FORCING_LONG_ROLLOUT_KV_WINDOW}
+        ),
+        checkpoints={"weights": CheckpointSpec(source=checkpoint)},
+    )
+    with pytest.raises(ValueError, match="kv_window is the Self-Forcing long-rollout preset"):
+        build_self_forcing_wan21_denoiser(causal)
+
 
 def test_native_self_forcing_pipeline_forwards_kv_window(monkeypatch: pytest.MonkeyPatch) -> None:
     from worldfoundry.pipelines import native_diffusion

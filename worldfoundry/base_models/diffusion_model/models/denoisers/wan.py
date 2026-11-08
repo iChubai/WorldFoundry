@@ -2579,7 +2579,8 @@ def build_self_forcing_wan21_denoiser(
     """Load a released Self-Forcing generator checkpoint strictly onto the causal Wan graph.
 
     The ``kv_window`` runtime option ``"sink5-window7-rerope"`` builds the graph
-    with the rolling sink-plus-window cache and cache-relative RoPE.
+    with the rolling sink-plus-window cache and cache-relative RoPE; only the
+    Self-Forcing recipe accepts it.
     """
 
     from ..networks.wan.variants.forcing.self_forcing import CausalWanModel
@@ -2590,6 +2591,14 @@ def build_self_forcing_wan21_denoiser(
         raise ValueError(f"unsupported Self-Forcing denoiser options: {unknown}")
     block_size = int(options.get("block_size", 3))
     kv_window = context.policy.options.get("kv_window")
+    if kv_window is not None:
+        from ...recipes.wan import SELF_FORCING_MODEL_ID
+
+        if context.model_id != SELF_FORCING_MODEL_ID:
+            raise ValueError(
+                f"kv_window is the Self-Forcing long-rollout preset; {context.model_id} runs its trained "
+                "21-frame KV cache"
+            )
     config = dict(SELF_FORCING_WAN21_T2V_1P3B_CONFIG)
     if kv_window == SELF_FORCING_LONG_ROLLOUT_KV_WINDOW:
         config.update(

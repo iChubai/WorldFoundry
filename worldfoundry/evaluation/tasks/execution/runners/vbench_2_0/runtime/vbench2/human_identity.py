@@ -6,6 +6,13 @@ import torch
 decord.bridge.set_bridge("torch")
 from collections import Counter  # noqa: E402 - Follows the decord torch bridge setup.
 
+# isort: split
+# Importing CoTracker seeds torch's global RNG, as in the upstream module.
+from worldfoundry.base_models.perception_core.tracking.cotracker import (  # noqa: E402, F401 - Follows the decord torch bridge setup.
+    Visualizer,
+)
+
+# isort: split
 from worldfoundry.base_models.perception_core.face.arcface import (  # noqa: E402 - Follows the decord torch bridge setup.
     resnet_face18,
 )

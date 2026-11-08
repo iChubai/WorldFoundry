@@ -3,6 +3,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import logging
 
+import vbench2.hack_registry  # noqa: F401 - Patches mmengine's Registry so duplicate registrations are logged instead of raising.
 from vbench2.utils import load_dimension_info
 
 from worldfoundry.base_models.perception_core.human_anatomy.vit_detector import compute_abnormality

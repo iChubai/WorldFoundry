@@ -38,7 +38,7 @@ from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5Tokeniz
 
 try:
     from diffusers.models.autoencoders.vae import DecoderOutput
-except:
+except BaseException:
     from diffusers.models.vae import DecoderOutput
 
 if is_torch_xla_available():

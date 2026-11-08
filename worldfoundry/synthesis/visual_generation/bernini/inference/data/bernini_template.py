@@ -282,7 +282,7 @@ class BerniniTemplate(Qwen2VLTemplate):
         messages.append(self.format_message(content, pre_has_loss))
 
         input_ids, attention_mask, labels = [], [], []
-        for i, message in enumerate(messages):
+        for _i, message in enumerate(messages):
             content_str = message["content"].strip()
             if not content_str:
                 continue

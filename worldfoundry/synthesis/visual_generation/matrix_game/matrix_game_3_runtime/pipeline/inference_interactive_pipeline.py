@@ -93,7 +93,7 @@ def get_current_action():
             idx_keyboard = input("Please input the keyboard action (e.g. `W`):\n").strip().lower()
             if idx_mouse in CAMERA_VALUE_MAP and idx_keyboard in KEYBOARD_IDX:
                 flag = 1
-        except:
+        except BaseException:
             pass
     mouse_cond = torch.tensor(CAMERA_VALUE_MAP[idx_mouse])
     keyboard_cond = torch.tensor(KEYBOARD_IDX[idx_keyboard])
@@ -473,7 +473,7 @@ class MatrixGame3Pipeline:
         num_iterations = args.num_iterations
 
         generator = torch.Generator(device=self.device).manual_seed(seed)
-        num_frames = first_clip_frame + (num_iterations - 1) * 40
+        _num_frames = first_clip_frame + (num_iterations - 1) * 40
 
         input_image = torch.from_numpy(np.array(pil_image)).unsqueeze(0)
         input_image = input_image.float().permute(0, 3, 1, 2) / 127.5 - 1.0
@@ -636,7 +636,7 @@ class MatrixGame3Pipeline:
                     timestep_memory = None
                 else:
                     if self.rank == 0:
-                        mem_end = ((current_start_frame_idx - 1) // 4 * 4 + 1) if current_start_frame_idx > 1 else 1
+                        _mem_end = ((current_start_frame_idx - 1) // 4 * 4 + 1) if current_start_frame_idx > 1 else 1
                         selected_index_base = [current_end_frame_idx - o for o in range(1, 34, 8)]
                         selected_index = select_memory_idx_fov(
                             extrinsics_all, current_start_frame_idx, selected_index_base, use_gpu=True

@@ -9,7 +9,7 @@ import torch.nn.functional as F
 try:
     import torch_npu
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
 import random

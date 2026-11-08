@@ -158,7 +158,7 @@ class RTVidActionControl(Dataset):
     def _load_metadata(self):
         """Load all npz files from data directory"""
         self.file_list = []
-        for i, file in enumerate(os.listdir(self.data_dir)):
+        for _i, file in enumerate(os.listdir(self.data_dir)):
             if not file.endswith(".npz"):
                 continue
             if self.mode == "training":
@@ -288,7 +288,7 @@ class RTVidActionControl(Dataset):
                 start_idx = random.randint(0, random_range) if random_range > 0 else 0
 
             selected_frames = frames[start_idx : start_idx + self.video_length]
-            selected_actions = actions[start_idx : start_idx + self.video_length]
+            _selected_actions = actions[start_idx : start_idx + self.video_length]
 
         # Convert to torch tensor
         frames_tensor = torch.tensor(selected_frames).permute(3, 0, 1, 2).float()  # [C, T, H, W]

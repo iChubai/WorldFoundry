@@ -23,7 +23,7 @@ try:
     import xformers.ops
 
     XFORMERS_IS_AVAILABLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILABLE = False
     print("No module 'xformers', processing without it")
 

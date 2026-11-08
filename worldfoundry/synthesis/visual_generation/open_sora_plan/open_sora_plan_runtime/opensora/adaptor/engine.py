@@ -163,7 +163,7 @@ def split_half_float_double_sparse(tensors):
         assert t.type() in supported_types, f"attempting to reduce an unsupported grad type: {t.type()}"
 
     buckets = []
-    for i, dtype in enumerate(supported_types):
+    for _i, dtype in enumerate(supported_types):
         bucket = [t for t in tensors if t.type() == dtype]
         if bucket:
             buckets.append((dtype, bucket))
@@ -520,10 +520,7 @@ class DeepSpeedEngine(Module):
     def is_elastic_model_parallel_supported(self):
         if self.elasticity_enabled():
             # Add code for finding number of GPUs per node automatically
-            if self._config.num_gpus_per_node % self._config.elastic_model_parallel_size == 0:
-                return True
-            else:
-                return False
+            return bool(self._config.num_gpus_per_node % self._config.elastic_model_parallel_size == 0)
 
     def pld_enabled(self):
         return self._config.pld_enabled
@@ -1095,9 +1092,7 @@ class DeepSpeedEngine(Module):
 
     def _broadcast_model(self):
         def is_replicated(p):
-            if hasattr(p, "ds_status") and p.ds_status is not ZeroParamStatus.AVAILABLE:
-                return False
-            return True
+            return not (hasattr(p, "ds_status") and p.ds_status is not ZeroParamStatus.AVAILABLE)
 
         for p in self.module.parameters():
             # Broadcast the model for different parameters
@@ -2132,7 +2127,7 @@ class DeepSpeedEngine(Module):
         """
         Zero parameter grads.
         """
-        for param_name, param in self.module.named_parameters():
+        for _param_name, param in self.module.named_parameters():
             param.grad = None
 
     def clip_fp32_gradients(self):
@@ -2526,7 +2521,7 @@ class DeepSpeedEngine(Module):
     def _reduce_expert_gradients(self, expert_grads, elements_per_buffer):
         for ep_name, expert_grads_group in expert_grads.items():
             expert_split_buckets = split_half_float_double_sparse(expert_grads_group)
-            for i, bucket_tuple in enumerate(expert_split_buckets):
+            for _i, bucket_tuple in enumerate(expert_split_buckets):
                 bucket_type, bucket = bucket_tuple
                 if bucket_type == SparseTensor.type():
                     self.sparse_allreduce_no_retain(bucket, groups._get_expert_data_parallel_group(ep_name))
@@ -2676,7 +2671,7 @@ class DeepSpeedEngine(Module):
 
         else:
             moe_layer_id = 0
-            for n_module, module in model.named_modules():
+            for _n_module, module in model.named_modules():
                 if isinstance(module, MoE):  # and deepspeed.comm.get_rank() == 0:
                     group_name = module.expert_group_name
                     num_local_experts = module.num_local_experts
@@ -3381,7 +3376,7 @@ class DeepSpeedEngine(Module):
             checkpoint_name = name_function(save_dir, tag)
             path = os.path.dirname(checkpoint_name)
             self.checkpoint_engine.makedirs(path, exist_ok=True)
-        except:
+        except BaseException:
             logger.error(f"Failed saving model checkpoint to {save_dir} with tag {tag}")
             return False
 

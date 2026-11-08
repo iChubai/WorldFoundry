@@ -995,7 +995,7 @@ class CasualWorldActionTransformer(
         num_action_tokens = action_states.shape[1]
         num_state_tokens = state_states.shape[1]
         num_ref_tokens = post_patch_width * post_patch_height
-        num_noisy_tokens = (post_patch_num_frames - 1) * post_patch_width * post_patch_height
+        _num_noisy_tokens = (post_patch_num_frames - 1) * post_patch_width * post_patch_height
         extra_states = torch.cat([state_states, action_states], dim=1)
 
         # 4. 获取旋转位置嵌入 (RoPE)
@@ -1151,7 +1151,7 @@ class CasualWorldActionTransformer(
         num_action_tokens = action_states.shape[1]
         num_state_tokens = state_states.shape[1]
         num_ref_tokens = post_patch_width * post_patch_height
-        num_noisy_tokens = (post_patch_num_frames - 1) * post_patch_width * post_patch_height
+        _num_noisy_tokens = (post_patch_num_frames - 1) * post_patch_width * post_patch_height
         extra_states = torch.cat([state_states, action_states], dim=1)
 
         # 4. 获取旋转位置嵌入 (RoPE)
@@ -1314,7 +1314,7 @@ class CasualWorldActionTransformer(
         hidden_states = self.patch_embedding(hidden_states)
         hidden_states = hidden_states.flatten(2).transpose(1, 2)
 
-        num_hidden_tokens = hidden_states.shape[1]
+        _num_hidden_tokens = hidden_states.shape[1]
 
         # state, ref, action, noisy tokens
         hidden_states = torch.cat(

@@ -766,9 +766,9 @@ def rotation_matrix_to_quaternion(R):
     :return: [4]
     """
     tr = np.trace(R)
-    Rxx = R[0, 0]
-    Ryy = R[1, 1]
-    Rzz = R[2, 2]
+    _Rxx = R[0, 0]
+    _Ryy = R[1, 1]
+    _Rzz = R[2, 2]
     q = np.zeros(4)
     q[0] = 0.5 * np.sqrt(1 + tr)
     q[1] = (R[2, 1] - R[1, 2]) / (4 * q[0])

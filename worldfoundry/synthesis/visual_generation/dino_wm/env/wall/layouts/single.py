@@ -196,7 +196,7 @@ class DotDataset:
         von_mises_dist = torch.distributions.VonMises(concentration=concentration, loc=0.0)
         # Initialize angles with bias
         angles = [bias]
-        for i in range(1, n_steps - 1):
+        for _i in range(1, n_steps - 1):
             noise = von_mises_dist.sample((bs,)).to(self.device)
             angles.append((angles[-1] + noise).fmod(2 * torch.pi))
         angles = torch.stack(angles, dim=1)

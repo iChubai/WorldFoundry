@@ -586,7 +586,6 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         )
         # print("text len1:", max_length_1)
         hidden_state_skip_layer = 2
-        text_encoder_precision = "fp16"
         apply_final_norm = False
         reproduce = False
         logger = None
@@ -626,7 +625,7 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         elif prompt is not None and isinstance(prompt, list):
             batch_size = len(prompt)
         else:
-            batch_size = prompt_embeds.shape[0]
+            _batch_size = prompt_embeds.shape[0]
 
         text_inputs = text_encoder.text2tokens(prompt, data_type=data_type)
 

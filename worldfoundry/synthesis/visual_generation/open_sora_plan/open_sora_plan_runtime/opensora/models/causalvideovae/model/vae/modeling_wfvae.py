@@ -2,7 +2,7 @@ try:
     import torch_npu
 
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
 
@@ -383,12 +383,12 @@ class WFVAEModel(VideoBaseAE):
         return [self.decoder]
 
     def _empty_causal_cached(self, parent):
-        for name, module in parent.named_modules():
+        for _name, module in parent.named_modules():
             if hasattr(module, "causal_cached"):
                 module.causal_cached = deque()
 
     def _set_causal_cached(self, enable_cached=True):
-        for name, module in self.named_modules():
+        for _name, module in self.named_modules():
             if hasattr(module, "enable_cached"):
                 module.enable_cached = enable_cached
 

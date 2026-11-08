@@ -412,7 +412,6 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
         return video
 
     def preprocess_video(self, videos, torch_dtype=None, device=None, pattern="B C T H W", min_value=-1, max_value=1):
-        res = []
         """
         for video in videos:
             # Transform a list of PIL.Image to torch.Tensor
@@ -437,7 +436,7 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
             print(f"video np.stack error, {e} || {videos}")
             try:
                 print("video np.stack error, ", [vi.shape for vi in videos])
-            except:
+            except BaseException:
                 pass
             videos = np.zeros((len(videos), 1, h, w, 3), dtype=np.uint8)
         videos = torch.from_numpy(videos).permute(0, 4, 1, 2, 3).contiguous()

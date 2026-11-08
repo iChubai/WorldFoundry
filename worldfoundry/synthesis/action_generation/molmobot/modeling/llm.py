@@ -634,17 +634,14 @@ class LlmConfig(BaseConfig):
         strategy = self.activation_checkpoint
         if strategy is None:
             return False
-        elif (
+        return bool(
             (strategy == LlmActivationCheckpointMode.whole_layer)
             or (strategy == LlmActivationCheckpointMode.one_in_two and block_idx % 2 == 0)
             or (strategy == LlmActivationCheckpointMode.one_in_three and block_idx % 3 == 0)
             or (strategy == LlmActivationCheckpointMode.one_in_four and block_idx % 4 == 0)
             or (strategy == LlmActivationCheckpointMode.two_in_three and block_idx % 3 != 0)
             or (strategy == LlmActivationCheckpointMode.three_in_four and block_idx % 4 != 0)
-        ):
-            return True
-        else:
-            return False
+        )
 
     @classmethod
     def update_legacy_settings(cls, config):

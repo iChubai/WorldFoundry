@@ -94,7 +94,7 @@ class Engine:
             self.execution_context.set_tensor_address(name, x.data_ptr())
             reference_tensors.append(x)
 
-        for name, shape, dtype in self.in_meta:
+        for name, _shape, dtype in self.in_meta:
             if name not in kwargs:
                 continue
 

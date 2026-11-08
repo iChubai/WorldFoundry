@@ -269,7 +269,7 @@ class RECONVIDDataset(BaseDataset):
                 # self.__getitem__(i+1)
             goal_offset = np.arange(self.video_length - 1) + 1  # [1, 2, ..., video_length-1]
             goal_time = (curr_time + goal_offset).astype("int")
-            rel_time = (goal_offset).astype("float") / (128.0)  # TODO: refactor, currently a fixed const
+            _rel_time = (goal_offset).astype("float") / (128.0)  # TODO: refactor, currently a fixed const
             context_times = list(range(curr_time, curr_time + 1))  # [curr_time]
             context = [(f_curr, t) for t in context_times] + [(f_curr, t) for t in goal_time]
 

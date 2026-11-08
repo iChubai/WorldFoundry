@@ -320,7 +320,7 @@ def fast_pnp(pts3d, focal, msk, device, pp=None, niter_PnP=10):
             )
             if not success:
                 continue
-        except:
+        except BaseException:
             continue
 
         score = len(inliers)

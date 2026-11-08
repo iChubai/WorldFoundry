@@ -291,7 +291,7 @@ class WanWrapperBase(torch.nn.Module):
         # Extract parameters from config
         wan_model_name = getattr(config, "wan_model_name", None)
         generator_backbone_ckpt_path = getattr(config, "generator_backbone_ckpt_path", None)
-        generator_lora_ckpt_path = getattr(config, "generator_lora_ckpt_path", None)
+        _generator_lora_ckpt_path = getattr(config, "generator_lora_ckpt_path", None)
         timestep_shift = getattr(config, "timestep_shift", 8.0)
         num_latent_frames = getattr(config, "num_latent_frames", config.image_or_video_shape[1])
         use_lora = getattr(config, "use_lora", False)

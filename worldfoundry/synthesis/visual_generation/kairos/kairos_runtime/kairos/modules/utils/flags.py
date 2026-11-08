@@ -11,14 +11,14 @@ def detectplat_device_gpu_vendor():
 
         if "MetaX" in output:
             return "MetaX"
-    except:
+    except BaseException:
         pass
 
     try:
         result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3)
         if "NVIDIA" in result.stdout:
             return "NVIDIA"
-    except:
+    except BaseException:
         pass
 
     return "Unknown"

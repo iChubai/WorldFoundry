@@ -146,7 +146,7 @@ def random_shift_crop(clip):
         long_edge = w
         short_edge = h
     else:
-        long_edge = h
+        _long_edge = h
         short_edge = w
 
     th, tw = short_edge, short_edge

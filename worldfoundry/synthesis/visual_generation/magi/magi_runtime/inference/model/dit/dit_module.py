@@ -33,7 +33,7 @@ try:
     from magi_attention.functional import flex_flash_attn_func
 
     flex_attention = flex_flash_attn_func
-except:
+except BaseException:
     flex_attention = None
 
 from inference.common.config import EngineConfig, ModelConfig

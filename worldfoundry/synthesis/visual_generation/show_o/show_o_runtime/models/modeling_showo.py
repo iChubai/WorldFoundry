@@ -209,7 +209,7 @@ class Showo(ModelMixin, ConfigMixin):
         """
         try:
             device = idx.device
-        except:
+        except BaseException:
             device = input_embeddings.device
 
         result = []

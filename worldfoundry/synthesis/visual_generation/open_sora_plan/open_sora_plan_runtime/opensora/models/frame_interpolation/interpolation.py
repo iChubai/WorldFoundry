@@ -173,7 +173,7 @@ def write(outputs, input_path, output_path, frame_rate=30):
     save_video_path = f"{output_path}/output_{file_name}.mp4"
     writer = cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*"mp4v"), frame_rate, size)
 
-    for i, imgt_pred in enumerate(outputs):
+    for _i, imgt_pred in enumerate(outputs):
         imgt_pred = tensor2img(imgt_pred)
         imgt_pred = cv2.cvtColor(imgt_pred, cv2.COLOR_RGB2BGR)
         writer.write(imgt_pred)

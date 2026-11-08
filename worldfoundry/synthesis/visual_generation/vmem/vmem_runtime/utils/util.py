@@ -234,7 +234,7 @@ def parse_meta_data(file_path, image_height=288, image_width=512):
         lines = file.readlines()
 
     # First line is the video URL
-    video_url = lines[0].strip()
+    _video_url = lines[0].strip()
 
     line = lines[1]
     data = line.strip().split()

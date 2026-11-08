@@ -125,7 +125,7 @@ class Conversation:
 
     def get_images(self, return_pil=False):
         images = []
-        for i, (role, msg) in enumerate(self.messages[self.offset :]):
+        for i, (_role, msg) in enumerate(self.messages[self.offset :]):
             if i % 2 == 0:
                 if isinstance(msg, tuple):
                     import base64

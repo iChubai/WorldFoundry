@@ -24,7 +24,7 @@ try:
     from flash_attn.flash_attn_interface import flash_attn_varlen_qkvpacked_func
 
     has_flash_attn = True
-except:
+except BaseException:
     print("FlashAttention2 is not installed.")
     has_flash_attn = False
 
@@ -360,7 +360,7 @@ class InternVisionEncoder(nn.Module):
         encoder_states = () if output_hidden_states else None
         hidden_states = inputs_embeds
 
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 encoder_states = encoder_states + (hidden_states,)
             if self.gradient_checkpointing and self.training:
@@ -400,7 +400,7 @@ class InternVisionModel(PreTrainedModel):
             original_name = "vision_model." + name
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
 

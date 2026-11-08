@@ -284,10 +284,10 @@ def run(config):
                 kf_gen.update_images_and_masks(inpaint_output["latent"], render_output["inpaint_mask"])
 
                 kf2_depth_should_be = render_output["rendered_depth"]
-                mask_to_align_depth = ~(render_output["inpaint_mask_512"] > 0) & (
+                _mask_to_align_depth = ~(render_output["inpaint_mask_512"] > 0) & (
                     kf2_depth_should_be < cutoff_depth + kf_gen.kf_delta_t
                 )
-                mask_to_cutoff_depth = ~(render_output["inpaint_mask_512"] > 0) & (
+                _mask_to_cutoff_depth = ~(render_output["inpaint_mask_512"] > 0) & (
                     kf2_depth_should_be >= cutoff_depth + kf_gen.kf_delta_t
                 )
 

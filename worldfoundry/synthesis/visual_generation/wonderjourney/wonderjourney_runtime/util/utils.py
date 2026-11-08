@@ -152,7 +152,7 @@ def save_depth_map(depth_map, file_name, vmin=None, vmax=None, save_clean=False)
 
     if not save_clean:
         # Standard save with labels and color bar
-        cbar = fig.colorbar(cax)
+        _cbar = fig.colorbar(cax)
         ax.set_title("Depth Map")
         ax.set_xlabel("Width")
         ax.set_ylabel("Height")

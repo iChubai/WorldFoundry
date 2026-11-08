@@ -10,9 +10,7 @@ CACHE_T = 2
 def check_is_instance(model, module_class):
     if isinstance(model, module_class):
         return True
-    if hasattr(model, "module") and isinstance(model.module, module_class):
-        return True
-    return False
+    return bool(hasattr(model, "module") and isinstance(model.module, module_class))
 
 
 def block_causal_mask(x, block_size):
@@ -344,7 +342,7 @@ class Decoder3d_38(nn.Module):
 
         # dimensions
         dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
-        scale = 1.0 / 2 ** (len(dim_mult) - 2)
+        _scale = 1.0 / 2 ** (len(dim_mult) - 2)
         # init block
         self.conv1 = CausalConv3d(z_dim, dims[0], 3, padding=1)
 

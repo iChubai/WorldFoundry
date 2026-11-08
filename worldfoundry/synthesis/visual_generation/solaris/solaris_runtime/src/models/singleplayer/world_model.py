@@ -99,7 +99,7 @@ class SelfAttention(nnx.Module):
             # we apply rope to the keys and queries in the same way.
             new_kv_cache = None
             grid_sizes = (grid_sizes[0] // 2, grid_sizes[1], grid_sizes[2])
-            s_tf = grid_sizes[1] * grid_sizes[2]  # spatial size per frame (single player)
+            _s_tf = grid_sizes[1] * grid_sizes[2]  # spatial size per frame (single player)
             roped_query_BTHD = rearrange(
                 rope_apply(
                     rearrange(q_BTHD, "b (r s) n d -> (b r) s n d", r=2),
@@ -126,7 +126,7 @@ class SelfAttention(nnx.Module):
             roped_query_BTHD = rope_apply(q_BTHD, grid_sizes, freqs).astype(v_BTHD.dtype)
             roped_key_BTHD = rope_apply(k_BTHD, grid_sizes, freqs).astype(v_BTHD.dtype)
             new_kv_cache = None
-            s0 = grid_sizes[1] * grid_sizes[2]  # spatial size per frame (single player)
+            _s0 = grid_sizes[1] * grid_sizes[2]  # spatial size per frame (single player)
             x_BTHD = jax.nn.dot_product_attention(roped_query_BTHD, roped_key_BTHD, v_BTHD, mask=block_mask)
 
         else:

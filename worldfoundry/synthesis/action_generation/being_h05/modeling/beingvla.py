@@ -385,9 +385,9 @@ class BeingH(PreTrainedModel):
             padded_attn_modes = attn_modes + ["causal"]
             padded_seqlen = seqlen + padding_len
         else:
-            padded_sample_lens_list = sample_lens_list
-            padded_attn_modes = attn_modes
-            padded_seqlen = seqlen
+            _padded_sample_lens_list = sample_lens_list
+            _padded_attn_modes = attn_modes
+            _padded_seqlen = seqlen
 
         if sum(sample_lens_list) == sequence_length:
             sample_lens_for_llm = sample_lens_list

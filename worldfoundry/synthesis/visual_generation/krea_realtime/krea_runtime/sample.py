@@ -225,7 +225,7 @@ def sample_videos(
         num_blocks = params.num_blocks
         print(f"🎬 Generating {num_blocks} blocks...")
         t_start_sampling = time.time()
-        for block_idx in range(num_blocks):
+        for _block_idx in range(num_blocks):
             try:
                 session.generate_block(models)
             except asyncio.CancelledError:
@@ -321,7 +321,7 @@ def create_grid(outputs_folder: str = "outputs", grid_output_dir: str = "outputs
         import math
 
         cols = min(3, num_videos)  # Max 3 columns
-        rows = math.ceil(num_videos / cols)
+        _rows = math.ceil(num_videos / cols)
 
         # Build ffmpeg command
         cmd = ["ffmpeg", "-y"]
@@ -348,7 +348,7 @@ def create_grid(outputs_folder: str = "outputs", grid_output_dir: str = "outputs
         try:
             dimensions = sp.run(probe_cmd, capture_output=True, text=True, check=True).stdout.strip()
             video_width, video_height = map(int, dimensions.split("x"))
-        except:
+        except BaseException:
             # Fallback to default dimensions if probe fails
             video_width, video_height = 832, 480
 
@@ -411,7 +411,7 @@ def create_grid(outputs_folder: str = "outputs", grid_output_dir: str = "outputs
 
         # Run ffmpeg
         try:
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            _result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             print(f"✅ Grid video saved to {grid_output_path}")
             grid_results[prompt_name] = grid_output_path
         except subprocess.CalledProcessError as e:

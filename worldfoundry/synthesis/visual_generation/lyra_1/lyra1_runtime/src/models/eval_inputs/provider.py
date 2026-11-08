@@ -152,7 +152,7 @@ class Provider(Dataset):
             c2w_ref = c2ws[0]
             c2w_rel = torch.inverse(c2w_ref)[None]
             c2ws_new = c2w_rel @ c2ws
-            target_cam_c2w = c2ws_new[[0]]
+            _target_cam_c2w = c2ws_new[[0]]
             c2ws = c2ws_new
 
         # Scaling the scene
@@ -337,7 +337,7 @@ class Provider(Dataset):
     ):
         frame_indices_views = []
         # Create multiple frame indices for each view index, can create duplicates across views for overlap
-        for view_idx in range(num_input_multi_views):
+        for _view_idx in range(num_input_multi_views):
             # Create mirrored frame indices for too short videos
             if mirror_frames:
                 frame_indices = mirror_frame_indices(self.opt.num_input_views, total_num_frames)

@@ -65,7 +65,7 @@ def fake_diffusers_current_device(model: torch.nn.Module, target_device: torch.d
         model.scale_shift_table.data = model.scale_shift_table.data.to(target_device)
         return
 
-    for k, p in model.named_modules():
+    for _k, p in model.named_modules():
         if hasattr(p, "weight"):
             p.to(target_device)
             return

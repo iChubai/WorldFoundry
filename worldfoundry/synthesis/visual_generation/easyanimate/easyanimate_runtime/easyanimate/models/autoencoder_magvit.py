@@ -26,7 +26,7 @@ from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 try:
     from diffusers.loaders import FromOriginalVAEMixin
-except:
+except BaseException:
     from diffusers.loaders import FromOriginalModelMixin as FromOriginalVAEMixin
 
 from diffusers import AutoencoderKL as AutoencoderKL
@@ -46,7 +46,7 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 def str_eval(item):
-    if type(item) == str:
+    if type(item) is str:
         return eval(item)
     else:
         return item
@@ -218,7 +218,7 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
             module.gradient_checkpointing = value
 
     def _clear_conv_cache(self):
-        for name, module in self.named_modules():
+        for _name, module in self.named_modules():
             if isinstance(module, CausalConv3d):
                 module._clear_conv_cache()
 

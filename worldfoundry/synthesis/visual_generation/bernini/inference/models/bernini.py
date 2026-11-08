@@ -449,7 +449,6 @@ class BerniniModel(PreTrainedModel):
 
         if inference:
             # mask all tokens
-            mask_rate = 1
             all_vit_token_num = sum(target_vit_embed_mask).detach().cpu().numpy()
             target_vit_embeds[:, :, :] = mask_token.expand(1, all_vit_token_num, -1)
             input_embeds[:, target_vit_embed_mask, :] = target_vit_embeds

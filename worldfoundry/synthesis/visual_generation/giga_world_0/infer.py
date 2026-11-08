@@ -186,7 +186,7 @@ def run(args: argparse.Namespace) -> Path:
     np.random.seed(args.seed)
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    transformer_config = _transformer_config(
+    _transformer_config(
         args.transformer_model_dir,
         attention_backend=args.attention_backend,
     )

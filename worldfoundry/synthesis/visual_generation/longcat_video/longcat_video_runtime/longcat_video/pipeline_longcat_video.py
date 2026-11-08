@@ -750,7 +750,7 @@ class LongCatVideoPipeline:
         num_frames = max(num_frames, 1)
 
         has_neg_prompt = negative_prompt is not None
-        do_true_cfg = guidance_scale > 1 and has_neg_prompt
+        _do_true_cfg = guidance_scale > 1 and has_neg_prompt
 
         self._guidance_scale = guidance_scale
         self._attention_kwargs = attention_kwargs
@@ -1455,7 +1455,7 @@ class LongCatVideoPipeline:
         if self.dit is not None:
             self.dit = self.dit.to(device, non_blocking=True)
             if hasattr(self.dit, "lora_dict") and self.dit.lora_dict:
-                for lora_key, lora_network in self.dit.lora_dict.items():
+                for _lora_key, lora_network in self.dit.lora_dict.items():
                     for lora in lora_network.loras:
                         lora.to(device, non_blocking=True)
         if self.text_encoder is not None:

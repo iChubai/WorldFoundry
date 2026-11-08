@@ -441,7 +441,7 @@ def _check_multiview_depth_consistency(
     # Track how many views each point was checked against
     view_counts = np.zeros(n_points, dtype=np.int32)
 
-    for pose_idx, (hist_depth, hist_c2w, hist_K, (H, W)) in depth_history.items():
+    for _pose_idx, (hist_depth, hist_c2w, hist_K, (H, W)) in depth_history.items():
         # Project new points to this historical camera
         w2c = np.linalg.inv(hist_c2w)
         R, t = w2c[:3, :3], w2c[:3, 3]
@@ -855,7 +855,7 @@ class Stream3RUpdater(PointCloudUpdater):
 
         device_str = str(self._device) if self._device else "cuda:0"
         cpu_offload_qwen = getattr(self, "_cpu_offload_qwen", False)
-        cpu_offload_sam3 = getattr(self, "_cpu_offload_sam3", False)
+        _cpu_offload_sam3 = getattr(self, "_cpu_offload_sam3", False)
 
         # Step 1: Save frames as temp video for Qwen video-mode detection
         tmp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)

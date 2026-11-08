@@ -270,7 +270,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             List of encoded latent tensors with optional reference image padding
         """
         vae = self.vae if vae is None else vae
-        weight_dtype = multi_frames[0].dtype
+        _weight_dtype = multi_frames[0].dtype
 
         if ref_images is None:
             ref_images = [None] * len(multi_frames[0])

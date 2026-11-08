@@ -257,7 +257,6 @@ class CSGOVID(Dataset):
                            random keyboard + static mouse for the rest
         """
         N_KEYS = 11
-        N_CLICKS = 2
         N_MOUSE_X = 23
         N_MOUSE_Y = 15
 

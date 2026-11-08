@@ -211,7 +211,7 @@ class AllegroTI2VPipeline(DiffusionPipeline):
                 If `True`, the function will preprocess and clean the provided caption before encoding.
             max_sequence_length (`int`, defaults to 120): Maximum sequence length to use for the prompt.
         """
-        embeds_initially_provided = prompt_embeds is not None and negative_prompt_embeds is not None
+        _embeds_initially_provided = prompt_embeds is not None and negative_prompt_embeds is not None
 
         if device is None:
             device = self._execution_device

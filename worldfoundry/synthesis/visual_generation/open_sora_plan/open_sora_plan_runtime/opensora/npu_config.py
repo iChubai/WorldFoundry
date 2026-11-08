@@ -15,7 +15,7 @@ try:
 
     npu_is_available = True
     from torch_npu.contrib import transfer_to_npu  # noqa: F401 - Import checks optional dependency availability.
-except:
+except BaseException:
     npu_is_available = False
 
 import types
@@ -212,7 +212,7 @@ class NPUConfig:
         return f"{self.pickle_save_path}/{file_name}_local_n63"
 
     def free_mm(self):
-        for key, value in self.mm.items():
+        for _key, value in self.mm.items():
             value.close()
         self.mm.clear()
 
@@ -255,7 +255,6 @@ class NPUConfig:
         # grad_norm = get_grad_norm(gradients)
         # 计算并打印梯度范数
         grad_norm = 0
-        n_grad = 0
         # for name, param in model.named_parameters():
         #     grad_data = deepspeed.utils.safe_get_full_grad(param)
         #     # self.print_tensor_stats(grad_data, name=name)

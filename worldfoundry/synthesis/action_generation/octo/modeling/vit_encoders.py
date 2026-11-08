@@ -112,7 +112,7 @@ class SmallStem(nn.Module):
         assert expecting_cond_var == received_cond_var, "Only pass in cond var iff model expecting cond var"
 
         x = normalize_images(observations, self.img_norm_type)
-        for n, (kernel_size, stride, features, padding) in enumerate(
+        for _n, (kernel_size, stride, features, padding) in enumerate(
             zip(
                 self.kernel_sizes,
                 self.strides,

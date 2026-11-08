@@ -1003,7 +1003,6 @@ def get_policy(
         state = state[..., :14]
 
         quiet = bool(data.get("_quiet", False))
-        eps = 1e-8
         norm_state = ((state - state_min) / state_range) * 2 - 1
 
         norm_state = norm_state.to(device)

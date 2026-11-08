@@ -79,7 +79,7 @@ class DeltaSampler:
         return encodings
 
     def construct_input(self, prompts):
-        for i, prompt in enumerate(prompts):
+        for _i, prompt in enumerate(prompts):
             vision = self._read_process_vision(prompt["image"])
             tokens, vm = [], []
             tokens.extend(vision)

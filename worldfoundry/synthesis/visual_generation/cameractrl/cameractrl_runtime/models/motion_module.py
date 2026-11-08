@@ -278,7 +278,7 @@ class TemporalTransformerBlock(nn.Module):
         norms = []
         self.attention_block_types = attention_block_types
 
-        for block_idx, block_name in enumerate(attention_block_types):
+        for _block_idx, block_name in enumerate(attention_block_types):
             attention_blocks.append(
                 TemporalSelfAttention(
                     attention_mode=block_name,

@@ -17,7 +17,7 @@ class Updateable:
                 continue
             try:
                 module = getattr(self, attr)
-            except:
+            except BaseException:
                 continue  # ignore attributes like property, which can't be retrived using getattr?
             if isinstance(module, Updateable):
                 module.do_update_step(epoch, global_step, on_load_weights=on_load_weights)
@@ -29,7 +29,7 @@ class Updateable:
                 continue
             try:
                 module = getattr(self, attr)
-            except:
+            except BaseException:
                 continue  # ignore attributes like property, which can't be retrived using getattr?
             if isinstance(module, Updateable):
                 module.do_update_step_end(epoch, global_step)
@@ -90,7 +90,7 @@ class VQGANEncoder(ModelMixin, ConfigMixin):
             attn = nn.ModuleList()
             block_in = self.ch * in_ch_mult[i_level]
             block_out = self.ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks[i_level]):
+            for _i_block in range(self.num_res_blocks[i_level]):
                 block.append(
                     ResnetBlock(
                         in_channels=block_in,
@@ -290,7 +290,7 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
 
         self.z_channels = z_channels
         # compute in_ch_mult, block_in and curr_res at lowest res
-        in_ch_mult = (1,) + tuple(ch_mult)
+        _in_ch_mult = (1,) + tuple(ch_mult)
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = self.resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
@@ -321,7 +321,7 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks[i_level]):
+            for _i_block in range(self.num_res_blocks[i_level]):
                 block.append(
                     ResnetBlock(
                         in_channels=block_in,

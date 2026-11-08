@@ -337,8 +337,6 @@ def draw_joystick(frame_bgr, center, radius: int, vec2, label: str = None):
 
     blue = (255, 170, 50)
     blue_hot = (255, 210, 90)
-    base_dark = (18, 22, 30)
-    base_mid = (35, 45, 65)
     knob_core = (235, 245, 255)
     knob_edge = (165, 190, 215)
 

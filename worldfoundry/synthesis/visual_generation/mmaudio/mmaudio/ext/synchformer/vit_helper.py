@@ -334,7 +334,6 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
         # completely discard fully connected if model num_classes doesn't match pretrained weights
         del state_dict[classifier_name + ".weight"]
         del state_dict[classifier_name + ".bias"]
-        strict = False
     elif label_offset > 0:
         # special case for pretrained weights with an extra background class in pretrained weights
         classifier_weight = state_dict[classifier_name + ".weight"]

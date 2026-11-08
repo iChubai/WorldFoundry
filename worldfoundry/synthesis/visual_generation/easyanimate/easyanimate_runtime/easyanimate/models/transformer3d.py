@@ -55,7 +55,7 @@ from .resampler import Resampler
 
 try:
     from diffusers.models.embeddings import PixArtAlphaTextProjection
-except:
+except BaseException:
     from diffusers.models.embeddings import CaptionProjection as PixArtAlphaTextProjection
 
 
@@ -1727,7 +1727,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
                 ori_hidden_states = hidden_states.clone().cpu()
 
                 # 4. Transformer blocks
-                for i, block in enumerate(self.transformer_blocks):
+                for _i, block in enumerate(self.transformer_blocks):
                     if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                         def create_custom_forward(module, return_dict=None):
@@ -1774,7 +1774,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
                 del ori_hidden_states
         else:
             # 4. Transformer blocks
-            for i, block in enumerate(self.transformer_blocks):
+            for _i, block in enumerate(self.transformer_blocks):
                 if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                     def create_custom_forward(module, return_dict=None):

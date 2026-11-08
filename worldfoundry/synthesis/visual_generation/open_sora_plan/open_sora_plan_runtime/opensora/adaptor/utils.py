@@ -111,10 +111,7 @@ def is_model_parallel_parameter(p) -> bool:
     if hasattr(p, "model_parallel") and p.model_parallel:
         return True
 
-    if hasattr(p, "tensor_model_parallel") and p.tensor_model_parallel:
-        return True
-
-    return False
+    return bool(hasattr(p, "tensor_model_parallel") and p.tensor_model_parallel)
 
 
 def bwc_tensor_model_parallel_rank(mpu=None):
@@ -312,9 +309,7 @@ class CheckOverflow:
                 raise
             return True
         else:
-            if cpu_sum == float("inf") or cpu_sum == -float("inf") or cpu_sum != cpu_sum:
-                return True
-            return False
+            return bool(cpu_sum == float("inf") or cpu_sum == -float("inf") or cpu_sum != cpu_sum)
 
 
 def _handle_overflow(cpu_sum, x, i):
@@ -1051,7 +1046,4 @@ def required_torch_version(min_version=None, max_version=None):
     if min_version and pkg_version.parse(str(min_version)) > torch_version:
         return False
 
-    if max_version and pkg_version.parse(str(max_version)) < torch_version:
-        return False
-
-    return True
+    return not (max_version and pkg_version.parse(str(max_version)) < torch_version)

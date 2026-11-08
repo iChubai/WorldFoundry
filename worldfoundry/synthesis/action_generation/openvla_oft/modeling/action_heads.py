@@ -101,7 +101,7 @@ class L1RegressionActionHead(nn.Module):
         # actions_hidden_states: last hidden states of Transformer corresponding to action tokens in sequence
         # - shape: (batch_size, chunk_len * action_dim, hidden_dim)
         batch_size = actions_hidden_states.shape[0]
-        device = actions_hidden_states.device
+        _device = actions_hidden_states.device
         rearranged_actions_hidden_states = actions_hidden_states.reshape(batch_size, NUM_ACTIONS_CHUNK, -1)
         action = self.model(rearranged_actions_hidden_states)
         return action
@@ -176,7 +176,7 @@ class DiffusionActionHead(nn.Module):
         # actions_hidden_states: last hidden states of Transformer corresponding to action tokens in sequence
         # - shape: (batch_size, chunk_len * action_dim, hidden_dim)
         batch_size = actions_hidden_states.shape[0]
-        device = actions_hidden_states.device
+        _device = actions_hidden_states.device
         rearranged_actions_hidden_states = actions_hidden_states.reshape(
             batch_size, NUM_ACTIONS_CHUNK, -1
         )  # (batch_size, chunk_len, action_dim * hidden_dim)

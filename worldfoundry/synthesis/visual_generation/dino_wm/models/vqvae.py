@@ -107,7 +107,7 @@ class Encoder(nn.Module):
                 nn.Conv2d(channel // 2, channel, 3, padding=1),
             ]
 
-        for i in range(n_res_block):
+        for _i in range(n_res_block):
             blocks.append(ResBlock(channel, n_res_channel))
 
         blocks.append(nn.ReLU(inplace=True))
@@ -124,7 +124,7 @@ class Decoder(nn.Module):
 
         blocks = [nn.Conv2d(in_channel, channel, 3, padding=1)]
 
-        for i in range(n_res_block):
+        for _i in range(n_res_block):
             blocks.append(ResBlock(channel, n_res_channel))
 
         blocks.append(nn.ReLU(inplace=True))

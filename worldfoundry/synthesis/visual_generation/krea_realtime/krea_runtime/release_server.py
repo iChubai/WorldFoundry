@@ -744,7 +744,7 @@ class GenerationSession:
         for index, current_timestep in enumerate(self.denoising_step_list):
             if self.disposed.is_set():
                 return
-            t_step_start = time.time()
+            _t_step_start = time.time()
             # Normal initialize timestamp stuff
             timestep = (
                 torch.ones([1, models.pipeline.num_frame_per_block], device=self.noise.device, dtype=torch.int64)
@@ -782,7 +782,7 @@ class GenerationSession:
                 ).unflatten(0, denoised_pred.shape[:2])
                 # logging.debug("(renoise) time %f", time.time() - start_time)
             else:
-                start_time = time.time()
+                _start_time = time.time()
                 # otherwise just denoise
                 _, denoised_pred = models.transformer(
                     noisy_image_or_video=noisy_input,
@@ -797,7 +797,7 @@ class GenerationSession:
             :, self.current_start_frame : self.current_start_frame + models.pipeline.num_frame_per_block
         ] = denoised_pred
         self.last_pred = denoised_pred
-        decode_start = time.time()
+        _decode_start = time.time()
 
         if (self.params.width, self.params.height) != (832, 480):
             print("Falling back to eager for VAE decode")
@@ -1199,7 +1199,7 @@ async def ws_session(websocket: WebSocket, id: str, config: OmegaConf, models: M
         # Send session ID for video download
         try:
             await websocket.send_json({"session_id": id, "status": "completed"})
-        except:
+        except BaseException:
             pass
 
 

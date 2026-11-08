@@ -220,9 +220,7 @@ class LingBotWorldRuntime:
             return True
         if fast_model_path:
             return True
-        if isinstance(pretrained_model_path, str) and cls._looks_like_fast_repo(pretrained_model_path):
-            return True
-        return False
+        return bool(isinstance(pretrained_model_path, str) and cls._looks_like_fast_repo(pretrained_model_path))
 
     @staticmethod
     def _candidate_hfd_roots() -> tuple[Path, ...]:

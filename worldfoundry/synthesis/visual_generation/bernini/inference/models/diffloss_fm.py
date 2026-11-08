@@ -163,7 +163,7 @@ class DiffLoss_FM(nn.Module):
         # Denoising loop
         samples = noise.to(z.dtype)
         progress_bar = tqdm(timesteps, desc=f"Vit diffusion with cfg={cfg}") if verbose else None
-        for i, t in enumerate(timesteps):
+        for _i, t in enumerate(timesteps):
             timestep = t.unsqueeze(0).to(dtype=z.dtype, device=device)
 
             # Inference
@@ -364,7 +364,7 @@ class SimpleMLPAdaLN(nn.Module):
         self.input_proj = nn.Linear(in_channels, model_channels)
 
         res_blocks = []
-        for i in range(num_res_blocks):
+        for _i in range(num_res_blocks):
             res_blocks.append(
                 ResBlock(
                     model_channels,

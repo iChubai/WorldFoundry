@@ -111,8 +111,6 @@ class QwenVLTextEncoder(nn.Module):
                 raise ValueError(f"len(images)={len(images_list)} must match len(prompt)={bsz}")
 
         chat_texts = []
-        pre_texts = []
-        post_texts = []
         for p, img in zip(prompt_list, images_list, strict=False):
             if img is not None:
                 user_content = [
@@ -167,7 +165,7 @@ class QwenVLTextEncoder(nn.Module):
         prompt_m_list = []
         for i in range(bsz):
             valid_len = int(attn_mask[i].sum().item())
-            ids_i = input_ids[i, :valid_len].detach().cpu()
+            _ids_i = input_ids[i, :valid_len].detach().cpu()
 
             start = self.prompt_template_encode_start_idx
             end = valid_len

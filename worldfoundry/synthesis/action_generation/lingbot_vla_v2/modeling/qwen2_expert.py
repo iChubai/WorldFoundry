@@ -216,7 +216,7 @@ class Qwen2TokenMoeBlock(nn.Module):
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Token-level routing with all-to-all computation for torch.compile compatibility."""
         batch_size, sequence_length, hidden_dim = hidden_states.shape
-        num_tokens = batch_size * sequence_length
+        _num_tokens = batch_size * sequence_length
 
         # Token-level routing: each token individually
         hidden_flat = hidden_states.reshape(-1, hidden_dim)  # (B*T, D)

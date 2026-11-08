@@ -723,12 +723,14 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
         elif is_torchcodec_available():
             warnings.warn(
                 "`decord` is not installed and cannot be used to decode the video by default. "
-                "Falling back to `torchcodec`."
+                "Falling back to `torchcodec`.",
+                stacklevel=1,
             )
             backend = "torchcodec"
         else:
             warnings.warn(
-                "`decord` is not installed and cannot be used to decode the video by default. Falling back to `PyAV`."
+                "`decord` is not installed and cannot be used to decode the video by default. Falling back to `PyAV`.",
+                stacklevel=1,
             )
             backend = "pyav"
 

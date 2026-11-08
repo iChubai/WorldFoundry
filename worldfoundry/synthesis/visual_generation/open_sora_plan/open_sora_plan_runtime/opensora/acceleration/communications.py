@@ -6,7 +6,7 @@ from opensora.acceleration.parallel_states import enable_LCCL, hccl_info, lccl_i
 
 try:
     from lcalib.functional import lcal_all2allvc
-except:
+except BaseException:
     lcal_all2allvc = None
 
 

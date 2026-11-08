@@ -48,7 +48,7 @@ class LoRAModule(torch.nn.Module):
             self.lora_down = torch.nn.Linear(in_dim, self.lora_dim, bias=False)
             self.lora_up = torch.nn.Linear(self.lora_dim, out_dim, bias=False)
 
-        if type(alpha) == torch.Tensor:
+        if type(alpha) is torch.Tensor:
             alpha = alpha.detach().float().numpy()  # without casting, bf16 causes error
         alpha = self.lora_dim if alpha is None or alpha == 0 else alpha
         alpha_scale = alpha / self.lora_dim

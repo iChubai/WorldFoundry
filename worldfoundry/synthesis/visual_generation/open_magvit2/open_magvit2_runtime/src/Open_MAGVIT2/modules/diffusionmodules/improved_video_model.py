@@ -163,7 +163,7 @@ class Encoder(nn.Module):
 
         ### mid
         self.mid_block = nn.ModuleList()
-        for res_idx in range(self.num_res_blocks):
+        for _res_idx in range(self.num_res_blocks):
             self.mid_block.append(ResBlock(block_in, block_in))
 
         ### end
@@ -217,7 +217,7 @@ class Decoder(nn.Module):
         self.conv_in = ConvBlock3D(z_channels, block_in, kernel_size=(3, 3, 3), causal=True, padding=1, bias=True)
 
         self.mid_block = nn.ModuleList()
-        for res_idx in range(self.num_res_blocks):
+        for _res_idx in range(self.num_res_blocks):
             self.mid_block.append(ResBlock(block_in, block_in))
 
         self.up = nn.ModuleList()
@@ -228,7 +228,7 @@ class Decoder(nn.Module):
             block = nn.ModuleList()
             block_out = ch * ch_mult[i_level]
             self.adaptive.insert(0, AdaptiveGroupNorm(z_channels, block_in))
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(ResBlock(block_in, block_out))
                 block_in = block_out
 

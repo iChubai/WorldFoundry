@@ -342,7 +342,7 @@ class GalaxeaZero(nn.Module):
         # forward euler integration --- using kv caches of vlm and proprio
         delta_t = 1.0 / self.num_inference_steps
         t = torch.zeros(bsz, device=device, dtype=dtype)
-        for i in range(self.num_inference_steps):
+        for _i in range(self.num_inference_steps):
             # encode action and time into embedding
             time_cond = self.time_embedding(t)
             # [Batch_Size, Horizon_Steps, Embed_Dim]

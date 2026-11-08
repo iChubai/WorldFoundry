@@ -196,15 +196,15 @@ def maybe_fallback_attn_mode(attn_mode, infer_state=None, block_idx=None):
         elif is_flash2_available():
             attn_mode = "flash2"
         else:
-            warnings.warn("flash is not available. Falling back to torch attention.")
+            warnings.warn("flash is not available. Falling back to torch attention.", stacklevel=1)
             attn_mode = "torch"
     elif attn_mode == "flash3":
         if not is_flash3_available():
-            warnings.warn("flash3 is not available. Falling back to torch attention.")
+            warnings.warn("flash3 is not available. Falling back to torch attention.", stacklevel=1)
             attn_mode = "torch"
     elif attn_mode == "flash2":
         if not is_flash2_available():
-            warnings.warn("flash2 is not available. Falling back to torch attention.")
+            warnings.warn("flash2 is not available. Falling back to torch attention.", stacklevel=1)
             attn_mode = "torch"
     if attn_mode in ("flex-block-attn"):
         if not is_sparse_attn_available():

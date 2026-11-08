@@ -617,7 +617,7 @@ class Progress:
         self._skip_lines = 1
 
     def set_description(self, params=[]):
-        if type(params) == dict:
+        if type(params) is dict:
             params = sorted([(key, val) for key, val in params.items()])
 
         ############

@@ -292,7 +292,6 @@ def read_exr_depth_to_numpy(exr_file) -> np.ndarray:
         bytes_per_pixel = 4
     elif pix_type == Imath.PixelType(Imath.PixelType.DOUBLE).v:
         dtype = np.float64
-        bytes_per_pixel = 8
     else:
         raise ValueError(f"Unknown EXR pixel type: {pix_type}")
 

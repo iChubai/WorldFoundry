@@ -117,7 +117,7 @@ class FrameBank:
                 scored.append((base - penalty, e))
             scored.sort(key=lambda x: -x[0])
 
-            for score, entry in scored:
+            for _score, entry in scored:
                 if len(selected) >= select_k:
                     break
                 if float(diversity_min_dist) > 0.0 and len(selected) > 0:

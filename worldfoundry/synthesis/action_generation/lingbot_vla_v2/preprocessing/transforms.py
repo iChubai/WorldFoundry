@@ -142,7 +142,7 @@ class Normalizer:
         for key, value in data.items():
             if key in self.norm_stats:
                 norm_type = self.norm_type.get(key, "identity")
-                stats = self.norm_stats[key]
+                _stats = self.norm_stats[key]
                 if norm_type == "meanstd":
                     mean = self._get_stat(key, "mean", value)
                     std = self._get_stat(key, "std", value)

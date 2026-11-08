@@ -644,8 +644,8 @@ class BerniniPipeline:
         )
         mllm_config_path = self.config.mllm_config_path
         mllm_config_subfolder = getattr(self.config, "mllm_subfolder", None)
-        vae_model_path = getattr(self.config, "vae_model_path", None)
-        vae_subfolder = getattr(self.config, "vae_subfolder", None)
+        _vae_model_path = getattr(self.config, "vae_model_path", None)
+        _vae_subfolder = getattr(self.config, "vae_subfolder", None)
         vae_config_path = self.config.vae_config_path
 
         mllm_config = AutoConfig.from_pretrained(mllm_config_path, subfolder=mllm_config_subfolder)
@@ -1133,7 +1133,7 @@ class BerniniPipeline:
         all_vae_rope = inputs["input_vae_rope"]
         src_image_vae_latents, src_image_vae_shapes, src_image_vae_rope = [], [], []
         src_video_vae_latents, src_video_vae_shapes, src_video_vae_rope = [], [], []
-        for i, shape in enumerate(inputs["input_vae_shape"][:-1]):
+        for _i, shape in enumerate(inputs["input_vae_shape"][:-1]):
             vae_len = shape[1] * shape[2] // 4 * shape[0]
             cur_vae_rope = all_vae_rope[pos : pos + vae_len]
             cur_vae_latent = all_vae_latents[pos : pos + vae_len]

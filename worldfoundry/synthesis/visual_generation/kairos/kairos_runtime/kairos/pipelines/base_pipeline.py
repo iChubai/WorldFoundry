@@ -133,7 +133,7 @@ class BasePipeline(torch.nn.Module):
         return noise
 
     def enable_cpu_offload(self):
-        warnings.warn("`enable_cpu_offload` will be deprecated. Please use `enable_vram_management`.")
+        warnings.warn("`enable_cpu_offload` will be deprecated. Please use `enable_vram_management`.", stacklevel=1)
         self.vram_management_enabled = True
 
     def get_vram(self):

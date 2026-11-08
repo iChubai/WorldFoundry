@@ -421,7 +421,7 @@ class BF16_Optimizer(ZeROOptimizer):
 
     # Restore base optimizer fp32 weights bfloat16 weights
     def _restore_from_bit16_weights(self):
-        for i, group in enumerate(self.bf16_groups):
+        for i, _group in enumerate(self.bf16_groups):
             partition_id = dist.get_rank(group=self.real_dp_process_group[i])
             for bf16_partitions, fp32_partition in zip(
                 self.bf16_partitioned_groups, self.fp32_groups_flat_partition, strict=False

@@ -264,7 +264,8 @@ class Florence2LanguageConfig(PretrainedConfig):
             self.forced_bos_token_id = self.bos_token_id
             warnings.warn(
                 f"Please make sure the config includes `forced_bos_token_id={self.bos_token_id}` in future versions. "
-                "The config can simply be saved and uploaded again to be fixed."
+                "The config can simply be saved and uploaded again to be fixed.",
+                stacklevel=1,
             )
 
 

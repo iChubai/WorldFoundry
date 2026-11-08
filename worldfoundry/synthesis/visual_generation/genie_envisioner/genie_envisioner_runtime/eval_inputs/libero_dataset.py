@@ -165,7 +165,7 @@ class CustomLeRobotDataset(Dataset):
 
                 with open(os.path.join(meta_folder, "info.json")) as f:
                     metainfo = json.load(f)
-                    total_chunks = metainfo["total_chunks"]
+                    _total_chunks = metainfo["total_chunks"]
                     chunks_size = metainfo["chunks_size"]
 
                 episodes_jsonl = os.path.join(meta_folder, "episodes.jsonl")
@@ -444,7 +444,7 @@ class CustomLeRobotDataset(Dataset):
         return recap
 
     def get_batch(self, idx):
-        video_path = self.dataset[idx][0]
+        _video_path = self.dataset[idx][0]
         parquet_path = self.dataset[idx][2]
         domain_name = self.dataset[idx][3]
         # domain_id = self.dataset[idx][4]
@@ -472,7 +472,7 @@ class CustomLeRobotDataset(Dataset):
             else:
                 action = np.stack([data[self.action_key][i] for i in range(data[self.action_key].shape[0])])
                 state = np.stack([data[self.state_key][i] for i in range(data[self.state_key].shape[0])])
-        except:
+        except BaseException:
             raise ValueError("We currently only support action and state data with the shape of T*C!")
 
         action = action.astype(np.float32)
@@ -537,7 +537,7 @@ class CustomLeRobotDataset(Dataset):
                 try:
                     video, actions, caption, state = self.get_batch(idx)
                     break
-                except:
+                except BaseException:
                     ### print error information to debug
                     traceback.print_exc()
                     ###

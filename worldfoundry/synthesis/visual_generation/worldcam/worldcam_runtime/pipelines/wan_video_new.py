@@ -621,7 +621,7 @@ class WanVideoPipeline(StagedDiffusionPipeline):
         all_extrinsics = torch.cat([all_extrinsics, all_extrinsics[:, -1:, :, :].repeat(1, 100, 1, 1)], dim=1)
 
         # Inference Progressive Noise Scheduling
-        input_dtype = torch.bfloat16
+        _input_dtype = torch.bfloat16
         num_inference_steps = 64
         denoising_strength = 1.0
         sigma_shift = 5.0
@@ -631,7 +631,7 @@ class WanVideoPipeline(StagedDiffusionPipeline):
 
         latent_height = inputs_shared["height"] // self.vae.upsampling_factor
         latent_width = inputs_shared["width"] // self.vae.upsampling_factor
-        patches_per_frame = latent_height * latent_width
+        _patches_per_frame = latent_height * latent_width
 
         self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=sigma_shift)
         sigmas = self.scheduler.sigmas.to(self.device, dtype=torch.bfloat16)
@@ -653,7 +653,7 @@ class WanVideoPipeline(StagedDiffusionPipeline):
 
         first_sigma = all_sigmas[0][None, None, :, None, None]
 
-        shape = (
+        _shape = (
             1,
             self.vae.model.z_dim,
             condition_num + generated_num,

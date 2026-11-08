@@ -574,7 +574,7 @@ class Encoder1D(nn.Module):
             attn = nn.ModuleList()
             block_in = dim * in_ch_mult[i_level]
             block_out = dim * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(ResnetBlock1D(in_dim=block_in, out_dim=block_out, kernel_size=kernel_size, use_norm=True))
                 block_in = block_out
                 if i_level in attn_layers:
@@ -665,7 +665,7 @@ class Decoder1D(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = dim * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 block.append(ResnetBlock1D(in_dim=block_in, out_dim=block_out, use_norm=True))
                 block_in = block_out
                 if i_level in attn_layers:

@@ -303,7 +303,7 @@ def flash_attention(
         q = q * q_scale
 
     if version is not None and version == 3 and not FLASH_ATTN_3_AVAILABLE:
-        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.")
+        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.", stacklevel=1)
 
     # apply attention
     if (version is None or version == 3) and FLASH_ATTN_3_AVAILABLE:
@@ -764,7 +764,7 @@ class WanAttentionBlock(nn.Module):
         T_noisy = noisy.shape[1] // (H * W)
         T_hist = hist.shape[1] // (H * W)
 
-        grid_sizes_noisy = torch.tensor([T_noisy, H, W], device=grid_sizes.device).unsqueeze(0).repeat(B, 1)
+        _grid_sizes_noisy = torch.tensor([T_noisy, H, W], device=grid_sizes.device).unsqueeze(0).repeat(B, 1)
         grid_sizes_hist = torch.tensor([T_hist, H, W], device=grid_sizes.device).unsqueeze(0).repeat(B, 1)
 
         # print(x.shape, e[1].shape, e[0].shape)

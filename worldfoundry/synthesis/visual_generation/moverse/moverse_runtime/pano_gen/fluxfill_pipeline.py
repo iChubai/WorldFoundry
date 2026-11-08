@@ -28,7 +28,7 @@ from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
 
 try:
     from diffusers.models.autoencoders.vae import DecoderOutput
-except:
+except BaseException:
     from diffusers.models.vae import DecoderOutput
 
 if is_torch_xla_available():

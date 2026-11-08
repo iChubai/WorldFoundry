@@ -100,7 +100,7 @@ def modify_transformer(model, add_in_channels, add_out_channels=0):
     old_in_channels = old_proj.in_channels
     old_out_channels = old_proj.out_channels
 
-    if type(old_proj) == nn.Conv2d:
+    if type(old_proj) is nn.Conv2d:
         new_proj = nn.Conv2d(
             old_in_channels + add_in_channels,
             old_out_channels,
@@ -109,7 +109,7 @@ def modify_transformer(model, add_in_channels, add_out_channels=0):
             padding=old_proj.padding,
             bias=old_proj.bias is not None,
         ).to(device, dtype)
-    elif type(old_proj) == nn.Linear:
+    elif type(old_proj) is nn.Linear:
         new_proj = nn.Linear(old_in_channels + add_in_channels, old_out_channels).to(device, dtype)
 
     with torch.no_grad():
@@ -122,7 +122,7 @@ def modify_transformer(model, add_in_channels, add_out_channels=0):
     if add_out_channels > 0:
         old_proj = model.proj_out
         patch_size = model.config.patch_size
-        out_channels = model.config.out_channels
+        _out_channels = model.config.out_channels
         new_proj = nn.Linear(
             old_proj.in_features, old_proj.out_features + add_out_channels * patch_size * patch_size
         ).to(device, dtype)

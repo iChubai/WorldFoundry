@@ -45,7 +45,7 @@ def flex_attention_forward(
     """
     batch_size, seq_len, num_att_heads, head_dim = query_states.shape
     original_dtype = query_states.dtype
-    num_key_value_heads = key_states.shape[2]
+    _num_key_value_heads = key_states.shape[2]
     # num_key_value_groups = num_att_heads // num_key_value_heads # 16 // 2 = 8
 
     query_states = query_states.transpose(1, 2)
@@ -199,7 +199,7 @@ def flex_attention_with_block_mask(
     Run flex_attention with a pre-built BlockMask (no create_mask allocation per call).
     """
     batch_size = query_states.shape[0]
-    num_att_heads = query_states.shape[2]
+    _num_att_heads = query_states.shape[2]
     head_dim = query_states.shape[3]
     original_dtype = query_states.dtype
 

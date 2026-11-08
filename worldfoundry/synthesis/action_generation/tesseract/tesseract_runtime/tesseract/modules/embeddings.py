@@ -150,7 +150,7 @@ class TesserActDepthPatchEmbed(nn.Module):
 class TesserActDepthNormalPatchEmbed(TesserActDepthPatchEmbed):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        bias = kwargs.pop("bias", True)
+        _bias = kwargs.pop("bias", True)
         in_channels = kwargs.pop("in_channels", 16)
         patch_size = self.patch_size
         patch_size_t = self.patch_size_t

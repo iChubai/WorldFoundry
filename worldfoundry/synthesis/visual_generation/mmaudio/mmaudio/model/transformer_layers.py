@@ -155,7 +155,7 @@ class JointBlock(nn.Module):
 
         latent_len = latent.shape[1]
         clip_len = clip_f.shape[1]
-        text_len = text_f.shape[1]
+        _text_len = text_f.shape[1]
 
         joint_qkv = [torch.cat([x_qkv[i], c_qkv[i], t_qkv[i]], dim=2) for i in range(3)]
 

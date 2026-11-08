@@ -86,7 +86,7 @@ def rope_time_delta_(k: torch.Tensor, delta_frames: int, dim_t: int, t_ntk_facto
     """
     if delta_frames == 0:
         return
-    head_dim = k.shape[-1]
+    _head_dim = k.shape[-1]
     half_t = dim_t // 2
     t_theta = 10000.0 * t_ntk_factor
     dim_range = torch.arange(0, dim_t, 2, device=k.device, dtype=torch.float32)[:half_t] / dim_t

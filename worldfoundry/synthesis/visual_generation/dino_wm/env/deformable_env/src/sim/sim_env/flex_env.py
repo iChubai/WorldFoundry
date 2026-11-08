@@ -33,7 +33,7 @@ class FlexEnv(gym.Env):
         self.scene = FlexScene()
 
         # set up pybullet
-        physicsClient = p.connect(p.DIRECT)
+        _physicsClient = p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -10)
         self.planeId = p.loadURDF("plane.urdf")

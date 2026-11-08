@@ -34,7 +34,7 @@ def generate_wall_layouts(wall_config):
     fix_wall = wall_config.fix_wall
     fix_door_location = wall_config.fix_door_location
     fix_wall_location = wall_config.fix_wall_location
-    num_train_layouts = wall_config.num_train_layouts
+    _num_train_layouts = wall_config.num_train_layouts
 
     def extract_min_max(code):
         vals = [int(x) for x in code.split("-") if x]

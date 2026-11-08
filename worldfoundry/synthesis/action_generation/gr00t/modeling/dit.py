@@ -457,7 +457,7 @@ class SelfAttentionTransformer(ModelMixin, ConfigMixin):
         all_hidden_states = [hidden_states]
 
         # Process through transformer blocks
-        for idx, block in enumerate(self.transformer_blocks):
+        for _idx, block in enumerate(self.transformer_blocks):
             hidden_states = block(hidden_states)
             all_hidden_states.append(hidden_states)
 

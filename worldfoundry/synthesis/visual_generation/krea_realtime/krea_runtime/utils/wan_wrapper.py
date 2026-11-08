@@ -55,7 +55,7 @@ class WanTextEncoder(torch.nn.Module):
         return torch.cuda.current_device()
 
     def forward(self, text_prompts: list[str]) -> dict:
-        stime = time.time()
+        _stime = time.time()
         ids, mask = self.tokenizer(text_prompts, return_mask=True, add_special_tokens=True)
         ids = ids.to(self.device)
         mask = mask.to(self.device)

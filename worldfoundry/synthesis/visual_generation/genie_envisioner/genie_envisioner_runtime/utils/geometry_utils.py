@@ -10,10 +10,10 @@ def resize_traj_and_ray(traj_n_ray, mem_size, future_size, height, width):
     orig_t = traj_n_ray.shape[3]
     try:
         assert orig_t > (mem_size + future_size)
-    except:
+    except BaseException:
         breakpoint()
 
-    n_view = traj_n_ray.shape[2]
+    _n_view = traj_n_ray.shape[2]
 
     mem = traj_n_ray[:, :, :mem_size]
     mem = rearrange(mem, "bv c t h w -> (bv t) c h w")

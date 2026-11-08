@@ -364,7 +364,7 @@ class AgiBotWorld(Dataset):
                 c2w = torch.eye(4, dtype=torch.float)
                 c2w[:3, :3] = torch.FloatTensor(_i_info["extrinsic"]["rotation_matrix"])
                 c2w[:3, -1] = torch.FloatTensor(_i_info["extrinsic"]["translation_vector"])
-                w2c = torch.linalg.inv(c2w)
+                _w2c = torch.linalg.inv(c2w)
                 c2ws.append(c2w)
             c2ws = torch.stack(c2ws, dim=0)
             c2ws_list.append(c2ws)
@@ -484,7 +484,6 @@ class AgiBotWorld(Dataset):
         if self.ignore_seek:
             ### used in the action-training stage to avoid seek future frames
             vid_indexes = vid_indexes[: self.n_previous + 1]
-            end_frames = 1
 
         videos = self.seek_mp4(video_root, self.valid_cam, vid_indexes)
         videos, intrinsics = self.transform_video(videos, specific_transforms_resize, intrinsics, sample_size)
@@ -503,7 +502,7 @@ class AgiBotWorld(Dataset):
                 try:
                     video, video_root, intrinsics, extrinsics, actions, state, caption = self.get_batch(idx)
                     break
-                except:
+                except BaseException:
                     ### print error information to debug
                     traceback.print_exc()
                     ###

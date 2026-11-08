@@ -233,8 +233,8 @@ class DrawOptions(pymunk.SpaceDebugDrawOptions):
         pygame.draw.circle(self.surface, light_color(fill_color).as_int(), p, round(radius - 4), 0)
 
         circle_edge = pos + Vec2d(radius, 0).rotated(angle)
-        p2 = to_pygame(circle_edge, self.surface)
-        line_r = 2 if radius > 20 else 1
+        _p2 = to_pygame(circle_edge, self.surface)
+        _line_r = 2 if radius > 20 else 1
         # pygame.draw.lines(self.surface, outline_color.as_int(), False, [p, p2], line_r)
 
     def draw_segment(self, a: Vec2d, b: Vec2d, color: SpaceDebugColor) -> None:
@@ -480,7 +480,7 @@ class PushTEnv(gym.Env):
             if self.relative:
                 action = self.agent.position + action
             self.latest_action = action
-            for i in range(n_steps):
+            for _i in range(n_steps):
                 # Step PD control.
                 # self.agent.velocity = self.k_p * (act - self.agent.position)    # P control works too.
                 acceleration = self.k_p * (action - self.agent.position) + self.k_v * (

@@ -115,7 +115,7 @@ class Encoder3D(nn.Module):
         sample = self.temp_conv_in(sample)
         sample = sample + temp_sample
         # down
-        for b_id, down_block in enumerate(self.down_blocks):
+        for _b_id, down_block in enumerate(self.down_blocks):
             sample = down_block(sample)
         # middle
         sample = self.mid_block(sample)
@@ -237,7 +237,7 @@ class Decoder3D(nn.Module):
         sample = sample.to(upscale_dtype)
 
         # up
-        for b_id, up_block in enumerate(self.up_blocks):
+        for _b_id, up_block in enumerate(self.up_blocks):
             sample = up_block(sample)
 
         # post-process

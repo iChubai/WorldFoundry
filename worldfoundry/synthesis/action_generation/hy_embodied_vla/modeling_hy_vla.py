@@ -931,7 +931,7 @@ class HyVLAFlowMatching(nn.Module):
         image_full_ranges = []  # full per-image span (patches + split rows)
 
         # 2. Add vision_start + image patches with row-wise split tokens + vision_end
-        for i, (img, img_mask) in enumerate(zip(images, img_masks, strict=True)):
+        for _i, (img, img_mask) in enumerate(zip(images, img_masks, strict=True)):
             bs = img.shape[0]
 
             # vision_start

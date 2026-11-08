@@ -1391,7 +1391,7 @@ class MonitorCentricEvolutionPipeline:
 
         # 4. Build all frames.
         combined_frames = []
-        for round_idx, rd in enumerate(round_data):
+        for _round_idx, rd in enumerate(round_data):
             obs_frames = rd["observer_frames"]
             n_frames = len(obs_frames)
 
@@ -2523,7 +2523,7 @@ class MonitorCentricEvolutionPipeline:
             (EventVideo, EventPointCloud) or None if generation fails.
         """
         observer_cfg = self.config["observer"]
-        frames_per_iter = observer_cfg["frames_per_iter"]
+        _frames_per_iter = observer_cfg["frames_per_iter"]
         intermediate_cfg = self.config["event"].get("intermediate_detection", {})
         min_visible_duration = int(intermediate_cfg.get("min_visible_duration", 5))
 

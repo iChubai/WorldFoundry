@@ -137,7 +137,7 @@ def query_z_with_indices(indices, z):
     """
     b_idx, t_idx, h_idx, w_idx = indices  # each (B, N)
     B, T, H, W, C = z.shape
-    N = t_idx.shape[1]
+    _N = t_idx.shape[1]
 
     # Step 1: Flatten z from (B, T, H, W, C) → (B, T*H*W, C)
     z_flat = rearrange(z, "b t h w c -> b (t h w) c")  # (B, T*H*W, C)

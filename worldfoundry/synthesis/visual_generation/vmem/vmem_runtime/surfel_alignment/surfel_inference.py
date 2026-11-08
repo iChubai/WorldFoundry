@@ -177,7 +177,7 @@ def prepare_output(output, poses, depths, lr, niter, outdir, device, save_flag=F
         if poses is not None:
             scene.preset_pose(poses)
 
-        loss = scene.compute_global_alignment(
+        _loss = scene.compute_global_alignment(
             init="mst",
             niter=niter,
             schedule="linear",
@@ -203,7 +203,7 @@ def prepare_output(output, poses, depths, lr, niter, outdir, device, save_flag=F
     }
     if save_flag:
         depths_tosave = torch.cat(depths)  # B, H, W
-        pts3ds_other_tosave = torch.cat(pts3ds_other)  # B, H, W, 3
+        _pts3ds_other_tosave = torch.cat(pts3ds_other)  # B, H, W, 3
         conf_self_tosave = torch.cat(confs)  # B, H, W
         colors_tosave = torch.cat(colors)  # [B, H, W, 3]
         cam2world_tosave = poses.detach().cpu()  # B, 4, 4

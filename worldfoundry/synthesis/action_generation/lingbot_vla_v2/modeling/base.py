@@ -24,7 +24,7 @@ try:
         dinov3_vits16,  # noqa: F401 - Import checks optional dependency availability.
         dinov3_vits16plus,  # noqa: F401 - Import checks optional dependency availability.
     )
-except:
+except BaseException:
     pass
 from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
 from .depth_head import TaskTokenDepthHead
@@ -864,7 +864,7 @@ class FlowMatching(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         bsize = images.shape[0]
         device = images.device
-        dtype = images.dtype
+        _dtype = images.dtype
 
         # embed image
         if images.ndim == 5:

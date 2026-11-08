@@ -1411,7 +1411,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
 
         history_sizes = sorted(list(WAH_HISTORY_SIZES), reverse=True)
         num_channels_latents = int(self.transformer.config.in_channels)
-        window_num_frames = (WAH_NUM_LATENT_FRAMES_PER_CHUNK - 1) * self.vae_scale_factor_temporal + 1
+        _window_num_frames = (WAH_NUM_LATENT_FRAMES_PER_CHUNK - 1) * self.vae_scale_factor_temporal + 1
         num_history_latent_frames = int(sum(history_sizes))
         history_latents = torch.zeros(
             batch_size,

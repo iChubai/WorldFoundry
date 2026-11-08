@@ -52,7 +52,7 @@ from transformers import (
 
 try:
     from diffusers.models.autoencoders.vae import DecoderOutput
-except:
+except BaseException:
     from diffusers.models.vae import DecoderOutput
 
 if is_torch_xla_available():
@@ -422,7 +422,7 @@ class FluxPipeline(
                     f"`ip_adapter_image` must have same length as the number of IP Adapters. Got {len(ip_adapter_image)} images and {len(self.transformer.encoder_hid_proj.image_projection_layers)} IP Adapters."
                 )
 
-            for single_ip_adapter_image, image_proj_layer in zip(
+            for single_ip_adapter_image, _image_proj_layer in zip(
                 ip_adapter_image, self.transformer.encoder_hid_proj.image_projection_layers, strict=False
             ):
                 single_image_embeds = self.encode_image(single_ip_adapter_image, device, 1)
@@ -433,7 +433,7 @@ class FluxPipeline(
                 image_embeds.append(single_image_embeds)
 
         ip_adapter_image_embeds = []
-        for i, single_image_embeds in enumerate(image_embeds):
+        for _i, single_image_embeds in enumerate(image_embeds):
             single_image_embeds = torch.cat([single_image_embeds] * num_images_per_prompt, dim=0)
             single_image_embeds = single_image_embeds.to(device=device)
             ip_adapter_image_embeds.append(single_image_embeds)

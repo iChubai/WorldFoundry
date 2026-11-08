@@ -193,8 +193,8 @@ class Inferencer:
 
         if self.args.return_action:
             n_chunk_video = 1
-            action_type = self.args.data["train"]["action_type"]
-            action_space = self.args.data["train"]["action_space"]
+            _action_type = self.args.data["train"]["action_type"]
+            _action_space = self.args.data["train"]["action_space"]
 
         if self.args.return_video:
             n_chunk_action = 1
@@ -209,7 +209,7 @@ class Inferencer:
                 pd_actions_arr_all = None
                 gt_actions_arr_all = None
 
-            for i_chunk_action in range(n_chunk_action):
+            for _i_chunk_action in range(n_chunk_action):
                 batch = next(iter(self.val_dataloader))
                 image = batch["video"][:, :, :, : self.args.data["train"]["n_previous"]]  # shape b,c,v,t,h,w
                 prompt = batch["caption"]

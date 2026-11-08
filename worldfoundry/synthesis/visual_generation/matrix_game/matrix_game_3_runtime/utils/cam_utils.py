@@ -10,7 +10,7 @@ from scipy.spatial.transform import Rotation, Slerp
 try:
     import torch_npu
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
 
@@ -437,7 +437,6 @@ def cal_intersection_ratio_gpu(K, E1, E2, height, width, near=0.0, far=50):
     在 E1 的视锥体内采样点，检查有多少点落在 E2 的视锥体内。
     """
     device = E1.device
-    num_samples = 1000
 
     z_samples = torch.linspace(near + 0.1, far, 10, device=device)  # 深度采样
     x_samples = torch.linspace(-1, 1, 10, device=device)

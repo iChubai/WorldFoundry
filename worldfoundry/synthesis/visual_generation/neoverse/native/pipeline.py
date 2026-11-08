@@ -953,7 +953,7 @@ class WanVideoUnit_4DEmbedder(InferenceStage):
             batch_size = len(target_rgb)
             try:
                 target_d_max = torch.quantile(target_depth.reshape(batch_size, -1), 0.98, dim=-1).clamp_min(1e-6)
-            except:
+            except BaseException:
                 target_d_max = target_depth.reshape(batch_size, -1).max(dim=-1).values.clamp_min(1e-6)
             d_max = target_d_max[:, None, None, None, None]
 

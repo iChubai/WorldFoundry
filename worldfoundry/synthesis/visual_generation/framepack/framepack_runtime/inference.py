@@ -374,7 +374,7 @@ def worker(
 
             if is_last_section:
                 break
-    except:
+    except BaseException:
         traceback.print_exc()
 
         if not high_vram:

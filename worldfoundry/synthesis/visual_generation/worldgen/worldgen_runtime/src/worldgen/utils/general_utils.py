@@ -70,7 +70,7 @@ def resize_img_and_rays(img, rays, equi_H, equi_W):
         rays_resized: resized rays
     """
     H, W = img.shape[:2]
-    device = img.device
+    _device = img.device
 
     # Estimate input angular coverage
     h_center = rays[H // 2]

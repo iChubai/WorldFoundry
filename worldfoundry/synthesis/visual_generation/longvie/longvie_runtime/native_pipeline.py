@@ -1730,7 +1730,7 @@ def model_fn_wan_video(
     if history_latents is not None:
         f_h, h_h, w_h = history.shape[2:]
         history = rearrange(history, "b c f h w -> b (f h w) c").contiguous()
-        history_token = history.shape[1]
+        _history_token = history.shape[1]
         x = torch.cat([history, x], dim=1)
         f += f_h
 
@@ -1917,7 +1917,7 @@ def model_fn_wan_video(
             x_full = x_full[:, -dense_original_len:]
 
             x_chunks = torch.chunk(x_full, _sequence_parallel_world_size(), dim=1)
-            current_pad_shape = x_chunks[0].shape[1] - x_chunks[-1].shape[1]
+            _current_pad_shape = x_chunks[0].shape[1] - x_chunks[-1].shape[1]
             x_chunks = [
                 torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1] - chunk.shape[1]), value=0)
                 for chunk in x_chunks

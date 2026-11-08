@@ -113,7 +113,7 @@ if args.checkpoint_path:
     key = "generator_ema"
     try:
         gen_sd = state_dict[key]
-    except:
+    except BaseException:
         key = "generator"
         gen_sd = state_dict[key]
 

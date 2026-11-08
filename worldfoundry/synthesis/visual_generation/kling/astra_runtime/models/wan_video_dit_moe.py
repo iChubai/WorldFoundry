@@ -366,7 +366,7 @@ class WanModelMoe(torch.nn.Module):
         不用router，直接根据modality_to_expert写死专家选择和权重
         """
         batch_size, seq_len, _ = combined_modality_input.shape
-        num_experts = len(self.modality_to_expert)
+        _num_experts = len(self.modality_to_expert)
         top_k = self.top_k if hasattr(self, "top_k") else 1
 
         # 获取目标专家id
@@ -935,7 +935,7 @@ class WanModelMoe(torch.nn.Module):
             # 计算该模态的平均统计
             avg_selection_ratio = np.mean(stats["selection_ratios"], axis=0)
             avg_expert_weights = np.mean(stats["expert_weights"], axis=0)
-            avg_top_k_weights = np.mean(stats["top_k_weights"], axis=0)
+            _avg_top_k_weights = np.mean(stats["top_k_weights"], axis=0)
             avg_target_expert_usage = np.mean(stats["target_expert_usages"])
             target_expert_id = stats["target_expert_id"]
 

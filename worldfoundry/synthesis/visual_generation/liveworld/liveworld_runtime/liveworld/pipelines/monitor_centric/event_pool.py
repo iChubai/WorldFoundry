@@ -408,7 +408,7 @@ class EventPool:
             matcher.to_device()
         try:
             obs_embeddings, obs_crops, obs_masks, obs_labels = self._compute_scene_entity_features(detections, matcher)
-            debug_path = Path(debug_dir) if debug_dir else None
+            _debug_path = Path(debug_dir) if debug_dir else None
             logger.info(
                 f"  Instance matching: {len(detections)} detections, "
                 f"{len(obs_embeddings)} embeddings, "

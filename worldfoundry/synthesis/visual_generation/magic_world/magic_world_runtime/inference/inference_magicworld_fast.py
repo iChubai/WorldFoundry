@@ -427,7 +427,6 @@ def main():
         set_seed(args.seed + local_rank)
     else:
         local_rank = 0
-        world_size = 1
         device = torch.device("cuda")
         set_seed(args.seed)
 

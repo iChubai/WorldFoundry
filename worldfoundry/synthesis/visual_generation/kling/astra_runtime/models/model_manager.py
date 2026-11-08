@@ -92,9 +92,7 @@ class ModelDetectorFromSingleFile:
 
         # 再尝试普通 Hash
         keys_hash = hash_state_dict_keys(state_dict, with_shape=False)
-        if keys_hash in self.keys_hash_dict:
-            return True
-        return False
+        return keys_hash in self.keys_hash_dict
 
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
         if len(state_dict) == 0:

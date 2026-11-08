@@ -11,9 +11,7 @@ CACHE_T = 2
 def check_is_instance(model, module_class):
     if isinstance(model, module_class):
         return True
-    if hasattr(model, "module") and isinstance(model.module, module_class):
-        return True
-    return False
+    return bool(hasattr(model, "module") and isinstance(model.module, module_class))
 
 
 def block_causal_mask(x, block_size):

@@ -353,7 +353,7 @@ class UniversalPrompting:
         attention_masks = []
         label_ids = []
         probs = torch.rand(len(text_ids))
-        probs2 = torch.rand(len(text_ids))
+        _probs2 = torch.rand(len(text_ids))
         for i in range(len(text_ids)):
             if len(text_ids[i]) == 0:
                 text_ids[i] = [self.text_tokenizer.bos_token_id]

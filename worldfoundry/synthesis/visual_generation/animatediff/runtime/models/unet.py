@@ -528,7 +528,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         if is_safetensors_available():
             try:
                 model_file = resolve_model_file(SAFETENSORS_WEIGHTS_NAME)
-            except:
+            except BaseException:
                 pass
 
         if model_file is None:

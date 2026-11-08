@@ -172,7 +172,7 @@ class ResidualBlock(nnx.Module):
     ):
         h = self.shortcut(x) if self.shortcut is not None else x
 
-        for ix, layer in enumerate(self.residual):
+        for _ix, layer in enumerate(self.residual):
             if isinstance(layer, CausalConv3d) and feat_cache is not None:
                 idx = feat_idx[0]
                 cache_x = x[:, -CACHE_T:, :, :, :]
@@ -720,7 +720,7 @@ class Encoder3d(nnx.Module):
         #
 
         ## downsamples
-        for ix, layer in enumerate(self.downsamples):
+        for _ix, layer in enumerate(self.downsamples):
             if feat_cache is not None:
                 x = layer(x, feat_cache, new_cache, feat_idx)
             else:
@@ -844,7 +844,7 @@ class Decoder3d(nnx.Module):
                 x = layer(x)
 
         ## head
-        for i, layer in enumerate(self.head):
+        for _i, layer in enumerate(self.head):
             if isinstance(layer, CausalConv3d) and feat_cache is not None:
                 idx = feat_idx[0]
                 cache_x = x[:, -CACHE_T:, :, :, :]

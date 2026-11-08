@@ -62,7 +62,7 @@ class VAELoss(nn.Module):
     ):
         super().__init__()
 
-        if type(dtype) == str:
+        if type(dtype) is str:
             if dtype == "bf16":
                 dtype = torch.bfloat16
             elif dtype == "fp16":

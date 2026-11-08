@@ -251,7 +251,7 @@ class DotWall(gym.Env):
 
     def set_init_state(self, init_state):
         self.reset_to_state = torch.tensor(init_state)
-        dot_location = init_state[-2:] if init_state is not None else None
+        _dot_location = init_state[-2:] if init_state is not None else None
 
     def seed(self, seed):
         self.rng = np.random.default_rng(seed)

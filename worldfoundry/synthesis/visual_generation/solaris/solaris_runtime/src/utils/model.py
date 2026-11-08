@@ -23,7 +23,7 @@ def log_num_params(tag, state):
     """
     total_params = 0
     total_bytes = 0
-    for name, var in flatten_state(state):
+    for _name, var in flatten_state(state):
         arr = var.value if isinstance(var, nnx.VariableState) else var
         if arr is None:
             continue

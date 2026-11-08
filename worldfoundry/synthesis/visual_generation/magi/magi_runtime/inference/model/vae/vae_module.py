@@ -546,7 +546,7 @@ class ViTEncoder(nn.Module):
         x = x + pos_embed
         x = self.pos_drop(x)
 
-        for idx, blk in enumerate(self.blocks):
+        for _idx, blk in enumerate(self.blocks):
             x = blk(x, feat_shape=(latentT, latentH, latentW))
 
         x = self.norm(x)
@@ -712,7 +712,7 @@ class ViTDecoder(nn.Module):
         x = x + pos_embed
         x = self.pos_drop(x)
 
-        for idx, blk in enumerate(self.blocks):
+        for _idx, blk in enumerate(self.blocks):
             x = blk(x, feat_shape=(latentT, latentH, latentW))
 
         x = self.norm(x)

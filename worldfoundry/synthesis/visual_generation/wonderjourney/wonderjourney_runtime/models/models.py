@@ -48,7 +48,7 @@ class PointsRenderer(torch.nn.Module):
     ) -> torch.Tensor:
         fragments = self.rasterizer(point_clouds, **kwargs)
 
-        r = self.rasterizer.raster_settings.radius
+        _r = self.rasterizer.raster_settings.radius
 
         zbuf = fragments.zbuf.permute(0, 3, 1, 2)
         fragment_idx = fragments.idx.long().permute(0, 3, 1, 2)

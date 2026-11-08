@@ -135,7 +135,7 @@ def remux_with_audio(video_path: Path, audio: torch.Tensor, output_path: Path, s
     output_video_stream = output.add_stream(template=input_video_stream)
     output_audio_stream = output.add_stream("aac", sampling_rate)
 
-    duration_sec = audio.shape[-1] / sampling_rate
+    _duration_sec = audio.shape[-1] / sampling_rate
 
     for packet in video.demux(input_video_stream):
         # We need to skip the "flushing" packets that `demux` generates.

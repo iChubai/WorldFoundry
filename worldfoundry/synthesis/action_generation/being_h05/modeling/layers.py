@@ -461,7 +461,7 @@ class SlicedWassersteinDistance(nn.Module):
 
         total_transport_cost = 0.0
 
-        for k in range(self.num_projections):
+        for _k in range(self.num_projections):
             # Generate random unit direction theta_k
             direction = torch.randn(feature_dim, device=device, dtype=dtype, generator=generator)
             direction = direction / torch.norm(direction)  # Normalize to unit vector

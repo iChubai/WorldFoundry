@@ -248,7 +248,7 @@ class VisionTransformer(nn.Module):
         x = self.pos_drop(x)
 
         # Encoding using transformer layers
-        for i, blk in enumerate(self.blocks):
+        for _i, blk in enumerate(self.blocks):
             x = blk(
                 x,
                 seq_len=npatch,

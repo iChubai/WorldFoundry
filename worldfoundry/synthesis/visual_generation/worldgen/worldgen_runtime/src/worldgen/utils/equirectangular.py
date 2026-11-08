@@ -274,7 +274,7 @@ def cubemap_to_equirectangular(
     device = faces.front.device
     dtype = faces.front.dtype
     channels = faces.front.shape[0]
-    face_size = faces.front.shape[1]
+    _face_size = faces.front.shape[1]
 
     # Create output pixel grid
     y_coords = torch.arange(output_height, device=device, dtype=dtype)
@@ -639,7 +639,7 @@ def merge_with_consensus(
     all_opacities = []
     all_view_weights = []
 
-    for view_id, (gaussians, view_forward) in enumerate(zip(gaussians_list, view_forwards, strict=False)):
+    for _view_id, (gaussians, view_forward) in enumerate(zip(gaussians_list, view_forwards, strict=False)):
         positions = gaussians.mean_vectors[0]  # (N, 3)
 
         # Compute weight based on distance from view center

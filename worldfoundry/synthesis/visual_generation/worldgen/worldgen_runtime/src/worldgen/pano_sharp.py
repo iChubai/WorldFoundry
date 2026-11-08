@@ -148,7 +148,7 @@ def predict_equirectangular(
     distance_pt = distance.unsqueeze(0).to(device)  # (1, H, W)
     cubemap_depth = extract_cubemap_from_equirectangular(distance_pt, face_size)
 
-    face_params = get_cubemap_face_params(device)
+    _face_params = get_cubemap_face_params(device)
 
     all_positions = []
     all_singular_values = []

@@ -295,7 +295,7 @@ class CausalInferencePipeline(torch.nn.Module):
             vae_start.record()
         if rectified_tf:
             mean = torch.load("laboratory/mean.pt", weights_only=True).to(output.device)
-            std = torch.load("laboratory/std.pt", weights_only=True).to(output.device)
+            _std = torch.load("laboratory/std.pt", weights_only=True).to(output.device)
             noise = torch.randn_like(output).to(output.device)
             output -= mean
 

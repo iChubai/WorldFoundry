@@ -684,7 +684,8 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
                         "You have modified the pretrained model configuration to control generation. This is a"
                         " deprecated strategy to control generation and will be removed soon, in a future version."
                         " Please use and modify the model generation configuration (see"
-                        " https://huggingface.co/docs/transformers/generation_strategies#default-text-generation-configuration )"
+                        " https://huggingface.co/docs/transformers/generation_strategies#default-text-generation-configuration )",
+                        stacklevel=1,
                     )
                     self.generation_config = new_generation_config
             generation_config = self.generation_config
@@ -748,6 +749,7 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
                 f"Using the model-agnostic default `max_length` (={generation_config.max_length}) "
                 "to control the generation length.  recommend setting `max_new_tokens` to control the maximum length of the generation.",
                 UserWarning,
+                stacklevel=1,
             )
         elif generation_config.max_new_tokens is not None:
             if not has_default_max_length and generation_config.max_length is not None:

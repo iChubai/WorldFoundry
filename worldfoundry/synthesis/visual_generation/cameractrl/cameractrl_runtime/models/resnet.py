@@ -268,7 +268,6 @@ class Upsample3D(nn.Module):
         self.use_conv_transpose = use_conv_transpose
         self.name = name
 
-        conv = None
         if use_conv_transpose:
             raise NotImplementedError
         elif use_conv:
@@ -406,7 +405,7 @@ class ResnetBlock3D(nn.Module):
         hidden_states = input_tensor
 
         video_length = hidden_states.shape[2]
-        emb = repeat(emb, "b c -> (b f) c", f=video_length)
+        _emb = repeat(emb, "b c -> (b f) c", f=video_length)
 
         hidden_states = self.norm1(hidden_states)
         hidden_states = self.nonlinearity(hidden_states)

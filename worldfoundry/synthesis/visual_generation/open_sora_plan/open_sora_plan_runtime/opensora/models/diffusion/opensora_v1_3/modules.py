@@ -14,7 +14,7 @@ try:
     from opensora.acceleration.parallel_states import get_sequence_parallel_state
     from opensora.acceleration.parallel_states import hccl_info as xccl_info
     from opensora.npu_config import npu_config, set_run_dtype
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
     set_run_dtype = None
@@ -192,7 +192,7 @@ class OpenSoraAttnProcessor2_0:
         *args,
         **kwargs,
     ) -> torch.FloatTensor:
-        residual = hidden_states
+        _residual = hidden_states
 
         sequence_length, batch_size, _ = (
             hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape

@@ -519,7 +519,7 @@ class PointCloudViewer:
                 colors = 0.5 * (output["pred"]["rgb"].cpu().numpy() + 1.0)
                 depthmap = output["pred"]["pts3d_in_self_view"].cpu().numpy()[0][..., -1]
                 conf = output["pred"]["conf"].cpu().numpy()
-                disp = 1.0 / depthmap
+                _disp = 1.0 / depthmap
                 pts3ds, colors = self.parse_pc_data(pts3ds, colors, set_border_color=True)
                 mask = (conf > 1.0).reshape(-1)
                 self.num_frames += 1

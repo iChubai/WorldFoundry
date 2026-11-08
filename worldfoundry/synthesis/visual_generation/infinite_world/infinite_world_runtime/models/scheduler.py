@@ -127,7 +127,7 @@ class RFlowScheduler:
                 t = self.sample_t(x_start) * self.num_timesteps
 
             if self.use_timestep_transform:
-                latent_size = x_start.shape[-3:]
+                _latent_size = x_start.shape[-3:]
                 t = timestep_transform(t, shift=self.shift, num_timesteps=self.num_timesteps)
 
         if model_kwargs is None:
@@ -245,7 +245,7 @@ class RFlowScheduler:
             timesteps = [int(round(t)) for t in timesteps]
         timesteps = [torch.tensor([t] * z.shape[0], device=device) for t in timesteps]
         if self.use_timestep_transform:
-            latent_size = z_size[-3:]
+            _latent_size = z_size[-3:]
             timesteps = [timestep_transform(t, shift=self.shift, num_timesteps=self.num_timesteps) for t in timesteps]
 
         if mask is not None:

@@ -334,7 +334,7 @@ class LTXVideoDownBlock3D(nn.Module):
     ) -> torch.Tensor:
         r"""Forward method of the `LTXDownBlock3D` class."""
 
-        for i, resnet in enumerate(self.resnets):
+        for _i, resnet in enumerate(self.resnets):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                 def create_custom_forward(module):
@@ -434,7 +434,7 @@ class LTXVideoMidBlock3d(nn.Module):
             )
             temb = temb.view(hidden_states.size(0), -1, 1, 1, 1)
 
-        for i, resnet in enumerate(self.resnets):
+        for _i, resnet in enumerate(self.resnets):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                 def create_custom_forward(module):
@@ -569,7 +569,7 @@ class LTXVideoUpBlock3d(nn.Module):
             for upsampler in self.upsamplers:
                 hidden_states = upsampler(hidden_states)
 
-        for i, resnet in enumerate(self.resnets):
+        for _i, resnet in enumerate(self.resnets):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                 def create_custom_forward(module):

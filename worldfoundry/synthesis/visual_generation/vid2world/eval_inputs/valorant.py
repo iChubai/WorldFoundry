@@ -114,7 +114,6 @@ class CSGOVIDStyleDataset(Dataset):
         Returns: [T, 51] tensor
         """
         N_KEYS = 11
-        N_CLICKS = 2
         N_MOUSE_X = 23
         N_MOUSE_Y = 15
 

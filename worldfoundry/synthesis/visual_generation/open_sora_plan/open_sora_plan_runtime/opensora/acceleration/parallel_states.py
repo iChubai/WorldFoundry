@@ -8,7 +8,7 @@ try:
     from lcalib.functional import lcal_initialize
 
     enable_LCCL = True
-except:
+except BaseException:
     lcal_initialize = None
     enable_LCCL = False
 

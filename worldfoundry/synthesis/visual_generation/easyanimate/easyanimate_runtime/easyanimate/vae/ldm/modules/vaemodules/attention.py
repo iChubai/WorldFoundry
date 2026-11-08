@@ -370,7 +370,7 @@ class Attention(nn.Module):
         # here we simply pass along all tensors to the selected processor class
         # For standard processors that are defined here, `**cross_attention_kwargs` is empty
 
-        unused_kwargs = [k for k, _ in cross_attention_kwargs.items() if k not in self._attn_parameters]
+        _unused_kwargs = [k for k, _ in cross_attention_kwargs.items() if k not in self._attn_parameters]
         # if len(unused_kwargs) > 0:
         #     logger.warning(
         #         f"cross_attention_kwargs {unused_kwargs} are not expected by {self.processor.__class__.__name__} and will be ignored."

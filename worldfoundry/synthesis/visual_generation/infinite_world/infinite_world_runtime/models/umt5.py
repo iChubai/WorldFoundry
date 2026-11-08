@@ -382,7 +382,7 @@ class T5EncoderModel:
         ids, mask = self.tokenizer(texts, return_mask=True, add_special_tokens=True)
         ids = ids.to(self.device)
         mask = mask.to(self.device)
-        seq_lens = mask.gt(0).sum(dim=1).long()
+        _seq_lens = mask.gt(0).sum(dim=1).long()
         context = self.model(ids, mask).float()
         return dict(y=context[:, None], y_mask=mask)
 

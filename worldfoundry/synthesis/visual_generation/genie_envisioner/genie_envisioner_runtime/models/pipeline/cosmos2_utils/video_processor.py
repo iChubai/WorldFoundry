@@ -56,6 +56,7 @@ class VideoProcessor(VaeImageProcessor):
                 "Passing `video` as a list of 5d np.ndarray is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 5d np.ndarray",
                 FutureWarning,
+                stacklevel=1,
             )
             video = np.concatenate(video, axis=0)
         if isinstance(video, list) and isinstance(video[0], torch.Tensor) and video[0].ndim == 5:
@@ -63,6 +64,7 @@ class VideoProcessor(VaeImageProcessor):
                 "Passing `video` as a list of 5d torch.Tensor is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 5d torch.Tensor",
                 FutureWarning,
+                stacklevel=1,
             )
             video = torch.cat(video, axis=0)
 

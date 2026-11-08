@@ -212,7 +212,7 @@ class LatentRecon(nn.Module):
                 )
 
         # Initialize weights
-        for module_name, module in self.named_children():
+        for _module_name, module in self.named_children():
             module.apply(self._init_weights)
 
         # Gaussian renderer
@@ -280,7 +280,7 @@ class LatentRecon(nn.Module):
             x = self.pos_embedding(x)
 
         # Main blocks
-        for blk_idx, blk in enumerate(self.enc_blocks):
+        for _blk_idx, blk in enumerate(self.enc_blocks):
             x = forward_checkpointing(blk, x, gradient_checkpoint=self.opt.gradient_checkpoint_transformer)
         x = forward_checkpointing(self.enc_norm, x, gradient_checkpoint=self.opt.gradient_checkpoint_transformer)
 
@@ -337,7 +337,6 @@ class LatentRecon(nn.Module):
 
     def forward(self, data, skip_loss=False):
         results = {}
-        loss = 0
 
         rays_os = data["rays_os"]
         rays_ds = data["rays_ds"]
@@ -350,7 +349,7 @@ class LatentRecon(nn.Module):
             cam_view = cam_view.squeeze(1)
         intrinsics = data["intrinsics"]
         num_input_multi_views = data["num_input_multi_views"]
-        B = images.shape[0]
+        _B = images.shape[0]
 
         # use the first view to predict gaussians
         gaussians, gaussians_mask = self.forward_gaussians(

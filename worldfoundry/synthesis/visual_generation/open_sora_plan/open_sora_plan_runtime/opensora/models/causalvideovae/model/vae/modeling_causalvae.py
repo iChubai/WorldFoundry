@@ -2,7 +2,7 @@ try:
     import torch_npu
 
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
 import os
@@ -69,7 +69,7 @@ class Encoder(nn.Module):
             attn = nn.ModuleList()
             block_in = hidden_size * in_ch_mult[i_level]
             block_out = hidden_size * hidden_size_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(
                     resolve_str_to_obj(resnet_blocks[i_level])(
                         in_channels=block_in, out_channels=block_out, dropout=dropout, norm_type=norm_type
@@ -187,7 +187,7 @@ class Decoder(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = hidden_size * hidden_size_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 block.append(
                     resolve_str_to_obj(resnet_blocks[i_level])(
                         in_channels=block_in, out_channels=block_out, dropout=dropout, norm_type=norm_type

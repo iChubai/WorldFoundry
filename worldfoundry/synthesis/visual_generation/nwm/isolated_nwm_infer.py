@@ -249,7 +249,7 @@ def main(args):
         os.makedirs(dataset_save_output_dir, exist_ok=True)
         curr_data_loader = datasets[dataset_name]
 
-        for data_iter_step, (idxs, obs_image, gt_image, delta) in enumerate(
+        for _data_iter_step, (idxs, obs_image, gt_image, delta) in enumerate(
             metric_logger.log_every(curr_data_loader, print_freq, header)
         ):
             with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):

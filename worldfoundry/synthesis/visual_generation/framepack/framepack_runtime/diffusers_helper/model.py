@@ -117,7 +117,7 @@ try:
     from xformers.ops import memory_efficient_attention as xformers_attn_func
 
     print("Xformers is installed!")
-except:
+except BaseException:
     print("Xformers is not installed!")
     xformers_attn_func = None
 
@@ -126,7 +126,7 @@ try:
     from flash_attn import flash_attn_func, flash_attn_varlen_func
 
     print("Flash Attn is installed!")
-except:
+except BaseException:
     print("Flash Attn is not installed!")
     flash_attn_varlen_func = None
     flash_attn_func = None
@@ -136,7 +136,7 @@ try:
     from sageattention import sageattn, sageattn_varlen
 
     print("Sage Attn is installed!")
-except:
+except BaseException:
     print("Sage Attn is not installed!")
     sageattn_varlen = None
     sageattn = None
@@ -1095,24 +1095,24 @@ class HunyuanVideoTransformer3DModelPacked(ModelMixin, ConfigMixin, PeftAdapterM
             else:
                 ori_hidden_states = hidden_states.clone()
 
-                for block_id, block in enumerate(self.transformer_blocks):
+                for _block_id, block in enumerate(self.transformer_blocks):
                     hidden_states, encoder_hidden_states = self.gradient_checkpointing_method(
                         block, hidden_states, encoder_hidden_states, temb, attention_mask, rope_freqs
                     )
 
-                for block_id, block in enumerate(self.single_transformer_blocks):
+                for _block_id, block in enumerate(self.single_transformer_blocks):
                     hidden_states, encoder_hidden_states = self.gradient_checkpointing_method(
                         block, hidden_states, encoder_hidden_states, temb, attention_mask, rope_freqs
                     )
 
                 self.previous_residual = hidden_states - ori_hidden_states
         else:
-            for block_id, block in enumerate(self.transformer_blocks):
+            for _block_id, block in enumerate(self.transformer_blocks):
                 hidden_states, encoder_hidden_states = self.gradient_checkpointing_method(
                     block, hidden_states, encoder_hidden_states, temb, attention_mask, rope_freqs
                 )
 
-            for block_id, block in enumerate(self.single_transformer_blocks):
+            for _block_id, block in enumerate(self.single_transformer_blocks):
                 hidden_states, encoder_hidden_states = self.gradient_checkpointing_method(
                     block, hidden_states, encoder_hidden_states, temb, attention_mask, rope_freqs
                 )

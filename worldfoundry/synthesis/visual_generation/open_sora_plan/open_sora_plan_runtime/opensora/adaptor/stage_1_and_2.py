@@ -68,7 +68,7 @@ def split_half_float_double(tensors):
         f"torch.{device_type}.BFloat16Tensor",
     ]
     buckets = []
-    for i, dtype in enumerate(dtypes):
+    for _i, dtype in enumerate(dtypes):
         bucket = [t for t in tensors if t.type() == dtype]
         if bucket:
             buckets.append(bucket)
@@ -239,7 +239,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         self.expert_dp_process_group = expert_data_parallel_group
 
         # data parallel size for non-experts
-        dp_size = dist.get_world_size(group=self.dp_process_group)
+        _dp_size = dist.get_world_size(group=self.dp_process_group)
 
         # For MoE models this maybe different for different param group
         # It will be modified during MoE setup later in the init
@@ -728,8 +728,8 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     #################### ZeRO Stage 1 - reduce gradients ####################
     #########################################################################
     def reduce_gradients(self, pipeline_parallel=False):
-        world_size = dist.get_world_size(self.zp_process_group)
-        my_rank = dist.get_rank(self.zp_process_group)
+        _world_size = dist.get_world_size(self.zp_process_group)
+        _my_rank = dist.get_rank(self.zp_process_group)
 
         # with PP we must create ipg buffer, since backward is handled outside zero
         if pipeline_parallel and self.contiguous_gradients:
@@ -1044,9 +1044,8 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         small_bucket = []
         small_bucket_ranks = []
         numel = 0
-        allreduce_sizes = []
 
-        for i, bucket_elem in enumerate(bucket):
+        for _i, bucket_elem in enumerate(bucket):
             rank, tensor = bucket_elem
             small_bucket.append(tensor)
             small_bucket_ranks.append(rank)
@@ -1104,7 +1103,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 assert all([p_id < dist.get_world_size(group=process_group) for p_id in partition_ids]), (
                     f"world size {dist.get_world_size(group=process_group)} and p_ids: {partition_ids}"
                 )
-                partition_size = self.partition_size[i]
+                _partition_size = self.partition_size[i]
                 # Get all partition ids + their offsets
                 partition_ids_w_offsets = []
                 for partition_id in partition_ids:
@@ -1613,7 +1612,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     def buffered_reduce_fallback(self, rank, grads, elements_per_buffer=500000000, log=None):
         split_buckets = split_half_float_double(grads)
 
-        for i, bucket in enumerate(split_buckets):
+        for _i, bucket in enumerate(split_buckets):
             self.allreduce_no_retain(bucket, numel_per_bucket=elements_per_buffer, rank=rank, log=log)
 
     #############################################################################
@@ -1817,11 +1816,11 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     def scaled_global_norm(self, norm_type=2):
         assert norm_type == 2, "only L2 norm supported"
         norm_groups = []
-        for i, group in enumerate(self.bit16_groups):
-            partition_id = dist.get_rank(group=self.real_zp_process_group[i])
+        for i, _group in enumerate(self.bit16_groups):
+            _partition_id = dist.get_rank(group=self.real_zp_process_group[i])
             if self.cpu_offload:
                 norm_groups.append(self.complete_grad_norm_calculation_for_cpu_offload(self.params_in_partition[i]))
-                single_grad_partition = self.single_partition_of_fp32_groups[i].grad
+                _single_grad_partition = self.single_partition_of_fp32_groups[i].grad
             else:
                 norm_groups.append(self.get_grad_norm_direct(self.averaged_gradients[i], self.params_in_partition[i]))
 
@@ -1833,7 +1832,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
     def get_bit16_param_group(self, group_no):
         bit16_partitions = self.parallel_partitioned_bit16_groups[group_no]
-        partition_id = dist.get_rank(group=self.real_zp_process_group[group_no])
+        _partition_id = dist.get_rank(group=self.real_zp_process_group[group_no])
         return [bit16_partitions[dist.get_rank(group=self.real_zp_process_group[group_no])]]
 
     def _optimizer_step(self, group_no):
@@ -1884,7 +1883,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         see_memory_usage("After norm before optimizer")
 
         # Step 2:- run optimizer and upscaling simultaneously
-        for i, group in enumerate(self.bit16_groups):
+        for i, _group in enumerate(self.bit16_groups):
             self.timers(OPTIMIZER_GRADIENTS_TIMER).start()
             partition_id = dist.get_rank(group=self.real_zp_process_group[i])
             if self.cpu_offload:
@@ -2075,9 +2074,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 raise
             return True
         else:
-            if cpu_sum == float("inf") or cpu_sum == -float("inf") or cpu_sum != cpu_sum:
-                return True
-            return False
+            return bool(cpu_sum == float("inf") or cpu_sum == -float("inf") or cpu_sum != cpu_sum)
 
     def backward(self, loss, retain_graph=False):
         """
@@ -2277,7 +2274,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             return all_partition_states[0]
 
     def _restore_base_optimizer_state(self, base_optimizer_group_states):
-        if type(base_optimizer_group_states) == dict:
+        if type(base_optimizer_group_states) is dict:
             base_optimizer_group_states = base_optimizer_group_states["state"]
         for i, group in enumerate(self.optimizer.param_groups):
             p = group["params"][0]

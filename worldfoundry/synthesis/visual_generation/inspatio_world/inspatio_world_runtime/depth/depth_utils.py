@@ -187,7 +187,7 @@ def _robust_ransac_plane_fitting(points, iterations, threshold, min_inliers_rati
 
     adaptive_thresholds = [threshold * 2, threshold * 1.5, threshold]
 
-    for stage, current_threshold in enumerate(adaptive_thresholds):
+    for _stage, current_threshold in enumerate(adaptive_thresholds):
         stage_iterations = iterations // len(adaptive_thresholds)
 
         for _ in range(stage_iterations):

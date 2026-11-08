@@ -41,7 +41,7 @@ class VQModel(nn.Module):
         )
 
         if colorize_nlabels is not None:
-            assert type(colorize_nlabels) == int
+            assert type(colorize_nlabels) is int
             self.register_buffer("colorize", torch.randn(3, colorize_nlabels, 1, 1))
         if monitor is not None:
             self.monitor = monitor

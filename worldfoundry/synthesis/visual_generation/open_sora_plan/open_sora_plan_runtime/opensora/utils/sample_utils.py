@@ -31,7 +31,7 @@ try:
     from opensora.acceleration.parallel_states import hccl_info as hccl_info
     from opensora.acceleration.parallel_states import initialize_sequence_parallel_state
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
     from opensora.utils.parallel_states import initialize_sequence_parallel_state

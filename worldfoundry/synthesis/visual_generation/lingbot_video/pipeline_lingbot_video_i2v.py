@@ -232,7 +232,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
         cfg_latent_src = _group_global_rank(cfg_parallel_group, 0)
         cfg_uncond_src = _group_global_rank(cfg_parallel_group, 1)
 
-        for i, timestep in enumerate(self.progress_bar(self.scheduler.timesteps)):
+        for _i, timestep in enumerate(self.progress_bar(self.scheduler.timesteps)):
             if cfg_parallel:
                 dist.broadcast(latents, src=cfg_latent_src, group=cfg_parallel_group)
             timestep_batch = _transformer_timestep(timestep, transformer_dtype).expand(1).to(device)

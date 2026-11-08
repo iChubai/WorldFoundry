@@ -320,7 +320,7 @@ class TextpromptGen:
         print(border_text)
         has_border = True
         payload["messages"][0]["content"][0]["text"] = border_text + " Your answer should be simply 'Yes' or 'No'."
-        for i in range(5):
+        for _i in range(5):
             try:
                 response = requests.post(
                     "https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=5
@@ -339,7 +339,7 @@ class TextpromptGen:
             blur_text = "Does this image have a significant blur issue or blurry effect caused by out of focus around the image edges? You only have to pay attention to the four borders of the image."
             print(blur_text)
             payload["messages"][0]["content"][0]["text"] = blur_text + " Your answer should be simply 'Yes' or 'No'."
-            for i in range(5):
+            for _i in range(5):
                 try:
                     response = requests.post(
                         "https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=5

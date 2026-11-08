@@ -953,7 +953,7 @@ class WanModel(nn.Module):
             nn.init.zeros_(self.head.head.bias)
 
     def fully_shard(self, mesh):
-        for i, block in enumerate(self.blocks):
+        for _i, block in enumerate(self.blocks):
             fully_shard(block, mesh=mesh, reshard_after_forward=True)
         fully_shard(self.head, mesh=mesh, reshard_after_forward=False)
         fully_shard(self.text_embedding, mesh=mesh, reshard_after_forward=True)

@@ -426,7 +426,7 @@ def merge_bg_and_fg_sequences(
     rgb_frames = []
     depth_frames = []
 
-    for bg_rgb, bg_depth, bg_mask, fg_rgb, fg_depth, fg_mask in zip(
+    for bg_rgb, bg_depth, _bg_mask, fg_rgb, fg_depth, fg_mask in zip(
         bg_rgb_frames, bg_depth_frames, bg_masks, fg_rgb_frames, fg_depth_frames, fg_masks, strict=False
     ):
         rgb_out, depth_out = composite_by_depth(bg_rgb, bg_depth, fg_rgb, fg_depth, fg_mask)
@@ -445,7 +445,7 @@ def composite_by_depth(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     assert bg_rgb.shape[:2] == bg_depth.shape and fg_rgb.shape[:2] == fg_depth.shape
     H, W, _ = bg_rgb.shape
-    device = bg_rgb.device
+    _device = bg_rgb.device
     take_fg = fg_mask & ((bg_depth <= 0) | (fg_depth > 0) & (fg_depth < bg_depth - 1e-6))
     out_rgb = bg_rgb.clone()
     out_rgb[take_fg] = fg_rgb[take_fg]
@@ -1032,8 +1032,8 @@ def load_ellipsoid_parameters(
     with open(json_path) as f:
         data = json.load(f)
 
-    num_frames = data["metadata"]["num_frames"]
-    num_objects = data["metadata"]["num_objects"]
+    _num_frames = data["metadata"]["num_frames"]
+    _num_objects = data["metadata"]["num_objects"]
 
     obj_id_to_color_idx = {}
     for key, value in data["metadata"]["obj_id_to_color_idx"].items():

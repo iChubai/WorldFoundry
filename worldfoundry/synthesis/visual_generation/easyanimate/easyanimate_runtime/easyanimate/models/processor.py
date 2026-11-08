@@ -124,7 +124,7 @@ class LazyKVCompressionProcessor2_0:
         if attn.spatial_norm is not None:
             hidden_states = attn.spatial_norm(hidden_states, temb)
 
-        input_ndim = hidden_states.ndim
+        _input_ndim = hidden_states.ndim
 
         batch_size, channel, num_frames, height, width = hidden_states.shape
         hidden_states = rearrange(hidden_states, "b c f h w -> b (f h w) c", f=num_frames, h=height, w=width)
@@ -321,7 +321,7 @@ try:
         pad_input,
         unpad_input,
     )
-except:
+except BaseException:
     print("Flash Attention is not installed. Please install with `pip install flash-attn`, if you want to use SWA.")
 
 

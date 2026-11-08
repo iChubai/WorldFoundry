@@ -527,7 +527,7 @@ class BCFlamingo(nn.Module):
 
         rearrange code based on https://github.com/dhansmair/flamingo-mini
         """
-        bs = int(vision_rgb.shape[0] // self.window_size)
+        _bs = int(vision_rgb.shape[0] // self.window_size)
         vision_rgb = self._encode_vision(vision_rgb)
         vision_rgb = self.perceiver(vision_rgb)  # BxL, T, n, d
         vision_rgb = vision_rgb.view(-1, self.window_size, *vision_rgb.shape[1:])  # B, L, T, n, d

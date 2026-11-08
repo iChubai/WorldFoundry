@@ -352,7 +352,8 @@ class InternLM2Attention(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
         bsz, q_len, _ = hidden_states.size()
@@ -449,7 +450,8 @@ class InternLM2FlashAttention2(InternLM2Attention):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
             # overwrite attention_mask with padding_mask
@@ -644,7 +646,8 @@ class InternLM2DecoderLayer(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
         residual = hidden_states

@@ -81,7 +81,7 @@ def get_current_action(mode="universal"):
                 idx_keyboard = input("Please input the keyboard action (e.g. `W`):\n").strip().lower()
                 if idx_mouse in CAMERA_VALUE_MAP and idx_keyboard in KEYBOARD_IDX:
                     flag = 1
-            except:
+            except BaseException:
                 pass
         mouse_cond = torch.tensor(CAMERA_VALUE_MAP[idx_mouse]).cuda()
         keyboard_cond = torch.tensor(KEYBOARD_IDX[idx_keyboard]).cuda()
@@ -116,7 +116,7 @@ def get_current_action(mode="universal"):
                     idx_keyboard += ["q"]
                 assert idx_mouse in [["a"], ["d"], ["q"]] and idx_keyboard in [["q"], ["w"], ["s"]]
                 flag = 1
-            except:
+            except BaseException:
                 pass
         mouse_cond = torch.tensor(CAMERA_VALUE_MAP[idx_mouse[0]]).cuda()
         keyboard_cond = torch.tensor(KEYBOARD_IDX[idx_keyboard[0]]).cuda()
@@ -144,7 +144,7 @@ def get_current_action(mode="universal"):
                 )
                 if idx_keyboard in KEYBOARD_IDX.keys():
                     flag = 1
-            except:
+            except BaseException:
                 pass
         keyboard_cond = torch.tensor(KEYBOARD_IDX[idx_keyboard]).cuda()
 

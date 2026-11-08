@@ -138,7 +138,7 @@ class DWposeDetector:
             bodyfoot = bodyfoot[:, :20, :]
             bodyfoot = bodyfoot.reshape(nums * 20, locs)
 
-            foot = candidate[:, 18:24]
+            _foot = candidate[:, 18:24]
 
             faces = candidate[:, 24:92]
 
@@ -228,34 +228,34 @@ def mp_main(args):
     dwpose_woface, dwpose_wface = draw_pose(pose_ref, H=768, W=512)
 
     bodies = results_vis[0]["bodies"]
-    faces = results_vis[0]["faces"]
-    hands = results_vis[0]["hands"]
+    _faces = results_vis[0]["faces"]
+    _hands = results_vis[0]["hands"]
     candidate = bodies["candidate"]
 
     ref_bodies = pose_ref["bodies"]
-    ref_faces = pose_ref["faces"]
-    ref_hands = pose_ref["hands"]
+    _ref_faces = pose_ref["faces"]
+    _ref_hands = pose_ref["hands"]
     ref_candidate = ref_bodies["candidate"]
 
     ref_2_x = ref_candidate[2][0]
-    ref_2_y = ref_candidate[2][1]
+    _ref_2_y = ref_candidate[2][1]
     ref_5_x = ref_candidate[5][0]
-    ref_5_y = ref_candidate[5][1]
-    ref_8_x = ref_candidate[8][0]
-    ref_8_y = ref_candidate[8][1]
-    ref_11_x = ref_candidate[11][0]
-    ref_11_y = ref_candidate[11][1]
+    _ref_5_y = ref_candidate[5][1]
+    _ref_8_x = ref_candidate[8][0]
+    _ref_8_y = ref_candidate[8][1]
+    _ref_11_x = ref_candidate[11][0]
+    _ref_11_y = ref_candidate[11][1]
     ref_center1 = 0.5 * (ref_candidate[2] + ref_candidate[5])
     ref_center2 = 0.5 * (ref_candidate[8] + ref_candidate[11])
 
     zero_2_x = candidate[2][0]
-    zero_2_y = candidate[2][1]
+    _zero_2_y = candidate[2][1]
     zero_5_x = candidate[5][0]
-    zero_5_y = candidate[5][1]
-    zero_8_x = candidate[8][0]
-    zero_8_y = candidate[8][1]
-    zero_11_x = candidate[11][0]
-    zero_11_y = candidate[11][1]
+    _zero_5_y = candidate[5][1]
+    _zero_8_x = candidate[8][0]
+    _zero_8_y = candidate[8][1]
+    _zero_11_x = candidate[11][0]
+    _zero_11_y = candidate[11][1]
     zero_center1 = 0.5 * (candidate[2] + candidate[5])
     zero_center2 = 0.5 * (candidate[8] + candidate[11])
 

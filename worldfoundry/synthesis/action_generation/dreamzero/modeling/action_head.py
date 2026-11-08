@@ -505,7 +505,7 @@ class WANPolicyHead(ActionHead):
         seq_lens = attention_mask.gt(0).sum(dim=1).long()
         prompt_emb = self.text_encoder(input_ids, attention_mask)
         prompt_emb = prompt_emb.clone().to(dtype=torch.bfloat16)
-        for i, v in enumerate(seq_lens):
+        for _i, v in enumerate(seq_lens):
             prompt_emb[:, v:] = 0
         return prompt_emb
 

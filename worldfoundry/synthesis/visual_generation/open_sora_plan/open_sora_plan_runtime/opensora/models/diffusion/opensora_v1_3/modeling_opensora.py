@@ -22,7 +22,7 @@ try:
         hccl_info,
     )
     from opensora.npu_config import npu_config
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
     from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info

@@ -591,7 +591,7 @@ def run_inference_rollout(
         if action is not None:
             prope_kwargs["action"] = action[start_idx:end_idx].to(device, dtype=torch.int64)
 
-        for i, t in enumerate(timesteps):
+        for _i, t in enumerate(timesteps):
             if dist.get_rank() == 0:
                 print("timesteps", t.item(), flush=True)
             ts_in = torch.full((chunk_latent_frames,), t, device=device, dtype=timesteps.dtype)

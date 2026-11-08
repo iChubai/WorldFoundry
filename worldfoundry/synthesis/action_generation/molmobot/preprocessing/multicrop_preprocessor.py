@@ -147,7 +147,7 @@ class MultiCropImagePreprocessor:
         crop_patch_h = base_image_input_size[0] // base_image_input_d
 
         original_image_h, original_image_w = image.shape[:2]
-        crop_size = base_image_input_size[0]
+        _crop_size = base_image_input_size[0]
 
         if self.crop_mode == "resize":
             resized, resized_mask, resize_idx = self.image_preprocessor.build_single_crop(

@@ -44,8 +44,8 @@ try:
     from torch.nn.attention.flex_attention import flex_attention as flex_attn_func
 
     flex_attn_func_compiled = torch.compile(flex_attn_func)
-except:
-    warnings.warn("flex_attn is not available")
+except BaseException:
+    warnings.warn("flex_attn is not available", stacklevel=1)
 
 import math
 from functools import partial

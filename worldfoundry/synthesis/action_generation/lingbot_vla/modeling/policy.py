@@ -1468,7 +1468,7 @@ class FlowMatching(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         bsize = images.shape[0]
         device = images.device
-        dtype = images.dtype
+        _dtype = images.dtype
 
         # embed image
         if images.ndim == 5:

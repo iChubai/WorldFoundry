@@ -136,7 +136,8 @@ class ActioinExpertAttention(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
         bsz, q_len, _ = hidden_states.size()
@@ -242,7 +243,8 @@ class ActioinExpertAttentionFlashAttention2(ActioinExpertAttention):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
             # overwrite attention_mask with padding_mask
@@ -445,7 +447,8 @@ class ActionExpertDecoderLayer(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
         residual = hidden_states

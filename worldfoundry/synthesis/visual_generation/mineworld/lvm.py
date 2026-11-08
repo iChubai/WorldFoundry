@@ -345,7 +345,7 @@ class LlamaModel(PreTrainedModel):
         positions_embedding = self.rotary_emb(hidden_states, seq_len=self.max_position_embedding)
 
         attention_mask = self._create_attention_mask(input_pos=position_ids)
-        for idx, decoder_layer in enumerate(self.layers):
+        for _idx, decoder_layer in enumerate(self.layers):
             layer_outputs = decoder_layer(
                 hidden_states,
                 attention_mask=attention_mask,

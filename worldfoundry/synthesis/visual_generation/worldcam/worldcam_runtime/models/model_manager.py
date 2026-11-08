@@ -53,7 +53,7 @@ def load_model_from_huggingface_folder(file_path, model_names, model_classes, to
             model = model.half()
         try:
             model = model.to(device=device)
-        except:
+        except BaseException:
             pass
         loaded_model_names.append(model_name)
         loaded_models.append(model)
@@ -132,9 +132,7 @@ class ModelDetectorFromSingleFile:
         if keys_hash_with_shape in self.keys_hash_with_shape_dict:
             return True
         keys_hash = hash_state_dict_keys(state_dict, with_shape=False)
-        if keys_hash in self.keys_hash_dict:
-            return True
-        return False
+        return keys_hash in self.keys_hash_dict
 
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
         if len(state_dict) == 0:
@@ -213,9 +211,7 @@ class ModelDetectorFromHuggingfaceFolder:
             return False
         with open(os.path.join(file_path, "config.json")) as f:
             config = json.load(f)
-        if "architectures" not in config and "_class_name" not in config:
-            return False
-        return True
+        return not ("architectures" not in config and "_class_name" not in config)
 
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
         with open(os.path.join(file_path, "config.json")) as f:
@@ -250,9 +246,7 @@ class ModelDetectorFromPatchedSingleFile:
         if len(state_dict) == 0:
             state_dict = load_state_dict(file_path)
         keys_hash_with_shape = hash_state_dict_keys(state_dict, with_shape=True)
-        if keys_hash_with_shape in self.keys_hash_with_shape_dict:
-            return True
-        return False
+        return keys_hash_with_shape in self.keys_hash_with_shape_dict
 
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, model_manager=None, **kwargs):
         if len(state_dict) == 0:

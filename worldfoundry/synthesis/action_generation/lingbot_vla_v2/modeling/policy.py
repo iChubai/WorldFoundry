@@ -479,7 +479,7 @@ class FlowMatchingV2(FlowMatchingV1):
             raise ValueError("LingbotVlaV2Policy requires image_grid_thw from the Qwen3-VL image processor.")
         bsize = images.shape[0]
         device = images.device
-        dtype = images.dtype
+        _dtype = images.dtype
         if images.ndim == 3:
             bsize = 1
             num_images = images.shape[0]

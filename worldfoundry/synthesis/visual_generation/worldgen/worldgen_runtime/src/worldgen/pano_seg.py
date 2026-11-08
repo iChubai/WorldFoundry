@@ -40,7 +40,7 @@ def seg_pano(processor, model, image: Image.Image):
     cube_faces = pano_to_cube(image, face_w=cube_face_res)
 
     cube_masks = []
-    for i, face in enumerate(cube_faces):
+    for _i, face in enumerate(cube_faces):
         seg_map = segment_image_oneformer(processor, model, face)
         cube_masks.append(seg_map)
 

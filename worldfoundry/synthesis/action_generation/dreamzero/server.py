@@ -551,7 +551,6 @@ class WebsocketPolicyServer:
 
         await websocket.send(packer.pack(self._metadata))
 
-        prev_total_time = None
         signal_tensor = torch.zeros(1, dtype=torch.int32, device="cpu")
 
         try:

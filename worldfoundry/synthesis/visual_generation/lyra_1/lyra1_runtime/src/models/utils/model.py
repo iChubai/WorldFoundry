@@ -440,7 +440,7 @@ class MultiStageConvTranspose3d(nn.Module):
         kD, kH, kW = self.target_kernel_size
         pD, pH, pW = self.target_padding
 
-        target_D = (D - 1) * sD - 2 * pD + kD
+        _target_D = (D - 1) * sD - 2 * pD + kD
         spatial_out_H = (H - 1) * sH - 2 * pH + kH
         spatial_out_W = (W - 1) * sW - 2 * pW + kW
 

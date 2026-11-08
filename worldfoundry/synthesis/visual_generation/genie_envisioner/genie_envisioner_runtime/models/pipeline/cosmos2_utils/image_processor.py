@@ -682,6 +682,7 @@ class VaeImageProcessor(ConfigMixin):
                 "Passing `image` as a list of 4d np.ndarray is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 4d np.ndarray",
                 FutureWarning,
+                stacklevel=1,
             )
             image = np.concatenate(image, axis=0)
         if isinstance(image, list) and isinstance(image[0], torch.Tensor) and image[0].ndim == 4:
@@ -689,6 +690,7 @@ class VaeImageProcessor(ConfigMixin):
                 "Passing `image` as a list of 4d torch.Tensor is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 4d torch.Tensor",
                 FutureWarning,
+                stacklevel=1,
             )
             image = torch.cat(image, axis=0)
 
@@ -1126,6 +1128,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
                 "Passing `image` as torch tensor with value range in [-1,1] is deprecated. The expected value range for image tensor is [0,1] "
                 f"when passing as pytorch tensor or numpy Array. You passed `image` with value range [{rgb.min()},{rgb.max()}]",
                 FutureWarning,
+                stacklevel=1,
             )
             do_normalize = False
 
@@ -1235,6 +1238,7 @@ class IPAdapterMaskProcessor(VaeImageProcessor):
                 "The aspect ratio of the mask does not match the aspect ratio of the output image. "
                 "Please update your masks or adjust the output size for optimal performance.",
                 UserWarning,
+                stacklevel=1,
             )
             mask_downsample = F.pad(mask_downsample, (0, num_queries - mask_downsample.shape[1]), value=0.0)
         # Discard last embeddings if downsampled_mask.shape[1] is bigger than num_queries
@@ -1243,6 +1247,7 @@ class IPAdapterMaskProcessor(VaeImageProcessor):
                 "The aspect ratio of the mask does not match the aspect ratio of the output image. "
                 "Please update your masks or adjust the output size for optimal performance.",
                 UserWarning,
+                stacklevel=1,
             )
             mask_downsample = mask_downsample[:, :num_queries]
 

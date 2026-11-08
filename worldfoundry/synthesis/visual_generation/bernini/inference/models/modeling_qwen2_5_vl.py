@@ -439,7 +439,7 @@ class Qwen2_5_VLVisionFlashAttention2(nn.Module):
         # ulysses sp patch: qkv projection
         qkv = self.qkv(hidden_states).reshape(seq_length, 3, self.num_heads, -1).permute(1, 0, 2, 3)
 
-        unpadded_dim_size = cu_seqlens[-1]
+        _unpadded_dim_size = cu_seqlens[-1]
         q, k, v = qkv.unbind(0)
 
         if position_embeddings is None:
@@ -796,7 +796,7 @@ class Qwen2_5_VisionTransformerPretrainedModel(Qwen2_5_VLPreTrainedModel):
         )
         cu_seqlens = F.pad(cu_seqlens, (1, 0), value=0)
 
-        unpadded_dim_size = cu_seqlens[-1]
+        _unpadded_dim_size = cu_seqlens[-1]
 
         seq_len, _ = hidden_states.size()
         hidden_states = hidden_states.reshape(seq_len // self.spatial_merge_unit, self.spatial_merge_unit, -1)
@@ -2315,7 +2315,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
                 )
                 n_image_tokens = image_mask.sum().long().item()
                 image_embeds = image_embeds[:n_image_tokens]
-                n_image_features = image_embeds.shape[0]
+                _n_image_features = image_embeds.shape[0]
                 inputs_embeds = inputs_embeds.masked_scatter(image_mask, image_embeds)
 
             if pixel_values_videos is not None:

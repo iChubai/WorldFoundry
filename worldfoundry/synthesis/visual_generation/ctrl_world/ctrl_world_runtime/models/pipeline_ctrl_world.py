@@ -143,7 +143,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
         elif prompt is not None and isinstance(prompt, list):
             batch_size = len(prompt)
         else:
-            batch_size = prompt_embeds.shape[0]
+            _batch_size = prompt_embeds.shape[0]
 
         # device = self._execution_device
         device = latents.device

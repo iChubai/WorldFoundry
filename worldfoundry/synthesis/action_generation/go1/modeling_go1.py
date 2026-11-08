@@ -311,7 +311,8 @@ class GO1Model(PreTrainedModel):
         if self.ps_version == "v1":
             warnings.warn(
                 "In ps_version 'v1', the height and width have not been swapped back, "
-                "which results in a transposed image."
+                "which results in a transposed image.",
+                stacklevel=1,
             )
         else:
             x = x.permute(0, 2, 1, 3).contiguous()

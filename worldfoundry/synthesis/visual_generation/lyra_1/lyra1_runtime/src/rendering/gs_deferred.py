@@ -217,7 +217,7 @@ class GaussianRendererDeferred:
         H, W = self.opt.img_size
         near_plane, far_plane = self.opt.znear, self.opt.zfar
         # Downscale images until no OOM error (sometimes the GS rendering runs OOM for many intersections)
-        for factor_idx, downscale_factor in enumerate(self.oom_downscale_factors):
+        for _factor_idx, _downscale_factor in enumerate(self.oom_downscale_factors):
             out_dict = self.render_func(
                 means3D,
                 opacity,

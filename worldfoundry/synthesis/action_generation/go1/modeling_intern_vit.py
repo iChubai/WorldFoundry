@@ -24,7 +24,7 @@ try:
     from .flash_attention import FlashAttention
 
     has_flash_attn = True
-except:
+except BaseException:
     print("FlashAttention is not installed.")
     has_flash_attn = False
 
@@ -271,7 +271,7 @@ class InternVisionEncoder(nn.Module):
         encoder_states = () if output_hidden_states else None
         hidden_states = inputs_embeds
 
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 encoder_states = encoder_states + (hidden_states,)
             if self.gradient_checkpointing and self.training:

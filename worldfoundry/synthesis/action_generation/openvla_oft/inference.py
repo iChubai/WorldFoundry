@@ -188,9 +188,7 @@ def _prepare_image(image: Any, *, center_crop: bool) -> Any:
 def _present_image(value: Any) -> bool:
     if value is None:
         return False
-    if isinstance(value, str) and not value:
-        return False
-    return True
+    return not (isinstance(value, str) and not value)
 
 
 def _first_present_image(*values: Any) -> Any:

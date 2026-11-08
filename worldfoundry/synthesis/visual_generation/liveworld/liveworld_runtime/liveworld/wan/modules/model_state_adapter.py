@@ -1126,8 +1126,7 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
 
             return custom_forward
 
-        gan_idx = 0
-        for ii, block in enumerate(self.blocks):
+        for _ii, block in enumerate(self.blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),

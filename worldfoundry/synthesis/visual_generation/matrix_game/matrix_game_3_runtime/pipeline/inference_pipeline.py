@@ -522,7 +522,7 @@ class MatrixGame3Pipeline:
                     timestep_memory = None
                 else:
                     if self.rank == 0:
-                        mem_end = ((current_start_frame_idx - 1) // 4 * 4 + 1) if current_start_frame_idx > 1 else 1
+                        _mem_end = ((current_start_frame_idx - 1) // 4 * 4 + 1) if current_start_frame_idx > 1 else 1
                         selected_index_base = [current_end_frame_idx - o for o in range(1, 34, 8)]
                         selected_index = select_memory_idx_fov(
                             extrinsics_all, current_start_frame_idx, selected_index_base, use_gpu=True

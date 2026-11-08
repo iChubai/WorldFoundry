@@ -1081,7 +1081,7 @@ class Lyra2WanModel(nn.Module):
             nn.init.zeros_(self.head.head.bias)
 
     def fully_shard(self, mesh, **fsdp_kwargs):
-        for i, block in enumerate(self.blocks):
+        for _i, block in enumerate(self.blocks):
             fully_shard(block, mesh=mesh, reshard_after_forward=True, **fsdp_kwargs)
         fully_shard(self.head, mesh=mesh, reshard_after_forward=False, **fsdp_kwargs)
         fully_shard(self.text_embedding, mesh=mesh, reshard_after_forward=True, **fsdp_kwargs)

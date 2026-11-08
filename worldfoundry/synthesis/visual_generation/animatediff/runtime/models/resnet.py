@@ -37,7 +37,6 @@ class Upsample3D(nn.Module):
         self.use_conv_transpose = use_conv_transpose
         self.name = name
 
-        conv = None
         if use_conv_transpose:
             raise NotImplementedError
         elif use_conv:

@@ -33,7 +33,7 @@ class GeneralLoRAFromPeft:
 
     def fetch_device_and_dtype(self, state_dict):
         device, dtype = None, None
-        for name, param in state_dict.items():
+        for _name, param in state_dict.items():
             device, dtype = param.device, param.dtype
             break
         computation_device = device

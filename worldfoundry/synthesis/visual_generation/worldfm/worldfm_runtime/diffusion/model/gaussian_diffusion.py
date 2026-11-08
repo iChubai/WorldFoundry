@@ -190,8 +190,8 @@ class GaussianDiffusion:
             betas_snr_shift = 1 - alpha_snr_shift
 
             # Update the class attributes with adjusted values
-            snr_ref = self.alphas_cumprod / (1 - self.alphas_cumprod)
-            snr_cur = alpha_cumprod_snr_shift / (1 - alpha_cumprod_snr_shift)
+            _snr_ref = self.alphas_cumprod / (1 - self.alphas_cumprod)
+            _snr_cur = alpha_cumprod_snr_shift / (1 - alpha_cumprod_snr_shift)
 
             self.betas = betas_snr_shift
             self.alphas_cumprod = np.cumprod(alpha_snr_shift, axis=0)

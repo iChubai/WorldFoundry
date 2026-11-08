@@ -713,7 +713,7 @@ class ActionExpert(nn.Module):
         timesteps: Sequence[torch.Tensor],
     ) -> Sequence[ActionExpertStepModulation]:
         cache = []
-        for idx, step_t in enumerate(timesteps):
+        for _idx, step_t in enumerate(timesteps):
             conditioning = self._time_conditioning(step_t)
             block_modulations = []
             for block in self.blocks:
@@ -767,7 +767,7 @@ class ActionExpert(nn.Module):
         x = self.action_embed(actions)
         if context.valid_action is not None:
             x = x * context.valid_action
-        for idx, (block, kv_context, block_modulation) in enumerate(
+        for _idx, (block, kv_context, block_modulation) in enumerate(
             zip(self.blocks, context.kv_contexts, block_modulations, strict=False)
         ):
             x = block(
@@ -3852,7 +3852,7 @@ class MolmoAct2ForConditionalGeneration(MolmoAct2PreTrainedModel, GenerationMixi
         output = self(**inputs, use_cache=True, past_key_values=static_cache)
         current_output = output
         current_past_key_values = output.past_key_values
-        current_attention_mask = inputs.get("attention_mask")
+        _current_attention_mask = inputs.get("attention_mask")
         generated_tokens: list[torch.Tensor] = []
 
         depth_start = torch.full(

@@ -412,7 +412,7 @@ class TesserActDepthNormal(TesserActDepth):
         hidden_states = hidden_states[:, text_seq_length:]
 
         # 3. Transformer blocks
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
 
                 def create_custom_forward(module):

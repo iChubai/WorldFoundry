@@ -73,7 +73,8 @@ def main(
 
     if not any([save_maps_, save_glb_, save_ply_]):
         warnings.warn(
-            'No output format specified. Defaults to saving all. Please use "--maps", "--glb", or "--ply" to specify the output.'
+            'No output format specified. Defaults to saving all. Please use "--maps", "--glb", or "--ply" to specify the output.',
+            stacklevel=1,
         )
         save_maps_ = save_glb_ = save_ply_ = True
 

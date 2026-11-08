@@ -703,7 +703,7 @@ class GEN_Wanx22(nn.Module):
         logger.info(f"{guidance_mode=} {cur_omega_txt=} {cur_omega_tgt=} {cur_omega_img=}")
 
         progress_bar = tqdm(timesteps)
-        for t_idx, t in enumerate(timesteps):
+        for _t_idx, t in enumerate(timesteps):
             model_id = "transformer_1" if t >= boundary_timestep else "transformer_2"
             if t < boundary_timestep and not switched and self.transformer_2 is not None:
                 if local_device_moves:

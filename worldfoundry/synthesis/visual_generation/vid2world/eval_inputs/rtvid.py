@@ -122,7 +122,7 @@ class RTVid(Dataset):
         """Helper function to load metadata."""
         # Get all npz files in the directory
         self.file_list = []
-        for i, file in enumerate(os.listdir(self.data_dir)):
+        for _i, file in enumerate(os.listdir(self.data_dir)):
             if not file.endswith(".npz"):
                 continue
             if self.mode == "training":

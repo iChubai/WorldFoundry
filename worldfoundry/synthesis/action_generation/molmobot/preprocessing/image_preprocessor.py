@@ -164,7 +164,7 @@ def dino_resize_and_pad(
     desired_output_size: tuple[int, int],
 ) -> tuple[np.ndarray, np.ndarray]:
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
-    dtype = image.dtype
+    _dtype = image.dtype
     if torch.is_floating_point(image):
         resized = torchvision.transforms.Resize(
             desired_output_size,
@@ -191,7 +191,7 @@ def dino_resize_and_pad(
 def select_tiling(h, w, patch_size, max_num_crops):
     """Divide in image of size [w, h] in up to max_num_patches of size patch_size"""
     original_size = np.stack([h, w])  # [1, 2]
-    original_res = h * w
+    _original_res = h * w
     tilings = []
     for i in range(1, max_num_crops + 1):
         for j in range(1, max_num_crops + 1):
@@ -400,7 +400,6 @@ class ImagePreprocessor:
         crop_arr = np.zeros([n_crops, crop_size, crop_size, 3], dtype=src.dtype)
         mask_arr = np.zeros([n_crops, crop_size, crop_size], dtype=img_mask.dtype)
         patch_idx_arr = np.zeros([n_crops, crop_patch_h, crop_patch_w], dtype=np.int32)
-        on = 0
         on_crop = 0
         for i in range(tiling[0]):
             # Slide over `src` by `crop_window_size` steps, but extract crops of size `crops_size`

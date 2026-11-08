@@ -23,7 +23,7 @@ class LangEncoder(nn.Module):
     def forward(self, langs):
         try:
             langs = langs.tolist()
-        except:
+        except BaseException:
             pass
 
         with torch.no_grad():

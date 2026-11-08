@@ -1028,7 +1028,7 @@ def generate_blue_noise_tile(size: int, rng: np.random.Generator) -> np.ndarray:
     tile = rng.random((size, size))
 
     sigma = 1.5
-    k_size = int(sigma * 6) | 1
+    _k_size = int(sigma * 6) | 1
 
     for _ in range(size * size // 4):
         blurred = gaussian_filter(tile, sigma, mode="wrap")
@@ -1573,7 +1573,7 @@ def _limit_points_by_density(
     order_pix = np.lexsort((z, flat))
     flat_sorted = flat[order_pix]
     idx_sorted = idx[order_pix]
-    z_sorted = z[order_pix]
+    _z_sorted = z[order_pix]
     unique_flat, first_idx = np.unique(flat_sorted, return_index=True)
 
     pixel_idx = idx_sorted[first_idx]
@@ -1903,7 +1903,7 @@ def _get_visible_points_and_coverage_gpu(
 
     # Upload points once.
     pts_t = torch.as_tensor(points_world, device=dev, dtype=torch.float32)  # (N, 3)
-    N = pts_t.shape[0]
+    _N = pts_t.shape[0]
 
     results = []
     for frame_idx in frame_indices:

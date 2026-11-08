@@ -11,7 +11,7 @@ def replace_parameters_by_name(module, name_keywords, device):
                 tensor = param.data
                 delattr(module, name)
                 setattr(module, name, tensor.to(device=device))
-    for child_name, child_module in module.named_children():
+    for _child_name, child_module in module.named_children():
         replace_parameters_by_name(child_module, name_keywords, device)
 
 
@@ -58,7 +58,7 @@ def convert_weight_dtype_wrapper(module, origin_dtype):
 
 
 def undo_convert_weight_dtype_wrapper(module):
-    for name, module in module.named_modules():
+    for _name, module in module.named_modules():
         if hasattr(module, "original_forward") and module.weight is not None:
             module.forward = module.original_forward
             delattr(module, "original_forward")

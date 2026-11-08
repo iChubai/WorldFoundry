@@ -1125,7 +1125,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
             pF * pH * pW * C,
         )
         if packed_batch:
-            packed_patch_tokens = patch_tokens.reshape(1, B * n_video, -1)
+            _packed_patch_tokens = patch_tokens.reshape(1, B * n_video, -1)
             x = torch.cat(
                 [self.patch_embedder(patch_tokens[i : i + 1]) for i in range(B)],
                 dim=1,

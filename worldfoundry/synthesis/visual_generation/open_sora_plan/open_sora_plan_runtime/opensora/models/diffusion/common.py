@@ -6,7 +6,7 @@ try:
     import torch_npu
 
     from opensora.npu_config import npu_config, set_run_dtype
-except:
+except BaseException:
     torch_npu = None
     npu_config = None
     set_run_dtype = None

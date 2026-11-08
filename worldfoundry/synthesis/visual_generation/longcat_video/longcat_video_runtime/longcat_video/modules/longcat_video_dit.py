@@ -278,12 +278,12 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
             raise ValueError(f"Cannot find module: {module_name}, error: {e}")
 
     def disable_all_loras(self):
-        for name, module in self.named_modules():
+        for _name, module in self.named_modules():
             if hasattr(module, "org_forward"):
                 module.forward = module.org_forward
                 delattr(module, "org_forward")
 
-        for lora_key, lora_network in self.lora_dict.items():
+        for _lora_key, lora_network in self.lora_dict.items():
             for lora in lora_network.loras:
                 lora.to("cpu")
 

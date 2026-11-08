@@ -10,7 +10,7 @@ try:
     import xformers.ops  # noqa: F401 - Import checks optional dependency availability.
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 
 mainlogger = logging.getLogger("mainlogger")
@@ -40,13 +40,13 @@ def TemporalTransformer_forward(self, x, context=None, is_imgbatch=False):
 
     if self.only_self_att:
         ## note: if no context is given, cross-attention defaults to self-attention
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             x = block(x, context=context, mask=mask)
         x = rearrange(x, "(b hw) t c -> b hw t c", b=b).contiguous()
     else:
         x = rearrange(x, "(b hw) t c -> b hw t c", b=b).contiguous()
         context = rearrange(context, "(b t) l con -> b t l con", t=t).contiguous()
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             # calculate each batch one by one (since number in shape could not greater then 65,535 for some package)
             for j in range(b):
                 unit_context = context[j][0:1]

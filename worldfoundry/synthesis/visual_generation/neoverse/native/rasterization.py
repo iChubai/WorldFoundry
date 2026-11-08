@@ -744,7 +744,7 @@ class GaussianSplatRenderer(nn.Module):
 
             pred_all_extrinsic[..., :3, 3] = pred_all_extrinsic[..., :3, 3] * scale_factor
             render_viewmats, render_Ks = pred_all_extrinsic, pred_all_intrinsic
-            valid_masks = views.get("valid_mask", torch.ones(B, S + V, H, W, dtype=bool, device=images.device))
+            _valid_masks = views.get("valid_mask", torch.ones(B, S + V, H, W, dtype=bool, device=images.device))
             render_timestamps = views["timestamp"]
 
         # 3) Generate splats from gs_params + predictions, and perform voxel merging
@@ -804,7 +804,7 @@ class GaussianSplatRenderer(nn.Module):
                 else:
                     # Expand indices to match tensor dimensions
                     expand_idx = topk_idx.clone()
-                    for i in range(x.ndim - 1):
+                    for _i in range(x.ndim - 1):
                         expand_idx = expand_idx.unsqueeze(-1)
                     expand_idx = expand_idx.expand(-1, *x.shape[1:])
                     filtered[key] = torch.gather(x, 0, expand_idx)

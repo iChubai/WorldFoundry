@@ -499,8 +499,8 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
                 timestep, added_cond_kwargs, batch_size=batch_size, hidden_dtype=self.dtype
             )  # b 6d, b d
             if hidden_states_vid is None:
-                timestep_img = timestep
-                embedded_timestep_img = embedded_timestep
+                _timestep_img = timestep
+                _embedded_timestep_img = embedded_timestep
             else:
                 timestep_vid = timestep
                 embedded_timestep_vid = embedded_timestep
@@ -511,7 +511,7 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
             )  # b, 1+use_image_num, l, d or b, 1, l, d
 
             if hidden_states_vid is None:
-                encoder_hidden_states_img = rearrange(encoder_hidden_states, "b 1 l d -> (b 1) l d")
+                _encoder_hidden_states_img = rearrange(encoder_hidden_states, "b 1 l d -> (b 1) l d")
             else:
                 encoder_hidden_states_vid = rearrange(encoder_hidden_states[:, :1], "b 1 l d -> (b 1) l d")
 

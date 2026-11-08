@@ -72,7 +72,7 @@ def resize_image(
 def select_tiling(h, w, patch_size, max_num_crops):
     """Divide in image of size [w, h] in up to max_num_patches of size patch_size"""
     original_size = np.stack([h, w])  # [1, 2]
-    original_res = h * w
+    _original_res = h * w
     tilings = []
     for i in range(1, max_num_crops + 1):
         for j in range(1, max_num_crops + 1):

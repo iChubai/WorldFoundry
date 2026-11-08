@@ -634,7 +634,7 @@ class VA_Server:
             pred_latent_lst.append(latents)
             pred_action_lst.append(actions)
         pred_latent = torch.cat(pred_latent_lst, dim=2)
-        pred_action = torch.cat(pred_action_lst, dim=1).flatten(1)
+        _pred_action = torch.cat(pred_action_lst, dim=1).flatten(1)
         self.transformer.clear_cache(self.cache_name)
         self.streaming_vae.clear_cache()
         if self.streaming_vae_half:

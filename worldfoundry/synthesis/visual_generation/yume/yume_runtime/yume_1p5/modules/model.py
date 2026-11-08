@@ -355,7 +355,7 @@ class Yume1p5WanModel(WanModel):
 
         # keep the first subset
         ids_keep = ids_shuffle[:, :len_keep]
-        ids_unkeep = ids_shuffle[:, len_keep:]
+        _ids_unkeep = ids_shuffle[:, len_keep:]
         x_masked = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))
 
         # generate the binary mask: 0 is keep, 1 is remove
@@ -635,8 +635,8 @@ class Yume1p5WanModel(WanModel):
                 u = torch.cat([u1, u2], dim=1)
                 x_pack.append(u)
                 t = t.squeeze()
-                u1_shape = u1.shape[1]
-                u2_shape = u2.shape[1]
+                _u1_shape = u1.shape[1]
+                _u2_shape = u2.shape[1]
                 t = torch.cat([t[0:1].new_ones(u1.shape[1]) * t[0], t[-1:].new_ones(u2.shape[1]) * t[-1]])
                 t = t.unsqueeze(0)
 
@@ -667,9 +667,8 @@ class Yume1p5WanModel(WanModel):
             # masking: length -> length * mask_ratio
             rand_mask_ratio = torch.rand(1, device=x.device)  # noise in [0, 1]
             rand_mask_ratio = rand_mask_ratio * 0.2 + self.mask_ratio  # mask_ratio, mask_ratio + 0.2
-            x_ori = x
+            _x_ori = x
             x, mask, ids_restore, ids_keep = self.random_masking(x, rand_mask_ratio)
-            masked_stage = True
             seq_lens = torch.tensor([x.shape[1]], dtype=torch.long)
             seq_len_ori = seq_len
             seq_len = int(seq_lens.item())

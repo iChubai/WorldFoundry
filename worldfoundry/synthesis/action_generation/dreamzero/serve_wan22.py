@@ -288,7 +288,7 @@ class DreamZeroWan225BPolicy(BasePolicy):
 
             os.makedirs(self._video_output_dir, exist_ok=True)
             timestamp = datetime.datetime.now().strftime("%m_%d_%H_%M_%S")
-            n_latent_frames = latents.shape[2]
+            _n_latent_frames = latents.shape[2]
             existing = [f for f in os.listdir(self._video_output_dir) if f.endswith(".mp4")]
             safe_prompt = self._current_prompt.replace(" ", "_")
             safe_prompt = "".join(c for c in safe_prompt if c.isalnum() or c in "_-.")

@@ -23,7 +23,7 @@ from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2
 try:
     import torch_npu
     from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
-except:
+except BaseException:
     torch_npu = None
     from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info
 

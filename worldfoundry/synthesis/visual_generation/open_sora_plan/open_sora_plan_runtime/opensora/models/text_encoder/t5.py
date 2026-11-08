@@ -3,7 +3,7 @@ from transformers import T5EncoderModel
 
 try:
     import torch_npu
-except:
+except BaseException:
     torch_npu = None
 
 

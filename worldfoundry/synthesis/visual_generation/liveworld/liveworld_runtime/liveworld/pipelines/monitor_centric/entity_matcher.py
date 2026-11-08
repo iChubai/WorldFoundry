@@ -71,7 +71,7 @@ class EntityMatcher:
             patch_tokens = outputs.last_hidden_state[0, 5:]
 
         num_patches = patch_tokens.shape[0]
-        hidden_dim = patch_tokens.shape[1]
+        _hidden_dim = patch_tokens.shape[1]
         grid_size = int(num_patches**0.5)
 
         # Require SAM mask for foreground token selection.

@@ -451,7 +451,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
                 vae_offloaded = True
         cfg_latent_src = _group_global_rank(cfg_parallel_group, 0)
         cfg_uncond_src = _group_global_rank(cfg_parallel_group, 1)
-        for i, timestep in enumerate(self.progress_bar(self.scheduler.timesteps)):
+        for _i, timestep in enumerate(self.progress_bar(self.scheduler.timesteps)):
             if cfg_parallel:
                 dist.broadcast(latents, src=cfg_latent_src, group=cfg_parallel_group)
             timestep_batch = _transformer_timestep(timestep, transformer_dtype).expand(1).to(device)
@@ -464,7 +464,6 @@ class LingBotVideoPipeline(DiffusionPipeline):
                 else:
                     branch_embeds = negative_embeds
                     branch_mask = negative_mask
-                    branch_name = "transformer.uncond"
                 branch_model_input = branch_embeds.to(transformer_dtype)
                 with _transformer_autocast(device, transformer_dtype):
                     branch_noise_pred = self.transformer(

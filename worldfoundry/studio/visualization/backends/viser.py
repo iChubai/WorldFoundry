@@ -155,7 +155,7 @@ def viser_orientation_defaults(model_id: str, geometry_path: str | Path) -> dict
             up_direction="+y",
             alignment="none",
         )
-    elif model_id in {"dust3r", "dust3r-base-model", "loger", "pi3"}:
+    elif model_id in {"loger", "pi3"}:
         defaults.update(
             coordinate_preset="asset-native",
             up_direction="+y",

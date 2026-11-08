@@ -4,8 +4,6 @@ from .pipeline_geometry_priors import (
     DAPPipeline,
     DepthAnythingV2PriorPipeline,
     DepthAnythingV3PriorPipeline,
-    DUSt3RBaseModelPipeline,
-    DUSt3RPipeline,
     GeoCalibPriorPipeline,
     GeometryPriorPipeline,
     Metric3DPriorPipeline,
@@ -18,8 +16,6 @@ from .pipeline_geometry_priors import (
 
 __all__ = [
     "DAPPipeline",
-    "DUSt3RBaseModelPipeline",
-    "DUSt3RPipeline",
     "DepthAnythingV2PriorPipeline",
     "DepthAnythingV3PriorPipeline",
     "GeoCalibPriorPipeline",

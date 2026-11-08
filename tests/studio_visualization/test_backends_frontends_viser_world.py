@@ -271,8 +271,6 @@ class TestViserFunctions:
             "up_direction": "+y",
             "alignment": "first-camera-opengl",
         }
-        assert viser_orientation_defaults("dust3r", "dust3r_point_cloud.ply") == camera_aligned
-        assert viser_orientation_defaults("dust3r-base-model", "dust3r_point_cloud.ply") == camera_aligned
         assert viser_orientation_defaults("loger", "point_cloud/result.ply") == camera_aligned
         assert viser_orientation_defaults("pi3", "point_cloud/result.ply") == camera_aligned
         assert viser_orientation_defaults("unknown", "scene.ply")["up_direction"] == "+z"
@@ -349,11 +347,11 @@ class TestViserFunctions:
         import numpy as np
         from worldfoundry.studio.visualization.backends.viser import _load_camera_poses
 
-        cloud_path = tmp_path / "dust3r_point_cloud.ply"
+        cloud_path = tmp_path / "scene_point_cloud.ply"
         cloud_path.write_text("ply\n", encoding="utf-8")
         expected = np.stack([np.eye(4), np.eye(4)])
         expected[1, 0, 3] = 1.0
-        np.save(tmp_path / "dust3r_camera_poses.npy", expected)
+        np.save(tmp_path / "scene_camera_poses.npy", expected)
 
         poses = _load_camera_poses(cloud_path)
         assert len(poses) == 2

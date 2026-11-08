@@ -316,16 +316,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：DualCamCtrl 的双分支框架联合生成对齐的 RGB 与深度视频潜变量。",
         ),
     },
-    "dust3r": {
-        "teaser": (
-            "Official paper teaser: DUSt3R reconstructs a kitchen pointmap and cameras from four uncalibrated frames.",
-            "论文官方 Teaser：DUSt3R 用四张未标定帧重建厨房点图与相机。",
-        ),
-        "overview": (
-            "Method overview: shared ViT encoders and interacting decoders predict dense pointmaps in camera-1 coordinates.",
-            "论文方法总览：共享 ViT 编码器与交互解码器，在相机 1 坐标系下预测密集点图。",
-        ),
-    },
     "dvlt": {
         "teaser": (
             "Official paper teaser: DéjàView. Given multiple input views (top-left) , DéjàView reconstructs camera poses and consistent depth by repeatedly applying the same transformer block, with the number of refinement steps K K exposed as an.",

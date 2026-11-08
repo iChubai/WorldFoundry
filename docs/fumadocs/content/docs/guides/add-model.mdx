@@ -110,7 +110,7 @@ Do not commit checkpoints, generated videos, local caches, API keys, or private 
 
 Cache directories are for temporary downloads, checkpoint copies, dataset mirrors, official-runtime clone caches, generated previews, and logs. They are not a second `worldfoundry/` tree. An in-tree runner must not import Python modules from a cache path. If the official repo is cloned only to harvest `inference.py`, vendor the infer-only slice under the appropriate package and delete the training side.
 
-Transforms that actually run at inference time may stay in the runtime package — GroundingDINO `util.transforms`, DUST3R crop helpers, DROID-SLAM RGB-D geometry. Training datasets, dataloaders, losses, callbacks, augmentation-only modules, and experiment scripts should not. `pixelsplat` is the current exception under 3D base models because it still uses the official Lightning test runner and a dataset-shaped loader. Treat that as debt to port into a pure inference runner, not as a pattern for the model you are adding.
+Transforms that actually run at inference time may stay in the runtime package — GroundingDINO `util.transforms` and DROID-SLAM RGB-D geometry. Training datasets, dataloaders, losses, callbacks, augmentation-only modules, and experiment scripts should not. `pixelsplat` is the current exception under 3D base models because it still uses the official Lightning test runner and a dataset-shaped loader. Treat that as debt to port into a pure inference runner, not as a pattern for the model you are adding.
 
 ## Model homepage
 

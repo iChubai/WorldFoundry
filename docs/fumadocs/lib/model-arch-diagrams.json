@@ -137,20 +137,6 @@
       "caption": "Method overview: DualCamCtrl’s dual-branch framework jointly generates aligned RGB and depth video latents.",
       "captionZh": "论文方法总览：DualCamCtrl 的双分支框架联合生成对齐的 RGB 与深度视频潜变量。"
     },
-    "dust3r": {
-      "modelId": "dust3r",
-      "paperSrc": "/models/dust3r/paper.png",
-      "teaserSrc": "/models/dust3r/teaser.jpg",
-      "teaserAlt": "Official paper teaser: DUSt3R reconstructs a kitchen pointmap and cameras from four uncalibrated frames.",
-      "teaserAltZh": "论文官方 Teaser：DUSt3R 用四张未标定帧重建厨房点图与相机。",
-      "teaserCaption": "Official paper teaser: DUSt3R reconstructs a kitchen pointmap and cameras from four uncalibrated frames.",
-      "teaserCaptionZh": "论文官方 Teaser：DUSt3R 用四张未标定帧重建厨房点图与相机。",
-      "src": "/models/dust3r/overview.png",
-      "alt": "Method overview: shared ViT encoders and interacting decoders predict dense pointmaps in camera-1 coordinates.",
-      "altZh": "论文方法总览：共享 ViT 编码器与交互解码器，在相机 1 坐标系下预测密集点图。",
-      "caption": "Method overview: shared ViT encoders and interacting decoders predict dense pointmaps in camera-1 coordinates.",
-      "captionZh": "论文方法总览：共享 ViT 编码器与交互解码器，在相机 1 坐标系下预测密集点图。"
-    },
     "fantasyworld": {
       "modelId": "fantasyworld",
       "paperSrc": "/models/fantasyworld/paper.png",

@@ -310,9 +310,6 @@ def run_inference_from_pil(
         print("CUDA not available. Switching to CPU.")
         device = "cpu"
 
-    # Add the checkpoint path (required for model imports in the dust3r package)
-
-    # Import model and inference functions after adding the ckpt path
     from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.inference import (
         inference,
     )

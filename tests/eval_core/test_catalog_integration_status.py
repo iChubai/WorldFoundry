@@ -50,14 +50,16 @@ def test_studio_controls_match_native_model_routes() -> None:
 
 
 @pytest.mark.parametrize(
-    "model_id, export",
+    "model_id, module, export",
     [
-        ("irasim", "IRASimPipeline"),
-        ("pandora", "PandoraPipeline"),
-        ("biwm-wan21", "BiWMPipeline"),
-        ("biwm-wan22", "BiWMPipeline"),
+        ("irasim", "worldfoundry.pipelines.component_pipelines", "IRASimPipeline"),
+        ("pandora", "worldfoundry.pipelines.component_pipelines", "PandoraPipeline"),
+        ("biwm-wan21", "worldfoundry.pipelines.component_pipelines", "BiWMPipeline"),
+        ("biwm-wan22", "worldfoundry.pipelines.component_pipelines", "BiWMPipeline"),
+        ("dust3r", "worldfoundry.pipelines.geometry_priors", "DUSt3RPipeline"),
+        ("dust3r-base-model", "worldfoundry.pipelines.geometry_priors", "DUSt3RBaseModelPipeline"),
     ],
 )
-def test_retired_models_are_not_public_integrations(model_id: str, export: str) -> None:
+def test_retired_models_are_not_public_integrations(model_id: str, module: str, export: str) -> None:
     assert model_id not in load_model_zoo_registry().keys()
-    assert not hasattr(importlib.import_module("worldfoundry.pipelines.component_pipelines"), export)
+    assert not hasattr(importlib.import_module(module), export)

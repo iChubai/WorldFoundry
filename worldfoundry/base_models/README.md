@@ -9,7 +9,7 @@ losses, or experiment scripts live here.
 | --- | --- |
 | [`diffusion_model/`](diffusion_model/README.md) | The single native diffusion kernel used by every local diffusion family |
 | [`perception_core/`](perception_core/README.md) | Perception models: detection, segmentation, tracking, optical flow, captioning, face, video quality, safety, … |
-| [`three_dimensions/`](three_dimensions/README.md) | 3D/4D models: `depth/`, `point_clouds/`, `general_3d/`, `slam/`, `three_d_four_d/` (DUSt3R, VGGT, Depth Anything, pixelSplat, …) |
+| [`three_dimensions/`](three_dimensions/README.md) | 3D/4D models: `depth/`, `point_clouds/`, `general_3d/`, `slam/`, `three_d_four_d/` (VGGT, Depth Anything, pixelSplat, …) |
 | [`llm_mllm_core/`](llm_mllm_core/README.md) | Multimodal LLM components |
 | `capabilities.py` | Capability registry and readiness checks; declarations live in `worldfoundry/data/base_models/` |
 

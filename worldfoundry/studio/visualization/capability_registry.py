@@ -124,12 +124,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
     ),
     # Reconstruction, dynamic scenes, splats, and SLAM.
     _cap(
-        "dust3r",
-        "three_dimensions/general_3d/dust3r",
-        ("point-cloud", "mesh", "viser"),
-        "three_dimensions/general_3d/dust3r/dust3r/viz/scene3d_dust.py",
-    ),
-    _cap(
         "4d-gaussians",
         "three_dimensions/general_3d/four_d_gaussians",
         ("gaussian-splat", "media"),

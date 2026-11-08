@@ -162,9 +162,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "dualcamctrl": {
         "overview": "https://arxiv.org/html/2511.23127v2/dualcam_framework.png",
     },
-    "dust3r": {
-        "teaser": "https://raw.githubusercontent.com/naver/dust3r/main/assets/dust3r.jpg",
-    },
     "dvlt": {
         "teaser": "https://arxiv.org/html/2605.30215v2/teaser_figure.png",
         "overview": "https://arxiv.org/html/2605.30215v2/method_overview_v3.png",

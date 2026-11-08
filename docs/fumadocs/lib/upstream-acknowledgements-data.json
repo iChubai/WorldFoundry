@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 224,
+  "modelsTotal": 223,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -610,7 +610,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 34,
+      "count": 33,
       "entries": [
         {
           "name": "CUT3R",
@@ -631,10 +631,6 @@
         {
           "name": "Depth Anything V2",
           "url": "https://github.com/DepthAnything/Depth-Anything-V2"
-        },
-        {
-          "name": "DUSt3R",
-          "url": "https://github.com/naver/dust3r"
         },
         {
           "name": "Déjà View Looping Transformer",

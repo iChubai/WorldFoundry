@@ -187,7 +187,6 @@ STATUS_ORDER = {
 # Docs catalog hides blocked 3D/4D entries.
 # Extra IDs are runtime/profile rows of a model that already has a public recipe.
 DOCS_EXCLUDED_RECIPE_IDS: set[str] = {
-    "dust3r-base-model",
     "dreamx-world-5b-cam",
     "matrix-game-3.5-third-person",
     "minwm-wan-action2v",

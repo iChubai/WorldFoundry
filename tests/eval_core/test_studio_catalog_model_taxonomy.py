@@ -22,8 +22,6 @@ _TEMPLATE_TO_WORKLOAD = {
 @pytest.mark.parametrize(
     ("model_id", "category", "template_id", "workload"),
     [
-        ("dust3r", "Depth / Geometry", "depth-geometry", "geometry"),
-        ("dust3r-base-model", "Depth / Geometry", "depth-geometry", "geometry"),
         ("inspatio-world", "Video-to-Video", "video-to-video", "v2v"),
         ("recammaster", "Video-to-Video", "video-to-video", "v2v"),
         ("neoverse", "Video-to-Video", "video-to-video", "v2v"),

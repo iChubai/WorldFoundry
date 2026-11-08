@@ -378,10 +378,7 @@ def test_integrated_catalog_entries_expose_pipeline_operator_contracts() -> None
 
 
 def test_pipeline_runner_spec_uses_resolved_runtime_profile_id() -> None:
-    for model_id, expected_profile in (
-        ("cogvideox", "cogvideox-5b-t2v"),
-        ("dust3r", "dust3r-base-model"),
-    ):
+    for model_id, expected_profile in (("cogvideox", "cogvideox-5b-t2v"),):
         resolved = resolve_model_zoo_config(model_id, manifest_dir=MODEL_CATALOG_DIR, runtime={"device": "cpu"})
         spec = build_pipeline_runner_spec(resolved.config)
 

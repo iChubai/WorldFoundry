@@ -78,7 +78,6 @@ No file in this directory is a personal GitHub avatar.
 | `mira-wm.svg` | MIRA | Original simple wordmark rendition for the identity mark | Public domain (text logo) | model:mira |
 | `mit.svg` | MIT | https://commons.wikimedia.org/wiki/File:MIT_logo.svg | Public domain (text logo) | model:hma, model:pixelsplat |
 | `modelscope.png` | ModelScope | GitHub organization brand avatar (github.com/modelscope) | Organization brand mark | model:zeroscope |
-| `naver.svg` | NAVER | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #03C75A | CC0-1.0 | model:dust3r, model:dust3r-base-model |
 | `ntu.png` | Nanyang Technological University | Official university brand mark (www.ntu.edu.sg), crest cropped for the identity mark | Organization brand mark | benchmark:apple-pi, model:vlanext, model:worldmem |
 | `northeastern.svg` | Northeastern University (World Model & Embodied AI Lab) | Original simple circular-seal rendition of the Northeastern N | Public domain (simple seal rendition) | benchmark:phyground |
 | `nus.png` | National University of Singapore | Official university brand mark (www.nus.edu.sg), coat of arms cropped for the identity mark | Organization brand mark | benchmark:ipv-bench, model:show-o |

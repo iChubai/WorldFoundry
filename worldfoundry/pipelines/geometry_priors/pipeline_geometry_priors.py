@@ -38,18 +38,6 @@ class DepthAnythingV3PriorPipeline(GeometryPriorPipeline):
     MODEL_ID = "depth-anything-v3-prior"
 
 
-class DUSt3RPipeline(GeometryPriorPipeline):
-    """Pipeline implementation for DUSt3R visual generation."""
-
-    MODEL_ID = "dust3r"
-
-
-class DUSt3RBaseModelPipeline(GeometryPriorPipeline):
-    """Pipeline implementation for DUSt3RBaseModel visual generation."""
-
-    MODEL_ID = "dust3r-base-model"
-
-
 class GeoCalibPriorPipeline(GeometryPriorPipeline):
     """Pipeline implementation for GeoCalibPrior visual generation."""
 
@@ -94,8 +82,6 @@ class VideoDepthAnythingPriorPipeline(GeometryPriorPipeline):
 
 __all__ = [
     "DAPPipeline",
-    "DUSt3RBaseModelPipeline",
-    "DUSt3RPipeline",
     "DepthAnythingV2PriorPipeline",
     "DepthAnythingV3PriorPipeline",
     "GeoCalibPriorPipeline",

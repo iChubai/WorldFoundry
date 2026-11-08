@@ -1,5 +1,5 @@
 {
-  "modelsListed": 267,
+  "modelsListed": 266,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -1418,7 +1418,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 34,
+      "count": 33,
       "entries": [
         {
           "id": "cut3r",
@@ -1463,19 +1463,6 @@
           "status": "integrated",
           "aliases": [
             "depth-anything-v2-prior"
-          ]
-        },
-        {
-          "id": "dust3r",
-          "name": "DUSt3R",
-          "status": "verified",
-          "aliases": [
-            "dust3r",
-            "dust3r-base-model"
-          ],
-          "versions": [
-            "Catalog",
-            "Base"
           ]
         },
         {

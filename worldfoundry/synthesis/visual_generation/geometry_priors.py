@@ -19,8 +19,6 @@ _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "dap": "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1",
     "depth-anything-v2-prior": "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2",
     "depth-anything-v3-prior": "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3",
-    "dust3r": "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
-    "dust3r-base-model": "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
     "geocalib-prior": "worldfoundry.base_models.three_dimensions.general_3d.geocalib",
     "metric3d-prior": "worldfoundry.base_models.three_dimensions.depth.metric3d",
     "prior-depth-anything": "worldfoundry.base_models.three_dimensions.depth.priorda",
@@ -29,11 +27,6 @@ _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "unik3d-prior": "worldfoundry.base_models.three_dimensions.depth.unik3d",
     "video-depth-anything-prior": "worldfoundry.base_models.three_dimensions.depth.videodepthanything",
 }
-
-_PROFILE_ID_OVERRIDES: Mapping[str, str] = {
-    "dust3r": "dust3r-base-model",
-}
-
 
 def _checkpoint_root() -> Path:
     return Path(
@@ -58,14 +51,6 @@ def _known_checkpoint_candidates(model_id: str) -> tuple[str, ...]:
         "depth-anything-v3-prior": (
             root / "DA3METRIC-LARGE" / "model.safetensors",
             root / "depth-anything--DA3METRIC-LARGE" / "model.safetensors",
-        ),
-        "dust3r": (
-            root / "DUSt3R_ViTLarge_BaseDecoder_512_dpt.pth",
-            root / "DUSt3R_ViTLarge_BaseDecoder_512_dpt" / "model.safetensors",
-        ),
-        "dust3r-base-model": (
-            root / "DUSt3R_ViTLarge_BaseDecoder_512_dpt.pth",
-            root / "DUSt3R_ViTLarge_BaseDecoder_512_dpt" / "model.safetensors",
         ),
         "geocalib-prior": (
             root / "GeoCalib" / "geocalib-pinhole.tar",
@@ -120,7 +105,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
     def __init__(self, *, model_id: str, device: str = "cuda", options: Mapping[str, Any] | None = None) -> None:
         super().__init__()
         self.model_id = model_id
-        self.profile_id = _PROFILE_ID_OVERRIDES.get(model_id, model_id)
+        self.profile_id = model_id
         self.device = device
         self.options = dict(options or {})
         self.profile = load_runtime_profile(self.profile_id, check_conda_env_exists=False)
@@ -303,8 +288,6 @@ class GeometryPriorSynthesis(BaseSynthesis):
             if prompt is not None:
                 kwargs.setdefault("prompt", prompt)
             return self._run_track_anything(video=video, images=images, output_dir=output_dir, **kwargs)
-        if self.model_id in {"dust3r", "dust3r-base-model"}:
-            return self._run_dust3r(images=images, output_dir=output_dir, **kwargs)
         return self._run_single_image_depth(images=images, output_dir=output_dir, **kwargs)
 
     def _run_single_image_depth(self, *, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:
@@ -473,108 +456,6 @@ class GeometryPriorSynthesis(BaseSynthesis):
             "metadata_path": str(metadata_path),
         }
 
-    def _run_dust3r(self, *, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:
-        from worldfoundry.base_models.three_dimensions.general_3d.dust3r import ensure_import_paths
-
-        ensure_import_paths()
-        from dust3r.cloud_opt import GlobalAlignerMode, global_aligner
-        from dust3r.image_pairs import make_pairs
-        from dust3r.inference import inference
-        from dust3r.model import AsymmetricCroCo3DStereo
-        from dust3r.utils.image import load_images
-
-        image_paths = _collect_image_paths(
-            _first_available(images, kwargs.get("image_path"), kwargs.get("input_path")),
-            output_dir=output_dir,
-            max_images=int(kwargs.get("max_images") or 2),
-        )
-        if len(image_paths) == 1:
-            image_paths = [image_paths[0], image_paths[0]]
-        if len(image_paths) < 2:
-            raise ValueError(
-                "DUSt3R inference requires at least one image path; a single image is duplicated for validation tests."
-            )
-
-        ckpt = self._existing_checkpoint(directory_ok=True)
-        if not ckpt:
-            raise FileNotFoundError("DUSt3R requires a local checkpoint file or a Hugging Face model directory.")
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = AsymmetricCroCo3DStereo.from_pretrained(ckpt).to(device).eval()
-        dust3r_images = load_images(
-            image_paths[: int(kwargs.get("max_images") or 2)],
-            size=int(kwargs.get("image_size") or 512),
-            verbose=bool(kwargs.get("verbose", False)),
-        )
-        pairs = make_pairs(
-            dust3r_images,
-            scene_graph=str(kwargs.get("scene_graph") or "complete"),
-            prefilter=None,
-            symmetrize=True,
-        )
-        with torch.no_grad():
-            output = inference(
-                pairs,
-                model,
-                device,
-                batch_size=int(kwargs.get("batch_size") or 1),
-                verbose=bool(kwargs.get("verbose", False)),
-            )
-        scene = global_aligner(
-            output,
-            device=device,
-            mode=GlobalAlignerMode.PairViewer,
-            min_conf_thr=float(kwargs.get("min_conf_thr") or 3.0),
-        )
-
-        imgs = [np.asarray(img) for img in scene.imgs]
-        pts3d = [item.detach().cpu().numpy() for item in scene.get_pts3d()]
-        masks = [item.detach().cpu().numpy().astype(bool) for item in scene.get_masks()]
-        points = []
-        colors = []
-        for pts, img, mask in zip(pts3d, imgs, masks, strict=False):
-            if mask.shape == pts.shape[:2]:
-                points.append(pts[mask])
-                colors.append(img[mask])
-            else:
-                points.append(pts.reshape(-1, 3))
-                colors.append(img.reshape(-1, 3))
-
-        ply_path = output_dir / "dust3r_point_cloud.ply"
-        _write_colored_points_ply(
-            ply_path,
-            points=points,
-            colors=colors,
-            max_points=int(kwargs.get("max_points") or 20000),
-        )
-        intrinsics_path = output_dir / "dust3r_intrinsics.npy"
-        poses_path = output_dir / "dust3r_camera_poses.npy"
-        np.save(intrinsics_path, scene.get_intrinsics().detach().cpu().numpy())
-        np.save(poses_path, scene.get_im_poses().detach().cpu().numpy())
-        preview_path = output_dir / "dust3r_input_preview.png"
-        Image.fromarray(np.clip(imgs[0] * 255.0, 0, 255).astype(np.uint8)).save(preview_path)
-        metadata_path = output_dir / "dust3r_metadata.json"
-        self._write_json(
-            metadata_path,
-            {
-                "model_id": self.model_id,
-                "checkpoint_path": ckpt,
-                "input_images": image_paths,
-                "num_pairs": len(pairs),
-                "point_cloud_path": str(ply_path),
-                "intrinsics_path": str(intrinsics_path),
-                "camera_poses_path": str(poses_path),
-                "runtime_options": _safe_json(kwargs),
-            },
-        )
-        return {
-            "status": "succeeded",
-            "runtime": "geometry_prior_in_tree",
-            "model_id": self.model_id,
-            "artifact_path": str(ply_path),
-            "preview_image": str(preview_path),
-            "point_cloud_path": str(ply_path),
-            "metadata_path": str(metadata_path),
-        }
 
     def _run_track_anything(self, *, video: Any, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:
         from worldfoundry.base_models.perception_core.tracking.track_anything import TrackAnythingPipeline
@@ -855,39 +736,6 @@ def _save_depth_preview(depth: np.ndarray, path: Path) -> None:
         Image.fromarray(colored).save(path)
     except Exception:
         Image.fromarray(image).save(path)
-
-
-def _collect_image_paths(source: Any, *, output_dir: Path, max_images: int) -> list[str]:
-    image_paths: list[str] = []
-
-    def add_path(path: Path) -> None:
-        if path.is_dir():
-            for child in sorted(path.iterdir()):
-                if child.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
-                    image_paths.append(str(child))
-                    if len(image_paths) >= max_images:
-                        return
-        elif path.is_file() and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
-            image_paths.append(str(path))
-
-    if isinstance(source, (str, Path)):
-        add_path(Path(source).expanduser())
-    elif isinstance(source, Sequence) and not isinstance(source, (str, bytes, bytearray, np.ndarray)):
-        for item in source:
-            if len(image_paths) >= max_images:
-                break
-            if isinstance(item, (str, Path)):
-                add_path(Path(item).expanduser())
-            else:
-                frame_path = output_dir / f"dust3r_input_{len(image_paths):03d}.png"
-                Image.fromarray(_as_uint8_frame(item)).save(frame_path)
-                image_paths.append(str(frame_path))
-    elif source is not None:
-        frame_path = output_dir / "dust3r_input_000.png"
-        Image.fromarray(_as_uint8_frame(source)).save(frame_path)
-        image_paths.append(str(frame_path))
-
-    return image_paths[: max(max_images, 1)]
 
 
 def _write_colored_points_ply(

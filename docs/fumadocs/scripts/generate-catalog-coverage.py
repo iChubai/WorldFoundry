@@ -93,13 +93,6 @@ MODEL_VERSION_GROUPS = {
             "depth-anything-v3-prior": "Metric Prior",
         },
     },
-    "dust3r": {
-        "name": "DUSt3R",
-        "versions": {
-            "dust3r": "Catalog",
-            "dust3r-base-model": "Base",
-        },
-    },
     "minwm": {
         "name": "minWM",
         "versions": {

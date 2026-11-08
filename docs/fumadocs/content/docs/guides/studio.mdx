@@ -731,7 +731,7 @@ frame:
   frame. Their Workspace PLY exporter instead persists `x-right/y-up/z-forward`,
   so those PLY files use `asset-native`, `+Y` up, and `alignment=none` without a
   second flip.
-- DUSt3R, LoGeR, and Pi3 PLY point clouds keep their predicted camera-to-world
+- LoGeR and Pi3 PLY point clouds keep their predicted camera-to-world
   sidecars. Viser applies `first-camera-opengl` to points and cameras together,
   uses `+Y` up, and frames the central 5-95% geometry range so sparse outliers do
   not shrink the useful scene.
@@ -742,7 +742,7 @@ frame:
   same rigid transform to geometry and camera-to-world poses, then verify reset,
   orbit, and timeline interaction in a browser.
 
-Workspace resolves the proven VGGT, DUSt3R, LoGeR, and Pi3 defaults automatically.
+Workspace resolves the proven VGGT, LoGeR, and Pi3 defaults automatically.
 The Visualizer defaults also cover UniDepth V2 and UniK3D raw/Workspace assets.
 The Visualizer Params JSON remains an explicit override for other exporters. Viser reports the
 actual bound port when its requested port is occupied. Rerun uses WebGPU

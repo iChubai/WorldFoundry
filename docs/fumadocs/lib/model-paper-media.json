@@ -51,23 +51,6 @@
       }
     ]
   },
-  "dust3r": {
-    "paper": {
-      "title": "DUSt3R: Geometric 3D Vision Made Easy",
-      "year": 2023,
-      "venue": null,
-      "arxivId": "2312.14132",
-      "abstract": "Multi-view stereo reconstruction (MVS) in the wild requires to first estimate the camera parameters e.g. intrinsic and extrinsic parameters. These are usually tedious and cumbersome to obtain, yet they are mandatory to triangulate corresponding pixels in 3D space, which is the core of all best performing MVS algorithms. In this work, we take an opposite stance and introduce DUSt3R, a radically novel paradigm for Dense and Unconstrained Stereo 3D Reconstruction of arbitrary image collections, i.e. operating without prior information about camera calibration nor viewpoint poses. We cast the pairwise reconstruction problem as a regression of pointmaps, relaxing the hard constraints of usual projective camera models. We show that this formulation smoothly unifies the monocular and binocular reconstruction cases. In the case where more than two images are provided, we further propose a simple"
-    },
-    "figures": [
-      {
-        "kind": "image",
-        "src": "/models/dust3r/paper.png",
-        "caption": "DUSt3R: Geometric 3D Vision Made Easy",
-        "captionZh": "DUSt3R: Geometric 3D Vision Made Easy"
-      }
-    ]
-  },
   "fantasyworld": {
     "paper": {
       "title": "FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction",

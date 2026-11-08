@@ -123,8 +123,6 @@
     "dreamx-world-5b-cam": "amap",
     "dreamzero": "nvidia",
     "dualcamctrl": "hkust",
-    "dust3r": "naver",
-    "dust3r-base-model": "naver",
     "dvlt": "nvidia",
     "dynamicrafter": "tencent",
     "easyanimate": "alibaba",
@@ -914,14 +912,6 @@
       "name": "ModelScope",
       "source": "GitHub organization brand avatar (github.com/modelscope)",
       "src": "/org-logos/modelscope.png"
-    },
-    "naver": {
-      "abbr": "NA",
-      "key": "naver",
-      "license": "CC0-1.0",
-      "name": "NAVER",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #03C75A",
-      "src": "/org-logos/naver.svg"
     },
     "ntu": {
       "abbr": "NTU",

@@ -1001,9 +1001,14 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        base_kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        base_kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         # State Adapter hint generation for LiveWorld [T, P, R] frame order
         sp_hints = None
@@ -1060,14 +1065,14 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
             sp_seq_lens = torch.full_like(seq_lens, sp_seq_len)
 
             # SPControlBlock.forward(c, x, e, **kwargs) - c, x, e are positional args
-            sp_kwargs = dict(
-                seq_lens=sp_seq_lens,
-                grid_sizes=sp_grid_sizes,
-                freqs=self.freqs,
-                context=context,
-                context_lens=context_lens,
-                backbone_segment_info=sp_backbone_segment_info,
-            )
+            sp_kwargs = {
+                "seq_lens": sp_seq_lens,
+                "grid_sizes": sp_grid_sizes,
+                "freqs": self.freqs,
+                "context": context,
+                "context_lens": context_lens,
+                "backbone_segment_info": sp_backbone_segment_info,
+            }
             # Process through State Adapter control blocks
             for block in self.sp_blocks:
                 if torch.is_grad_enabled() and self.gradient_checkpointing:

@@ -255,10 +255,7 @@ class MolmoVisionBackbone(nn.Module):
         config = self.config
         input_dim: int = None
         vit_cfg = config.vit
-        if config.use_deepstack:
-            pool_dim = vit_cfg.image_emb_dim
-        else:
-            pool_dim = vit_cfg.image_emb_dim * len(config.vit_layers)
+        pool_dim = vit_cfg.image_emb_dim if config.use_deepstack else vit_cfg.image_emb_dim * len(config.vit_layers)
 
         from .image_vit import ViTMultiHeadDotProductAttention
 
@@ -380,10 +377,7 @@ class MolmoVisionBackbone(nn.Module):
         # connector's reduced-precision Linear weights during inference.
         to_pool = to_pool * valid[:, :, :, None].to(dtype=to_pool.dtype)
         to_pool = to_pool.reshape([-1, pooled_patches_idx.shape[-1], dim])
-        if self.config.pooling_attention_mask:
-            attn_mask = valid.reshape([-1, 1, 1, valid.shape[-1]])
-        else:
-            attn_mask = None
+        attn_mask = valid.reshape([-1, 1, 1, valid.shape[-1]]) if self.config.pooling_attention_mask else None
 
         if cfg.image_pooling_2d in [
             ImagePooling2DType.attention_meanq,

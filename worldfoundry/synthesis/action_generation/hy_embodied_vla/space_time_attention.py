@@ -202,10 +202,7 @@ def _patched_forward_video_features(self, x: torch.Tensor):
             # Collapse time dim: keep only the current-frame tokens.
             x = x.view(b, k, -1, x.shape[-1])[:, -1]
             k = 1
-        if isinstance(blk, SpaceTimeBlock):
-            x = blk(x, cu_slens=None, num_frames=k)
-        else:
-            x = blk(x)
+        x = blk(x, cu_slens=None, num_frames=k) if isinstance(blk, SpaceTimeBlock) else blk(x)
 
     # Drop past-timestep tokens; keep only the current frame (t = K-1).
     x = x.view(b, k, -1, x.shape[-1])[:, -1]  # (B, N, D)

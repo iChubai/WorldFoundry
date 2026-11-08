@@ -250,10 +250,7 @@ def main() -> int:
     with torch.no_grad(), autocast:
         outputs = model.inference(batch, config=inference_config, progress_bar=True)
 
-    if args.no_overlay_actions:
-        video = outputs.output_video
-    else:
-        video = model.visualize(outputs)["pred_video"]
+    video = outputs.output_video if args.no_overlay_actions else model.visualize(outputs)["pred_video"]
     if args.generated_only:
         video = video[:, n_context_frames:]
     grid = videos_to_grid(video)

@@ -18,7 +18,7 @@ LRELU_SLOPE = 0.1
 
 class AMPBlock1(torch.nn.Module):
     def __init__(self, h, channels, kernel_size=3, dilation=(1, 3, 5), activation=None):
-        super(AMPBlock1, self).__init__()
+        super().__init__()
         self.h = h
 
         self.convs1 = nn.ModuleList(
@@ -113,7 +113,7 @@ class AMPBlock1(torch.nn.Module):
 
 class AMPBlock2(torch.nn.Module):
     def __init__(self, h, channels, kernel_size=3, dilation=(1, 3), activation=None):
-        super(AMPBlock2, self).__init__()
+        super().__init__()
         self.h = h
 
         self.convs = nn.ModuleList(

@@ -57,10 +57,7 @@ class Attention(nn.Module):
         context = context if context is not None else x
         k = self.to_k(context)
         v = self.to_v(context)
-        q, k, v = map(
-            lambda t: rearrange(t, "b l (h d) -> b h l d", h=self.heads),
-            (q, k, v),
-        )
+        q, k, v = (rearrange(t, "b l (h d) -> b h l d", h=self.heads) for t in (q, k, v))
         with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
             out = F.scaled_dot_product_attention(q, k, v)
         out = rearrange(out, "b h l d -> b l (h d)")

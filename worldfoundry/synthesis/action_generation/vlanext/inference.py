@@ -248,10 +248,7 @@ def get_vla_action(cfg, model, processor, obs, task_label, *, seed=None):
         )
 
     elif input_modality == "image":
-        if view_mode == "multi":
-            images = [pil_images[-1], pil_wrist[-1]]
-        else:
-            images = [pil_images[-1]]
+        images = [pil_images[-1], pil_wrist[-1]] if view_mode == "multi" else [pil_images[-1]]
 
         if is_llama:
             text = [task_label]

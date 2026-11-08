@@ -68,14 +68,14 @@ def load_fast(
     root = Path(model_path).expanduser().resolve()
     config = json.loads((root / "inference_config.json").read_text())
     manifest = json.loads((root / "manifest.json").read_text())
-    expected_config = dict(
-        steps_per_stage=[2, 2, 2],
-        guidance_scale=1.0,
-        ucpe_pixel_center=True,
-        repencoder_target_microbatch=1,
-        representation="resident_byte_compact_ucpe",
-        compile=False,
-    )
+    expected_config = {
+        "steps_per_stage": [2, 2, 2],
+        "guidance_scale": 1.0,
+        "ucpe_pixel_center": True,
+        "repencoder_target_microbatch": 1,
+        "representation": "resident_byte_compact_ucpe",
+        "compile": False,
+    }
     if any(config.get(key) != value for key, value in expected_config.items()):
         raise ValueError("Fast inference configuration differs from the validated release contract")
     if config["routing"] != [["equal", "equal"], ["equal", "equal"], ["equal", "old"]]:
@@ -176,13 +176,13 @@ def load_fast(
             if branch != expected or pipe.resident_branches.active != branch:
                 raise RuntimeError("Fast transformer/adapter routing mismatch")
             pipe.stage_model_trace.append(
-                dict(
-                    chunk=chunk,
-                    stage=stage,
-                    step=step,
-                    stage_steps=stage_steps,
-                    branch=branch,
-                )
+                {
+                    "chunk": chunk,
+                    "stage": stage,
+                    "step": step,
+                    "stage_steps": stage_steps,
+                    "branch": branch,
+                }
             )
 
         return hook
@@ -209,10 +209,10 @@ def load_fast(
     )
     model.model_type = "fast"
     model.fast_config = config
-    model.fast_report = dict(
-        compile_enabled=bool(enable_compile),
-        compile_scope="transformer_blocks" if enable_compile else None,
-        compact_ucpe=compact,
-        resident=pipe.resident_branches.report,
-    )
+    model.fast_report = {
+        "compile_enabled": bool(enable_compile),
+        "compile_scope": "transformer_blocks" if enable_compile else None,
+        "compact_ucpe": compact,
+        "resident": pipe.resident_branches.report,
+    }
     return model

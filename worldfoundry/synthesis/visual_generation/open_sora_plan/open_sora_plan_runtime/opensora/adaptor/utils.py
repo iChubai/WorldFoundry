@@ -558,7 +558,7 @@ def prefix_sum_inc(weights):
         >>> prefix_sum_inc([3,4,5])
         [3, 7, 12]
     """
-    weights_ = [w for w in weights]
+    weights_ = list(weights)
     for x in range(1, len(weights_)):
         weights_[x] += weights_[x - 1]
     return weights_

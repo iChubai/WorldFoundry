@@ -196,14 +196,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                     T5RelativeEmbedding: AutoWrappedModule,
                     T5LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.dit is not None:
@@ -220,23 +220,23 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.Conv1d: AutoWrappedModule,
                     torch.nn.Embedding: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                overflow_vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.dual_controller is not None:
@@ -253,23 +253,23 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.Conv1d: AutoWrappedModule,
                     torch.nn.Embedding: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                overflow_vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.dit2 is not None:
@@ -284,23 +284,23 @@ class LongViePipeline(StagedDiffusionPipeline):
                     RMSNorm: AutoWrappedModule,
                     torch.nn.Conv2d: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                overflow_vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.vae is not None:
@@ -316,14 +316,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.Dropout: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=self.device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": self.device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.image_encoder is not None:
             dtype = next(iter(self.image_encoder.parameters())).dtype
@@ -334,14 +334,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.Conv2d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
             # Fine-grained wrapping moves Conv/Linear/LayerNorm computation to
             # CUDA but intentionally leaves parameters registered directly on
@@ -360,14 +360,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                 module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.vace is not None:
             device = "cpu" if vram_limit is not None else self.device
@@ -379,14 +379,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.LayerNorm: AutoWrappedModule,
                     RMSNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.audio_encoder is not None:
@@ -399,14 +399,14 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.LayerNorm: AutoWrappedModule,
                     torch.nn.Conv1d: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
             )
 
     def initialize_usp(self, ring_degree=2, ulysses_degree=4):
@@ -1278,9 +1278,8 @@ class WanVideoUnit_UnifiedSequenceParallel(InferenceStage):
         Args:
             pipe: The pipe.
         """
-        if hasattr(pipe, "use_unified_sequence_parallel"):
-            if pipe.use_unified_sequence_parallel:
-                return {"use_unified_sequence_parallel": True}
+        if hasattr(pipe, "use_unified_sequence_parallel") and pipe.use_unified_sequence_parallel:
+            return {"use_unified_sequence_parallel": True}
         return {}
 
 
@@ -1377,7 +1376,7 @@ class TeaCache:
             "Wan2.1-I2V-14B-720P": [8.10705460e03, 2.13393892e03, -3.72934672e02, 1.66203073e01, -4.17769401e-02],
         }
         if model_id not in self.coefficients_dict:
-            supported_model_ids = ", ".join([i for i in self.coefficients_dict])
+            supported_model_ids = ", ".join(list(self.coefficients_dict))
             raise ValueError(
                 f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids})."
             )
@@ -1603,23 +1602,23 @@ def model_fn_wan_video(
         history_latents: The history latents.
     """
     if sliding_window_size is not None and sliding_window_stride is not None:
-        model_kwargs = dict(
-            dit=dit,
-            dual_controller=dual_controller,
-            motion_controller=motion_controller,
-            vace=vace,
-            latents=latents,
-            timestep=timestep,
-            context=context,
-            clip_feature=clip_feature,
-            y=y,
-            reference_latents=reference_latents,
-            vace_context=vace_context,
-            vace_scale=vace_scale,
-            tea_cache=tea_cache,
-            use_unified_sequence_parallel=use_unified_sequence_parallel,
-            motion_bucket_id=motion_bucket_id,
-        )
+        model_kwargs = {
+            "dit": dit,
+            "dual_controller": dual_controller,
+            "motion_controller": motion_controller,
+            "vace": vace,
+            "latents": latents,
+            "timestep": timestep,
+            "context": context,
+            "clip_feature": clip_feature,
+            "y": y,
+            "reference_latents": reference_latents,
+            "vace_context": vace_context,
+            "vace_scale": vace_scale,
+            "tea_cache": tea_cache,
+            "use_unified_sequence_parallel": use_unified_sequence_parallel,
+            "motion_bucket_id": motion_bucket_id,
+        }
         return TemporalTiler_BCTHW().run(
             model_fn_wan_video,
             sliding_window_size,
@@ -1631,9 +1630,8 @@ def model_fn_wan_video(
             batch_size=2 if cfg_merge else 1,
         )
 
-    if use_unified_sequence_parallel:
-        if not dist.is_initialized():
-            raise RuntimeError("LongVie USP requires an initialized torch.distributed process group")
+    if use_unified_sequence_parallel and not dist.is_initialized():
+        raise RuntimeError("LongVie USP requires an initialized torch.distributed process group")
 
     # Timestep
     if dit.seperated_timestep and fuse_vae_embedding_in_latents:
@@ -1761,36 +1759,31 @@ def model_fn_wan_video(
     )
 
     # TeaCache
-    if tea_cache is not None:
-        tea_cache_update = tea_cache.check(dit, x, t_mod)
-    else:
-        tea_cache_update = False
+    tea_cache_update = tea_cache.check(dit, x, t_mod) if tea_cache is not None else False
 
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            x_original_len = x.size(1)
-            dense_original_len = dense.size(1)
-            chunks = torch.chunk(x, _sequence_parallel_world_size(), dim=1)
-            pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
-            chunks = [
-                torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1] - chunk.shape[1]), value=0)
-                for chunk in chunks
-            ]
-            x = chunks[_sequence_parallel_rank()]
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        x_original_len = x.size(1)
+        dense_original_len = dense.size(1)
+        chunks = torch.chunk(x, _sequence_parallel_world_size(), dim=1)
+        pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
+        chunks = [
+            torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1] - chunk.shape[1]), value=0) for chunk in chunks
+        ]
+        x = chunks[_sequence_parallel_rank()]
 
-            dense_chunks = torch.chunk(dense, _sequence_parallel_world_size(), dim=1)
-            dense_chunks = [
-                torch.nn.functional.pad(chunk, (0, 0, 0, dense_chunks[0].shape[1] - chunk.shape[1]), value=0)
-                for chunk in dense_chunks
-            ]
-            dense = dense_chunks[_sequence_parallel_rank()]
+        dense_chunks = torch.chunk(dense, _sequence_parallel_world_size(), dim=1)
+        dense_chunks = [
+            torch.nn.functional.pad(chunk, (0, 0, 0, dense_chunks[0].shape[1] - chunk.shape[1]), value=0)
+            for chunk in dense_chunks
+        ]
+        dense = dense_chunks[_sequence_parallel_rank()]
 
-            sparse_chunks = torch.chunk(sparse, _sequence_parallel_world_size(), dim=1)
-            sparse_chunks = [
-                torch.nn.functional.pad(chunk, (0, 0, 0, sparse_chunks[0].shape[1] - chunk.shape[1]), value=0)
-                for chunk in sparse_chunks
-            ]
-            sparse = sparse_chunks[_sequence_parallel_rank()]
+        sparse_chunks = torch.chunk(sparse, _sequence_parallel_world_size(), dim=1)
+        sparse_chunks = [
+            torch.nn.functional.pad(chunk, (0, 0, 0, sparse_chunks[0].shape[1] - chunk.shape[1]), value=0)
+            for chunk in sparse_chunks
+        ]
+        sparse = sparse_chunks[_sequence_parallel_rank()]
 
     if tea_cache_update:
         x = tea_cache.update(x)
@@ -1927,10 +1920,9 @@ def model_fn_wan_video(
             x = x[:, -dense.size(1) :]
         f -= f_h
     x = dit.head(x, t)
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            x = _sequence_parallel_all_gather(x, dim=1)
-            x = x[:, :-pad_shape] if pad_shape > 0 else x
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        x = _sequence_parallel_all_gather(x, dim=1)
+        x = x[:, :-pad_shape] if pad_shape > 0 else x
     # Remove reference latents
     if reference_latents is not None:
         x = x[:, reference_latents.shape[1] :]

@@ -454,10 +454,7 @@ class SlicedWassersteinDistance(nn.Module):
         dtype = x.dtype
 
         # Set random seed if provided (for deterministic inference)
-        if seed is not None:
-            generator = torch.Generator(device=device).manual_seed(seed)
-        else:
-            generator = None
+        generator = torch.Generator(device=device).manual_seed(seed) if seed is not None else None
 
         total_transport_cost = 0.0
 

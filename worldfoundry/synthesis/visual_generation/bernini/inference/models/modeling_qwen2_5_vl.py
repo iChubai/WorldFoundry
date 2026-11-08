@@ -96,11 +96,10 @@ from veomni.distributed.sequence_parallel import (
 )
 from veomni.utils.device import IS_CUDA_AVAILABLE
 from veomni.utils.import_utils import is_liger_kernel_available  # noqa: F401 - Keeps the module's import-time setup.
+import contextlib
 
-try:
+with contextlib.suppress(Exception):
     from liger_kernel.transformers.qwen2vl_mrope import liger_multimodal_rotary_pos_emb
-except Exception:
-    pass
 
 try:
     from models.editing.utils.loss import flash_cross_entropy_func
@@ -809,10 +808,7 @@ class Qwen2_5_VisionTransformerPretrainedModel(Qwen2_5_VLPreTrainedModel):
         position_embeddings = (emb.cos(), emb.sin())
 
         for layer_num, blk in enumerate(self.blocks):
-            if layer_num in self.fullatt_block_indexes:
-                cu_seqlens_now = cu_seqlens
-            else:
-                cu_seqlens_now = cu_window_seqlens
+            cu_seqlens_now = cu_seqlens if layer_num in self.fullatt_block_indexes else cu_window_seqlens
             if self.gradient_checkpointing and self.training:
                 hidden_states = self._gradient_checkpointing_func(
                     blk.__call__, hidden_states, cu_seqlens_now, None, position_embeddings
@@ -1297,10 +1293,7 @@ class Qwen2_5_VLFlashAttention2(Qwen2_5_VLAttention):
         """
         Patches flash attention forward to handle 3D position ids in mrope. (3, batch_size, seq_length)
         """
-        if not use_top_left_mask:
-            causal = is_causal
-        else:
-            causal = is_causal and query_length != 1
+        causal = is_causal if not use_top_left_mask else is_causal and query_length != 1
 
         # Assuming 4D tensors, key_states.shape[1] is the key/value sequence length (source length).
         use_sliding_windows = (
@@ -1424,7 +1417,7 @@ class Qwen2_5_VLSdpaAttention(Qwen2_5_VLAttention):
         # We dispatch to SDPA's Flash Attention or Efficient kernels via this `is_causal` if statement instead of an inline conditional assignment
         # in SDPA to support both torch.compile's dynamic shapes and full graph options. An inline conditional prevents dynamic shapes from compiling.
         # The q_len > 1 is necessary to match with AttentionMaskConverter.to_causal_4d that does not create a causal mask in case q_len == 1.
-        is_causal = True if causal_mask is None and q_len > 1 else False
+        is_causal = bool(causal_mask is None and q_len > 1)
 
         attn_output = torch.nn.functional.scaled_dot_product_attention(
             query_states,
@@ -1611,12 +1604,11 @@ class Qwen2_5_VLModel(Qwen2_5_VLPreTrainedModel):
         if (input_ids is None) ^ (inputs_embeds is not None):
             raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         # torch.jit.trace() doesn't support cache objects in the output
         if use_cache and past_key_values is None and not torch.jit.is_tracing():
@@ -1743,15 +1735,14 @@ class Qwen2_5_VLModel(Qwen2_5_VLPreTrainedModel):
             self.config._attn_implementation == "sdpa"
             and not (using_static_cache or using_sliding_window_cache)
             and not output_attentions
+        ) and AttentionMaskConverter._ignore_causal_mask_sdpa(
+            attention_mask,
+            inputs_embeds=input_tensor,
+            past_key_values_length=past_seen_tokens,
+            sliding_window=self.config.sliding_window,
+            is_training=self.training,
         ):
-            if AttentionMaskConverter._ignore_causal_mask_sdpa(
-                attention_mask,
-                inputs_embeds=input_tensor,
-                past_key_values_length=past_seen_tokens,
-                sliding_window=self.config.sliding_window,
-                is_training=self.training,
-            ):
-                return None
+            return None
 
         dtype, device = input_tensor.dtype, input_tensor.device
         min_dtype = torch.finfo(dtype).min
@@ -2128,10 +2119,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
                             video_grid_thw[video_index][1],
                             video_grid_thw[video_index][2],
                         )
-                        if second_per_grid_ts is not None:
-                            second_per_grid_t = second_per_grid_ts[video_index]
-                        else:
-                            second_per_grid_t = 1.0
+                        second_per_grid_t = second_per_grid_ts[video_index] if second_per_grid_ts is not None else 1.0
                         video_index += 1
                         remain_videos -= 1
                         ed = ed_video
@@ -2370,9 +2358,8 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
                     delta = delta.repeat_interleave(batch_size // delta.shape[0], dim=0)
                 position_ids = position_ids.add(delta)
                 position_ids = position_ids.unsqueeze(0).expand(3, -1, -1)
-        elif position_ids is not None:
-            if position_ids.shape[1] == 3:  # TODO: unify position_ids to bs, dim, l
-                position_ids = position_ids.transpose(0, 1).contiguous()  # bs, dim, l -> dim, bs, l
+        elif position_ids is not None and position_ids.shape[1] == 3:  # TODO: unify position_ids to bs, dim, l
+            position_ids = position_ids.transpose(0, 1).contiguous()  # bs, dim, l -> dim, bs, l
 
         outputs = self.model(
             input_ids=None,

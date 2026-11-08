@@ -128,25 +128,23 @@ class RTVid(Dataset):
             if self.mode == "training":
                 if file not in self.val_file_set:
                     self.file_list.append(os.path.join(self.data_dir, file))
-            elif self.mode == "validation":
-                if file in self.val_file_set:
-                    self.file_list.append(os.path.join(self.data_dir, file))
+            elif self.mode == "validation" and file in self.val_file_set:
+                self.file_list.append(os.path.join(self.data_dir, file))
         self.file_list.sort()  # Sort files for consistency
-        if self.mode == "validation":
-            if len(self.file_list) > 1024:
-                # Random sample from valid files
-                rand_state = random.getstate()
-                random.seed(0)
-                valid_files = []
-                for file_path in self.file_list:
-                    with np.load(file_path) as data:
-                        frames = data["action"]
-                        if len(frames) >= self.video_length:
-                            valid_files.append((file_path, len(frames)))
-                valid_file_paths = [x[0] for x in valid_files]
-                assert len(valid_file_paths) >= 1024, f"Only {len(valid_file_paths)} files with enough frames"
-                self.file_list = random.sample(valid_file_paths, 1024)  # same as AVID
-                random.setstate(rand_state)
+        if self.mode == "validation" and len(self.file_list) > 1024:
+            # Random sample from valid files
+            rand_state = random.getstate()
+            random.seed(0)
+            valid_files = []
+            for file_path in self.file_list:
+                with np.load(file_path) as data:
+                    frames = data["action"]
+                    if len(frames) >= self.video_length:
+                        valid_files.append((file_path, len(frames)))
+            valid_file_paths = [x[0] for x in valid_files]
+            assert len(valid_file_paths) >= 1024, f"Only {len(valid_file_paths)} files with enough frames"
+            self.file_list = random.sample(valid_file_paths, 1024)  # same as AVID
+            random.setstate(rand_state)
         if self.subsample:
             self.file_list = self.file_list[:16]  # when training, we only use 16 videos for sake of time
         print(f"{self.mode} set size: {len(self.file_list)} episode files.")

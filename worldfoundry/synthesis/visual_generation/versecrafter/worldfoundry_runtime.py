@@ -122,8 +122,7 @@ class VerseCrafterRuntime:
             cwd=self.repo_root,
             env=process_env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         log_path = log_dir / f"{name}.log"

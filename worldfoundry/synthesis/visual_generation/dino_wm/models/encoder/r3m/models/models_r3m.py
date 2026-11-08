@@ -128,8 +128,5 @@ class R3M(nn.Module):
         return h
 
     def sim(self, tensor1, tensor2):
-        if self.l2dist:
-            d = -torch.linalg.norm(tensor1 - tensor2, dim=-1)
-        else:
-            d = self.cs(tensor1, tensor2)
+        d = -torch.linalg.norm(tensor1 - tensor2, dim=-1) if self.l2dist else self.cs(tensor1, tensor2)
         return d

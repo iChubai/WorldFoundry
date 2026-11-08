@@ -121,7 +121,7 @@ class AgiBotWorld(Dataset):
                         if not os.path.exists(os.path.join(task_info_root, f"task_{task}.json")):
                             continue
                         zero_rank_print(f"preparing data info: task-{task}")
-                        task_infos = dict()
+                        task_infos = {}
                         with open(os.path.join(task_info_root, f"task_{task}.json")) as f:
                             for info in json.load(f):
                                 task_infos.update({str(info["episode_id"]): (info["label_info"], info["task_name"])})
@@ -508,10 +508,10 @@ class AgiBotWorld(Dataset):
                     ###
                     idx = random.randint(0, self.length - 1)
 
-        sample = dict(
-            video=video,
-            actions=actions,
-            state=state,
-            caption=caption,
-        )
+        sample = {
+            "video": video,
+            "actions": actions,
+            "state": state,
+            "caption": caption,
+        }
         return sample

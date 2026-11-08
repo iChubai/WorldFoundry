@@ -265,7 +265,7 @@ def forward_mixture_attn(
 
     # Split into the different mixtures
     attn_outputs = torch.split(attn_output, q_lens, dim=1)
-    attn_outputs = {key: value for key, value in zip(active_mixture_names, attn_outputs, strict=False)}
+    attn_outputs = dict(zip(active_mixture_names, attn_outputs, strict=False))
 
     # Multiply by W_o. [Batch_Size, Seq_Len_Q, Hidden_Size]
     attn_outputs_final = {}

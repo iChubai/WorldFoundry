@@ -75,7 +75,7 @@ def adjust_learning_rate_by_lr(optimizer, lr):
 
 
 def make_traj(args) -> PoseTrajectory3D:
-    if isinstance(args, tuple) or isinstance(args, list):
+    if isinstance(args, (tuple, list)):
         traj, tstamps = args
         return PoseTrajectory3D(
             positions_xyz=traj[:, :3],
@@ -88,7 +88,10 @@ def make_traj(args) -> PoseTrajectory3D:
 
 def save_trajectory_tum_format(traj, filename):
     traj = make_traj(traj)
-    tostr = lambda a: " ".join(map(str, a))
+
+    def tostr(a):
+        return " ".join(map(str, a))
+
     with Path(filename).open("w") as f:
         for i in range(traj.num_poses):
             f.write(

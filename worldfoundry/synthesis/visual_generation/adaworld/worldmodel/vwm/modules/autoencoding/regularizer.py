@@ -6,7 +6,7 @@ from ...modules.distributions.distributions import DiagonalGaussianDistribution
 
 class AbstractRegularizer(nn.Module):
     def __init__(self):
-        super(AbstractRegularizer, self).__init__()
+        super().__init__()
 
     def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, dict]:
         raise NotImplementedError
@@ -14,13 +14,10 @@ class AbstractRegularizer(nn.Module):
 
 class DiagonalGaussianRegularizer(AbstractRegularizer):
     def __init__(self, sample: bool = True):
-        super(DiagonalGaussianRegularizer, self).__init__()
+        super().__init__()
         self.sample = sample
 
     def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, dict]:
         posterior = DiagonalGaussianDistribution(z)
-        if self.sample:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if self.sample else posterior.mode()
         return z, {}

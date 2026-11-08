@@ -221,7 +221,9 @@ def cal_score_triton(q, k):
 
     kernel_config = {} if os.environ.get("TRITON_AUTOTUNE_ENBALE", "0") == "1" else configs_gating_preset["default"]
 
-    grid = lambda args: (triton.cdiv(s_q, args["BLOCK_M"]), B * H, 1)
+    def grid(args):
+        return (triton.cdiv(s_q, args["BLOCK_M"]), B * H, 1)
+
     _attn_fwd_gating[grid](
         q,
         k,
@@ -349,7 +351,8 @@ def attn_fwd_bsa_varlen_triton(
     o = torch.empty_like(q)
     M = torch.empty((q.shape[0], q.shape[1], q.shape[2]), device=q.device, dtype=torch.float32)
 
-    grid = lambda args: (triton.cdiv(q.shape[2], args["BLOCK_M"]), q.shape[0] * q.shape[1], 1)
+    def grid(args):
+        return (triton.cdiv(q.shape[2], args["BLOCK_M"]), q.shape[0] * q.shape[1], 1)
 
     config_key = "BLOCK_N_LG=64" if chunk_size_k == 64 else "default"
     if chunk_size_k > 128:
@@ -431,10 +434,7 @@ def attn_bwd_bsa_varlen_triton(
     arg_k = k
     arg_k = arg_k * (sm_scale * RCP_LN2)
 
-    if min(chunk_size_q, chunk_size_k) >= 128:
-        PRE_BLOCK = 128
-    else:
-        PRE_BLOCK = min(chunk_size_q, chunk_size_k)
+    PRE_BLOCK = 128 if min(chunk_size_q, chunk_size_k) >= 128 else min(chunk_size_q, chunk_size_k)
 
     assert N_CTX % PRE_BLOCK == 0
     pre_grid = (N_CTX // PRE_BLOCK, BATCH * N_HEAD)
@@ -455,7 +455,9 @@ def attn_bwd_bsa_varlen_triton(
         {} if os.environ.get("TRITON_AUTOTUNE_ENBALE", "0") == "1" else configs_bwd_dkdv_bsa_varlen_preset[config_key]
     )
 
-    grid_dkdv = lambda args: (triton.cdiv(arg_k.shape[2], args["BLOCK_N"]), 1, arg_k.shape[0] * arg_k.shape[1])
+    def grid_dkdv(args):
+        return (triton.cdiv(arg_k.shape[2], args["BLOCK_N"]), 1, arg_k.shape[0] * arg_k.shape[1])
+
     _attn_bwd_dkdv_bsa_varlen_wrapper[grid_dkdv](
         q,
         arg_k,
@@ -528,7 +530,9 @@ def attn_bwd_bsa_varlen_triton(
             else configs_bwd_dq_bsa_varlen_align_preset[config_key]
         )
 
-    grid_dq = lambda args: (triton.cdiv(q.shape[2], args["BLOCK_M"]), 1, q.shape[0] * q.shape[1])
+    def grid_dq(args):
+        return (triton.cdiv(q.shape[2], args["BLOCK_M"]), 1, q.shape[0] * q.shape[1])
+
     bwd_dq_func[grid_dq](
         q,
         arg_k,

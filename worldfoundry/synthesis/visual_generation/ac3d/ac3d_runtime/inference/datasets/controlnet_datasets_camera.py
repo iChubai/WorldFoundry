@@ -22,7 +22,7 @@ def unpack_mm_params(p):
 
 class RandomHorizontalFlipWithPose(nn.Module):
     def __init__(self, p=0.5):
-        super(RandomHorizontalFlipWithPose, self).__init__()
+        super().__init__()
         self.p = p
 
     def get_flip_flag(self, n_image):
@@ -126,10 +126,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
         hflip_p=0.0,
     ):
         minimum_sample_stride, sample_stride = stride
-        if hflip_p != 0.0:
-            use_flip = True
-        else:
-            use_flip = False
+        use_flip = hflip_p != 0.0
         root_path = video_root_dir
         self.root_path = root_path
         self.relative_pose = relative_pose
@@ -165,10 +162,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
         abs_w2cs = [cam_param.w2c_mat for cam_param in cam_params]
         abs_c2ws = [cam_param.c2w_mat for cam_param in cam_params]
         source_cam_c2w = abs_c2ws[0]
-        if self.zero_t_first_frame:
-            cam_to_origin = 0
-        else:
-            cam_to_origin = np.linalg.norm(source_cam_c2w[:3, 3])
+        cam_to_origin = 0 if self.zero_t_first_frame else np.linalg.norm(source_cam_c2w[:3, 3])
         target_cam_c2w = np.array([[1, 0, 0, 0], [0, 1, 0, -cam_to_origin], [0, 0, 1, 0], [0, 0, 0, 1]])
         abs2rel = target_cam_c2w @ abs_w2cs[0]
         ret_poses = [

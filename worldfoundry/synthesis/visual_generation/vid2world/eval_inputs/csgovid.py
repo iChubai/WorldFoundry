@@ -110,7 +110,7 @@ class CSGOVID(Dataset):
 
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
             with open(self.val_file_list_path) as f:  # val_file_list_path is a txt file, each line is a file path
-                self.val_file_set = set(line.strip() for line in f)
+                self.val_file_set = {line.strip() for line in f}
         print(f"Current directory: {os.getcwd()}")
         print(f"Does val_file_list_path exist? {os.path.exists(self.val_file_list_path)}")
         print(f"val_file_list_path: {self.val_file_list_path}")
@@ -168,9 +168,8 @@ class CSGOVID(Dataset):
                 if self.mode == "training":
                     if file not in self.val_file_set:
                         self.file_list.append(file_path)
-                elif self.mode == "validation":
-                    if file in self.val_file_set:
-                        self.file_list.append(file_path)
+                elif self.mode == "validation" and file in self.val_file_set:
+                    self.file_list.append(file_path)
         self.file_list.sort()  # Sort files for consistency
         # print(f"file_list_length: {len(self.file_list)}")
         if self.subsample:  # default is False, for debugging purpose

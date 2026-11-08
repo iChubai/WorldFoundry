@@ -379,10 +379,7 @@ class LatentRecon(nn.Module):
             out["depths_pred"] = results["depths_pred"]
 
             # opacity loss
-            if self.opt.lambda_opacity > 0:
-                opacity = gaussians[..., 3]
-            else:
-                opacity = None
+            opacity = gaussians[..., 3] if self.opt.lambda_opacity > 0 else None
             out["opacity_pred"] = opacity
         else:
             out = results
@@ -522,9 +519,8 @@ class LatentRecon(nn.Module):
     def reshape_mv_batch_to_view(self, x, num_input_multi_views=None):
         if num_input_multi_views is None:
             num_input_multi_views = self.num_input_multi_views
-        if num_input_multi_views != 1:
-            if len(x.shape) == 3:
-                x = rearrange(x, "(b v) d c -> (b d) v c", v=num_input_multi_views)
+        if num_input_multi_views != 1 and len(x.shape) == 3:
+            x = rearrange(x, "(b v) d c -> (b d) v c", v=num_input_multi_views)
         return x
 
     def repeat_to_mv(self, x, num_input_multi_views=None):

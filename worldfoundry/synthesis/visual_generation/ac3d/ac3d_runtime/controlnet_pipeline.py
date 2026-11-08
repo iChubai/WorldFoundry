@@ -248,10 +248,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
         device = device or self._execution_device
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds = self._get_t5_prompt_embeds(

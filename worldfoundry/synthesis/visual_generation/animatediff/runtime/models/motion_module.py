@@ -299,11 +299,10 @@ class VersatileAttention(CrossAttention):
         key = self.reshape_heads_to_batch_dim(key)
         value = self.reshape_heads_to_batch_dim(value)
 
-        if attention_mask is not None:
-            if attention_mask.shape[-1] != query.shape[1]:
-                target_length = query.shape[1]
-                attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
-                attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
+        if attention_mask is not None and attention_mask.shape[-1] != query.shape[1]:
+            target_length = query.shape[1]
+            attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
+            attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
 
         # attention, what we cannot get enough of
         if self._use_memory_efficient_attention_xformers:

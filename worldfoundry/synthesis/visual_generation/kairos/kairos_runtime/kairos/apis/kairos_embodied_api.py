@@ -24,15 +24,15 @@ class KairosEmbodiedAPI(torch.nn.Module):
     def __init__(
         self,
         config=MMConfig(
-            dict(
-                pipeline_type="KairosEmbodiedPipeline",
-                pretrained_dit=None,
-                vae_path=None,
-                text_encoder_path=None,
-                pipeline_args=None,
-                tea_cache_l1_thresh=None,
-                tea_cache_model_id="",
-            )
+            {
+                "pipeline_type": "KairosEmbodiedPipeline",
+                "pretrained_dit": None,
+                "vae_path": None,
+                "text_encoder_path": None,
+                "pipeline_args": None,
+                "tea_cache_l1_thresh": None,
+                "tea_cache_model_id": "",
+            }
         ),
         torch_dtype=torch.bfloat16,
         device="cuda",
@@ -47,7 +47,7 @@ class KairosEmbodiedAPI(torch.nn.Module):
 
         pretrained_dit = config.get("pretrained_dit", None)
         pipeline_type = config.get("pipeline_type", "KairosEmbodiedPipeline")
-        pipeline_args = config.get("pipeline_args", dict())
+        pipeline_args = config.get("pipeline_args", {})
 
         if pipeline_args:
             dit_config = pipeline_args.pop("dit_config", None)

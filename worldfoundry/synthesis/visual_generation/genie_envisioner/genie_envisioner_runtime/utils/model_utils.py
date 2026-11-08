@@ -27,7 +27,7 @@ def load_index_file(index_filename):
 
     if "weight_map" in index:
         index = index["weight_map"]
-    checkpoint_files = sorted(list(set(index.values())))
+    checkpoint_files = sorted(set(index.values()))
     checkpoint_files = [os.path.join(checkpoint_folder, f) for f in checkpoint_files]
     state_dict = {}
     for checkpoint_file in checkpoint_files:

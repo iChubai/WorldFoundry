@@ -154,10 +154,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
         # For text-to-video, batch is just the text prompt
         prompt = batch["prompts"][0]
         extended_prompt = batch["extended_prompts"][0] if "extended_prompts" in batch else None
-        if extended_prompt is not None:
-            prompts = [extended_prompt] * args.num_samples
-        else:
-            prompts = [prompt] * args.num_samples
+        prompts = [extended_prompt] * args.num_samples if extended_prompt is not None else [prompt] * args.num_samples
         initial_latent = None
 
         sampled_noise = torch.randn(

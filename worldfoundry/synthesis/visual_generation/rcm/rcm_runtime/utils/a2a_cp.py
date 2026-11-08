@@ -272,7 +272,7 @@ class DistributedAttention(torch.nn.Module):
 class MinimalA2AAttnOp(DistributedAttention):
     def __init__(self, local_attn=attention, *args, **kwargs):
         del args, kwargs
-        super(MinimalA2AAttnOp, self).__init__(local_attn)
+        super().__init__(local_attn)
 
     def set_context_parallel_group(self, process_group, ranks, stream):
         del ranks

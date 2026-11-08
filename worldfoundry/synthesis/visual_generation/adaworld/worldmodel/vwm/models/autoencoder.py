@@ -17,7 +17,7 @@ class AbstractAutoencoder(LightningModule):
     """
 
     def __init__(self, input_key: str = "img"):
-        super(AbstractAutoencoder, self).__init__()
+        super().__init__()
         self.input_key = input_key
 
     @abstractmethod
@@ -41,7 +41,7 @@ class AutoencodingEngine(AbstractAutoencoder):
     """
 
     def __init__(self, *args, encoder_config: dict, decoder_config: dict, regularizer_config: dict, **kwargs):
-        super(AutoencodingEngine, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.encoder: nn.Module = instantiate_from_config(encoder_config)
         self.decoder: nn.Module = instantiate_from_config(decoder_config)
         self.regularization: AbstractRegularizer = instantiate_from_config(regularizer_config)
@@ -80,7 +80,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
     def __init__(self, embed_dim: int, **kwargs):
         self.max_batch_size = kwargs.pop("max_batch_size", None)
         ddconfig = kwargs.pop("ddconfig")
-        super(AutoencodingEngineLegacy, self).__init__(
+        super().__init__(
             encoder_config={"target": "vwm.modules.diffusionmodules.model.Encoder", "params": ddconfig},
             decoder_config={"target": "vwm.modules.diffusionmodules.model.Decoder", "params": ddconfig},
             **kwargs,
@@ -129,7 +129,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
 
 class AutoencoderKL(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
-        super(AutoencoderKL, self).__init__(
+        super().__init__(
             regularizer_config={"target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer")},
             **kwargs,
         )
@@ -137,7 +137,7 @@ class AutoencoderKL(AutoencodingEngineLegacy):
 
 class AutoencoderKLModeOnly(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
-        super(AutoencoderKLModeOnly, self).__init__(
+        super().__init__(
             regularizer_config={
                 "target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"),
                 "params": {"sample": False},

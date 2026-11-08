@@ -83,10 +83,7 @@ class WanVAEWrapper(torch.nn.Module):  # todo
         device, dtype = latent.device, latent.dtype
         scale = [self.mean.to(device=device, dtype=dtype), 1.0 / self.std.to(device=device, dtype=dtype)]
 
-        if use_cache:
-            decode_function = self.model.cached_decode
-        else:
-            decode_function = self.model.decode
+        decode_function = self.model.cached_decode if use_cache else self.model.decode
 
         output = []
         for u in latent:
@@ -149,8 +146,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         # use higher precision for calculations
 
         original_dtype = flow_pred.dtype
-        flow_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(flow_pred.device), [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
+        flow_pred, xt, sigmas, timesteps = (
+            x.double().to(flow_pred.device) for x in [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
         )
 
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
@@ -172,8 +169,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         """
         # use higher precision for calculations
         original_dtype = x0_pred.dtype
-        x0_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(x0_pred.device), [x0_pred, xt, scheduler.sigmas, scheduler.timesteps]
+        x0_pred, xt, sigmas, timesteps = (
+            x.double().to(x0_pred.device) for x in [x0_pred, xt, scheduler.sigmas, scheduler.timesteps]
         )
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
         sigma_t = sigmas[timestep_id].reshape(-1, 1, 1, 1)
@@ -194,10 +191,7 @@ class WanDiffusionWrapper(torch.nn.Module):
     ) -> torch.Tensor:
         assert noisy_image_or_video.shape[1] == 16
         # [B, F] -> [B]
-        if self.uniform_timestep:
-            input_timestep = timestep[:, 0]
-        else:
-            input_timestep = timestep
+        input_timestep = timestep[:, 0] if self.uniform_timestep else timestep
         logits = None
         # ``dtype`` used to be exposed by older Diffusers ``ModelMixin``
         # versions.  Matrix-Game-2's vendored CausalWanModel no longer has

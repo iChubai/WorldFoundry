@@ -595,11 +595,10 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         skips = []
         skip_index = 0
         for index, block in enumerate(self.transformer_blocks):
-            if self.enable_uvit:
-                if index >= 15:
-                    long_connect = self.long_connect_fc[skip_index](skips.pop())
-                    hidden_states = hidden_states + long_connect
-                    skip_index += 1
+            if self.enable_uvit and index >= 15:
+                long_connect = self.long_connect_fc[skip_index](skips.pop())
+                hidden_states = hidden_states + long_connect
+                skip_index += 1
 
             if self.casual_3d_upsampler_index is not None and index in self.casual_3d_upsampler_index:
                 hidden_states = rearrange(hidden_states, "b (f h w) c -> b c f h w", f=video_length, h=height, w=width)
@@ -655,9 +654,8 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                     **kwargs,
                 )
 
-            if self.enable_uvit:
-                if index < 13:
-                    skips.append(hidden_states)
+            if self.enable_uvit and index < 13:
+                skips.append(hidden_states)
 
         if self.fake_3d and self.patch_3d:
             hidden_states = rearrange(hidden_states, "b (f h w) c -> (b h w) c f", f=video_length, w=width, h=height)
@@ -991,7 +989,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                         skip=layer > num_layers // 2,
                         after_norm=after_norm,
                         time_position_encoding=time_position_encoding,
-                        is_local_attention=False if layer % 2 == 0 else True,
+                        is_local_attention=not layer % 2 == 0,
                         local_attention_frames=2,
                         enable_inpaint=self.enable_inpaint and enable_clip_in_inpaint,
                     )
@@ -1011,7 +1009,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                         skip=layer > num_layers // 2,
                         after_norm=after_norm,
                         time_position_encoding=time_position_encoding,
-                        kvcompression=False if layer < num_layers // 2 else True,
+                        kvcompression=not layer < num_layers // 2,
                         enable_inpaint=self.enable_inpaint and enable_clip_in_inpaint,
                     )
                     for layer in range(num_layers)
@@ -1229,7 +1227,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                             height,
                             width,
                             clip_encoder_hidden_states,
-                            True if layer == 0 else False,
+                            layer == 0,
                         ],
                         "basic": [
                             None,
@@ -1237,7 +1235,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                             height,
                             width,
                             clip_encoder_hidden_states,
-                            True if layer == 0 else False,
+                            layer == 0,
                         ],
                         "hybrid_attention": [
                             None,
@@ -1245,7 +1243,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                             height,
                             width,
                             clip_encoder_hidden_states,
-                            True if layer == 0 else False,
+                            layer == 0,
                         ],
                     }[self.basic_block_type]
                     hidden_states = torch.utils.checkpoint.checkpoint(
@@ -1283,7 +1281,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                         temb=temb,
                         encoder_hidden_states=encoder_hidden_states,
                         image_rotary_emb=image_rotary_emb,
-                        disable_image_rotary_emb_in_attn1=True if layer == 0 else False,
+                        disable_image_rotary_emb_in_attn1=layer == 0,
                         **kwargs,
                     )  # (N, L, D)
 
@@ -1560,8 +1558,8 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
                         norm_elementwise_affine=norm_elementwise_affine,
                         norm_eps=norm_eps,
                         after_norm=after_norm,
-                        is_mmdit_block=True if index < mmdit_layers else False,
-                        is_swa=True if index in swa_layers else False,
+                        is_mmdit_block=index < mmdit_layers,
+                        is_swa=index in swa_layers,
                     )
                     for index in range(num_layers)
                 ]
@@ -1579,7 +1577,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
                         norm_elementwise_affine=norm_elementwise_affine,
                         norm_eps=norm_eps,
                         after_norm=after_norm,
-                        is_mmdit_block=True if _ < mmdit_layers else False,
+                        is_mmdit_block=_ < mmdit_layers,
                     )
                     for _ in range(num_layers)
                 ]

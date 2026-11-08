@@ -89,7 +89,7 @@ class GELU(nn.Module):
 
 class T5LayerNorm(nn.Module):
     def __init__(self, dim, eps=1e-6):
-        super(T5LayerNorm, self).__init__()
+        super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
@@ -106,7 +106,7 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T
 
 class T5FeedForward(nn.Module):
     def __init__(self, dim, dim_ffn, dropout=0.1):
-        super(T5FeedForward, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_ffn = dim_ffn
 
@@ -126,7 +126,7 @@ class T5FeedForward(nn.Module):
 
 class T5SelfAttention(nn.Module):
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5SelfAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -150,7 +150,7 @@ class T5SelfAttention(nn.Module):
 
 class T5CrossAttention(nn.Module):
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5CrossAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -180,7 +180,7 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T
 
 class T5Encoder(nn.Module):
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5Encoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -217,7 +217,7 @@ class T5Encoder(nn.Module):
 
 class T5Decoder(nn.Module):
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5Decoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -275,7 +275,7 @@ class T5Model(nn.Module):
         shared_pos=True,
         dropout=0.1,
     ):
-        super(T5Model, self).__init__()
+        super().__init__()
         self.vocab_size = vocab_size
         self.dim = dim
         self.dim_attn = dim_attn
@@ -334,18 +334,18 @@ def _t5(name, encoder_only=False, decoder_only=False, dtype=torch.float32, devic
 
 
 def umt5_xxl(**kwargs):
-    cfg = dict(
-        vocab_size=256384,
-        dim=4096,
-        dim_attn=4096,
-        dim_ffn=10240,
-        num_heads=64,
-        encoder_layers=24,
-        decoder_layers=24,
-        num_buckets=32,
-        shared_pos=False,
-        dropout=0.1,
-    )
+    cfg = {
+        "vocab_size": 256384,
+        "dim": 4096,
+        "dim_attn": 4096,
+        "dim_ffn": 10240,
+        "num_heads": 64,
+        "encoder_layers": 24,
+        "decoder_layers": 24,
+        "num_buckets": 32,
+        "shared_pos": False,
+        "dropout": 0.1,
+    }
     cfg.update(**kwargs)
     return _t5("umt5-xxl", **cfg)
 

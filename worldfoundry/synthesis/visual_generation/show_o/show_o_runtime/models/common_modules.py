@@ -307,9 +307,6 @@ class ResnetBlock(nn.Module):
         h = self.conv2(h)
 
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
 
         return x + h

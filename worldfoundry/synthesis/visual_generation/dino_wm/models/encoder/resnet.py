@@ -45,7 +45,7 @@ class resnet18(nn.Module):
 class resblock(nn.Module):
     # this implementation assumes square images
     def __init__(self, input_dim, output_dim, kernel_size, resample=None, hw=32):
-        super(resblock, self).__init__()
+        super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.kernel_size = kernel_size
@@ -76,10 +76,7 @@ class resblock(nn.Module):
         self.leakyrelu2 = nn.LeakyReLU()
 
     def forward(self, x):
-        if (self.input_dim == self.output_dim) and self.resample is None:
-            idnty = x
-        else:
-            idnty = self.skip(x)
+        idnty = x if self.input_dim == self.output_dim and self.resample is None else self.skip(x)
 
         residual = x
         residual = self.conv1(residual)
@@ -95,7 +92,7 @@ class resblock(nn.Module):
 
 class SmallResNet(nn.Module):
     def __init__(self, output_dim=512):
-        super(SmallResNet, self).__init__()
+        super().__init__()
 
         self.hw = 224
 

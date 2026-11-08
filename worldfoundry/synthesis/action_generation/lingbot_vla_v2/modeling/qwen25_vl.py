@@ -372,10 +372,7 @@ def forward_without_grid_thw(
     position_embeddings = (emb.cos(), emb.sin())
 
     for layer_num, blk in enumerate(self.blocks):
-        if layer_num in self.fullatt_block_indexes:
-            cu_seqlens_now = cu_seqlens
-        else:
-            cu_seqlens_now = cu_window_seqlens
+        cu_seqlens_now = cu_seqlens if layer_num in self.fullatt_block_indexes else cu_window_seqlens
 
         hidden_states = blk(
             hidden_states,

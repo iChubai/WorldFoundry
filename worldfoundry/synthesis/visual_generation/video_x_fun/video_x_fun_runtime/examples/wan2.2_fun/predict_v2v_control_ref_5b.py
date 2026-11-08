@@ -199,18 +199,17 @@ if transformer_path is not None:
     m, u = transformer.load_state_dict(state_dict, strict=False)
     print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
 
-if transformer_2 is not None:
-    if transformer_high_path is not None:
-        print(f"From checkpoint: {transformer_high_path}")
-        if transformer_high_path.endswith("safetensors"):
-            from safetensors.torch import load_file
+if transformer_2 is not None and transformer_high_path is not None:
+    print(f"From checkpoint: {transformer_high_path}")
+    if transformer_high_path.endswith("safetensors"):
+        from safetensors.torch import load_file
 
-            state_dict = load_file(transformer_high_path)
-        else:
-            state_dict = load_tensor_state_dict(transformer_high_path)
+        state_dict = load_file(transformer_high_path)
+    else:
+        state_dict = load_tensor_state_dict(transformer_high_path)
 
-        m, u = transformer_2.load_state_dict(state_dict, strict=False)
-        print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
+    m, u = transformer_2.load_state_dict(state_dict, strict=False)
+    print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
 
 # Get Vae
 Chosen_AutoencoderKL = {"AutoencoderKLWan": AutoencoderKLWan, "AutoencoderKLWan3_8": AutoencoderKLWan3_8}[

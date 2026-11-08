@@ -7,7 +7,7 @@ Only inference codecs are retained, with atomic output publication.
 
 import subprocess
 import tempfile
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import numpy as np
@@ -171,9 +171,7 @@ def video_writer(path, fps, width=832, height=480, lossless=False, depth=False):
             if process.poll() is None:
                 process.terminate()
             if not process.stdin.closed:
-                try:
+                with suppress(BrokenPipeError):
                     process.stdin.close()
-                except BrokenPipeError:
-                    pass
             process.wait()
         temporary.unlink(missing_ok=True)

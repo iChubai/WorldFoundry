@@ -89,10 +89,7 @@ def resize_image(
     resized = resized.to(torch.float32)
     resized = (resized - in_min) / (in_max - in_min)
 
-    if is_video:
-        resized = torch.permute(resized, [0, 2, 3, 1]).numpy()
-    else:
-        resized = torch.permute(resized, [1, 2, 0]).numpy()
+    resized = torch.permute(resized, [0, 2, 3, 1]).numpy() if is_video else torch.permute(resized, [1, 2, 0]).numpy()
 
     return resized
 
@@ -496,9 +493,8 @@ def get_target_fps(
         step_size = max(int(video_fps / target_fps), 1)
         num_frames_sampled_at_fps = int(total_frames / step_size)
         if num_frames_sampled == 0:
-            if "uniform" in frame_sample_mode:
-                if num_frames_sampled_at_fps > max_frames:
-                    break
+            if "uniform" in frame_sample_mode and num_frames_sampled_at_fps > max_frames:
+                break
             selected_target_fps = target_fps
             num_frames_sampled = num_frames_sampled_at_fps
 
@@ -928,11 +924,11 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
         pixel_values_videos = np.concatenate(batch_crops, 0)
         video_token_pooling = np.concatenate(batch_pooled_patches_idx, 0)
 
-        data = dict(
-            pixel_values_videos=pixel_values_videos,
-            video_token_pooling=video_token_pooling,
-            video_grids=video_grids,
-        )
+        data = {
+            "pixel_values_videos": pixel_values_videos,
+            "video_token_pooling": video_token_pooling,
+            "video_grids": video_grids,
+        }
 
         return BatchFeature(data, tensor_type=return_tensors)
 

@@ -75,15 +75,15 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
     Autoencoder3d adapted from Stable Diffusion 1.x, 2.x and XL.
     """
     # params
-    cfg = dict(
-        dim=96,
-        z_dim=z_dim,
-        dim_mult=[1, 2, 4, 4],
-        num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
-        dropout=0.0,
-    )
+    cfg = {
+        "dim": 96,
+        "z_dim": z_dim,
+        "dim_mult": [1, 2, 4, 4],
+        "num_res_blocks": 2,
+        "attn_scales": [],
+        "temperal_downsample": [False, True, True],
+        "dropout": 0.0,
+    }
     cfg.update(**kwargs)
 
     # init model

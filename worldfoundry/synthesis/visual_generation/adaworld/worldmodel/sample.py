@@ -108,7 +108,7 @@ def load_video_slices(
     video = rearrange(video, "t h w c -> t c h w")
     if video.shape[-1] != resolution or video.shape[-2] != resolution:
         video = F.interpolate(video, resolution, mode="bicubic")
-    return [frame for frame in video]
+    return list(video)
 
 
 def get_sample(source_video_dict: dict[str, object], target_video_dict: dict[str, object], args: argparse.Namespace):

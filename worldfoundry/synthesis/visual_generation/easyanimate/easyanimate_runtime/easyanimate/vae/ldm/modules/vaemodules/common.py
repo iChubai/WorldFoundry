@@ -10,10 +10,7 @@ from .activations import get_activation
 try:
     current_version = torch.__version__
     version_numbers = [int(x) for x in current_version.split(".")[:2]]
-    if version_numbers[0] < 2 or (version_numbers[0] == 2 and version_numbers[1] < 2):
-        need_to_float = True
-    else:
-        need_to_float = False
+    need_to_float = bool(version_numbers[0] < 2 or version_numbers[0] == 2 and version_numbers[1] < 2)
 except Exception:
     print("Encountered an error with Torch version. Set the data type to float in the VAE. ")
     need_to_float = False

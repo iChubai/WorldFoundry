@@ -212,7 +212,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
         )
         self.metadata_path = None
         self.repeat = 1
-        self.data_file_keys = tuple()
+        self.data_file_keys = ()
         self.main_data_operator = lambda x: x
         self.special_operator_map = {}
         self.max_data_items = max_data_items
@@ -479,7 +479,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
             "class": type(self).__name__,
             "rawpath_sha": _sha1_text("\n".join(sorted(rawpath))),
             "rawpath_count": len(rawpath),
-            "inference_assigns": sorted(list(inference_assigns or [])),
+            "inference_assigns": sorted(inference_assigns or []),
             "inputs": self._dataset_cache_inputs_dict(),
         }
         return hashlib.sha1(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:24]
@@ -575,7 +575,7 @@ class _MosaicDatasetBase(torch.utils.data.Dataset):
                 "split_source_count": getattr(self, "_split_source_count", None),
             },
             "inputs": self._dataset_cache_inputs_dict(),
-            "inference_assigns": sorted(list(inference_assigns or [])),
+            "inference_assigns": sorted(inference_assigns or []),
             "rawpath_count": len(rawpath),
             "kept_count": len(dataset_info),
             "dataset_info": dataset_info,

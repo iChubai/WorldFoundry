@@ -97,7 +97,7 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
         self.scale_by_keep = scale_by_keep
 
@@ -254,7 +254,7 @@ class Attention(nn.Module):
         xq = apply_rotary_emb(xq, freqs_cis)
         xk = apply_rotary_emb(xk, freqs_cis)
 
-        xq, xk, xv = map(lambda x: x.transpose(1, 2), (xq, xk, xv))
+        xq, xk, xv = (x.transpose(1, 2) for x in (xq, xk, xv))
 
         if self.kv_cache is not None:
             keys, values = self.kv_cache.update(input_pos, xk, xv)
@@ -269,7 +269,7 @@ class Attention(nn.Module):
             keys,
             values,
             attn_mask=mask,
-            is_causal=True if mask is None else False,  # is_causal=False is for KV cache
+            is_causal=mask is None,  # is_causal=False is for KV cache
             dropout_p=self.attn_dropout_p if self.training else 0,
         )
 
@@ -647,10 +647,7 @@ def sample_Open_MAGVIT2(
         sample_pre, sample_post = cond_token, cond_token
 
     cond_len = x.shape[1]
-    if cfg_scale[0] > 1.0:
-        max_batch_size = x.shape[0] // 2
-    else:
-        max_batch_size = x.shape[0]
+    max_batch_size = x.shape[0] // 2 if cfg_scale[0] > 1.0 else x.shape[0]
 
     max_seq_length = cond_len + steps
     max_batch_size_cfg = max_batch_size * 2 if cfg_scale[0] > 1.0 else max_batch_size
@@ -681,10 +678,7 @@ def sample_Open_MAGVIT2(
         )
         for i in range(k):
             if i == 0:  ## only CLS Token
-                if cfg_scale[i] > 1.0:
-                    factor_x = torch.concat([cond_token, uncond_token])
-                else:
-                    factor_x = cond_token
+                factor_x = torch.concat([cond_token, uncond_token]) if cfg_scale[i] > 1.0 else cond_token
             factor_input_pos = torch.tensor([i], device=device)
             logits = model.decode_subtoken(h, factor_x, factor_input_pos, first_step=(i == 0))
 
@@ -721,9 +715,8 @@ def sample_Open_MAGVIT2(
 
 def sample_from_logits(logits, temperature=1.0, top_k=None, top_p=None, sample_logits=True):
     logits = logits[:, -1, :] / temperature
-    if top_k is not None or top_p is not None:
-        if top_k > 0 or top_p < 1.0:
-            logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
+    if (top_k is not None or top_p is not None) and (top_k > 0 or top_p < 1.0):
+        logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
 
     probs = F.softmax(logits, dim=-1)
 

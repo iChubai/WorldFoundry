@@ -91,11 +91,10 @@ class FrameBank:
                 if len(nearby) >= nearby_k:
                     break
                 # Skip entry if it duplicates the anchor pose.
-                if anchor_c2w_cpu is not None:
-                    if float((e.c2w - anchor_c2w_cpu).norm()) < 1e-3:
-                        continue
+                if anchor_c2w_cpu is not None and float((e.c2w - anchor_c2w_cpu).norm()) < 1e-3:
+                    continue
                 nearby.append(e)
-        nearby_ids = set(id(e) for e in nearby)
+        nearby_ids = {id(e) for e in nearby}
 
         # 2) Score remaining entries by metric and greedily select up to select_k.
         remaining = [e for e in self.entries if id(e) not in nearby_ids]

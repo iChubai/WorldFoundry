@@ -146,10 +146,7 @@ class WarpAsHistoryRuntime:
             target = self.default_work_dir / f"{self.model_id}.json"
         else:
             target = Path(output_path).expanduser()
-            if target.suffix:
-                target = target.with_suffix(".json")
-            else:
-                target = target / f"{self.model_id}.json"
+            target = target.with_suffix(".json") if target.suffix else target / f"{self.model_id}.json"
         return target.resolve()
 
     @staticmethod
@@ -256,7 +253,7 @@ class WarpAsHistoryRuntime:
             rows = list(csv.DictReader(handle))
         if len(rows) != 1:
             raise ValueError(f"{path} must contain exactly one demo row, got {len(rows)}")
-        row = {key: value for key, value in rows[0].items()}
+        row = dict(rows[0].items())
         for key in ("first_frame_path", "camera_poses_path", "warp_video_path", "warp_visibility_mask_path"):
             value = (row.get(key) or "").strip()
             if value:

@@ -346,15 +346,15 @@ class WorldFMTriConditionInprocess:
             kw["tri_condition"] = True
             return self.model.forward_with_dpmsolver(x, timestep, y=cond, **kw)
 
-        model_kwargs = dict(
-            data_info={"img_hw": hw, "aspect_ratio": ar},
-            mask=None,
-            tri_condition=True,
-            cond1=z_c1,
-            cond2=z_c2,
-            debug_mask_log=False,
-            use_cond2_cross_attn=False,
-        )
+        model_kwargs = {
+            "data_info": {"img_hw": hw, "aspect_ratio": ar},
+            "mask": None,
+            "tri_condition": True,
+            "cond1": z_c1,
+            "cond2": z_c2,
+            "debug_mask_log": False,
+            "use_cond2_cross_attn": False,
+        }
 
         if int(self.cfg.step) == 1:
             diffusion = IDDPM("1000", learn_sigma=True, pred_sigma=True)
@@ -474,15 +474,15 @@ class WorldFMTriConditionInprocess:
             kw["debug_mask_log"] = False
             return self.model.forward_with_dpmsolver(x, timestep, y=cond, **kw)
 
-        model_kwargs = dict(
-            data_info={"img_hw": hw, "aspect_ratio": ar},
-            mask=None,
-            tri_condition=True,
-            cond1=z_c1,
-            cond2=z_c2,
-            debug_mask_log=False,
-            use_cond2_cross_attn=False,
-        )
+        model_kwargs = {
+            "data_info": {"img_hw": hw, "aspect_ratio": ar},
+            "mask": None,
+            "tri_condition": True,
+            "cond1": z_c1,
+            "cond2": z_c2,
+            "debug_mask_log": False,
+            "use_cond2_cross_attn": False,
+        }
 
         dpm_solver = DPMS(
             model_fn_wrapper,

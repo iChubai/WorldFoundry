@@ -66,10 +66,7 @@ def load_video(video_path: str, max_frames: int = 81):
 
 def load_images(image_paths: list[str], max_frames: int = None):
     frames_list = []
-    if max_frames is None:
-        max_frames = len(image_paths)
-    else:
-        max_frames = min(max_frames, len(image_paths))
+    max_frames = len(image_paths) if max_frames is None else min(max_frames, len(image_paths))
     for i in range(max_frames):
         img_bgr = cv2.imread(image_paths[i])
         if img_bgr is None:
@@ -334,10 +331,7 @@ class DepthPredictDA3:
 
         # Save depth maps
         for idx in range(len(frames)):
-            if seg_masks is not None:
-                local_seg_mask = seg_masks[idx]
-            else:
-                local_seg_mask = np.ones_like(depth_maps[idx])
+            local_seg_mask = seg_masks[idx] if seg_masks is not None else np.ones_like(depth_maps[idx])
 
             depth_map = depth_maps[idx] * depth_scale_factor
             depth_map[local_seg_mask == 0] = 0.0

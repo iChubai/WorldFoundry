@@ -179,10 +179,7 @@ with torch.no_grad():
 
     if args.compile_dit:
         # Warm up each distinct kv_size pattern to trigger compilation
-        if num_frame_per_block == 1:
-            warmup_ctx_sizes = [1, 3, 5, 6]
-        else:
-            warmup_ctx_sizes = [3, 6]
+        warmup_ctx_sizes = [1, 3, 5, 6] if num_frame_per_block == 1 else [3, 6]
 
         for wi, n_ctx in enumerate(warmup_ctx_sizes):
             kv_size = n_ctx * 1560
@@ -307,10 +304,7 @@ if dist.is_initialized():
 # Inference loop
 # ============================================================================
 for i, batch_data in tqdm(enumerate(dataloader), total=len(dataloader), disable=(rank != 0), desc=f"Rank {rank}"):
-    if dist.is_initialized():
-        global_idx = i * world_size + rank
-    else:
-        global_idx = i
+    global_idx = i * world_size + rank if dist.is_initialized() else i
 
     batch = batch_data if isinstance(batch_data, dict) else batch_data[0]
 

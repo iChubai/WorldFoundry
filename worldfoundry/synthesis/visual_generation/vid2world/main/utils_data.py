@@ -44,7 +44,7 @@ class DataModuleFromConfig(pl.LightningDataModule):
     def __init__(self, batch_size, validation, wrap=False, num_workers=None):
         super().__init__()
         self.batch_size = batch_size
-        self.dataset_configs = dict()
+        self.dataset_configs = {}
         self.num_workers = num_workers if num_workers is not None else batch_size * 2
         self.use_worker_init_fn = False
         self.dataset_configs["validation"] = validation
@@ -58,7 +58,7 @@ class DataModuleFromConfig(pl.LightningDataModule):
         pass
 
     def setup(self, stage=None):
-        self.datasets = dict((k, instantiate_from_config(self.dataset_configs[k])) for k in self.dataset_configs)
+        self.datasets = {k: instantiate_from_config(self.dataset_configs[k]) for k in self.dataset_configs}
         if self.wrap:
             for k in self.datasets:
                 self.datasets[k] = WrappedDataset(self.datasets[k])

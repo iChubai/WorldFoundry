@@ -622,10 +622,7 @@ class Lyra2WanModel(nn.Module):
         gen_grid = (0, 0, 0)
         buffer_token_dim = None
         if use_buffer_tokens:
-            if self.buffer_pixelshuffle:
-                buffer_token_dim = int(self.buffer_in_dim) * pt * ph * pw
-            else:
-                buffer_token_dim = int(self.dim)
+            buffer_token_dim = int(self.buffer_in_dim) * pt * ph * pw if self.buffer_pixelshuffle else int(self.dim)
 
         for i, x_chunk in enumerate(xs):
             kid = framepack_kernel_ids[i]
@@ -885,14 +882,14 @@ class Lyra2WanModel(nn.Module):
                 context_clip = self.img_emb(frame_cond_crossattn_emb_B_L_D)
                 context_B_L_D = torch.concat([context_clip, context_B_L_D], dim=1)
 
-            kwargs_blocks = dict(
-                e=e0_B_6_D,
-                seq_lens=seq_lens,
-                video_size=video_size,
-                freqs=self.rope_position_embedding(x_B_T_H_W_D),
-                context=context_B_L_D,
-                context_lens=context_lens,
-            )
+            kwargs_blocks = {
+                "e": e0_B_6_D,
+                "seq_lens": seq_lens,
+                "video_size": video_size,
+                "freqs": self.rope_position_embedding(x_B_T_H_W_D),
+                "context": context_B_L_D,
+                "context_lens": context_lens,
+            }
 
             for block_idx, block in enumerate(self.blocks):
                 if slg_layers is not None and block_idx in slg_layers and is_uncond:
@@ -993,26 +990,26 @@ class Lyra2WanModel(nn.Module):
         assert x_tokens.shape[0] == 1
         seq_lens = torch.tensor([x_tokens.size(1)] * x_tokens.size(0), dtype=torch.long, device=x_tokens.device)
         if self.use_plucker_condition:
-            kwargs_blocks = dict(
-                e=e0_B_6_D,
-                seq_lens=seq_lens,
-                video_size=VideoSize(T=1, H=1, W=x_tokens.size(1)),
-                freqs=freqs_tokens,
-                context=context_B_L_D,
-                context_lens=None,
-                camera=camera_tokens,
-                buffer=buffer_tokens,
-            )
+            kwargs_blocks = {
+                "e": e0_B_6_D,
+                "seq_lens": seq_lens,
+                "video_size": VideoSize(T=1, H=1, W=x_tokens.size(1)),
+                "freqs": freqs_tokens,
+                "context": context_B_L_D,
+                "context_lens": None,
+                "camera": camera_tokens,
+                "buffer": buffer_tokens,
+            }
         else:
-            kwargs_blocks = dict(
-                e=e0_B_6_D,
-                seq_lens=seq_lens,
-                video_size=VideoSize(T=1, H=1, W=x_tokens.size(1)),
-                freqs=freqs_tokens,
-                context=context_B_L_D,
-                context_lens=None,
-                buffer=buffer_tokens,
-            )
+            kwargs_blocks = {
+                "e": e0_B_6_D,
+                "seq_lens": seq_lens,
+                "video_size": VideoSize(T=1, H=1, W=x_tokens.size(1)),
+                "freqs": freqs_tokens,
+                "context": context_B_L_D,
+                "context_lens": None,
+                "buffer": buffer_tokens,
+            }
 
         x_B_L_D = x_tokens
         for block in self.blocks:

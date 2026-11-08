@@ -606,7 +606,7 @@ def create_attention_mask_lvg_v2(
         if sid_text_for_bi.shape[-1] % 2 != 0:
             sid_text_for_bi = sid_text_for_bi[:, :-1]
             eid_text_for_bi = eid_text_for_bi[:, :-1]
-        select_idx = [i for i in range(0, sid_text_for_bi.shape[1], 2)]
+        select_idx = list(range(0, sid_text_for_bi.shape[1], 2))
         sid_text_for_bi = sid_text_for_bi[:, select_idx]
         select_idx = [i + 1 for i in range(0, eid_text_for_bi.shape[1], 2)]
         eid_text_for_bi = eid_text_for_bi[:, select_idx]

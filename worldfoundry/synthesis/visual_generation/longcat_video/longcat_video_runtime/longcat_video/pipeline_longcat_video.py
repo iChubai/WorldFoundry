@@ -299,12 +299,11 @@ class LongCatVideoPipeline:
             latents = torch.randn(shape, generator=generator, device=device, dtype=dtype)
 
         if image is not None or video is not None:
-            if isinstance(generator, list):
-                if len(generator) != batch_size:
-                    raise ValueError(
-                        f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"
-                        f" size of {batch_size}. Make sure the batch size matches the length of the generators."
-                    )
+            if isinstance(generator, list) and len(generator) != batch_size:
+                raise ValueError(
+                    f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"
+                    f" size of {batch_size}. Make sure the batch size matches the length of the generators."
+                )
 
             condition_data = image if image is not None else video
             is_image = image is not None
@@ -411,7 +410,7 @@ class LongCatVideoPipeline:
 
         ratio = height / width
         # Find the closest bucket
-        closest_bucket = sorted(list(bucket_config.keys()), key=lambda x: abs(float(x) - ratio))[0]
+        closest_bucket = sorted(bucket_config.keys(), key=lambda x: abs(float(x) - ratio))[0]
         target_h, target_w = bucket_config[closest_bucket][0]
         return target_h, target_w
 
@@ -531,10 +530,7 @@ class LongCatVideoPipeline:
         device = self.device
 
         # 2. Define call parameters
-        if isinstance(prompt, str):
-            batch_size = 1
-        else:
-            batch_size = len(prompt)
+        batch_size = 1 if isinstance(prompt, str) else len(prompt)
 
         # 3. Encode input prompt
         dit_dtype = self.dit.dtype
@@ -760,10 +756,7 @@ class LongCatVideoPipeline:
         device = self.device
 
         # 2. Define call parameters
-        if isinstance(prompt, str):
-            batch_size = 1
-        else:
-            batch_size = len(prompt)
+        batch_size = 1 if isinstance(prompt, str) else len(prompt)
 
         # 3. Encode input prompt
         dit_dtype = self.dit.dtype
@@ -996,10 +989,7 @@ class LongCatVideoPipeline:
         device = self.device
 
         # 2. Define call parameters
-        if isinstance(prompt, str):
-            batch_size = 1
-        else:
-            batch_size = len(prompt)
+        batch_size = 1 if isinstance(prompt, str) else len(prompt)
 
         # 3. Encode input prompt
         dit_dtype = self.dit.dtype
@@ -1260,10 +1250,7 @@ class LongCatVideoPipeline:
         device = self.device
 
         # 2. Define call parameters
-        if isinstance(prompt, str):
-            batch_size = 1
-        else:
-            batch_size = len(prompt)
+        batch_size = 1 if isinstance(prompt, str) else len(prompt)
 
         # 3. Encode input prompt
         dit_dtype = self.dit.dtype

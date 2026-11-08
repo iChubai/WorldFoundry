@@ -5,7 +5,7 @@ from vwm.util import append_dims, instantiate_from_config
 
 class Denoiser(nn.Module):
     def __init__(self, scaling_config: dict):
-        super(Denoiser, self).__init__()
+        super().__init__()
         self.scaling = instantiate_from_config(scaling_config)
 
     def possibly_quantize_sigma(self, sigma: torch.Tensor) -> torch.Tensor:

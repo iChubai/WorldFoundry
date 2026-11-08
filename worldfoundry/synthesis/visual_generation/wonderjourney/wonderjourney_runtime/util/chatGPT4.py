@@ -33,7 +33,7 @@ openai.api_key = os.environ.get("OPENAI_API_KEY", "")
 
 class TextpromptGen:
     def __init__(self, root_path, control=False):
-        super(TextpromptGen, self).__init__()
+        super().__init__()
         self.model = "gpt-4"
         self.save_prompt = True
         self.scene_num = 0

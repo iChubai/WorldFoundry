@@ -90,9 +90,7 @@ def _load_lora_model(
     ):
         raise TypeError("TinyVLA non_lora_trainables.bin must contain a non-empty string-to-tensor mapping")
     non_lora = _normalize_non_lora_keys(non_lora)
-    expected_action_keys = {
-        key for key in model.state_dict() if key.startswith("embed_out.") or key.startswith("proj_to_action.")
-    }
+    expected_action_keys = {key for key in model.state_dict() if key.startswith(("embed_out.", "proj_to_action."))}
     missing_action = sorted(expected_action_keys - set(non_lora))
     if missing_action:
         raise RuntimeError(

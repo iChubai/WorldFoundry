@@ -11,7 +11,7 @@ class VideoResBlock(ResnetBlock):
     def __init__(
         self, out_channels, *args, dropout=0.0, video_kernel_size=3, alpha=0.0, merge_strategy="learned", **kwargs
     ):
-        super(VideoResBlock, self).__init__(out_channels=out_channels, dropout=dropout, *args, **kwargs)
+        super().__init__(out_channels=out_channels, dropout=dropout, *args, **kwargs)
         if video_kernel_size is None:
             video_kernel_size = [3, 1, 1]
         self.time_stack = ResBlock(
@@ -64,7 +64,7 @@ class VideoResBlock(ResnetBlock):
 
 class AE3DConv(torch.nn.Conv2d):
     def __init__(self, in_channels, out_channels, video_kernel_size=3, *args, **kwargs):
-        super(AE3DConv, self).__init__(in_channels, out_channels, *args, **kwargs)
+        super().__init__(in_channels, out_channels, *args, **kwargs)
         if isinstance(video_kernel_size, Iterable):
             padding = [int(k // 2) for k in video_kernel_size]
         else:
@@ -108,7 +108,7 @@ class VideoDecoder(Decoder):
         assert self.time_mode in self.available_time_modes, (
             f"'time_mode' parameter has to be in {self.available_time_modes}"
         )
-        super(VideoDecoder, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_last_layer(self, skip_time_mix=False, **kwargs):
         if self.time_mode == "attn-only":

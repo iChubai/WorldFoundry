@@ -309,10 +309,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         device = device or self._execution_device
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds = self._get_t5_prompt_embeds(
@@ -455,10 +452,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             latent_smpl = vae_encode_1(smpl)
             latent_hamer = vae_encode_1(hamer)
             latent_ref = vae_encode_1(image)
-            if self.do_classifier_free_guidance:
-                latent_null_ref = vae_encode_1(torch.zeros_like(image))
-            else:
-                latent_null_ref = None
+            latent_null_ref = vae_encode_1(torch.zeros_like(image)) if self.do_classifier_free_guidance else None
         else:
 
             def vae_encode_2(x):
@@ -469,10 +463,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             latent_smpl = vae_encode_2(smpl)
             latent_hamer = vae_encode_2(hamer)
             latent_ref = vae_encode_2(image)
-            if self.do_classifier_free_guidance:
-                latent_null_ref = vae_encode_2(torch.zeros_like(image))
-            else:
-                latent_null_ref = None
+            latent_null_ref = vae_encode_2(torch.zeros_like(image)) if self.do_classifier_free_guidance else None
 
         mask_lat_size = torch.zeros(batch_size, 4, num_latent_frames, latent_height, latent_width)
         mask_lat_size = mask_lat_size.to(latent_condition.device)

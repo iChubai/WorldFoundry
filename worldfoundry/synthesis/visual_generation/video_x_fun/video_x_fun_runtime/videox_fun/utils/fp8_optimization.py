@@ -6,11 +6,10 @@ import torch.nn as nn
 
 def replace_parameters_by_name(module, name_keywords, device):
     for name, param in list(module.named_parameters(recurse=False)):
-        if any(keyword in name for keyword in name_keywords):
-            if isinstance(param, nn.Parameter):
-                tensor = param.data
-                delattr(module, name)
-                setattr(module, name, tensor.to(device=device))
+        if any(keyword in name for keyword in name_keywords) and isinstance(param, nn.Parameter):
+            tensor = param.data
+            delattr(module, name)
+            setattr(module, name, tensor.to(device=device))
     for _child_name, child_module in module.named_children():
         replace_parameters_by_name(child_module, name_keywords, device)
 

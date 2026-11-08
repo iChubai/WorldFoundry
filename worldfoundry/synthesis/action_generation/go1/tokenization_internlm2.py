@@ -191,10 +191,7 @@ class InternLM2Tokenizer(PreTrainedTokenizer):
         return (out_vocab_file,)
 
     def build_inputs_with_special_tokens(self, token_ids_0, token_ids_1=None):
-        if self.add_bos_token:
-            bos_token_ids = [self.bos_token_id]
-        else:
-            bos_token_ids = []
+        bos_token_ids = [self.bos_token_id] if self.add_bos_token else []
 
         output = bos_token_ids + token_ids_0
 

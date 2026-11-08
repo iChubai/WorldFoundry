@@ -231,10 +231,7 @@ def _resolve_path_under_runtime(
         raise ValueError(f"Unable to resolve Solaris {label}.")
 
     # Resolve absolute path: if relative, combine with runtime_root.
-    if not candidate.is_absolute():
-        candidate = (Path(runtime_root) / candidate).resolve()
-    else:
-        candidate = candidate.resolve()
+    candidate = (Path(runtime_root) / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
 
     # Check existence if required.
     if must_exist and not candidate.exists():

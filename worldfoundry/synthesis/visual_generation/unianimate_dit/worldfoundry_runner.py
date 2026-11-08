@@ -172,8 +172,7 @@ def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path, reference_im
         ],
         cwd=str(workspace_root),
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if completed.returncode != 0:
@@ -262,8 +261,7 @@ def main() -> None:
         cwd=str(workspace_root),
         env=env,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if completed.returncode != 0:

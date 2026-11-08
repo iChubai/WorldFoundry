@@ -704,11 +704,7 @@ class CasualWorldActionTransformer_MoT(
         for key, tensor in state_dict.items():
             if key.startswith("blocks."):
                 continue
-            if (
-                key.startswith("state_encoder.")
-                or key.startswith("action_encoder.")
-                or key.startswith("action_decoder.")
-            ):
+            if key.startswith(("state_encoder.", "action_encoder.", "action_decoder.")):
                 if skip_action_expert:
                     skipped_keys.append(key)
                 continue
@@ -828,10 +824,7 @@ class CasualWorldActionTransformer_MoT(
         future_latents: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor], int, int, dict[str, int] | None]:
         """Encode ref (+ optional future) latents into visual stream tokens and RoPE."""
-        if future_latents is not None:
-            visual_input = torch.cat([ref_latents, future_latents], dim=2)
-        else:
-            visual_input = ref_latents
+        visual_input = torch.cat([ref_latents, future_latents], dim=2) if future_latents is not None else ref_latents
 
         visual_rotary_emb = self.rope(visual_input)
         visual_hidden_states = self.patch_embedding(visual_input)

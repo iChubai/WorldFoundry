@@ -89,10 +89,7 @@ def relative_pose_quaternion(
         a_q = quat_normalize(action[..., s + 3 : s + pose_dim])
         s_xyz = state[..., s : s + 3]
         s_q = quat_normalize(state[..., s + 3 : s + pose_dim])
-        if relative_type == "local":
-            rel_xyz = quat_rotate_inverse(a_xyz - s_xyz, s_q)
-        else:
-            rel_xyz = a_xyz - s_xyz
+        rel_xyz = quat_rotate_inverse(a_xyz - s_xyz, s_q) if relative_type == "local" else a_xyz - s_xyz
         rel_q = quat_canonicalize(quat_normalize(quat_multiply(quat_inverse(s_q), a_q)))
         parts.append(torch.cat([rel_xyz, rel_q], dim=-1))
     return torch.cat(parts, dim=-1)
@@ -118,10 +115,7 @@ def absolute_pose_quaternion(
         r_q = quat_normalize(rel_action[..., s + 3 : s + pose_dim])
         s_xyz = state[..., s : s + 3]
         s_q = quat_normalize(state[..., s + 3 : s + pose_dim])
-        if relative_type == "local":
-            abs_xyz = s_xyz + quat_rotate(s_q, r_xyz)
-        else:
-            abs_xyz = s_xyz + r_xyz
+        abs_xyz = s_xyz + quat_rotate(s_q, r_xyz) if relative_type == "local" else s_xyz + r_xyz
         abs_q = quat_canonicalize(quat_normalize(quat_multiply(s_q, r_q)))
         parts.append(torch.cat([abs_xyz, abs_q], dim=-1))
     return torch.cat(parts, dim=-1)

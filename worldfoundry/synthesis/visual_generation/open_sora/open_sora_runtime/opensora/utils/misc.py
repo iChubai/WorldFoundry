@@ -36,7 +36,7 @@ def create_logger(logging_dir=None):
     Create a logger that writes to a log file and stdout.
     """
     if is_main_process():  # real logger
-        additional_args = dict()
+        additional_args = {}
         if logging_dir is not None:
             additional_args["handlers"] = [
                 logging.StreamHandler(),

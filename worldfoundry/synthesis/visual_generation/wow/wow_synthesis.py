@@ -15,6 +15,7 @@ from worldfoundry.core.media.resolutions import VIDEO_RES_SIZE_INFO
 from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 
 from ...base_synthesis import BaseSynthesis
+import contextlib
 
 WAN_DEFAULT_NEGATIVE_PROMPT = "low quality, distorted, ugly, bad anatomy"
 DIT_DEFAULT_NEGATIVE_PROMPT = (
@@ -75,10 +76,8 @@ def _resolve_dit_path(
         if not candidate.exists():
             is_hf_repo_id = "/" in path_text and not path_text.startswith(("/", ".", "~")) and "://" not in path_text
             if is_hf_repo_id:
-                try:
+                with contextlib.suppress(FileNotFoundError):
                     candidate = resolve_local_hf_model_path(path_text)
-                except FileNotFoundError:
-                    pass
         if candidate.is_file():
             return str(candidate)
         if candidate.is_dir():

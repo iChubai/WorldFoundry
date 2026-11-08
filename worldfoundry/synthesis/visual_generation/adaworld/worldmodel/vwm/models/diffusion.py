@@ -25,7 +25,7 @@ class DiffusionEngine(LightningModule):
         en_and_decode_n_samples_a_time: int | None = None,
         n_context_frames: int = 5,
     ):
-        super(DiffusionEngine, self).__init__()
+        super().__init__()
         self.input_key = input_key
         model = instantiate_from_config(network_config)
         self.model = get_obj_from_str(default(network_wrapper, OPENAIUNETWRAPPER))(model, compile_model=compile_model)
@@ -97,7 +97,8 @@ class DiffusionEngine(LightningModule):
     ):
         randn = torch.randn(N, *shape).to(self.device)
 
-        denoiser = lambda input, sigma, c: self.denoiser(self.model, input, sigma, c, **kwargs)
+        def denoiser(input, sigma, c):
+            return self.denoiser(self.model, input, sigma, c, **kwargs)
 
         samples = self.sampler(denoiser, randn, cond, x_ori=x_ori, uc=uc)
         return samples

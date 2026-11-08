@@ -116,7 +116,7 @@ def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_em
     z = model.encode_first_stage(value_dict["img_seq"])
 
     for predict_id in range(out_length):
-        batch, batch_uc = get_batch(list(set([x.input_key for x in model.conditioner.embedders])), value_dict)
+        batch, batch_uc = get_batch(list({x.input_key for x in model.conditioner.embedders}), value_dict)
         c, uc = model.conditioner.get_unconditional_conditioning(
             batch, batch_uc=batch_uc, force_uc_zero_embeddings=force_uc_zero_embeddings
         )

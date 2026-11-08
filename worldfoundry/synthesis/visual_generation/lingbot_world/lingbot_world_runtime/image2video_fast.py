@@ -252,8 +252,8 @@ class WanI2VFast:
         """
         # use higher precision for calculations
         original_dtype = flow_pred.dtype
-        flow_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(flow_pred.device), [flow_pred, xt, scheduler.sigmas, scheduler.timesteps]
+        flow_pred, xt, sigmas, timesteps = (
+            x.double().to(flow_pred.device) for x in [flow_pred, xt, scheduler.sigmas, scheduler.timesteps]
         )
         timestep_id = torch.argmin((timesteps - timestep).abs())
         sigma_t = sigmas[timestep_id].reshape(-1, 1, 1, 1)

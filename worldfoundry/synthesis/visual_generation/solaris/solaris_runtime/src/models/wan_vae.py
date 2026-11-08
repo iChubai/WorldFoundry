@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 from einops import rearrange
 from flax import nnx
+import itertools
 
 CACHE_T = 2
 VAE_MEAN = jnp.array(
@@ -283,26 +284,22 @@ class Resample(nnx.Module):
 
     def __call__(self, x, feat_cache=None, new_cache=None, feat_idx=[0]):
         b, f, h, w, c = x.shape
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    b, f, h, w, c = x.shape
-                    new_cache[idx] = jnp.zeros((b, CACHE_T, h, w, c))
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, -CACHE_T:, :, :, :]
-                    cache_x = jnp.concatenate([feat_cache[idx], cache_x], axis=1)[:, -2:, :, :, :]
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                b, f, h, w, c = x.shape
+                new_cache[idx] = jnp.zeros((b, CACHE_T, h, w, c))
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, -CACHE_T:, :, :, :]
+                cache_x = jnp.concatenate([feat_cache[idx], cache_x], axis=1)[:, -2:, :, :, :]
 
-                    if feat_cache[idx] == "Rep":
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
+                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
 
-                    new_cache[idx] = cache_x
-                    feat_idx[0] += 1
-                    x = rearrange(x, "b t h w (r c) -> b t h w r c", r=2)
-                    x = rearrange(x, "b t h w r c -> b (t r) h w c")
+                new_cache[idx] = cache_x
+                feat_idx[0] += 1
+                x = rearrange(x, "b t h w (r c) -> b t h w r c", r=2)
+                x = rearrange(x, "b t h w r c -> b (t r) h w c")
 
         t = x.shape[1]
         x = rearrange(x, "b t h w c -> (b t) h w c")
@@ -400,10 +397,7 @@ def count_conv3d(module):
                 attr = getattr(module, attr_name)
                 if isinstance(attr, CausalConv3d):
                     count += 1
-                elif isinstance(
-                    attr,
-                    (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d),
-                ) or isinstance(attr, list):
+                elif isinstance(attr, (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d, list)):
                     count += count_conv3d(attr)
     return count
 
@@ -668,7 +662,7 @@ class Encoder3d(nnx.Module):
 
         # downsample blocks
         self.downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 self.downsamples.append(ResidualBlock(in_dim, out_dim, rngs, dropout))
@@ -721,10 +715,7 @@ class Encoder3d(nnx.Module):
 
         ## downsamples
         for _ix, layer in enumerate(self.downsamples):
-            if feat_cache is not None:
-                x = layer(x, feat_cache, new_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, new_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         for layer in self.middle:
@@ -788,7 +779,7 @@ class Decoder3d(nnx.Module):
 
         # upsample blocks
         self.upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -838,10 +829,7 @@ class Decoder3d(nnx.Module):
 
         ## upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, new_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, new_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## head
         for _i, layer in enumerate(self.head):

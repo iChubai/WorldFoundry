@@ -116,10 +116,7 @@ def _inference(
         if process_index == 0:
             vis_images = []
             for k in range(len(output_images)):
-                if image is not None:
-                    vis_image = [input_image, output_images[k]]
-                else:
-                    vis_image = [output_images[k]]
+                vis_image = [input_image, output_images[k]] if image is not None else [output_images[k]]
                 vis_image = image_utils.concat_images_grid(vis_image, cols=2, pad=2)
                 vis_images.append(vis_image)
             save_path = os.path.join(save_dir, f"{n}.mp4")
@@ -186,21 +183,21 @@ def inference(
         gpu_ids: List of GPU IDs to use.
         num_inference_steps, fps, num_frames, height, width, seed: Generation parameters.
     """
-    kwargs = dict(
-        data_path=data_path,
-        save_dir=save_dir,
-        transformer_model_path=transformer_model_path,
-        text_encoder_model_path=text_encoder_model_path,
-        vae_model_path=vae_model_path,
-        lora_model_path=lora_model_path,
-        lora_fuse=lora_fuse,
-        num_inference_steps=num_inference_steps,
-        fps=fps,
-        num_frames=num_frames,
-        height=height,
-        width=width,
-        seed=seed,
-    )
+    kwargs = {
+        "data_path": data_path,
+        "save_dir": save_dir,
+        "transformer_model_path": transformer_model_path,
+        "text_encoder_model_path": text_encoder_model_path,
+        "vae_model_path": vae_model_path,
+        "lora_model_path": lora_model_path,
+        "lora_fuse": lora_fuse,
+        "num_inference_steps": num_inference_steps,
+        "fps": fps,
+        "num_frames": num_frames,
+        "height": height,
+        "width": width,
+        "seed": seed,
+    }
     num_gpus = len(gpu_ids)
     assert num_gpus >= 1
     if num_gpus == 1:

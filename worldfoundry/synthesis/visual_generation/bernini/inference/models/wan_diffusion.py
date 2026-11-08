@@ -141,10 +141,10 @@ class GEN_Wanx22(nn.Module):
         self.transformer_config_path = getattr(config, "transformer_config_path", None)
         self.transformer_2_config_path = getattr(config, "transformer_2_config_path", None)
 
-        common = dict(
-            use_src_id_rotary_emb=config.use_src_id_rotary_emb,
-            torch_dtype=torch.bfloat16,
-        )
+        common = {
+            "use_src_id_rotary_emb": config.use_src_id_rotary_emb,
+            "torch_dtype": torch.bfloat16,
+        }
         self._expert_load_kwargs = common
         self._lazy_expert_loading = bool(getattr(config, "lazy_expert_loading", False))
         self._expert_device = getattr(config, "expert_device", None)
@@ -791,13 +791,13 @@ class GEN_Wanx22(nn.Module):
             timestep = t.expand(latent_model_inputs_wovae.shape[0])
 
             # (Clip_cond, null, null)
-            shared_kwargs = dict(
-                model_id=model_id,
-                timesteps=timestep,
-                self_attn_mask=None,
-                cross_attn_mask=None,
-                need_patch_hidden_states=False,
-            )
+            shared_kwargs = {
+                "model_id": model_id,
+                "timesteps": timestep,
+                "self_attn_mask": None,
+                "cross_attn_mask": None,
+                "need_patch_hidden_states": False,
+            }
             noise_pred = self.sample_one_step(
                 shared_kwargs=shared_kwargs,
                 guidance_mode=guidance_mode,
@@ -875,10 +875,12 @@ class GEN_Wanx22(nn.Module):
         norm_threshold=[50.0, 50.0, 50.0],
     ):
         def _seq_lens_kwargs(latent_inputs: torch.Tensor, cond_embeds: torch.Tensor):
-            return dict(
-                batch_vae_seqlen=torch.tensor([latent_inputs.shape[1]], dtype=torch.int32, device=latent_inputs.device),
-                batch_text_seqlen=torch.tensor([cond_embeds.shape[1]], dtype=torch.int32, device=cond_embeds.device),
-            )
+            return {
+                "batch_vae_seqlen": torch.tensor(
+                    [latent_inputs.shape[1]], dtype=torch.int32, device=latent_inputs.device
+                ),
+                "batch_text_seqlen": torch.tensor([cond_embeds.shape[1]], dtype=torch.int32, device=cond_embeds.device),
+            }
 
         # shared conditional results
         cond_pred_wtxt_wvit_wvae = self.shared_step(

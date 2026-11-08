@@ -28,7 +28,7 @@ class DepthHead(nn.Module):
         llm_hidden_size=4096,
         use_intermediate_depth=False,
     ):
-        super(DepthHead, self).__init__()
+        super().__init__()
 
         self.projector = Resampler(
             dim_in=llm_hidden_size,
@@ -53,7 +53,7 @@ class TaskTokenDepthHead(nn.Module):
         llm_hidden_size=4096,
         use_intermediate_depth=False,
     ):
-        super(TaskTokenDepthHead, self).__init__()
+        super().__init__()
 
         self.projector = TaskTokenResampler(
             dim_in=llm_hidden_size,

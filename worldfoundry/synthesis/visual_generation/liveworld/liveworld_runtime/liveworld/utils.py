@@ -30,7 +30,7 @@ def save_video_h264(
 ) -> None:
     """Write inference frames as an H.264 MP4 through shared video I/O."""
 
-    if isinstance(frames, torch.Tensor) or isinstance(frames, np.ndarray):
+    if isinstance(frames, (torch.Tensor, np.ndarray)):
         frame_count = int(frames.shape[0])
     else:
         frames = list(frames)

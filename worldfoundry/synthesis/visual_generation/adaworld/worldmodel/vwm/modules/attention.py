@@ -41,7 +41,7 @@ def default(val, d):
 
 class GEGLU(nn.Module):
     def __init__(self, dim_in, dim_out):
-        super(GEGLU, self).__init__()
+        super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
@@ -51,7 +51,7 @@ class GEGLU(nn.Module):
 
 class FeedForward(nn.Module):
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.0, zero_init=False):
-        super(FeedForward, self).__init__()
+        super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
         project_in = nn.Sequential(nn.Linear(dim, inner_dim), nn.GELU()) if not glu else GEGLU(dim, inner_dim)
@@ -84,7 +84,7 @@ class CrossAttention(nn.Module):  # Not used, never mind
     def __init__(
         self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0, backend=None, zero_init=False, **kwargs
     ):
-        super(CrossAttention, self).__init__()
+        super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
 
@@ -116,7 +116,7 @@ class CrossAttention(nn.Module):  # Not used, never mind
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=num_heads), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=num_heads) for t in (q, k, v))
 
         out = _worldfoundry_scaled_dot_product_attention(q, k, v, attn_mask=mask, backend=self.backend)
 
@@ -131,7 +131,7 @@ class CrossAttention(nn.Module):  # Not used, never mind
 
 class MemoryEfficientCrossAttention(nn.Module):  # We are using this implementation
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0, zero_init=False, **kwargs):
-        super(MemoryEfficientCrossAttention, self).__init__()
+        super().__init__()
         print(
             f"Setting up {self.__class__.__name__}. "
             f"Query dim is {query_dim}, "
@@ -167,13 +167,13 @@ class MemoryEfficientCrossAttention(nn.Module):  # We are using this implementat
         v = self.to_v(context)
 
         b, _, _ = q.shape
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
+        q, k, v = (
+            t.unsqueeze(3)
             .reshape(b, t.shape[1], self.heads, self.dim_head)
             .permute(0, 2, 1, 3)
             .reshape(b * self.heads, t.shape[1], self.dim_head)
-            .contiguous(),
-            (q, k, v),
+            .contiguous()
+            for t in (q, k, v)
         )
 
         if exists(mask):
@@ -224,7 +224,7 @@ class BasicTransformerBlock(nn.Module):
         attn_mode="softmax",
         sdp_backend=None,
     ):
-        super(BasicTransformerBlock, self).__init__()
+        super().__init__()
         assert attn_mode in self.ATTENTION_MODES
         if attn_mode != "softmax" and not XFORMERS_IS_AVAILABLE:
             print(
@@ -307,7 +307,7 @@ class SpatialTransformer(nn.Module):
         use_checkpoint=False,
         sdp_backend=None,
     ):
-        super(SpatialTransformer, self).__init__()
+        super().__init__()
         print(f"Constructing {self.__class__.__name__} of depth {depth} w/ {in_channels} channels and {n_heads} heads")
 
         from omegaconf import ListConfig
@@ -323,7 +323,7 @@ class SpatialTransformer(nn.Module):
                     f"Setting context_dim to {depth * [context_dim[0]]} now"
                 )
                 # Depth does not match context dims
-                assert all(map(lambda x: x == context_dim[0], context_dim)), (
+                assert all((x == context_dim[0] for x in context_dim)), (
                     "Need homogenous context_dim to match depth automatically"
                 )
                 context_dim = depth * [context_dim[0]]

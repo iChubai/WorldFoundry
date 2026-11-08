@@ -387,10 +387,7 @@ class CausalInferencePipeline(torch.nn.Module):
 
     def _initialize_prope_kv_cache(self, batch_size, dtype, device):
         num_heads = self._get_sp_num_heads(12)
-        if self.local_attn_size != -1:
-            kv_cache_size = self.local_attn_size * self.frame_seq_length
-        else:
-            kv_cache_size = 31200
+        kv_cache_size = self.local_attn_size * self.frame_seq_length if self.local_attn_size != -1 else 31200
         self.prope_kv_cache1 = [
             {
                 "k": torch.zeros([batch_size, kv_cache_size, num_heads, 128], dtype=dtype, device=device),

@@ -174,10 +174,7 @@ class CustomLeRobotDataset(Dataset):
                 for episode_data in tqdm(epiosdes_data):
                     episode_index = episode_data["episode_index"]
                     tasks = episode_data["tasks"]
-                    if len(tasks) > 1:
-                        task = random.choice(tasks)
-                    else:
-                        task = tasks[0]
+                    task = random.choice(tasks) if len(tasks) > 1 else tasks[0]
                     length = episode_data["length"]
 
                     episode_chunk = int(episode_index // chunks_size)
@@ -389,10 +386,7 @@ class CustomLeRobotDataset(Dataset):
             video = specific_transforms_resize(video)
             new_videos.append(video)
         new_videos = torch.stack(new_videos, dim=1)
-        if len(new_intrinsics) > 0:
-            new_intrinsics = torch.stack(new_intrinsics, dim=0)
-        else:
-            new_intrinsics = None
+        new_intrinsics = torch.stack(new_intrinsics, dim=0) if len(new_intrinsics) > 0 else None
         return new_videos, None
 
     def normalize_video(self, video, specific_transforms_norm):
@@ -543,10 +537,10 @@ class CustomLeRobotDataset(Dataset):
                     ###
                     idx = random.randint(0, self.length - 1)
 
-        sample = dict(
-            video=video,
-            actions=actions,
-            caption=caption,
-            state=state,
-        )
+        sample = {
+            "video": video,
+            "actions": actions,
+            "caption": caption,
+            "state": state,
+        }
         return sample

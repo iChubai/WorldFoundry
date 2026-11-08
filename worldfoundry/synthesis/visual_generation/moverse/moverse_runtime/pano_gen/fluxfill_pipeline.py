@@ -413,15 +413,13 @@ class FluxFillPipeline(
                 device=device,
             )
 
-        if self.text_encoder is not None:
-            if isinstance(self, FluxLoraLoaderMixin) and USE_PEFT_BACKEND:
-                # Retrieve the original scale by scaling back the LoRA layers
-                unscale_lora_layers(self.text_encoder, lora_scale)
+        if self.text_encoder is not None and isinstance(self, FluxLoraLoaderMixin) and USE_PEFT_BACKEND:
+            # Retrieve the original scale by scaling back the LoRA layers
+            unscale_lora_layers(self.text_encoder, lora_scale)
 
-        if self.text_encoder_2 is not None:
-            if isinstance(self, FluxLoraLoaderMixin) and USE_PEFT_BACKEND:
-                # Retrieve the original scale by scaling back the LoRA layers
-                unscale_lora_layers(self.text_encoder_2, lora_scale)
+        if self.text_encoder_2 is not None and isinstance(self, FluxLoraLoaderMixin) and USE_PEFT_BACKEND:
+            # Retrieve the original scale by scaling back the LoRA layers
+            unscale_lora_layers(self.text_encoder_2, lora_scale)
 
         dtype = self.text_encoder.dtype if self.text_encoder is not None else self.transformer.dtype
         text_ids = torch.zeros(prompt_embeds.shape[1], 3).to(device=device, dtype=dtype)
@@ -999,10 +997,7 @@ class FluxFillPipeline(
                 if i % 2 == 0:
                     latents_unpack = self._unpack_latents(latents, height, width, self.vae_scale_factor)
                     B, C, H, W = latents_unpack.shape
-                    if self.shift_count % 2 == 0:
-                        roll_shift = W // 2
-                    else:
-                        roll_shift = -(W // 2)
+                    roll_shift = W // 2 if self.shift_count % 2 == 0 else -(W // 2)
                     self.shift_count += 1
                     latents_unpack = torch.roll(latents_unpack, roll_shift, dims=-1)
                     latents = self._pack_latents(latents_unpack, batch_size, num_channels_latents, H, W)

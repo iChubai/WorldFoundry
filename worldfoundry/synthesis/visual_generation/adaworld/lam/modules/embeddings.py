@@ -84,7 +84,7 @@ class RotaryEmbedding(Module):
         cache_if_possible=True,
         cache_max_seq_len=8192,
     ) -> None:
-        super(RotaryEmbedding, self).__init__()
+        super().__init__()
         theta *= theta_rescale_factor ** (dim / (dim - 2))
 
         self.freqs_for = freqs_for

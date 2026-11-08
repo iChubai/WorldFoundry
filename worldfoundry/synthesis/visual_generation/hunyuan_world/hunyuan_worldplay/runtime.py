@@ -1134,22 +1134,22 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
             ),
             auto_offload_model(self.transformer, self.execution_device, enabled=self.enable_offloading),
         ):
-            common = dict(
-                bi_inference=False,
-                ar_txt_inference=False,
-                ar_vision_inference=True,
-                hidden_states=context_input,
-                timestep=context_timestep,
-                timestep_r=None,
-                mask_type=task_type,
-                return_dict=False,
-                viewmats=viewmats[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
-                Ks=Ks[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
-                action=action[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
-                cache_vision=True,
-                rope_temporal_size=context_input.shape[2],
-                start_rope_start_idx=0,
-            )
+            common = {
+                "bi_inference": False,
+                "ar_txt_inference": False,
+                "ar_vision_inference": True,
+                "hidden_states": context_input,
+                "timestep": context_timestep,
+                "timestep_r": None,
+                "mask_type": task_type,
+                "return_dict": False,
+                "viewmats": viewmats[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
+                "Ks": Ks[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
+                "action": action[:, selected_frame_indices].to(device=device, dtype=self.target_dtype),
+                "cache_vision": True,
+                "rope_temporal_size": context_input.shape[2],
+                "start_rope_start_idx": 0,
+            }
             self._kv_cache = self.transformer(kv_cache=self._kv_cache, **common)
             if self.do_classifier_free_guidance:
                 self._kv_cache_neg = self.transformer(kv_cache=self._kv_cache_neg, **common)
@@ -1192,22 +1192,22 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
                 action_input = action[:, start_idx:end_idx].to(device)
                 model_input = torch.concat([latent_model_input, condition_input], dim=1)
                 model_input = self.scheduler.scale_model_input(model_input, timestep)
-                transformer_kwargs = dict(
-                    bi_inference=False,
-                    ar_txt_inference=False,
-                    ar_vision_inference=True,
-                    hidden_states=model_input,
-                    timestep=timestep_input,
-                    timestep_r=None,
-                    mask_type=task_type,
-                    return_dict=False,
-                    viewmats=viewmats_input.to(self.target_dtype),
-                    Ks=intrinsics_input.to(self.target_dtype),
-                    action=action_input.to(self.target_dtype),
-                    cache_vision=False,
-                    rope_temporal_size=model_input.shape[2] + len(selected_frame_indices),
-                    start_rope_start_idx=len(selected_frame_indices),
-                )
+                transformer_kwargs = {
+                    "bi_inference": False,
+                    "ar_txt_inference": False,
+                    "ar_vision_inference": True,
+                    "hidden_states": model_input,
+                    "timestep": timestep_input,
+                    "timestep_r": None,
+                    "mask_type": task_type,
+                    "return_dict": False,
+                    "viewmats": viewmats_input.to(self.target_dtype),
+                    "Ks": intrinsics_input.to(self.target_dtype),
+                    "action": action_input.to(self.target_dtype),
+                    "cache_vision": False,
+                    "rope_temporal_size": model_input.shape[2] + len(selected_frame_indices),
+                    "start_rope_start_idx": len(selected_frame_indices),
+                }
                 with torch.autocast(
                     device_type="cuda",
                     dtype=self.target_dtype,
@@ -1324,7 +1324,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
                         device=device,
                     )
                     selected_frame_indices = selected_frame_indices + selected_history_frame_id
-                selected_frame_indices = sorted(list(set(selected_frame_indices)))
+                selected_frame_indices = sorted(set(selected_frame_indices))
                 to_remove = list(range(current_frame_idx, current_frame_idx + chunk_size))
                 selected_frame_indices = [x for x in selected_frame_indices if x not in to_remove]
 
@@ -1438,11 +1438,11 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
                     latents[:, :, start_idx:end_idx] = latent_model_input[:, :, -chunk_size:]
 
                     # Update progress bar
-                    if i == len(timesteps) - 1 or (
-                        (i + 1) > self.num_warmup_steps and (i + 1) % self.scheduler.order == 0
-                    ):
-                        if progress_bar is not None:
-                            progress_bar.update()
+                    if (
+                        i == len(timesteps) - 1
+                        or ((i + 1) > self.num_warmup_steps and (i + 1) % self.scheduler.order == 0)
+                    ) and progress_bar is not None:
+                        progress_bar.update()
         return latents
 
     @torch.no_grad()

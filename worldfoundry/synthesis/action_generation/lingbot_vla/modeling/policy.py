@@ -666,15 +666,14 @@ class Qwen2Model(Qwen2PreTrainedModel):
             self.config._attn_implementation == "sdpa"
             and not (using_static_cache or using_sliding_window_cache)
             and not output_attentions
+        ) and AttentionMaskConverter._ignore_causal_mask_sdpa(
+            attention_mask,
+            inputs_embeds=input_tensor,
+            past_key_values_length=past_seen_tokens,
+            sliding_window=self.config.sliding_window,
+            is_training=self.training,
         ):
-            if AttentionMaskConverter._ignore_causal_mask_sdpa(
-                attention_mask,
-                inputs_embeds=input_tensor,
-                past_key_values_length=past_seen_tokens,
-                sliding_window=self.config.sliding_window,
-                is_training=self.training,
-            ):
-                return None
+            return None
 
         dtype, device = input_tensor.dtype, input_tensor.device
         min_dtype = torch.finfo(dtype).min

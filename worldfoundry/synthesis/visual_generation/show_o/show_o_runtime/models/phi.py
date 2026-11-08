@@ -705,7 +705,7 @@ class PhiSdpaAttention(PhiAttention):
 
         # We dispatch to SDPA's Flash Attention or Efficient kernels via this `is_causal` if statement instead of an inline conditional assignment
         # in SDPA to support both torch.compile's dynamic shapes and full graph options. An inline conditional prevents dynamic shapes from compiling.
-        is_causal = True if self.is_causal and attention_mask is None and q_len > 1 else False
+        is_causal = bool(self.is_causal and attention_mask is None and q_len > 1)
 
         attn_output = _worldfoundry_scaled_dot_product_attention(
             query_states,
@@ -977,12 +977,11 @@ class PhiModel(PhiPreTrainedModel):
 
         past_key_values_length = 0
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         if use_cache:
             use_legacy_cache = not isinstance(past_key_values, Cache)
@@ -1339,10 +1338,7 @@ class PhiForSequenceClassification(PhiPreTrainedModel):
         hidden_states = model_outputs[0]
         logits = self.score(hidden_states)
 
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

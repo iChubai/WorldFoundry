@@ -23,7 +23,7 @@ class VectorQuantizer(nn.Module):
     # used wherever VectorQuantizer has been used before and is additionally
     # more efficient.
     def __init__(self, n_e, e_dim, beta):
-        super(VectorQuantizer, self).__init__()
+        super().__init__()
         self.n_e = n_e
         self.e_dim = e_dim
         self.beta = beta

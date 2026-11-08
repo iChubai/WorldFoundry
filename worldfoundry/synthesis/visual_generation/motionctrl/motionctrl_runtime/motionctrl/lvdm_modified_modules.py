@@ -62,10 +62,7 @@ def TemporalTransformer_forward(self, x, context=None, is_imgbatch=False):
         x = self.proj_out(x)
         x = rearrange(x, "(b h w) c t -> b c t h w", b=b, h=h, w=w).contiguous()
 
-    if self.use_image_dataset:
-        x = 0.0 * x + x_in
-    else:
-        x = x + x_in
+    x = 0.0 * x + x_in if self.use_image_dataset else x + x_in
     return x
 
 

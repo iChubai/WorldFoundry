@@ -231,13 +231,20 @@ def _unnormalize(values: np.ndarray, stats: Mapping[str, Any] | None, mode: str)
     source = values.astype(np.float32, copy=False)
     if mode in {"bounds_q99", "q99"}:
         low, high = np.asarray(stats["q01"], np.float32), np.asarray(stats["q99"], np.float32)
-        transform = lambda item, index: (item + 1.0) * 0.5 * (high[index] - low[index]) + low[index]
+
+        def transform(item, index):
+            return (item + 1.0) * 0.5 * (high[index] - low[index]) + low[index]
     elif mode in {"bounds", "minmax"}:
         low, high = np.asarray(stats["min"], np.float32), np.asarray(stats["max"], np.float32)
-        transform = lambda item, index: (item + 1.0) * 0.5 * (high[index] - low[index]) + low[index]
+
+        def transform(item, index):
+            return (item + 1.0) * 0.5 * (high[index] - low[index]) + low[index]
     elif mode in {"normal", "mean_std"}:
         mean, std = np.asarray(stats["mean"], np.float32), np.asarray(stats["std"], np.float32)
-        transform = lambda item, index: item * std[index] + mean[index]
+
+        def transform(item, index):
+            return item * std[index] + mean[index]
+
         low = high = mean
     else:
         raise ValueError(f"Unsupported A1 normalization mode: {mode!r}")

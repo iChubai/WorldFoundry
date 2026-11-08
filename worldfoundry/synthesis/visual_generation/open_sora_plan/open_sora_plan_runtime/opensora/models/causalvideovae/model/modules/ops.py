@@ -19,7 +19,7 @@ def nonlinearity(x):
 
 
 def cast_tuple(t, length=1):
-    return t if isinstance(t, tuple) or isinstance(t, list) else ((t,) * length)
+    return t if isinstance(t, (tuple, list)) else ((t,) * length)
 
 
 def shift_dim(x, src_dim=-1, dest_dim=-1, make_contiguous=True):

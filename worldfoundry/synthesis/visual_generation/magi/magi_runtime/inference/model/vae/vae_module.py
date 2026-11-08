@@ -227,7 +227,7 @@ class Mlp(nn.Module):
 ###################################################
 class ManualLayerNorm(nn.Module):
     def __init__(self, normalized_shape, eps=1e-5, elementwise_affine=True):
-        super(ManualLayerNorm, self).__init__()
+        super().__init__()
         self.normalized_shape = normalized_shape
         self.eps = eps
         self.elementwise_affine = elementwise_affine

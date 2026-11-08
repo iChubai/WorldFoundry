@@ -216,12 +216,12 @@ class JINGRuntime:
             del vae
             release_memory()
         channels, audio_channels = self.architecture["in_channels"], self.architecture["audio_in_channels"]
-        payload = dict(
-            lengths=lengths,
-            slices=expanded,
-            text_bank=bank,
-            references=references,
-            video=torch.randn(
+        payload = {
+            "lengths": lengths,
+            "slices": expanded,
+            "text_bank": bank,
+            "references": references,
+            "video": torch.randn(
                 sum(lengths),
                 channels,
                 height // 16,
@@ -231,7 +231,7 @@ class JINGRuntime:
             )
             .permute(1, 0, 2, 3)
             .contiguous(),
-            audio=torch.randn(
+            "audio": torch.randn(
                 audio_endpoint(sum(lengths)),
                 2,
                 audio_channels,
@@ -240,7 +240,7 @@ class JINGRuntime:
             )
             .permute(1, 0, 2)
             .contiguous(),
-        )
+        }
         packed = pack(payload, self.architecture, {"reserved_slots": 15}, self.device)
         model = load_transformer(self.checkpoint)
         loading = model.loading_report
@@ -309,23 +309,23 @@ class JINGRuntime:
             save_video_h264(video, silent, fps=24)
             write_audio(audio, wav, sample_rate=sample_rate)
             mux_audio_video(silent, wav, output_path=target, shortest=False)
-        result = dict(
-            status="success",
-            model_id="xgen-jing",
-            artifact_path=str(target),
-            num_frames=frames,
-            height=height,
-            width=width,
-            fps=24,
-            sample_rate=sample_rate,
-            audio_samples=audio.shape[-1],
-            seed=seed,
-            slices=expanded,
-            slice_lengths=lengths,
-            loading=loading,
-            text_loading=text_loading,
-            inference_steps=4,
-            reference_images=len(images),
-        )
+        result = {
+            "status": "success",
+            "model_id": "xgen-jing",
+            "artifact_path": str(target),
+            "num_frames": frames,
+            "height": height,
+            "width": width,
+            "fps": 24,
+            "sample_rate": sample_rate,
+            "audio_samples": audio.shape[-1],
+            "seed": seed,
+            "slices": expanded,
+            "slice_lengths": lengths,
+            "loading": loading,
+            "text_loading": text_loading,
+            "inference_steps": 4,
+            "reference_images": len(images),
+        }
         target.with_suffix(".settings.json").write_text(json.dumps(result, indent=2))
         return result

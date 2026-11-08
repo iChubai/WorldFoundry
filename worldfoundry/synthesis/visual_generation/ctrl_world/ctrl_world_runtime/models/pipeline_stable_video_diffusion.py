@@ -724,10 +724,7 @@ def _gaussian(window_size: int, sigma):
 
 
 def _gaussian_blur2d(input, kernel_size, sigma):
-    if isinstance(sigma, tuple):
-        sigma = torch.tensor([sigma], dtype=input.dtype)
-    else:
-        sigma = sigma.to(dtype=input.dtype)
+    sigma = torch.tensor([sigma], dtype=input.dtype) if isinstance(sigma, tuple) else sigma.to(dtype=input.dtype)
 
     ky, kx = int(kernel_size[0]), int(kernel_size[1])
     bs = sigma.shape[0]

@@ -67,16 +67,16 @@ def _call_magi_flex_flash(q, k, v, q_ranges, k_ranges):
     q_flat = q.reshape(B * Q, H, D).contiguous()
     k_flat = k.reshape(B * KV, H, D).contiguous()
     v_flat = v.reshape(B * KV, H, D).contiguous()
-    kwargs = dict(
-        q=q_flat,
-        k=k_flat,
-        v=v_flat,
-        q_ranges=q_ranges,
-        k_ranges=k_ranges,
-        attn_type_map=attn_type_map,
-        softmax_scale=None,
-        softcap=0,
-    )
+    kwargs = {
+        "q": q_flat,
+        "k": k_flat,
+        "v": v_flat,
+        "q_ranges": q_ranges,
+        "k_ranges": k_ranges,
+        "attn_type_map": attn_type_map,
+        "softmax_scale": None,
+        "softcap": 0,
+    }
 
     out, _meta = flex_flash_attn_func(num_heads_q=H, num_heads_kv=H, head_dim=D, **kwargs)
     return out.reshape(B, Q, H, D)
@@ -206,10 +206,7 @@ class FlexOrSdpaLocalAttention(nn.Module):
         )
 
         # right-pad q to Q_pad
-        if Q_pad != Q:
-            q_pad = torch.cat([q, q.new_zeros((B, Q_pad - Q, H, D))], dim=1)
-        else:
-            q_pad = q
+        q_pad = torch.cat([q, q.new_zeros((B, Q_pad - Q, H, D))], dim=1) if Q_pad != Q else q
 
         # right-pad kv to KV_pad
         if KV_pad != KV:

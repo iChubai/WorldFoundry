@@ -268,10 +268,7 @@ class CenterCropAR:
 
     def __call__(self, img: Image.Image):
         w, h = img.size
-        if w > h:
-            img = TF.center_crop(img, (h, int(h * self.ar)))
-        else:
-            img = TF.center_crop(img, (int(w / self.ar), w))
+        img = TF.center_crop(img, (h, int(h * self.ar))) if w > h else TF.center_crop(img, (int(w / self.ar), w))
         return img
 
 

@@ -212,10 +212,7 @@ def encode_image_to_cond_latent(vae, image_path, height, width, device):
         latent = vae.encode(img_tensor).latent_dist.sample()
     scaling_factor = vae.config.scaling_factor
     shift_factor = getattr(vae.config, "shift_factor", None)
-    if shift_factor:
-        latent = (latent - shift_factor) * scaling_factor
-    else:
-        latent = latent * scaling_factor
+    latent = (latent - shift_factor) * scaling_factor if shift_factor else latent * scaling_factor
     return latent.to(dtype=torch.bfloat16)
 
 
@@ -632,10 +629,7 @@ def run_inference_rollout(
                         **prope_kwargs,
                     )[0]
 
-            if use_cfg:
-                pred = uncond_pred + guidance_scale * (cond_pred - uncond_pred)
-            else:
-                pred = cond_pred
+            pred = uncond_pred + guidance_scale * (cond_pred - uncond_pred) if use_cfg else cond_pred
 
             latent_chunk = scheduler.step(pred, t, latent_chunk, return_dict=False)[0]
             latents[:, :, start_idx:end_idx] = latent_chunk

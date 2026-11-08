@@ -464,7 +464,11 @@ class BerniniModel(PreTrainedModel):
             all_vit_token_num = sum(target_vit_embed_mask).detach().cpu().numpy()
             diff_loss_mask = torch.zeros(all_vit_token_num).to(target_vit_embeds.device)
 
-        return dict(input_embeds=input_embeds, diff_loss_mask=diff_loss_mask, target_vit_embeds=target_vit_embeds_gt)
+        return {
+            "input_embeds": input_embeds,
+            "diff_loss_mask": diff_loss_mask,
+            "target_vit_embeds": target_vit_embeds_gt,
+        }
 
     def feat_from_planner_to_renderer(self, hidden_states, tgt_vit_mask, visual_output_mask, inference=False):
         pred_vit_embed_mask = visual_output_mask.squeeze(0)
@@ -494,14 +498,14 @@ class BerniniModel(PreTrainedModel):
         mllm_context_seqlens.append(int(cond_embed_mask.sum().item()))
         pred_vit_embed_seqlens.append(int(pred_vit_embed_mask.sum().item()))
 
-        return dict(
-            diff_mllm_contexts=diff_mllm_contexts,
-            mllm_context_seqlens=mllm_context_seqlens,
-            pred_vit_embeds=pred_vit_embeds,
-            pred_vit_embed_seqlens=pred_vit_embed_seqlens,
-            diff_mllm_context_txt_mask=diff_mllm_context_txt_mask,
-            diff_mllm_context_vit_mask=diff_mllm_context_vit_mask,
-        )
+        return {
+            "diff_mllm_contexts": diff_mllm_contexts,
+            "mllm_context_seqlens": mllm_context_seqlens,
+            "pred_vit_embeds": pred_vit_embeds,
+            "pred_vit_embed_seqlens": pred_vit_embed_seqlens,
+            "diff_mllm_context_txt_mask": diff_mllm_context_txt_mask,
+            "diff_mllm_context_vit_mask": diff_mllm_context_vit_mask,
+        }
 
     def format_mllm_inputs_embeds(
         self,

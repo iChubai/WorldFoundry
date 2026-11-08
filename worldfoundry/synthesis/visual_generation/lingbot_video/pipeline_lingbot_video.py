@@ -160,10 +160,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
         video_metadata: Any | None = None,
         video_kwargs: dict[str, Any] | None = None,
     ):
-        if isinstance(prompt, str):
-            prompts = [prompt]
-        else:
-            prompts = list(prompt)
+        prompts = [prompt] if isinstance(prompt, str) else list(prompt)
 
         visual_template = ""
         if images is not None:
@@ -328,7 +325,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
         frames = frames.float().clamp_(-1, 1)
         frames = (frames + 1.0) / 2.0
         frames = frames.permute(0, 2, 3, 4, 1).cpu().numpy()
-        return [video for video in frames]
+        return list(frames)
 
     @torch.no_grad()
     def __call__(

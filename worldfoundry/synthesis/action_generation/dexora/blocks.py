@@ -288,7 +288,7 @@ def get_multimodal_cond_pos_embed(embed_dim, mm_cond_lens: OrderedDict, embed_mo
     # Get embeddings for positions inside each modality
     c_pos_emb = np.zeros((0, embed_dim))
     for idx, (modality, cond_len) in enumerate(mm_cond_lens.items()):
-        if modality == "image" and (isinstance(cond_len, tuple) or isinstance(cond_len, list)):
+        if modality == "image" and (isinstance(cond_len, (tuple, list))):
             all_grid_sizes = tuple([abs(x) for x in cond_len])
             embed_grid_sizes = tuple([x if x > 0 else 1 for x in cond_len])
             cond_sincos_embed = get_nd_sincos_pos_embed_from_grid(pos_embed_dim, embed_grid_sizes)

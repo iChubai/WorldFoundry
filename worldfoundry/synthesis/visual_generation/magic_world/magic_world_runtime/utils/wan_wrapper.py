@@ -111,10 +111,7 @@ class WanDiffusionWrapper(torch.nn.Module):
         y_history = conditional_dict["y_history"]
 
         # [B, F] -> [B]
-        if self.uniform_timestep:
-            input_timestep = timestep[:, 0]
-        else:
-            input_timestep = timestep
+        input_timestep = timestep[:, 0] if self.uniform_timestep else timestep
 
         # X0 prediction
         if kv_cache is not None:

@@ -266,10 +266,7 @@ def apply_visual_augmentation(
     image = gray + (image - gray) * saturation
     image = image.clamp(0.0, 1.0)
 
-    if orig_dtype == torch.uint8:
-        image = (image * 255.0).round().to(torch.uint8)
-    else:
-        image = image.to(orig_dtype)
+    image = (image * 255.0).round().to(torch.uint8) if orig_dtype == torch.uint8 else image.to(orig_dtype)
     return image.squeeze(0) if squeeze else image
 
 

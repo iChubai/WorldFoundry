@@ -103,14 +103,13 @@ def _prepare_distributed(runtime_args, cfg):
     local_rank = int(os.getenv("LOCAL_RANK", "0"))
     _init_logging(rank)
 
-    if runtime_args.ulysses_size <= 1:
-        if runtime_args.t5_fsdp or runtime_args.dit_fsdp:
-            logging.info(
-                "Single GPU detected (ulysses_size=%s). Automatically disabling FSDP.",
-                runtime_args.ulysses_size,
-            )
-            runtime_args.t5_fsdp = False
-            runtime_args.dit_fsdp = False
+    if runtime_args.ulysses_size <= 1 and (runtime_args.t5_fsdp or runtime_args.dit_fsdp):
+        logging.info(
+            "Single GPU detected (ulysses_size=%s). Automatically disabling FSDP.",
+            runtime_args.ulysses_size,
+        )
+        runtime_args.t5_fsdp = False
+        runtime_args.dit_fsdp = False
 
     if world_size > 1:
         torch.cuda.set_device(local_rank)

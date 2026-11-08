@@ -194,7 +194,7 @@ class T5Encoder:
     def encode(self, text):
         caption_embs, emb_masks = self.t5.get_text_embeddings(text)
         caption_embs = caption_embs[:, None]
-        return dict(y=caption_embs, mask=emb_masks)
+        return {"y": caption_embs, "mask": emb_masks}
 
     def null(self, n):
         null_y = self.y_embedder.y_embedding[None].repeat(n, 1, 1)[:, None]

@@ -164,9 +164,8 @@ class RTVidActionControl(Dataset):
             if self.mode == "training":
                 if file not in self.val_file_set:
                     self.file_list.append(os.path.join(self.data_dir, file))
-            elif self.mode == "validation":
-                if file in self.val_file_set:
-                    self.file_list.append(os.path.join(self.data_dir, file))
+            elif self.mode == "validation" and file in self.val_file_set:
+                self.file_list.append(os.path.join(self.data_dir, file))
 
         self.file_list.sort()  # Sort for consistency
 

@@ -139,18 +139,18 @@ class DiffLoss_FM(nn.Module):
         if img_cfg is not None and cfg > 1.0:
             noise = torch.randn(z.shape[0] // 3, self.in_channels).to(device)
             noise = torch.cat([noise, noise, noise], dim=0)
-            model_kwargs = dict(c=z, txt_cfg_scale=cfg, img_cfg_scale=img_cfg)
+            model_kwargs = {"c": z, "txt_cfg_scale": cfg, "img_cfg_scale": img_cfg}
             sample_fn = self.net.forward_with_txt_img_cfg
 
         elif cfg > 1.0:
             noise = torch.randn(z.shape[0] // 2, self.in_channels).to(device)
             noise = torch.cat([noise, noise], dim=0)
-            model_kwargs = dict(c=z, cfg_scale=cfg)
+            model_kwargs = {"c": z, "cfg_scale": cfg}
             sample_fn = self.net.forward_with_cfg
 
         else:
             noise = torch.randn(z.shape[0], self.in_channels).to(device)
-            model_kwargs = dict(c=z)
+            model_kwargs = {"c": z}
             sample_fn = self.net.forward
 
         # Prepare timesteps

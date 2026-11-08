@@ -254,28 +254,28 @@ def OpenSoraVAE_V1_2(
     freeze_vae_2d=False,
     cal_loss=False,
 ):
-    vae_2d = dict(
-        type="VideoAutoencoderKL",
-        from_pretrained="PixArt-alpha/pixart_sigma_sdxlvae_T5_diffusers",
-        subfolder="vae",
-        micro_batch_size=micro_batch_size,
-        local_files_only=local_files_only,
-    )
-    vae_temporal = dict(
-        type="VAE_Temporal_SD",
-        from_pretrained=None,
-    )
+    vae_2d = {
+        "type": "VideoAutoencoderKL",
+        "from_pretrained": "PixArt-alpha/pixart_sigma_sdxlvae_T5_diffusers",
+        "subfolder": "vae",
+        "micro_batch_size": micro_batch_size,
+        "local_files_only": local_files_only,
+    }
+    vae_temporal = {
+        "type": "VAE_Temporal_SD",
+        "from_pretrained": None,
+    }
     shift = (-0.10, 0.34, 0.27, 0.98)
     scale = (3.85, 2.32, 2.33, 3.06)
-    kwargs = dict(
-        vae_2d=vae_2d,
-        vae_temporal=vae_temporal,
-        freeze_vae_2d=freeze_vae_2d,
-        cal_loss=cal_loss,
-        micro_frame_size=micro_frame_size,
-        shift=shift,
-        scale=scale,
-    )
+    kwargs = {
+        "vae_2d": vae_2d,
+        "vae_temporal": vae_temporal,
+        "freeze_vae_2d": freeze_vae_2d,
+        "cal_loss": cal_loss,
+        "micro_frame_size": micro_frame_size,
+        "shift": shift,
+        "scale": scale,
+    }
 
     if from_pretrained is not None and not os.path.isdir(from_pretrained):
         model = VideoAutoencoderPipeline.from_pretrained(from_pretrained, **kwargs)

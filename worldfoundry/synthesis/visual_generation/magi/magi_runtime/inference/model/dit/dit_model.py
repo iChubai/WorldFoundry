@@ -260,16 +260,16 @@ class VideoDiTModel(torch.nn.Module):
         flat_kv = torch.unique(kv_range, sorted=True)
         max_seqlen_k = (flat_kv[-1] - flat_kv[0]).cpu().item()
 
-        ardf_meta = dict(
-            clip_token_nums=clip_token_nums,
-            slice_point=slice_point,
-            range_num=range_num,
-            denoising_range_num=denoising_range_num,
-            q_range=q_range,
-            k_range=kv_range,
-            max_seqlen_q=clip_token_nums,
-            max_seqlen_k=max_seqlen_k,
-        )
+        ardf_meta = {
+            "clip_token_nums": clip_token_nums,
+            "slice_point": slice_point,
+            "range_num": range_num,
+            "denoising_range_num": denoising_range_num,
+            "q_range": q_range,
+            "k_range": kv_range,
+            "max_seqlen_q": clip_token_nums,
+            "max_seqlen_k": max_seqlen_k,
+        }
 
         return (
             x,

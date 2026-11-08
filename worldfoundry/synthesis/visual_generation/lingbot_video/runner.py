@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -261,10 +261,8 @@ def _restore_cuda_sdp_state(state: dict[str, bool | None]) -> None:
         fn = getattr(cuda_backends, setter, None)
         if fn is None:
             continue
-        try:
+        with suppress(Exception):
             fn(value)
-        except Exception:
-            pass
 
 
 _BASELINE_CUDA_SDP_STATE = _cuda_sdp_state()
@@ -902,13 +900,9 @@ def _extract_frames(result: Any) -> np.ndarray:
         tensor = frames.detach().cpu().float()
         if tensor.ndim == 5:
             # Accept B,T,C,H,W or B,C,T,H,W.
-            if tensor.shape[2] in (1, 3, 4):
-                tensor = tensor[0].permute(0, 2, 3, 1)
-            else:
-                tensor = tensor[0].permute(1, 2, 3, 0)
-        elif tensor.ndim == 4:
-            if tensor.shape[1] in (1, 3, 4):
-                tensor = tensor.permute(0, 2, 3, 1)
+            tensor = tensor[0].permute(0, 2, 3, 1) if tensor.shape[2] in (1, 3, 4) else tensor[0].permute(1, 2, 3, 0)
+        elif tensor.ndim == 4 and tensor.shape[1] in (1, 3, 4):
+            tensor = tensor.permute(0, 2, 3, 1)
         return tensor.numpy()
     if isinstance(frames, list):
         return np.asarray(frames[0])

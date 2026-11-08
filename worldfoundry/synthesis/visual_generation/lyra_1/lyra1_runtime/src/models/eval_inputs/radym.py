@@ -59,7 +59,7 @@ class Radym(BaseDataset):
             )
             with open(self.filter_list_path) as f:
                 self.filter_set = [line.strip() for line in f.readlines()]
-            self.filter_set = set([x.split(".")[0] for x in self.filter_set])
+            self.filter_set = {x.split(".")[0] for x in self.filter_set}
         self.n_views = num_views
 
         # Recursively grab all mp4 files in subfolders with name 'rgb'.
@@ -108,10 +108,7 @@ class Radym(BaseDataset):
     def _get_zip_handle(self, idx, attr, view_idx, attr_path=None):
         self._check_worker_id()
 
-        if self.n_views != -1:
-            dict_key = f"{idx}_{view_idx}_{attr}"
-        else:
-            dict_key = f"{idx}_{attr}"
+        dict_key = f"{idx}_{view_idx}_{attr}" if self.n_views != -1 else f"{idx}_{attr}"
         if dict_key in self.zip_descriptors:
             return self.zip_descriptors[dict_key]
 
@@ -186,19 +183,13 @@ class Radym(BaseDataset):
         frame_indices = np.asarray(frame_idxs).astype(np.int64)
         rgb_path = self.mp4_file_paths[video_idx]
         data_base_path, data_key = rgb_path.parent.parent, rgb_path.stem
-        if self.camera_path is not None:
-            camera_path = self.camera_path
-        else:
-            camera_path = data_base_path
+        camera_path = self.camera_path if self.camera_path is not None else data_base_path
         if self.n_views != -1:
             # Currently support only load at most one camera.
             assert len(set(view_idxs)) == 1, "Currently support only one view"
             view_idx = view_idxs[0]
             data_base_path = data_base_path.parent / str(view_idx)
-            if self.camera_path is None:
-                camera_path = data_base_path
-            else:
-                camera_path = camera_path / str(view_idx)
+            camera_path = data_base_path if self.camera_path is None else camera_path / str(view_idx)
         else:
             view_idx = self.start_view_idx
         output_dict: dict[str | DataField, Any] = {"__key__": data_key}

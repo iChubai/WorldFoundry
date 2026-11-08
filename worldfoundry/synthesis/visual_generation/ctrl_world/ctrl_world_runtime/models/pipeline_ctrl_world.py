@@ -224,10 +224,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
 
         video_tensor = self.decode_latents(latents)
 
-        if output_type == "pt":
-            video = video_tensor
-        else:
-            video = tensor2vid(video_tensor)
+        video = video_tensor if output_type == "pt" else tensor2vid(video_tensor)
 
         # Offload last model to CPU
         if hasattr(self, "final_offload_hook") and self.final_offload_hook is not None:

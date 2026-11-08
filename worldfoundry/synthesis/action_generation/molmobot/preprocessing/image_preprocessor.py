@@ -16,6 +16,7 @@ from transformers.image_utils import (
 )
 
 from ..io import get_bytes_range
+import contextlib
 
 
 def setup_pil():
@@ -38,10 +39,8 @@ def load_image(image_path):
         # Avoid annoying palette transparency warnings filling up the logs
         with warnings.catch_warnings(record=True):
             image = image_path.convert("RGB")
-        try:
+        with contextlib.suppress(Exception):
             image = ImageOps.exif_transpose(image)
-        except Exception:
-            pass
         return np.array(image)
     elif isinstance(image_path, np.ndarray):
         if image_path.ndim != 3 or image_path.shape[2] != 3:

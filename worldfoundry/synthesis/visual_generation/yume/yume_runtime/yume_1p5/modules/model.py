@@ -712,18 +712,18 @@ class Yume1p5WanModel(WanModel):
         len_blocks = (len(self.blocks) + 1) // 2
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            ids_keep=ids_keep,
-            ids_restore=ids_restore,
-            mask_token=self.mask_token,
-            flag=flag,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "ids_keep": ids_keep,
+            "ids_restore": ids_restore,
+            "mask_token": self.mask_token,
+            "flag": flag,
+        }
 
         cnt_blocks = 0
         for block in self.blocks:

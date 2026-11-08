@@ -49,10 +49,7 @@ class CEMPlanner(BasePlanner):
         """
         n_evals = obs_0["visual"].shape[0]
         sigma = self.var_scale * torch.ones([n_evals, self.horizon, self.action_dim])
-        if actions is None:
-            mu = torch.zeros(n_evals, 0, self.action_dim)
-        else:
-            mu = actions
+        mu = torch.zeros(n_evals, 0, self.action_dim) if actions is None else actions
         device = mu.device
         t = mu.shape[1]
         remaining_t = self.horizon - t

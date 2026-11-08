@@ -23,6 +23,7 @@ from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
     WanVideoCameraPipeline,
 )
+import contextlib
 
 MODEL_ID = "dualcamctrl"
 DISPLAY_NAME = "DualCamCtrl"
@@ -267,10 +268,8 @@ class DualCamCtrlRuntime:
                 checkpoint_root_path(Path(model_id).name),
             )
         )
-        try:
+        with contextlib.suppress(FileNotFoundError):
             roots.append(resolve_local_hf_model_path(model_id))
-        except FileNotFoundError:
-            pass
         roots.extend(
             (
                 Path(self.local_model_path) / Path(model_id),

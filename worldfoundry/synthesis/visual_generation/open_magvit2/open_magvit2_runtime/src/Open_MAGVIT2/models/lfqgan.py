@@ -72,7 +72,7 @@ class VQModel(nn.Module):
             if ("inception_model" not in k and "lpips_vgg" not in k and "lpips_alex" not in k)
         }
 
-    def init_from_ckpt(self, path, ignore_keys=list(), stage="transformer"):
+    def init_from_ckpt(self, path, ignore_keys=[], stage="transformer"):
         sd = torch.load(path, map_location="cpu")["state_dict"]
         new_params = OrderedDict()
         if stage == "transformer":

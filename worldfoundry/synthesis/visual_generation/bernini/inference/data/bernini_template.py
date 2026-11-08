@@ -53,10 +53,7 @@ class T5TextTokenizer:
     ) -> dict[str, torch.Tensor]:
         text_prompt = self.extract_text_prompt(conversations, drop_text)
 
-        if preprocess_fn is not None:
-            text_prompt = preprocess_fn(text_prompt)
-        else:
-            text_prompt = prompt_clean(text_prompt)
+        text_prompt = preprocess_fn(text_prompt) if preprocess_fn is not None else prompt_clean(text_prompt)
 
         tokenizer_kwargs = {
             "add_special_tokens": True,
@@ -186,7 +183,7 @@ class BerniniTemplate(Qwen2VLTemplate):
         content = ""
         text_content = ""
         pre_has_loss = 0
-        visual_id_to_type = dict({})
+        visual_id_to_type = {}
         visual_id, img_id, vid_id = 0, 0, 0
         indicator_id = 2
         visual_indicator_maps = {}

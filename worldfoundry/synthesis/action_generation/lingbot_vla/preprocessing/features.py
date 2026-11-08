@@ -73,7 +73,7 @@ class FeatureTransform:
 
         self.check_robot_config(robot_config)
         # keep the self.feature_to_keep in lerobot item when convert to new item
-        self.feature_to_keep = set(["timestamp", "frame_index", "episode_index", "task_index", "task", "action_is_pad"])
+        self.feature_to_keep = {"timestamp", "frame_index", "episode_index", "task_index", "task", "action_is_pad"}
 
         target_features = {"states": [], "actions": [], "images": []}
         # Lists preserve robot-config camera/state ordering. A set here makes
@@ -130,7 +130,7 @@ class FeatureTransform:
                         )
 
                 elif feature_category == "states":
-                    assert isinstance(feature_convert_info, dict) or isinstance(feature_convert_info, str)
+                    assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
                         state_feature = list(feature_convert_info.keys())[0]
                     else:
@@ -143,7 +143,7 @@ class FeatureTransform:
                         )
 
                 elif feature_category == "images":
-                    assert isinstance(feature_convert_info, dict) or isinstance(feature_convert_info, str)
+                    assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
                         image_feature = list(feature_convert_info.keys())[0]
                     else:

@@ -2521,10 +2521,7 @@ class AlayaV11Rollout:
     ) -> torch.Tensor:
         history_latents = max(0, int(history_latent_frames))
         condition_latents = max(0, int(condition_latent_frames))
-        if history_latents > 0:
-            start = 1 + history_latents
-        else:
-            start = 1 + condition_latents
+        start = 1 + history_latents if history_latents > 0 else 1 + condition_latents
         return torch.arange(start, start + int(frames), device=self.dist.device, dtype=torch.float32)
 
     def _indices_grid(self, batch: int, frames: int, height: int, width: int, *, t_offset: int) -> torch.Tensor:

@@ -60,6 +60,7 @@ except ImportError:
     _TIMM_AVAILABLE = False
 
 from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -299,10 +300,7 @@ def _mask_apply(
             out_b = [torch.zeros(S, od, device=hs_b.device, dtype=hs_b.dtype) for od in out_dims]
 
         # Text tokens: mask == 0 (and valid if padding_mask provided)
-        if valid_b is not None:
-            text_idx = (~mask_b) & valid_b
-        else:
-            text_idx = ~mask_b
+        text_idx = ~mask_b & valid_b if valid_b is not None else ~mask_b
 
         if text_idx.any():
             hs_t = hs_b[text_idx]  # (N_t, D)
@@ -313,10 +311,7 @@ def _mask_apply(
                 zero_feature = zero_feature + fn(placeholder).mean() * 0
 
         # Vision tokens: mask == 1 (and valid if padding_mask provided)
-        if valid_b is not None:
-            vis_idx = mask_b & valid_b
-        else:
-            vis_idx = mask_b
+        vis_idx = mask_b & valid_b if valid_b is not None else mask_b
 
         if vis_idx.any():
             hs_v = hs_b[vis_idx]  # (N_v, D)
@@ -674,7 +669,7 @@ def _sdpa_spatial_attention(
                 f"expected [0, ..., {sequence_length}], got {boundaries}"
             )
         output = torch.empty_like(query)
-        for start, end in zip(boundaries, boundaries[1:], strict=False):
+        for start, end in itertools.pairwise(boundaries):
             if end < start:
                 raise ValueError(f"HYViT2 cu_seqlens are not monotonic: {boundaries}")
             if end == start:
@@ -1427,7 +1422,7 @@ class _HYViT2VisionTransformer(nn.Module):
 
         embed_args = {}
         if dynamic_img_size:
-            embed_args.update(dict(strict_img_size=False, output_fmt="NHWC"))
+            embed_args.update({"strict_img_size": False, "output_fmt": "NHWC"})
         self.patch_embed = embed_layer(
             img_size=img_size,
             patch_size=patch_size,

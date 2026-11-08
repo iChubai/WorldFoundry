@@ -84,8 +84,8 @@ class ImageTokenizer(nn.Module):
     num_tokens: int = 8
     conditioning_type: str = "none"
     obs_stack_keys: Sequence[str] = ("image_.*", "depth_.*")
-    task_stack_keys: Sequence[str] = tuple()
-    task_film_keys: Sequence[str] = tuple()
+    task_stack_keys: Sequence[str] = ()
+    task_film_keys: Sequence[str] = ()
     proper_pad_mask: bool = True
 
     @nn.compact
@@ -268,7 +268,7 @@ class LowdimObsTokenizer(BinTokenizer):
         discretize (bool): If True, discretizes inputs per dimension, see BinTokenizer.
     """
 
-    obs_keys: Sequence[str] = tuple()
+    obs_keys: Sequence[str] = ()
     discretize: bool = False
     proper_pad_mask: bool = True
 

@@ -52,10 +52,7 @@ def integration_asset(root: Path, relative: str) -> Path:
 
 def resolve_robot_config(root: Path, robot_name: str, options: Mapping[str, Any]) -> Path:
     explicit = options.get("robot_config_path")
-    if explicit:
-        path = Path(str(explicit)).expanduser().resolve()
-    else:
-        path = integration_asset(root, f"{robot_name}.yaml")
+    path = Path(str(explicit)).expanduser().resolve() if explicit else integration_asset(root, f"{robot_name}.yaml")
     if not path.is_file():
         raise FileNotFoundError(f"LingBot-VLA robot config not found: {path}")
     return path

@@ -38,14 +38,14 @@ class Normalize:
                     raise AttributeError(f"stats object is missing the following attribute: {attr}")
 
         if self.use_quantiles:
-            self.q01 = dict()
-            self.q99 = dict()
+            self.q01 = {}
+            self.q99 = {}
             for key in stats:
                 self.q01[int(key)] = torch.tensor(stats[key]["q01"], dtype=torch.float32)
                 self.q99[int(key)] = torch.tensor(stats[key]["q99"], dtype=torch.float32)
         else:
-            self.mean = dict()
-            self.std = dict()
+            self.mean = {}
+            self.std = {}
             for key in stats:
                 self.mean[int(key)] = torch.tensor(stats[key]["mean"], dtype=torch.float32)
                 self.std[int(key)] = torch.tensor(stats[key]["std"], dtype=torch.float32)
@@ -112,14 +112,14 @@ class Unnormalize:
                     raise AttributeError(f"stats object is missing the following attribute: {attr}")
 
         if self.use_quantiles:
-            self.q01 = dict()
-            self.q99 = dict()
+            self.q01 = {}
+            self.q99 = {}
             for key in stats:
                 self.q01[int(key)] = torch.tensor(stats[key]["q01"], dtype=torch.float32)
                 self.q99[int(key)] = torch.tensor(stats[key]["q99"], dtype=torch.float32)
         else:
-            self.mean = dict()
-            self.std = dict()
+            self.mean = {}
+            self.std = {}
             for key in stats:
                 self.mean[int(key)] = torch.tensor(stats[key]["mean"], dtype=torch.float32)
                 self.std[int(key)] = torch.tensor(stats[key]["std"], dtype=torch.float32)
@@ -160,7 +160,7 @@ class AbsoluteActions:
     """Repacks delta actions into absolute action space."""
 
     def __init__(self, mask: dict[int, list[bool]]):
-        self.mask = dict()
+        self.mask = {}
         assert mask is not None, "mask is required"
         for key in mask:
             self.mask[int(key)] = torch.tensor(mask[key])

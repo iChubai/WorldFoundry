@@ -23,6 +23,7 @@ from .unet_blocks import (
     get_down_block,
     get_up_block,
 )
+import contextlib
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -526,10 +527,8 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
 
         model_file = None
         if is_safetensors_available():
-            try:
+            with contextlib.suppress(BaseException):
                 model_file = resolve_model_file(SAFETENSORS_WEIGHTS_NAME)
-            except BaseException:
-                pass
 
         if model_file is None:
             model_file = resolve_model_file(WEIGHTS_NAME)

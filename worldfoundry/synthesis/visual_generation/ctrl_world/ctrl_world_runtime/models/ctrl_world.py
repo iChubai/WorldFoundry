@@ -104,7 +104,7 @@ class Action_encoder2(nn.Module):
 
 class CrtlWorld(nn.Module):
     def __init__(self, args):
-        super(CrtlWorld, self).__init__()
+        super().__init__()
 
         self.args = args
 

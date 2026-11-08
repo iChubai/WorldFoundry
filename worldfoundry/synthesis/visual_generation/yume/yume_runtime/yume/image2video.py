@@ -198,10 +198,7 @@ class YumeI2V:
         lat_h = h // self.vae_stride[1]
         lat_w = w // self.vae_stride[2]
 
-        if rand_num_img < 0.4:
-            img = model_input[:, 0, :, :]
-        else:
-            img = model_input[:, 0:-frame_zero, :, :]
+        img = model_input[:, 0, :, :] if rand_num_img < 0.4 else model_input[:, 0:-frame_zero, :, :]
 
         if rand_num_img >= 0.4:
             model_input = torch.cat(

@@ -1337,10 +1337,7 @@ class AutoencoderKLLTXVideo(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     ) -> torch.Tensor | torch.Tensor:
         x = sample
         posterior = self.encode(x).latent_dist
-        if sample_posterior:
-            z = posterior.sample(generator=generator)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(generator=generator) if sample_posterior else posterior.mode()
         dec = self.decode(z, temb)
         if not return_dict:
             return (dec,)

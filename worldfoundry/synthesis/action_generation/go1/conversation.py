@@ -121,10 +121,7 @@ class Conversation:
             return ret
         elif self.sep_style == SeparatorStyle.LLAMA2:
             seps = [self.sep, self.sep2]
-            if self.system_message:
-                ret = system_prompt
-            else:
-                ret = "[INST] "
+            ret = system_prompt if self.system_message else "[INST] "
             for i, (role, message) in enumerate(self.messages):
                 tag = self.roles[i % 2]
                 if message:
@@ -139,10 +136,7 @@ class Conversation:
             # source: https://huggingface.co/THUDM/chatglm-6b/blob/1d240ba371910e9282298d4592532d7f0f3e9f3e/modeling_chatglm.py#L1302-L1308
             # source2: https://huggingface.co/THUDM/chatglm2-6b/blob/e186c891cf64310ac66ef10a87e6635fa6c2a579/modeling_chatglm.py#L926
             round_add_n = 1 if self.name == "chatglm2" else 0
-            if system_prompt:
-                ret = system_prompt + self.sep
-            else:
-                ret = ""
+            ret = system_prompt + self.sep if system_prompt else ""
 
             for i, (role, message) in enumerate(self.messages):
                 if i % 2 == 0:

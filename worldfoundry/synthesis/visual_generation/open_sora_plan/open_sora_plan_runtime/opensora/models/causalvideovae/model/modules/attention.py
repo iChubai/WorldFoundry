@@ -97,10 +97,7 @@ class AttnBlock3DFix(nn.Module):
 
         else:
             # print('npu_config.enable_FA, q.dtype == torch.float32', npu_config.enable_FA, q.dtype == torch.float32)
-            if npu_config.enable_FA and q.dtype == torch.float32:
-                dtype = torch.bfloat16
-            else:
-                dtype = None
+            dtype = torch.bfloat16 if npu_config.enable_FA and q.dtype == torch.float32 else None
             with set_run_dtype(q, dtype):
                 query, key, value = npu_config.set_current_run_dtype([q, k, v])
                 hidden_states = npu_config.run_attention(

@@ -434,10 +434,7 @@ class ABotWorldInference:
             for separator in (",", "+", "|", "/"):
                 normalized = normalized.replace(separator, " ")
             tokens = normalized.split()
-            if len(tokens) == 1 and set(tokens[0]).issubset(ACTION_KEYS):
-                active = set(tokens[0])
-            else:
-                active = set(tokens)
+            active = set(tokens[0]) if len(tokens) == 1 and set(tokens[0]).issubset(ACTION_KEYS) else set(tokens)
         else:
             active = {str(key).strip().upper() for key in action}
         unknown = active.difference(ACTION_KEYS)

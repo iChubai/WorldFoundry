@@ -103,10 +103,7 @@ class ResBlock(nn.Module):
         x = swish(x)
         x = self.conv2(x)
         if self.in_filters != self.out_filters:
-            if self.use_conv_shortcut:
-                residual = self.conv_shortcut(residual)
-            else:
-                residual = self.nin_shortcut(residual)
+            residual = self.conv_shortcut(residual) if self.use_conv_shortcut else self.nin_shortcut(residual)
 
         return x + residual
 

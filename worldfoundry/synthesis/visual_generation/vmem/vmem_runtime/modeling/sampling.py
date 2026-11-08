@@ -231,7 +231,7 @@ class VanillaCFG:
     def prepare_inputs(
         self, x: torch.Tensor, s: torch.Tensor, c: dict, uc: dict
     ) -> tuple[torch.Tensor, torch.Tensor, dict]:
-        c_out = dict()
+        c_out = {}
 
         for k in c:
             if k in ["vector", "crossattn", "concat", "replace", "dense_vector"]:

@@ -75,10 +75,7 @@ def _crop_entity_on_black_square(
         cropped_mask: Cropped SAM mask aligned with cropped_image, uint8 {0,1}.
     """
     # Find bounding box from mask.
-    if mask.dtype == bool:
-        mask_uint8 = mask.astype(np.uint8) * 255
-    else:
-        mask_uint8 = mask
+    mask_uint8 = mask.astype(np.uint8) * 255 if mask.dtype == bool else mask
 
     coords = cv2.findNonZero(mask_uint8)
     if coords is None:

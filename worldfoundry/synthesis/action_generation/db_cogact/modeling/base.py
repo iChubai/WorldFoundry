@@ -197,7 +197,7 @@ class DexboticVLMModel(DexboticPretrainedModel):
 
         if images.ndim == 5:
             # [B n_image, C, H, W] -> [B*n_image, C, H, W]
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             concat_image_features = encode_image(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(concat_image_features, split_sizes, dim=0)  # {[n_image n_token C] * B}

@@ -37,8 +37,8 @@ class RotationTransform:
         assert from_rep in self.valid_reps, f"Invalid from_rep: {from_rep}"
         assert to_rep in self.valid_reps, f"Invalid to_rep: {to_rep}"
 
-        forward_funcs = list()
-        inverse_funcs = list()
+        forward_funcs = []
+        inverse_funcs = []
 
         if from_rep != "matrix" or to_rep != "matrix":
             import pytorch3d.transforms as pt
@@ -492,10 +492,7 @@ class StateActionToTensor(InvertibleModalityTransform):
     )
 
     def model_dump(self, *args, **kwargs):
-        if kwargs.get("mode", "python") == "json":
-            include = {"apply_to"}
-        else:
-            include = kwargs.pop("include", None)
+        include = {"apply_to"} if kwargs.get("mode", "python") == "json" else kwargs.pop("include", None)
 
         return super().model_dump(*args, include=include, **kwargs)
 
@@ -506,7 +503,7 @@ class StateActionToTensor(InvertibleModalityTransform):
                 if dtype.startswith("torch."):
                     dtype_split = dtype.split(".")[-1]
                     v[key] = getattr(torch, dtype_split)
-                elif dtype.startswith("np.") or dtype.startswith("numpy."):
+                elif dtype.startswith(("np.", "numpy.")):
                     dtype_split = dtype.split(".")[-1]
                     v[key] = np.dtype(dtype_split)
                 else:

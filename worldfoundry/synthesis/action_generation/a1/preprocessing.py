@@ -161,10 +161,7 @@ def _pixels_to_patches(array: np.ndarray, patch_size: int) -> np.ndarray:
         patch_size,
         *(() if array.ndim == 2 else (channels,)),
     )
-    if array.ndim == 2:
-        shaped = shaped.transpose(0, 2, 1, 3)
-    else:
-        shaped = shaped.transpose(0, 2, 1, 3, 4)
+    shaped = shaped.transpose(0, 2, 1, 3) if array.ndim == 2 else shaped.transpose(0, 2, 1, 3, 4)
     return shaped.reshape(-1, patch_size * patch_size * channels)
 
 

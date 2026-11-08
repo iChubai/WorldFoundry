@@ -14,6 +14,7 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model impo
     CausalConv3d,
 )
 from worldfoundry.core.attention import scaled_dot_product_attention
+import itertools
 
 
 class MemoryAttentionBlock(AttentionBlock):
@@ -102,7 +103,7 @@ class CausalMemCompressModel(nn.Module):
                 temporal_down[index],
                 non_linearity,
             )
-            for index, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False))
+            for index, (in_dim, out_dim) in enumerate(itertools.pairwise(dims))
         )
         self.attn_blocks = nn.ModuleList(MemoryAttentionBlock(dims[-1]) for _ in range(attn_num))
         self.output_layer = nn.Linear(dims[-1], output_dim)

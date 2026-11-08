@@ -5,6 +5,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.modules.activation import Sigmoid
+import contextlib
 
 epsilon = 1e-8
 
@@ -21,10 +22,8 @@ class LangEncoder(nn.Module):
         self.lang_size = 768
 
     def forward(self, langs):
-        try:
+        with contextlib.suppress(BaseException):
             langs = langs.tolist()
-        except BaseException:
-            pass
 
         with torch.no_grad():
             encoded_input = self.tokenizer(langs, return_tensors="pt", padding=True)

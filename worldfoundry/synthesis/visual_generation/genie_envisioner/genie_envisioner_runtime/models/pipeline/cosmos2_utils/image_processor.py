@@ -672,10 +672,7 @@ class VaeImageProcessor(ConfigMixin):
                 # if it is a numpy array, it could have 2 possible shapes:
                 #   1. batch x height x width: insert channel dimension on last position
                 #   2. height x width x channel: insert batch dimension on first position
-                if image.shape[-1] == 1:
-                    image = np.expand_dims(image, axis=0)
-                else:
-                    image = np.expand_dims(image, axis=-1)
+                image = np.expand_dims(image, axis=0) if image.shape[-1] == 1 else np.expand_dims(image, axis=-1)
 
         if isinstance(image, list) and isinstance(image[0], np.ndarray) and image[0].ndim == 4:
             warnings.warn(
@@ -1073,7 +1070,7 @@ class VaeImageProcessorLDM3D(VaeImageProcessor):
                 # rgb = [self.convert_to_rgb(i) for i in rgb]
                 # depth = [self.convert_to_depth(i) for i in depth]  #TODO define convert_to_depth
             if self.config.do_resize or target_res:
-                height, width = self.get_default_height_width(rgb[0], height, width) if not target_res else target_res
+                height, width = target_res if target_res else self.get_default_height_width(rgb[0], height, width)
                 rgb = [self.resize(i, height, width) for i in rgb]
                 depth = [self.resize(i, height, width) for i in depth]
             rgb = self.pil_to_numpy(rgb)  # to np

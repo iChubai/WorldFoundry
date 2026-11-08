@@ -106,10 +106,7 @@ def main(
             except Exception:
                 min_disp = float(np.min(sampled))
                 max_disp = float(np.max(sampled))
-            if max_disp - min_disp <= 1e-8:
-                disp_norm = disp - min_disp
-            else:
-                disp_norm = (disp - min_disp) / (max_disp - min_disp)
+            disp_norm = disp - min_disp if max_disp - min_disp <= 1e-08 else (disp - min_disp) / (max_disp - min_disp)
         else:
             disp_norm = disp
 

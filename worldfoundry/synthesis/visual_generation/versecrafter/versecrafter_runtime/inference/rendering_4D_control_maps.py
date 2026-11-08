@@ -95,14 +95,8 @@ def make_ellipsoid_mesh(
     verts = sphere.verts_list()[0]  # (V,3)
     faces = sphere.faces_list()[0]  # (F,3)
 
-    if isinstance(mean, np.ndarray):
-        mean_t = torch.from_numpy(mean).float().to(device)
-    else:
-        mean_t = mean.to(device).float()
-    if isinstance(cov, np.ndarray):
-        cov_t = torch.from_numpy(cov).float().to(device)
-    else:
-        cov_t = cov.to(device).float()
+    mean_t = torch.from_numpy(mean).float().to(device) if isinstance(mean, np.ndarray) else mean.to(device).float()
+    cov_t = torch.from_numpy(cov).float().to(device) if isinstance(cov, np.ndarray) else cov.to(device).float()
 
     # Eigendecomposition of covariance: cov = U @ diag(evals) @ U^T
     evals, evecs = torch.linalg.eigh(cov_t)
@@ -632,10 +626,7 @@ def project_3d_gaussians_to_2d(
 
         # Project each Gaussian to 2D
         for obj_id, (mean, covariance) in gaussian_params.items():
-            if not isinstance(mean, torch.Tensor):
-                mean = torch.from_numpy(mean).float().to(device)
-            else:
-                mean = mean.to(device)
+            mean = torch.from_numpy(mean).float().to(device) if not isinstance(mean, torch.Tensor) else mean.to(device)
 
             if not isinstance(covariance, torch.Tensor):
                 covariance = torch.from_numpy(covariance).float().to(device)
@@ -652,10 +643,7 @@ def project_3d_gaussians_to_2d(
                 color_rgb = get_object_color(obj_id, obj_id_to_color_idx, device, return_float=True)
 
                 max_density = density_map.max()
-                if max_density > 0:
-                    normalized_density = density_map / (max_density + 1e-8)
-                else:
-                    normalized_density = density_map
+                normalized_density = density_map / (max_density + 1e-08) if max_density > 0 else density_map
 
                 gaussian_list.append((normalized_density, color_rgb, depth_z, obj_id))
 
@@ -779,10 +767,7 @@ def project_gaussian_to_2d_gpu(
     means_3d = mean.unsqueeze(0)
     covs_3d = cov.unsqueeze(0)
 
-    if t.dim() == 2:
-        t_vec = t.squeeze()
-    else:
-        t_vec = t
+    t_vec = t.squeeze() if t.dim() == 2 else t
     mean_3d_cam = R @ mean + t_vec
 
     density = compute_probability_density_map_gpu(means_3d, covs_3d, K, R, t, image_size, device)
@@ -818,10 +803,7 @@ def compute_probability_density_map_gpu(
         mean_3d_world = means_3d[i]
         cov_3d_world = covs_3d[i]
 
-        if t.dim() == 2:
-            t_vec = t.squeeze()
-        else:
-            t_vec = t
+        t_vec = t.squeeze() if t.dim() == 2 else t
         mean_3d_cam = R @ mean_3d_world + t_vec
         cov_3d_cam = R @ cov_3d_world @ R.T
 
@@ -1088,10 +1070,9 @@ def render_video_with_bg_and_fg(
 
     H, W = image_size
 
-    if background_points is not None:
-        if pin_memory and not background_points.is_pinned():
-            background_points = background_points.pin_memory()
-            background_colors = background_colors.pin_memory()
+    if background_points is not None and pin_memory and not background_points.is_pinned():
+        background_points = background_points.pin_memory()
+        background_colors = background_colors.pin_memory()
 
     num_batches = (num_frames + batch_size - 1) // batch_size
 
@@ -1235,10 +1216,7 @@ def main():
     ellipsoid_meshes_per_frame = []
 
     for frame_idx in range(num_frames):
-        if frame_idx < len(gaussian_params_per_frame):
-            gaussian_params = gaussian_params_per_frame[frame_idx]
-        else:
-            gaussian_params = {}
+        gaussian_params = gaussian_params_per_frame[frame_idx] if frame_idx < len(gaussian_params_per_frame) else {}
 
         ellipsoid_meshes = []
 

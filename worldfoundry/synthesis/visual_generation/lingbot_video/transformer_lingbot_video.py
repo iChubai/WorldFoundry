@@ -369,10 +369,7 @@ class LingBotVideoRouter(nn.Module):
     def forward(self, tokens: torch.Tensor):
         with torch.amp.autocast(tokens.device.type, enabled=False):
             logits = F.linear(tokens.float(), self.weight.float())
-        if self.score_func == "softmax":
-            scores = F.softmax(logits, dim=-1)
-        else:
-            scores = logits.sigmoid()
+        scores = F.softmax(logits, dim=-1) if self.score_func == "softmax" else logits.sigmoid()
         scores_for_choice = scores + self.e_score_correction_bias.unsqueeze(0)
         if self.n_group is not None and self.n_group > 1:
             top_indices = self._group_limited_topk(scores_for_choice)

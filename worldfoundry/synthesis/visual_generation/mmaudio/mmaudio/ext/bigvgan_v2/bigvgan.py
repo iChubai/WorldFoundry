@@ -390,13 +390,13 @@ class BigVGAN(
         """Load Pytorch pretrained weights and return the loaded model."""
 
         # Build kwargs for hf_hub_download, excluding params removed in huggingface_hub 1.0
-        hf_hub_kwargs = dict(
-            revision=revision,
-            cache_dir=cache_dir,
-            force_download=force_download,
-            token=token,
-            local_files_only=local_files_only,
-        )
+        hf_hub_kwargs = {
+            "revision": revision,
+            "cache_dir": cache_dir,
+            "force_download": force_download,
+            "token": token,
+            "local_files_only": local_files_only,
+        }
         # proxies and resume_download were removed in huggingface_hub 1.0
         # Only include them for backwards compatibility with older versions
         import inspect

@@ -96,7 +96,7 @@ def pts3d_to_trimesh(img, pts3d, valid=None):
         face_colors = face_colors[valid_faces]
 
     assert len(faces) == len(face_colors)
-    return dict(vertices=vertices, face_colors=face_colors, faces=faces)
+    return {"vertices": vertices, "face_colors": face_colors, "faces": faces}
 
 
 def cat_meshes(meshes):
@@ -108,7 +108,7 @@ def cat_meshes(meshes):
     vertices = np.concatenate(vertices)
     colors = np.concatenate(colors)
     faces = np.concatenate(faces)
-    return dict(vertices=vertices, face_colors=colors, faces=faces)
+    return {"vertices": vertices, "face_colors": colors, "faces": faces}
 
 
 def show_duster_pairs(view1, view2, pred1, pred2):
@@ -236,7 +236,9 @@ class SceneViz:
         return self
 
     def add_cameras(self, poses, focals=None, images=None, imsizes=None, colors=None, **kw):
-        get = lambda arr, idx: None if arr is None else arr[idx]
+        def get(arr, idx):
+            return None if arr is None else arr[idx]
+
         for i, pose_c2w in enumerate(poses):
             self.add_camera(
                 pose_c2w,
@@ -662,10 +664,7 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
                 )
             else:
                 img2 = cv2.circle(img2, (int(pt2[0]), int(pt2[1])), radius, color, -1, cv2.LINE_AA)
-    if row_cat:
-        whole_img = np.concatenate([img1, img2], axis=0)
-    else:
-        whole_img = np.concatenate([img1, img2], axis=1)
+    whole_img = np.concatenate([img1, img2], axis=0) if row_cat else np.concatenate([img1, img2], axis=1)
     return whole_img
 
 
@@ -691,10 +690,7 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
         kp2 = kp2[ind]
         mask = mask[ind]
 
-    if row_cat:
-        whole_img = np.concatenate([img1, img2], axis=0)
-    else:
-        whole_img = np.concatenate([img1, img2], axis=1)
+    whole_img = np.concatenate([img1, img2], axis=0) if row_cat else np.concatenate([img1, img2], axis=1)
     for i, (pt1, pt2) in enumerate(zip(kp1, kp2, strict=False)):
         if color_by == 0:
             coord_angle = np.arctan2(pt1[1] - center1[1], pt1[0] - center1[0])

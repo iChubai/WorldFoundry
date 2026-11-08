@@ -15,7 +15,7 @@ def cast_tuple(t, length=1):
 
 
 def xavier_uniform_weight_init(m):
-    if isinstance(m, nn.Conv3d) or isinstance(m, nn.Linear):
+    if isinstance(m, (nn.Conv3d, nn.Linear)):
         nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain("relu"))
         if m.bias is not None:
             nn.init.zeros_(m.bias)
@@ -44,7 +44,7 @@ class BlurPool3D(nn.Module):
         device="cpu",
         dtype=torch.bfloat16,
     ):
-        super(BlurPool3D, self).__init__()
+        super().__init__()
         self.filt_size = filt_size
         self.pad_off = pad_off
         self.pad_sizes = [
@@ -163,7 +163,7 @@ class NLayerDiscriminator(nn.Module):
             n_layers (int)  -- the number of conv layers in the discriminator
             norm_layer      -- normalization layer
         """
-        super(NLayerDiscriminator, self).__init__()
+        super().__init__()
 
         norm_layer = nn.BatchNorm2d
 
@@ -220,7 +220,7 @@ class NLayerDiscriminator3D(nn.Module):
             n_layers (int)  -- the number of conv layers in the discriminator
             use_actnorm (bool) -- flag to use actnorm instead of batchnorm
         """
-        super(NLayerDiscriminator3D, self).__init__()
+        super().__init__()
         if not use_actnorm:
             norm_layer = nn.BatchNorm3d
         else:
@@ -369,7 +369,7 @@ def load_checkpoint_with_inflation(model, ckpt_path):
     """
     pre-train using image, then inflate to 3D videos
     """
-    if ckpt_path.endswith(".pt") or ckpt_path.endswith(".pth"):
+    if ckpt_path.endswith((".pt", ".pth")):
         state_dict = find_model(ckpt_path)
         with torch.no_grad():
             for key in state_dict:

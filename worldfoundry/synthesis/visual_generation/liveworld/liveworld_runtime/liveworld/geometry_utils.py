@@ -420,10 +420,7 @@ class TrajectoryGenerator:
             if return_back:
                 t = i / (total_frames - 1) if total_frames > 1 else 0
                 # 前半段前进，后半段后退
-                if t < 0.5:
-                    progress = t * 2
-                else:
-                    progress = (1 - t) * 2
+                progress = t * 2 if t < 0.5 else (1 - t) * 2
             else:
                 progress = i / (total_frames - 1) if total_frames > 1 else 0
 
@@ -460,10 +457,7 @@ def unproject_depth_to_points(
     if K.shape != (3, 3):
         raise ValueError("K must be 3x3")
 
-    if mask is None:
-        mask = depth > 0
-    else:
-        mask = mask & (depth > 0)
+    mask = depth > 0 if mask is None else mask & (depth > 0)
 
     ys, xs = np.nonzero(mask)
     if ys.size == 0:
@@ -607,10 +601,7 @@ def load_video_frames(
 
     resize_wh = None
     if target_size is not None:
-        if isinstance(target_size, int):
-            resize_wh = (target_size, target_size)
-        else:
-            resize_wh = (target_size[0], target_size[1])
+        resize_wh = (target_size, target_size) if isinstance(target_size, int) else (target_size[0], target_size[1])
 
     frames: list[np.ndarray] = []
     idx = 0
@@ -1146,10 +1137,7 @@ def compute_depth_scale_factor(
     ratio_std = np.std(ratios)
     valid_ratios = ratios[np.abs(ratios - ratio_median) < 3 * ratio_std]
 
-    if len(valid_ratios) < min_valid_pixels // 2:
-        scale_factor = ratio_median
-    else:
-        scale_factor = np.median(valid_ratios)
+    scale_factor = ratio_median if len(valid_ratios) < min_valid_pixels // 2 else np.median(valid_ratios)
 
     print(f"  [ScaleAlign] Computed scale factor: {scale_factor:.4f} (from {num_valid} pixels)")
     return float(scale_factor)

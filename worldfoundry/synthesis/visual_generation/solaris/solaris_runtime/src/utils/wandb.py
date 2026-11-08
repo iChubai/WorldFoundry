@@ -19,4 +19,4 @@ def generate_run_id(exp_name):
 
 def log_copy(x, step=None):
     if is_main_process():
-        wandb.log({k: v for k, v in x.items()}, step=step)  # Make a copy so garbarge doesn't get inserted
+        wandb.log(dict(x.items()), step=step)  # Make a copy so garbarge doesn't get inserted

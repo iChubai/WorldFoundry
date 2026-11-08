@@ -203,10 +203,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         # print("!!!randn_like", latents.shape)
         latents = latents.to(dtype=dtype)
 
-        if latents is None:
-            latents = noise
-        else:
-            latents = latents.to(device)
+        latents = noise if latents is None else latents.to(device)
 
         if hasattr(self.scheduler, "init_noise_sigma"):
             latents = latents * self.scheduler.init_noise_sigma
@@ -384,10 +381,9 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                 negative_prompt_embeds = negative_prompt_embeds.repeat(1, num_videos_per_prompt, 1)
                 negative_prompt_embeds = negative_prompt_embeds.view(batch_size * num_videos_per_prompt, seq_len, -1)
 
-        if text_encoder is not None:
-            if isinstance(self, LoraLoaderMixin) and USE_PEFT_BACKEND:
-                # Retrieve the original scale by scaling back the LoRA layers
-                unscale_lora_layers(text_encoder.model, lora_scale)
+        if text_encoder is not None and isinstance(self, LoraLoaderMixin) and USE_PEFT_BACKEND:
+            # Retrieve the original scale by scaling back the LoRA layers
+            unscale_lora_layers(text_encoder.model, lora_scale)
 
         return prompt_embeds, negative_prompt_embeds, attention_mask, negative_attention_mask
 
@@ -605,17 +601,16 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
             if prompt_mask_2 is not None:
                 prompt_mask_2 = torch.cat([negative_prompt_mask_2, prompt_mask_2])
 
-        if self.do_classifier_free_guidance:
-            if ref_latents is not None:
-                ref_latents = torch.cat([ref_latents, ref_latents], dim=0)
-                if prompt_mask[0].sum() > 575:
-                    prompt_mask[0] = torch.cat(
-                        [
-                            torch.ones((1, prompt_mask[0].sum() - 575)).to(prompt_mask),
-                            torch.zeros((1, prompt_mask.shape[1] - prompt_mask[0].sum() + 575)).to(prompt_mask),
-                        ],
-                        dim=1,
-                    )
+        if self.do_classifier_free_guidance and ref_latents is not None:
+            ref_latents = torch.cat([ref_latents, ref_latents], dim=0)
+            if prompt_mask[0].sum() > 575:
+                prompt_mask[0] = torch.cat(
+                    [
+                        torch.ones((1, prompt_mask[0].sum() - 575)).to(prompt_mask),
+                        torch.zeros((1, prompt_mask.shape[1] - prompt_mask[0].sum() + 575)).to(prompt_mask),
+                    ],
+                    dim=1,
+                )
 
         if ip_cfg_scale > 0:
             prompt_embeds = torch.cat([prompt_embeds, prompt_embeds[1:]])
@@ -740,10 +735,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                     is_cache = False
                     if use_deepcache and num_inference_steps == 50:
                         no_cache_steps = list(range(10)) + list(range(10, 40, 2)) + list(range(40, 50))
-                        if i in no_cache_steps:
-                            is_cache = False
-                        else:
-                            is_cache = True
+                        is_cache = not i in no_cache_steps
                     if split_camera_cfg:
                         if i == 0:
                             print(
@@ -869,10 +861,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                     f"Only support latents with shape (b, c, h, w) or (b, c, f, h, w), but got {latents.shape}."
                 )
 
-            if not last_latents.shape[2] == 1:
-                last_latents = latents[:, :, latents.shape[2] // 2 :, :, :]
-            else:
-                last_latents = latents
+            last_latents = latents[:, :, latents.shape[2] // 2 :, :, :] if not last_latents.shape[2] == 1 else latents
             latent_decode = last_latents.clone()
             latent_decode = latent_decode / self.vae.config.scaling_factor
 

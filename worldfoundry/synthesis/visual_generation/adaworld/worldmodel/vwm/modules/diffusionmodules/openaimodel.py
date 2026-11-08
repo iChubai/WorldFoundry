@@ -62,7 +62,7 @@ class Upsample(nn.Module):
     def __init__(
         self, channels: int, use_conv: bool, dims: int = 2, out_channels: int | None = None, third_up: bool = False
     ):
-        super(Upsample, self).__init__()
+        super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
         self.use_conv = use_conv
@@ -95,7 +95,7 @@ class Downsample(nn.Module):
     def __init__(
         self, channels: int, use_conv: bool, dims: int = 2, out_channels: int | None = None, third_down: bool = False
     ):
-        super(Downsample, self).__init__()
+        super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
         self.use_conv = use_conv
@@ -148,7 +148,7 @@ class ResBlock(TimestepBlock):
         exchange_temb_dims: bool = False,
         skip_t_emb: bool = False,
     ):
-        super(ResBlock, self).__init__()
+        super().__init__()
         self.channels = channels
         self.emb_channels = emb_channels
         self.dropout = dropout
@@ -158,10 +158,7 @@ class ResBlock(TimestepBlock):
         self.use_scale_shift_norm = use_scale_shift_norm
         self.exchange_temb_dims = exchange_temb_dims
 
-        if isinstance(kernel_size, Iterable):
-            padding = [k // 2 for k in kernel_size]
-        else:
-            padding = kernel_size // 2
+        padding = [k // 2 for k in kernel_size] if isinstance(kernel_size, Iterable) else kernel_size // 2
 
         self.in_layers = nn.Sequential(
             normalization(channels), nn.SiLU(), conv_nd(dims, channels, self.out_channels, kernel_size, padding=padding)
@@ -223,10 +220,7 @@ class ResBlock(TimestepBlock):
         else:
             h = self.in_layers(x)
 
-        if self.skip_t_emb:
-            emb_out = torch.zeros_like(h)
-        else:
-            emb_out = self.emb_layers(emb).type(h.dtype)
+        emb_out = torch.zeros_like(h) if self.skip_t_emb else self.emb_layers(emb).type(h.dtype)
         while len(emb_out.shape) < len(h.shape):
             emb_out = emb_out[..., None]
         if self.use_scale_shift_norm:
@@ -244,7 +238,7 @@ class ResBlock(TimestepBlock):
 
 class Timestep(nn.Module):
     def __init__(self, dim: int):
-        super(Timestep, self).__init__()
+        super().__init__()
         self.dim = dim
 
     def forward(self, t: torch.Tensor) -> torch.Tensor:

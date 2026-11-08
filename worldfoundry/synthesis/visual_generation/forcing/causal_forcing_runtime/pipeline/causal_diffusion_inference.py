@@ -336,7 +336,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
         # ---- validate record indices against scheduler length ----
         sample_scheduler_probe = self._initialize_sample_scheduler(noise)
         T = len(sample_scheduler_probe.timesteps)
-        record_step_indices = sorted(set(int(i) for i in record_step_indices))
+        record_step_indices = sorted({int(i) for i in record_step_indices})
         if len(record_step_indices) == 0:
             raise ValueError("record_step_indices must be non-empty")
         if record_step_indices[0] < 0 or record_step_indices[-1] >= T:

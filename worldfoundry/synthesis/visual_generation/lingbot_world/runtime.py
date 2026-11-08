@@ -24,7 +24,7 @@ SUPPORTED_LINGBOT_TASKS = frozenset({"i2v-A14B"})
 
 
 def _candidate_official_runtime_roots() -> tuple[Path, ...]:
-    return tuple()
+    return ()
 
 
 def _official_runtime_root() -> Path | None:
@@ -134,18 +134,18 @@ class LingBotWorldRuntime:
         device_id = cls._parse_device_id(device)
         use_sp = ulysses_size > 1
         core_model_cls = wan_i2v_fast if use_fast else wan_i2v
-        core_model_kwargs = dict(
-            config=config,
-            checkpoint_dir=base_model_path,
-            device_id=device_id,
-            rank=rank,
-            t5_fsdp=t5_fsdp,
-            dit_fsdp=dit_fsdp,
-            use_sp=use_sp,
-            t5_cpu=t5_cpu,
-            convert_model_dtype=convert_model_dtype,
-            control_type=control_type,
-        )
+        core_model_kwargs = {
+            "config": config,
+            "checkpoint_dir": base_model_path,
+            "device_id": device_id,
+            "rank": rank,
+            "t5_fsdp": t5_fsdp,
+            "dit_fsdp": dit_fsdp,
+            "use_sp": use_sp,
+            "t5_cpu": t5_cpu,
+            "convert_model_dtype": convert_model_dtype,
+            "control_type": control_type,
+        }
         if use_fast and "fast_checkpoint_dir" in signature(core_model_cls.__init__).parameters:
             core_model_kwargs["fast_checkpoint_dir"] = resolved_fast_model_path
         core_model = core_model_cls(**core_model_kwargs)

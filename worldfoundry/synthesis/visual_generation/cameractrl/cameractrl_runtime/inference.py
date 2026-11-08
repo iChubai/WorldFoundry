@@ -294,16 +294,10 @@ def main(args):
     if args.visualization_captions.endswith(".json"):
         json_file = json.load(open(args.visualization_captions))
         captions = json_file["captions"] if "captions" in json_file else json_file["prompts"]
-        if args.use_negative_prompt:
-            negative_prompts = json_file["negative_prompts"]
-        else:
-            negative_prompts = None
+        negative_prompts = json_file["negative_prompts"] if args.use_negative_prompt else None
         if isinstance(captions[0], dict):
             captions = [cap["caption"] for cap in captions]
-        if args.use_specific_seeds:
-            specific_seeds = json_file["seeds"]
-        else:
-            specific_seeds = None
+        specific_seeds = json_file["seeds"] if args.use_specific_seeds else None
     elif args.visualization_captions.endswith(".txt"):
         with open(args.visualization_captions) as f:
             captions = f.readlines()

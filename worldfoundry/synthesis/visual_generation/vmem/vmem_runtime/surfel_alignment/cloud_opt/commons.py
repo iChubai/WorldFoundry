@@ -79,7 +79,7 @@ def l1_dist(a, b, weight):
     return (a - b).norm(dim=-1) * weight
 
 
-ALL_DISTS = dict(l1=l1_dist, l2=l2_dist)
+ALL_DISTS = {"l1": l1_dist, "l2": l2_dist}
 
 
 def signed_log1p(x):

@@ -350,7 +350,7 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
         self.last_z_shape = z.shape
         # timestep embedding
         temb = None
-        output = dict()
+        output = {}
         z = self.post_quant_conv(z)
 
         # z to block_in

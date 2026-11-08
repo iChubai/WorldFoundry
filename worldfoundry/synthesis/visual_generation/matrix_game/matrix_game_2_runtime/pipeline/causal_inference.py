@@ -173,10 +173,7 @@ def cond_current(conditional_dict, current_start_frame, num_frame_per_block, rep
     new_cond["cond_concat"] = cond_concat
     new_cond["visual_context"] = conditional_dict["visual_context"]
     if replace is not None:
-        if current_start_frame == 0:
-            last_frame_num = 1 + 4 * (num_frame_per_block - 1)
-        else:
-            last_frame_num = 4 * num_frame_per_block
+        last_frame_num = 1 + 4 * (num_frame_per_block - 1) if current_start_frame == 0 else 4 * num_frame_per_block
         final_frame = 1 + 4 * (current_start_frame + num_frame_per_block - 1)
         if mode != "templerun":
             conditional_dict["mouse_cond"][:, -last_frame_num + final_frame : final_frame] = replace["mouse"][
@@ -718,10 +715,7 @@ class CausalInferencePipeline(torch.nn.Module):
         """
         kv_cache_mouse = []
         kv_cache_keyboard = []
-        if self.local_attn_size != -1:
-            kv_cache_size = self.local_attn_size
-        else:
-            kv_cache_size = 15 * 1
+        kv_cache_size = self.local_attn_size if self.local_attn_size != -1 else 15 * 1
         for _ in range(self.num_transformer_blocks):
             kv_cache_keyboard.append(
                 {

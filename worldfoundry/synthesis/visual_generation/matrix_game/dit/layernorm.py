@@ -244,7 +244,7 @@ class FusedLayerNorm(torch.nn.Module):
 
 class MixedFusedRMSNorm(torch.nn.Module):
     def __init__(self, normalized_shape, elementwise_affine=True, eps=1e-5, device=None, dtype=None):
-        super(MixedFusedRMSNorm, self).__init__()
+        super().__init__()
 
         global fused_layer_norm_cuda
         fused_layer_norm_cuda = importlib.import_module("fused_layer_norm_cuda")

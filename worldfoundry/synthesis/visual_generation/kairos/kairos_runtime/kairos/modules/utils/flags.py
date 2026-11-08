@@ -6,7 +6,7 @@ import torch
 
 def detectplat_device_gpu_vendor():
     try:
-        result = subprocess.run(["mx-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3)
+        result = subprocess.run(["mx-smi"], capture_output=True, text=True, timeout=3)
         output = result.stdout + result.stderr
 
         if "MetaX" in output:
@@ -15,7 +15,7 @@ def detectplat_device_gpu_vendor():
         pass
 
     try:
-        result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=3)
+        result = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=3)
         if "NVIDIA" in result.stdout:
             return "NVIDIA"
     except BaseException:

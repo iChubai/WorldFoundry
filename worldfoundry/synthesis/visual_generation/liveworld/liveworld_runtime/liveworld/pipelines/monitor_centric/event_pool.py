@@ -21,6 +21,7 @@ from .entity_matcher import EntityMatcher
 from .event_agent import EventAgent, EventPrompts
 from .event_types import EventID, EventObservation, EventState, make_event_id
 from .logger import logger
+import contextlib
 
 
 @dataclass
@@ -353,7 +354,7 @@ class EventPool:
                     "Output the description string only, no JSON wrapping."
                 )
                 scene_text = qwen.generate_text(tmp_path, scene_prompt).strip()
-                if scene_text.startswith("{") or scene_text.startswith('"'):
+                if scene_text.startswith(("{", '"')):
                     scene_text = scene_text.strip('"{}').strip()
                 self._cached_scene_text = scene_text
 
@@ -371,10 +372,8 @@ class EventPool:
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
         finally:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
 
         return self._cached_scene_text, fg_text.strip()
 

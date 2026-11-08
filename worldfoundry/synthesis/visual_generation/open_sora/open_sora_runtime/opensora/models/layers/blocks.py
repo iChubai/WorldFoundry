@@ -25,7 +25,9 @@ from timm.models.vision_transformer import Mlp
 from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
 from opensora.acceleration.parallel_states import get_sequence_parallel_group
 
-approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+def approx_gelu():
+    return nn.GELU(approximate="tanh")
 
 
 class LlamaRMSNorm(nn.Module):
@@ -442,7 +444,7 @@ class SeqParallelAttention(Attention):
 
 class MultiHeadCrossAttention(nn.Module):
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0):
-        super(MultiHeadCrossAttention, self).__init__()
+        super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
         self.d_model = d_model

@@ -32,7 +32,7 @@ def build_estimator(
         raise ValueError(f"this inference-only Evoke port supports depth_backend='vigeo', got {backend!r}")
     from .vigeo_cloud import _VIGEO_WEIGHTS, ViGeoDepthEstimator
 
-    kwargs = dict(device=device, process_res=int(process_res), weights=(weights or str(_VIGEO_WEIGHTS)))
+    kwargs = {"device": device, "process_res": int(process_res), "weights": (weights or str(_VIGEO_WEIGHTS))}
     if src:
         kwargs["src"] = src
     unknown = sorted(set(vigeo_opts or {}) - set(_VIGEO_KEYS))

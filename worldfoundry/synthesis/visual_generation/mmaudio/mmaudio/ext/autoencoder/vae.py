@@ -514,10 +514,7 @@ class VAE(nn.Module):
         unnormalize: bool = True,
     ) -> tuple[torch.Tensor, DiagonalGaussianDistribution]:
         posterior = self.encode(x, normalize=normalize)
-        if sample_posterior:
-            z = posterior.sample(rng)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(rng) if sample_posterior else posterior.mode()
         dec = self.decode(z, unnormalize=unnormalize)
         return dec, posterior
 

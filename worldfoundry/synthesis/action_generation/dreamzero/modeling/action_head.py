@@ -394,18 +394,18 @@ class WANPolicyHead(ActionHead):
                 T5RelativeEmbedding: AutoWrappedModule,
                 T5LayerNorm: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device="cpu",
-                computation_dtype=self.dtype,
-                computation_device=(
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": "cpu",
+                "computation_dtype": self.dtype,
+                "computation_device": (
                     torch.device("cuda", torch.cuda.current_device())
                     if torch.cuda.is_available()
                     else torch.device("cpu")
                 ),
-            ),
+            },
         )
 
         self.cpu_offload = True
@@ -587,10 +587,7 @@ class WANPolicyHead(ActionHead):
         if self.ip_size > 1:
             assert self.cfg_scale != 1.0, "cfg_scale must be != 1.0 when ip_size > 1"
             assert len(kv_caches_input) == 2
-            if self.ip_rank == 0:
-                kv_caches = [kv_caches_input[0]]
-            else:
-                kv_caches = [kv_caches_input[1]]
+            kv_caches = [kv_caches_input[0]] if self.ip_rank == 0 else [kv_caches_input[1]]
         else:
             assert len(kv_caches_input) <= 2
             kv_caches = [kv_caches_input[0]]
@@ -931,10 +928,10 @@ class WANPolicyHead(ActionHead):
                 clip_feature=self.clip_feas,
                 kv_caches=kv_caches,
                 crossattn_caches=crossattn_caches,
-                kv_cache_metadata=dict(
-                    start_frame=0,
-                    update_kv_cache=True,
-                ),
+                kv_cache_metadata={
+                    "start_frame": 0,
+                    "update_kv_cache": True,
+                },
             )
             self.current_start_frame += 1
 
@@ -959,10 +956,10 @@ class WANPolicyHead(ActionHead):
                 clip_feature=self.clip_feas,
                 kv_caches=kv_caches,
                 crossattn_caches=crossattn_caches,
-                kv_cache_metadata=dict(
-                    start_frame=self.current_start_frame - self.num_frame_per_block,
-                    update_kv_cache=True,
-                ),
+                kv_cache_metadata={
+                    "start_frame": self.current_start_frame - self.num_frame_per_block,
+                    "update_kv_cache": True,
+                },
             )
 
         end_kv_event.record()
@@ -1046,10 +1043,10 @@ class WANPolicyHead(ActionHead):
                     clip_feature=self.clip_feas,
                     kv_caches=kv_caches,
                     crossattn_caches=crossattn_caches,
-                    kv_cache_metadata=dict(
-                        start_frame=self.current_start_frame,
-                        update_kv_cache=False,
-                    ),
+                    kv_cache_metadata={
+                        "start_frame": self.current_start_frame,
+                        "update_kv_cache": False,
+                    },
                 )
                 flow_pred_cond, flow_pred_cond_action = predictions[0]
                 flow_pred_uncond, flow_pred_uncond_action = predictions[1]

@@ -85,10 +85,7 @@ def _da3_infer_depth_intrinsics_single(
     depths_np = getattr(prediction, "depth", None)
     if depths_np is None:
         raise RuntimeError("DA3 prediction has no 'depth' field.")
-    if isinstance(depths_np, torch.Tensor):
-        depth_np = depths_np[0].detach().cpu().numpy()
-    else:
-        depth_np = np.asarray(depths_np)[0]
+    depth_np = depths_np[0].detach().cpu().numpy() if isinstance(depths_np, torch.Tensor) else np.asarray(depths_np)[0]
     Hd, Wd = depth_np.shape[-2:]
 
     depth_t = torch.from_numpy(depth_np.astype(np.float32)).unsqueeze(0).unsqueeze(0)
@@ -102,10 +99,7 @@ def _da3_infer_depth_intrinsics_single(
         ixts_np = getattr(prediction, "intrinsics", None)
         if ixts_np is None:
             raise AttributeError
-        if isinstance(ixts_np, torch.Tensor):
-            K_np = ixts_np[0].detach().cpu().numpy()
-        else:
-            K_np = np.asarray(ixts_np)[0]
+        K_np = ixts_np[0].detach().cpu().numpy() if isinstance(ixts_np, torch.Tensor) else np.asarray(ixts_np)[0]
         K_33 = torch.from_numpy(K_np.astype(np.float32))
         scale_x = float(Wt) / float(Wd)
         scale_y = float(Ht) / float(Hd)

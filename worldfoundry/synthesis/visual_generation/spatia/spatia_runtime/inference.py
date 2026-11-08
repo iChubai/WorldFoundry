@@ -159,7 +159,7 @@ def get_round_range(round_idx, total_frames, first_round_frames, round_frames, h
 
 
 def load_video_frames(video_path, height, width):
-    return [frame for frame in VideoData(str(video_path), height=height, width=width)]
+    return list(VideoData(str(video_path), height=height, width=width))
 
 
 def run_mapanything(args, round_idx, map_frames, map_extrinsics, intrinsic_path, work_dir):

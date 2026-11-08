@@ -267,18 +267,18 @@ def run(args: argparse.Namespace) -> Path:
             initial_state = torch.zeros(25, dtype=torch.float32)
         generator = torch.manual_seed(args.seed)
 
-        inference_kwargs = dict(
-            decode_chunk_size=min(8, args.num_frames),
-            generator=generator,
-            motion_bucket_id=args.motion_bucket_id,
-            noise_aug_strength=0.1,
-            actions=actions,
-            fps=args.fps,
-            height=args.height,
-            width=args.width,
-            num_frames=args.num_frames,
-            num_inference_steps=args.num_inference_steps,
-        )
+        inference_kwargs = {
+            "decode_chunk_size": min(8, args.num_frames),
+            "generator": generator,
+            "motion_bucket_id": args.motion_bucket_id,
+            "noise_aug_strength": 0.1,
+            "actions": actions,
+            "fps": args.fps,
+            "height": args.height,
+            "width": args.width,
+            "num_frames": args.num_frames,
+            "num_inference_steps": args.num_inference_steps,
+        }
         if action_dims == 25:
             inference_kwargs["init_state"] = initial_state
         else:

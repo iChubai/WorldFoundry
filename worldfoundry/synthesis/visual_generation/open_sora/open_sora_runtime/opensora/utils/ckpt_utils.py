@@ -193,7 +193,7 @@ def record_model_param_shape(model: torch.nn.Module) -> dict:
 
 
 def load_checkpoint(model, ckpt_path, save_as_pt=False, model_name="model", strict=False):
-    if ckpt_path.endswith(".pt") or ckpt_path.endswith(".pth"):
+    if ckpt_path.endswith((".pt", ".pth")):
         state_dict = find_model(ckpt_path, model=model)
         missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=strict)
         get_logger().info("Missing keys: %s", missing_keys)

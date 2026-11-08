@@ -438,10 +438,7 @@ class GaussianDiffusion:
         if device is None:
             device = next(model.parameters()).device
         assert isinstance(shape, (tuple, list))
-        if noise is not None:
-            img = noise
-        else:
-            img = th.randn(*shape, device=device)
+        img = noise if noise is not None else th.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
 
         if progress:
@@ -596,10 +593,7 @@ class GaussianDiffusion:
         if device is None:
             device = next(model.parameters()).device
         assert isinstance(shape, (tuple, list))
-        if noise is not None:
-            img = noise
-        else:
-            img = th.randn(*shape, device=device)
+        img = noise if noise is not None else th.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
 
         if progress:
@@ -666,7 +660,7 @@ def space_timesteps(num_timesteps, section_counts):
         if section_counts.startswith("ddim"):
             desired_count = int(section_counts[len("ddim") :])
             if desired_count == 1:
-                return set([50])
+                return {50}
             for i in range(1, num_timesteps):
                 if len(range(0, num_timesteps, i)) == desired_count:
                     return set(range(0, num_timesteps, i))
@@ -680,10 +674,7 @@ def space_timesteps(num_timesteps, section_counts):
         size = size_per + (1 if i < extra else 0)
         if size < section_count:
             raise ValueError(f"cannot divide section of {size} steps into {section_count}")
-        if section_count <= 1:
-            frac_stride = 1
-        else:
-            frac_stride = (size - 1) / (section_count - 1)
+        frac_stride = 1 if section_count <= 1 else (size - 1) / (section_count - 1)
         cur_idx = 0.0
         taken_steps = []
         for _ in range(section_count):

@@ -122,10 +122,7 @@ class Encoder(nn.Module):
         h = self.mid.block_1(h)
         h = self.mid.attn_1(h)
         h = self.mid.block_2(h)
-        if npu_config is None:
-            h = self.norm_out(h)
-        else:
-            h = npu_config.run_group_norm(self.norm_out, h)
+        h = self.norm_out(h) if npu_config is None else npu_config.run_group_norm(self.norm_out, h)
         h = nonlinearity(h)
         h = self.conv_out(h)
         return h
@@ -226,10 +223,7 @@ class Decoder(nn.Module):
             if hasattr(self.up[i_level], "time_upsample"):
                 h = self.up[i_level].time_upsample(h)
 
-        if npu_config is None:
-            h = self.norm_out(h)
-        else:
-            h = npu_config.run_group_norm(self.norm_out, h)
+        h = self.norm_out(h) if npu_config is None else npu_config.run_group_norm(self.norm_out, h)
         h = nonlinearity(h)
         h = self.conv_out(h)
         return h
@@ -393,10 +387,7 @@ class CausalVAEModel(VideoBaseAE):
 
     def forward(self, input, sample_posterior=True):
         posterior = self.encode(input)
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior
 
@@ -424,7 +415,7 @@ class CausalVAEModel(VideoBaseAE):
 
     def tiled_encode(self, x):
         t = x.shape[2]
-        t_chunk_idx = [i for i in range(0, t, self.tile_sample_min_size_t - 1)]
+        t_chunk_idx = list(range(0, t, self.tile_sample_min_size_t - 1))
         # print('tiled_encode', t_chunk_idx)
         if len(t_chunk_idx) == 1 and t_chunk_idx[0] == 0:
             t_chunk_start_end = [[0, t]]
@@ -453,7 +444,7 @@ class CausalVAEModel(VideoBaseAE):
 
     def tiled_decode(self, x):
         t = x.shape[2]
-        t_chunk_idx = [i for i in range(0, t, self.tile_latent_min_size_t - 1)]
+        t_chunk_idx = list(range(0, t, self.tile_latent_min_size_t - 1))
         # print('tiled_decode', t_chunk_idx)
         if len(t_chunk_idx) == 1 and t_chunk_idx[0] == 0:
             t_chunk_start_end = [[0, t]]
@@ -570,7 +561,7 @@ class CausalVAEModel(VideoBaseAE):
     def disable_tiling(self):
         self.enable_tiling(False)
 
-    def init_from_ckpt(self, path, ignore_keys=list()):
+    def init_from_ckpt(self, path, ignore_keys=[]):
         sd = torch.load(path, map_location="cpu")
         print("init from " + path)
 
@@ -580,10 +571,7 @@ class CausalVAEModel(VideoBaseAE):
             sd = {key.replace("module.", ""): value for key, value in sd.items()}
         elif "state_dict" in sd:
             print("Load from normal model!")
-            if "gen_model" in sd["state_dict"]:
-                sd = sd["state_dict"]["gen_model"]
-            else:
-                sd = sd["state_dict"]
+            sd = sd["state_dict"]["gen_model"] if "gen_model" in sd["state_dict"] else sd["state_dict"]
 
         keys = list(sd.keys())
 

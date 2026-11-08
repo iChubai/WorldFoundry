@@ -42,7 +42,7 @@ class TemporalAxialAttention(nn.Module):
         q = self.rotary_emb.rotate_queries_or_keys(q, self.rotary_emb.freqs)
         k = self.rotary_emb.rotate_queries_or_keys(k, self.rotary_emb.freqs)
 
-        q, k, v = map(lambda t: t.contiguous(), (q, k, v))
+        q, k, v = (t.contiguous() for t in (q, k, v))
 
         x = _worldfoundry_scaled_dot_product_attention(query=q, key=k, value=v, is_causal=self.is_causal)
 

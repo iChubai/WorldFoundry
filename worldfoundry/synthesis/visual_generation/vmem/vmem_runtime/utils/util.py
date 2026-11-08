@@ -182,10 +182,7 @@ def get_value_dict(
     value_dict["cond_frames_mask"][curr_input_frame_indices] = True
     value_dict["cond_aug"] = 0.0
 
-    if curr_c2ws.shape[-1] == 3:
-        c2w = to_hom_pose(curr_c2ws.float())
-    else:
-        c2w = curr_c2ws
+    c2w = to_hom_pose(curr_c2ws.float()) if curr_c2ws.shape[-1] == 3 else curr_c2ws
     w2c = torch.linalg.inv(c2w)
 
     # camera centering
@@ -419,10 +416,7 @@ def load_img_and_K(
     image = np.array(image).astype(np.float32) / 255
     if image.shape[-1] == 4:
         rgb, alpha = image[:, :, :3], image[:, :, 3:]
-        if context_rgb is not None:
-            image = rgb * alpha + context_rgb * (1 - alpha)
-        else:
-            image = rgb * alpha + (1 - alpha)
+        image = rgb * alpha + context_rgb * (1 - alpha) if context_rgb is not None else rgb * alpha + (1 - alpha)
     image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image).to(dtype=torch.float32)
     image = image.unsqueeze(0)
@@ -745,10 +739,7 @@ def select_frames(timestamps, min_num_frames=2, skip_frame=10, random_start=Fals
     else:
         cur_skip_frame = skip_frame
 
-    if random_start:
-        start_frame = np.random.randint(0, skip_frame)
-    else:
-        start_frame = 0
+    start_frame = np.random.randint(0, skip_frame) if random_start else 0
 
     # Gather frame indices
     selected_frame_indices = list(range(start_frame, num_frames, cur_skip_frame))

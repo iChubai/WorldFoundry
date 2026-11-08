@@ -1503,10 +1503,7 @@ class ViTMultiHeadDotProductAttention(nn.Module):
 
         elif self.attn_implementation == "flash_attention_2":
             if xq.dtype == torch.float32:
-                if torch.is_autocast_enabled():
-                    target_dtype = torch.get_autocast_gpu_dtype()
-                else:
-                    target_dtype = self.wq.weight.dtype
+                target_dtype = torch.get_autocast_gpu_dtype() if torch.is_autocast_enabled() else self.wq.weight.dtype
             attn_output = _flash_attention_forward(
                 xq,
                 xk,

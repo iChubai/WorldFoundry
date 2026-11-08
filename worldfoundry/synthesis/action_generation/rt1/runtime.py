@@ -101,7 +101,7 @@ class RT1SavedModelRuntime:
         device = self.config.device.lower()
         if device.startswith("/"):
             return self.config.device
-        if device.startswith("cuda") or device.startswith("gpu"):
+        if device.startswith(("cuda", "gpu")):
             return "/GPU:0"
         return "/CPU:0"
 

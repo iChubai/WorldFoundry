@@ -223,9 +223,7 @@ class LlamaAttention(nn.Module):
         key_states = key_states.repeat_interleave(self.num_key_value_groups, dim=2)
         value_states = value_states.repeat_interleave(self.num_key_value_groups, dim=2)
 
-        query_states, key_states, value_states = map(
-            lambda x: x.transpose(1, 2), (query_states, key_states, value_states)
-        )
+        query_states, key_states, value_states = (x.transpose(1, 2) for x in (query_states, key_states, value_states))
 
         attn_output = (
             _worldfoundry_scaled_dot_product_attention(

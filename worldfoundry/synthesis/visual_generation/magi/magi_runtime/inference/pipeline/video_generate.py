@@ -191,10 +191,7 @@ def init_t(t_schedule_config: dict | None, num_steps: int, device: torch.device,
     if num_steps == 12:
         base_t = torch.linspace(0, 1, 4 + 1, device=device) / 4
         accu_num = torch.linspace(0, 1, 4 + 1, device=device)
-        if shortcut_mode == "16,16,8":
-            base_t = base_t[:3]
-        else:
-            base_t = torch.cat([base_t[:1], base_t[2:4]], dim=0)
+        base_t = base_t[:3] if shortcut_mode == "16,16,8" else torch.cat([base_t[:1], base_t[2:4]], dim=0)
         t = torch.cat([base_t + accu for accu in accu_num], dim=0)[: (num_steps + 1)]
     else:
         t = torch.linspace(0, 1, num_steps + 1, device=device)
@@ -628,9 +625,11 @@ class SampleTransport:
                 t_end,
             ),
         ) = self.generate_denoise_status_and_sequences(infer_idx, cur_denoise_step)
-        model_kwargs = dict(
-            chunk_width=self.chunk_width, fwd_extra_1st_chunk=False, num_steps=transport_input.num_steps
-        )
+        model_kwargs = {
+            "chunk_width": self.chunk_width,
+            "fwd_extra_1st_chunk": False,
+            "num_steps": transport_input.num_steps,
+        }
 
         if chunk_offset > 0 and cur_denoise_step == 0:
             self.extract_prefix_video_feature(

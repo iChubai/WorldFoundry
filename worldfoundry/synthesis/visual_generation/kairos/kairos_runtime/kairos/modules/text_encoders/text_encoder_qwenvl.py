@@ -93,20 +93,14 @@ class QwenVLTextEncoder(nn.Module):
         self._update_dtype_for_awq()
 
         # Normalize batch
-        if isinstance(prompt, str):
-            prompt_list = [prompt]
-        else:
-            prompt_list = prompt
+        prompt_list = [prompt] if isinstance(prompt, str) else prompt
         bsz = len(prompt_list)
 
         # Normalize images
         if images is None:
             images_list = [None] * bsz
         else:
-            if isinstance(images, list):
-                images_list = images
-            else:
-                images_list = [images]
+            images_list = images if isinstance(images, list) else [images]
             if len(images_list) != bsz:
                 raise ValueError(f"len(images)={len(images_list)} must match len(prompt)={bsz}")
 
@@ -145,7 +139,7 @@ class QwenVLTextEncoder(nn.Module):
             truncation=True,
             max_length=self.tokenizer_max_length,
             return_tensors="pt",
-            images_kwargs=dict(max_pixels=448 * 448, do_resize=True),
+            images_kwargs={"max_pixels": 448 * 448, "do_resize": True},
         )
 
         model_inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in model_inputs.items()}

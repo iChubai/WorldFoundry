@@ -54,7 +54,7 @@ def build_data_loader(
         num_workers=num_workers,
         collate_fn=functools.partial(collate_segments_to_batch, sampler.num_frames, pad_batch_to),
         pin_memory=True,
-        persistent_workers=True if num_workers > 0 else False,
+        persistent_workers=num_workers > 0,
     )
     return loader, num_batches
 

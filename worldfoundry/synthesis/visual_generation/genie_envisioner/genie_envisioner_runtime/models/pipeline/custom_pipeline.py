@@ -314,10 +314,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         """
         device = device or self._execution_device
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds, prompt_attention_mask = self._get_t5_prompt_embeds(
@@ -771,10 +768,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
             init_latents = rearrange(init_latents, "(b t) c f h w -> b c (t f) h w", t=mem_size)
 
         if return_action:
-            if noise_seed:
-                action_generator = torch.Generator(device=device).manual_seed(noise_seed)
-            else:
-                action_generator = generator
+            action_generator = torch.Generator(device=device).manual_seed(noise_seed) if noise_seed else generator
             actions = randn_tensor(
                 (batch_size, action_chunk, action_dim),
                 device=device,
@@ -826,10 +820,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         )
 
         # 7. Denoising loop
-        if noise_seed:
-            video_generator = torch.Generator(device=device).manual_seed(noise_seed)
-        else:
-            video_generator = generator
+        video_generator = torch.Generator(device=device).manual_seed(noise_seed) if noise_seed else generator
         video_attention_mask = None
         for i_chunk in range(n_chunk):
             video_states_buffer = None
@@ -988,10 +979,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                     decode_timestep=decode_timestep,
                     decode_noise_scale=decode_noise_scale,
                 )
-                if video_list is None:
-                    video_list = clean_frames
-                else:
-                    video_list = torch.cat((video_list, clean_frames), dim=2)
+                video_list = clean_frames if video_list is None else torch.cat((video_list, clean_frames), dim=2)
 
                 if i_chunk < n_chunk - 1:
                     ### reset scheduler

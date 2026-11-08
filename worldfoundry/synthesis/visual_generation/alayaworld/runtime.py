@@ -62,6 +62,7 @@ from worldfoundry.synthesis.visual_generation.alayaworld.model import (
 )
 
 from .spatial import AlayaSpatialMemory, SpatialBank
+import contextlib
 
 _LTX_SCALE_FACTORS = SpatioTemporalScaleFactors(time=8, height=32, width=32)
 
@@ -833,10 +834,8 @@ class AlayaWorldRuntime:
             self._owns_process_group = False
 
     def __del__(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self.close()
-        except Exception:
-            pass
 
 
 __all__ = ["AlayaWorldRuntime"]

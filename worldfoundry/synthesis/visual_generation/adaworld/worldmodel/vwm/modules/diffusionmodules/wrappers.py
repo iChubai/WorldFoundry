@@ -7,7 +7,7 @@ OPENAIUNETWRAPPER = "vwm.modules.diffusionmodules.wrappers.OpenAIWrapper"
 
 class IdentityWrapper(nn.Module):
     def __init__(self, diffusion_model, compile_model: bool = False):
-        super(IdentityWrapper, self).__init__()
+        super().__init__()
         compile = (
             torch.compile
             if version.parse(torch.__version__) >= version.parse("2.0.0") and compile_model

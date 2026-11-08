@@ -66,10 +66,7 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
         name = name.split("/")
         pointer = model
         for m_name in name:
-            if re.fullmatch(r"[A-Za-z]+\d+", m_name):
-                scope_names = re.split(r"(\d+)", m_name)
-            else:
-                scope_names = [m_name]
+            scope_names = re.split(r"(\d+)", m_name) if re.fullmatch(r"[A-Za-z]+\d+", m_name) else [m_name]
             if scope_names[0] == "w" or scope_names[0] == "g":
                 pointer = pointer.weight
             elif scope_names[0] == "b":

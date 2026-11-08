@@ -303,10 +303,7 @@ def _preprocess_frames(
     shapes = set()
 
     for frame in frames:
-        if isinstance(frame, torch.Tensor):
-            frame_np = frame.detach().cpu().numpy()
-        else:
-            frame_np = np.asarray(frame)
+        frame_np = frame.detach().cpu().numpy() if isinstance(frame, torch.Tensor) else np.asarray(frame)
 
         if frame_np.dtype != np.uint8:
             frame_np = np.clip(frame_np, 0, 255).astype(np.uint8)
@@ -911,10 +908,7 @@ class Stream3RUpdater(PointCloudUpdater):
             )
             if seg_result.size == 0:
                 continue
-            if merged is None:
-                merged = seg_result.copy()
-            else:
-                merged = merged | seg_result
+            merged = seg_result.copy() if merged is None else merged | seg_result
 
         if merged is None or not merged.any():
             return None
@@ -1142,10 +1136,7 @@ class Stream3RUpdater(PointCloudUpdater):
 
         pts = wp[valid].astype(np.float32)
         cols = img[valid]
-        if cols.max() <= 1.5:
-            cols = (cols * 255.0).clip(0, 255).astype(np.uint8)
-        else:
-            cols = cols.clip(0, 255).astype(np.uint8)
+        cols = (cols * 255.0).clip(0, 255).astype(np.uint8) if cols.max() <= 1.5 else cols.clip(0, 255).astype(np.uint8)
 
         # Voxel downsample
         if options.voxel_size and options.voxel_size > 0 and len(pts) > 0:

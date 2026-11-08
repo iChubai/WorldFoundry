@@ -876,14 +876,14 @@ class WanModel(nn.Module):
             context_B_L_D = torch.concat([context_clip, context_B_L_D], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0_B_6_D,
-            seq_lens=seq_lens,
-            video_size=video_size,
-            freqs=self.rope_position_embedding(x_B_T_H_W_D),
-            context=context_B_L_D,
-            context_lens=context_lens,
-        )
+        kwargs = {
+            "e": e0_B_6_D,
+            "seq_lens": seq_lens,
+            "video_size": video_size,
+            "freqs": self.rope_position_embedding(x_B_T_H_W_D),
+            "context": context_B_L_D,
+            "context_lens": context_lens,
+        }
 
         for block_idx, block in enumerate(self.blocks):
             if slg_layers is not None and block_idx in slg_layers and is_uncond:

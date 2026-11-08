@@ -40,7 +40,7 @@ def compress_video(input_file, output_file, out_size):
         "copy",
         output_file,
     ]
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(command, capture_output=True)
 
 
 @contextmanager
@@ -86,7 +86,7 @@ class NPUConfig:
         self._loss = []
         self.work_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.pickle_save_path = f"{self.work_path}/pickles"
-        self.mm = dict()
+        self.mm = {}
 
         if self.on_npu:
             import deepspeed  # noqa: F401 - Keeps the module's import-time setup.
@@ -159,15 +159,8 @@ class NPUConfig:
     def replace_methods(self, target_class, source_class, skip_fcns=[], only_include_fcns=None):
         for attr_name in dir(source_class):
             attr_value = getattr(source_class, attr_name)
-            if attr_name in source_class.__dict__:
-                attr_class_value = source_class.__dict__[attr_name]
-            else:
-                attr_class_value = attr_value
-            if (
-                isinstance(attr_class_value, staticmethod)
-                or isinstance(attr_class_value, classmethod)
-                or attr_name in skip_fcns
-            ):
+            attr_class_value = source_class.__dict__[attr_name] if attr_name in source_class.__dict__ else attr_value
+            if isinstance(attr_class_value, (staticmethod, classmethod)) or attr_name in skip_fcns:
                 print(f"skip replace {attr_name}")
                 continue
 
@@ -230,12 +223,11 @@ class NPUConfig:
                 return loaded_data
         else:
             data = function()
-            if not self.use_small_dataset:
-                if self.rank % self.N_NPU_PER_NODE == 0:
-                    # 只需要rank0保存文件
-                    os.makedirs(self.pickle_save_path, exist_ok=True)
-                    with open(file_name, "wb") as file:
-                        pickle.dump(data, file, pickle.HIGHEST_PROTOCOL)
+            if not self.use_small_dataset and self.rank % self.N_NPU_PER_NODE == 0:
+                # 只需要rank0保存文件
+                os.makedirs(self.pickle_save_path, exist_ok=True)
+                with open(file_name, "wb") as file:
+                    pickle.dump(data, file, pickle.HIGHEST_PROTOCOL)
             return data
 
     def try_get_vid_path(self, file, out_size=1024):
@@ -343,9 +335,8 @@ class NPUConfig:
                 self._loss.append(msg)
 
     def print_msg(self, msg, on=True, rank=None):
-        if on:
-            if self.rank == rank or rank is None:
-                print(f"[RANK-{self.rank}]: {msg}", flush=True)
+        if on and (self.rank == rank or rank is None):
+            print(f"[RANK-{self.rank}]: {msg}", flush=True)
 
     def save_loss(self, filename, rank=0):
         if self.rank == rank:

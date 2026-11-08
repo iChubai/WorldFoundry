@@ -24,7 +24,7 @@ class LatentActionModel(nn.Module):
         num_heads: int,
         dropout: float = 0.0,
     ) -> None:
-        super(LatentActionModel, self).__init__()
+        super().__init__()
         self.model_dim = model_dim
         self.latent_dim = latent_dim
         self.patch_size = patch_size

@@ -179,10 +179,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             print("Video has been generated. Pass!")
             continue
         extended_prompt = batch["extended_prompts"][0] if "extended_prompts" in batch else None
-        if extended_prompt is not None:
-            prompts = [extended_prompt]
-        else:
-            prompts = [prompt]
+        prompts = [extended_prompt] if extended_prompt is not None else [prompt]
 
         initial_latent = None
         sampled_noise = torch.randn([1, args.num_output_frames, 16, 60, 104], device=device, dtype=torch.bfloat16)

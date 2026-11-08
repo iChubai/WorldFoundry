@@ -230,8 +230,12 @@ class SolarisSPBlock(nnx.Module):
         assert e.ndim == 4
 
         num_frames = e.shape[1]
-        pack = lambda x: rearrange(x, "b f p c -> b (f p) c", f=num_frames)
-        unpack = lambda x: rearrange(x, "b (f p) c -> b f p c", f=num_frames)
+
+        def pack(x):
+            return rearrange(x, "b f p c -> b (f p) c", f=num_frames)
+
+        def unpack(x):
+            return rearrange(x, "b (f p) c -> b f p c", f=num_frames)
 
         # for the duration of the function, keep x in unpacked format (i.e. separate the frames from the time)
         # only convert to packed format for self-attention.
@@ -462,10 +466,7 @@ class SolarisSPModel(nnx.Module):
         # currently we decode 1 frame at a time.
         i = jnp.arange(num_q_blocks)[:, None]  # (num_q_blocks, 1)
         j = jnp.arange(num_k_blocks)[None, :]  # (1, num_k_blocks)
-        if sliding_block_size == -1:
-            block_mask = j <= i
-        else:
-            block_mask = (j >= i - sliding_block_size + 1) & (j <= i)
+        block_mask = j <= i if sliding_block_size == -1 else (j >= i - sliding_block_size + 1) & (j <= i)
         block_mask = einops.repeat(block_mask, "q k -> (q p1) (k p2)", p1=q_block_size, p2=k_block_size)
         return block_mask
 
@@ -482,10 +483,7 @@ class SolarisSPModel(nnx.Module):
         # currently we decode 1 frame at a time.
         i = jnp.arange(num_q_blocks)[:, None]  # (num_q_blocks, 1)
         j = jnp.arange(num_k_blocks)[None, :]  # (1, num_k_blocks)
-        if sliding_block_size == -1:
-            block_mask = j < i
-        else:
-            block_mask = (j >= i - sliding_block_size + 1) & (j < i)
+        block_mask = j < i if sliding_block_size == -1 else (j >= i - sliding_block_size + 1) & (j < i)
         block_mask = einops.repeat(block_mask, "q k -> (q p1) (k p2)", p1=q_block_size, p2=k_block_size)
         return block_mask
 
@@ -655,10 +653,7 @@ class SolarisSPModel(nnx.Module):
                 bidirectional=bidirectional,
             )
 
-        if matrix_game_forward:
-            action_module_zipper = jnp.array([True] * 15 + [False] * 15)
-        else:
-            action_module_zipper = jnp.array([True] * 30)
+        action_module_zipper = jnp.array([True] * 15 + [False] * 15) if matrix_game_forward else jnp.array([True] * 30)
 
         if kv_cache is not None:
 

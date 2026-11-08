@@ -133,6 +133,7 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
 from opensora.adaptor.zp_manager import zp_manager
+import contextlib
 
 MEMORY_OPT_ALLREDUCE_SIZE = 500000000
 
@@ -229,7 +230,7 @@ class DeepSpeedEngine(Module):
         config_class=None,
         dont_change_device=False,
     ):
-        super(DeepSpeedEngine, self).__init__()
+        super().__init__()
         self.dont_change_device = dont_change_device
         self.client_optimizer = optimizer
         self.client_lr_scheduler = lr_scheduler
@@ -276,12 +277,8 @@ class DeepSpeedEngine(Module):
         self._configure_with_arguments(args, mpu)
         self._do_sanity_check()
         see_memory_usage("DeepSpeed Engine: After args sanity test", force=self.memory_breakdown())
-        if mpu is not None:
-            if self.elasticity_enabled():
-                if not self.is_elastic_model_parallel_supported():
-                    assert not self.elasticity_enabled(), (
-                        "Elasticity is not currently supported with model parallelism."
-                    )
+        if mpu is not None and self.elasticity_enabled() and not self.is_elastic_model_parallel_supported():
+            assert not self.elasticity_enabled(), "Elasticity is not currently supported with model parallelism."
 
         self._set_distributed_vars(args)
 
@@ -591,7 +588,7 @@ class DeepSpeedEngine(Module):
     def random_ltd_initialize(self):
         assert self.random_ltd_enabled()
         random_ltd_config = self.random_ltd_config()
-        random_ltd_queue = deque([x for x in sorted(random_ltd_config[RANDOM_LTD_LAYER_ID])])
+        random_ltd_queue = deque(list(sorted(random_ltd_config[RANDOM_LTD_LAYER_ID])))
         count = 0
         for name, layer in self.module.named_modules():
             if isinstance(layer, RandomLayerTokenDrop):
@@ -772,7 +769,7 @@ class DeepSpeedEngine(Module):
         return self.zero_optimization_stage() >= ZeroStageEnum.weights
 
     def is_first_weights_partition_group(self):
-        ret = True if self.mics_shard_size() < 0 and self.zero_optimization_partition_weights() else False
+        ret = bool(self.mics_shard_size() < 0 and self.zero_optimization_partition_weights())
         if self.mics_shard_size() > 0 and self.global_rank < self.mics_shard_size():
             ret = True
         return ret
@@ -1054,10 +1051,8 @@ class DeepSpeedEngine(Module):
 
     def _supported_optims(self):
         FairseqOptimizer = None
-        try:
+        with contextlib.suppress(ImportError):
             from fairseq.optim.fairseq_optimizer import FairseqOptimizer
-        except ImportError:
-            pass
 
         expected_optim_types = [Optimizer]
         if FairseqOptimizer:
@@ -1073,11 +1068,10 @@ class DeepSpeedEngine(Module):
             f"Client Optimizer is of unexpected type {type(self.client_optimizer)}"
         )
 
-        if not self.client_optimizer:
-            if self.optimizer_name() is not None:
-                assert self._is_supported_optimizer(self.optimizer_name()), (
-                    f"{self.optimizer_name()} is not a supported DeepSpeed Optimizer"
-                )
+        if not self.client_optimizer and self.optimizer_name() is not None:
+            assert self._is_supported_optimizer(self.optimizer_name()), (
+                f"{self.optimizer_name()} is not a supported DeepSpeed Optimizer"
+            )
 
         if self.optimizer_name() == LAMB_OPTIMIZER or self.optimizer_name() == ONEBIT_LAMB_OPTIMIZER:
             assert self.dynamic_loss_scale(), (
@@ -1456,10 +1450,7 @@ class DeepSpeedEngine(Module):
         initial_dynamic_scale = self.initial_dynamic_scale()
         dynamic_loss_args = self.dynamic_loss_scale_args()
         clip_grad = self.gradient_clipping()
-        if APEX_INSTALLED:
-            fused_opts = (apex.optimizers.FusedAdam, FusedAdam)
-        else:
-            fused_opts = FusedAdam
+        fused_opts = (apex.optimizers.FusedAdam, FusedAdam) if APEX_INSTALLED else FusedAdam
         if isinstance(optimizer, fused_opts) or self.optimizer_name() in [
             ONEBIT_ADAM_OPTIMIZER,
             ZERO_ONE_ADAM_OPTIMIZER,
@@ -1559,10 +1550,9 @@ class DeepSpeedEngine(Module):
                 if not self.has_moe_layers:
                     contiguous_gradients = False
 
-            if isinstance(self.module, PipelineModule):
-                if overlap_comm:
-                    logger.warning("Pipeline parallelism does not support overlapped communication, will be disabled.")
-                    overlap_comm = False
+            if isinstance(self.module, PipelineModule) and overlap_comm:
+                logger.warning("Pipeline parallelism does not support overlapped communication, will be disabled.")
+                overlap_comm = False
             optimizer = DeepSpeedZeroOptimizer(
                 optimizer,
                 self.param_names,
@@ -1832,7 +1822,7 @@ class DeepSpeedEngine(Module):
     def _scale_loss_by_gas(self, prescaled_loss):
         if isinstance(prescaled_loss, torch.Tensor):
             scaled_loss = prescaled_loss / self.gradient_accumulation_steps()
-        elif isinstance(prescaled_loss, tuple) or isinstance(prescaled_loss, list):
+        elif isinstance(prescaled_loss, (tuple, list)):
             scaled_loss = []
             for l in prescaled_loss:
                 if isinstance(l, torch.Tensor):
@@ -1884,9 +1874,8 @@ class DeepSpeedEngine(Module):
         if flops_profiler_active:
             self.flops_profiler.start_profile(ignore_list=None)
 
-        if self.module.training:
-            if self.progressive_layer_drop:
-                kwargs.update(self.progressive_layer_drop.get_state())
+        if self.module.training and self.progressive_layer_drop:
+            kwargs.update(self.progressive_layer_drop.get_state())
 
         if self.__class__.__name__ != "PipelineEngine":
             # TODO: The above if condition is a HACK since for PipelineEngine
@@ -2022,17 +2011,15 @@ class DeepSpeedEngine(Module):
 
         # Log training loss
         self.losses += loss.mean().item()
-        if self.monitor.enabled:
-            if self.is_gradient_accumulation_boundary():
-                if self.global_rank == 0:
-                    self.summary_events = [
-                        (
-                            "Train/Samples/train_loss",
-                            self.losses,
-                            self.global_samples,
-                        )
-                    ]
-                    self.monitor.write_events(self.summary_events)
+        if self.monitor.enabled and self.is_gradient_accumulation_boundary() and self.global_rank == 0:
+            self.summary_events = [
+                (
+                    "Train/Samples/train_loss",
+                    self.losses,
+                    self.global_samples,
+                )
+            ]
+            self.monitor.write_events(self.summary_events)
 
         self._start_timers(self.engine_timers.backward_timers)
 
@@ -2257,34 +2244,29 @@ class DeepSpeedEngine(Module):
         self._stop_timers(self.engine_timers.step_timers)
 
         # Log learning rate
-        if self.monitor.enabled:
-            if self.is_gradient_accumulation_boundary():
-                if self.global_rank == 0:
-                    self.summary_events = [("Train/Samples/lr", self.get_lr()[0], self.global_samples)]
+        if self.monitor.enabled and self.is_gradient_accumulation_boundary() and self.global_rank == 0:
+            self.summary_events = [("Train/Samples/lr", self.get_lr()[0], self.global_samples)]
 
-                    if self.fp16_enabled() and hasattr(self.optimizer, "cur_scale"):
-                        self.summary_events.append(
-                            (
-                                "Train/Samples/loss_scale",
-                                self.optimizer.cur_scale,
-                                self.global_samples,
-                            )
+            if self.fp16_enabled() and hasattr(self.optimizer, "cur_scale"):
+                self.summary_events.append(
+                    (
+                        "Train/Samples/loss_scale",
+                        self.optimizer.cur_scale,
+                        self.global_samples,
+                    )
+                )
+
+            if self.eigenvalue_enabled() and not self.gas_boundary_ctr % self.eigenvalue_gas_boundary_resolution():
+                ev_values = self.block_eigenvalue.values()
+                for i in range(len(ev_values)):
+                    self.summary_events.append(
+                        (
+                            f"Train/Eigenvalues/ModelBlockParam_{i}",
+                            self.ev_values[i][0],
+                            self.global_samples,
                         )
-
-                    if (
-                        self.eigenvalue_enabled()
-                        and not self.gas_boundary_ctr % self.eigenvalue_gas_boundary_resolution()
-                    ):
-                        ev_values = self.block_eigenvalue.values()
-                        for i in range(len(ev_values)):
-                            self.summary_events.append(
-                                (
-                                    f"Train/Eigenvalues/ModelBlockParam_{i}",
-                                    self.ev_values[i][0],
-                                    self.global_samples,
-                                )
-                            )
-                    self.monitor.write_events(self.summary_events)
+                    )
+            self.monitor.write_events(self.summary_events)
 
         # Check flops profiling
         if flops_profiler_active:
@@ -3408,32 +3390,32 @@ class DeepSpeedEngine(Module):
         module = self.module_state_dict(exclude_frozen_parameters=exclude_frozen_parameters)
         self._curr_ckpt_path = None
 
-        state = dict(
-            module=module,
-            buffer_names=self._get_buffer_names(),
-            optimizer=self.optimizer.state_dict() if self.optimizer and not zero_optimizer_state else None,
-            param_shapes=self._get_zero_param_shapes() if self.optimizer and zero_optimizer_state else None,
-            frozen_param_shapes=self._get_zero_frozen_param_attributes(self._get_param_shape_func)
+        state = {
+            "module": module,
+            "buffer_names": self._get_buffer_names(),
+            "optimizer": self.optimizer.state_dict() if self.optimizer and not zero_optimizer_state else None,
+            "param_shapes": self._get_zero_param_shapes() if self.optimizer and zero_optimizer_state else None,
+            "frozen_param_shapes": self._get_zero_frozen_param_attributes(self._get_param_shape_func)
             if save_frozen_param
             else None,
-            shared_params=self._get_shared_params() if self.optimizer and zero_optimizer_state else None,
-            frozen_param_fragments=self._get_zero_frozen_param_attributes(self._get_param_fragment_func)
+            "shared_params": self._get_shared_params() if self.optimizer and zero_optimizer_state else None,
+            "frozen_param_fragments": self._get_zero_frozen_param_attributes(self._get_param_fragment_func)
             if save_frozen_param
             else None,
-            lr_scheduler=self.lr_scheduler.state_dict() if self.lr_scheduler is not None else None,
-            data_sampler=self.training_dataloader.data_sampler.state_dict()
+            "lr_scheduler": self.lr_scheduler.state_dict() if self.lr_scheduler is not None else None,
+            "data_sampler": self.training_dataloader.data_sampler.state_dict()
             if (self.training_dataloader is not None and self.curriculum_learning_enabled())
             else None,
-            random_ltd=self.random_ltd_scheduler.state_dict() if self.random_ltd_enabled() else None,
-            sparse_tensor_module_names=self.sparse_tensor_module_names,
-            skipped_steps=self.skipped_steps,
-            global_steps=self.global_steps,
-            global_samples=self.global_samples,
-            dp_world_size=self.seq_dp_world_size,
-            mp_world_size=self.mp_world_size,
-            ds_config=self.config,
-            ds_version=version,
-        )
+            "random_ltd": self.random_ltd_scheduler.state_dict() if self.random_ltd_enabled() else None,
+            "sparse_tensor_module_names": self.sparse_tensor_module_names,
+            "skipped_steps": self.skipped_steps,
+            "global_steps": self.global_steps,
+            "global_samples": self.global_samples,
+            "dp_world_size": self.seq_dp_world_size,
+            "mp_world_size": self.mp_world_size,
+            "ds_config": self.config,
+            "ds_version": version,
+        }
         state.update(client_state)
 
         if self.save_non_zero_checkpoint:
@@ -3585,7 +3567,7 @@ class DeepSpeedEngine(Module):
 
     def _save_zero_checkpoint(self, save_path, tag):
         zero_checkpoint_name = self._get_zero_ckpt_name(save_path, tag)
-        zero_sd = dict(optimizer_state_dict=self.optimizer.state_dict(), ds_config=self.config, ds_version=version)
+        zero_sd = {"optimizer_state_dict": self.optimizer.state_dict(), "ds_config": self.config, "ds_version": version}
         self.checkpoint_engine.save(zero_sd, zero_checkpoint_name)
 
         if self.global_rank == 0:

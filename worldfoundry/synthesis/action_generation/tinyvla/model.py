@@ -10,6 +10,7 @@ from .act_head import build_act_head
 from .config import LlavaPythiaConfig
 from .diffusion_head import ConditionalUnet1D
 from .multimodal import LlavaMetaForCausalLM, LlavaMetaModel
+import contextlib
 
 
 class LLavaPythiaModel(LlavaMetaModel, GPTNeoXModel):
@@ -186,14 +187,10 @@ class LlavaPythiaForCausalLM(GPTNeoXPreTrainedModel, LlavaMetaForCausalLM):
         return action
 
 
-try:
+with contextlib.suppress(ValueError):
     AutoConfig.register(LlavaPythiaConfig.model_type, LlavaPythiaConfig)
-except ValueError:
-    pass
-try:
+with contextlib.suppress(ValueError):
     AutoModelForCausalLM.register(LlavaPythiaConfig, LlavaPythiaForCausalLM)
-except ValueError:
-    pass
 
 
 __all__ = ["LLavaPythiaModel", "LlavaPythiaForCausalLM"]

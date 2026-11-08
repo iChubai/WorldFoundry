@@ -330,9 +330,8 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
 
         def fn_recursive_add_processors(name: str, module: torch.nn.Module, processors: dict[str, AttentionProcessor]):
             # filter out processors in motion module
-            if hasattr(module, "set_processor"):
-                if "motion_modules." not in name:
-                    processors[f"{name}.processor"] = module.processor
+            if hasattr(module, "set_processor") and "motion_modules." not in name:
+                processors[f"{name}.processor"] = module.processor
 
             for sub_name, child in module.named_children():
                 fn_recursive_add_processors(f"{name}.{sub_name}", child, processors)
@@ -366,12 +365,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             )
 
         def fn_recursive_attn_processor(name: str, module: torch.nn.Module, processor):
-            if hasattr(module, "set_processor"):
-                if "motion_modules." not in name:
-                    if not isinstance(processor, dict):
-                        module.set_processor(processor)
-                    else:
-                        module.set_processor(processor.pop(f"{name}.processor"))
+            if hasattr(module, "set_processor") and "motion_modules." not in name:
+                if not isinstance(processor, dict):
+                    module.set_processor(processor)
+                else:
+                    module.set_processor(processor.pop(f"{name}.processor"))
 
             for sub_name, child in module.named_children():
                 fn_recursive_attn_processor(f"{name}.{sub_name}", child, processor)
@@ -417,9 +415,8 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
 
         def fn_recursive_add_processors(name: str, module: torch.nn.Module, processors: dict[str, AttentionProcessor]):
             # filter out processors in motion module
-            if hasattr(module, "set_processor"):
-                if "motion_modules." in name:
-                    processors[f"{name}.processor"] = module.processor
+            if hasattr(module, "set_processor") and "motion_modules." in name:
+                processors[f"{name}.processor"] = module.processor
 
             for sub_name, child in module.named_children():
                 fn_recursive_add_processors(f"{name}.{sub_name}", child, processors)
@@ -453,12 +450,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             )
 
         def fn_recursive_attn_processor(name: str, module: torch.nn.Module, processor):
-            if hasattr(module, "set_processor"):
-                if "motion_modules." in name:
-                    if not isinstance(processor, dict):
-                        module.set_processor(processor)
-                    else:
-                        module.set_processor(processor.pop(f"{name}.processor"))
+            if hasattr(module, "set_processor") and "motion_modules." in name:
+                if not isinstance(processor, dict):
+                    module.set_processor(processor)
+                else:
+                    module.set_processor(processor.pop(f"{name}.processor"))
 
             for sub_name, child in module.named_children():
                 fn_recursive_attn_processor(f"{name}.{sub_name}", child, processor)
@@ -892,7 +888,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         return init_dict, unused_kwargs, hidden_config_dict
 
     def __init__(self, decoder_add_posecond=True, **kwargs):
-        super(UNet3DConditionModelPoseCond, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.decoder_add_posecond = decoder_add_posecond
 
     def set_all_attn_processor(

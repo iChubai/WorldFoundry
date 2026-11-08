@@ -38,6 +38,7 @@ if os.environ.get("EVOKE_CPU_THREADS"):
 from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402
     CHUNK0_TARGET_DISPARITY_PX_DEFAULT as _CHUNK0_TARGET_DISPARITY_PX_DEFAULT,
 )
+import contextlib
 
 _PARSER = None  # set by parse_args; lets checks read a flag's default rather than duplicating it
 
@@ -1170,10 +1171,8 @@ def _wait_for_worker_slot(workers_dir: Path, max_workers: int, poll: float = 2.0
             if pid > 0 and _pid_alive(pid):
                 live += 1
             elif pid > 0:  # only prune once a real pid was written and is now dead
-                try:
+                with contextlib.suppress(OSError):
                     m.unlink()
-                except OSError:
-                    pass
         if live < max_workers:
             return
         print(f"[geo-infer] [bg] {live} postprocess worker(s) in flight (max {max_workers}), waiting...", flush=True)
@@ -1298,11 +1297,11 @@ def build_pipe(args):
         raise SystemExit(f"[geo-infer] FATAL: ckpt dir missing: {ckpt_path}")
     print(f"[geo-infer] ckpt:    {ckpt_path}", flush=True)
 
-    _from_pretrained_kwargs = dict(
-        subfolder="transformer",
-        torch_dtype=weight_dtype,
-        low_cpu_mem_usage=True,
-    )
+    _from_pretrained_kwargs = {
+        "subfolder": "transformer",
+        "torch_dtype": weight_dtype,
+        "low_cpu_mem_usage": True,
+    }
     _additional_kwargs = {}
     if args.enable_cam_control:
         # override config so transformer __init__ initialises the cam submodule
@@ -2145,34 +2144,34 @@ def main(argv=None):
             f"event_prompt={args.event_prompt!r}",
             flush=True,
         )
-    pipe_kwargs = dict(
-        prompt=args.prompt,
-        negative_prompt=args.negative_prompt,
-        height=int(args.height),
-        width=int(args.width),
-        num_frames=int(args.num_frames),
-        num_inference_steps=int(args.num_inference_steps),
-        guidance_scale=float(args.guidance_scale),
-        image=image_pil,  # None for t2v
-        image_noise_sigma_min=float(args.image_noise_sigma_min),
-        image_noise_sigma_max=float(args.image_noise_sigma_max),
-        video=video_input,  # v2v conditioning
-        video_noise_sigma_min=float(args.video_noise_sigma_min),
-        video_noise_sigma_max=float(args.video_noise_sigma_max),
-        use_dynamic_shifting=not bool(args.no_dynamic_shifting),
-        time_shift_type="exponential",
-        is_keep_x0=True,
-        history_sizes=[16, 2, 1],
-        is_enable_stage2=bool(args.is_enable_stage2),
-        vae_decode_type=str(args.vae_decode_type),
-        output_type="np",
-        return_dict=True,
-        generator=generator,
-        use_kv_cache=bool(
+    pipe_kwargs = {
+        "prompt": args.prompt,
+        "negative_prompt": args.negative_prompt,
+        "height": int(args.height),
+        "width": int(args.width),
+        "num_frames": int(args.num_frames),
+        "num_inference_steps": int(args.num_inference_steps),
+        "guidance_scale": float(args.guidance_scale),
+        "image": image_pil,  # None for t2v
+        "image_noise_sigma_min": float(args.image_noise_sigma_min),
+        "image_noise_sigma_max": float(args.image_noise_sigma_max),
+        "video": video_input,  # v2v conditioning
+        "video_noise_sigma_min": float(args.video_noise_sigma_min),
+        "video_noise_sigma_max": float(args.video_noise_sigma_max),
+        "use_dynamic_shifting": not bool(args.no_dynamic_shifting),
+        "time_shift_type": "exponential",
+        "is_keep_x0": True,
+        "history_sizes": [16, 2, 1],
+        "is_enable_stage2": bool(args.is_enable_stage2),
+        "vae_decode_type": str(args.vae_decode_type),
+        "output_type": "np",
+        "return_dict": True,
+        "generator": generator,
+        "use_kv_cache": bool(
             args.use_kv_cache
         ),  # default False -> EvokePipeline leaves the cache off; pair with --restrict_self_attn
-        stream_output=bool(args.stream_long_video),  # True -> do not accumulate full-clip pixels, return frames=None
-    )
+        "stream_output": bool(args.stream_long_video),  # True -> do not accumulate full-clip pixels, return frames=None
+    }
     if args.is_enable_stage2:
         pipe_kwargs["stage2_num_stages"] = int(args.stage2_num_stages)
         pipe_kwargs["stage2_num_inference_steps_list"] = [int(x) for x in args.stage2_steps]
@@ -2375,10 +2374,8 @@ def _acquire_load_slot(root: Path, poll: float = 3.0):
             if pid > 0 and _pid_alive(pid):
                 live += 1
             elif pid > 0:
-                try:
+                with contextlib.suppress(OSError):
                     m.unlink()
-                except OSError:
-                    pass
         if live < cap:
             mine.write_text(str(os.getpid()))
             print(f"[geo-infer] load slot acquired ({live + 1}/{cap} building)", flush=True)
@@ -2388,10 +2385,8 @@ def _acquire_load_slot(root: Path, poll: float = 3.0):
 
 
 def _release_load_slot(marker) -> None:
-    try:
+    with contextlib.suppress(OSError):
         marker.unlink()
-    except OSError:
-        pass
 
 
 def run_argv_batch(path: str) -> int:

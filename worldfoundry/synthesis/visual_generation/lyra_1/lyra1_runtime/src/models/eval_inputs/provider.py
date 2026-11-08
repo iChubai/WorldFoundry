@@ -212,10 +212,7 @@ class Provider(Dataset):
 
         # Additional outputs
         if self.opt.use_depth:
-            if not self.load_latents:
-                depths_output = depths[num_total_input_frames:]
-            else:
-                depths_output = depths
+            depths_output = depths[num_total_input_frames:] if not self.load_latents else depths
             out_dict["depths_output"] = depths_output
         if images_input_vae is not None:
             out_dict["images_input_vae"] = images_input_vae
@@ -502,10 +499,7 @@ class Provider(Dataset):
 
         # Split data fields for input if latents are used
         data_fields_target = self.data_fields
-        if self.load_latents:
-            data_fields_input = self.data_fields_latents
-        else:
-            data_fields_input = self.data_fields
+        data_fields_input = self.data_fields_latents if self.load_latents else self.data_fields
 
         # Read data
         original_output_dict_input = self.dataset.get_data(

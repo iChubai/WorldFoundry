@@ -47,6 +47,7 @@ from ..utils.inference_utils import (
     vigeo_opts_from_cfg,
 )
 from .pipeline_output import EvokePipelineOutput
+import contextlib
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -263,10 +264,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         device = device or self._execution_device
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds, prompt_attention_mask = self._get_t5_prompt_embeds(
@@ -913,11 +911,11 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             _render_bw = _render_backward_multisrc_zbuf if render_mode == "backward_zbuf" else _render_backward
             # the zbuf despeckle params are only accepted by the backward_zbuf path (same function and params as training build_backward_warp) -> only added to kwargs there.
             _zbuf_extra = (
-                dict(
-                    zbuf_despeckle=bool(geo_state.get("da3_zbuf_despeckle", False)),
-                    zbuf_despeckle_ksize=int(geo_state.get("da3_zbuf_despeckle_ksize", 3)),
-                    zbuf_despeckle_fill_iters=int(geo_state.get("da3_zbuf_despeckle_fill_iters", 4)),
-                )
+                {
+                    "zbuf_despeckle": bool(geo_state.get("da3_zbuf_despeckle", False)),
+                    "zbuf_despeckle_ksize": int(geo_state.get("da3_zbuf_despeckle_ksize", 3)),
+                    "zbuf_despeckle_fill_iters": int(geo_state.get("da3_zbuf_despeckle_fill_iters", 4)),
+                }
                 if render_mode == "backward_zbuf"
                 else {}
             )
@@ -1322,10 +1320,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         loaded_path = getattr(self, "_geo_loaded_lora_path", None)
         if loaded_path != lora_path:
             if loaded_path is not None and hasattr(self, "delete_adapters"):
-                try:
+                with contextlib.suppress(Exception):
                     self.delete_adapters(self._GEO_ADAPTER_NAME)
-                except Exception:
-                    pass
             self.load_lora_weights(str(lora_path), adapter_name=self._GEO_ADAPTER_NAME)
             self._geo_loaded_lora_path = lora_path
         if hasattr(self, "set_adapters"):
@@ -2475,10 +2471,9 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             total_generated_latent_frames += video_latents.shape[2]
 
         # 6. Main denoising loop.
-        if use_interpolate_prompt:
-            if num_latent_sections < max(interpolate_cumulative_list):
-                num_latent_sections = sum(interpolate_cumulative_list)
-                print(f"Update num_latent_sections to: {num_latent_sections}")
+        if use_interpolate_prompt and num_latent_sections < max(interpolate_cumulative_list):
+            num_latent_sections = sum(interpolate_cumulative_list)
+            print(f"Update num_latent_sections to: {num_latent_sections}")
 
         # Reset per-rollout short-tier noise state.
         self._short_tier_print_count = 0

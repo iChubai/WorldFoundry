@@ -266,7 +266,7 @@ class LLaMAConfig(PretrainedConfig):
 
     @staticmethod
     def get_ranks_and_size(mesh):
-        out = dict(mesh=mesh)
+        out = {"mesh": mesh}
         mp_size = mesh.shape["tp"] * mesh.shape["sp"]
         mp_node_size = max(1, mp_size // jax.local_device_count())
         dp_node_size = jax.process_count() // mp_node_size
@@ -347,14 +347,14 @@ class LLaMAConfig(PretrainedConfig):
 
     @staticmethod
     def get_weight_decay_exclusions():
-        return tuple()
+        return ()
 
     @staticmethod
     def get_frozen_param_exclusions(freeze_base):
         if freeze_base:
             return ("vte", "vision_head")
         else:
-            return tuple()
+            return ()
 
     @staticmethod
     def rng_keys():
@@ -643,18 +643,18 @@ class FlaxLLaMAAttention(nn.Module):
                     ring_attention_fn,
                     axis_name="sp",
                     float32_logits=True,
-                    blockwise_kwargs=dict(
-                        deterministic=deterministic,
-                        dropout_rng=dropout_rng,
-                        attn_pdrop=self.config.attn_pdrop,
-                        causal=True,
-                        query_chunk_size=self.config.scan_query_chunk_size,
-                        key_chunk_size=self.config.scan_key_chunk_size,
-                        dtype=self.dtype,
-                        policy=get_gradient_checkpoint_policy("nothing_saveable"),
-                        precision=self.precision,
-                        prevent_cse=not self.config.scan_layers,
-                    ),
+                    blockwise_kwargs={
+                        "deterministic": deterministic,
+                        "dropout_rng": dropout_rng,
+                        "attn_pdrop": self.config.attn_pdrop,
+                        "causal": True,
+                        "query_chunk_size": self.config.scan_query_chunk_size,
+                        "key_chunk_size": self.config.scan_key_chunk_size,
+                        "dtype": self.dtype,
+                        "policy": get_gradient_checkpoint_policy("nothing_saveable"),
+                        "precision": self.precision,
+                        "prevent_cse": not self.config.scan_layers,
+                    },
                 ),
                 mesh=LLaMAConfig.get_jax_mesh(self.config.mesh_dim),
                 in_specs=(
@@ -1355,11 +1355,11 @@ class LLaMATokenizer(PreTrainedTokenizer):
         self.add_eos_token = add_eos_token
         """ Initialisation"""
         self.add_special_tokens(
-            dict(
-                unk_token=unk_token,
-                bos_token=bos_token,
-                eos_token=eos_token,
-            )
+            {
+                "unk_token": unk_token,
+                "bos_token": bos_token,
+                "eos_token": eos_token,
+            }
         )
         self.pad_token_id = self.unk_token_id
 
@@ -1440,10 +1440,7 @@ class LLaMATokenizer(PreTrainedTokenizer):
         return (out_vocab_file,)
 
     def build_inputs_with_special_tokens(self, token_ids_0, token_ids_1=None):
-        if self.add_bos_token:
-            bos_token_ids = [self.bos_token_id]
-        else:
-            bos_token_ids = []
+        bos_token_ids = [self.bos_token_id] if self.add_bos_token else []
 
         output = bos_token_ids + token_ids_0
 

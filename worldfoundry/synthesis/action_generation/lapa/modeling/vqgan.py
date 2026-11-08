@@ -262,7 +262,7 @@ class AttnBlock(nn.Module):
         query = nn.Conv(hidden_states.shape[-1], [1, 1])(hidden_states)
         key = nn.Conv(hidden_states.shape[-1], [1, 1])(hidden_states)
         value = nn.Conv(hidden_states.shape[-1], [1, 1])(hidden_states)
-        query, key, value = map(lambda x: x.reshape(x.shape[0], -1, x.shape[-1]), [query, key, value])
+        query, key, value = (x.reshape(x.shape[0], -1, x.shape[-1]) for x in [query, key, value])
         attn_weights = jnp.einsum("bqd,bkd->bqk", query, key)
         attn_weights *= hidden_states.shape[-1] ** -0.5
         attn_weights = jax.nn.softmax(attn_weights, axis=-1)

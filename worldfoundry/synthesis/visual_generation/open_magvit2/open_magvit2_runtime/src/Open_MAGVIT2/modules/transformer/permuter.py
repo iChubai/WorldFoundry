@@ -17,10 +17,7 @@ class ShiftPermuter(AbstractPermuter):
         self.shift_pos = shift_pos
 
     def forward(self, x, reverse=False):
-        if reverse:
-            x = x - self.shift_pos
-        else:
-            x = x + self.shift_pos
+        x = x - self.shift_pos if reverse else x + self.shift_pos
         return x
 
 

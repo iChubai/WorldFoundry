@@ -300,10 +300,7 @@ def fast_pnp(pts3d, focal, msk, device, pp=None, niter_PnP=10):
     else:
         tentative_focals = [focal]
 
-    if pp is None:
-        pp = (W / 2, H / 2)
-    else:
-        pp = to_numpy(pp)
+    pp = (W / 2, H / 2) if pp is None else to_numpy(pp)
 
     best = (0,)
     for focal in tentative_focals:

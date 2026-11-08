@@ -127,16 +127,16 @@ class MotionFormer(VisionTransformer):
             self.head = nn.Identity()
             self.head_drop = nn.Identity()
             # avoiding code duplication (used only if agg_*_module is TransformerEncoderLayer)
-            transf_enc_layer_kwargs = dict(
-                d_model=self.embed_dim,
-                nhead=self.num_heads,
-                activation=nn.GELU(),
-                batch_first=True,
-                dim_feedforward=self.mlp_ratio * self.embed_dim,
-                dropout=self.drop_rate,
-                layer_norm_eps=1e-6,
-                norm_first=True,
-            )
+            transf_enc_layer_kwargs = {
+                "d_model": self.embed_dim,
+                "nhead": self.num_heads,
+                "activation": nn.GELU(),
+                "batch_first": True,
+                "dim_feedforward": self.mlp_ratio * self.embed_dim,
+                "dropout": self.drop_rate,
+                "layer_norm_eps": 1e-6,
+                "norm_first": True,
+            }
             # define adapters if needed
             if self.factorize_space_time:
                 if agg_space_module == "TransformerEncoderLayer":
@@ -170,7 +170,7 @@ class MotionFormer(VisionTransformer):
         if was_pt_on_avclip:
             # we need to filter out the state_dict of the AVCLIP model (has both A and V extractors)
             # and keep only the state_dict of the feat extractor
-            ckpt_weights = dict()
+            ckpt_weights = {}
             for k, v in ckpt["state_dict"].items():
                 if k.startswith(("module.v_encoder.", "v_encoder.")):
                     k = k.replace("module.", "").replace("v_encoder.", "")

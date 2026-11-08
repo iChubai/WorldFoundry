@@ -49,11 +49,11 @@ from transformers import T5Tokenizer as T5Tokenizer
 
 
 def get_scheduler(args):
-    kwargs = dict(
-        prediction_type=args.prediction_type,
-        rescale_betas_zero_snr=args.rescale_betas_zero_snr,
-        timestep_spacing="trailing" if args.rescale_betas_zero_snr else "leading",
-    )
+    kwargs = {
+        "prediction_type": args.prediction_type,
+        "rescale_betas_zero_snr": args.rescale_betas_zero_snr,
+        "timestep_spacing": "trailing" if args.rescale_betas_zero_snr else "leading",
+    }
     if args.v1_5_scheduler:
         kwargs["beta_start"] = 0.00085
         kwargs["beta_end"] = 0.0120

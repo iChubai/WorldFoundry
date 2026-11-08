@@ -14,7 +14,7 @@ import torch
 # Variant of constant() that inherits dtype and device from the given
 # reference tensor by default.
 
-_constant_cache = dict()
+_constant_cache = {}
 
 
 def constant(value, shape=None, dtype=None, device=None, memory_format=None):

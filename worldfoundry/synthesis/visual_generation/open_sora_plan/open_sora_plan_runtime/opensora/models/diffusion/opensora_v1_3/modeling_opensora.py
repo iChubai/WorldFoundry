@@ -406,13 +406,13 @@ if __name__ == "__main__":
     ).to(device)  # B L or B 1+num_images L
     cond_mask = torch.randint(0, 2, (b, 1, args.model_max_length)).to(device)  # B L or B 1+num_images L
     timestep = torch.randint(0, 1000, (b,), device=device)
-    model_kwargs = dict(
-        hidden_states=x,
-        encoder_hidden_states=cond,
-        attention_mask=attn_mask,
-        encoder_attention_mask=cond_mask,
-        timestep=timestep,
-    )
+    model_kwargs = {
+        "hidden_states": x,
+        "encoder_hidden_states": cond,
+        "attention_mask": attn_mask,
+        "encoder_attention_mask": cond_mask,
+        "timestep": timestep,
+    }
     with torch.no_grad():
         output = model(**model_kwargs)
     print(output[0].shape)

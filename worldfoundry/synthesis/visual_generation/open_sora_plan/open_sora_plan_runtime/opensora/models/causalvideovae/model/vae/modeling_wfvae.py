@@ -128,10 +128,7 @@ class Encoder(VideoBaseAE):
         h = torch.concat([h, l2], dim=1)
         h = self.mid(h)
 
-        if npu_config is None:
-            h = self.norm_out(h)
-        else:
-            h = npu_config.run_group_norm(self.norm_out, h)
+        h = self.norm_out(h) if npu_config is None else npu_config.run_group_norm(self.norm_out, h)
 
         h = nonlinearity(h)
         h = self.conv_out(h)
@@ -284,10 +281,7 @@ class Decoder(VideoBaseAE):
         h = self.up1(h[:, : -self.energy_flow_hidden_size])
 
         h = self.layer(h)
-        if npu_config is None:
-            h = self.norm_out(h)
-        else:
-            h = npu_config.run_group_norm(self.norm_out, h)
+        h = self.norm_out(h) if npu_config is None else npu_config.run_group_norm(self.norm_out, h)
         h = nonlinearity(h)
         h = self.conv_out(h)
         h[:, :3] = h[:, :3] + l1
@@ -468,10 +462,7 @@ class WFVAEModel(VideoBaseAE):
         for idx, (start, end) in enumerate(start_end):
             self._set_first_chunk(idx == 0)
 
-            if end + 1 < t:
-                chunk = x[:, :, start : end + 1, :, :]
-            else:
-                chunk = x[:, :, start:end, :, :]
+            chunk = x[:, :, start : end + 1, :, :] if end + 1 < t else x[:, :, start:end, :, :]
 
             if self.use_quant_layer:
                 chunk = self.post_quant_conv(chunk)
@@ -487,10 +478,7 @@ class WFVAEModel(VideoBaseAE):
 
     def forward(self, input, sample_posterior=True):
         posterior = self.encode(input)
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior
 
@@ -507,7 +495,7 @@ class WFVAEModel(VideoBaseAE):
     def disable_tiling(self):
         self.enable_tiling(False)
 
-    def init_from_ckpt(self, path, ignore_keys=list()):
+    def init_from_ckpt(self, path, ignore_keys=[]):
         sd = torch.load(path, map_location="cpu")
         print("init from " + path)
 
@@ -517,10 +505,7 @@ class WFVAEModel(VideoBaseAE):
             sd = {key.replace("module.", ""): value for key, value in sd.items()}
         elif "state_dict" in sd:
             print("Load from normal model!")
-            if "gen_model" in sd["state_dict"]:
-                sd = sd["state_dict"]["gen_model"]
-            else:
-                sd = sd["state_dict"]
+            sd = sd["state_dict"]["gen_model"] if "gen_model" in sd["state_dict"] else sd["state_dict"]
 
         keys = list(sd.keys())
 

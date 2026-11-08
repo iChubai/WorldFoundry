@@ -13,7 +13,7 @@ from vwm.util import autocast, count_params, default, disabled_train, expand_dim
 
 class AbstractEmbModel(nn.Module):
     def __init__(self):
-        super(AbstractEmbModel, self).__init__()
+        super().__init__()
         self._is_trainable = None
         self._ucg_rate = None
         self._input_key = None
@@ -60,7 +60,7 @@ class GeneralConditioner(nn.Module):
     KEY2CATDIM = {"vector": 1, "crossattn": 2, "concat": 1}
 
     def __init__(self, emb_models: list | ListConfig):
-        super(GeneralConditioner, self).__init__()
+        super().__init__()
         embedders = []
         for n, embconfig in enumerate(emb_models):
             embedder = instantiate_from_config(embconfig)
@@ -175,7 +175,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
         output_tokens=False,
         init_device=None,
     ):
-        super(FrozenOpenCLIPImageEmbedder, self).__init__()
+        super().__init__()
         model, _, _ = open_clip.create_model_and_transforms(
             arch, device=torch.device(default(init_device, "cpu")), pretrained=version
         )
@@ -236,10 +236,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
             assert not self.pad_to_max_len
             return tokens, z
         elif self.repeat_to_max_len:
-            if z.dim() == 2:
-                z_ = z[:, None]
-            else:
-                z_ = z
+            z_ = z[:, None] if z.dim() == 2 else z
             return repeat(z_, "b 1 d -> b n d", n=self.max_length), z
         elif self.pad_to_max_len:
             assert z.dim() == 3
@@ -280,7 +277,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
 
 class ActionBook(AbstractEmbModel):  # For adaptation to discrete action space
     def __init__(self, num_actions: int = 4, action_dim: int = 32):
-        super(ActionBook, self).__init__()
+        super().__init__()
         self.codebook = nn.Embedding(num_actions, action_dim)
         self.codebook.weight.data.uniform_(-1.0 / num_actions, 1.0 / num_actions)
 
@@ -301,7 +298,7 @@ class ActionBook(AbstractEmbModel):  # For adaptation to discrete action space
 
 class ActionMLP(AbstractEmbModel):  # For adaptation to continuous action space
     def __init__(self, num_actions: int = 4, action_dim: int = 32):
-        super(ActionMLP, self).__init__()
+        super().__init__()
         self.mapping = nn.Sequential(nn.Linear(num_actions, action_dim), nn.SiLU(), nn.Linear(action_dim, action_dim))
 
         init_weights = torch.load("path_to/mlp_init_weights.pth", map_location="cpu")["model_state_dict"]
@@ -315,7 +312,7 @@ class ActionMLP(AbstractEmbModel):  # For adaptation to continuous action space
 
 class VideoPredictionEmbedderWithLAMEncoder(AbstractEmbModel):
     def __init__(self, lam_config: dict):
-        super(VideoPredictionEmbedderWithLAMEncoder, self).__init__()
+        super().__init__()
         self.lam = instantiate_from_config(lam_config).eval()
 
     def forward(self, vid):
@@ -334,7 +331,7 @@ class VideoPredictionEmbedderWithEncoder(AbstractEmbModel):
         disable_encoder_autocast: bool = False,
         en_and_decode_n_samples_a_time: int | None = None,
     ):
-        super(VideoPredictionEmbedderWithEncoder, self).__init__()
+        super().__init__()
         self.encoder = instantiate_from_config(encoder_config).eval()
 
         self.num_frames = n_context_frames + 1
@@ -357,7 +354,7 @@ class VideoPredictionEmbedderWithEncoder(AbstractEmbModel):
 
 class FrozenOpenCLIPImagePredictionEmbedder(AbstractEmbModel):
     def __init__(self, open_clip_config: dict):
-        super(FrozenOpenCLIPImagePredictionEmbedder, self).__init__()
+        super().__init__()
         self.open_clip = instantiate_from_config(open_clip_config).eval()
 
     def forward(self, vid):
@@ -372,7 +369,7 @@ class ConcatTimestepEmbedderND(AbstractEmbModel):
     """
 
     def __init__(self, output_dim: int):
-        super(ConcatTimestepEmbedderND, self).__init__()
+        super().__init__()
         self.timestep = Timestep(output_dim)
         self.output_dim = output_dim
 

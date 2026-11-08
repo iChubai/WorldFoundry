@@ -67,10 +67,7 @@ class DeltaSampler:
         encodings = []
         for i in range(0, len(vision), 1):
             v = vision[i : i + B]
-            if len(v) % B == 0:
-                n_pad = 0
-            else:
-                n_pad = B - len(v) % B
+            n_pad = 0 if len(v) % B == 0 else B - len(v) % B
             v = np.pad(v, ((n_pad, 0), (0, 0), (0, 0), (0, 0)))
             enc = jax.device_get(self.vqgan.encode(v))[1].astype(int)
             enc = enc[n_pad:]
@@ -95,18 +92,18 @@ class DeltaSampler:
             llama_config = VideoLLaMAConfig.load_config(self.FLAGS.load_llama_config)
             updates = VideoLLaMAConfig(**self.FLAGS.llama)
             llama_config.update(
-                dict(
-                    remat_block=updates.remat_block,
-                    remat_attention=updates.remat_attention,
-                    remat_mlp=updates.remat_mlp,
-                    scan_attention=updates.scan_attention,
-                    scan_mlp=updates.scan_mlp,
-                    scan_query_chunk_size=updates.scan_query_chunk_size,
-                    scan_key_chunk_size=updates.scan_key_chunk_size,
-                    scan_mlp_chunk_size=updates.scan_mlp_chunk_size,
-                    scan_layers=updates.scan_layers,
-                    param_scan_axis=updates.param_scan_axis,
-                )
+                {
+                    "remat_block": updates.remat_block,
+                    "remat_attention": updates.remat_attention,
+                    "remat_mlp": updates.remat_mlp,
+                    "scan_attention": updates.scan_attention,
+                    "scan_mlp": updates.scan_mlp,
+                    "scan_query_chunk_size": updates.scan_query_chunk_size,
+                    "scan_key_chunk_size": updates.scan_key_chunk_size,
+                    "scan_mlp_chunk_size": updates.scan_mlp_chunk_size,
+                    "scan_layers": updates.scan_layers,
+                    "param_scan_axis": updates.param_scan_axis,
+                }
             )
         else:
             llama_config = VideoLLaMAConfig(**self.FLAGS.llama)
@@ -115,12 +112,12 @@ class DeltaSampler:
             llama_config.update(dict(eval(self.FLAGS.update_llama_config)))
 
         llama_config.update(
-            dict(
-                bos_token_id=self.tokenizer.bos_token_id,
-                eos_token_id=self.tokenizer.eos_token_id,
-            )
+            {
+                "bos_token_id": self.tokenizer.bos_token_id,
+                "eos_token_id": self.tokenizer.eos_token_id,
+            }
         )
-        llama_config.update(dict(mesh_dim=self.FLAGS.mesh_dim))
+        llama_config.update({"mesh_dim": self.FLAGS.mesh_dim})
         self.config = llama_config
 
         with jax.default_device(jax.devices("cpu")[0]):
@@ -178,9 +175,9 @@ class DeltaSampler:
         prefix_for_gen = ["</vision> <delta>"] * len(prompts)
         inputs_for_gen = self.prefix_tokenizer(prefix_for_gen, return_tensors="np")
 
-        batch = dict(
-            input_ids=np.concatenate([inputs.input_ids, images, inputs_for_gen.input_ids], axis=1),
-            attention_mask=np.concatenate(
+        batch = {
+            "input_ids": np.concatenate([inputs.input_ids, images, inputs_for_gen.input_ids], axis=1),
+            "attention_mask": np.concatenate(
                 [
                     inputs.attention_mask,
                     np.ones(images.shape, dtype=inputs.attention_mask.dtype),
@@ -188,7 +185,7 @@ class DeltaSampler:
                 ],
                 axis=1,
             ),
-            vision_masks=np.concatenate(
+            "vision_masks": np.concatenate(
                 [
                     np.zeros(inputs.input_ids.shape, dtype=bool),
                     np.ones(images.shape, dtype=bool),
@@ -196,7 +193,7 @@ class DeltaSampler:
                 ],
                 axis=1,
             ),
-            delta_masks=np.concatenate(
+            "delta_masks": np.concatenate(
                 [
                     np.zeros(inputs.input_ids.shape, dtype=bool),
                     np.zeros(images.shape, dtype=bool),
@@ -204,7 +201,7 @@ class DeltaSampler:
                 ],
                 axis=1,
             ),
-        )
+        }
 
         with self.mesh:
             delta_output, sharded_rng = self._forward_generate(

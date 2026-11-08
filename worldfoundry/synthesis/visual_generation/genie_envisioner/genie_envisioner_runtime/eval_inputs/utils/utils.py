@@ -48,10 +48,7 @@ def intrinsic_transform(intrinsic, original_res, size, transform_mode):
         cy_new = cy * scale_height
 
     elif transform_mode == "center_crop_resize":
-        if original_height <= original_width:
-            scale_ratio = min(size) / original_height
-        else:
-            scale_ratio = min(size) / original_width
+        scale_ratio = min(size) / original_height if original_height <= original_width else min(size) / original_width
         resize_height = scale_ratio * original_height
         resize_width = scale_ratio * original_width
 
@@ -89,10 +86,7 @@ def intrinsic_transform_batch(intrinsic, original_res, size, transform_mode):
         cy_new = cy * scale_height
 
     elif transform_mode == "center_crop_resize":
-        if original_height <= original_width:
-            scale_ratio = min(size) / original_height
-        else:
-            scale_ratio = min(size) / original_width
+        scale_ratio = min(size) / original_height if original_height <= original_width else min(size) / original_width
         resize_height = scale_ratio * original_height
         resize_width = scale_ratio * original_width
 

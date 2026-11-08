@@ -10,11 +10,11 @@ from opensora.datasets.utils import read_from_path
 
 def prepare_multi_resolution_info(info_type, batch_size, image_size, num_frames, fps, device, dtype):
     if info_type is None:
-        return dict()
+        return {}
     elif info_type == "PixArtMS":
         hw = torch.tensor([image_size], device=device, dtype=dtype).repeat(batch_size, 1)
         ar = torch.tensor([[image_size[0] / image_size[1]]], device=device, dtype=dtype).repeat(batch_size, 1)
-        return dict(ar=ar, hw=hw)
+        return {"ar": ar, "hw": hw}
     elif info_type in ["STDiT2", "OpenSora"]:
         fps = fps if num_frames > 1 else IMG_FPS
         fps = torch.tensor([fps], device=device, dtype=dtype).repeat(batch_size)
@@ -22,7 +22,7 @@ def prepare_multi_resolution_info(info_type, batch_size, image_size, num_frames,
         width = torch.tensor([image_size[1]], device=device, dtype=dtype).repeat(batch_size)
         num_frames = torch.tensor([num_frames], device=device, dtype=dtype).repeat(batch_size)
         ar = torch.tensor([image_size[0] / image_size[1]], device=device, dtype=dtype).repeat(batch_size)
-        return dict(height=height, width=width, num_frames=num_frames, ar=ar, fps=fps)
+        return {"height": height, "width": width, "num_frames": num_frames, "ar": ar, "fps": fps}
     else:
         raise NotImplementedError
 

@@ -346,10 +346,7 @@ if __name__ == "__main__":
         misc.set_random_seed(seed=args.seed, by_rank=True)
 
         # ---- Load trajectory ----
-        if traj_is_dir:
-            traj_file = os.path.join(args.trajectory_path, f"{base_name}.npz")
-        else:
-            traj_file = args.trajectory_path
+        traj_file = os.path.join(args.trajectory_path, f"{base_name}.npz") if traj_is_dir else args.trajectory_path
         if not os.path.isfile(traj_file):
             log.error(f"Trajectory file not found: {traj_file}")
             continue

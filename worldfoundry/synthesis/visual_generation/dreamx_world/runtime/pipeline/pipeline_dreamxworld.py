@@ -335,10 +335,7 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             max_sequence_length=max_sequence_length,
             device=device,
         )
-        if do_classifier_free_guidance:
-            in_prompt_embeds = negative_prompt_embeds + prompt_embeds
-        else:
-            in_prompt_embeds = prompt_embeds
+        in_prompt_embeds = negative_prompt_embeds + prompt_embeds if do_classifier_free_guidance else prompt_embeds
 
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(

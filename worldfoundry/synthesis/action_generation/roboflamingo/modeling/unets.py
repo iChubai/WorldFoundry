@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
+import itertools
 
 # -----------------------------------------------------------------------------#
 # ----------------------------------- Unets -----------------------------------#
@@ -60,10 +61,7 @@ class Conv1dBlock(nn.Module):
     def __init__(self, inp_channels, out_channels, kernel_size, mish=True, n_groups=8):
         super().__init__()
 
-        if mish:
-            act_fn = nn.Mish()
-        else:
-            act_fn = nn.SiLU()
+        act_fn = nn.Mish() if mish else nn.SiLU()
 
         self.block = nn.Sequential(
             nn.Conv1d(inp_channels, out_channels, kernel_size, padding=kernel_size // 2),
@@ -172,7 +170,7 @@ class ConditionalUnet1D(nn.Module):
         if global_cond_dim is not None:
             cond_dim += global_cond_dim
 
-        in_out = list(zip(all_dims[:-1], all_dims[1:], strict=False))
+        in_out = list(itertools.pairwise(all_dims))
         # print("cond_dim", cond_dim)
         # print("inout", in_out)
 
@@ -326,7 +324,7 @@ class ConditionalUnet1D(nn.Module):
             global_feature = torch.cat([global_feature, global_cond], axis=-1)
 
         # encode local features
-        h_local = list()
+        h_local = []
         if local_cond is not None:
             local_cond = einops.rearrange(local_cond, "b h t -> b t h")
             resnet, resnet2 = self.local_cond_encoder
@@ -539,7 +537,7 @@ def apply_conditioning(x, conditions, action_dim):
                 x[:, t, :, action_dim:].scatter_(1, index, val.clone().unsqueeze(1))
             else:
                 x[:, t, :, action_dim:] = val.clone()
-        elif isinstance(t, tuple) or isinstance(t, list):
+        elif isinstance(t, (tuple, list)):
             assert len(t) == 2, t
             if "agent_idx" in conditions:
                 index = conditions["agent_idx"].long().unsqueeze(-1).repeat(1, t[1] - t[0], 1, x.shape[-1] - action_dim)

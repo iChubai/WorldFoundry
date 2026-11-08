@@ -62,7 +62,7 @@ class SelfAttention2d(nn.Module):
         x = self.norm(x)
         qkv = self.qkv_proj(x)
         qkv = qkv.view(n, self.n_head * 3, c // self.n_head, h * w).transpose(2, 3).contiguous()
-        q, k, v = [x for x in qkv.chunk(3, dim=1)]
+        q, k, v = list(qkv.chunk(3, dim=1))
         att = (q @ k.transpose(-2, -1)) / math.sqrt(k.size(-1))
         att = F.softmax(att, dim=-1)
         y = att @ v

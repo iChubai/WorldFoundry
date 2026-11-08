@@ -789,7 +789,7 @@ class DA3FrameBank:
         """[free-space carving] use the dense depth of the frames just ingested (new_gids) to delete points of earlier old frames that fall in free space.
         free-space criterion: project an old point into a new frame; if its camera-z depth < that pixel's newly observed surface depth*(1-margin) -> the old point hangs
         in "the gap between the camera and the real surface" -> delete it (set the old frame dense depth to 0 + recompute the sparse points). clears floating poison / ghosts of objects that moved away."""
-        new_set = set(int(g) for g in new_gids)
+        new_set = {int(g) for g in new_gids}
         # new observations = the (already gated) dense (depth, intr, c2w) of the batch just ingested
         newobs = [self.frames[g][:3] for g in new_gids if g in self.frames]
         if not newobs:
@@ -892,7 +892,7 @@ class DA3FrameBank:
 
     def _evict_keep(self, keep_gids):
         """[self re-anchor] selective eviction: keep only keep_gids and pop everything else (including the probation / strike side state)."""
-        keep = set(int(g) for g in keep_gids)
+        keep = {int(g) for g in keep_gids}
         for gid in [g for g in self.pts if g not in keep]:
             self.pts.pop(gid, None)
             self.c2ws.pop(gid, None)
@@ -1539,8 +1539,13 @@ def _render_backward_multisrc_zbuf(
         #   when off the whole block is bypassed -> fused/covered unchanged -> byte-identical to the original. when on it rewrites the (color, covered) appended for this frame.
         if zbuf_despeckle:
             k = int(zbuf_despeckle_ksize)
-            erosion = lambda x: -_F.max_pool2d(-x, k, 1, k // 2)
-            dilation = lambda x: _F.max_pool2d(x, k, 1, k // 2)
+
+            def erosion(x):
+                return -_F.max_pool2d(-x, k, 1, k // 2)
+
+            def dilation(x):
+                return _F.max_pool2d(x, k, 1, k // 2)
+
             V = covered.float()[None, None]  # (1,1,H,W)
             opened = dilation(
                 erosion(V)
@@ -1588,7 +1593,10 @@ def _render_backward_multisrc_zbuf(
             _gid = _ids_t[_wr]
             _age = (int(ids_all[-1]) - _gid).float() / 24.0  # seconds
             _n = float(_wr.numel())
-            _b = lambda lo, hi: 100.0 * float(((_age >= lo) & (_age < hi)).sum()) / _n
+
+            def _b(lo, hi):
+                return 100.0 * float(((_age >= lo) & (_age < hi)).sum()) / _n
+
             _oldest = int(_gid.min().item())
             _newest_win = int(_gid.max().item())
             _n_old_pool = int(

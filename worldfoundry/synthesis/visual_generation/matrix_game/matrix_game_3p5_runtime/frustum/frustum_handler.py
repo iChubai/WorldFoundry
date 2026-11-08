@@ -3077,9 +3077,8 @@ class FrustumHandler:
 
         if int(fuse_block_size) not in (1, 2):
             raise ValueError(f"fuse_block_size must be 1 or 2, got {fuse_block_size}.")
-        if int(fuse_block_size) == 2:
-            if H_lat % 2 != 0 or W_lat % 2 != 0:
-                raise ValueError(f"fuse_block_size=2 requires even (H_lat, W_lat); got ({H_lat}, {W_lat}).")
+        if int(fuse_block_size) == 2 and (H_lat % 2 != 0 or W_lat % 2 != 0):
+            raise ValueError(f"fuse_block_size=2 requires even (H_lat, W_lat); got ({H_lat}, {W_lat}).")
 
         z_pref = str(zbuffer_depth_preference).lower().strip()
         if z_pref not in {"near", "far"}:
@@ -3803,10 +3802,7 @@ class FrustumHandler:
         else:
             prev_pose = self._cache.c2w[-1]
             key_indices = np.flatnonzero(self._cache.is_keyframe)
-            if key_indices.size > 0:
-                last_kf = int(key_indices[-1])
-            else:
-                last_kf = int(self._cache.num_frames - 1)
+            last_kf = int(key_indices[-1]) if key_indices.size > 0 else int(self._cache.num_frames - 1)
             frames_since_last_kf = int(self._cache.num_frames - 1 - last_kf)
 
         for idx in range(Tn):

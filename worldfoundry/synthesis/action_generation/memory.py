@@ -125,10 +125,7 @@ class ActionTraceMemory(BaseMemory):
         """
         del context_query, kwargs  # context_query and kwargs are explicitly ignored
         # Retrieve the latest record, optionally filtering by a preferred type.
-        if prefer_type is None:
-            record = self.latest_record()
-        else:
-            record = self.latest_record(prefer_type=prefer_type)
+        record = self.latest_record() if prefer_type is None else self.latest_record(prefer_type=prefer_type)
         return record["content"] if record is not None else None
 
     def manage(self, action: str = "reset", **kwargs: Any):

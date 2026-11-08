@@ -321,7 +321,7 @@ def load_model_checkpoint(model, ckpt):
         model.load_state_dict(state_dict, strict=True)
     else:
         # deepspeed
-        new_pl_sd = dict()
+        new_pl_sd = {}
         for key in state_dict["module"]:
             new_pl_sd[key[16:]] = state_dict["module"][key]
         model.load_state_dict(new_pl_sd)

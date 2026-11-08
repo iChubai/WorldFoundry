@@ -132,10 +132,7 @@ class FlexEnv(gym.Env):
         self.table_shape_states[0] = np.concatenate([center, center, quats, quats])
 
         # table for robot
-        if self.obj in ["cloth"]:
-            robot_table_height = 0.5 + 1.0
-        else:
-            robot_table_height = 0.5 + 0.3
+        robot_table_height = 0.5 + 1.0 if self.obj in ["cloth"] else 0.5 + 0.3
         robot_table_width = 126 / 200  # 126mm
         robot_table_length = 126 / 200  # 126mm
         halfEdge = np.array([robot_table_width, robot_table_height, robot_table_length])
@@ -330,10 +327,7 @@ class FlexEnv(gym.Env):
         e_2d = np.concatenate([action[2:], [h]])
 
         # pusher angle depending on x-axis
-        if (s_2d - e_2d)[0] == 0:
-            pusher_angle = np.pi / 2
-        else:
-            pusher_angle = np.arctan((s_2d - e_2d)[1] / (s_2d - e_2d)[0])
+        pusher_angle = np.pi / 2 if (s_2d - e_2d)[0] == 0 else np.arctan((s_2d - e_2d)[1] / (s_2d - e_2d)[0])
         # robot orientation
         orn = np.array([0.0, np.pi, pusher_angle + np.pi / 2])
 
@@ -552,10 +546,7 @@ class FlexEnv(gym.Env):
                 valid = True
                 break
 
-        if valid:
-            action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0)
-        else:
-            action = None
+        action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0) if valid else None
 
         return action
 
@@ -611,10 +602,7 @@ class FlexEnv(gym.Env):
                 valid = True
                 break
 
-        if valid:
-            action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0)
-        else:
-            action = None
+        action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0) if valid else None
 
         return action, boundary_points, boundary
 

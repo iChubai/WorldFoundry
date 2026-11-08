@@ -44,24 +44,15 @@ class ResnetBlock2D(Block):
     @video_to_image
     def forward(self, x):
         h = x
-        if npu_config is None:
-            h = self.norm1(h)
-        else:
-            h = npu_config.run_group_norm(self.norm1, h)
+        h = self.norm1(h) if npu_config is None else npu_config.run_group_norm(self.norm1, h)
         h = nonlinearity(h)
         h = self.conv1(h)
-        if npu_config is None:
-            h = self.norm2(h)
-        else:
-            h = npu_config.run_group_norm(self.norm2, h)
+        h = self.norm2(h) if npu_config is None else npu_config.run_group_norm(self.norm2, h)
         h = nonlinearity(h)
         h = self.dropout(h)
         h = self.conv2(h)
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
         x = x + h
         return x
 
@@ -94,24 +85,15 @@ class ResnetBlock3D(Block):
 
     def forward(self, x):
         h = x
-        if npu_config is None:
-            h = self.norm1(h)
-        else:
-            h = npu_config.run_group_norm(self.norm1, h)
+        h = self.norm1(h) if npu_config is None else npu_config.run_group_norm(self.norm1, h)
         h = nonlinearity(h)
         h = self.conv1(h)
-        if npu_config is None:
-            h = self.norm2(h)
-        else:
-            h = npu_config.run_group_norm(self.norm2, h)
+        h = self.norm2(h) if npu_config is None else npu_config.run_group_norm(self.norm2, h)
         h = nonlinearity(h)
         h = self.dropout(h)
         h = self.conv2(h)
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
         return x + h
 
 
@@ -154,8 +136,5 @@ class ResnetBlock3D_GC(Block):
         h = self.dropout(h)
         h = self.conv2(h)
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
         return x + h

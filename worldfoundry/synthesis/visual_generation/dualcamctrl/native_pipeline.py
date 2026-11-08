@@ -112,14 +112,14 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                     T5RelativeEmbedding: AutoWrappedModule,
                     T5LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.dit is not None:
@@ -134,23 +134,23 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                     RMSNorm: AutoWrappedModule,
                     torch.nn.Conv2d: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                overflow_vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.vae is not None:
@@ -166,14 +166,14 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.Dropout: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=self.device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": self.device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.image_encoder is not None:
             dtype = next(iter(self.image_encoder.parameters())).dtype
@@ -184,14 +184,14 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                     torch.nn.Conv2d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.motion_controller is not None:
             dtype = next(iter(self.motion_controller.parameters())).dtype
@@ -200,14 +200,14 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                 module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.vace is not None:
             device = "cpu" if vram_limit is not None else self.device
@@ -219,14 +219,14 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
                     torch.nn.LayerNorm: AutoWrappedModule,
                     RMSNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
 
@@ -840,9 +840,8 @@ class WanVideoUnit_UnifiedSequenceParallel(InferenceStage):
         super().__init__(input_params=())
 
     def process(self, pipe: WanVideoCameraPipeline):
-        if hasattr(pipe, "use_unified_sequence_parallel"):
-            if pipe.use_unified_sequence_parallel:
-                return {"use_unified_sequence_parallel": True}
+        if hasattr(pipe, "use_unified_sequence_parallel") and pipe.use_unified_sequence_parallel:
+            return {"use_unified_sequence_parallel": True}
         return {}
 
 
@@ -887,7 +886,7 @@ class TeaCache:
             ],
         }
         if model_id not in self.coefficients_dict:
-            supported_model_ids = ", ".join([i for i in self.coefficients_dict])
+            supported_model_ids = ", ".join(list(self.coefficients_dict))
             raise ValueError(
                 f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids})."
             )
@@ -1023,22 +1022,22 @@ def model_fn_wan_video(
     **kwargs,
 ):
     if sliding_window_size is not None and sliding_window_stride is not None:
-        model_kwargs = dict(
-            dit=dit,
-            motion_controller=motion_controller,
-            vace=vace,
-            latents=latents,
-            timestep=timestep,
-            context=context,
-            clip_feature=clip_feature,
-            y=y,
-            reference_latents=reference_latents,
-            vace_context=vace_context,
-            vace_scale=vace_scale,
-            tea_cache=tea_cache,
-            use_unified_sequence_parallel=use_unified_sequence_parallel,
-            motion_bucket_id=motion_bucket_id,
-        )
+        model_kwargs = {
+            "dit": dit,
+            "motion_controller": motion_controller,
+            "vace": vace,
+            "latents": latents,
+            "timestep": timestep,
+            "context": context,
+            "clip_feature": clip_feature,
+            "y": y,
+            "reference_latents": reference_latents,
+            "vace_context": vace_context,
+            "vace_scale": vace_scale,
+            "tea_cache": tea_cache,
+            "use_unified_sequence_parallel": use_unified_sequence_parallel,
+            "motion_bucket_id": motion_bucket_id,
+        }
         return TemporalTiler_BCTHW().run(
             model_fn_wan_video,
             sliding_window_size,
@@ -1086,18 +1085,14 @@ def model_fn_wan_video(
     )
 
     # TeaCache
-    if tea_cache is not None:
-        tea_cache_update = tea_cache.check(dit, x, t_mod)
-    else:
-        tea_cache_update = False
+    tea_cache_update = tea_cache.check(dit, x, t_mod) if tea_cache is not None else False
 
     # blocks
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            x = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)[get_sequence_parallel_rank()]
-            control_latents = torch.chunk(control_latents, get_sequence_parallel_world_size(), dim=1)[
-                get_sequence_parallel_rank()
-            ]
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        x = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)[get_sequence_parallel_rank()]
+        control_latents = torch.chunk(control_latents, get_sequence_parallel_world_size(), dim=1)[
+            get_sequence_parallel_rank()
+        ]
 
     if tea_cache_update:
         x = tea_cache.update(x)
@@ -1195,10 +1190,9 @@ def model_fn_wan_video(
     x = dit.head(x, t)
     control_latents = dit.head(control_latents, t)
 
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            x = get_sp_group().all_gather(x, dim=1)
-            control_latents = get_sp_group().all_gather(control_latents, dim=1)
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        x = get_sp_group().all_gather(x, dim=1)
+        control_latents = get_sp_group().all_gather(control_latents, dim=1)
 
     x = dit.unpatchify(x, (f, h, w))
     control_latents = dit.unpatchify(control_latents, (f, h, w))

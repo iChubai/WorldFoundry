@@ -804,14 +804,13 @@ class MonitorCentricEvolutionPipeline:
             # -------------------------------------------------------------------
             generated_frames = observer_output.frames
             frames_np_list = []
-            if isinstance(generated_frames, torch.Tensor):
-                if generated_frames.dim() == 4:
-                    frames_np = generated_frames.cpu().numpy()
-                    if frames_np.dtype != np.uint8:
-                        frames_np = frames_np.clip(0, 255).astype(np.uint8)
-                    for f in frames_np:
-                        self.geometry.all_generated_frames.append(f)
-                        frames_np_list.append(f)
+            if isinstance(generated_frames, torch.Tensor) and generated_frames.dim() == 4:
+                frames_np = generated_frames.cpu().numpy()
+                if frames_np.dtype != np.uint8:
+                    frames_np = frames_np.clip(0, 255).astype(np.uint8)
+                for f in frames_np:
+                    self.geometry.all_generated_frames.append(f)
+                    frames_np_list.append(f)
 
             if frames_np_list:
                 save_video(obs_dir / "video.mp4", frames_np_list, fps=fps)
@@ -1802,10 +1801,7 @@ class MonitorCentricEvolutionPipeline:
             )
             if seg_result.size == 0:
                 continue
-            if merged_mask is None:
-                merged_mask = seg_result[0].copy()
-            else:
-                merged_mask = merged_mask | seg_result[0]
+            merged_mask = seg_result[0].copy() if merged_mask is None else merged_mask | seg_result[0]
 
         # Dilate to aggressively remove foreground edges from first-frame
         # background point cloud (same strategy as _detect_dynamic_masks).
@@ -4082,10 +4078,7 @@ class MonitorCentricEvolutionPipeline:
         output_size = (output_height, output_width)
 
         intrinsics = self.geometry.intrinsics
-        if intrinsics.ndim == 3:
-            intr = intrinsics
-        else:
-            intr = np.tile(intrinsics[None], (len(self.geometry.poses_c2w), 1, 1))
+        intr = intrinsics if intrinsics.ndim == 3 else np.tile(intrinsics[None], (len(self.geometry.poses_c2w), 1, 1))
 
         frames_to_process = []
         for local_idx, frame_idx in enumerate(target_frame_indices):

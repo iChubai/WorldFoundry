@@ -30,10 +30,7 @@ class PointMazeDataset(TrajDataset):
         self.seq_lengths = torch.load(self.data_path / "seq_lengths.pth")
 
         self.n_rollout = n_rollout
-        if self.n_rollout:
-            n = self.n_rollout
-        else:
-            n = len(self.states)
+        n = self.n_rollout or len(self.states)
 
         self.states = self.states[:n]
         self.actions = self.actions[:n]

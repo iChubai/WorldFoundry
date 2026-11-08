@@ -458,7 +458,7 @@ class MoT(nn.Module):
         if attention_mask.shape[0] != attention_mask.shape[1]:
             raise ValueError(f"`attention_mask` must be square, got shape {tuple(attention_mask.shape)}")
 
-        tokens_all = {k: v for k, v in embeds_all.items()}
+        tokens_all = dict(embeds_all.items())
 
         for layer_idx in range(self.num_layers):
             q_chunks = []

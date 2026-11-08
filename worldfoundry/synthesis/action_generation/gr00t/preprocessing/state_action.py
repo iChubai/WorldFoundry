@@ -512,10 +512,7 @@ class StateActionProcessor:
             Tuple of (processed_state, processed_action)
         """
         processed_state = self.apply_state(state, embodiment_tag)
-        if action:
-            processed_action = self.apply_action(action, embodiment_tag, state=state)
-        else:
-            processed_action = {}
+        processed_action = self.apply_action(action, embodiment_tag, state=state) if action else {}
         return processed_state, processed_action
 
     def unapply(

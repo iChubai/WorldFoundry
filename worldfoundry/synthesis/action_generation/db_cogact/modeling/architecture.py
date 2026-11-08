@@ -134,10 +134,10 @@ class CogACTForCausalLM(DexboticForCausalLM, ActionOutputForCausalLM):
             uncondition = self.model.action_head.net.z_embedder.uncondition  # [1, D]
             uncondition = uncondition.unsqueeze(0).expand(B, 1, -1)  # [B, 1, D]
             z = torch.cat([cognition_features, uncondition], 0)
-            model_kwargs = dict(z=z, cfg_scale=cfg_scale)
+            model_kwargs = {"z": z, "cfg_scale": cfg_scale}
             sample_fn = self.model.action_head.net.forward_with_cfg
         else:
-            model_kwargs = dict(z=cognition_features)
+            model_kwargs = {"z": cognition_features}
             sample_fn = self.model.action_head.net.forward
 
         if (

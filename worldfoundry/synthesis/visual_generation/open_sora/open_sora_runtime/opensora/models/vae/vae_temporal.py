@@ -144,12 +144,12 @@ class Encoder(nn.Module):
         self.activation_fn = get_activation_fn(activation_fn)
         self.activate = self.activation_fn()
         self.conv_fn = CausalConv3d
-        self.block_args = dict(
-            conv_fn=self.conv_fn,
-            activation_fn=self.activation_fn,
-            use_conv_shortcut=False,
-            num_groups=self.num_groups,
-        )
+        self.block_args = {
+            "conv_fn": self.conv_fn,
+            "activation_fn": self.activation_fn,
+            "use_conv_shortcut": False,
+            "num_groups": self.num_groups,
+        }
 
         # first layer conv
         self.conv_in = self.conv_fn(
@@ -243,12 +243,12 @@ class Decoder(nn.Module):
         self.activation_fn = get_activation_fn(activation_fn)
         self.activate = self.activation_fn()
         self.conv_fn = CausalConv3d
-        self.block_args = dict(
-            conv_fn=self.conv_fn,
-            activation_fn=self.activation_fn,
-            use_conv_shortcut=False,
-            num_groups=self.num_groups,
-        )
+        self.block_args = {
+            "conv_fn": self.conv_fn,
+            "activation_fn": self.activation_fn,
+            "use_conv_shortcut": False,
+            "num_groups": self.num_groups,
+        }
 
         filters = self.filters * self.channel_multipliers[-1]
         prev_filters = filters
@@ -408,10 +408,7 @@ class VAE_Temporal(nn.Module):
 
     def forward(self, x, sample_posterior=True):
         posterior = self.encode(x)
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
         recon_video = self.decode(z, num_frames=x.shape[2])
         return recon_video, posterior, z
 

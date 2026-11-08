@@ -9,7 +9,7 @@ _NETS_IMPORTED = False
 
 def build_model(cfg, use_grad_checkpoint=False, use_fp32_attention=False, gc_step=1, **kwargs):
     if isinstance(cfg, str):
-        cfg = dict(type=cfg)
+        cfg = {"type": cfg}
     # Ensure model modules are imported and registered before building.
     # Use lazy import to avoid circular-import issues during module init.
     global _NETS_IMPORTED

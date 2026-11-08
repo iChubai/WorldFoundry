@@ -819,14 +819,14 @@ class PaliGemma2WithExpertModel(nn.Module):
                     auto_regression_inference_mode=auto_regression_inference_mode,
                 )
                 hidden_states_list = layer_outputs
-                if use_cache:
-                    if (fill_kv_cache and present_key_states is not None) or (
-                        auto_regression_inference_mode and present_key_states is not None
-                    ):
-                        updated_kv_cache[layer_idx] = {
-                            "key_states": present_key_states,
-                            "value_states": present_value_states,
-                        }
+                if use_cache and (
+                    (fill_kv_cache and present_key_states is not None)
+                    or (auto_regression_inference_mode and present_key_states is not None)
+                ):
+                    updated_kv_cache[layer_idx] = {
+                        "key_states": present_key_states,
+                        "value_states": present_value_states,
+                    }
 
             outputs_embeds = []
             for i, hidden_states in enumerate(hidden_states_list):

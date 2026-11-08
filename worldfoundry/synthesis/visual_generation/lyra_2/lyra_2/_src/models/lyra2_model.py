@@ -343,7 +343,7 @@ class Lyra2Model(WANDiffusionModel):
                                 trainable_param_names.add(name)
 
                     log.info(
-                        f"Enabled gradients for {len(trainable_param_names)} parameters: {sorted(list(trainable_param_names))}"
+                        f"Enabled gradients for {len(trainable_param_names)} parameters: {sorted(trainable_param_names)}"
                     )
 
         return net
@@ -728,9 +728,8 @@ class Lyra2Model(WANDiffusionModel):
           => x0 = x_t - sigma_t * pred
         """
         original_dtype = flow_pred.dtype
-        flow_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(flow_pred.device),
-            [flow_pred, xt, scheduler.sigmas, scheduler.timesteps],
+        flow_pred, xt, sigmas, timesteps = (
+            x.double().to(flow_pred.device) for x in [flow_pred, xt, scheduler.sigmas, scheduler.timesteps]
         )
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
         sigma_t = sigmas[timestep_id].reshape(-1, 1, 1, 1)
@@ -1097,10 +1096,7 @@ class Lyra2Model(WANDiffusionModel):
         vae_wrap = self.tokenizer.model  # WanVAE wrapper
         vae_core = vae_wrap.model  # WanVAE_ core
         with vae_wrap.context:
-            if not vae_wrap.is_amp:
-                x_vid = video.to(vae_wrap.dtype)
-            else:
-                x_vid = video
+            x_vid = video.to(vae_wrap.dtype) if not vae_wrap.is_amp else video
             # Restore encoder caches
             vae_core._enc_feat_map = self._clone_vae_cache(enc_cache)
             # Always start layer-iteration index at 0 when resuming with an explicit cache
@@ -1610,7 +1606,7 @@ class Lyra2Model(WANDiffusionModel):
             frames_per_lat = int(self.framepack_num_frames_per_latent)
             v_len = int(K_sel.shape[1])
             # subsample long T to 0, 4, 8, 12, ... to match VAE latent indexing used elsewhere
-            time_idx = [0] + [i for i in range(4, v_len, frames_per_lat)]
+            time_idx = [0] + list(range(4, v_len, frames_per_lat))
             time_idx_t = torch.tensor(time_idx, device=device, dtype=torch.long)
 
             # Select downsampled intrinsics and poses

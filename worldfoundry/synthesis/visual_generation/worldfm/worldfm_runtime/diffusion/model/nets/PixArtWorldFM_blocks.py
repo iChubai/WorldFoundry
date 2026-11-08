@@ -31,7 +31,7 @@ def t2i_modulate(x, shift, scale):
 
 class MultiHeadCrossAttention(nn.Module):
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0, **block_kwargs):
-        super(MultiHeadCrossAttention, self).__init__()
+        super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
         self.d_model = d_model

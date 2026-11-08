@@ -103,10 +103,7 @@ class ColumnParallelLinear(nn.Linear):
             return torch.cat(outs, dim=-1)
 
         max_len = max(lens)
-        if x.shape[-1] < max_len:
-            x_pad = F.pad(x, (0, max_len - x.shape[-1]), "constant", 0)
-        else:
-            x_pad = x
+        x_pad = F.pad(x, (0, max_len - x.shape[-1]), "constant", 0) if x.shape[-1] < max_len else x
 
         outs = [torch.empty_like(x_pad) for _ in range(self.tp_size)]
         dist.all_gather(outs, x_pad, group=self.tp_group)

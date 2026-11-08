@@ -121,16 +121,14 @@ class FeatureTransform:
             self.image_augment = image_augment
 
         # keep the self.feature_to_keep in lerobot item when convert to new item
-        self.feature_to_keep = set(
-            [
-                "timestamp",
-                "frame_index",
-                "episode_index",
-                "task_index",
-                "action_is_pad",
-                "task",
-            ]
-        )
+        self.feature_to_keep = {
+            "timestamp",
+            "frame_index",
+            "episode_index",
+            "task_index",
+            "action_is_pad",
+            "task",
+        }
 
         target_features = {"states": [], "actions": [], "images": []}
         # Keep declared order: list-valued observations rely on stable camera
@@ -197,7 +195,7 @@ class FeatureTransform:
                         )
 
                 elif feature_category == "states":
-                    assert isinstance(feature_convert_info, dict) or isinstance(feature_convert_info, str)
+                    assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
                         state_feature = list(feature_convert_info.keys())[0]
                     else:
@@ -209,7 +207,7 @@ class FeatureTransform:
                         )
 
                 elif feature_category == "images":
-                    assert isinstance(feature_convert_info, dict) or isinstance(feature_convert_info, str)
+                    assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
                         image_feature = list(feature_convert_info.keys())[0]
                     else:

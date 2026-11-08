@@ -87,10 +87,7 @@ class ConcatTransform(InvertibleModalityTransform):
                 modality, _ = key.split(".")
             except:  # noqa: E722
                 ### Handle language annotation special case
-                if "annotation" in key:
-                    modality = "language"
-                else:
-                    modality = "others"
+                modality = "language" if "annotation" in key else "others"
             if modality not in grouped_keys:
                 grouped_keys[modality] = []
             grouped_keys[modality].append(key)

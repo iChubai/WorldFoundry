@@ -12,6 +12,7 @@ from worldfoundry.core.io.paths import checkpoint_root_candidates
 from worldfoundry.synthesis.visual_generation.lyra_2 import (
     SOURCE_PACKAGE_ROOT as LYRA2_SOURCE_PACKAGE_ROOT,
 )
+import contextlib
 
 DEFAULT_DA3_MODEL_NAME = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
 DEFAULT_WEIGHT_DTYPE = "bfloat16"
@@ -241,10 +242,8 @@ class Lyra2Runtime:
         if not source_checkpoint_dir.is_dir():
             return
         if not runtime_checkpoint_dir.exists() and not runtime_checkpoint_dir.is_symlink():
-            try:
+            with contextlib.suppress(FileExistsError):
                 runtime_checkpoint_dir.symlink_to(source_checkpoint_dir, target_is_directory=True)
-            except FileExistsError:
-                pass
 
         shared_root = checkpoint_root.parent
         tokenizer_roots = tuple(dict.fromkeys((shared_root, *checkpoint_root_candidates())))
@@ -301,10 +300,8 @@ class Lyra2Runtime:
             for attr in dir(megatron_compat.parallel_state):
                 if attr.startswith("__"):
                     continue
-                try:
+                with contextlib.suppress(Exception):
                     setattr(parallel_state_module, attr, getattr(megatron_compat.parallel_state, attr))
-                except Exception:
-                    pass
             sys.modules["megatron.core.parallel_state"] = parallel_state_module
 
         megatron_module = sys.modules.setdefault("megatron", types.ModuleType("megatron"))

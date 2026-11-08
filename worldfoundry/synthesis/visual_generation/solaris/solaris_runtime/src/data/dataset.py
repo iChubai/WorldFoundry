@@ -136,7 +136,7 @@ class DatasetMultiplayer(TorchDataset):
         self._episodes = {}
 
         mp4_files = sorted(
-            [p for p in self.directory.glob(f"*_{self.bot1_name}_*.mp4")],
+            self.directory.glob(f"*_{self.bot1_name}_*.mp4"),
             key=lambda p: p.name,
         )
         episode_id = 0

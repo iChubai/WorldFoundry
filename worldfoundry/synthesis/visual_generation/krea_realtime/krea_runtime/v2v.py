@@ -26,8 +26,7 @@ def get_rotation_metadata(video_path):
                 "json",
                 video_path,
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=True,
             text=True,
         )
@@ -98,7 +97,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
                 resampled_path,
             ]
 
-            subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(ffmpeg_cmd, check=True, capture_output=True)
         else:
             resampled_path = video_path
         # Now read the resampled video

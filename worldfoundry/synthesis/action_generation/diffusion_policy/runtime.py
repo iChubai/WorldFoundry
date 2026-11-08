@@ -189,10 +189,7 @@ def _coerce_observation(observation: Any, *, device: str) -> Mapping[str, Any]:
         raise ValueError("Diffusion Policy predict_action requires observation/obs input.")
 
     # Convert NumPy array to PyTorch tensor.
-    if isinstance(obs_value, np.ndarray):
-        obs_tensor = torch.from_numpy(obs_value)
-    else:
-        obs_tensor = obs_value
+    obs_tensor = torch.from_numpy(obs_value) if isinstance(obs_value, np.ndarray) else obs_value
 
     # Ensure the input is a PyTorch tensor, coercing if necessary.
     if not torch.is_tensor(obs_tensor):

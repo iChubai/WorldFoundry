@@ -146,18 +146,17 @@ def is_inside_polygon(points, p):
     inside = False
 
     # Function to calculate x intercept for horizontal line intersecting a polygon edge
-    x_intercept = lambda p1, p2, y: p1[0] + (p2[0] - p1[0]) * (y - p1[1]) / (p2[1] - p1[1])
+    def x_intercept(p1, p2, y):
+        return p1[0] + (p2[0] - p1[0]) * (y - p1[1]) / (p2[1] - p1[1])
 
     p1 = points[0]
     for i in range(n + 1):
         p2 = points[i % n]
-        if p[1] > min(p1[1], p2[1]):
-            if p[1] <= max(p1[1], p2[1]):
-                if p[0] <= max(p1[0], p2[0]):
-                    if p1[1] != p2[1]:
-                        xints = x_intercept(p1, p2, p[1])
-                        if p1[0] == p2[0] or p[0] <= xints:
-                            inside = not inside
+        if p[1] > min(p1[1], p2[1]) and p[1] <= max(p1[1], p2[1]) and p[0] <= max(p1[0], p2[0]):
+            if p1[1] != p2[1]:
+                xints = x_intercept(p1, p2, p[1])
+                if p1[0] == p2[0] or p[0] <= xints:
+                    inside = not inside
         p1 = p2
 
     return inside

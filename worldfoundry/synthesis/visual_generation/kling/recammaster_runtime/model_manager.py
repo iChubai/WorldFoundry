@@ -13,6 +13,7 @@ from .recammaster_model_registry import (
     model_loader_configs,
     patch_model_loader_configs,
 )
+import contextlib
 
 
 def load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device):
@@ -50,10 +51,8 @@ def load_model_from_huggingface_folder(file_path, model_names, model_classes, to
             model = model_class.from_pretrained(file_path).eval().to(dtype=torch_dtype)
         if torch_dtype == torch.float16 and hasattr(model, "half"):
             model = model.half()
-        try:
+        with contextlib.suppress(BaseException):
             model = model.to(device=device)
-        except BaseException:
-            pass
         loaded_model_names.append(model_name)
         loaded_models.append(model)
     return loaded_model_names, loaded_models

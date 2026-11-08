@@ -571,10 +571,7 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
         """
         x = sample
         posterior = self.encode(x, local_batch_size=encoder_local_batch_size).latent_dist
-        if sample_posterior:
-            z = posterior.sample(generator=generator)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(generator=generator) if sample_posterior else posterior.mode()
         dec = self.decode(z, local_batch_size=decoder_local_batch_size).sample
 
         if not return_dict:

@@ -65,10 +65,7 @@ class PatchEmbed(nn.Module):
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         )
         x = self.proj(x)
-        if self.flatten:
-            x = rearrange(x, "B C H W -> B (H W) C")
-        else:
-            x = rearrange(x, "B C H W -> B H W C")
+        x = rearrange(x, "B C H W -> B (H W) C") if self.flatten else rearrange(x, "B C H W -> B H W C")
         x = self.norm(x)
         return x
 
@@ -145,7 +142,9 @@ class SpatioTemporalDiTBlock(nn.Module):
         super().__init__()
         self.is_causal = is_causal
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
 
         self.s_norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.s_attn = SpatialAxialAttention(

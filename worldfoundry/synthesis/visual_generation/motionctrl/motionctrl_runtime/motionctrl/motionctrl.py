@@ -13,7 +13,7 @@ from worldfoundry.synthesis.visual_generation.motionctrl.motionctrl_runtime.moti
 
 class MotionCtrl(LatentDiffusion):
     def __init__(self, omcm_config=None, pose_dim=12, context_dim=1024, *args, **kwargs):
-        super(MotionCtrl, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # object motion control module
         if omcm_config is not None:

@@ -202,30 +202,30 @@ def add_action_expert(
 
     attention_args = []
     attention_args.append(
-        dict(
-            query_dim=self.action_inner_dim,
-            heads=action_num_attention_heads,
-            kv_heads=action_num_attention_heads,
-            dim_head=action_attention_head_dim,
-            bias=attention_bias,
-            cross_attention_dim=None,
-            out_bias=attention_out_bias,
-            qk_norm=qk_norm,
-            processor=attention_processor,
-        )
+        {
+            "query_dim": self.action_inner_dim,
+            "heads": action_num_attention_heads,
+            "kv_heads": action_num_attention_heads,
+            "dim_head": action_attention_head_dim,
+            "bias": attention_bias,
+            "cross_attention_dim": None,
+            "out_bias": attention_out_bias,
+            "qk_norm": qk_norm,
+            "processor": attention_processor,
+        }
     )
     attention_args.append(
-        dict(
-            query_dim=self.action_inner_dim,
-            heads=action_num_attention_heads,
-            kv_heads=action_num_attention_heads,
-            dim_head=action_attention_head_dim,
-            bias=attention_bias,
-            cross_attention_dim=inner_dim,
-            out_bias=attention_out_bias,
-            qk_norm=qk_norm,
-            processor=attention_processor,
-        )
+        {
+            "query_dim": self.action_inner_dim,
+            "heads": action_num_attention_heads,
+            "kv_heads": action_num_attention_heads,
+            "dim_head": action_attention_head_dim,
+            "bias": attention_bias,
+            "cross_attention_dim": inner_dim,
+            "out_bias": attention_out_bias,
+            "qk_norm": qk_norm,
+            "processor": attention_processor,
+        }
     )
 
     self.action_blocks = nn.ModuleList(

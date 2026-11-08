@@ -8,6 +8,7 @@ from einops.layers.torch import Rearrange
 
 from .convolution import Conv1dBlock, Downsample1d, Upsample1d
 from .embeddings import SinusoidalPosEmb
+import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class ConditionalUnet1D(nn.Module):
         if global_cond_dim is not None:
             cond_dim += global_cond_dim
 
-        in_out = list(zip(all_dims[:-1], all_dims[1:], strict=False))
+        in_out = list(itertools.pairwise(all_dims))
 
         local_cond_encoder = None
         if local_cond_dim is not None:
@@ -239,7 +240,7 @@ class ConditionalUnet1D(nn.Module):
             global_feature = torch.cat([global_feature, global_cond], axis=-1)
 
         # encode local features
-        h_local = list()
+        h_local = []
         if local_cond is not None:
             local_cond = einops.rearrange(local_cond, "b h t -> b t h")
             resnet, resnet2 = self.local_cond_encoder

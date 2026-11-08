@@ -222,10 +222,7 @@ class WanVAEWrapper(torch.nn.Module):
         device, dtype = latent.device, latent.dtype
         scale = [self.mean.to(device=device, dtype=dtype), 1.0 / self.std.to(device=device, dtype=dtype)]
 
-        if use_cache:
-            decode_function = self.model.cached_decode
-        else:
-            decode_function = self.model.decode
+        decode_function = self.model.cached_decode if use_cache else self.model.decode
 
         output = []
         for u in zs:
@@ -505,8 +502,8 @@ class WanWrapperBase(torch.nn.Module):
         """
         # use higher precision for calculations
         original_dtype = flow_pred.dtype
-        flow_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(flow_pred.device), [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
+        flow_pred, xt, sigmas, timesteps = (
+            x.double().to(flow_pred.device) for x in [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
         )
 
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
@@ -531,10 +528,7 @@ class WanWrapperBase(torch.nn.Module):
         **kwargs,
     ) -> torch.Tensor:
         # [B, F] -> [B]
-        if self.uniform_timestep:
-            input_timestep = timestep[:, 0]
-        else:
-            input_timestep = timestep
+        input_timestep = timestep[:, 0] if self.uniform_timestep else timestep
 
         if kv_cache is not None:
             # dzc: For training Self-Forcing; for infering DMD, Self-Forcing
@@ -638,10 +632,7 @@ class BidirectionalWanWrapperSP(WanWrapperBase):
         **kwargs,
     ) -> torch.Tensor:
         # [B, F] -> [B]
-        if self.uniform_timestep:
-            input_timestep = timestep[:, 0]
-        else:
-            input_timestep = timestep
+        input_timestep = timestep[:, 0] if self.uniform_timestep else timestep
 
         # Calculate seq_len based on actual input shape (may include R+P+T frames for LiveWorld)
         # noisy_image_or_video: [B, F, C, H, W]

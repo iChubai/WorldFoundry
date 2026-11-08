@@ -43,21 +43,21 @@ class Bucket:
 
         # first level: HW
         num_bucket = 0
-        hw_criteria = dict()
-        t_criteria = dict()
-        ar_criteria = dict()
+        hw_criteria = {}
+        t_criteria = {}
+        ar_criteria = {}
         bucket_id = OrderedDict()
         bucket_id_cnt = 0
         for k1, v1 in bucket_probs.items():
             hw_criteria[k1] = ASPECT_RATIOS[k1][0]
-            t_criteria[k1] = dict()
-            ar_criteria[k1] = dict()
-            bucket_id[k1] = dict()
+            t_criteria[k1] = {}
+            ar_criteria[k1] = {}
+            bucket_id[k1] = {}
             for k2, _ in v1.items():
                 t_criteria[k1][k2] = k2
                 bucket_id[k1][k2] = bucket_id_cnt
                 bucket_id_cnt += 1
-                ar_criteria[k1][k2] = dict()
+                ar_criteria[k1][k2] = {}
                 for k3, v3 in ASPECT_RATIOS[k1][1].items():
                     ar_criteria[k1][k2][k3] = v3
                     num_bucket += 1

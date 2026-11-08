@@ -292,6 +292,6 @@ def select_aligned_memory_frames(
     selected_frames_set = set(context_frames_indices)
     selected_frames_set.update(memory_frames_indices)
 
-    final_selected_frames = sorted(list(selected_frames_set))
+    final_selected_frames = sorted(selected_frames_set)
 
     return final_selected_frames

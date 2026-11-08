@@ -60,7 +60,7 @@ def _decode_frames_pyav(
             f"TorchCodec failed with: {torchcodec_error}"
         ) from exc
 
-    requested = set(int(index) for index in frame_indices)
+    requested = {int(index) for index in frame_indices}
     if min(requested) < 0:
         raise ValueError(f"frame indices must be non-negative, got {frame_indices}")
     decoded: dict[int, torch.Tensor] = {}

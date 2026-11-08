@@ -253,7 +253,7 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
     def temporal_downsample_factor(self):
         return self._temporal_downsample_factor
 
-    def init_from_ckpt(self, path, ignore_keys=list()):
+    def init_from_ckpt(self, path, ignore_keys=[]):
         raise NotImplementedError
 
     def encode(self, x, sample_posterior=True):
@@ -271,19 +271,13 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
             x = x.expand(-1, -1, 4, -1, -1)
             x = self.encoder(x)
             posterior = DiagonalGaussianDistribution(x)
-            if sample_posterior:
-                z = posterior.sample()
-            else:
-                z = posterior.mode()
+            z = posterior.sample() if sample_posterior else posterior.mode()
 
             return z[:, :, :1, :, :].type(x.dtype)
         else:
             x = self.encoder(x)
             posterior = DiagonalGaussianDistribution(x)
-            if sample_posterior:
-                z = posterior.sample()
-            else:
-                z = posterior.mode()
+            z = posterior.sample() if sample_posterior else posterior.mode()
 
             return z.type(x.dtype)
 
@@ -311,10 +305,7 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
         x = self.encoder(x)
         posterior = DiagonalGaussianDistribution(x)
 
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
 
         dec = self.decoder(z)
         return dec, posterior

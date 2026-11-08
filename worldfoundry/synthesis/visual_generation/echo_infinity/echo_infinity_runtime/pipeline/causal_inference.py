@@ -9,6 +9,7 @@ from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtim
     WanTextEncoder,
     WanVAEWrapper,
 )
+import contextlib
 
 
 def _config_get(config, key, default=None):
@@ -274,10 +275,8 @@ class CausalInferencePipeline(torch.nn.Module):
             updated_modules.append("<root_model>")
         for name, module in self.generator.model.named_modules():
             if hasattr(module, "max_attention_size"):
-                try:
+                with contextlib.suppress(Exception):
                     prev = module.max_attention_size
-                except Exception:
-                    pass
                 try:
                     module.max_attention_size = target_size
                     updated_modules.append(name if name else module.__class__.__name__)

@@ -973,16 +973,10 @@ def merge_video_foregrounds(
     # ========== Step 1: 加载输入帧和模型 ==========
     _log("[Step 1] Loading video and models...")
     if video_frames is not None:
-        if isinstance(video_frames, np.ndarray):
-            frames = [f for f in video_frames]
-        else:
-            frames = list(video_frames)
+        frames = list(video_frames) if isinstance(video_frames, np.ndarray) else list(video_frames)
         if len(frames) == 0:
             raise ValueError("video_frames is empty")
-        if video_fps is not None and np.isfinite(video_fps) and float(video_fps) > 0:
-            fps = float(video_fps)
-        else:
-            fps = 16.0
+        fps = float(video_fps) if video_fps is not None and np.isfinite(video_fps) and float(video_fps) > 0 else 16.0
         source_desc = "in-memory frames"
     else:
         if not video_path:

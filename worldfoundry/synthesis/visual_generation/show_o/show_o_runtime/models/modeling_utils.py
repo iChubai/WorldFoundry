@@ -108,10 +108,7 @@ def _load_model_dict_into_meta_compat(
         return unexpected_keys
 
 
-if is_torch_version(">=", "1.9.0"):
-    _LOW_CPU_MEM_USAGE_DEFAULT = True
-else:
-    _LOW_CPU_MEM_USAGE_DEFAULT = False
+_LOW_CPU_MEM_USAGE_DEFAULT = bool(is_torch_version(">=", "1.9.0"))
 
 
 if is_accelerate_available():
@@ -630,10 +627,9 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
             elif not low_cpu_mem_usage:
                 raise ValueError("Passing along a `device_map` requires `low_cpu_mem_usage=True`")
 
-        if low_cpu_mem_usage:
-            if device_map is not None and not is_torch_version(">=", "1.10"):
-                # The max memory utils require PyTorch >= 1.10 to have torch.cuda.mem_get_info.
-                raise ValueError("`low_cpu_mem_usage` and `device_map` require PyTorch >= 1.10.")
+        if low_cpu_mem_usage and device_map is not None and not is_torch_version(">=", "1.10"):
+            # The max memory utils require PyTorch >= 1.10 to have torch.cuda.mem_get_info.
+            raise ValueError("`low_cpu_mem_usage` and `device_map` require PyTorch >= 1.10.")
 
         # Load config if we don't provide a configuration
         config_path = pretrained_model_name_or_path

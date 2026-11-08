@@ -80,7 +80,7 @@ class PymunkKeypointManager:
         """
         if color_map is None:
             cmap = cm.get_cmap("tab10")
-            color_map = dict()
+            color_map = {}
             for i, key in enumerate(local_keypoint_map.keys()):
                 color_map[key] = (np.array(cmap.colors[i]) * 255).astype(np.uint8)
 
@@ -97,7 +97,7 @@ class PymunkKeypointManager:
     @classmethod
     def create_from_pusht_env(cls, env, n_block_kps=9, n_agent_kps=3, seed=0, **kwargs):
         rng = np.random.default_rng(seed=seed)
-        local_keypoint_map = dict()
+        local_keypoint_map = {}
         for name in ["block", "agent"]:
             self = env
             self.space = pymunk.Space()
@@ -144,12 +144,9 @@ class PymunkKeypointManager:
         return cls.get_tf_img(pose)
 
     def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):
-        kp_map = dict()
+        kp_map = {}
         for key, value in pose_map.items():
-            if is_obj:
-                tf_img_obj = self.get_tf_img_obj(value)
-            else:
-                tf_img_obj = self.get_tf_img(value)
+            tf_img_obj = self.get_tf_img_obj(value) if is_obj else self.get_tf_img(value)
             kp_local = self.local_keypoint_map[key]
             kp_global = tf_img_obj(kp_local)
             kp_map[key] = kp_global
@@ -217,7 +214,7 @@ class DrawOptions(pymunk.SpaceDebugDrawOptions):
                     Surface that the objects will be drawn on
         """
         self.surface = surface
-        super(DrawOptions, self).__init__()
+        super().__init__()
 
     def draw_circle(
         self,
@@ -340,7 +337,7 @@ def light_color(color: SpaceDebugColor):
 
 
 def pymunk_to_shapely(body, shapes):
-    geoms = list()
+    geoms = []
     for shape in shapes:
         if isinstance(shape, pymunk.shapes.Poly):
             verts = [body.local_to_world(v) for v in shape.get_vertices()]
@@ -610,20 +607,19 @@ class PushTEnv(gym.Env):
 
         img = np.transpose(np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2))
         img = cv2.resize(img, (self.render_size, self.render_size))
-        if self.render_action:
-            if self.render_action and (self.latest_action is not None):
-                action = np.array(self.latest_action)
-                coord = (action / 512 * 96).astype(np.int32)
-                marker_size = int(8 / 96 * self.render_size)
-                thickness = int(1 / 96 * self.render_size)
-                cv2.drawMarker(
-                    img,
-                    coord,
-                    color=(255, 0, 0),
-                    markerType=cv2.MARKER_CROSS,
-                    markerSize=marker_size,
-                    thickness=thickness,
-                )
+        if self.render_action and self.render_action and (self.latest_action is not None):
+            action = np.array(self.latest_action)
+            coord = (action / 512 * 96).astype(np.int32)
+            marker_size = int(8 / 96 * self.render_size)
+            thickness = int(1 / 96 * self.render_size)
+            cv2.drawMarker(
+                img,
+                coord,
+                color=(255, 0, 0),
+                markerType=cv2.MARKER_CROSS,
+                markerSize=marker_size,
+                thickness=thickness,
+            )
         return img
 
     def close(self):
@@ -684,7 +680,7 @@ class PushTEnv(gym.Env):
         self.space.gravity = 0, 0
         self.space.damping = 0
         self.teleop = False
-        self.render_buffer = list()
+        self.render_buffer = []
 
         # Add walls.
         walls = [
@@ -1022,7 +1018,7 @@ class PymunkKeypointManager:
         """
         if color_map is None:
             cmap = cm.get_cmap("tab10")
-            color_map = dict()
+            color_map = {}
             for i, key in enumerate(local_keypoint_map.keys()):
                 color_map[key] = (np.array(cmap.colors[i]) * 255).astype(np.uint8)
 
@@ -1039,7 +1035,7 @@ class PymunkKeypointManager:
     @classmethod
     def create_from_pusht_env(cls, env, n_block_kps=9, n_agent_kps=3, seed=0, **kwargs):
         rng = np.random.default_rng(seed=seed)
-        local_keypoint_map = dict()
+        local_keypoint_map = {}
         for name in ["block", "agent"]:
             self = env
             self.space = pymunk.Space()
@@ -1086,12 +1082,9 @@ class PymunkKeypointManager:
         return cls.get_tf_img(pose)
 
     def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):
-        kp_map = dict()
+        kp_map = {}
         for key, value in pose_map.items():
-            if is_obj:
-                tf_img_obj = self.get_tf_img_obj(value)
-            else:
-                tf_img_obj = self.get_tf_img(value)
+            tf_img_obj = self.get_tf_img_obj(value) if is_obj else self.get_tf_img(value)
             kp_local = self.local_keypoint_map[key]
             kp_global = tf_img_obj(kp_local)
             kp_map[key] = kp_global

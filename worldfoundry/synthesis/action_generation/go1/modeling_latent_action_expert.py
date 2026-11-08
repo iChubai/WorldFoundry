@@ -15,7 +15,10 @@ class FinalLayer(nn.Module):
     def __init__(self, hidden_size, out_channels):
         super().__init__()
         self.norm_final = InternLM2RMSNorm(hidden_size)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.ffn_final = Mlp(
             in_features=hidden_size,
             hidden_features=hidden_size,

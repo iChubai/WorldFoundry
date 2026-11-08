@@ -99,6 +99,5 @@ def seed(seed):
 
 
 def pil_loader(path):
-    with open(path, "rb") as f:
-        with Image.open(f) as img:
-            return img.convert("RGB")
+    with open(path, "rb") as f, Image.open(f) as img:
+        return img.convert("RGB")

@@ -17,10 +17,7 @@ def store_arrays_to_lmdb(env, arrays_dict, start_index=0):
         for array_name, array in arrays_dict.items():
             for i, row in enumerate(array):
                 # Convert row to bytes
-                if isinstance(row, str):
-                    row_bytes = row.encode()
-                else:
-                    row_bytes = row.tobytes()
+                row_bytes = row.encode() if isinstance(row, str) else row.tobytes()
 
                 data_key = f"{array_name}_{start_index + i}_data".encode()
 
@@ -62,10 +59,7 @@ def retrieve_row_from_lmdb(lmdb_env, array_name, dtype, row_index, shape=None):
     with lmdb_env.begin() as txn:
         row_bytes = txn.get(data_key)
 
-    if dtype == str:
-        array = row_bytes.decode()
-    else:
-        array = np.frombuffer(row_bytes, dtype=dtype)
+    array = row_bytes.decode() if dtype == str else np.frombuffer(row_bytes, dtype=dtype)
 
     if shape is not None and len(shape) > 0:
         array = array.reshape(shape)

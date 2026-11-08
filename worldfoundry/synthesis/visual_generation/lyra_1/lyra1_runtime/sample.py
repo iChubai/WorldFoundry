@@ -321,10 +321,7 @@ def main_single(
                 reconstructed_latents = decode_multi_view_latents(
                     vae, model_input, num_input_multi_views, main_config.vae_backbone
                 )
-            if video is None:
-                video = reconstructed_latents
-            else:
-                video = torch.cat((reconstructed_latents, video), -1)
+            video = reconstructed_latents if video is None else torch.cat((reconstructed_latents, video), -1)
 
         # Gaussians export just exporting the tensor
         if config.save_gaussians:

@@ -35,10 +35,7 @@ if __name__ == "__main__":
     else:
         enhance_video_model = None
     pipeline = prepare_pipeline(args, dtype, device)
-    if args.caption_refiner is not None:
-        caption_refiner_model = OpenSoraCaptionRefiner(args, dtype, device)
-    else:
-        caption_refiner_model = None
+    caption_refiner_model = OpenSoraCaptionRefiner(args, dtype, device) if args.caption_refiner is not None else None
 
     if npu_config is not None and npu_config.on_npu and npu_config.profiling:
         run_model_and_save_samples_npu(args, pipeline, caption_refiner_model, enhance_video_model)

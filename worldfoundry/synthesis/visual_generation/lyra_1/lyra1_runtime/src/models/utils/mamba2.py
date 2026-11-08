@@ -122,7 +122,7 @@ class Mamba2SingleScan(nn.Module):
         """
         A = -torch.exp(self.A_log)  # (nheads) or (d_inner, d_state)
         initial_states = None
-        dt_limit_kwargs = {} if self.dt_limit == (0.0, float("inf")) else dict(dt_limit=self.dt_limit)
+        dt_limit_kwargs = {} if self.dt_limit == (0.0, float("inf")) else {"dt_limit": self.dt_limit}
 
         # Fully fused path
         out = mamba_split_conv1d_scan_combined(

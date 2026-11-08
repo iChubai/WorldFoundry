@@ -20,6 +20,7 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.util
 # isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder
+import itertools
 
 AMT_G = {
     "name": "networks.AMT-G.Model",
@@ -144,7 +145,7 @@ def interpolater(model, inputs, scale, padder, iters=1):
     for i in range(iters):
         print(f"Iter {i + 1}. input_frames={len(inputs)} output_frames={2 * len(inputs) - 1}")
         outputs = [inputs[0]]
-        for in_0, in_1 in zip(inputs[:-1], inputs[1:], strict=False):
+        for in_0, in_1 in itertools.pairwise(inputs):
             in_0 = in_0.to(device)
             in_1 = in_1.to(device)
             with torch.no_grad():

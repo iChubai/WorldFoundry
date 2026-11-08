@@ -16,7 +16,7 @@ import torch.nn as nn
 
 class CausalVAEModelWrapper(nn.Module):
     def __init__(self, model_path, subfolder=None, cache_dir=None, use_ema=False, **kwargs):
-        super(CausalVAEModelWrapper, self).__init__()
+        super().__init__()
         self.vae = CausalVAEModel.from_pretrained(model_path, subfolder=subfolder, cache_dir=cache_dir, **kwargs)
 
     def encode(self, x):
@@ -34,7 +34,7 @@ class CausalVAEModelWrapper(nn.Module):
 
 class WFVAEModelWrapper(nn.Module):
     def __init__(self, model_path, subfolder=None, cache_dir=None, **kwargs):
-        super(WFVAEModelWrapper, self).__init__()
+        super().__init__()
         self.vae = WFVAEModel.from_pretrained(model_path, subfolder=subfolder, cache_dir=cache_dir, **kwargs)
         self.register_buffer("shift", torch.tensor(self.vae.config.shift)[None, :, None, None, None])
         self.register_buffer("scale", torch.tensor(self.vae.config.scale)[None, :, None, None, None])

@@ -40,10 +40,7 @@ class ResnetBlock1D(nn.Module):
         h = self.conv2(h)
 
         if self.in_dim != self.out_dim:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
 
         return mp_sum(x, h, t=0.3)
 

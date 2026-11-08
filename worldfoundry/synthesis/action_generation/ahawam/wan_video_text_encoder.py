@@ -36,7 +36,7 @@ class GELU(nn.Module):
 
 class T5LayerNorm(nn.Module):
     def __init__(self, dim, eps=1e-6):
-        super(T5LayerNorm, self).__init__()
+        super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
@@ -53,7 +53,7 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T
 
 class T5FeedForward(nn.Module):
     def __init__(self, dim, dim_ffn, dropout=0.1):
-        super(T5FeedForward, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_ffn = dim_ffn
 
@@ -73,7 +73,7 @@ class T5FeedForward(nn.Module):
 
 class T5SelfAttention(nn.Module):
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5SelfAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -127,7 +127,7 @@ class WanTextEncoder(torch.nn.Module):
         shared_pos=False,
         dropout=0.1,
     ):
-        super(WanTextEncoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn

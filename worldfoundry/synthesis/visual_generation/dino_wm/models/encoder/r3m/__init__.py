@@ -26,10 +26,7 @@ VALID_ARGS = [
     "l2dist",
     "bs",
 ]
-if torch.cuda.is_available():
-    device = "cuda"
-else:
-    device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def cleanup_config(cfg):

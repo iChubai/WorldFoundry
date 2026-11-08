@@ -38,7 +38,7 @@ class ReCamMasterSynthesis(BaseSynthesis):
             width (int, optional): The target width for video frames. Defaults to 832.
             device (str, optional): The device to run the model on (e.g., "cuda", "cpu"). Defaults to "cuda".
         """
-        super(ReCamMasterSynthesis, self).__init__()
+        super().__init__()
         self.pipeline = pipeline
         self.device = device
 

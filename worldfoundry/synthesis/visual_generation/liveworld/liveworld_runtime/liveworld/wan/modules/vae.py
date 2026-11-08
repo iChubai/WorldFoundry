@@ -87,31 +87,27 @@ class Resample(nn.Module):
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
         b, c, t, h, w = x.size()
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = "Rep"
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
-                        # cache last frame of last two chunk
-                        cache_x = torch.cat(
-                            [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
-                        )
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
-                        cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
-                    if feat_cache[idx] == "Rep":
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = "Rep"
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -CACHE_T:, :, :].clone()
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
+                    # cache last frame of last two chunk
+                    cache_x = torch.cat(
+                        [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
+                    )
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
+                    cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
+                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
 
-                    x = x.reshape(b, 2, c, t, h, w)
-                    x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                    x = x.reshape(b, c, t * 2, h, w)
+                x = x.reshape(b, 2, c, t, h, w)
+                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
+                x = x.reshape(b, c, t * 2, h, w)
         t = x.shape[2]
         x = rearrange(x, "b c t h w -> (b t) c h w")
         x = self.resample(x)
@@ -159,6 +155,7 @@ class Resample(nn.Module):
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
+import itertools
 
 
 class AttentionBlock(nn.Module):
@@ -228,7 +225,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -268,10 +265,7 @@ class Encoder3d(nn.Module):
 
         # downsamples
         for layer in self.downsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         # middle
         for layer in self.middle:
@@ -331,7 +325,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -374,10 +368,7 @@ class Decoder3d(nn.Module):
 
         # upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         # head
         for layer in self.head:
@@ -523,15 +514,15 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
     Autoencoder3d adapted from Stable Diffusion 1.x, 2.x and XL.
     """
     # params
-    cfg = dict(
-        dim=96,
-        z_dim=z_dim,
-        dim_mult=[1, 2, 4, 4],
-        num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
-        dropout=0.0,
-    )
+    cfg = {
+        "dim": 96,
+        "z_dim": z_dim,
+        "dim_mult": [1, 2, 4, 4],
+        "num_res_blocks": 2,
+        "attn_scales": [],
+        "temperal_downsample": [False, True, True],
+        "dropout": 0.0,
+    }
     cfg.update(**kwargs)
 
     # init model

@@ -55,6 +55,7 @@ from utils.misc import AtomicCounter
 from v2v import encode_video_latent, get_denoising_schedule
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
+import contextlib
 
 # PyTorch renamed this setting in older releases and removed the compatibility
 # alias in newer ones.  Keep the upstream intent without making module import
@@ -525,10 +526,7 @@ class GenerationSession:
     def process_webcam_frames(self, models: Models, idx: int):
         """Process webcam frames for streaming v2v with proper frame encoding"""
         # Determine number of frames to encode based on block index
-        if idx == 0:
-            num_frames_to_encode = 9
-        else:
-            num_frames_to_encode = 12
+        num_frames_to_encode = 9 if idx == 0 else 12
 
         # Wait until we have at least enough frames
         while self.frame_queue.qsize() < num_frames_to_encode:
@@ -1130,7 +1128,10 @@ async def ws_session(websocket: WebSocket, id: str, config: OmegaConf, models: M
 
         gc.collect()
         torch.cuda.empty_cache()
-        new_session = lambda: GenerationSession(params, config, frame_callback=actual_frame_callback, models=models)
+
+        def new_session():
+            return GenerationSession(params, config, frame_callback=actual_frame_callback, models=models)
+
         session = new_session()
 
         new_data_event = asyncio.Event()
@@ -1197,10 +1198,8 @@ async def ws_session(websocket: WebSocket, id: str, config: OmegaConf, models: M
         if generate_task:
             generate_task.cancel()
         # Send session ID for video download
-        try:
+        with contextlib.suppress(BaseException):
             await websocket.send_json({"session_id": id, "status": "completed"})
-        except BaseException:
-            pass
 
 
 @app.websocket("/session/{id}")

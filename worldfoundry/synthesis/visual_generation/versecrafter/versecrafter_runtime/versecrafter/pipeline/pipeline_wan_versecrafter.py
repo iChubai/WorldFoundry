@@ -574,10 +574,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             device=device,
         )
         # Concatenate negative and positive embeddings for classifier-free guidance
-        if do_classifier_free_guidance:
-            in_prompt_embeds = negative_prompt_embeds + prompt_embeds
-        else:
-            in_prompt_embeds = prompt_embeds
+        in_prompt_embeds = negative_prompt_embeds + prompt_embeds if do_classifier_free_guidance else prompt_embeds
 
         # 4. Prepare timesteps
         if isinstance(self.scheduler, FlowMatchEulerDiscreteScheduler):

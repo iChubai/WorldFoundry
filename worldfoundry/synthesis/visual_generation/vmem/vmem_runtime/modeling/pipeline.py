@@ -639,7 +639,7 @@ class VMemPipeline:
             candidates = []
             for frame, count in frame_count:
                 candidates.extend([frame] * count)
-                indices_to_frame = {i: frame for i, frame in enumerate(candidates)}
+                indices_to_frame = dict(enumerate(candidates))
 
             # Sort candidates by distance to target view
             distances = [
@@ -775,10 +775,7 @@ class VMemPipeline:
         positions = np.array([s.position for s in existing_surfels])  # Shape: (N, 3)
         normals = np.array([s.normal for s in existing_surfels])  # Shape: (N, 3)
 
-        if len(positions) > 0:
-            octree = Octree(positions, max_points=max_points_per_node)
-        else:
-            octree = None
+        octree = Octree(positions, max_points=max_points_per_node) if len(positions) > 0 else None
 
         filtered_surfels = []
 
@@ -838,10 +835,7 @@ class VMemPipeline:
             focal_lengths = torch.mean(focal_lengths, dim=0)
 
         # 1) Estimate normals
-        if estimate_normals:
-            normal_map = self.estimate_normal_from_pointmap(pointmap)
-        else:
-            normal_map = torch.zeros_like(pointmap)
+        normal_map = self.estimate_normal_from_pointmap(pointmap) if estimate_normals else torch.zeros_like(pointmap)
 
         # Create mask for valid points
         # depth threshold is the 95 percentile of the depth map

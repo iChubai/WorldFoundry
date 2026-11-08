@@ -419,10 +419,7 @@ class WebsocketPolicyServer:
             value = obs[key]
             try:
                 # Convert to numpy if tensor
-                if isinstance(value, torch.Tensor):
-                    arr = value.detach().cpu().numpy()
-                else:
-                    arr = np.asarray(value)
+                arr = value.detach().cpu().numpy() if isinstance(value, torch.Tensor) else np.asarray(value)
 
                 # Expected format: THWC (Time, Height, Width, Channel)
                 if arr.ndim != 4:

@@ -211,7 +211,7 @@ def _predict_da3_depth_window(
 
         selected_frames.extend(list(range(0, int(abs_last_idx) + 1, chunk)))
 
-    selected_frames = sorted(set(int(x) for x in selected_frames))
+    selected_frames = sorted({int(x) for x in selected_frames})
     if not selected_frames:
         return {"frame_indices": [], "prediction": None}
 

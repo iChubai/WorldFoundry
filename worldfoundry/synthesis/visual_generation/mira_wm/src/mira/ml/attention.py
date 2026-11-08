@@ -152,7 +152,7 @@ class SelfAttention(nn.Module):
                 q = apply_rotary_emb(q, rotary_emb)
             k = apply_rotary_emb(k, rotary_emb)
 
-        q, k, v = map(lambda t: t.transpose(1, 2), (q, k, v))
+        q, k, v = (t.transpose(1, 2) for t in (q, k, v))
         attn_mask = None
         if self.causal:
             attn_mask = local_causal_mask(

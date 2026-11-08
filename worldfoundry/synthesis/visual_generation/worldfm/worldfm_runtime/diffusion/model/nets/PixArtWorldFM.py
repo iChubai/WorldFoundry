@@ -64,8 +64,11 @@ class PixArtWorldFMBlock(nn.Module):
         )
         self.cross_attn = MultiHeadCrossAttention(hidden_size, num_heads, **block_kwargs)
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
+
         # to be compatible with lower version pytorch
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.mlp = Mlp(
             in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
         )
@@ -144,7 +147,9 @@ class PixArtWorldFM(nn.Module):
         # Will use fixed sin-cos embedding:
         self.register_buffer("pos_embed", torch.zeros(1, num_patches, hidden_size))
 
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.y_embedder = CaptionEmbedder(
             in_channels=caption_channels,

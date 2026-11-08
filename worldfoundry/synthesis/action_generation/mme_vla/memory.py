@@ -278,10 +278,7 @@ class MemoryBufferRecurrent(MemoryBuffer):
             raise ValueError("Invalid recurrent history indices")
         horizon = self.input_obs_horizon
         if exec_start_idx == 0:
-            if step_idx < horizon:
-                indices = [step_idx]
-            else:
-                indices = list(range(step_idx % horizon, step_idx + 1, horizon))
+            indices = [step_idx] if step_idx < horizon else list(range(step_idx % horizon, step_idx + 1, horizon))
         else:
             if exec_start_idx <= horizon * 2:
                 video_indices = list(range(0, exec_start_idx, max(1, horizon // 2)))

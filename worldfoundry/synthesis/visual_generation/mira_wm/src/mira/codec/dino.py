@@ -95,12 +95,12 @@ class DinoModel(nn.Module):
         else:
             logging.getLogger("dinov3").setLevel(logging.WARNING)  # suppress noisy dinov3 logging
             logger.info(f"Loading DINOv3 model, variant {dino_model}, {compile=}")
-            hub_kwargs: dict[str, Any] = dict(
-                repo_or_dir="facebookresearch/dinov3",
-                model=dino_model,
-                source="github",
-                verbose=False,  # Get rid of "Using cache found in ..." message
-            )
+            hub_kwargs: dict[str, Any] = {
+                "repo_or_dir": "facebookresearch/dinov3",
+                "model": dino_model,
+                "source": "github",
+                "verbose": False,  # Get rid of "Using cache found in ..." message
+            }
             # Load pretrained weights from a local cache dir if RS_DINO_WEIGHTS_DIR provides one;
             # otherwise build without pretrained weights (restored from a codec checkpoint).
             weights_path = resolve_dino_weights(dino_model)

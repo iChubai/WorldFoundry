@@ -63,4 +63,4 @@ class WebsocketClientPolicy:
 
     @override
     def reset(self) -> None:
-        self.infer(dict(reset=True))
+        self.infer({"reset": True})

@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Mapping
-from contextlib import nullcontext
+from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
@@ -713,8 +713,7 @@ class OfficialVideoRuntime:
             cwd=cwd,
             env=env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         if completed.returncode != 0:
@@ -772,10 +771,8 @@ class OfficialVideoRuntime:
             if raw_root in {None, ""}:
                 continue
             root = Path(raw_root).expanduser()
-            try:
+            with suppress(OSError):
                 root = root.resolve()
-            except OSError:
-                pass
             if root.is_file():
                 root = root.parent
             if root.exists() and root not in roots:

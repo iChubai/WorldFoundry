@@ -48,7 +48,7 @@ class TextEncoder(SharedTextEncoder):
                     tokenize_input_type = "list"
             else:
                 raise TypeError(f"Unsupported text type: {type(text)}")
-        kwargs = dict(truncation=True, max_length=self.max_length, padding="max_length", return_tensors="pt")
+        kwargs = {"truncation": True, "max_length": self.max_length, "padding": "max_length", "return_tensors": "pt"}
         if self.text_encoder_type == "llava-llama-3-8b":
             if isinstance(text, list):
                 for i in range(len(text)):

@@ -701,10 +701,7 @@ class BaseVectorEnv:
         reset_returns_info = (
             isinstance(ret_list[0], (tuple, list)) and len(ret_list[0]) == 2 and isinstance(ret_list[0][1], dict)
         )
-        if reset_returns_info:
-            obs_list = [r[0] for r in ret_list]
-        else:
-            obs_list = ret_list
+        obs_list = [r[0] for r in ret_list] if reset_returns_info else ret_list
 
         if isinstance(obs_list[0], tuple):
             raise TypeError(

@@ -202,7 +202,7 @@ def get_nd_rotary_pos_embed(
 
     grid = get_meshgrid_nd(start, *args, dim=len(rope_dim_list))  # [3, W, H, D] / [2, W, H]
 
-    if isinstance(theta_rescale_factor, int) or isinstance(theta_rescale_factor, float):
+    if isinstance(theta_rescale_factor, (int, float)):
         theta_rescale_factor = [theta_rescale_factor] * len(rope_dim_list)
     elif isinstance(theta_rescale_factor, list) and len(theta_rescale_factor) == 1:
         theta_rescale_factor = [theta_rescale_factor[0]] * len(rope_dim_list)
@@ -210,7 +210,7 @@ def get_nd_rotary_pos_embed(
         "len(theta_rescale_factor) should equal to len(rope_dim_list)"
     )
 
-    if isinstance(interpolation_factor, int) or isinstance(interpolation_factor, float):
+    if isinstance(interpolation_factor, (int, float)):
         interpolation_factor = [interpolation_factor] * len(rope_dim_list)
     elif isinstance(interpolation_factor, list) and len(interpolation_factor) == 1:
         interpolation_factor = [interpolation_factor[0]] * len(rope_dim_list)

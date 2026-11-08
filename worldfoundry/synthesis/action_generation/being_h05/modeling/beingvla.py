@@ -191,7 +191,7 @@ class BeingH(PreTrainedModel):
 
         # Enable Flash Attention if supported, otherwise fall back to eager attention.
         use_flash_attn = use_flash_attn if has_flash_attn else False
-        config.vit_config.use_flash_attn = True if use_flash_attn else False
+        config.vit_config.use_flash_attn = bool(use_flash_attn)
         config.llm_config.attn_implementation = "flash_attention_2" if use_flash_attn else "eager"
 
         self.config = config
@@ -389,10 +389,7 @@ class BeingH(PreTrainedModel):
             _padded_attn_modes = attn_modes
             _padded_seqlen = seqlen
 
-        if sum(sample_lens_list) == sequence_length:
-            sample_lens_for_llm = sample_lens_list
-        else:
-            sample_lens_for_llm = [sequence_length]
+        sample_lens_for_llm = sample_lens_list if sum(sample_lens_list) == sequence_length else [sequence_length]
         attention_mask_kind = str(
             getattr(self, "worldfoundry_attention_mask_kind", None)
             or os.environ.get("WORLDFOUNDRY_BEING_H05_ATTENTION_MASK_KIND", "dense")

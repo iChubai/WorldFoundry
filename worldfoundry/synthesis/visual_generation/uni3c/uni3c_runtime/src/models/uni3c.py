@@ -391,10 +391,7 @@ class RealisDanceDiT(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOriginalMode
         controlnet_inputs = controlnet_inputs.flatten(2).transpose(1, 2)
 
         # additional inputs (mask, camera embedding)
-        if camera_embedding is not None:
-            add_inputs = torch.cat([render_mask, camera_embedding], dim=1)
-        else:
-            add_inputs = render_mask
+        add_inputs = torch.cat([render_mask, camera_embedding], dim=1) if camera_embedding is not None else render_mask
         add_inputs = self.controlnet_mask_embedding(add_inputs)
         controlnet_inputs = controlnet_inputs + add_inputs
         ### process controlnet inputs over ###

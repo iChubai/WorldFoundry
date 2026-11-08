@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.core.io.paths import hfd_root_path
+import contextlib
 
 DEFAULT_ATI_REPO = "bytedance-research/ATI"
 DEFAULT_WAN_I2V_REPO = "Wan-AI/Wan2.1-I2V-14B-480P"
@@ -274,10 +275,8 @@ class ATIRuntime:
             self._checkpoint_overlay = None
 
     def __del__(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self.close()
-        except Exception:
-            pass
 
 
 __all__ = ["DEFAULT_ATI_REPO", "DEFAULT_WAN_I2V_REPO", "ATIRuntime"]

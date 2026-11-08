@@ -165,10 +165,7 @@ def compute_training_frame_budget(
 ) -> tuple[int, float, int]:
     if num_source_frames <= 0:
         return 1, 0.0, 1
-    if source_fps > sample_fps:
-        raw_val = int(num_source_frames / source_fps * sample_fps)
-    else:
-        raw_val = int(num_source_frames)
+    raw_val = int(num_source_frames / source_fps * sample_fps) if source_fps > sample_fps else int(num_source_frames)
     sample_frame = ((raw_val - 1) // vae_tc) * vae_tc + 1
     sample_frame = max(sample_frame, 1)
     vae_fps = sample_frame / num_source_frames * float(source_fps)

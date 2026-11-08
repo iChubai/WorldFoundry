@@ -132,10 +132,7 @@ def random_shift_crop(clip):
         raise ValueError("clip should be a 4D torch.tensor")
     h, w = clip.size(-2), clip.size(-1)
 
-    if h <= w:
-        short_edge = h
-    else:
-        short_edge = w
+    short_edge = h if h <= w else w
 
     th, tw = short_edge, short_edge
 

@@ -55,7 +55,7 @@ class LinearNormalizer(DictOfTensorMixin):
 
     def _normalize_impl(self, x, forward=True):
         if isinstance(x, dict):
-            result = dict()
+            result = {}
             for key, value in x.items():
                 params = self.params_dict[key]
                 result[key] = _normalize(value, params, forward=forward)
@@ -97,9 +97,6 @@ def _normalize(x, params, forward=True):
     # x = x.to(device=scale.device, dtype=scale.dtype)
     src_shape = x.shape
     x = x.reshape(-1, scale.shape[0])
-    if forward:
-        x = x * scale + offset
-    else:
-        x = (x - offset) / scale
+    x = x * scale + offset if forward else (x - offset) / scale
     x = x.reshape(src_shape)
     return x

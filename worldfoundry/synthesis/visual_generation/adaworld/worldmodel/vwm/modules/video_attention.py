@@ -34,7 +34,7 @@ class VideoTransformerBlock(nn.Module):
         disable_temporal_crossattention=False,
         switch_temporal_ca_to_sa=False,
     ):
-        super(VideoTransformerBlock, self).__init__()
+        super().__init__()
         attn_cls = self.ATTENTION_MODES[attn_mode]
 
         self.ff_in = ff_in or inner_dim is not None
@@ -141,7 +141,7 @@ class SpatialVideoTransformer(SpatialTransformer):
         disable_temporal_crossattention=False,
         max_time_embed_period=10000,
     ):
-        super(SpatialVideoTransformer, self).__init__(
+        super().__init__(
             in_channels,
             n_heads,
             d_head,

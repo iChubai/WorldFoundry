@@ -53,14 +53,14 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
                 T5RelativeEmbedding: AutoWrappedModule,
                 T5LayerNorm: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device="cpu",
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": "cpu",
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         dtype = next(iter(self.dit.parameters())).dtype
         enable_vram_management(
@@ -71,23 +71,23 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
                 torch.nn.LayerNorm: AutoWrappedModule,
                 RMSNorm: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device=self.device,
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": self.device,
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
             max_num_param=num_persistent_param_in_dit,
-            overflow_vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device="cpu",
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            overflow_vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": "cpu",
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         dtype = next(iter(self.vae.parameters())).dtype
         enable_vram_management(
@@ -101,14 +101,14 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
                 torch.nn.SiLU: AutoWrappedModule,
                 torch.nn.Dropout: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device=self.device,
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": self.device,
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         if self.image_encoder is not None:
             dtype = next(iter(self.image_encoder.parameters())).dtype
@@ -119,14 +119,14 @@ class WanVideoAstraPipeline(StagedDiffusionPipeline):
                     torch.nn.Conv2d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         self.enable_cpu_offload()
 
@@ -371,7 +371,7 @@ class TeaCache:
             "Wan2.1-I2V-14B-720P": [8.10705460e03, 2.13393892e03, -3.72934672e02, 1.66203073e01, -4.17769401e-02],
         }
         if model_id not in self.coefficients_dict:
-            supported_model_ids = ", ".join([i for i in self.coefficients_dict])
+            supported_model_ids = ", ".join(list(self.coefficients_dict))
             raise ValueError(
                 f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids})."
             )
@@ -452,10 +452,7 @@ def model_fn_wan_video(
 
     # TeaCache
     tea_cache = None
-    if tea_cache is not None:
-        tea_cache_update = tea_cache.check(dit, x, t_mod)
-    else:
-        tea_cache_update = False
+    tea_cache_update = tea_cache.check(dit, x, t_mod) if tea_cache is not None else False
 
     if tea_cache_update:
         x = tea_cache.update(x)

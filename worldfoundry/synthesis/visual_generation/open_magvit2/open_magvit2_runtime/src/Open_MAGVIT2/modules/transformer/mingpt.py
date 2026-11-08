@@ -276,10 +276,7 @@ class GPT(nn.Module):
                 logits_post = self.head_post(x)
             logits = (logits_pre, logits_post)
         else:
-            if self.weight_tying:
-                logits = x @ self.tok_emb.weight.T
-            else:
-                logits = self.head(x)
+            logits = x @ self.tok_emb.weight.T if self.weight_tying else self.head(x)
 
         # if we are given some desired targets also calculate the loss
         loss = None
@@ -351,10 +348,7 @@ class GPT(nn.Module):
                 logits_post = self.head_post(x)
             logits = (logits_pre, logits_post)
         else:
-            if self.weight_tying:
-                logits = x @ self.tok_emb.weight.T
-            else:
-                logits = self.head(x)
+            logits = x @ self.tok_emb.weight.T if self.weight_tying else self.head(x)
         # if we are given some desired targets also calculate the loss
         loss = None
         if targets is not None:
@@ -579,10 +573,7 @@ def sample_with_past(
                 else:
                     x = torch.multinomial(probs, num_samples=1)
                 # append to the sequence and continue
-                if cfg_scale > 1.0:
-                    x = torch.concat([x, x])
-                else:
-                    x = x
+                x = torch.concat([x, x]) if cfg_scale > 1.0 else x
                 sample = torch.cat((sample, x), dim=1)
 
     if token_factorization:

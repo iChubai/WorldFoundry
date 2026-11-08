@@ -284,10 +284,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         image = self.vae.decode(latents)
         image = (image / 2 + 0.5).clamp(0, 1)
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloat16
-        if image.ndim == 4:
-            image = image.cpu().permute(0, 2, 3, 1).float()
-        else:
-            image = image.cpu().float()
+        image = image.cpu().permute(0, 2, 3, 1).float() if image.ndim == 4 else image.cpu().float()
         return image
 
     def prepare_extra_func_kwargs(self, func, kwargs):
@@ -323,9 +320,8 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             if "884" in vae_ver:
                 if video_length != 1 and (video_length - 1) % 4 != 0:
                     raise ValueError(f"`video_length` has to be 1 or a multiple of 4 but is {video_length}.")
-            elif "888" in vae_ver:
-                if video_length != 1 and (video_length - 1) % 8 != 0:
-                    raise ValueError(f"`video_length` has to be 1 or a multiple of 8 but is {video_length}.")
+            elif "888" in vae_ver and video_length != 1 and (video_length - 1) % 8 != 0:
+                raise ValueError(f"`video_length` has to be 1 or a multiple of 8 but is {video_length}.")
 
         if callback_steps is not None and (not isinstance(callback_steps, int) or callback_steps <= 0):
             raise ValueError(

@@ -404,10 +404,7 @@ def model_wrapper(
 
     def noise_pred_fn(x, t_continuous, cond=None):
         t_input = get_model_input_time(t_continuous)
-        if cond is None:
-            output = model(x, t_input, **model_kwargs)
-        else:
-            output = model(x, t_input, cond, **model_kwargs)
+        output = model(x, t_input, **model_kwargs) if cond is None else model(x, t_input, cond, **model_kwargs)
         if model_type == "noise":
             return output
         elif model_type == "x_start":
@@ -1143,18 +1140,22 @@ class DPM_Solver:
         nfe = 0
         if order == 2:
             r1 = 0.5
-            lower_update = lambda x, s, t: self.dpm_solver_first_update(x, s, t, return_intermediate=True)
-            higher_update = lambda x, s, t, **kwargs: self.singlestep_dpm_solver_second_update(
-                x, s, t, r1=r1, solver_type=solver_type, **kwargs
-            )
+
+            def lower_update(x, s, t):
+                return self.dpm_solver_first_update(x, s, t, return_intermediate=True)
+
+            def higher_update(x, s, t, **kwargs):
+                return self.singlestep_dpm_solver_second_update(x, s, t, r1=r1, solver_type=solver_type, **kwargs)
         elif order == 3:
             r1, r2 = 1.0 / 3.0, 2.0 / 3.0
-            lower_update = lambda x, s, t: self.singlestep_dpm_solver_second_update(
-                x, s, t, r1=r1, return_intermediate=True, solver_type=solver_type
-            )
-            higher_update = lambda x, s, t, **kwargs: self.singlestep_dpm_solver_third_update(
-                x, s, t, r1=r1, r2=r2, solver_type=solver_type, **kwargs
-            )
+
+            def lower_update(x, s, t):
+                return self.singlestep_dpm_solver_second_update(
+                    x, s, t, r1=r1, return_intermediate=True, solver_type=solver_type
+                )
+
+            def higher_update(x, s, t, **kwargs):
+                return self.singlestep_dpm_solver_third_update(x, s, t, r1=r1, r2=r2, solver_type=solver_type, **kwargs)
         else:
             raise ValueError(f"For adaptive step size solver, order must be 2 or 3, got {order}")
         while torch.abs(s - t_0).mean() > t_err:
@@ -1162,7 +1163,10 @@ class DPM_Solver:
             x_lower, lower_noise_kwargs = lower_update(x, s, t)
             x_higher = higher_update(x, s, t, **lower_noise_kwargs)
             delta = torch.max(torch.ones_like(x).to(x) * atol, rtol * torch.max(torch.abs(x_lower), torch.abs(x_prev)))
-            norm_fn = lambda v: torch.sqrt(torch.square(v.reshape((v.shape[0], -1))).mean(dim=-1, keepdim=True))
+
+            def norm_fn(v):
+                return torch.sqrt(torch.square(v.reshape((v.shape[0], -1))).mean(dim=-1, keepdim=True))
+
             E = norm_fn((x_higher - x_lower) / delta).max()
             if torch.all(E <= 1.0):
                 x = x_higher
@@ -1411,10 +1415,7 @@ class DPM_Solver:
                 for step in progress_fn(range(order, steps + 1)):
                     t = timesteps[step]
                     # We only use lower order for steps < 10
-                    if lower_order_final and steps < 10:
-                        step_order = min(order, steps + 1 - step)
-                    else:
-                        step_order = order
+                    step_order = min(order, steps + 1 - step) if lower_order_final and steps < 10 else order
                     x = self.multistep_dpm_solver_update(
                         x, model_prev_list, t_prev_list, t, step_order, solver_type=solver_type
                     )

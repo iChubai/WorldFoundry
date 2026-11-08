@@ -498,10 +498,7 @@ class FlowMatchingActionHead(nn.Module):
         # Retain the older path as well so the in-tree runtime works across
         # both supported cache APIs without pinning a Transformers downgrade.
         from_legacy_cache = getattr(DynamicCache, "from_legacy_cache", None)
-        if from_legacy_cache is not None:
-            cache = from_legacy_cache(legacy_cache)
-        else:
-            cache = DynamicCache(legacy_cache)
+        cache = from_legacy_cache(legacy_cache) if from_legacy_cache is not None else DynamicCache(legacy_cache)
         output = self.qwen2.model(
             inputs_embeds=target,
             attention_mask=attention_mask,

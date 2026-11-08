@@ -22,7 +22,7 @@ class VideoResBlock(ResBlock):
         up: bool = False,
         down: bool = False,
     ):
-        super(VideoResBlock, self).__init__(
+        super().__init__(
             channels,
             emb_channels,
             dropout,
@@ -100,7 +100,7 @@ class VideoUNet(nn.Module):
         max_ddpm_temb_period: int = 10000,
         n_context_frames: int = 5,
     ):
-        super(VideoUNet, self).__init__()
+        super().__init__()
         assert context_dim is not None
 
         if num_heads_upsample == -1:

@@ -118,10 +118,7 @@ class BaseDataset(ABC):
 
         if frame_idxs is None:
             # Frame not provided, default read all frames.
-            if view_idxs is None:
-                view_iterator = range(self.num_views(video_idx))
-            else:
-                view_iterator = view_idxs
+            view_iterator = range(self.num_views(video_idx)) if view_idxs is None else view_idxs
 
             new_frame_idxs, new_view_idxs = [], []
             for view_idx in view_iterator:

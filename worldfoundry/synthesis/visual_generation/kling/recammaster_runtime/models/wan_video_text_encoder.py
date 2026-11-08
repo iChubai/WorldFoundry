@@ -22,7 +22,7 @@ class WanTextEncoder(torch.nn.Module):
         shared_pos=False,
         dropout=0.1,
     ):
-        super(WanTextEncoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn

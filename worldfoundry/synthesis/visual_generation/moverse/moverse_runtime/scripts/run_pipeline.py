@@ -418,10 +418,7 @@ def main():
 
     # VAE cached_encode only supports T=1 (step 1) or T=4 (subsequent steps).
     # Round num_frames up to nearest valid count: 1 + 4*N.
-    if args.num_frames == 1:
-        total_frames_padded = 1
-    else:
-        total_frames_padded = 1 + 4 * ((args.num_frames - 1 + 3) // 4)
+    total_frames_padded = 1 if args.num_frames == 1 else 1 + 4 * ((args.num_frames - 1 + 3) // 4)
     if total_frames_padded != args.num_frames:
         print(
             f"[traj] Padding {args.num_frames} → {total_frames_padded} frames "

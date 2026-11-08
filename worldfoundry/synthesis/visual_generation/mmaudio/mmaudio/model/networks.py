@@ -303,10 +303,7 @@ class MMAudio(nn.Module):
     def get_empty_conditions(
         self, bs: int, *, negative_text_features: torch.Tensor | None = None
     ) -> PreprocessedConditions:
-        if negative_text_features is not None:
-            empty_text = negative_text_features
-        else:
-            empty_text = self.get_empty_string_sequence(1)
+        empty_text = negative_text_features if negative_text_features is not None else self.get_empty_string_sequence(1)
 
         empty_clip = self.get_empty_clip_sequence(1)
         empty_sync = self.get_empty_sync_sequence(1)

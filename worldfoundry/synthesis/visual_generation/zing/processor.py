@@ -10,6 +10,7 @@ import torch
 from PIL import Image
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.zing.config import ZingConfig
+import itertools
 
 
 @dataclass
@@ -164,7 +165,7 @@ class MessageProcessor:
         boundaries.update(value for value in hard_boundaries if 0 < value < total_frames)
         spans = []
         ordered = sorted(boundaries)
-        for start, end in zip(ordered, ordered[1:], strict=False):
+        for start, end in itertools.pairwise(ordered):
             frame = start
             while frame < end:
                 block_end = min(frame + self.config.inference.frames_per_block, end)

@@ -65,7 +65,7 @@ class StateDictMixin:
     def load_state_dict(self, state_dict: dict[str, Any]) -> None:
         if not hasattr(self, "_all_fields"):
             self._init_fields()
-        assert set(list(state_dict.keys())) == self._all_fields
+        assert set(state_dict.keys()) == self._all_fields
         for k, v in state_dict.items():
             self._set_field(k, v)
 
@@ -111,7 +111,7 @@ def get_path_agent_ckpt(path_ckpt_dir: str | Path, epoch: int, num_zeros: int = 
     if epoch >= 0:
         return d / f"agent_epoch_{epoch:0{num_zeros}d}.pt"
     else:
-        all_ = sorted(list(d.iterdir()))
+        all_ = sorted(d.iterdir())
         assert len(all_) >= -epoch
         return all_[epoch]
 

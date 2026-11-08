@@ -9,7 +9,7 @@ except BaseException:
 
 class CLIPWrapper(nn.Module):
     def __init__(self, args, **kwargs):
-        super(CLIPWrapper, self).__init__()
+        super().__init__()
         self.model_name = args.text_encoder_name_2 or "laion/CLIP-ViT-bigG-14-laion2B-39B-b160k"
         print(f"Loading CLIP model from {self.model_name}...")
         self.text_enc = CLIPTextModelWithProjection.from_pretrained(

@@ -8,7 +8,7 @@ from .vae import WanVAE
 
 class WanVAEModelWrapper(nn.Module):
     def __init__(self, vae_pth, dtype=torch.float, device="cuda", patch_size=(4, 8, 8)):
-        super(WanVAEModelWrapper, self).__init__()
+        super().__init__()
         self.module = WanVAE(
             vae_pth=vae_pth,
             dtype=dtype,

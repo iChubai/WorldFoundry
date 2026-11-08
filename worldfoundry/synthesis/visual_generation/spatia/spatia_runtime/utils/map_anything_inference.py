@@ -104,13 +104,13 @@ def load_and_preprocess_videos(
         intrinsics = torch.tensor([[fx, 0, cx], [0, fy, cy], [0, 0, 1]]).to(images.device)
     imgs_list = []
     for img_i in images:
-        data = dict(
-            img=img_i[None],
-            true_shape=np.int32([img_i.shape[1:]]),
-            idx=len(imgs_list),
-            instance=str(len(imgs_list)),
-            data_norm_type=["dinov2"],
-        )
+        data = {
+            "img": img_i[None],
+            "true_shape": np.int32([img_i.shape[1:]]),
+            "idx": len(imgs_list),
+            "instance": str(len(imgs_list)),
+            "data_norm_type": ["dinov2"],
+        }
         if extrinsics_path is not None:
             w2c = torch.from_numpy(w2cs[len(imgs_list)]).to(images.device)
             c2w = torch.linalg.inv(w2c)

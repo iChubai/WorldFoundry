@@ -96,10 +96,7 @@ def main():
         clip_frames = video_info.clip_frames
         sync_frames = video_info.sync_frames
         duration = video_info.duration_sec
-        if mask_away_clip:
-            clip_frames = None
-        else:
-            clip_frames = clip_frames.unsqueeze(0)
+        clip_frames = None if mask_away_clip else clip_frames.unsqueeze(0)
         sync_frames = sync_frames.unsqueeze(0)
     else:
         log.info("No video provided -- text-to-audio mode")

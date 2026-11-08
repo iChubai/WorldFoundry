@@ -1675,24 +1675,23 @@ def process_iteration(
             max_iou_frames=options.max_iou_frames,
             max_iou_points=options.max_iou_points,
         )
-        if reference_frames is not None:
-            if output_paths is not None:
-                os.makedirs(output_paths.video_dir, exist_ok=True)
-                ref_video_path = os.path.join(output_paths.video_dir, f"reference_iter_{iter_idx + 1:02d}.mp4")
-                ref_video = reference_frames.astype(np.uint8)
-                save_video_h264(ref_video_path, ref_video, fps=options.fps)
+        if reference_frames is not None and output_paths is not None:
+            os.makedirs(output_paths.video_dir, exist_ok=True)
+            ref_video_path = os.path.join(output_paths.video_dir, f"reference_iter_{iter_idx + 1:02d}.mp4")
+            ref_video = reference_frames.astype(np.uint8)
+            save_video_h264(ref_video_path, ref_video, fps=options.fps)
 
-                ref_meta_path = os.path.join(output_paths.video_dir, f"reference_iter_{iter_idx + 1:02d}.json")
-                with open(ref_meta_path, "w", encoding="utf-8") as f:
-                    json.dump(
-                        {
-                            "iter_idx": iter_idx,
-                            "reference_indices": ref_indices,
-                            "target_frame_indices": target_frame_indices,
-                        },
-                        f,
-                        indent=2,
-                    )
+            ref_meta_path = os.path.join(output_paths.video_dir, f"reference_iter_{iter_idx + 1:02d}.json")
+            with open(ref_meta_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "iter_idx": iter_idx,
+                        "reference_indices": ref_indices,
+                        "target_frame_indices": target_frame_indices,
+                    },
+                    f,
+                    indent=2,
+                )
 
     # Decode scene projection before generation so we can inspect the input early
     scene_proj_decoded = None
@@ -1999,10 +1998,7 @@ def _render_iteration_scene_projection(
 
     print("\n[Rendering scene projection for visualization...]")
 
-    if iter_idx == 0:
-        proj_frame_indices = target_frame_indices
-    else:
-        proj_frame_indices = target_frame_indices[1:]
+    proj_frame_indices = target_frame_indices if iter_idx == 0 else target_frame_indices[1:]
 
     if len(proj_frame_indices) == 0:
         return None
@@ -2040,7 +2036,7 @@ def _render_iteration_scene_projection(
 
     print(f"  Rendered {len(proj_frame_indices)} scene projection frames")
 
-    return [f for f in iter_scene_proj_np]
+    return list(iter_scene_proj_np)
 
 
 # =============================================================================

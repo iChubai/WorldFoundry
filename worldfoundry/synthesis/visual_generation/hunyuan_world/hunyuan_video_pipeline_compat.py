@@ -418,10 +418,9 @@ class HunyuanVideoPipeline(DiffusionPipeline):
                 negative_prompt_embeds = negative_prompt_embeds.repeat(1, num_videos_per_prompt, 1)
                 negative_prompt_embeds = negative_prompt_embeds.view(batch_size * num_videos_per_prompt, seq_len, -1)
 
-        if text_encoder is not None:
-            if isinstance(self, LoraLoaderMixin) and USE_PEFT_BACKEND:
-                # Retrieve the original scale by scaling back the LoRA layers
-                unscale_lora_layers(text_encoder.model, lora_scale)
+        if text_encoder is not None and isinstance(self, LoraLoaderMixin) and USE_PEFT_BACKEND:
+            # Retrieve the original scale by scaling back the LoRA layers
+            unscale_lora_layers(text_encoder.model, lora_scale)
 
         return (
             prompt_embeds,
@@ -448,10 +447,7 @@ class HunyuanVideoPipeline(DiffusionPipeline):
             image = self.vae.decode(latents, return_dict=False)[0]
         image = (image / 2 + 0.5).clamp(0, 1)
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloat16
-        if image.ndim == 4:
-            image = image.cpu().permute(0, 2, 3, 1).float()
-        else:
-            image = image.cpu().float()
+        image = image.cpu().permute(0, 2, 3, 1).float() if image.ndim == 4 else image.cpu().float()
         return image
 
     def prepare_extra_func_kwargs(self, func, kwargs):
@@ -507,9 +503,8 @@ class HunyuanVideoPipeline(DiffusionPipeline):
             if "884" in vae_ver:
                 if video_length != 1 and (video_length - 1) % 4 != 0:
                     raise ValueError(f"`video_length` has to be 1 or a multiple of 4 but is {video_length}.")
-            elif "888" in vae_ver:
-                if video_length != 1 and (video_length - 1) % 8 != 0:
-                    raise ValueError(f"`video_length` has to be 1 or a multiple of 8 but is {video_length}.")
+            elif "888" in vae_ver and video_length != 1 and (video_length - 1) % 8 != 0:
+                raise ValueError(f"`video_length` has to be 1 or a multiple of 8 but is {video_length}.")
 
         if callback_steps is not None and (not isinstance(callback_steps, int) or callback_steps <= 0):
             raise ValueError(

@@ -219,7 +219,7 @@ class MultiHeadCrossAttention(nn.Module):
         enable_flashattn2=False,
         enable_xformers=False,
     ):
-        super(MultiHeadCrossAttention, self).__init__()
+        super().__init__()
         assert dim % num_heads == 0, "d_model must be divisible by num_heads"
 
         self.dim = dim

@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 from worldfoundry.core.io import resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.runtime.env import resolve_hfd_root
+import itertools
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 UPSTREAM_REVISION = "0b931fd42f5ef51410019ae41b261eb3b8936410"
@@ -633,7 +634,7 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
                 raise ValueError("Echo-WM timesteps must be a non-empty descending list")
             values = [float(value) for value in timesteps]
             if not all(math.isfinite(v) and v == int(v) and 0 < v <= 1000 for v in values) or any(
-                a <= b for a, b in zip(values, values[1:], strict=False)
+                a <= b for a, b in itertools.pairwise(values)
             ):
                 raise ValueError("Echo-WM timesteps must be integers in [1, 1000] and descending")
         prompt = str(request.get("prompt") or "").strip()

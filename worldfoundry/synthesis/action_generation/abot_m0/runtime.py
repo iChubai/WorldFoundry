@@ -56,7 +56,7 @@ def _checkpoint_root(location: str) -> tuple[Path, Path]:
     candidates: list[Path] = []
     for pattern in patterns:
         candidates.extend(root.glob(pattern))
-    candidates = sorted(set(path.resolve() for path in candidates if path.is_file()))
+    candidates = sorted({path.resolve() for path in candidates if path.is_file()})
     if not candidates:
         raise FileNotFoundError(f"ABot-M0 policy weights are missing under {root}")
 

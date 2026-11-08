@@ -35,10 +35,7 @@ def fm_wrapper(transformer, t_scale=1000.0):
         x = x.to(dtype)
         timestep = (sigma * t_scale).to(dtype)
 
-        if concat_latent is None:
-            hidden_states = x
-        else:
-            hidden_states = torch.cat([x, concat_latent.to(x)], dim=1)
+        hidden_states = x if concat_latent is None else torch.cat([x, concat_latent.to(x)], dim=1)
 
         pred_positive = transformer(
             hidden_states=hidden_states, timestep=timestep, return_dict=False, **extra_args["positive"]
@@ -127,33 +124,21 @@ class FlowMatchUniPC:
 
         if use_predictor:
             D1s = torch.stack(D1s, dim=1)
-            if order == 2:
-                rhos_p = torch.tensor([0.5], device=b.device)
-            else:
-                rhos_p = torch.linalg.solve(R[:-1, :-1], b[:-1])
+            rhos_p = torch.tensor([0.5], device=b.device) if order == 2 else torch.linalg.solve(R[:-1, :-1], b[:-1])
         else:
             D1s = None
             rhos_p = None
 
-        if order == 1:
-            rhos_c = torch.tensor([0.5], device=b.device)
-        else:
-            rhos_c = torch.linalg.solve(R, b)
+        rhos_c = torch.tensor([0.5], device=b.device) if order == 1 else torch.linalg.solve(R, b)
 
         x_t_ = expand_dims(t / t_prev_0, dims) * x - expand_dims(h_phi_1, dims) * model_prev_0
 
-        if use_predictor:
-            pred_res = torch.tensordot(D1s, rhos_p, dims=([1], [0]))
-        else:
-            pred_res = 0
+        pred_res = torch.tensordot(D1s, rhos_p, dims=([1], [0])) if use_predictor else 0
 
         x_t = x_t_ - expand_dims(B_h, dims) * pred_res
         model_t = self.model_fn(x_t, t)
 
-        if D1s is not None:
-            corr_res = torch.tensordot(D1s, rhos_c[:-1], dims=([1], [0]))
-        else:
-            corr_res = 0
+        corr_res = torch.tensordot(D1s, rhos_c[:-1], dims=([1], [0])) if D1s is not None else 0
 
         D1_t = model_t - model_prev_0
         x_t = x_t_ - expand_dims(B_h, dims) * (corr_res + rhos_c[-1] * D1_t)
@@ -254,10 +239,7 @@ def sample_hunyuan(
     B, C, T, H, W = latents.shape
     seq_length = T * H * W // 4
 
-    if shift is None:
-        mu = calculate_flux_mu(seq_length, exp_max=7.0)
-    else:
-        mu = math.log(shift)
+    mu = calculate_flux_mu(seq_length, exp_max=7.0) if shift is None else math.log(shift)
 
     sigmas = get_flux_sigmas_from_mu(num_inference_steps, mu).to(device)
 
@@ -282,26 +264,26 @@ def sample_hunyuan(
     negative_prompt_poolers = repeat_to_batch_size(negative_prompt_poolers, batch_size)
     concat_latent = repeat_to_batch_size(concat_latent, batch_size)
 
-    sampler_kwargs = dict(
-        dtype=dtype,
-        cfg_scale=real_guidance_scale,
-        cfg_rescale=guidance_rescale,
-        concat_latent=concat_latent,
-        positive=dict(
+    sampler_kwargs = {
+        "dtype": dtype,
+        "cfg_scale": real_guidance_scale,
+        "cfg_rescale": guidance_rescale,
+        "concat_latent": concat_latent,
+        "positive": dict(
             pooled_projections=prompt_poolers,
             encoder_hidden_states=prompt_embeds,
             encoder_attention_mask=prompt_embeds_mask,
             guidance=distilled_guidance,
             **kwargs,
         ),
-        negative=dict(
+        "negative": dict(
             pooled_projections=negative_prompt_poolers,
             encoder_hidden_states=negative_prompt_embeds,
             encoder_attention_mask=negative_prompt_embeds_mask,
             guidance=distilled_guidance,
             **(kwargs if negative_kwargs is None else {**kwargs, **negative_kwargs}),
         ),
-    )
+    }
 
     if sampler == "unipc":
         results = sample_unipc(k_model, latents, sigmas, extra_args=sampler_kwargs, disable=False, callback=callback)

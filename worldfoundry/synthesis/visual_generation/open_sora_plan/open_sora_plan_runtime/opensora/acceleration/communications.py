@@ -38,10 +38,7 @@ def _single_all_to_all(
     gather_dim: int,
     enable_HCCL=False,
 ):
-    if enable_LCCL:
-        sp_size = lccl_info.world_size
-    else:
-        sp_size = hccl_info.world_size
+    sp_size = lccl_info.world_size if enable_LCCL else hccl_info.world_size
     inp_shape = list(input_.shape)
     inp_shape[scatter_dim] = inp_shape[scatter_dim] // sp_size
     if scatter_dim < 1:

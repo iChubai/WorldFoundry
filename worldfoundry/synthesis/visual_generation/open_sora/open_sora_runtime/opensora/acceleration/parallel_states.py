@@ -1,6 +1,6 @@
 import torch.distributed as dist
 
-_GLOBAL_PARALLEL_GROUPS = dict()
+_GLOBAL_PARALLEL_GROUPS = {}
 
 
 def set_data_parallel_group(group: dist.ProcessGroup):

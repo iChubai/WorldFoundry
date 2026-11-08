@@ -108,10 +108,7 @@ def apply_model_with_memblocks_sequential_single_step(model, memory, work_queue,
         b = model[i]
         if isinstance(b, MemBlock):
             # mem blocks are simple since we're visiting the graph in causal order
-            if memory[i] is None:
-                xt_new = b(xt, xt * 0)
-            else:
-                xt_new = b(xt, memory[i])
+            xt_new = b(xt, xt * 0) if memory[i] is None else b(xt, memory[i])
             memory[i] = xt
             work_queue.insert(0, TWorkItem(xt_new, i + 1))
         elif isinstance(b, TPool):

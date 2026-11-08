@@ -286,7 +286,7 @@ class DreamTransform(InvertibleModalityTransform):
         np_images = rearrange(images, "v t c h w -> (t v) h w c")
         if "language" in batch:
             lang = batch["language"]
-            if isinstance(lang, list) or isinstance(lang, np.ndarray):
+            if isinstance(lang, (list, np.ndarray)):
                 lang = lang[0]
 
         inputs = {}

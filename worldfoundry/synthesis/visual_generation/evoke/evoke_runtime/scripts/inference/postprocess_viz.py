@@ -21,6 +21,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
+import contextlib
 
 REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
 if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly
@@ -367,16 +368,12 @@ def _main_cli() -> None:
     finally:
         # drop the heavy intermediates + release the concurrency-guard marker
         for f in (npy, out_dir / ".postproc_params.json"):
-            try:
+            with contextlib.suppress(OSError):
                 f.unlink()
-            except OSError:
-                pass
         marker = params.get("_worker_marker")
         if marker:
-            try:
+            with contextlib.suppress(OSError):
                 Path(marker).unlink()
-            except OSError:
-                pass
     print("[postproc] DONE.", flush=True)
 
 

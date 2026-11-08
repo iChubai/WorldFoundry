@@ -138,7 +138,7 @@ def crop_and_resize_frames(frames, target_size, interpolation="bilinear"):
     target_height, target_width = target_size
     original_height, original_width = frames[0].shape[:2]
     if original_height == target_height and original_width == target_width:
-        return [frame for frame in frames]
+        return list(frames)
 
     # ==== interpolation method ====
     if interpolation == "bilinear":

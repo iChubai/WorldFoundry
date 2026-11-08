@@ -123,10 +123,7 @@ class WanVAEWrapper(torch.nn.Module):
             assert latent.shape[0] == 1, "Batch size must be 1 when using cache"
         device, dtype = (latent.device, latent.dtype)
         scale = [self.mean.to(device=device, dtype=dtype), 1.0 / self.std.to(device=device, dtype=dtype)]
-        if use_cache:
-            decode_function = self.model.cached_decode
-        else:
-            decode_function = self.model.decode
+        decode_function = self.model.cached_decode if use_cache else self.model.decode
         output = []
         for u in zs:
             output.append(decode_function(u.unsqueeze(0), scale).float().clamp_(-1, 1).squeeze(0))
@@ -142,10 +139,7 @@ class WanVAEWrapper(torch.nn.Module):
             assert latent.shape[0] == 1, "Batch size must be 1 when using cache"
         device, dtype = (latent.device, latent.dtype)
         scale = [self.mean.to(device=device, dtype=dtype), 1.0 / self.std.to(device=device, dtype=dtype)]
-        if use_cache:
-            decode_function = self.model.cached_decode
-        else:
-            decode_function = self.model.decode
+        decode_function = self.model.cached_decode if use_cache else self.model.decode
         output = []
         for u in zs:
             num_frames = u.shape[1]
@@ -254,8 +248,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         self, flow_pred: torch.Tensor, xt: torch.Tensor, timestep: torch.Tensor
     ) -> torch.Tensor:
         original_dtype = flow_pred.dtype
-        flow_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(flow_pred.device), [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
+        flow_pred, xt, sigmas, timesteps = (
+            x.double().to(flow_pred.device) for x in [flow_pred, xt, self.scheduler.sigmas, self.scheduler.timesteps]
         )
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
         sigma_t = sigmas[timestep_id].reshape(-1, 1, 1, 1)
@@ -267,8 +261,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         scheduler, x0_pred: torch.Tensor, xt: torch.Tensor, timestep: torch.Tensor
     ) -> torch.Tensor:
         original_dtype = x0_pred.dtype
-        x0_pred, xt, sigmas, timesteps = map(
-            lambda x: x.double().to(x0_pred.device), [x0_pred, xt, scheduler.sigmas, scheduler.timesteps]
+        x0_pred, xt, sigmas, timesteps = (
+            x.double().to(x0_pred.device) for x in [x0_pred, xt, scheduler.sigmas, scheduler.timesteps]
         )
         timestep_id = torch.argmin((timesteps.unsqueeze(0) - timestep.unsqueeze(1)).abs(), dim=1)
         sigma_t = sigmas[timestep_id].reshape(-1, 1, 1, 1)
@@ -291,10 +285,7 @@ class WanDiffusionWrapper(torch.nn.Module):
         sink_recache_after_switch=False,
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
-        if self.uniform_timestep:
-            input_timestep = timestep[:, 0]
-        else:
-            input_timestep = timestep
+        input_timestep = timestep[:, 0] if self.uniform_timestep else timestep
         logits = None
         if kv_cache is not None:
             flow_pred = self.model(

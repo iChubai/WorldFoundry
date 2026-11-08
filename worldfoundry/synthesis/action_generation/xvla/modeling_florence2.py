@@ -102,7 +102,7 @@ class PositionalEmbeddingCosine1D(nn.Module):
     """
 
     def __init__(self, embed_dim: int = 512, max_seq_len: int = 1024) -> None:
-        super(PositionalEmbeddingCosine1D, self).__init__()
+        super().__init__()
         self.embed_dim = embed_dim
         self.max_seq_len = max_seq_len
         # Generate the sinusoidal arrays.
@@ -151,7 +151,7 @@ class LearnedAbsolutePositionEmbedding1D(nn.Module):
     """
 
     def __init__(self, embedding_dim: int = 512, num_pos: int = 1024) -> None:
-        super(LearnedAbsolutePositionEmbedding1D, self).__init__()
+        super().__init__()
         self.embeddings = nn.Embedding(num_pos, embedding_dim)
         self.num_pos = num_pos
 
@@ -182,10 +182,7 @@ class LearnedAbsolutePositionEmbedding1D(nn.Module):
 class MySequential(nn.Sequential):
     def forward(self, *inputs):
         for module in self._modules.values():
-            if isinstance(inputs, tuple):
-                inputs = module(*inputs)
-            else:
-                inputs = module(inputs)
+            inputs = module(*inputs) if isinstance(inputs, tuple) else module(inputs)
         return inputs
 
 
@@ -1112,7 +1109,7 @@ class Florence2LanguagePreTrainedModel(PreTrainedModel):
             for name, _ in module.named_parameters():
                 if name == "bias":
                     nn.init.constant_(module.bias, 0)
-        elif isinstance(module, nn.LayerNorm) or isinstance(module, nn.BatchNorm2d):
+        elif isinstance(module, (nn.LayerNorm, nn.BatchNorm2d)):
             nn.init.constant_(module.weight, 1.0)
             nn.init.constant_(module.bias, 0)
 
@@ -1261,12 +1258,10 @@ class Florence2Encoder(Florence2LanguagePreTrainedModel):
         all_attentions = () if output_attentions else None
 
         # check if head_mask has a correct number of layers specified if desired
-        if head_mask is not None:
-            if head_mask.size()[0] != (len(self.layers)):
-                raise ValueError(
-                    f"The head_mask should be specified for {len(self.layers)} layers, but it is for"
-                    f" {head_mask.size()[0]}."
-                )
+        if head_mask is not None and head_mask.size()[0] != (len(self.layers)):
+            raise ValueError(
+                f"The head_mask should be specified for {len(self.layers)} layers, but it is for {head_mask.size()[0]}."
+            )
 
         for idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:

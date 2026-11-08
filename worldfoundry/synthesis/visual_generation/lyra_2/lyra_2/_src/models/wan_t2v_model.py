@@ -164,9 +164,8 @@ class WANDiffusionModel(InferenceModel):
             self.fsdp_device_mesh = None
 
         # 6. diffusion neural networks part
-        if "lora_config" in config:
-            if config.lora_config.enabled:
-                self.config.net.postpone_checkpoint = True
+        if "lora_config" in config and config.lora_config.enabled:
+            self.config.net.postpone_checkpoint = True
         self.set_up_model()
 
         self.net.requires_grad_(False)
@@ -204,9 +203,8 @@ class WANDiffusionModel(InferenceModel):
         # NOTE: (ruiyuang) always use meta device, no need to use cpu
         init_device = "meta"
         with misc.timer("Creating PyTorch model"):
-            with sync_timer("net instantiate"):
-                with torch.device(init_device):
-                    net = lazy_instantiate(config.net)
+            with sync_timer("net instantiate"), torch.device(init_device):
+                net = lazy_instantiate(config.net)
 
             if "lora_config" in config:
                 self.maybe_inject_lora_to_net(net, skip_load=True)
@@ -675,10 +673,7 @@ class WANDiffusionModel(InferenceModel):
 
         # Latent state
         raw_state = data_batch[self.input_image_key if is_image_batch else self.input_data_key]
-        if return_latent_state:
-            latent_state = self.encode(raw_state).contiguous().float()
-        else:
-            latent_state = None
+        latent_state = self.encode(raw_state).contiguous().float() if return_latent_state else None
 
         # Condition
         condition = self.conditioner(data_batch)

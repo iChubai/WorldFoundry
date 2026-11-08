@@ -4,7 +4,7 @@ import math
 import tempfile
 import threading
 from collections.abc import Callable
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -231,10 +231,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             else:
                 raise ValueError("warp_visibility_mask must be [B,1,T,H,W], [B,T,H,W,1], or a compatible mask tensor.")
         elif tensor.ndim == 4:
-            if tensor.shape[-1] in {1, 3, 4}:
-                tensor = tensor.permute(3, 0, 1, 2).unsqueeze(0)
-            else:
-                tensor = tensor.unsqueeze(1)
+            tensor = tensor.permute(3, 0, 1, 2).unsqueeze(0) if tensor.shape[-1] in {1, 3, 4} else tensor.unsqueeze(1)
         elif tensor.ndim == 3:
             tensor = tensor.unsqueeze(0).unsqueeze(0)
         elif tensor.ndim == 2:
@@ -860,10 +857,8 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                 if hasattr(transformer, "register_to_config"):
                     transformer.register_to_config(image_dim=None)
                 else:
-                    try:
+                    with suppress(Exception):
                         transformer_config.image_dim = None
-                    except Exception:
-                        pass
             lora_source, weight_name = _diffusers_lora_source(adapter_path)
             load_kwargs = {"adapter_name": self._wah_adapter_name}
             if weight_name is not None:
@@ -1409,7 +1404,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                 + (1 - fake_image_noise_sigma) * fake_image_latents
             )
 
-        history_sizes = sorted(list(WAH_HISTORY_SIZES), reverse=True)
+        history_sizes = sorted(WAH_HISTORY_SIZES, reverse=True)
         num_channels_latents = int(self.transformer.config.in_channels)
         _window_num_frames = (WAH_NUM_LATENT_FRAMES_PER_CHUNK - 1) * self.vae_scale_factor_temporal + 1
         num_history_latent_frames = int(sum(history_sizes))
@@ -1798,10 +1793,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         self._commit_autoregressive_conditioning(state)
 
         history_video = state.get("history_video")
-        if history_video is None:
-            history_video = current_video
-        else:
-            history_video = torch.cat([history_video, current_video], dim=2)
+        history_video = current_video if history_video is None else torch.cat([history_video, current_video], dim=2)
         state["history_video"] = history_video
 
         finalized_history_video = self._trim_decoded_video(history_video)

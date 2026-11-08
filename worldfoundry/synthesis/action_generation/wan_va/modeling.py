@@ -441,9 +441,8 @@ class WanAttention(torch.nn.Module):
 
         hidden_states = self.attn_op(query, key, value)
 
-        if update_cache == 0:
-            if kv_cache is not None and kv_cache["k"] is not None:
-                self.restore_cache(cache_name, slots)
+        if update_cache == 0 and kv_cache is not None and kv_cache["k"] is not None:
+            self.restore_cache(cache_name, slots)
 
         hidden_states = hidden_states.flatten(2, 3)
         hidden_states = hidden_states.type_as(query)

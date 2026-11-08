@@ -392,11 +392,10 @@ class InternLM2Attention(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
-                raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
-                )
+        if attention_mask is not None and attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
+            raise ValueError(
+                f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
+            )
         if output_attentions:
             attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
             if attention_mask is not None:
@@ -917,12 +916,11 @@ class InternLM2Model(InternLM2PreTrainedModel):
         # embed positions
         hidden_states = inputs_embeds
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         # decoder layers
         all_hidden_states = () if output_hidden_states else None
@@ -1160,10 +1158,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
         return reordered_past
 
     def build_inputs(self, tokenizer, query: str, history: list[tuple[str, str]] = [], meta_instruction=""):
-        if tokenizer.add_bos_token:
-            prompt = ""
-        else:
-            prompt = tokenizer.bos_token
+        prompt = "" if tokenizer.add_bos_token else tokenizer.bos_token
         if meta_instruction:
             prompt += f"""<|im_start|>system\n{meta_instruction}<|im_end|>\n"""
         for record in history:
@@ -1362,10 +1357,7 @@ class InternLM2ForSequenceClassification(InternLM2PreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits = self.score(hidden_states)
 
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

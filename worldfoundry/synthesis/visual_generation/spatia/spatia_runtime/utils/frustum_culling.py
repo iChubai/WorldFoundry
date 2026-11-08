@@ -265,7 +265,7 @@ def find_mask_matches(
         cost_matrix = -intersection_matrix
         cost_matrix_np = cost_matrix.cpu().numpy()
         row_ind, col_ind = linear_sum_assignment(cost_matrix_np)
-        matches = {r: c for r, c in zip(row_ind, col_ind, strict=False)}
+        matches = dict(zip(row_ind, col_ind, strict=False))
         for i in range(N):
             if i not in matches:
                 matches[i] = -1

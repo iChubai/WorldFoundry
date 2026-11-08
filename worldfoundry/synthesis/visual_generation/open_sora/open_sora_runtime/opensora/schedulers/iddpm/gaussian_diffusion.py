@@ -523,10 +523,7 @@ class GaussianDiffusion:
         if device is None:
             device = next(model.parameters()).device
         assert isinstance(shape, (tuple, list))
-        if noise is not None:
-            img = noise
-        else:
-            img = torch.randn(*shape, device=device)
+        img = noise if noise is not None else torch.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
 
         if progress:
@@ -682,10 +679,7 @@ class GaussianDiffusion:
         if device is None:
             device = next(model.parameters()).device
         assert isinstance(shape, (tuple, list))
-        if noise is not None:
-            img = noise
-        else:
-            img = torch.randn(*shape, device=device)
+        img = noise if noise is not None else torch.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
 
         if progress:

@@ -19,6 +19,7 @@ from PIL import Image
 from worldfoundry.core.io.paths import official_runtime_repo_path, project_root, resolve_worldfoundry_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
+import contextlib
 
 
 class LastR1Synthesis(ActionModelSynthesis):
@@ -93,14 +94,12 @@ class LastR1Synthesis(ActionModelSynthesis):
                 missing.append(f"invalid weight index: {exc}")
         revision = None
         if (self.source_root / ".git").exists():
-            try:
+            with contextlib.suppress(OSError, subprocess.SubprocessError):
                 revision = subprocess.check_output(
                     ["git", "-C", str(self.source_root), "rev-parse", "HEAD"],
                     text=True,
                     timeout=10,
                 ).strip()
-            except (OSError, subprocess.SubprocessError):
-                pass
         return {
             "status": "ready" if not missing and revision == self.REVISION else "blocked",
             "model_id": self.MODEL_ID,

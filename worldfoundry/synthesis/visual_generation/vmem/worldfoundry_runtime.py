@@ -28,10 +28,7 @@ def _to_pil_image(data: Any) -> Image.Image:
             array = array[0]
         if array.dtype in (np.float16, np.float32, np.float64):
             if array.min() >= -1.0 and array.max() <= 1.0:
-                if array.min() < 0.0:
-                    array = (array + 1.0) * 127.5
-                else:
-                    array = array * 255.0
+                array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
             array = np.clip(array, 0.0, 255.0).astype(np.uint8)
         elif array.dtype != np.uint8:
             array = np.clip(array, 0, 255).astype(np.uint8)

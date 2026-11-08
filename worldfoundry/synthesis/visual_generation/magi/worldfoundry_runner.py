@@ -158,8 +158,7 @@ def main() -> None:
         cwd=str(repo_root),
         env=env,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     log_path = output_path.with_suffix(output_path.suffix + ".magi.log")

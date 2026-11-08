@@ -185,10 +185,7 @@ def _done_child_scene_records(root_order, children, workers, max_scenes=None):
     )
     max_scenes = _normalize_max_scenes(max_scenes)
     workers = max(1, int(workers or 1))
-    if max_scenes is None:
-        batch_size = len(sorted_children)
-    else:
-        batch_size = min(len(sorted_children), max(max_scenes, workers, 32))
+    batch_size = len(sorted_children) if max_scenes is None else min(len(sorted_children), max(max_scenes, workers, 32))
 
     checked_count = 0
     while checked_count < len(sorted_children):
@@ -662,16 +659,15 @@ def _prompt_has_detailed(prompt_path):
 def _npz_member_shape(npz_path, key):
     member_name = f"{key}.npy"
     try:
-        with zipfile.ZipFile(npz_path) as zf:
-            with zf.open(member_name) as f:
-                version = np.lib.format.read_magic(f)
-                if version == (1, 0):
-                    shape, _fortran_order, _dtype = np.lib.format.read_array_header_1_0(f)
-                elif version == (2, 0):
-                    shape, _fortran_order, _dtype = np.lib.format.read_array_header_2_0(f)
-                else:
-                    shape, _fortran_order, _dtype = np.lib.format._read_array_header(f, version)
-                return tuple(shape)
+        with zipfile.ZipFile(npz_path) as zf, zf.open(member_name) as f:
+            version = np.lib.format.read_magic(f)
+            if version == (1, 0):
+                shape, _fortran_order, _dtype = np.lib.format.read_array_header_1_0(f)
+            elif version == (2, 0):
+                shape, _fortran_order, _dtype = np.lib.format.read_array_header_2_0(f)
+            else:
+                shape, _fortran_order, _dtype = np.lib.format._read_array_header(f, version)
+            return tuple(shape)
     except Exception:
         with np.load(npz_path, allow_pickle=True) as payload:
             array = np.asarray(payload[key])

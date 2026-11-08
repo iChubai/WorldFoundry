@@ -1548,7 +1548,7 @@ _AXES2TUPLE = {
     "rzyz": (2, 1, 1, 1),
 }
 
-_TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
+_TUPLE2AXES = {v: k for k, v in _AXES2TUPLE.items()}
 
 # helper functions
 

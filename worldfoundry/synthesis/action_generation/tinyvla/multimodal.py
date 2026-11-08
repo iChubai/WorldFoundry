@@ -30,7 +30,7 @@ from .vision import CLIPVisionTower, SiglipVisionTower, build_vision_projector
 
 class LlavaMetaModel:
     def __init__(self, config):
-        super(LlavaMetaModel, self).__init__(config)
+        super().__init__(config)
         if "clip" in config.vision_config["vision_tower"]["vision_model_name_or_path"]:
             self.vision_tower = CLIPVisionTower(LlavaPythiaVisionConfig(**config.vision_config["vision_tower"]))
         elif "siglip" in config.vision_config["vision_tower"]["vision_model_name_or_path"]:
@@ -108,7 +108,7 @@ class LlavaMetaForCausalLM(ABC):
 
         # if type(images) is list or images.ndim == 5:
         if type(images) is list:
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)

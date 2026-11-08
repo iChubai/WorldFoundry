@@ -173,7 +173,7 @@ class CameraPoseEncoder(nn.Module):
         temporal_position_encoding_max_len=16,
         rescale_output_factor=1.0,
     ):
-        super(CameraPoseEncoder, self).__init__()
+        super().__init__()
         self.unshuffle = nn.PixelUnshuffle(downscale_factor)
         self.channels = channels
         self.nums_rb = nums_rb

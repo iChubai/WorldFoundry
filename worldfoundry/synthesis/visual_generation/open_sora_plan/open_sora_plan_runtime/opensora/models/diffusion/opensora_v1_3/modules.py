@@ -43,10 +43,7 @@ class Attention(Attention_):
         attention_mask = attention_mask.unsqueeze(1)
         encoder_attention_mask = encoder_attention_mask.unsqueeze(1)
         l = attention_mask.shape[-1]
-        if l % (sparse_n * sparse_n) == 0:
-            pad_len = 0
-        else:
-            pad_len = sparse_n * sparse_n - l % (sparse_n * sparse_n)
+        pad_len = 0 if l % (sparse_n * sparse_n) == 0 else sparse_n * sparse_n - l % (sparse_n * sparse_n)
 
         attention_mask_sparse = F.pad(attention_mask, (0, pad_len, 0, 0), value=-9980.0)
         attention_mask_sparse_1d = rearrange(attention_mask_sparse, "b 1 1 (g k) -> (k b) 1 1 g", k=sparse_n)

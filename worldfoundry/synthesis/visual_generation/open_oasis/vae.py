@@ -312,10 +312,7 @@ class AutoencoderKL(nn.Module):
 
     def autoencode(self, input, sample_posterior=True):
         posterior = self.encode(input)
-        if self.use_variational and sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if self.use_variational and sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior, z
 
@@ -335,10 +332,7 @@ class AutoencoderKL(nn.Module):
 
 
 def ViT_L_20_Shallow_Encoder(**kwargs):
-    if "latent_dim" in kwargs:
-        latent_dim = kwargs.pop("latent_dim")
-    else:
-        latent_dim = 16
+    latent_dim = kwargs.pop("latent_dim") if "latent_dim" in kwargs else 16
     return AutoencoderKL(
         latent_dim=latent_dim,
         patch_size=20,

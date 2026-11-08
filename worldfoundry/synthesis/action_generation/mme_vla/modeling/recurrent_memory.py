@@ -63,10 +63,7 @@ class RecurrentMemory(nnx.Module):
         recur_state_emb: at.Float[at.Array, "b t d3"] | None = None,
         memory_state: Any | None = None,
     ):
-        if memory_state is None:
-            _memory_state = self.recur_layer.reset()
-        else:
-            _memory_state = memory_state
+        _memory_state = self.recur_layer.reset() if memory_state is None else memory_state
 
         hidden_states = self.feature_encoder.encode_recurrent_memory(recur_image_emb, recur_pos_emb, recur_state_emb)
         _, t, v, p, _ = hidden_states.shape

@@ -263,10 +263,7 @@ def video_last_frame_to_pil(video_btchw: torch.Tensor) -> Image.Image:
     assert video_btchw.ndim == 5
     frame = video_btchw[0, -1].detach().float().cpu()  # [C,H,W]
 
-    if frame.min().item() < 0:
-        frame = (frame * 0.5 + 0.5).clamp(0, 1)
-    else:
-        frame = frame.clamp(0, 1)
+    frame = (frame * 0.5 + 0.5).clamp(0, 1) if frame.min().item() < 0 else frame.clamp(0, 1)
 
     frame_u8 = (frame * 255.0).round().to(torch.uint8)
     frame_u8 = frame_u8.permute(1, 2, 0).numpy()
@@ -634,10 +631,7 @@ def main():
         pipeline.vae.model.clear_cache()
 
         # -------- filename --------
-        if args.save_with_index:
-            base = f"{idx:06d}_{img_stem}"
-        else:
-            base = img_stem
+        base = f"{idx:06d}_{img_stem}" if args.save_with_index else img_stem
 
         base = safe_filename(base)
         output_path = os.path.join(out_dir, f"{base}.mp4")

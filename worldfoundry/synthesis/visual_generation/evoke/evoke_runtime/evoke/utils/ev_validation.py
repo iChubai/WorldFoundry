@@ -157,7 +157,7 @@ def load_pose_for_v2v(
     n_in_range = sum(1 for idx in src_indices if idx < n_src)
     if pose_extend_mode == "relative_replay" and 0 < n_in_range < num_target_frames:
         # take the real in-range poses, then replay the same local motion to fill the tail
-        real_c2w = cam_c2w_all[[idx for idx in src_indices[:n_in_range]]]  # [n_in_range,4,4]
+        real_c2w = cam_c2w_all[list(src_indices[:n_in_range])]  # [n_in_range,4,4]
         cam_c2w = _extend_c2w_relative_replay(real_c2w, num_target_frames)  # [N_target,4,4]
         print(
             f"[pose] relative_replay: {n_in_range} real → {num_target_frames} frames "

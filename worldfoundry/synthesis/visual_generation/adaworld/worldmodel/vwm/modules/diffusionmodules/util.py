@@ -113,7 +113,7 @@ class AlphaBlender(nn.Module):
     strategies = ["learned", "fixed", "learned_with_images"]
 
     def __init__(self, alpha: float, merge_strategy: str, rearrange_pattern: str):
-        super(AlphaBlender, self).__init__()
+        super().__init__()
         self.merge_strategy = merge_strategy
         self.rearrange_pattern = rearrange_pattern
 

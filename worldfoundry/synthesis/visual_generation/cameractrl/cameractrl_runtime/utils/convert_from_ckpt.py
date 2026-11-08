@@ -175,9 +175,8 @@ def conv_attn_to_linear(checkpoint):
         if ".".join(key.split(".")[-2:]) in attn_keys:
             if checkpoint[key].ndim > 2:
                 checkpoint[key] = checkpoint[key][:, :, 0, 0]
-        elif "proj_attn.weight" in key:
-            if checkpoint[key].ndim > 2:
-                checkpoint[key] = checkpoint[key][:, :, 0]
+        elif "proj_attn.weight" in key and checkpoint[key].ndim > 2:
+            checkpoint[key] = checkpoint[key][:, :, 0]
 
 
 def convert_ldm_unet_checkpoint(checkpoint, config, path=None, extract_ema=False, controlnet=False):
@@ -189,10 +188,7 @@ def convert_ldm_unet_checkpoint(checkpoint, config, path=None, extract_ema=False
     unet_state_dict = {}
     keys = list(checkpoint.keys())
 
-    if controlnet:
-        unet_key = "control_model."
-    else:
-        unet_key = "model.diffusion_model."
+    unet_key = "control_model." if controlnet else "model.diffusion_model."
 
     # at least a 100 parameters have to start with `model_ema` in order for the checkpoint to be EMA
     if sum(k.startswith("model_ema") for k in keys) > 100 and extract_ema:

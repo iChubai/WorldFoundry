@@ -9,6 +9,7 @@ from .unified_dataset import (
     DA3MosaicVideoDataset,
     _derive_seed,
 )
+import contextlib
 
 IMAGENET_MEAN_RGB = np.asarray([123.675, 116.28, 103.53], dtype=np.float32)
 
@@ -188,10 +189,8 @@ class SubjectRefMemoryDA3MosaicVideoDataset(DA3MosaicVideoDataset):
                 except (TypeError, ValueError):
                     continue
             if not selected_track_ids and track.get("track_id") is not None:
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     selected_track_ids.append(int(track["track_id"]))
-                except (TypeError, ValueError):
-                    pass
 
         payload = {
             "candidates": candidates,

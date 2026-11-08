@@ -174,10 +174,7 @@ def load_condition_json(path: str) -> tuple[torch.Tensor, torch.Tensor]:
     raw_matrices: list[torch.Tensor] = []
     for i in range(149):
         key = str(i)
-        if key in data:
-            mat = _parse_camera_matrix(data[key])
-        else:
-            mat = raw_matrices[-1] if raw_matrices else torch.eye(4)
+        mat = _parse_camera_matrix(data[key]) if key in data else raw_matrices[-1] if raw_matrices else torch.eye(4)
         raw_matrices.append(mat)
 
     if len(raw_matrices) > 1:

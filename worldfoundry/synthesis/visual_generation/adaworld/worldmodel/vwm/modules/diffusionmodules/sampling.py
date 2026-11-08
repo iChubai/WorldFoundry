@@ -67,7 +67,7 @@ class SingleStepDiffusionSampler(BaseDiffusionSampler):
 
 class EulerEDMSampler(SingleStepDiffusionSampler):
     def __init__(self, s_churn=0.0, s_tmin=0.0, s_tmax=float("inf"), s_noise=1.0, *args, **kwargs):
-        super(EulerEDMSampler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.s_churn = s_churn
         self.s_tmin = s_tmin
         self.s_tmax = s_tmax

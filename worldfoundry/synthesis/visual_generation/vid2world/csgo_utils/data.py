@@ -57,7 +57,7 @@ class StateDictMixin:
     def load_state_dict(self, state_dict: dict[str, Any]) -> None:
         if not hasattr(self, "_all_fields"):
             self._init_fields()
-        assert set(list(state_dict.keys())) == self._all_fields
+        assert set(state_dict.keys()) == self._all_fields
         for k, v in state_dict.items():
             self._set_field(k, v)
 

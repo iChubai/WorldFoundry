@@ -52,7 +52,7 @@ def Normalize(in_channels, num_groups=32):
 
 class Upsample(nn.Module):
     def __init__(self, in_channels, with_conv):
-        super(Upsample, self).__init__()
+        super().__init__()
         self.with_conv = with_conv
         if self.with_conv:
             self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1)
@@ -66,7 +66,7 @@ class Upsample(nn.Module):
 
 class Downsample(nn.Module):
     def __init__(self, in_channels, with_conv):
-        super(Downsample, self).__init__()
+        super().__init__()
         self.with_conv = with_conv
         if self.with_conv:
             # No asymmetric padding in torch conv, must do it ourselves
@@ -84,7 +84,7 @@ class Downsample(nn.Module):
 
 class ResnetBlock(nn.Module):
     def __init__(self, *, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, temb_channels=512):
-        super(ResnetBlock, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
         self.out_channels = out_channels
@@ -118,16 +118,13 @@ class ResnetBlock(nn.Module):
         h = self.conv2(h)
 
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
         return x + h
 
 
 class AttnBlock(nn.Module):
     def __init__(self, in_channels):
-        super(AttnBlock, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
 
         self.norm = Normalize(in_channels)
@@ -143,7 +140,7 @@ class AttnBlock(nn.Module):
         v = self.v(h_)
 
         b, c, h, w = q.shape
-        q, k, v = map(lambda x: rearrange(x, "b c h w -> b 1 (h w) c").contiguous(), (q, k, v))
+        q, k, v = (rearrange(x, "b c h w -> b 1 (h w) c").contiguous() for x in (q, k, v))
         h_ = _worldfoundry_scaled_dot_product_attention(q, k, v)
         return rearrange(h_, "b 1 (h w) c -> b c h w", h=h, w=w, c=c, b=b)
 
@@ -161,7 +158,7 @@ class MemoryEfficientAttnBlock(nn.Module):
     """
 
     def __init__(self, in_channels):
-        super(MemoryEfficientAttnBlock, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
 
         self.norm = Normalize(in_channels)
@@ -179,15 +176,11 @@ class MemoryEfficientAttnBlock(nn.Module):
 
         # Compute attention
         B, C, H, W = q.shape
-        q, k, v = map(lambda x: rearrange(x, "b c h w -> b (h w) c"), (q, k, v))
+        q, k, v = (rearrange(x, "b c h w -> b (h w) c") for x in (q, k, v))
 
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
-            .reshape(B, t.shape[1], 1, C)
-            .permute(0, 2, 1, 3)
-            .reshape(B * 1, t.shape[1], C)
-            .contiguous(),
-            (q, k, v),
+        q, k, v = (
+            t.unsqueeze(3).reshape(B, t.shape[1], 1, C).permute(0, 2, 1, 3).reshape(B * 1, t.shape[1], C).contiguous()
+            for t in (q, k, v)
         )
         out = xformers.ops.memory_efficient_attention(q, k, v, op=self.attention_op)
         out = out[None].reshape(B, 1, out.shape[1], C).permute(0, 2, 1, 3).reshape(B, out.shape[1], C)
@@ -253,7 +246,7 @@ class Encoder(nn.Module):
         attn_type="vanilla",
         **ignore_kwargs,
     ):
-        super(Encoder, self).__init__()
+        super().__init__()
         if use_linear_attn:
             attn_type = "linear"
         self.ch = ch
@@ -350,7 +343,7 @@ class Decoder(nn.Module):
         attn_type="vanilla",
         **ignorekwargs,
     ):
-        super(Decoder, self).__init__()
+        super().__init__()
         if use_linear_attn:
             attn_type = "linear"
         self.ch = ch

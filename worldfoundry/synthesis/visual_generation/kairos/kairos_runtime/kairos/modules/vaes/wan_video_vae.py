@@ -184,6 +184,7 @@ class AttentionBlock(nn.Module):
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
+import itertools
 
 
 class Down_ResidualBlock(nn.Module):
@@ -285,7 +286,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -325,10 +326,7 @@ class Encoder3d(nn.Module):
 
         ## downsamples
         for layer in self.downsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         for layer in self.middle:
@@ -383,7 +381,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -432,10 +430,7 @@ class Encoder3d_38(nn.Module):
 
         ## downsamples
         for layer in self.downsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         for layer in self.middle:
@@ -499,7 +494,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -542,10 +537,7 @@ class Decoder3d(nn.Module):
 
         ## upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## head
         for layer in self.head:
@@ -597,7 +589,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(
@@ -640,10 +632,7 @@ class Decoder3d_38(nn.Module):
 
         ## upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx, first_chunk)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx, first_chunk) if feat_cache is not None else layer(x)
 
         ## head
         for layer in self.head:

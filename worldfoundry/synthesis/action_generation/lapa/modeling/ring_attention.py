@@ -47,9 +47,7 @@ def _ring_attention_fwd(q, k, v, attn_bias, segment_ids, axis_name, float32_logi
             segment_ids=segment_ids,
             **blockwise_kwargs,
         )
-        k, v = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]), (k, v)
-        )
+        k, v = (lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]) for x in (k, v))
         return (max_score, numerator, denominator, k, v), None
 
     prev_max_score = jnp.full((batch, num_heads, q_len), -jnp.inf).astype(q.dtype)
@@ -91,9 +89,9 @@ def _ring_attention_bwd(axis_name, float32_logits, blockwise_kwargs, res, g):
             segment_ids=segment_ids,
             **blockwise_kwargs,
         )
-        k, v, dk, dv = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]),
-            (k, v, dk, dv),
+        k, v, dk, dv = (
+            lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)])
+            for x in (k, v, dk, dv)
         )
         return (dq, dk, dv, k, v), None
 
@@ -133,9 +131,7 @@ def _ring_attention_standard_fwd(q, k, v, attn_mask, axis_name, float32_logits):
         correction = rearrange(jnp.exp(prev_max_score - max_score), "b h q -> b q h")[..., None]
         numerator = numerator * correction + jnp.einsum("bhqk,bkhd->bqhd", exp_weights, v)
         denominator = denominator * jnp.exp(prev_max_score - max_score) + jnp.sum(exp_weights, axis=-1)
-        k, v = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]), (k, v)
-        )
+        k, v = (lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]) for x in (k, v))
         return (max_score, numerator, denominator, k, v), None
 
     prev_max_score = jnp.full((batch, num_heads, q_len), -jnp.inf).astype(q.dtype)
@@ -169,9 +165,9 @@ def _ring_attention_standard_bwd(axis_name, float32_logits, res, g):
         dq = dq + jnp.einsum("bhqk,bkhd->bqhd", dl, k) / scale
         dk = dk + jnp.einsum("bqhd,bhqk->bkhd", q, dl) / scale
         dv = dv + jnp.einsum("bhqk,bqhd->bkhd", exp_weights, g)
-        k, v, dk, dv = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]),
-            (k, v, dk, dv),
+        k, v, dk, dv = (
+            lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)])
+            for x in (k, v, dk, dv)
         )
         return (dq, dk, dv, k, v), None
 
@@ -217,14 +213,14 @@ def _blockwise_attention_fwd(
     q = q.reshape((batch, num_q, query_chunk_size, num_heads, dim_per_head))
     k = k.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
     v = v.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
-    q, k, v = map(lambda x: jnp.moveaxis(x, 1, 0), (q, k, v))
+    q, k, v = (jnp.moveaxis(x, 1, 0) for x in (q, k, v))
 
     numerator, denominator, max_score = carry
     numerator = numerator.reshape((batch, num_q, query_chunk_size, num_heads, dim_per_head))
     numerator = jnp.moveaxis(numerator, 1, 0)
     denominator = denominator.reshape((batch, num_heads, num_q, query_chunk_size))
     max_score = max_score.reshape((batch, num_heads, num_q, query_chunk_size))
-    denominator, max_score = map(lambda x: rearrange(x, "b h n c -> n b h c"), (denominator, max_score))
+    denominator, max_score = (rearrange(x, "b h n c -> n b h c") for x in (denominator, max_score))
 
     scale = jnp.sqrt(q.shape[-1])
     if not deterministic and attn_pdrop > 0.0:
@@ -288,7 +284,7 @@ def _blockwise_attention_fwd(
 
     numerator = jnp.moveaxis(numerator, 1, 0)
     numerator = numerator.reshape((batch, q_len, num_heads, dim_per_head))
-    denominator, max_score = map(lambda x: rearrange(x, "n b h c -> b h n c"), (denominator, max_score))
+    denominator, max_score = (rearrange(x, "n b h c -> b h n c") for x in (denominator, max_score))
     denominator = denominator.reshape((batch, num_heads, q_len))
     max_score = max_score.reshape((batch, num_heads, q_len))
 
@@ -328,16 +324,16 @@ def _blockwise_attention_bwd(
     dk = dk.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
     dv = dv.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
     output = output.reshape((batch, num_q, query_chunk_size, num_heads, dim_per_head))
-    g, dq, dk, dv, output = map(lambda x: jnp.moveaxis(x, 1, 0), (g, dq, dk, dv, output))
+    g, dq, dk, dv, output = (jnp.moveaxis(x, 1, 0) for x in (g, dq, dk, dv, output))
 
     denominator = denominator.reshape((batch, num_heads, num_q, query_chunk_size))
     max_score = max_score.reshape((batch, num_heads, num_q, query_chunk_size))
-    denominator, max_score = map(lambda x: rearrange(x, "b h n c -> n b h c"), (denominator, max_score))
+    denominator, max_score = (rearrange(x, "b h n c -> n b h c") for x in (denominator, max_score))
 
     q = q.reshape((batch, num_q, query_chunk_size, num_heads, dim_per_head))
     k = k.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
     v = v.reshape((batch, num_kv, key_chunk_size, num_heads, dim_per_head))
-    q, k, v = map(lambda x: jnp.moveaxis(x, 1, 0), (q, k, v))
+    q, k, v = (jnp.moveaxis(x, 1, 0) for x in (q, k, v))
 
     scale = jnp.sqrt(q.shape[-1])
     if not deterministic and attn_pdrop > 0.0:
@@ -405,7 +401,7 @@ def _blockwise_attention_bwd(
         scan_attention, init=(dk, dv), xs=(q, dq, g, output, denominator, max_score, jnp.arange(0, num_q))
     )
 
-    dq, dk, dv = map(lambda x: jnp.moveaxis(x, 1, 0), (dq, dk, dv))
+    dq, dk, dv = (jnp.moveaxis(x, 1, 0) for x in (dq, dk, dv))
     dq = dq.reshape((batch, q_len, num_heads, dim_per_head))
     dk = dk.reshape((batch, kv_len, num_heads, dim_per_head))
     dv = dv.reshape((batch, kv_len, num_heads, dim_per_head))
@@ -493,7 +489,7 @@ def _chunk_attention_bias(
 def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, float32_logits, blockwise_kwargs):
     if float32_logits:
         q, k = q.astype(jnp.float32), k.astype(jnp.float32)
-    q, k, v = map(lambda x: rearrange(x, "b q h d -> b h q d"), [q, k, v])
+    q, k, v = (rearrange(x, "b q h d -> b h q d") for x in [q, k, v])
     batch, num_heads, q_len, dim_per_head = q.shape
     batch, num_heads, kv_len, dim_per_head = k.shape
     attn_bias = attn_bias[:, 0, 0]  # (batch, k_len)
@@ -557,9 +553,7 @@ def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, fl
             block_sizes=block_sizes,
             debug=False,
         )
-        k, v = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]), (k, v)
-        )
+        k, v = (lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]) for x in (k, v))
         return (o, l, m, k, v), None
 
     (o, l, m, _, _), _ = lax.scan(scan_kv_block, init=(o, l, m, k, v), xs=jnp.arange(0, axis_size))
@@ -636,15 +630,15 @@ def _ring_flash_attention_bwd_tpu(axis_name, float32_logits, blockwise_kwargs, r
         dq += dq_i
         dk += dk_i
         dv += dv_i
-        k, v, dk, dv = map(
-            lambda x: lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]),
-            (k, v, dk, dv),
+        k, v, dk, dv = (
+            lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)])
+            for x in (k, v, dk, dv)
         )
         return (dq, dk, dv, k, v), None
 
     (dq, dk, dv, k, v), _ = lax.scan(scan_kv_block, init=(dq, dk, dv, k, v), xs=jnp.arange(0, axis_size))
     dq, dk, dv = dq.astype(q.dtype), dk.astype(k.dtype), dv.astype(v.dtype)
-    dq, dk, dv = map(lambda x: rearrange(x, "b h q d -> b q h d"), (dq, dk, dv))
+    dq, dk, dv = (rearrange(x, "b h q d -> b q h d") for x in (dq, dk, dv))
     return dq, dk, dv, None, None
 
 
@@ -1021,10 +1015,15 @@ def _flash_attention_kernel_single_batch(
             l_next = jnp.sum(p, axis=1)[:, None] + l_corr  # Shape [block_q, 128]
 
             head_dim_repeats, rem = divmod(head_dim, MIN_BLOCK_SIZE)
-            l_broadcast = lambda l: pltpu.repeat(l, head_dim_repeats, 1)
+
+            def l_broadcast(l):
+                return pltpu.repeat(l, head_dim_repeats, 1)
+
             if rem:
                 if head_dim_repeats == 0:
-                    l_broadcast = lambda l: l[:, :head_dim]
+
+                    def l_broadcast(l):
+                        return l[:, :head_dim]
                 else:
                     raise NotImplementedError(f"{head_dim=} should be a multiple of {MIN_BLOCK_SIZE} if larger")
             l_scratch_ref[batch_idx] = l_next
@@ -1067,10 +1066,7 @@ def _flash_attention_impl(
     batch_size, num_heads, q_seq_len, head_dim = q.shape
     _, _, kv_seq_len, _ = k.shape
     acc, l_prev, m_prev = carry
-    l_prev, m_prev = map(
-        lambda x: jnp.broadcast_to(x[..., None], (*x.shape, MIN_BLOCK_SIZE)),
-        (l_prev, m_prev),
-    )
+    l_prev, m_prev = (jnp.broadcast_to(x[..., None], (*x.shape, MIN_BLOCK_SIZE)) for x in (l_prev, m_prev))
     q_chunk_idx_start, k_chunk_idx_start = (
         q_chunk_idx_start[None],
         k_chunk_idx_start[None],
@@ -1235,7 +1231,7 @@ def _flash_attention_impl(
             num_scalar_prefetch=2, in_specs=in_specs, out_specs=out_specs, grid=grid
         ),
         debug=debug,
-        mosaic_params=dict(dimension_semantics=("parallel", "parallel", "parallel", "arbitrary")),
+        mosaic_params={"dimension_semantics": ("parallel", "parallel", "parallel", "arbitrary")},
     )(
         q_chunk_idx_start,
         k_chunk_idx_start,
@@ -1596,14 +1592,14 @@ def _flash_attention_bwd_dkv(
                 num_scalar_prefetch=2, in_specs=in_specs, out_specs=out_specs, grid=grid
             ),
             debug=debug,
-            mosaic_params=dict(
-                dimension_semantics=(
+            mosaic_params={
+                "dimension_semantics": (
                     "parallel",
                     "parallel",
                     "parallel",
                     "arbitrary",
                 )
-            ),
+            },
         )(
             q_chunk_idx_start,
             k_chunk_idx_start,
@@ -1947,14 +1943,14 @@ def _flash_attention_bwd_dq(
                 num_scalar_prefetch=2, in_specs=in_specs, out_specs=out_specs, grid=grid
             ),
             debug=debug,
-            mosaic_params=dict(
-                dimension_semantics=(
+            mosaic_params={
+                "dimension_semantics": (
                     "parallel",
                     "parallel",
                     "parallel",
                     "arbitrary",
                 )
-            ),
+            },
         )(
             q_chunk_idx_start,
             k_chunk_idx_start,

@@ -845,9 +845,14 @@ class WanModel(ModelMixin, ConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        base_kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        base_kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         # State Adapter hint generation
         sp_hints = None
@@ -880,15 +885,15 @@ class WanModel(ModelMixin, ConfigMixin):
                 num_ref_frames = total_frames - num_sp_frames
                 sp_e0 = e0[:, num_ref_frames:]  # [B, P+T, 6, dim]
 
-            sp_kwargs = dict(
-                x=x_for_sp,
-                e=sp_e0,
-                seq_lens=seq_lens,
-                grid_sizes=grid_sizes,
-                freqs=self.freqs,
-                context=context,
-                context_lens=context_lens,
-            )
+            sp_kwargs = {
+                "x": x_for_sp,
+                "e": sp_e0,
+                "seq_lens": seq_lens,
+                "grid_sizes": grid_sizes,
+                "freqs": self.freqs,
+                "context": context,
+                "context_lens": context_lens,
+            }
             # Process through State Adapter control blocks
             for block in self.sp_blocks:
                 if torch.is_grad_enabled() and self.gradient_checkpointing:

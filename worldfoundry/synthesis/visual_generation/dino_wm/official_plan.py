@@ -338,10 +338,7 @@ class PlanWorkspace:
         print(f"Dumped plan targets to {file_path}")
 
     def perform_planning(self):
-        if self.debug_dset_init:
-            actions_init = self.gt_actions
-        else:
-            actions_init = None
+        actions_init = self.gt_actions if self.debug_dset_init else None
         actions, action_len = self.planner.plan(
             obs_0=self.obs_0,
             obs_g=self.obs_g,

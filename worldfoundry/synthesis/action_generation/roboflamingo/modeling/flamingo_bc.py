@@ -117,10 +117,7 @@ class BCFlamingo(nn.Module):
             self.frame_embs = nn.Parameter(torch.randn(self.window_size, self.vis_dim))
         # To-do: nn archiecture for actor
         self.llm = llm
-        if llm == "llama":
-            in_features = lang_encoder.lm_head.in_features
-        else:
-            in_features = self.lang_dim
+        in_features = lang_encoder.lm_head.in_features if llm == "llama" else self.lang_dim
         self.use_diff = use_diff
         self.decoder_type = decoder_type
         if decoder_type == "lstm":

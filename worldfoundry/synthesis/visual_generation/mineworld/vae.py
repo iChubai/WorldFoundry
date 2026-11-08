@@ -23,10 +23,7 @@ class VAE(nn.Module):
     def init_from_ckpt(self, path: str) -> None:
         if path.endswith("ckpt"):
             ckpt = torch.load(path, map_location="cpu", weights_only=False)
-            if "state_dict" in ckpt:
-                weights = ckpt["state_dict"]
-            else:
-                weights = ckpt
+            weights = ckpt["state_dict"] if "state_dict" in ckpt else ckpt
         elif path.endswith("safetensors"):
             weights = load_safetensors(path)
         else:

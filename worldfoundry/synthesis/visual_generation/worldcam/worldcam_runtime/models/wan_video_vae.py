@@ -205,6 +205,7 @@ class Up_ResidualBlock(nn.Module):
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Encoder3d
+import itertools
 
 
 class Encoder3d_38(nn.Module):
@@ -235,7 +236,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -284,10 +285,7 @@ class Encoder3d_38(nn.Module):
 
         ## downsamples
         for layer in self.downsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         for layer in self.middle:
@@ -319,6 +317,7 @@ class Encoder3d_38(nn.Module):
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Decoder3d
+import itertools
 
 
 class Decoder3d_38(nn.Module):
@@ -353,7 +352,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(
@@ -396,10 +395,7 @@ class Decoder3d_38(nn.Module):
 
         ## upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx, first_chunk)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx, first_chunk) if feat_cache is not None else layer(x)
 
         ## head
         for layer in self.head:

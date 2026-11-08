@@ -17,6 +17,7 @@ from worldfoundry.synthesis.visual_generation.sama.native_pipeline import (
     SamaWanPipeline,
     load_sama_pipeline,
 )
+import contextlib
 
 DEFAULT_MODEL_ROOT = ""
 
@@ -123,10 +124,8 @@ def detect_video_resolution(video_path: str, fallback: tuple[int, int]) -> tuple
         except Exception:
             pass
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 reader.close()
-            except Exception:
-                pass
     except Exception:
         pass
     if width and height:
@@ -156,10 +155,8 @@ def detect_video_fps(video_path: str) -> float | None:
         except Exception:
             pass
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 reader.close()
-            except Exception:
-                pass
     except Exception:
         pass
     if fps and fps > 0:

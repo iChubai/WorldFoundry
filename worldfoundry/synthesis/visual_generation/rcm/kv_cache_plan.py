@@ -61,7 +61,7 @@ def make_kv_cache_plan(
         # committed cache retained by the previous iteration.
         max_frames = max(max_frames, sum(block.frame_count for block in retained) + current.frame_count)
         state = CacheState(
-            blocks=tuple([*retained, current]),
+            blocks=(*retained, current),
             frame_tokens=pattern.frame_tokens,
             current_block_idx=block_idx,
         )

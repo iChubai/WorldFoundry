@@ -666,10 +666,10 @@ class BerniniPipeline:
         vae_latent_mean = vae_latent_mean.view(vae_config["z_dim"], 1, 1, 1)
         vae_latent_std = vae_latent_std.view(vae_config["z_dim"], 1, 1, 1)
 
-        src_id_kwargs = dict(
-            interpolate_src_id=getattr(self.config, "interpolate_src_id", True),
-            max_trained_src_id=getattr(self.config, "max_trained_src_id", 5),
-        )
+        src_id_kwargs = {
+            "interpolate_src_id": getattr(self.config, "interpolate_src_id", True),
+            "max_trained_src_id": getattr(self.config, "max_trained_src_id", 5),
+        }
         transform = partial(
             bernini_process_sample,
             processor=processor,
@@ -761,7 +761,10 @@ class BerniniPipeline:
         vit_img_cfg=1.2,
     ):
         device = input_embeds.device
-        mask_ratio_generator_infer = lambda s, totals: np.cos(math.pi / 2.0 * (s + 1) / totals)
+
+        def mask_ratio_generator_infer(s, totals):
+            return np.cos(math.pi / 2.0 * (s + 1) / totals)
+
         # Init and sample generation orders
         n_query_tokens = visual_output_token_mask.sum().detach().cpu().numpy()
         order = np.array(list(range(n_query_tokens)))
@@ -892,13 +895,13 @@ class BerniniPipeline:
             cond_embeds_wtxt_wovit = cond_embeds_wtxt_wvit[:, diff_mllm_context_txt_mask]
             cond_embeds_wotxt_wvit = cond_embeds_wtxt_wvit[:, diff_mllm_context_vit_mask]
 
-        return dict(
-            cond_embeds_wtxt_wvit=cond_embeds_wtxt_wvit,
-            cond_embeds_wtxt_wovit=cond_embeds_wtxt_wovit,
-            cond_embeds_wotxt_wvit=cond_embeds_wotxt_wvit,
-            cond_embeds_wotxt_wovit=cond_embeds_wotxt_wovit,
-            pred_vit_embed=pred_vit_embed_diff,
-        )
+        return {
+            "cond_embeds_wtxt_wvit": cond_embeds_wtxt_wvit,
+            "cond_embeds_wtxt_wovit": cond_embeds_wtxt_wovit,
+            "cond_embeds_wotxt_wvit": cond_embeds_wotxt_wvit,
+            "cond_embeds_wotxt_wovit": cond_embeds_wotxt_wovit,
+            "pred_vit_embed": pred_vit_embed_diff,
+        }
 
     @torch.no_grad()
     def __call__(

@@ -1324,10 +1324,7 @@ class TransformerLayer(torch.nn.Module):
         num_layers_per_pipeline_rank = self.model_config.num_layers // parallel_state.get_pp_world_size()
 
         # Each stage gets a contiguous set of layers.
-        if parallel_state.get_pp_world_size() > 1:
-            offset = pipeline_rank * num_layers_per_pipeline_rank
-        else:
-            offset = 0
+        offset = pipeline_rank * num_layers_per_pipeline_rank if parallel_state.get_pp_world_size() > 1 else 0
 
         return offset
 

@@ -171,10 +171,7 @@ class VA_Server:
         dtype = dtype or self.dtype
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds = self._get_t5_prompt_embeds(
@@ -272,7 +269,7 @@ class VA_Server:
         patch_size=(1, 2, 2),
     ):
         logger.info(f"FRAME START ID: {frame_st_id}")
-        input_dict = dict()
+        input_dict = {}
         if latent_model_input is not None:
             input_dict["latent_res_lst"] = {
                 "noisy_latents": latent_model_input,
@@ -585,17 +582,17 @@ class VA_Server:
         if reset:
             logger.info("******************* Reset server ******************")
             self._reset(prompt=prompt)
-            return dict()
+            return {}
         if not hasattr(self, "frame_st_id"):
             self._reset(prompt=prompt)
         if compute_kv_cache:
             logger.info("################# Compute KV Cache #################")
             self._compute_kv_cache(obs)
-            return dict()
+            return {}
         else:
             logger.info("################# Infer One Chunk #################")
             action, _ = self._infer(obs, frame_st_id=self.frame_st_id)
-            return dict(action=action)
+            return {"action": action}
 
     def decode_one_video(self, latents, output_type):
         latents = latents.to(self.vae.dtype)

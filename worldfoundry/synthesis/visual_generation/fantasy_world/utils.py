@@ -131,38 +131,37 @@ def crop_image_depth_and_intrinsic_by_pp(
         track[:, 0] = track[:, 0] - start_y
 
     # If strict, zero-pad if the new shape is smaller than target_shape
-    if strict:
-        if (image.shape[:2] != target_shape).any():
-            current_h, current_w = image.shape[:2]
-            target_h, target_w = target_shape[0], target_shape[1]
-            pad_h = target_h - current_h
-            pad_w = target_w - current_w
-            if pad_h < 0 or pad_w < 0:
-                raise ValueError(
-                    f"The cropped image is bigger than the target shape: "
-                    f"cropped=({current_h},{current_w}), "
-                    f"target=({target_h},{target_w})."
-                )
-            image = np.pad(
-                image,
-                pad_width=((0, pad_h), (0, pad_w), (0, 0)),
+    if strict and (image.shape[:2] != target_shape).any():
+        current_h, current_w = image.shape[:2]
+        target_h, target_w = target_shape[0], target_shape[1]
+        pad_h = target_h - current_h
+        pad_w = target_w - current_w
+        if pad_h < 0 or pad_w < 0:
+            raise ValueError(
+                f"The cropped image is bigger than the target shape: "
+                f"cropped=({current_h},{current_w}), "
+                f"target=({target_h},{target_w})."
+            )
+        image = np.pad(
+            image,
+            pad_width=((0, pad_h), (0, pad_w), (0, 0)),
+            mode="constant",
+            constant_values=0,
+        )
+        if depth_map is not None:
+            depth_map = np.pad(
+                depth_map,
+                pad_width=((0, pad_h), (0, pad_w)),
                 mode="constant",
                 constant_values=0,
             )
-            if depth_map is not None:
-                depth_map = np.pad(
-                    depth_map,
-                    pad_width=((0, pad_h), (0, pad_w)),
-                    mode="constant",
-                    constant_values=0,
-                )
-            if conf_map is not None:
-                conf_map = np.pad(
-                    conf_map,
-                    pad_width=((0, pad_h), (0, pad_w)),
-                    mode="constant",
-                    constant_values=0,
-                )
+        if conf_map is not None:
+            conf_map = np.pad(
+                conf_map,
+                pad_width=((0, pad_h), (0, pad_w)),
+                mode="constant",
+                constant_values=0,
+            )
 
     return image, depth_map, intrinsic, track, conf_map
 
@@ -625,10 +624,7 @@ def rotate_90_degrees(image, depth_map, extri_opencv, intri_opencv, clockwise=Tr
     # Adjust the intrinsic matrix
     new_intri_opencv = adjust_intrinsic_matrix_rot90(intri_opencv, image_width, image_height, clockwise)
 
-    if track is not None:
-        new_track = adjust_track_rot90(track, image_width, image_height, clockwise)
-    else:
-        new_track = None
+    new_track = adjust_track_rot90(track, image_width, image_height, clockwise) if track is not None else None
 
     # Adjust the extrinsic matrix
     new_extri_opencv = adjust_extrinsic_matrix_rot90(extri_opencv, clockwise)
@@ -810,10 +806,7 @@ def read_image_cv2(path: str, rgb: bool = True) -> np.ndarray:
             return None
 
     if rgb:
-        if len(img.shape) == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        else:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if len(img.shape) == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     return img
 

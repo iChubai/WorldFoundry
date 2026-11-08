@@ -148,7 +148,7 @@ class FCDecoder(ActionDecoder):
         return_feature=False,
         multi_step_action=1,
     ):
-        super(FCDecoder, self).__init__()
+        super().__init__()
         self.return_feature = return_feature
         if use_state:
             state_in_dim = 7
@@ -238,7 +238,7 @@ class DeterministicDecoder(ActionDecoder):
         return_feature=False,
         pooling="max",
     ):
-        super(DeterministicDecoder, self).__init__()
+        super().__init__()
         self.fc_state = None
         self.use_state = use_state
         if use_state:
@@ -404,7 +404,7 @@ class GPTDecoder(ActionDecoder):
         pooling="max",
         **kwargs,
     ):
-        super(GPTDecoder, self).__init__()
+        super().__init__()
 
         if use_state:
             state_in_dim = 7
@@ -512,7 +512,7 @@ class GPTDecoderActPad(ActionDecoder):
         global_latent=10,
         **kwargs,
     ):
-        super(GPTDecoderActPad, self).__init__()
+        super().__init__()
 
         if use_state:
             state_in_dim = 7
@@ -630,7 +630,7 @@ class DiffusionDecoder(ActionDecoder):
         predict_epsilon=True,
         normalizer=LinearNormalizer(),
     ):
-        super(DiffusionDecoder, self).__init__()
+        super().__init__()
         self.feature_dim = feature_dim
         self.horizon = horizon
         self.window_size = window_size

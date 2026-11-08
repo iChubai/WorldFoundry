@@ -87,7 +87,7 @@ class MJCTreeNode:
     def add_attr(self, key, value):
         if isinstance(value, str):
             pass
-        elif isinstance(value, list) or isinstance(value, np.ndarray):
+        elif isinstance(value, (list, np.ndarray)):
             value = " ".join([str(val).lower() for val in value])
         else:
             value = str(value).lower()

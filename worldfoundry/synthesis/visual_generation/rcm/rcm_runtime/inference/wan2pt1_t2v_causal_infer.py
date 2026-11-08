@@ -45,6 +45,7 @@ from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.model_utils 
     load_state_dict_from_dcp,
 )
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.umt5 import clear_umt5_memory, get_umt5_embedding
+import itertools
 
 torch._dynamo.config.suppress_errors = True
 
@@ -328,7 +329,7 @@ def causal_rollout_sampling(
         x = init_noise[:, :, frame_start:frame_end].to(torch.float64) * t_steps_block[0]
 
         step_bar = tqdm(
-            zip(t_steps_block[:-1], t_steps_block[1:], strict=False),
+            itertools.pairwise(t_steps_block),
             total=num_steps,
             desc=f"  Chunk {i}/{num_blocks}",
             position=1,
@@ -525,7 +526,7 @@ def causal_i2v_rollout_sampling(
         x = init_noise[:, :, noise_start : noise_start + block_size].to(torch.float64) * t_steps_block[0]
 
         step_bar = tqdm(
-            zip(t_steps_block[:-1], t_steps_block[1:], strict=False),
+            itertools.pairwise(t_steps_block),
             total=num_steps,
             desc=f"  Chunk {i}/{num_blocks}",
             position=1,
@@ -699,10 +700,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def load_dit_weights(net, dit_path: str):
-    if os.path.isdir(dit_path):
-        state_dict = load_state_dict_from_dcp(dit_path)
-    else:
-        state_dict = load_state_dict(dit_path)
+    state_dict = load_state_dict_from_dcp(dit_path) if os.path.isdir(dit_path) else load_state_dict(dit_path)
 
     for key in ["generator", "generator_ema"]:
         if key in state_dict.keys():

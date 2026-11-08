@@ -147,14 +147,14 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     T5RelativeEmbedding: AutoWrappedModule,
                     T5LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.dit is not None:
@@ -169,23 +169,23 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     RMSNorm: AutoWrappedModule,
                     torch.nn.Conv2d: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                overflow_vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
         if self.vae is not None:
@@ -201,14 +201,14 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.Dropout: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=self.device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": self.device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.control_branch is not None:
             dtype = next(iter(self.control_branch.parameters())).dtype
@@ -223,14 +223,14 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.GroupNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
                 vram_limit=vram_limit,
             )
 

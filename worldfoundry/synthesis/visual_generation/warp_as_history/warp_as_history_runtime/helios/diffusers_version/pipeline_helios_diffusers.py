@@ -309,10 +309,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         device = device or self._execution_device
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds, _ = self._get_t5_prompt_embeds(
@@ -1221,10 +1218,9 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         indices_latents_history_long = indices_latents_history_long.unsqueeze(0)
 
         # 6. Denoising loop
-        if use_interpolate_prompt:
-            if num_latent_chunk < max(interpolate_cumulative_list):
-                num_latent_chunk = sum(interpolate_cumulative_list)
-                print(f"Update num_latent_chunk to: {num_latent_chunk}")
+        if use_interpolate_prompt and num_latent_chunk < max(interpolate_cumulative_list):
+            num_latent_chunk = sum(interpolate_cumulative_list)
+            print(f"Update num_latent_chunk to: {num_latent_chunk}")
 
         if not is_enable_stage2:
             patch_size = self.transformer.config.patch_size

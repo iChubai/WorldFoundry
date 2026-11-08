@@ -207,11 +207,10 @@ class GrootSimPolicy:
         for action_key, statistics in metadata.statistics.action.items():
             values = statistics.model_dump()
             q01 = values.get("q01")
-            if isinstance(q01, (list, np.ndarray)) and len(q01):
-                if isinstance(q01[0], (list, np.ndarray)):
-                    result[action_key] = {
-                        key: value.tolist() if isinstance(value, np.ndarray) else value for key, value in values.items()
-                    }
+            if isinstance(q01, (list, np.ndarray)) and len(q01) and isinstance(q01[0], (list, np.ndarray)):
+                result[action_key] = {
+                    key: value.tolist() if isinstance(value, np.ndarray) else value for key, value in values.items()
+                }
         return result
 
     def offload_to_cpu(self) -> None:

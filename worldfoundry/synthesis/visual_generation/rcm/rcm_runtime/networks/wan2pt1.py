@@ -824,12 +824,12 @@ class WanModel(nn.Module):
         shared_rope = self._compute_rope(B, T, H, W, inference_state, attn_meta, use_fused=True)
 
         # arguments
-        kwargs = dict(
-            e=e0_B_L_6_D,
-            seq_lens=seq_lens,
-            context=context_B_L_D,
-            context_lens=context_lens,
-        )
+        kwargs = {
+            "e": e0_B_L_6_D,
+            "seq_lens": seq_lens,
+            "context": context_B_L_D,
+            "context_lens": context_lens,
+        }
 
         for block_idx, block in enumerate(self.blocks):
             if inference_state is not None:

@@ -146,8 +146,8 @@ class DWposeDetector:
             hands = np.vstack([hands, candidate[:, 113:]])
 
             # bodies = dict(candidate=body, subset=score)
-            bodies = dict(candidate=bodyfoot, subset=bodyfoot_score)
-            pose = dict(bodies=bodies, hands=hands, faces=faces)
+            bodies = {"candidate": bodyfoot, "subset": bodyfoot_score}
+            pose = {"bodies": bodies, "hands": hands, "faces": faces}
 
             # return draw_pose(pose, H, W)
             return pose

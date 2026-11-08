@@ -43,10 +43,7 @@ def save_image(output_file, img, unnormalize_img):
 
 def build_eval_input_dataset(config, dataset_name, eval_type, predefined_index=True):
     data_config = config["eval_datasets"][dataset_name]
-    if predefined_index:
-        predefined_index = f"data_splits/{dataset_name}/test/{eval_type}.pkl"
-    else:
-        predefined_index = None
+    predefined_index = f"data_splits/{dataset_name}/test/{eval_type}.pkl" if predefined_index else None
 
     dataset = EvalDataset(
         data_folder=data_config["data_folder"],
@@ -101,7 +98,7 @@ def model_forward_wrapper(
         )
         z = torch.randn(B * num_goals, 4, latent_size, latent_size, device=device)
         y = y.flatten(0, 1)
-        model_kwargs = dict(y=y, x_cond=x_cond, rel_t=rel_t)
+        model_kwargs = {"y": y, "x_cond": x_cond, "rel_t": rel_t}
         samples = diffusion.p_sample_loop(
             model.forward, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=progress, device=device
         )

@@ -165,12 +165,12 @@ FULL_TASK_DEFAULTS: dict[str, dict[str, Any]] = {
 }
 
 RENDERER_TASK_DEFAULTS: dict[str, dict[str, Any]] = {
-    "t2i": dict(num_frames=1, guidance_mode="t2v_apg"),
-    "i2i": dict(num_frames=1, guidance_mode="v2v"),
-    "t2v": dict(num_frames=81, guidance_mode="t2v_apg"),
-    "v2v": dict(num_frames=81, guidance_mode="v2v_apg"),
-    "r2v": dict(num_frames=81, guidance_mode="r2v_apg"),
-    "rv2v": dict(num_frames=81, guidance_mode="rv2v"),
+    "t2i": {"num_frames": 1, "guidance_mode": "t2v_apg"},
+    "i2i": {"num_frames": 1, "guidance_mode": "v2v"},
+    "t2v": {"num_frames": 81, "guidance_mode": "t2v_apg"},
+    "v2v": {"num_frames": 81, "guidance_mode": "v2v_apg"},
+    "r2v": {"num_frames": 81, "guidance_mode": "r2v_apg"},
+    "rv2v": {"num_frames": 81, "guidance_mode": "rv2v"},
 }
 
 COMMON_DEFAULTS = {

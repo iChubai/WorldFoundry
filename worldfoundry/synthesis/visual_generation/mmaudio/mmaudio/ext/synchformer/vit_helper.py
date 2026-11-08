@@ -53,7 +53,7 @@ class DividedAttention(nn.Module):
 
         # project x to q, k, v vaalues
         q, k, v = self.qkv(x).chunk(3, dim=-1)
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (q, k, v))
         if tok_mask is not None:
             # replicate token mask across heads (b, n) -> (b, h, n) -> (b*h, n) -- same as qkv but w/o d
             assert len(tok_mask.shape) == 2
@@ -63,7 +63,7 @@ class DividedAttention(nn.Module):
         q *= self.scale
 
         # Take out cls_q, cls_k, cls_v
-        (cls_q, q_), (cls_k, k_), (cls_v, v_) = map(lambda t: (t[:, 0:1], t[:, 1:]), (q, k, v))
+        (cls_q, q_), (cls_k, k_), (cls_v, v_) = ((t[:, 0:1], t[:, 1:]) for t in (q, k, v))
         # the same for masking
         if tok_mask is not None:
             cls_mask, mask_ = tok_mask[:, 0:1], tok_mask[:, 1:]
@@ -74,11 +74,11 @@ class DividedAttention(nn.Module):
         cls_out = qkv_attn(cls_q, k, v, tok_mask=tok_mask)
 
         # rearrange across time or space
-        q_, k_, v_ = map(lambda t: rearrange(t, f"{einops_from} -> {einops_to}", **einops_dims), (q_, k_, v_))
+        q_, k_, v_ = (rearrange(t, f"{einops_from} -> {einops_to}", **einops_dims) for t in (q_, k_, v_))
 
         # expand CLS token keys and values across time or space and concat
         r = q_.shape[0] // cls_k.shape[0]
-        cls_k, cls_v = map(lambda t: repeat(t, "b () d -> (b r) () d", r=r), (cls_k, cls_v))
+        cls_k, cls_v = (repeat(t, "b () d -> (b r) () d", r=r) for t in (cls_k, cls_v))
 
         k_ = torch.cat((cls_k, k_), dim=1)
         v_ = torch.cat((cls_v, v_), dim=1)
@@ -238,7 +238,7 @@ class PatchEmbed3D(nn.Module):
 
 class HeadMLP(nn.Module):
     def __init__(self, n_input, n_classes, n_hidden=512, p=0.1):
-        super(HeadMLP, self).__init__()
+        super().__init__()
         self.n_input = n_input
         self.n_classes = n_classes
         self.n_hidden = n_hidden
@@ -344,7 +344,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
     loaded_state = state_dict
     self_state = model.state_dict()
     all_names = set(self_state.keys())
-    saved_names = set([])
+    saved_names = set()
     for name, param in loaded_state.items():
         param = param
         if "module." in name:

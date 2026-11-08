@@ -617,10 +617,7 @@ class LlmConfig(BaseConfig):
         return Llm(self, cache, device)
 
     def build_tokenizer(self):
-        if self.fix_pad_tokenizer:
-            pad_tokenizer_to = self.embedding_size or self.vocab_size
-        else:
-            pad_tokenizer_to = self.vocab_size
+        pad_tokenizer_to = self.embedding_size or self.vocab_size if self.fix_pad_tokenizer else self.vocab_size
         return self.tokenizer.build(pad_tokenizer_to=pad_tokenizer_to)
 
     @property

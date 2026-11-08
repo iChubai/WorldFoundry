@@ -208,7 +208,7 @@ class ViTResnet(nn.Module):
 
     use_film: bool = False
     width: int = 1
-    num_layers: tuple = tuple()
+    num_layers: tuple = ()
     img_norm_type: str = "default"
 
     @nn.compact

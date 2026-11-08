@@ -183,7 +183,7 @@ class MaskProcessor:
         )
 
         masked_pixel_values = pixel_values * (mask < 0.5)
-        return dict(mask=mask, masked_pixel_values=masked_pixel_values)
+        return {"mask": mask, "masked_pixel_values": masked_pixel_values}
 
 
 class MaskCompressor:

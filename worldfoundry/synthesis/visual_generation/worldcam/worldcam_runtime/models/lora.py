@@ -38,9 +38,8 @@ class GeneralLoRAFromPeft:
             break
         computation_device = device
         computation_dtype = dtype
-        if computation_device == torch.device("cpu"):
-            if torch.cuda.is_available():
-                computation_device = torch.device("cuda")
+        if computation_device == torch.device("cpu") and torch.cuda.is_available():
+            computation_device = torch.device("cuda")
         if computation_dtype == torch.float8_e4m3fn:
             computation_dtype = torch.float32
         return device, dtype, computation_device, computation_dtype

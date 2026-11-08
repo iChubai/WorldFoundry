@@ -326,10 +326,7 @@ def _pytorch_sdpa_attention(
         outputs.append(output)
         if return_softmax_lse:
             logits = torch.matmul(q_chunk.float(), k_chunk.float().transpose(-2, -1)) * scale
-            if mask.dtype == torch.bool:
-                logits = logits.masked_fill(~mask, -torch.inf)
-            else:
-                logits = logits + mask.float()
+            logits = logits.masked_fill(~mask, -torch.inf) if mask.dtype == torch.bool else logits + mask.float()
             lse_chunks.append(torch.logsumexp(logits, dim=-1))
 
     output = torch.cat(outputs, dim=-2)
@@ -1036,18 +1033,9 @@ class DiTBlock(nn.Module):
                 end = min(start + chunk_size, N)
 
                 x_chunk = input_x[:, start:end, :]
-                if shift.shape[1] == 1:
-                    shift_chunk = shift
-                else:
-                    shift_chunk = shift[:, start:end, :]
-                if scale.shape[1] == 1:
-                    scale_chunk = scale
-                else:
-                    scale_chunk = scale[:, start:end, :]
-                if gate.shape[1] == 1:
-                    gate_chunk = gate
-                else:
-                    gate_chunk = gate[:, start:end, :]
+                shift_chunk = shift if shift.shape[1] == 1 else shift[:, start:end, :]
+                scale_chunk = scale if scale.shape[1] == 1 else scale[:, start:end, :]
+                gate_chunk = gate if gate.shape[1] == 1 else gate[:, start:end, :]
 
                 inp_chunk = modulate(self.ffn_norm(x_chunk), shift_chunk, scale_chunk)
                 out[:, start:end, :] = self.gate(x_chunk, gate_chunk, self.ffn(inp_chunk))

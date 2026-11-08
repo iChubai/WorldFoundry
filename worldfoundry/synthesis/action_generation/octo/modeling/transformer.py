@@ -243,48 +243,48 @@ def common_transformer_sizes(transformer_size: str) -> (int, dict):
     }
 
     TRANSFORMER_SIZES = {
-        "dummy": dict(
-            num_layers=1,
-            mlp_dim=256,
-            num_attention_heads=2,
-            dropout_rate=0.1,
-        ),
-        "vanilla": dict(
-            num_layers=4,
-            mlp_dim=1024,
-            num_attention_heads=8,
-            dropout_rate=0.1,
-        ),
-        "vit_t": dict(
-            num_layers=12,
-            mlp_dim=768,
-            num_attention_heads=3,
-            dropout_rate=0.0,
-        ),
-        "vit_s": dict(
-            num_layers=12,
-            mlp_dim=1536,
-            num_attention_heads=6,
-            dropout_rate=0.0,
-        ),
-        "vit_b": dict(
-            num_layers=12,
-            mlp_dim=3072,
-            num_attention_heads=12,
-            dropout_rate=0.0,
-        ),
-        "vit_l": dict(
-            num_layers=24,
-            mlp_dim=4096,
-            num_attention_heads=16,
-            dropout_rate=0.1,
-        ),
-        "vit_h": dict(
-            num_layers=32,
-            mlp_dim=5120,
-            num_attention_heads=16,
-            dropout_rate=0.1,
-        ),
+        "dummy": {
+            "num_layers": 1,
+            "mlp_dim": 256,
+            "num_attention_heads": 2,
+            "dropout_rate": 0.1,
+        },
+        "vanilla": {
+            "num_layers": 4,
+            "mlp_dim": 1024,
+            "num_attention_heads": 8,
+            "dropout_rate": 0.1,
+        },
+        "vit_t": {
+            "num_layers": 12,
+            "mlp_dim": 768,
+            "num_attention_heads": 3,
+            "dropout_rate": 0.0,
+        },
+        "vit_s": {
+            "num_layers": 12,
+            "mlp_dim": 1536,
+            "num_attention_heads": 6,
+            "dropout_rate": 0.0,
+        },
+        "vit_b": {
+            "num_layers": 12,
+            "mlp_dim": 3072,
+            "num_attention_heads": 12,
+            "dropout_rate": 0.0,
+        },
+        "vit_l": {
+            "num_layers": 24,
+            "mlp_dim": 4096,
+            "num_attention_heads": 16,
+            "dropout_rate": 0.1,
+        },
+        "vit_h": {
+            "num_layers": 32,
+            "mlp_dim": 5120,
+            "num_attention_heads": 16,
+            "dropout_rate": 0.1,
+        },
     }
 
     TOKEN_DIMS = {

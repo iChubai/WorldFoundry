@@ -56,10 +56,7 @@ def _camera_tensor(value: Any, *, use_video_encoder: bool, history_size: int):
         elif tensor.ndim == 4:
             if tensor.shape[1] not in {1, 3, 4} and tensor.shape[-1] in {1, 3, 4}:
                 tensor = tensor.permute(0, 3, 1, 2)
-            if use_video_encoder and tensor.shape[1] in {1, 3, 4}:
-                result = tensor.unsqueeze(0)
-            else:
-                result = tensor
+            result = tensor.unsqueeze(0) if use_video_encoder and tensor.shape[1] in {1, 3, 4} else tensor
         elif tensor.ndim == 3:
             result = _frame_tensor(tensor).unsqueeze(0)
         else:

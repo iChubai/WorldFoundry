@@ -45,8 +45,13 @@ def get_model_inputs_for_eval(
         "(b p) f d -> b p f d",
         b=B,
     )
-    compress = lambda x: rearrange(x, "b p f h w c -> (b p) f h w c")
-    uncompress = lambda x: rearrange(x, "(b p) f h w c -> b p f h w c", b=B)
+
+    def compress(x):
+        return rearrange(x, "b p f h w c -> (b p) f h w c")
+
+    def uncompress(x):
+        return rearrange(x, "(b p) f h w c -> b p f h w c", b=B)
+
     img_cond_BPFHWC = uncompress(
         jax.lax.stop_gradient(
             vae_model.encode(
@@ -105,8 +110,13 @@ def get_model_inputs(
         "(b p) f d -> b p f d",
         b=B,
     )
-    compress = lambda x: rearrange(x, "b p f h w c -> (b p) f h w c")
-    uncompress = lambda x: rearrange(x, "(b p) f h w c -> b p f h w c", b=B)
+
+    def compress(x):
+        return rearrange(x, "b p f h w c -> (b p) f h w c")
+
+    def uncompress(x):
+        return rearrange(x, "(b p) f h w c -> b p f h w c", b=B)
+
     encoded_outputs = uncompress(jax.lax.stop_gradient(vae_model.cacheless_encode(compress(video_BPFHWC), VAE_SCALE)))
     img_cond_BPFHWC = uncompress(
         jax.lax.stop_gradient(

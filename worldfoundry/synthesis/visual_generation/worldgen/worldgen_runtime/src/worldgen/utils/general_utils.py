@@ -48,10 +48,7 @@ def cube_to_pano(cube_faces: list[Image.Image], h: int, w: int, mode: str = "bil
 
 def resize_img(img: Image.Image, max_size=1024):
     W, H = img.size
-    if H > W:
-        img = img.resize((max_size, H * max_size // W))
-    else:
-        img = img.resize((W * max_size // H, max_size))
+    img = img.resize((max_size, H * max_size // W)) if H > W else img.resize((W * max_size // H, max_size))
     return img
 
 
@@ -258,10 +255,7 @@ def convert_rgbd2mesh_panorama(
         mask = mask.to(device)
 
     H, W = distance.shape
-    if max(H, W) > max_size:
-        scale = max_size / max(H, W)
-    else:
-        scale = 1.0
+    scale = max_size / max(H, W) if max(H, W) > max_size else 1.0
 
     rgb_nchw = rgb.permute(2, 0, 1).unsqueeze(0)
     distance_nchw = distance.unsqueeze(0).unsqueeze(0)

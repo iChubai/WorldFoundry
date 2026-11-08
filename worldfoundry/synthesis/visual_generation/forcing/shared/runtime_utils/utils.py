@@ -25,10 +25,7 @@ def min_resize(x, m):
         s1 = m
     new_max = max(s1, s0)
     raw_max = max(x.shape[0], x.shape[1])
-    if new_max < raw_max:
-        interpolation = cv2.INTER_AREA
-    else:
-        interpolation = cv2.INTER_LANCZOS4
+    interpolation = cv2.INTER_AREA if new_max < raw_max else cv2.INTER_LANCZOS4
     y = cv2.resize(x, (s1, s0), interpolation=interpolation)
     return y
 
@@ -37,10 +34,7 @@ def d_resize(x, y):
     H, W, C = y.shape
     new_min = min(H, W)
     raw_min = min(x.shape[0], x.shape[1])
-    if new_min < raw_min:
-        interpolation = cv2.INTER_AREA
-    else:
-        interpolation = cv2.INTER_LANCZOS4
+    interpolation = cv2.INTER_AREA if new_min < raw_min else cv2.INTER_LANCZOS4
     y = cv2.resize(x, (W, H), interpolation=interpolation)
     return y
 

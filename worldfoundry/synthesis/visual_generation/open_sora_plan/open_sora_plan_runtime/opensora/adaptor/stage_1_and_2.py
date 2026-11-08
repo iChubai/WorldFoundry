@@ -1288,10 +1288,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     def set_norm_for_param_grad_in_gpu(self, param):
         param_id = self.get_param_id(param)
         grad_accum = self.get_param_gradient_attribute(param)
-        if grad_accum is None:
-            accumulated_grad = param.grad
-        else:
-            accumulated_grad = grad_accum
+        accumulated_grad = param.grad if grad_accum is None else grad_accum
 
         [i, source_offset, dest_offset, num_elements] = self.grad_position[param_id]
 
@@ -2510,7 +2507,7 @@ def estimate_zero2_model_states_mem_needs(
 
 def model_to_params(model):
     # shared params calculated only once
-    total_params = sum(dict((p.data_ptr(), p.numel()) for p in model.parameters()).values())
+    total_params = sum({p.data_ptr(): p.numel() for p in model.parameters()}.values())
     return total_params
 
 

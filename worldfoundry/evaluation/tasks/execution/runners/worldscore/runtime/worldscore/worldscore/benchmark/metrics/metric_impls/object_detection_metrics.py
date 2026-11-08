@@ -1,7 +1,6 @@
 import argparse
 import os
 import re
-from typing import List
 
 # Load spaCy's small English model
 # make sure to run: python -m spacy download en_core_web_sm
@@ -81,7 +80,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")

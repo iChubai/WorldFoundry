@@ -1,4 +1,4 @@
-from typing import List
+import itertools
 
 import cv2
 import numpy as np
@@ -51,7 +51,7 @@ class MotionSmoothnessMetric(BaseMetric):
         odd_images = rendered_images[1::2]
 
         print("=========================Start Interpolating=========================")
-        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:], strict=False)):
+        for i, (image1, image2) in enumerate(itertools.pairwise(even_images)):
             odd_image = odd_images[i]
             mid_pred = cv2.imread(odd_image)
             I0 = cv2.imread(image1)

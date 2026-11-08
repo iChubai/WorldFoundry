@@ -1,6 +1,3 @@
-from typing import List, Optional
-
-
 class OptionalDependencyNotInstalled(Exception):
     pass
 

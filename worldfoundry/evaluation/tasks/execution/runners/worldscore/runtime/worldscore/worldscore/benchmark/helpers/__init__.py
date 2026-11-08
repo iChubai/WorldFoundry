@@ -18,7 +18,6 @@ def config_path(*relative):
 def GetDataloader(visual_movement, json_file=None, noise=False, noise_type="simple"):
     if json_file is None:
         json_file = f"{visual_movement}.json"
-    root_path = os.getenv("WORLDSCORE_PATH")
     dataset_root = os.getenv("DATA_PATH")
     json_path = os.path.join(dataset_root, "WorldScore-Dataset", visual_movement, json_file)
 

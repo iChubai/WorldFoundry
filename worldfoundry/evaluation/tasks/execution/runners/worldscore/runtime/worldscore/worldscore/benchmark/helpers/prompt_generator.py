@@ -1,13 +1,10 @@
 import ast
-import base64
-import io
 import json
 import os
 import time
 from pathlib import Path
 
 import openai
-import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 from tqdm import tqdm
@@ -30,7 +27,7 @@ client = OpenAI(
 
 class TextPromptGen:
     def __init__(self):
-        super(TextPromptGen, self).__init__()
+        super().__init__()
         self.model = "gpt-4o"
         self.scene_num = 0
         self.id = 0
@@ -79,7 +76,7 @@ class TextPromptGen:
             {"role": "user", "content": self.content},
         ]
 
-        for i in range(10):
+        for _i in range(10):
             try:
                 response = client.chat.completions.create(
                     model=self.model,
@@ -125,7 +122,7 @@ class TextPromptGen:
 
 class PromptGen:
     def __init__(self, config):
-        super(PromptGen, self).__init__()
+        super().__init__()
         self.config = config
         self.model = "gpt-4o"
         self.save_prompt = True
@@ -207,7 +204,7 @@ class PromptGen:
             scene_dict = {"scene_name": scene_name, "entities": entities}
 
             self.prompts.append(data_item["prompt"])
-            for i in range(scene_num):
+            for i in range(scene_num):  # noqa: B007 - The periodic save below reads this index.
                 scene_dict = self.text_prompt_generator.wonder_next_scene(
                     scene_name=scene_name, entities=entities, style=scene_style
                 )

@@ -9,7 +9,6 @@ from scipy.spatial.transform import Slerp
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     get_model2type,
-    layout_info,
     type2model,
 )
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.gpu_utils import (
@@ -80,7 +79,7 @@ class CameraExtrinsics:
 
 class CameraGen:
     def __init__(self, config):
-        super(CameraGen, self).__init__()
+        super().__init__()
         self.device = get_torch_device()
 
         self.root_path = config["benchmark_root"]
@@ -323,8 +322,8 @@ class CameraGen:
         }
         try:
             next_camera = layout_methods[self.layout]()
-        except:
-            raise ValueError("Invalid layout:", self.layout)
+        except BaseException:
+            raise ValueError("Invalid layout:", self.layout)  # noqa: B904 - Preserve the implicit context.
 
         current_camera = copy.deepcopy(next_camera)
         self.cameras.append(current_camera)

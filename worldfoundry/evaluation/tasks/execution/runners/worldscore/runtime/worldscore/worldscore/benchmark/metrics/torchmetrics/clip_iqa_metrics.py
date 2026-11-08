@@ -1,5 +1,4 @@
 import os
-from typing import List, Union
 
 import torch
 from PIL import Image

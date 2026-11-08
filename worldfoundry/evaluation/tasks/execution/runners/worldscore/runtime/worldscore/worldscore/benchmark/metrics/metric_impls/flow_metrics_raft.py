@@ -1,5 +1,5 @@
 import argparse
-from typing import List
+import itertools
 
 import numpy as np
 import torch
@@ -71,8 +71,8 @@ class OpticalFlowMetric(BaseMetric):
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in tqdm(
-                enumerate(zip(images[:-1], images[1:], strict=False)), total=len(images) - 1, desc="Computing flow..."
+            for _i, (imfile1, imfile2) in tqdm(
+                enumerate(itertools.pairwise(images)), total=len(images) - 1, desc="Computing flow..."
             ):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)

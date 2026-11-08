@@ -24,8 +24,6 @@ prompts used
 RANGE: [0, 1] higher the better
 """
 
-from typing import List, Union
-
 from PIL import Image
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (

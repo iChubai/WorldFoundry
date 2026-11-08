@@ -1,11 +1,8 @@
 import argparse
-from typing import List
 
 import cv2
-import cvxpy as cp
 import numpy as np
 import torch
-from lietorch import SE3
 from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.slam.droid_slam import checkpoint_path as droid_checkpoint_path

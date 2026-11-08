@@ -178,7 +178,7 @@ class Metric:
 
 def renormalize_score(score_dict):
     for aspect, aspect_score in score_dict.items():
-        if aspect not in aspect_info.keys():
+        if aspect not in aspect_info:
             continue
         for metric, score_ in aspect_score.items():
             score = score_["score"]
@@ -323,10 +323,7 @@ def get_rendered_images(rendered_images_all, i, anchor_frame_idx):
 
 def check_evaluation_completeness(aspect_list, instance_result_dict):
     instance_aspect_list = list(instance_result_dict.keys())
-    for aspect in aspect_list:
-        if aspect not in instance_aspect_list:
-            return False
-    return True
+    return all(aspect in instance_aspect_list for aspect in aspect_list)
 
 
 class BaseEvaluator:
@@ -407,11 +404,11 @@ class Evaluator(BaseEvaluator):
 
             try:
                 score = np.mean(np.array(scores), axis=0).item()
-            except:
+            except BaseException:
                 score = np.mean(np.array(scores), axis=0).tolist()
             try:
                 score_normalized = np.mean(np.array(scores_normalized), axis=0).item()
-            except:
+            except BaseException:
                 score_normalized = np.mean(np.array(scores_normalized), axis=0).tolist()
 
             return {"score": score, "score_normalized": score_normalized}
@@ -558,7 +555,7 @@ class Evaluator(BaseEvaluator):
                 continue
             # now check the number of files in each directory
             file_list = os.listdir(os.path.join(root_path, dir_name))
-            file_len = len([f for f in file_list if f.endswith(".png") or f.endswith(".jpg")])
+            file_len = len([f for f in file_list if f.endswith((".png", ".jpg"))])
             if dir_name == "frames":
                 if file_len < total_frames:
                     print(f"-- Directory {dir_name} is incomplete in {root_path}")

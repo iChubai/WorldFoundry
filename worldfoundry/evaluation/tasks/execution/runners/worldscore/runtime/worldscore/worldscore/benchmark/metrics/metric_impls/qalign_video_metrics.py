@@ -1,7 +1,4 @@
-from typing import List, Union
-
 import torch
-import torch.nn.functional as F
 from PIL import Image
 from transformers import AutoModelForCausalLM
 

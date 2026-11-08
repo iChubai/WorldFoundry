@@ -1,5 +1,3 @@
-from typing import List
-
 import cv2
 import numpy as np
 import torch
@@ -23,10 +21,7 @@ def compute_adaptive_image_size(image_size):
     scale0 = target_size[0] / image_size[0]
     scale1 = target_size[1] / image_size[1]
 
-    if scale0 > scale1:
-        scale = scale0
-    else:
-        scale = scale1
+    scale = scale0 if scale0 > scale1 else scale1
 
     image_size = (int(image_size[1] * scale), int(image_size[0] * scale))
 

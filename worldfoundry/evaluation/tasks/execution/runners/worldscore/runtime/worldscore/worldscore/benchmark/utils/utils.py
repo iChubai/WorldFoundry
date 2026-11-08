@@ -156,7 +156,7 @@ def save_cameras(cameras_interp, focal_length=500, save_dir=None, camera_type=No
     for camera in cameras_interp:
         try:
             extrinsics = save_camera_transform[camera_type](camera)
-        except:
+        except BaseException:
             extrinsics = camera
         matrices.append(extrinsics)
     data["cameras_interp"] = torch.cat(matrices, dim=0).cpu().numpy().tolist()
@@ -192,7 +192,7 @@ def save_video(video, path, fps=10, save_gif=False):
                 write_video(str(path), video_tensor, fps=fps, video_codec=codec, options=video_options)
                 success = True
                 break
-            except:
+            except BaseException:
                 continue
     except Exception as e:
         print("Failed to save video with torchvision", e)
@@ -409,7 +409,4 @@ def empty_cache():
 
 
 def check_model(model_name: str):
-    for model_list in type2model.values():
-        if model_name in model_list:
-            return True
-    return False
+    return any(model_name in model_list for model_list in type2model.values())

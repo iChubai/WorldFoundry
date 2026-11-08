@@ -13,10 +13,7 @@ from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldsco
 def generate_prompt_list(prompt_list, style):
     new_prompt_list = []
     for prompt in prompt_list:
-        if prompt.endswith("."):
-            new_prompt = prompt + " " + style
-        else:
-            new_prompt = prompt + ". " + style
+        new_prompt = prompt + " " + style if prompt.endswith(".") else prompt + ". " + style
         new_prompt_list.append(new_prompt)
     return new_prompt_list
 
@@ -93,7 +90,7 @@ class DataLoader:
                 continue
             # now check the number of files in each directory
             file_list = os.listdir(os.path.join(root_path, dir_name))
-            file_len = len([f for f in file_list if f.endswith(".png") or f.endswith(".jpg")])
+            file_len = len([f for f in file_list if f.endswith((".png", ".jpg"))])
             if dir_name == "frames":
                 if file_len < self.interpframe_num:
                     if self.verbose:

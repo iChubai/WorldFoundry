@@ -62,7 +62,7 @@ def calculate_mean_scores(metrics_results, visual_movement, scores, calculate_ra
         if aspect not in aspect_list:
             continue
         metric_score_list = []
-        for metric_name, metric_scores in metrics_results[aspect].items():
+        for _metric_name, metric_scores in metrics_results[aspect].items():
             if calculate_raw_score:
                 metric_score_list.append(
                     np.mean(np.array([metric_score["score"] for metric_score in metric_scores]), axis=0).tolist()
@@ -226,10 +226,7 @@ def main(
 ) -> None:
     assert check_model(model_name), "Model not exists!"
     model_type = get_model2type(type2model)[model_name]
-    if model_type == "threedgen":
-        visual_movement_list = ["static"]
-    else:
-        visual_movement_list = ["static", "dynamic"]
+    visual_movement_list = ["static"] if model_type == "threedgen" else ["static", "dynamic"]
 
     for visual_movement in visual_movement_list:
         args = Namespace(

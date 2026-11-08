@@ -1,5 +1,5 @@
 import argparse
-from typing import List
+import itertools
 
 import numpy as np
 import torch
@@ -124,7 +124,7 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:], strict=False)):
+            for _i, (imfile1, imfile2) in enumerate(itertools.pairwise(images)):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
 

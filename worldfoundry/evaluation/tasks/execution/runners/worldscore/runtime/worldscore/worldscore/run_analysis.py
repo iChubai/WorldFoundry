@@ -5,7 +5,6 @@
 import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
@@ -70,8 +69,6 @@ def get_parser() -> ArgumentParser:
 
 
 def run_check_data(args: Namespace) -> None:
-    import os
-
     from omegaconf import OmegaConf
 
     from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.evaluator import (
@@ -243,8 +240,6 @@ def run_check_score(args: Namespace) -> None:
 
 
 def run_analysis(args: Namespace) -> None:
-    import os
-
     from omegaconf import OmegaConf
 
     from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers import (
@@ -286,10 +281,7 @@ def main(argv: list | None = None) -> None:
 
     assert check_model(args.model_name), "Model not exists!"
     model_type = get_model2type(type2model)[args.model_name]
-    if model_type == "threedgen":
-        visual_movement_list = ["static"]
-    else:
-        visual_movement_list = ["static", "dynamic"]
+    visual_movement_list = ["static"] if model_type == "threedgen" else ["static", "dynamic"]
 
     complete = True
     data_dict = {}

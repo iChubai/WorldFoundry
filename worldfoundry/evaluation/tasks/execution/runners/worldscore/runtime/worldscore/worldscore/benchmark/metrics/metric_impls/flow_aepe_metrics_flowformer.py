@@ -1,5 +1,3 @@
-from typing import List
-
 import cv2
 import numpy as np
 import torch
@@ -41,10 +39,7 @@ def compute_adaptive_image_size(image_size):
     scale0 = target_size[0] / image_size[0]
     scale1 = target_size[1] / image_size[1]
 
-    if scale0 > scale1:
-        scale = scale0
-    else:
-        scale = scale1
+    scale = scale0 if scale0 > scale1 else scale1
 
     image_size = (int(image_size[1] * scale), int(image_size[0] * scale))
 
@@ -168,9 +163,7 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
 
     def _compute_flow(self, image1, image2):
         print("computing flow...")
-        image_size = image1.shape[1:]
         image1, image2 = image1[None].to(self._device), image2[None].to(self._device)
-        hws = compute_grid_indices(image_size)
 
         padder = InputPadder(image1.shape)
         image1, image2 = padder.pad(image1, image2)

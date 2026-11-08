@@ -2,7 +2,6 @@
 import argparse
 import os
 import re
-from typing import List
 
 import cv2
 import numpy as np
@@ -51,7 +50,7 @@ from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkp
 
 nlp = spacy.load("en_core_web_sm")
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (  # noqa: E402 - Upstream order after the spaCy model load.
     BaseMetric,
 )
 
@@ -90,10 +89,7 @@ def compute_adaptive_image_size(image_size):
     scale0 = target_size[0] / image_size[0]
     scale1 = target_size[1] / image_size[1]
 
-    if scale0 > scale1:
-        scale = scale0
-    else:
-        scale = scale1
+    scale = scale0 if scale0 > scale1 else scale1
 
     image_size = (int(image_size[1] * scale), int(image_size[0] * scale))
 
@@ -124,7 +120,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -263,7 +259,7 @@ def load_masks_from_dir(input_mask_path, per_obj_png_file, allow_missing=False):
         input_palette = None
         # each object is a directory in "{object_id:%03d}" format
         for object_id, file_name in enumerate(
-            sorted([f for f in os.listdir(input_mask_path) if f.endswith(".png") or f.endswith(".jpg")])
+            sorted([f for f in os.listdir(input_mask_path) if f.endswith((".png", ".jpg"))])
         ):
             input_mask_path_ = os.path.join(input_mask_path, file_name)
             if allow_missing and not os.path.exists(input_mask_path_):

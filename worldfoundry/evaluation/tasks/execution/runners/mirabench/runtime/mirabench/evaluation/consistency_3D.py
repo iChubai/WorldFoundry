@@ -42,6 +42,21 @@ def compute_fundamental_error(inliers, src_pts, dst_pts, F):
     return mean_error, median_error, rmse, mae
 
 
+def _ratio_test_points(kp1, des1, kp2, des2, ratio):
+    """Match SIFT descriptors with FLANN and return the (N, 1, 2) float32 point pairs that pass Lowe's ratio test."""
+    flann = cv2.FlannBasedMatcher()
+    matches = flann.knnMatch(des1, des2, k=2)
+
+    good_matches = []
+    for m, n in matches:
+        if m.distance < ratio * n.distance:
+            good_matches.append(m)
+
+    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    return src_pts, dst_pts
+
+
 def EvaluateErrBetweenTwoImage(left_img_path, right_img_path, ransac_th):
     img1 = cv2.imread(left_img_path)
     img2 = cv2.imread(right_img_path)
@@ -58,17 +73,7 @@ def EvaluateErrBetweenTwoImage(left_img_path, right_img_path, ransac_th):
     # print(len(kp1))
     # print(len(kp2))
 
-    flann = cv2.FlannBasedMatcher()
-    matches = flann.knnMatch(des1, des2, k=2)
-
-    # Lowe's ratio test.
-    good_matches = []
-    for m, n in matches:
-        if m.distance < 0.85 * n.distance:
-            good_matches.append(m)
-
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    src_pts, dst_pts = _ratio_test_points(kp1, des1, kp2, des2, 0.85)
 
     num_pts = len(src_pts)
 
@@ -108,17 +113,7 @@ def StereoMathing(img1, img2, out_dir):
     print("number of img1 key points", len(kp1))
     print("number of img2 key points", len(kp2))
 
-    flann = cv2.FlannBasedMatcher()
-    matches = flann.knnMatch(des1, des2, k=2)
-
-    # Lowe's ratio test.
-    good_matches = []
-    for m, n in matches:
-        if m.distance < 0.8 * n.distance:
-            good_matches.append(m)
-
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    src_pts, dst_pts = _ratio_test_points(kp1, des1, kp2, des2, 0.8)
 
     # Reject outlier matches with a RANSAC fundamental-matrix fit.
     F, inliers_F = cv2.findFundamentalMat(src_pts, dst_pts, cv2.USAC_MAGSAC, 0.5)
@@ -242,17 +237,7 @@ def EvaluateErrBetweenTwoImage2(left_img_path, right_img_path, ransac_th):
     print(len(kp1))
     print(len(kp2))
 
-    flann = cv2.FlannBasedMatcher()
-    matches = flann.knnMatch(des1, des2, k=2)
-
-    # Lowe's ratio test.
-    good_matches = []
-    for m, n in matches:
-        if m.distance < 0.7 * n.distance:
-            good_matches.append(m)
-
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    src_pts, dst_pts = _ratio_test_points(kp1, des1, kp2, des2, 0.7)
 
     num_pts = len(src_pts)
 

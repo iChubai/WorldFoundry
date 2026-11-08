@@ -462,7 +462,7 @@ def cases_selected_by(plan: dict, path: str) -> dict[str, list[dict]]:
 
 
 @pytest.mark.parametrize("path", [REALTIME_CONTRACTS, STUDIO_REALTIME_WEBRTC, MEDIA_PROCESSING_RTX])
-def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_layer_plan, path):
+def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_layer_plan: dict, path: str) -> None:
     root = TOOLS.parents[1]
     assert (root / path).is_file()
     assert not realtime_layer_plan["graph_errors"]
@@ -474,14 +474,14 @@ def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_l
             assert set(reason["kind"].split("+")) <= {"declared_component", "static_import", "recorded_import"}
 
 
-def test_realtime_contracts_select_their_offline_importers_only(realtime_layer_plan):
+def test_realtime_contracts_select_their_offline_importers_only(realtime_layer_plan: dict) -> None:
     selected = cases_selected_by(realtime_layer_plan, REALTIME_CONTRACTS)
     for case in ("self-forcing-t2v-short", "matrix-game2-controls-short"):
         assert any("static_import" in reason["kind"] for reason in selected[case])
     assert set(selected) < set(realtime_layer_plan["reasons"])
 
 
-def test_realtime_flow_sampling_selects_only_lingbot_cases(realtime_layer_plan):
+def test_realtime_flow_sampling_selects_only_lingbot_cases(realtime_layer_plan: dict) -> None:
     _, policy = impact.load_definitions(
         TOOLS / "geometry_regression_cases.json",
         TOOLS / "geometry_regression_dependencies.json",
@@ -496,7 +496,7 @@ def test_realtime_flow_sampling_selects_only_lingbot_cases(realtime_layer_plan):
     assert set(selected) <= lingbot_cases
 
 
-def test_other_core_subtrees_remain_shared_by_every_case(realtime_layer_plan):
+def test_other_core_subtrees_remain_shared_by_every_case(realtime_layer_plan: dict) -> None:
     selected = cases_selected_by(realtime_layer_plan, CORE_ATTENTION)
     assert set(selected) == set(realtime_layer_plan["reasons"])
     assert len(selected) == len(json.loads((TOOLS / "geometry_regression_cases.json").read_text()))
@@ -504,7 +504,7 @@ def test_other_core_subtrees_remain_shared_by_every_case(realtime_layer_plan):
         assert [reason["kind"] for reason in reasons] == ["shared_component_or_case_matrix"]
 
 
-def test_unimported_realtime_or_unlisted_core_files_keep_conservative_fallback(realtime_layer_plan):
+def test_unimported_realtime_or_unlisted_core_files_keep_conservative_fallback(realtime_layer_plan: dict) -> None:
     assert realtime_layer_plan["status"] == "uncovered"
     assert realtime_layer_plan["uncovered_paths"] == sorted([NEW_REALTIME_MODULE, NEW_CORE_SUBPACKAGE])
     for reasons in realtime_layer_plan["reasons"].values():

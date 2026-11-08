@@ -51,9 +51,9 @@ def judge(prompt, sysp, tokenizer, model):
 
 
 def split_by_numbered_list(text):
-    pattern = r"\d+\.\s*"  # 匹配形如 "1. " 的编号
-    parts = re.split(pattern, text)  # 按编号分割
-    parts = [part.strip() for part in parts if part.strip()]  # 去除空字符串和多余空白
+    pattern = r"\d+\.\s*"  # list numbers such as "1. "
+    parts = re.split(pattern, text)
+    parts = [part.strip() for part in parts if part.strip()]
     return parts
 
 

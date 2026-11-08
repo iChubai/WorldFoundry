@@ -22,11 +22,9 @@ def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
     img1 = cv2.resize(img1, (854, 480))
     img2 = cv2.resize(img2, (854, 480))
 
-    # 创建SIFT特征点检测器
     num_corners = 40000
     sift = cv2.SIFT_create(num_corners)
 
-    # 在两张图片上检测SIFT特征点和描述符
     kp1, des1 = sift.detectAndCompute(img1, None)
     kp2, des2 = sift.detectAndCompute(img2, None)
     k = 2
@@ -34,23 +32,22 @@ def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
         return 0
     if len(des1) < k or len(des2) < k:
         return 0
-    # 使用FLANN算法匹配特征点
     flann = cv2.FlannBasedMatcher()
     matches = flann.knnMatch(des1, des2, k=k)
 
-    # 通过距离比率去除错误匹配
+    # Lowe's ratio test.
     good_matches = []
     for m, n in matches:
         if m.distance < 0.85 * n.distance:
             good_matches.append(m)
 
-    # 提取正确匹配点的位置
+    # findFundamentalMat needs at least 8 point pairs.
     if len(good_matches) < 8:
         return 0
     src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
-    # 使用基础矩阵RANSAC去除误匹配
+    # Count the matches consistent with a RANSAC fundamental-matrix fit.
     F, inliers_F = cv2.findFundamentalMat(src_pts, dst_pts, cv2.RANSAC, ransac_th)
     if inliers_F is None:
         return 0

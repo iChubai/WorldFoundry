@@ -35,10 +35,10 @@ def most_frequent_number(numbers):
 
 def extract_face_features(face_image, model):
     face_image = cv2.resize(face_image, (128, 128))
-    image_gray = cv2.cvtColor(face_image, cv2.COLOR_RGB2GRAY)  # 转换为灰度图，shape: (100, 100)
-    image = np.dstack((image_gray, np.fliplr(image_gray)))  # shape: (100, 100, 2)
-    image = image.transpose((2, 0, 1))  # shape: (2, 100, 100)
-    image = image[:, np.newaxis, :, :]  # shape: (2, 1, 100, 100)
+    image_gray = cv2.cvtColor(face_image, cv2.COLOR_RGB2GRAY)  # shape: (128, 128)
+    image = np.dstack((image_gray, np.fliplr(image_gray)))  # shape: (128, 128, 2)
+    image = image.transpose((2, 0, 1))  # shape: (2, 128, 128)
+    image = image[:, np.newaxis, :, :]  # shape: (2, 1, 128, 128)
     image = image.astype(np.float32, copy=False)
     image -= 127.5
     image /= 127.5
@@ -50,7 +50,8 @@ def extract_face_features(face_image, model):
         fe_1 = output[::2]
         fe_2 = output[1::2]
         feature = np.hstack((fe_1, fe_2))
-    return feature.flatten()  # 返回人脸特征向量
+    # Concatenated features of the face and its mirror image.
+    return feature.flatten()
 
 
 def calculate_similarity(x1, x2):
@@ -60,8 +61,8 @@ def calculate_similarity(x1, x2):
 
 class IDTracker:
     def __init__(self, similarity_threshold=0.4, grid_size=20):
-        self.trackers = {}  # 存储每个ID的人脸特征
-        self.similarity_threshold = similarity_threshold  # 相似度阈值
+        self.trackers = {}  # face features per track ID
+        self.similarity_threshold = similarity_threshold
         self.track_human = []
 
     def update(self, frame, frame_count, retina_model, model):

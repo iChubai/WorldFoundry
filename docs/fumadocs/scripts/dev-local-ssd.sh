@@ -117,12 +117,17 @@ run_dev() {
     echo "Reusing local SSD mirror at ${LOCAL_FUMADOCS} (run '$0 sync' to force refresh)"
     sync_repo_links
     rsync -a "${RSYNC_EXCLUDES[@]}" "${FUMADOCS_SRC}/" "${LOCAL_FUMADOCS}/"
+    # tmp/ and .source/ must be real directories inside the mirror: Node and webpack
+    # resolve node_modules and content relative to a module's real path.
+    for rel in tmp .source; do
+      if [[ -L "${LOCAL_FUMADOCS}/${rel}" ]]; then
+        rm -f "${LOCAL_FUMADOCS}/${rel}"
+      fi
+    done
     run_predev
   else
     sync_to_local full
   fi
-
-  WF_DOCS_ROOT="${LOCAL_FUMADOCS}" bash "${SCRIPT_DIR}/ssd-cache.sh" setup
 
   cd "${LOCAL_FUMADOCS}"
   export WF_DOCS_CACHE_ROOT="${LOCAL_FUMADOCS}/tmp"

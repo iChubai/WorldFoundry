@@ -148,12 +148,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/general_3d/mast3r/mast3r/cloud_opt/sparse_ga.py",
     ),
     _cap(
-        "monst3r",
-        "three_dimensions/general_3d/monst3r",
-        ("point-cloud", "mesh", "viser", "rerun"),
-        "three_dimensions/general_3d/monst3r/demo.py",
-    ),
-    _cap(
         "mvdiffusion",
         "three_dimensions/general_3d/mvdiffusion",
         ("media",),

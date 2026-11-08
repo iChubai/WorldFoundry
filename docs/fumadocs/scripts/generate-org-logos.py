@@ -1264,7 +1264,6 @@ MODEL_ORGS: dict[str, str] = {
     "moverse": "alibaba",
     "molmoact2": "ai2",
     "molmobot": "ai2",
-    "monst3r": "google-deepmind",
     "mosaicmem": "starkware",
     "motionbricks": "nvidia",
     "motionctrl": "tencent",

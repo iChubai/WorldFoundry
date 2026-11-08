@@ -29,7 +29,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "flashworld",
     "lagernvs",
     "lyra",
-    "monst3r",
     "mvdiffusion",
     "neoverse",
     "recammaster",

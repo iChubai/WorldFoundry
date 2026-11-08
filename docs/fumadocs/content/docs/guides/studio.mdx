@@ -736,8 +736,8 @@ frame:
   uses `+Y` up, and frames the central 5-95% geometry range so sparse outliers do
   not shrink the useful scene.
 - Rerun recordings must log the world `ViewCoordinates` and use the same camera
-  convention in every `Pinhole`. Cut3R and MonST3R use RDF for both world and
-  camera entities.
+  convention in every `Pinhole`. Cut3R uses RDF for both world and camera
+  entities.
 - Never fix an orientation mismatch by flipping only the point cloud. Apply the
   same rigid transform to geometry and camera-to-world poses, then verify reset,
   orbit, and timeline interaction in a browser.

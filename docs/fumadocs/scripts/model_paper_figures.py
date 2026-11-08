@@ -834,12 +834,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文官方 Teaser：MolmoBot 的机器人操作论文配图。",
         ),
     },
-    "monst3r": {
-        "teaser": (
-            "Official paper teaser: Watch the video.",
-            "论文官方 Teaser：MonST3R 的视频生成论文配图。",
-        ),
-    },
     "mosaicmem": {
         "teaser": (
             "Official paper teaser: Left: Memory mechanism comparison and visualization. MoscaicMem is a hybrid approach, unifies the strengths of explicit and implicit memory. Right: (A) MosaicMem achieves more accurate camera motion than implicit.",

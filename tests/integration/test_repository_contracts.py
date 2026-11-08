@@ -111,13 +111,9 @@ def test_runtime_geometry_is_core_owned() -> None:
     from worldfoundry.core.geometry.transforms import depth_to_world_points
 
     assert depth_to_world_points.__module__ == "worldfoundry.core.geometry.transforms"
-    for relpath in (
-        "worldfoundry/pipelines/cut3r/official_runtime.py",
-        "worldfoundry/base_models/three_dimensions/three_d_four_d/runtime.py",
-    ):
-        source = (REPO_ROOT / relpath).read_text(encoding="utf-8")
-        assert "worldfoundry.studio" not in source
-        assert "worldfoundry.core.geometry" in source
+    source = (REPO_ROOT / "worldfoundry/pipelines/cut3r/official_runtime.py").read_text(encoding="utf-8")
+    assert "worldfoundry.studio" not in source
+    assert "worldfoundry.core.geometry" in source
 
 
 def test_worldolympiad_openrouter_key_priority(monkeypatch) -> None:

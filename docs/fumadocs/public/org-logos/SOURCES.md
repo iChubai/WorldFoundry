@@ -45,8 +45,8 @@ No file in this directory is a personal GitHub avatar.
 | `genmo.png` | Genmo | GitHub organization brand avatar (github.com/genmoai), pre-existing repo asset | Organization brand mark | model:mochi-1 |
 | `gigaai.png` | GigaAI | GitHub organization brand avatar (github.com/open-gigaai), pre-existing repo asset | Organization brand mark | model:giga-brain-0, model:giga-world-0, model:giga-world-policy-0.5 |
 | `google.svg` | Google | https://commons.wikimedia.org/wiki/File:Google_"G"_logo.svg | Public domain (simple geometry) | benchmark:videophy, benchmark:videophy2, model:rt-1, model:t2v_turbo_t2v |
-| `google-deepmind.svg` | Google DeepMind | https://commons.wikimedia.org/wiki/File:Google_DeepMind_logo.svg | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:monst3r, model:veo3 |
-| `google-deepmind-mark.svg` | Google DeepMind | Symbol cropped from `google-deepmind.svg` for compact catalog marks | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:monst3r, model:veo3 |
+| `google-deepmind.svg` | Google DeepMind | https://commons.wikimedia.org/wiki/File:Google_DeepMind_logo.svg | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:veo3 |
+| `google-deepmind-mark.svg` | Google DeepMind | Symbol cropped from `google-deepmind.svg` for compact catalog marks | Public domain (simple geometry) | benchmark:physics-iq, benchmark:physics-iq-verified, benchmark:simpler-env, model:veo3 |
 | `happyoyster.svg` | HappyOyster | Original simple oyster/pearl monogram for the identity mark | Public domain (simple geometry) | model:happyoyster |
 | `harvard.png` | Harvard University | https://commons.wikimedia.org/wiki/File:Harvard_University_shield.png | Public domain | benchmark:memobench |
 | `hku.png` | The University of Hong Kong | Official university coat of arms from the HKU site mark (www.hku.hk), shield cropped for the identity mark | Organization brand mark | benchmark:robotwin, benchmark:t2v-compbench, model:mem-0, model:sc-gs |

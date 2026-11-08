@@ -679,7 +679,7 @@ Spark 前区分普通 PLY geometry 和 Gaussian-splat PLY。
   与 cameras 一起应用 `first-camera-opengl`，使用 `+Y` up，并按中心 5-95%
   geometry 取景，避免少量离群点把有效场景缩得过小。
 - Rerun recording 必须声明 world `ViewCoordinates`，并让每个 `Pinhole` 使用同一
-  camera convention；Cut3R 与 MonST3R 的 world/camera 都使用 RDF。
+  camera convention；Cut3R 的 world/camera 都使用 RDF。
 
 Workspace 会自动解析 VGGT、LoGeR、Pi3、UniDepth V2 与 UniK3D 的上述已验证默认值。其他 exporter 可用 Visualizer Params JSON
 显式覆盖。请求端口被占用时，Viser 会显示实际绑定端口。Rerun 默认使用 WebGPU；

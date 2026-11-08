@@ -391,9 +391,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "molmobot": {
         "teaser": "https://arxiv.org/html/2603.16861v2/MolmoBotTeaser_11.png",
     },
-    "monst3r": {
-        "teaser": "https://raw.githubusercontent.com/Junyi42/monst3r/main/assets/fig1_teaser.png",
-    },
     "mosaicmem": {
         "teaser": "https://arxiv.org/html/2603.17117v1/figs/mem_comparison_V7.jpg",
         "overview": "https://arxiv.org/html/2603.17117v1/figs/method_v4.jpg",

@@ -1,5 +1,5 @@
 {
-  "modelsListed": 265,
+  "modelsListed": 264,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -1418,7 +1418,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 32,
+      "count": 31,
       "entries": [
         {
           "id": "cut3r",
@@ -1543,14 +1543,6 @@
           "status": "integrated",
           "aliases": [
             "metric3d-prior"
-          ]
-        },
-        {
-          "id": "monst3r",
-          "name": "MonST 3R",
-          "status": "verified",
-          "aliases": [
-            "monst3r"
           ]
         },
         {

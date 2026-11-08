@@ -27,12 +27,6 @@ class LagrNVSPipeline(ThreeDFourDRuntimePipeline):
     MODEL_ID = "lagernvs"
 
 
-class MonST3RPipeline(ThreeDFourDRuntimePipeline):
-    """Pipeline implementation for MonST3R visual generation."""
-
-    MODEL_ID = "monst3r"
-
-
 class MVDiffusionPipeline(ThreeDFourDRuntimePipeline):
     """Pipeline implementation for MVDiffusion visual generation."""
 
@@ -60,7 +54,6 @@ class WorldGenPipeline(ThreeDFourDRuntimePipeline):
 __all__ = [
     "LagrNVSPipeline",
     "MVDiffusionPipeline",
-    "MonST3RPipeline",
     "StableVirtualCameraPipeline",
     "ThreeDFourDRuntimePipeline",
     "WonderJourneyPipeline",

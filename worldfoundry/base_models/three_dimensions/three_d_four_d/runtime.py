@@ -14,7 +14,6 @@ from typing import Any
 
 import yaml
 
-from worldfoundry.core.geometry.transforms import depth_to_world_points
 from worldfoundry.core.io.paths import REPO_ROOT, package_data_path
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 from worldfoundry.zoo.runtime.profiles import load_runtime_profile
@@ -56,19 +55,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         required_input="image",
         source_repo_url="https://github.com/facebookresearch/lagernvs",
         input_schema={"prompt": False, "image": True, "video": False, "actions": ["camera_path"]},
-    ),
-    "monst3r": ThreeDFourDRuntimeSpec(
-        model_id="monst3r",
-        display_name="MonST3R",
-        repo_names=("monst3r", "MonST3R"),
-        entrypoint="demo.py",
-        command_kind="monst3r_demo",
-        artifact_kind="generated_4d_scene",
-        artifact_filename="monst3r.glb",
-        required_input="image_or_video",
-        source_repo_url="https://github.com/Junyi42/monst3r",
-        input_schema={"prompt": False, "image": True, "video": True, "actions": ["camera_path"]},
-        notes=("Runs the in-tree MonST3R demo.py infer path and exports a GLB scene artifact.",),
     ),
     "mvdiffusion": ThreeDFourDRuntimeSpec(
         model_id="mvdiffusion",
@@ -124,7 +110,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
 
 IN_TREE_RUNTIME_DIRS: Mapping[str, tuple[str, ...]] = {
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
-    "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "mvdiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
     "stable-virtual-camera": (
         "base_models",
@@ -325,14 +310,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             if artifact_path.resolve() != target.resolve():
                 shutil.copy2(artifact_path, target)
                 artifact_path = target
-        visualization_path = None
-        if self.spec.command_kind == "monst3r_demo":
-            seq_name = str(kwargs.get("seq_name", self.options.get("seq_name")) or "worldfoundry")
-            confidence_threshold = float(kwargs.get("min_conf_thr", self.options.get("min_conf_thr", 1.1)))
-            visualization_path = _build_monst3r_rerun_recording(
-                output.parent / seq_name,
-                confidence_threshold=confidence_threshold,
-            )
         result = {
             "status": "succeeded",
             "model_id": self.model_id,
@@ -345,9 +322,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             "backend_quality": "model_entrypoint",
             "metadata": {**plan_payload, "log_path": str(log_path)},
         }
-        if visualization_path is not None:
-            result["visualization_artifact_path"] = str(visualization_path)
-            result["metadata"]["rrd_path"] = str(visualization_path)
         return result
 
     @property
@@ -435,13 +409,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         gpu = options.get("gpu", self.options.get("gpu"))
         if gpu is not None and str(gpu).strip():
             env["CUDA_VISIBLE_DEVICES"] = str(gpu).strip()
-        if self.spec.model_id == "monst3r":
-            raft_model = _monst3r_raft_model_path()
-            if raft_model:
-                env.setdefault("WORLDFOUNDRY_MONST3R_RAFT_MODEL", str(raft_model))
-            sam2_checkpoint = _monst3r_sam2_checkpoint_path()
-            if sam2_checkpoint:
-                env.setdefault("WORLDFOUNDRY_MONST3R_SAM2_CHECKPOINT", str(sam2_checkpoint))
         existing_da2_model_path = env.get("WORLDFOUNDRY_DEPTH_ANYTHING2_MODEL_PATH") or env.get(
             "WORLDFOUNDRY_DA2_MODEL_PATH"
         )
@@ -481,7 +448,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         output_dir = str(context["output_dir"])
         run_dir = str(context["run_dir"])
         images = [str(item) for item in context.get("images") or []]
-        video = str(context.get("video") or "")
         seed = str(options.get("seed", self.options.get("seed", 1234)))
         config = str(options.get("config") or self.options.get("config") or self.spec.default_config or "")
 
@@ -575,66 +541,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 images=images,
             )
             command = [python, entrypoint, "--example_config", config]
-            return command
-        if self.spec.command_kind == "monst3r_demo":
-            command = [
-                python,
-                entrypoint,
-                "--output_dir",
-                output_dir,
-                "--device",
-                str(context.get("device") or self.device or "cuda"),
-                "--save_name",
-                Path(output_path).stem or "monst3r_scene",
-            ]
-            if video:
-                command.extend(["--input_dir", video])
-            elif images:
-                command.extend(["--input_dir", _monst3r_input_dir(images, Path(run_dir))])
-            weights = options.get("weights", self.options.get("weights"))
-            if weights:
-                command.extend(["--weights", str(weights)])
-            model_name = options.get("model_name", self.options.get("model_name"))
-            if model_name:
-                command.extend(["--model_name", str(model_name)])
-            image_size = options.get("image_size", self.options.get("image_size"))
-            if image_size is not None:
-                command.extend(["--image_size", str(image_size)])
-            seq_name = options.get("seq_name", self.options.get("seq_name"))
-            command.extend(["--seq_name", str(seq_name or "worldfoundry")])
-            num_frames = options.get("num_frames", self.options.get("num_frames"))
-            if num_frames is not None:
-                command.extend(["--num_frames", str(num_frames)])
-            batch_size = options.get("batch_size", self.options.get("batch_size"))
-            if batch_size is not None:
-                command.extend(["--batch_size", str(batch_size)])
-            if context.get("fps") is not None:
-                command.extend(["--fps", str(context.get("fps"))])
-            for key in ("not_batchify", "real_time", "window_wise", "silent", "skip_pair_dynamic_mask"):
-                if _bool_option(options, self.options, key):
-                    command.append(f"--{key}")
-            for key in (
-                "niter",
-                "scenegraph_type",
-                "winsize",
-                "refid",
-                "min_conf_thr",
-                "cam_size",
-                "temporal_smoothing_weight",
-                "translation_weight",
-                "flow_loss_weight",
-                "flow_loss_start_iter",
-                "flow_loss_threshold",
-            ):
-                value = options.get(key, self.options.get(key))
-                if value is not None:
-                    command.extend([f"--{key}", str(value)])
-            window_size = options.get("window_size", self.options.get("window_size"))
-            if window_size is not None:
-                command.extend(["--window_size", str(window_size)])
-            window_overlap_ratio = options.get("window_overlap_ratio", self.options.get("window_overlap_ratio"))
-            if window_overlap_ratio is not None:
-                command.extend(["--window_overlap_ratio", str(window_overlap_ratio)])
             return command
         if self.spec.command_kind == "mvdiffusion_demo":
             command = [python, entrypoint]
@@ -751,7 +657,7 @@ def _coerce_model_artifact_output(output: Path, spec: ThreeDFourDRuntimeSpec) ->
     artifact_suffix = Path(spec.artifact_filename).suffix.lower()
     if not artifact_suffix or output.suffix.lower() == artifact_suffix:
         return output
-    if spec.command_kind in {"monst3r_demo", "worldgen_inference"}:
+    if spec.command_kind == "worldgen_inference":
         return output.with_name(Path(spec.artifact_filename).name)
     return output
 
@@ -802,30 +708,6 @@ def _lagernvs_model_repo(value: str) -> str:
     return text
 
 
-def _monst3r_input_dir(images: Sequence[str], run_dir: Path) -> str:
-    if not images:
-        return ""
-    if len(images) == 1:
-        return str(Path(images[0]))
-
-    expanded = [
-        Path(item).expanduser()
-        for item in _expand_image_inputs(images)
-        if Path(item).suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
-    ]
-    if len(expanded) <= 1:
-        return str(Path(images[0]))
-
-    target_dir = run_dir / "monst3r_inputs"
-    if target_dir.exists():
-        shutil.rmtree(target_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    for index, source in enumerate(expanded):
-        suffix = source.suffix or ".png"
-        shutil.copy2(source, target_dir / f"{index:05d}{suffix.lower()}")
-    return str(target_dir)
-
-
 def _ckpt_root() -> Path:
     return Path(os.environ.get("WORLDFOUNDRY_CKPT_DIR", REPO_ROOT.parent / "ckpt")).expanduser()
 
@@ -858,28 +740,6 @@ def _first_existing_ckpt(*parts: str) -> str | None:
         candidate = root / part
         if candidate.exists():
             return str(candidate)
-    return None
-
-
-def _monst3r_raft_model_path() -> Path | None:
-    for candidate in (
-        _ckpt_root() / "monst3r_raft_models" / "raft-things.pth",
-        _ckpt_root() / "hfd" / "monst3r--MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt" / "raft-things.pth",
-    ):
-        if candidate.is_file():
-            return candidate
-    return None
-
-
-def _monst3r_sam2_checkpoint_path() -> Path | None:
-    for candidate in (
-        _ckpt_root() / "sam2.1-hiera-large" / "sam2.1_hiera_large.pt",
-        _ckpt_root() / "hfd" / "facebook--sam2.1-hiera-large" / "sam2.1_hiera_large.pt",
-        _ckpt_root() / "sam2-hiera-large" / "sam2_hiera_large.pt",
-        _ckpt_root() / "hfd" / "facebook--sam2-hiera-large" / "sam2_hiera_large.pt",
-    ):
-        if candidate.is_file():
-            return candidate
     return None
 
 
@@ -1053,110 +913,6 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.write_text(
         json.dumps(_jsonable(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-
-
-def _tum_pose(row: Any) -> Any:
-    """Convert one TUM ``timestamp tx ty tz qx qy qz qw`` row to camera-to-world."""
-
-    import numpy as np
-
-    values = np.asarray(row, dtype=np.float64)
-    x, y, z, w = values[4:8]
-    norm = max(float(np.linalg.norm([x, y, z, w])), 1e-12)
-    x, y, z, w = x / norm, y / norm, z / norm, w / norm
-    rotation = np.array(
-        [
-            [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
-            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
-            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
-        ]
-    )
-    pose = np.eye(4)
-    pose[:3, :3] = rotation
-    pose[:3, 3] = values[1:4]
-    return pose
-
-
-def _build_monst3r_rerun_recording(
-    sequence_dir: Path,
-    *,
-    confidence_threshold: float,
-) -> Path | None:
-    """Build a time-varying 4D viewer from MonST3R's official saved outputs."""
-
-    try:
-        import imageio.v2 as iio
-        import numpy as np
-        import rerun as rr
-    except ImportError:
-        return None
-
-    depth_paths = sorted(sequence_dir.glob("frame_*.npy"))
-    trajectory_path = sequence_dir / "pred_traj.txt"
-    intrinsics_path = sequence_dir / "pred_intrinsics.txt"
-    if not depth_paths or not trajectory_path.is_file() or not intrinsics_path.is_file():
-        return None
-
-    trajectory = np.atleast_2d(np.loadtxt(trajectory_path))
-    intrinsics = np.atleast_2d(np.loadtxt(intrinsics_path)).reshape(-1, 3, 3)
-    frame_count = min(len(depth_paths), len(trajectory), len(intrinsics))
-    recording_path = sequence_dir.parent / "monst3r_sequence.rrd"
-    rr.init("worldfoundry_monst3r", recording_id=sequence_dir.parent.name, spawn=False)
-    rr.save(recording_path)
-    rr.log("world", rr.ViewCoordinates.RDF, static=True)
-    rr.log("trajectory", rr.ViewCoordinates.RDF, static=True)
-    poses = [_tum_pose(row) for row in trajectory[:frame_count]]
-    rr.log(
-        "trajectory/camera_path",
-        rr.LineStrips3D([np.stack([pose[:3, 3] for pose in poses])]),
-        static=True,
-    )
-    for frame_id, (depth_path, pose, intrinsic) in enumerate(
-        zip(depth_paths[:frame_count], poses, intrinsics[:frame_count], strict=False)
-    ):
-        if hasattr(rr, "set_time"):
-            rr.set_time("frame", sequence=frame_id)
-        else:
-            rr.set_time_sequence("frame", frame_id)
-        color_path = sequence_dir / f"frame_{frame_id:04d}.png"
-        confidence_path = sequence_dir / f"init_conf_{frame_id}.npy"
-        if not color_path.is_file() or not confidence_path.is_file():
-            continue
-        color = iio.imread(color_path)
-        depth = np.load(depth_path)
-        confidence = np.load(confidence_path)
-        points = depth_to_world_points(depth, intrinsic, pose)
-        valid = np.isfinite(points).all(axis=-1) & np.isfinite(confidence) & (confidence > confidence_threshold)
-        rr.log("world/dynamic_points", rr.Points3D(points[valid], colors=color[valid], radii=0.001))
-        rr.log(
-            "world/current_camera",
-            rr.Transform3D(translation=pose[:3, 3], mat3x3=pose[:3, :3], from_parent=True),
-        )
-        rr.log(
-            "world/current_camera",
-            rr.Pinhole(
-                image_from_camera=intrinsic,
-                resolution=[color.shape[1], color.shape[0]],
-                camera_xyz=rr.ViewCoordinates.RDF,
-                image_plane_distance=0.03,
-            ),
-        )
-        rr.log("world/current_camera/rgb", rr.Image(color))
-        rr.log(
-            "observations/depth",
-            rr.DepthImage(
-                depth,
-                meter=1.0,
-                depth_range=[float(np.percentile(depth, 1)), float(np.percentile(depth, 99))],
-            ),
-        )
-        mask_path = sequence_dir / f"dynamic_mask_{frame_id}.png"
-        if mask_path.is_file():
-            dynamic_mask = iio.imread(mask_path)
-            if np.any(dynamic_mask):
-                rr.log("diagnostics/dynamic_mask", rr.Image(dynamic_mask))
-    rr.disconnect()
-    return recording_path
 
 
 def _jsonable(value: Any) -> Any:

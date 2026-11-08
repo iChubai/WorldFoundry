@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 222,
+  "modelsTotal": 221,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -610,7 +610,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 32,
+      "count": 31,
       "entries": [
         {
           "name": "CUT3R",
@@ -671,10 +671,6 @@
         {
           "name": "Metric3D",
           "url": "https://github.com/YvanYin/Metric3D"
-        },
-        {
-          "name": "MonST3R",
-          "url": "https://github.com/Junyi42/monst3r"
         },
         {
           "name": "MVDiffusion",

@@ -355,14 +355,6 @@
       "caption": "MolmoAct2",
       "captionZh": "MolmoAct2"
     },
-    "monst3r": {
-      "modelId": "monst3r",
-      "teaserSrc": "/models/monst3r/teaser.webp",
-      "teaserAlt": "Official paper teaser: Watch the video.",
-      "teaserAltZh": "论文官方 Teaser：MonST3R 的视频生成论文配图。",
-      "teaserCaption": "Official paper teaser: Watch the video.",
-      "teaserCaptionZh": "论文官方 Teaser：MonST3R 的视频生成论文配图。"
-    },
     "motionctrl": {
       "modelId": "motionctrl",
       "paperSrc": "/models/motionctrl/paper.png",

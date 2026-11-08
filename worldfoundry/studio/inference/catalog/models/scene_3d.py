@@ -402,7 +402,6 @@ def _lingbot_map_default_ref() -> str:
 
 _IN_TREE_REPO_PARTS: dict[str, tuple[str, ...]] = {
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
-    "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "MVDiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
     "stable-virtual-camera": (
         "base_models",
@@ -461,25 +460,6 @@ def _three_d_four_d_runtime_call_kwargs(**kwargs: Any) -> dict[str, Any]:
     }
     call_kwargs.update(kwargs)
     return call_kwargs
-
-
-def _monst3r_default_call_kwargs() -> dict[str, Any]:
-    checkpoint_dir = checkpoint_root_path("MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt")
-    legacy_checkpoint = checkpoint_dir / "MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt.pth"
-    if legacy_checkpoint.is_file():
-        weights = legacy_checkpoint
-    elif (checkpoint_dir / "config.json").is_file() and (checkpoint_dir / "model.safetensors").is_file():
-        weights = checkpoint_dir
-    else:
-        weights = legacy_checkpoint
-    return _three_d_four_d_runtime_call_kwargs(
-        weights=str(weights),
-        seq_name="worldfoundry",
-        niter=300,
-        flow_loss_weight=0.0,
-        skip_pair_dynamic_mask=True,
-        silent=True,
-    )
 
 
 def _geometry_prior_call_params(*model_params: str) -> tuple[str, ...]:
@@ -1524,49 +1504,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "tags": ("novel-view", "nvs", "vggt", "gated-checkpoint"),
         "env_hints": ("HF_TOKEN",),
         "notes": "Uses the local official LagrNVS minimal_inference.py entrypoint when weights and dependencies are staged.",
-    },
-    "monst3r": {
-        "display_name": "MonST3R",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("monst3r"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "monst3r_demo",
-        "default_call_kwargs": _monst3r_default_call_kwargs,
-        "call_params": _three_d_four_d_runtime_call_params(
-            "images",
-            "video",
-            "fps",
-            "weights",
-            "model_name",
-            "image_size",
-            "seq_name",
-            "save_name",
-            "num_frames",
-            "batch_size",
-            "niter",
-            "scenegraph_type",
-            "winsize",
-            "refid",
-            "min_conf_thr",
-            "cam_size",
-            "temporal_smoothing_weight",
-            "translation_weight",
-            "flow_loss_weight",
-            "flow_loss_start_iter",
-            "flow_loss_threshold",
-            "not_batchify",
-            "real_time",
-            "window_wise",
-            "window_size",
-            "window_overlap_ratio",
-            "skip_pair_dynamic_mask",
-            "silent",
-        ),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "tags": ("4d", "reconstruction", "dynamic-scene"),
-        "notes": "Runs the in-tree MonST3R demo.py entrypoint and exports a GLB scene artifact. Studio defaults disable optional flow loss so missing RAFT2/SAM2 assets do not block preview output.",
     },
     "mvdiffusion": {
         "display_name": "MVDiffusion",

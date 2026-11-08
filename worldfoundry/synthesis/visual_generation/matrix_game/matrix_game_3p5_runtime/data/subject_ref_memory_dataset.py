@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 from collections import OrderedDict
@@ -9,7 +10,6 @@ from .unified_dataset import (
     DA3MosaicVideoDataset,
     _derive_seed,
 )
-import contextlib
 
 IMAGENET_MEAN_RGB = np.asarray([123.675, 116.28, 103.53], dtype=np.float32)
 

@@ -2,10 +2,11 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+import contextlib
+
 import torch
 import torch.nn as nn
 from torch.nn.modules.activation import Sigmoid
-import contextlib
 
 epsilon = 1e-8
 

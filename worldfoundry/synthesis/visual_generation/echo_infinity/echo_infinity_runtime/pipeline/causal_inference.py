@@ -1,3 +1,4 @@
+import contextlib
 from pathlib import Path
 
 import torch
@@ -9,7 +10,6 @@ from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtim
     WanTextEncoder,
     WanVAEWrapper,
 )
-import contextlib
 
 
 def _config_get(config, key, default=None):

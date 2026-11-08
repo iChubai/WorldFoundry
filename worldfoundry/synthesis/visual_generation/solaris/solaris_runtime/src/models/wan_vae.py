@@ -1,8 +1,9 @@
+import itertools
+
 import jax
 import jax.numpy as jnp
 from einops import rearrange
 from flax import nnx
-import itertools
 
 CACHE_T = 2
 VAE_MEAN = jnp.array(

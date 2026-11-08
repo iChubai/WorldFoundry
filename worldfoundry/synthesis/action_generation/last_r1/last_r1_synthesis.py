@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -19,7 +20,6 @@ from PIL import Image
 from worldfoundry.core.io.paths import official_runtime_repo_path, project_root, resolve_worldfoundry_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
-import contextlib
 
 
 class LastR1Synthesis(ActionModelSynthesis):

@@ -735,7 +735,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                     is_cache = False
                     if use_deepcache and num_inference_steps == 50:
                         no_cache_steps = list(range(10)) + list(range(10, 40, 2)) + list(range(40, 50))
-                        is_cache = not i in no_cache_steps
+                        is_cache = i not in no_cache_steps
                     if split_camera_cfg:
                         if i == 0:
                             print(

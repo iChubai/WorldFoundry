@@ -7,6 +7,7 @@ across all EventAgent objects. It also holds the shared prompts
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 from dataclasses import dataclass
@@ -21,7 +22,6 @@ from .entity_matcher import EntityMatcher
 from .event_agent import EventAgent, EventPrompts
 from .event_types import EventID, EventObservation, EventState, make_event_id
 from .logger import logger
-import contextlib
 
 
 @dataclass

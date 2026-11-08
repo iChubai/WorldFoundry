@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
 import html
 import math
 from collections.abc import Callable
@@ -47,7 +48,6 @@ from ..utils.inference_utils import (
     vigeo_opts_from_cfg,
 )
 from .pipeline_output import EvokePipelineOutput
-import contextlib
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm

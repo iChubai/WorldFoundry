@@ -1,4 +1,5 @@
 # Inference-only Diffusion Policy source retained in-tree.
+import itertools
 import logging
 
 import einops
@@ -8,7 +9,6 @@ from einops.layers.torch import Rearrange
 
 from .convolution import Conv1dBlock, Downsample1d, Upsample1d
 from .embeddings import SinusoidalPosEmb
-import itertools
 
 logger = logging.getLogger(__name__)
 

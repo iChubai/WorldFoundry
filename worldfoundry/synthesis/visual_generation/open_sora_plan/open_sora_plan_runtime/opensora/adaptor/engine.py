@@ -3,6 +3,7 @@
 
 # DeepSpeed Team
 
+import contextlib
 import gc
 import hashlib
 import os
@@ -133,7 +134,6 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
 from opensora.adaptor.zp_manager import zp_manager
-import contextlib
 
 MEMORY_OPT_ALLREDUCE_SIZE = 500000000
 
@@ -588,7 +588,7 @@ class DeepSpeedEngine(Module):
     def random_ltd_initialize(self):
         assert self.random_ltd_enabled()
         random_ltd_config = self.random_ltd_config()
-        random_ltd_queue = deque(list(sorted(random_ltd_config[RANDOM_LTD_LAYER_ID])))
+        random_ltd_queue = deque(sorted(random_ltd_config[RANDOM_LTD_LAYER_ID]))
         count = 0
         for name, layer in self.module.named_modules():
             if isinstance(layer, RandomLayerTokenDrop):

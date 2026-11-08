@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 
@@ -9,7 +10,6 @@ import numpy as np
 import torch
 
 from .config import _normalize_mosaic_fuse_mode
-import contextlib
 
 
 class _MaterializeMixin:

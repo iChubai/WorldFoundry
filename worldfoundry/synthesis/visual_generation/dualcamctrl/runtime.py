@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -23,7 +24,6 @@ from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
     WanVideoCameraPipeline,
 )
-import contextlib
 
 MODEL_ID = "dualcamctrl"
 DISPLAY_NAME = "DualCamCtrl"

@@ -34,8 +34,9 @@ from kairos.modules.utils import parallel_state
 from kairos.modules.vaes.parallel_vae_wrapper import ParallelVAEWrapper
 
 # isort: split
-from kairos.modules.utils.tp_utils import _distribute_input_sp, _gather_input_sp
 import contextlib
+
+from kairos.modules.utils.tp_utils import _distribute_input_sp, _gather_input_sp
 
 # isort: split
 

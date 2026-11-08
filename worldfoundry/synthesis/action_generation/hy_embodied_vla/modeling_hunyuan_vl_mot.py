@@ -59,8 +59,9 @@ try:
 except ImportError:
     _TIMM_AVAILABLE = False
 
-from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig
 import itertools
+
+from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig
 
 logger = logging.getLogger(__name__)
 

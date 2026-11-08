@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+
 import torch
 from torch import nn
 from transformers import AutoConfig, AutoModelForCausalLM, GPTNeoXModel, GPTNeoXPreTrainedModel
@@ -10,7 +12,6 @@ from .act_head import build_act_head
 from .config import LlavaPythiaConfig
 from .diffusion_head import ConditionalUnet1D
 from .multimodal import LlavaMetaForCausalLM, LlavaMetaModel
-import contextlib
 
 
 class LLavaPythiaModel(LlavaMetaModel, GPTNeoXModel):

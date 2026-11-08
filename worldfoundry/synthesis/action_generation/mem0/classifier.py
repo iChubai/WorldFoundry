@@ -4,10 +4,11 @@
 
 from __future__ import annotations
 
+import itertools
+
 import torch
 import torch.nn.functional as F
 from torch import nn
-import itertools
 
 
 class ResidualMLPBlock(nn.Module):

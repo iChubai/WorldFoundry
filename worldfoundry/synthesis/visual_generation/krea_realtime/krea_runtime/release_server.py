@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder
 
 # Internal / self-forcing imports
+import contextlib
 import time
 from pathlib import Path
 
@@ -55,7 +56,6 @@ from utils.misc import AtomicCounter
 from v2v import encode_video_latent, get_denoising_schedule
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
-import contextlib
 
 # PyTorch renamed this setting in older releases and removed the compatibility
 # alias in newer ones.  Keep the upstream intent without making module import

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 from collections.abc import Mapping
@@ -11,7 +12,6 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.core.io.paths import hfd_root_path
-import contextlib
 
 DEFAULT_ATI_REPO = "bytedance-research/ATI"
 DEFAULT_WAN_I2V_REPO = "Wan-AI/Wan2.1-I2V-14B-480P"

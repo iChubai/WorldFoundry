@@ -19,6 +19,7 @@ Usage (distilled / few-step):
 """
 
 import argparse
+import itertools
 import os
 
 import numpy as np
@@ -45,7 +46,6 @@ from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.model_utils 
     load_state_dict_from_dcp,
 )
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.umt5 import clear_umt5_memory, get_umt5_embedding
-import itertools
 
 torch._dynamo.config.suppress_errors = True
 

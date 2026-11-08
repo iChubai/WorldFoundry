@@ -1,3 +1,5 @@
+import itertools
+
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -9,7 +11,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.a
     RMS_norm,
     Upsample,
 )
-import itertools
 
 
 class Resample(nn.Module):

@@ -183,8 +183,9 @@ class AttentionBlock(nn.Module):
         return x + identity
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
 import itertools
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
 
 
 class Down_ResidualBlock(nn.Module):

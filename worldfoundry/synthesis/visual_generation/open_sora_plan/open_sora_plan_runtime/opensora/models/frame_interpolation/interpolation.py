@@ -18,9 +18,10 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.util
 )
 
 # isort: split
+import itertools
+
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder
-import itertools
 
 AMT_G = {
     "name": "networks.AMT-G.Model",

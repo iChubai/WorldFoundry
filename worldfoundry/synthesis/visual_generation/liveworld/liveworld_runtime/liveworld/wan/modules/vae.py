@@ -154,8 +154,9 @@ class Resample(nn.Module):
         nn.init.zeros_(conv.bias.data)
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
 import itertools
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import ResidualBlock
 
 
 class AttentionBlock(nn.Module):

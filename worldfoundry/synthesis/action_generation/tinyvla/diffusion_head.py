@@ -2,11 +2,11 @@
 Implementation of Diffusion Policy https://diffusion-policy.cs.columbia.edu/ by Cheng Chi
 """
 
+import itertools
 import math
 
 import torch
 import torch.nn as nn
-import itertools
 
 # =================== UNet for Diffusion ==============
 

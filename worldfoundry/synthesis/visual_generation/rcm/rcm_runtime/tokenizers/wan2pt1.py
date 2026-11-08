@@ -176,13 +176,14 @@ class Resample(nn.Module):
         nn.init.zeros_(conv.bias.data)
 
 
+import itertools
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import (
     CausalConv3d as ReferenceCausalConv3d,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import (
     ResidualBlock,
 )
-import itertools
 
 
 class AttentionBlock(nn.Module):

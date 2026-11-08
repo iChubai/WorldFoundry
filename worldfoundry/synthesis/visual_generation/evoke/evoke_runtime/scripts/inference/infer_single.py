@@ -35,10 +35,11 @@ if os.environ.get("EVOKE_CPU_THREADS"):
 # Single source of truth for the chunk-0 disparity default: the engine owns it (the pipeline falls back
 # to the same constant when the attribute is absent, e.g. training validation), the CLI only surfaces it.
 # Import is safe here -- da3_cloud's module scope is numpy/torch/pathlib only, no DA3/ViGeo weight load.
+import contextlib
+
 from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402
     CHUNK0_TARGET_DISPARITY_PX_DEFAULT as _CHUNK0_TARGET_DISPARITY_PX_DEFAULT,
 )
-import contextlib
 
 _PARSER = None  # set by parse_args; lets checks read a flag's default rather than duplicating it
 

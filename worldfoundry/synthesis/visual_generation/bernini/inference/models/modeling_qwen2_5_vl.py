@@ -85,6 +85,8 @@ except ModuleNotFoundError:
     IGNORE_INDEX = -100
     IMAGE_INPUT_INDEX = -200
     VIDEO_INPUT_INDEX = -300
+import contextlib
+
 from torch.nn.attention.flex_attention import flex_attention
 from veomni.distributed.parallel_state import get_parallel_state
 from veomni.distributed.sequence_parallel import (
@@ -96,7 +98,6 @@ from veomni.distributed.sequence_parallel import (
 )
 from veomni.utils.device import IS_CUDA_AVAILABLE
 from veomni.utils.import_utils import is_liger_kernel_available  # noqa: F401 - Keeps the module's import-time setup.
-import contextlib
 
 with contextlib.suppress(Exception):
     from liger_kernel.transformers.qwen2vl_mrope import liger_multimodal_rotary_pos_emb

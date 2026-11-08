@@ -1,3 +1,4 @@
+import contextlib
 import importlib
 import json
 import os
@@ -9,7 +10,6 @@ from worldfoundry.core.vram import init_weights_on_device
 
 from ..model_registry import huggingface_model_loader_configs, model_loader_configs, patch_model_loader_configs
 from .lora import get_lora_loaders
-import contextlib
 
 
 def load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device):

@@ -11,6 +11,7 @@ AFTER the GPU is done. Two modes:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
@@ -21,7 +22,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
-import contextlib
 
 REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
 if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly

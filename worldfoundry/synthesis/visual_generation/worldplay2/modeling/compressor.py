@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import itertools
+
 import torch
 from einops import rearrange
 from torch import nn
@@ -14,7 +16,6 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model impo
     CausalConv3d,
 )
 from worldfoundry.core.attention import scaled_dot_product_attention
-import itertools
 
 
 class MemoryAttentionBlock(AttentionBlock):

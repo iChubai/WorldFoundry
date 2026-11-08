@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import importlib
 import json
 import os
@@ -12,7 +13,6 @@ from worldfoundry.core.io.paths import checkpoint_root_candidates
 from worldfoundry.synthesis.visual_generation.lyra_2 import (
     SOURCE_PACKAGE_ROOT as LYRA2_SOURCE_PACKAGE_ROOT,
 )
-import contextlib
 
 DEFAULT_DA3_MODEL_NAME = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
 DEFAULT_WEIGHT_DTYPE = "bfloat16"

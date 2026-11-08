@@ -1,5 +1,6 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/unet_2d_condition.py
 
+import contextlib
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,7 +24,6 @@ from .unet_blocks import (
     get_down_block,
     get_up_block,
 )
-import contextlib
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

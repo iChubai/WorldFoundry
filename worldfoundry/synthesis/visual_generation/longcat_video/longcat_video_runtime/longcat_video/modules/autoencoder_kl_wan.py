@@ -33,8 +33,9 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
 import itertools
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D, DupUp3D
 
 
 class WanCausalConv3d(nn.Conv3d):

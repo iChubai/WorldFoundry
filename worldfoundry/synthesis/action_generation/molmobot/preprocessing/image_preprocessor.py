@@ -1,3 +1,4 @@
+import contextlib
 import dataclasses
 import os
 import warnings
@@ -16,7 +17,6 @@ from transformers.image_utils import (
 )
 
 from ..io import get_bytes_range
-import contextlib
 
 
 def setup_pil():

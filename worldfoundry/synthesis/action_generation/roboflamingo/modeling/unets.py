@@ -3,6 +3,7 @@
 Diffusion polices.
 """
 
+import itertools
 import math
 import time
 
@@ -13,7 +14,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
-import itertools
 
 # -----------------------------------------------------------------------------#
 # ----------------------------------- Unets -----------------------------------#

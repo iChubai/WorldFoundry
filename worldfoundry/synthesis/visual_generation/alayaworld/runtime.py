@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import gc
 import os
 from collections.abc import Sequence
@@ -62,7 +63,6 @@ from worldfoundry.synthesis.visual_generation.alayaworld.model import (
 )
 
 from .spatial import AlayaSpatialMemory, SpatialBank
-import contextlib
 
 _LTX_SCALE_FACTORS = SpatioTemporalScaleFactors(time=8, height=32, width=32)
 

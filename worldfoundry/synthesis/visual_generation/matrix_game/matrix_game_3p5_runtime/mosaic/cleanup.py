@@ -1,7 +1,7 @@
+import contextlib
 import os
 
 import torch
-import contextlib
 
 
 def _rank_local_cuda_device():

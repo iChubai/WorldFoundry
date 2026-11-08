@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from collections.abc import Mapping
 from pathlib import Path
@@ -15,7 +16,6 @@ from worldfoundry.core.media.resolutions import VIDEO_RES_SIZE_INFO
 from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 
 from ...base_synthesis import BaseSynthesis
-import contextlib
 
 WAN_DEFAULT_NEGATIVE_PROMPT = "low quality, distorted, ugly, bad anatomy"
 DIT_DEFAULT_NEGATIVE_PROMPT = (

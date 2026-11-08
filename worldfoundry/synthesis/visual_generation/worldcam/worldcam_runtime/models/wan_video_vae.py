@@ -204,8 +204,9 @@ class Up_ResidualBlock(nn.Module):
             return x_main
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Encoder3d
 import itertools
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Encoder3d
 
 
 class Encoder3d_38(nn.Module):
@@ -316,8 +317,9 @@ class Encoder3d_38(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Decoder3d
 import itertools
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import Decoder3d
 
 
 class Decoder3d_38(nn.Module):

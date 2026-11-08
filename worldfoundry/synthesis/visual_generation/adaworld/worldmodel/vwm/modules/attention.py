@@ -323,7 +323,7 @@ class SpatialTransformer(nn.Module):
                     f"Setting context_dim to {depth * [context_dim[0]]} now"
                 )
                 # Depth does not match context dims
-                assert all((x == context_dim[0] for x in context_dim)), (
+                assert all(x == context_dim[0] for x in context_dim), (
                     "Need homogenous context_dim to match depth automatically"
                 )
                 context_dim = depth * [context_dim[0]]

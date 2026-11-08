@@ -1,6 +1,7 @@
 # Adapted from seedleap/zing-world-model (Apache-2.0).
 from __future__ import annotations
 
+import itertools
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,7 +11,6 @@ import torch
 from PIL import Image
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.zing.config import ZingConfig
-import itertools
 
 
 @dataclass

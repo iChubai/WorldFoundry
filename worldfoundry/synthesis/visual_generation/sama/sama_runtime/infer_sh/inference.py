@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import math
 import os
 
@@ -17,7 +18,6 @@ from worldfoundry.synthesis.visual_generation.sama.native_pipeline import (
     SamaWanPipeline,
     load_sama_pipeline,
 )
-import contextlib
 
 DEFAULT_MODEL_ROOT = ""
 

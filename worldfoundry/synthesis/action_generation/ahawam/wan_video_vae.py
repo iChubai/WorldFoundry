@@ -142,11 +142,12 @@ class AttentionBlock(nn.Module):
         return x + identity
 
 
+import itertools
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
     Down_ResidualBlock,
     DupUp3D,
 )
-import itertools
 
 
 class Up_ResidualBlock(nn.Module):

@@ -8,6 +8,7 @@ while the selected upstream interpreter executes the official entrypoint.
 
 from __future__ import annotations
 
+import itertools
 import json
 import math
 import os
@@ -25,7 +26,6 @@ from urllib.parse import urlparse
 from worldfoundry.core.io import resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.runtime.env import resolve_hfd_root
-import itertools
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 UPSTREAM_REVISION = "0b931fd42f5ef51410019ae41b261eb3b8936410"

@@ -25,6 +25,7 @@ DEFAULT_REALTIME_CONTROLS = (
 )
 REALTIME_AXIS_SOURCES = ("mouse_x", "mouse_y", "gamepad_lx", "gamepad_ly", "gamepad_rx", "gamepad_ry")
 REALTIME_AXIS_MODES = ("delta", "level")
+REALTIME_ADVANCE_MODES = ("on_input", "continuous")
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +111,12 @@ class RealtimeSensor:
 
 @dataclass(frozen=True, slots=True)
 class RealtimeSpec:
-    """Model-owned playback and generation cadence for one resident session."""
+    """Model-owned playback and generation cadence for one resident session.
+
+    ``advance="on_input"`` generates a chunk only for user input; ``"continuous"``
+    lets the server advance the session after each chunk, up to ``max_chunks``
+    chunks per rollout when set.
+    """
 
     fps: int = 16
     first_chunk_frames: int = 9
@@ -124,9 +130,11 @@ class RealtimeSpec:
     sensors: tuple[RealtimeSensor, ...] = ()
     keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS
     axes: tuple[RealtimeAxis, ...] = ()
+    advance: str = "on_input"
+    max_chunks: int | None = None
 
     def __post_init__(self) -> None:
-        """Reject non-positive clocks or empty control vocabularies before a session starts."""
+        """Reject non-positive clocks or chunk limits, empty control vocabularies, and unknown advance modes."""
         if self.fps < 1:
             raise ValueError("RealtimeSpec.fps must be positive.")
         if self.first_chunk_frames < 1 or self.steady_chunk_frames < 1:
@@ -148,6 +156,10 @@ class RealtimeSpec:
             raise ValueError("RealtimeSpec keys must be unique")
         if len({axis.name for axis in self.axes}) != len(self.axes):
             raise ValueError("RealtimeSpec axis names must be unique")
+        if self.advance not in REALTIME_ADVANCE_MODES:
+            raise ValueError("RealtimeSpec.advance must be 'on_input' or 'continuous'.")
+        if self.max_chunks is not None and self.max_chunks < 1:
+            raise ValueError("RealtimeSpec.max_chunks must be positive when provided.")
 
     @property
     def resolved_input_fps(self) -> float:
@@ -170,14 +182,15 @@ class RealtimeSpec:
     def to_payload(self) -> dict[str, Any]:
         """JSON-safe dict; omit unset optional fields so clients do not treat ``null`` as 0.
 
-        Default keys and an empty axis list are omitted, so specs that keep the
-        default bindings serialize without them.
+        Default keys, an empty axis list, and the default ``advance`` mode are
+        omitted, so specs that keep these defaults serialize without them.
         """
         payload = asdict(self)
         for optional_name in (
             "input_fps",
             "first_input_frames",
             "steady_input_frames",
+            "max_chunks",
         ):
             if payload[optional_name] is None:
                 payload.pop(optional_name)
@@ -195,6 +208,8 @@ class RealtimeSpec:
             ]
         else:
             payload.pop("axes")
+        if self.advance == "on_input":
+            payload.pop("advance")
         return payload
 
     @classmethod
@@ -226,6 +241,7 @@ class RealtimeSpec:
                 "steady_input_frames",
                 default.steady_input_frames,
             )
+            max_chunks = value.get("max_chunks", default.max_chunks)
             return cls(
                 fps=int(value.get("fps", default.fps)),
                 first_chunk_frames=int(value.get("first_chunk_frames", default.first_chunk_frames)),
@@ -241,6 +257,8 @@ class RealtimeSpec:
                 else default.sensors,
                 keys=tuple(RealtimeKey(**item) for item in value["keys"]) if "keys" in value else default.keys,
                 axes=tuple(RealtimeAxis(**item) for item in value["axes"]) if "axes" in value else default.axes,
+                advance=str(value.get("advance", default.advance)),
+                max_chunks=int(max_chunks) if max_chunks is not None else None,
             )
         except (TypeError, ValueError):
             return default
@@ -270,6 +288,7 @@ class InteractiveWorldPipeline(Protocol):
 __all__ = [
     "DEFAULT_REALTIME_CONTROLS",
     "DEFAULT_REALTIME_KEYS",
+    "REALTIME_ADVANCE_MODES",
     "REALTIME_AXIS_MODES",
     "REALTIME_AXIS_SOURCES",
     "InteractiveWorldPipeline",

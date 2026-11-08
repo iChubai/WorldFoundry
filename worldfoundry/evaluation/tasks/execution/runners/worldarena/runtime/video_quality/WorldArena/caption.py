@@ -1,16 +1,7 @@
-import hashlib
 import json
 import os
-import sys
-import time
 
-import decord
-import numpy as np
-import requests
 import torch
-from decord import VideoReader, cpu
-from IPython.display import Markdown, display
-from PIL import Image
 from tqdm import tqdm
 
 from .utils import load_dimension_info
@@ -19,7 +10,6 @@ try:
     import json_repair
 except ImportError:
     json_repair = None
-from pathlib import Path
 
 from worldfoundry.core.execution.device import get_current_torch_device, resolve_inference_dtype
 from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens
@@ -56,7 +46,6 @@ def inference(
     max_new_tokens = max_new_tokens or resolve_generation_max_new_tokens(512, scope="worldarena_caption")
     # print("video input:", video_inputs[0].shape)
     num_frames, _, resized_height, resized_width = video_inputs[0].shape
-    start_time = time.time()
     # adding timeout to avoid long waiting time
     try:
         inputs = processor(
@@ -76,7 +65,6 @@ def inference(
         print(f"Error: {e!s}")
         output_text = ["Error: " + str(e)]
 
-    end_time = time.time()
     return output_text[0]
 
 
@@ -162,7 +150,7 @@ def caption_reference(model_name, model_path, video_folder_root, save_path, **kw
                 start_index = parts.index(model_dataset) + 1
                 video_index = parts.index("video")
                 selected_parts = parts[start_index:video_index]
-                mp4_file_name = "_".join([model_dataset] + selected_parts)
+                mp4_file_name = "_".join([model_dataset, *selected_parts])
             except ValueError:
                 mp4_file_name = "error_in_filename_construction"
 

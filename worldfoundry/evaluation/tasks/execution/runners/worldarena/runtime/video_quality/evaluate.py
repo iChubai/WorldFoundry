@@ -9,14 +9,11 @@ try:
 except ImportError:
     from WorldArena import WorldArenaBenchmark
 import argparse
-import json
-from datetime import datetime
 
 import yaml
 
 
 def parse_args():
-    CUR_DIR = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(description="WorldArenaBenchmark", formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(

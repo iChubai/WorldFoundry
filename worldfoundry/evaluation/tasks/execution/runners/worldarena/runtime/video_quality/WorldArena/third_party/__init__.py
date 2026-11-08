@@ -1,6 +1,5 @@
 """Register third-party metric dependencies on sys.path."""
 
-import os
 import sys
 from pathlib import Path
 

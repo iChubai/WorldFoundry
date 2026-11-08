@@ -1,3 +1,4 @@
+import itertools
 import os
 
 import cv2
@@ -78,7 +79,7 @@ class FlowScore:
 
         pair_scores = []
         with torch.no_grad():
-            for first, second in zip(frames[:-1], frames[1:], strict=False):
+            for first, second in itertools.pairwise(frames):
                 pair_scores.append(self._pairwise_flow_mean(first, second))
 
         return float(np.mean(pair_scores)) if len(pair_scores) > 0 else 0.0

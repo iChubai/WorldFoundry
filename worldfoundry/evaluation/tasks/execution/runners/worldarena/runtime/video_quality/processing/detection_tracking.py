@@ -1,6 +1,4 @@
-import math
 import os
-from collections import defaultdict
 
 import av
 import cv2
@@ -398,8 +396,6 @@ def process_video_with_tracking(
                 box = box.tolist() if hasattr(box, "tolist") else list(box)
 
             x1, y1, x2, y2 = box
-            w = x2 - x1
-            h = y2 - y1
             x_center = (x1 + x2) / 2
             y_center = (y1 + y2) / 2
 

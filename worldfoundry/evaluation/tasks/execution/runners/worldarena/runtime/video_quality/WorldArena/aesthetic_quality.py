@@ -4,7 +4,6 @@ from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,

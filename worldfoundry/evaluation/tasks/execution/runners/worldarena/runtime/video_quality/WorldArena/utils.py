@@ -2,17 +2,15 @@ import json
 import logging
 import os
 import random
-import re
 from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
-import torchvision.transforms.functional as F
-from decord import VideoReader, cpu
+from decord import VideoReader
 from PIL import Image, ImageSequence
 from torchvision import transforms
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -28,11 +26,6 @@ CACHE_DIR = os.environ.get("WORLDARENA_CACHE_DIR")
 if CACHE_DIR is None:
     CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "worldarena")
 
-
-from worldfoundry.core.distributed.collectives.evaluation import (
-    barrier,
-    get_rank,
-)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -142,7 +135,7 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
         if sample == "rand":
             try:
                 frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]
-            except:
+            except BaseException:
                 frame_indices = np.random.permutation(vlen)[:acc_samples]
                 frame_indices.sort()
                 frame_indices = list(frame_indices)

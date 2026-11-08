@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 import numpy as np
-from scipy.optimize import linear_sum_assignment
+from scipy.spatial import ConvexHull
 from scipy.spatial.distance import directed_hausdorff, euclidean
 
 try:
     from fastdtw import fastdtw
 except ImportError:
     fastdtw = None
-import argparse
-import json
-import math
 import os
 
-from scipy.stats import norm
 from tqdm import tqdm
 
 
@@ -115,9 +111,6 @@ def select_farthest_traj_index(traj_gt, invalid_gt_trajs):
 
     max_idx_in_list, _ = max(enumerate(gt_max_distance_list), key=lambda x: x[1])
     return valid_gt_indices[max_idx_in_list]
-
-
-from scipy.spatial import ConvexHull
 
 
 def farthest_distance(points):
@@ -264,7 +257,7 @@ def eval_traj(traj_pred_file, traj_gt_file):
     # else:
     #     ndtw = (ndtw-min)/(ndtw_max-min)
 
-    res = {"ndtw": "%.3f" % ndtw}
+    res = {"ndtw": f"{ndtw:.3f}"}
 
     return res
 
@@ -273,9 +266,9 @@ def calculate_means_and_variances(data):
     metrics = ["ndtw"]
     values = {metric: [] for metric in metrics}
 
-    for task_name, samples in data.items():
-        for sample_id, groups in samples.items():
-            for gid, traj_eval_res in groups.items():
+    for _task_name, samples in data.items():
+        for _sample_id, groups in samples.items():
+            for _gid, traj_eval_res in groups.items():
                 for metric in metrics:
                     if metric in traj_eval_res:
                         values[metric].append(float(traj_eval_res[metric]))
@@ -290,8 +283,6 @@ def calculate_means_and_variances(data):
 
 
 def compute_trajectory_accuracy(gt_path, data_base):
-    metric_keys = ["ndtw"]
-
     res = {}
 
     for task_id in sorted(os.listdir(data_base)):

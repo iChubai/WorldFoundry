@@ -1,6 +1,6 @@
 import argparse
+import itertools
 from pathlib import Path
-from typing import List
 
 import cv2
 import numpy as np
@@ -160,7 +160,7 @@ class OpticalFlowAverageEndPointErrorMetric:
         flow_down = F.interpolate(flow, scale_factor=0.5**self._args.scale, mode="bilinear", align_corners=False) * (
             0.5**self._args.scale
         )
-        info_down = F.interpolate(info, scale_factor=0.5**self._args.scale, mode="area")
+        info_down = F.interpolate(info, scale_factor=0.5**self._args.scale, mode="area")  # noqa: F841 - The interpolation runs as upstream.
 
         flow = flow_down.cpu().numpy().squeeze().transpose(1, 2, 0)
         return flow
@@ -175,7 +175,7 @@ class OpticalFlowAverageEndPointErrorMetric:
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:], strict=False)):
+            for _i, (imfile1, imfile2) in enumerate(itertools.pairwise(images)):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
                 if image1 is None or image2 is None:
@@ -194,8 +194,8 @@ class OpticalFlowAverageEndPointErrorMetric:
             return 0.0
 
         score = sum(scores) / len(scores)
-        empirical_max = 3.4536
-        empirical_min = 0
+        empirical_max = 3.4536  # noqa: F841 - Bounds referenced by the commented normalization below.
+        empirical_min = 0  # noqa: F841 - Bounds referenced by the commented normalization below.
         # score = np.clip(score, empirical_min, empirical_max)
         # score = 1 - (score - empirical_min) / (empirical_max - empirical_min)
         score = 1.0 / max(float(score), 1e-6)

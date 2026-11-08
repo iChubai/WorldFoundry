@@ -1,13 +1,7 @@
-import importlib
-import importlib.util
 import json
 import os
-import re
-from collections import defaultdict
-from itertools import chain
-from pathlib import Path
 
-from worldfoundry.core.distributed.collectives.evaluation import get_rank, print0
+from worldfoundry.core.distributed.collectives.evaluation import print0
 
 from .utils import init_submodules, save_json
 
@@ -266,7 +260,7 @@ class WorldArenaBenchmark:
                     submodules_list = submodules_dict[dimension]
                     caption_model = submodules_list["caption_model"]
                     semantics_model = submodules_list["clip_model"]
-                    caption = caption_reference(
+                    caption_reference(
                         model_name=data_name,
                         model_path=caption_model,
                         video_folder_root=cur_full_info_path,
@@ -288,7 +282,7 @@ class WorldArenaBenchmark:
                     gt_caption_json = os.path.join(self.output_path, "gt_caption_responses.json")
                     if not os.path.isfile(gt_caption_json):
                         gt_full_info_path = self.build_full_gt_info_json(gt_path, "gt", **kwargs)
-                        gt_caption = caption_reference(
+                        caption_reference(
                             model_name="gt",
                             model_path=caption_model,
                             video_folder_root=gt_full_info_path,

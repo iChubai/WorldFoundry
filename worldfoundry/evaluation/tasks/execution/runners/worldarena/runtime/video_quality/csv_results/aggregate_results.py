@@ -2,7 +2,6 @@ import csv
 import glob
 import json
 import os
-from typing import Dict, List, Optional
 
 # Column order for the final CSV
 COLUMN_ORDER: list[str] = [
@@ -200,7 +199,8 @@ def aggregate_results(
         candidates = [
             os.path.join(base_dir, "output_JEDi", "generated_results.json"),
             os.path.join(base_dir, "output_JEDi", "results.json"),
-        ] + glob.glob(os.path.join(base_dir, "output_JEDi", "*.json"))
+            *glob.glob(os.path.join(base_dir, "output_JEDi", "*.json")),
+        ]
         for cand in candidates:
             jepa_score = _ingest_jepa_score(cand)
             if jepa_score is not None:

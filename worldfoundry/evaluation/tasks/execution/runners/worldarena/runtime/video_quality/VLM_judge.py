@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import json
 import os
 import shutil
@@ -279,10 +280,8 @@ def vlm_judge(
         json.dump(results, f, ensure_ascii=False, indent=2)
 
     # Clean up temporary directory
-    try:
+    with contextlib.suppress(Exception):
         shutil.rmtree(tmp_dir)
-    except Exception:
-        pass
 
     return out_file
 

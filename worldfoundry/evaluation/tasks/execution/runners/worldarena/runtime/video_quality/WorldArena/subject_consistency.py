@@ -32,10 +32,7 @@ def subject_consistency(model, video_list, device, read_frame, raft_model_path):
     video_results = []
     args_new = edict({"model": raft_model_path, "small": False, "mixed_precision": False, "alternate_corr": False})
     dynamic = DynamicDegree(args_new, device)
-    if read_frame:
-        image_transform = dino_transform_Image(224)
-    else:
-        image_transform = dino_transform(224)
+    image_transform = dino_transform_Image(224) if read_frame else dino_transform(224)
 
     for video_path in tqdm(video_list, disable=get_rank() > 0):
         video_sim = 0.0

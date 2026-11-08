@@ -1,11 +1,8 @@
-import torch
 from pyiqa.archs.musiq_arch import MUSIQ
 from torchvision import transforms
 from tqdm import tqdm
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
@@ -40,10 +37,7 @@ def transform(images, preprocess_mode="shorter"):
 
 
 def technical_quality(model, video_list, device, **kwargs):
-    if "imaging_quality_preprocessing_mode" not in kwargs:
-        preprocess_mode = "longer"
-    else:
-        preprocess_mode = kwargs["imaging_quality_preprocessing_mode"]
+    preprocess_mode = kwargs.get("imaging_quality_preprocessing_mode", "longer")
     video_results = []
     for video_path in tqdm(video_list, disable=get_rank() > 0):
         images = load_video(video_path)

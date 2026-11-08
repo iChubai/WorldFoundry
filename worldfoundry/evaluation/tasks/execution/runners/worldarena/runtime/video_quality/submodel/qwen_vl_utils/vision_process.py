@@ -9,7 +9,6 @@ import time
 import warnings
 from functools import lru_cache
 from io import BytesIO
-from typing import Optional
 
 import numpy as np
 import requests
@@ -95,14 +94,11 @@ def to_rgb(pil_image: Image.Image) -> Image.Image:
 
 
 def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACTOR) -> Image.Image:
-    if "image" in ele:
-        image = ele["image"]
-    else:
-        image = ele["image_url"]
+    image = ele["image"] if "image" in ele else ele["image_url"]
     image_obj = None
     if isinstance(image, Image.Image):
         image_obj = image
-    elif image.startswith("http://") or image.startswith("https://"):
+    elif image.startswith(("http://", "https://")):
         response = requests.get(image, stream=True)
         image_obj = Image.open(BytesIO(response.content))
     elif image.startswith("file://"):
@@ -197,7 +193,9 @@ def _read_video_torchvision(
     video_path = ele["video"]
     if version.parse(torchvision.__version__) < version.parse("0.19.0"):
         if "http://" in video_path or "https://" in video_path:
-            warnings.warn("torchvision < 0.19.0 does not support http/https video path, please upgrade to 0.19.0.")
+            warnings.warn(
+                "torchvision < 0.19.0 does not support http/https video path, please upgrade to 0.19.0.", stacklevel=1
+            )
         if "file://" in video_path:
             video_path = video_path[7:]
     st = time.time()
@@ -307,10 +305,7 @@ def fetch_video(
     ele: dict, image_factor: int = IMAGE_FACTOR, return_video_sample_fps: bool = False
 ) -> torch.Tensor | list[Image.Image]:
     if isinstance(ele["video"], str):
-        if os.path.isdir(ele["video"]):
-            video_reader_backend = "folder"
-        else:
-            video_reader_backend = get_video_reader_backend()
+        video_reader_backend = "folder" if os.path.isdir(ele["video"]) else get_video_reader_backend()
 
         try:
             video, sample_fps = VIDEO_READER_BACKENDS[video_reader_backend](ele)

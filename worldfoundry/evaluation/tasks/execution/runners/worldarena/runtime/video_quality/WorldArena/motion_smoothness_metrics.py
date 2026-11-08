@@ -1,5 +1,5 @@
+import itertools
 from pathlib import Path
-from typing import List
 
 import cv2
 import numpy as np
@@ -59,7 +59,7 @@ class MotionSmoothnessMetric:
 
         scores_final = []
 
-        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:], strict=False)):
+        for i, (image1, image2) in enumerate(itertools.pairwise(even_images)):
             if i >= len(odd_images):
                 break
 

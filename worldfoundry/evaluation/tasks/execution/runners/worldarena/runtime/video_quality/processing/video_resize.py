@@ -1,8 +1,6 @@
 import os
 
 import cv2
-import decord
-import numpy as np
 import yaml
 
 

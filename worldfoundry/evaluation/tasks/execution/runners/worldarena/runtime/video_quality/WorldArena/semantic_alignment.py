@@ -96,14 +96,13 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
     metric_type = eval_config["metric_type"]
     key = eval_config["key"]
 
-    dt_dasset_name = os.path.basename(dt_json).split("_dataset")[0]
     # Load generated and ground-truth strings
     gen_idxs, gen_strings = get_strings(dt_json, key)
     gt_idxs, gt_strings = get_strings(gt_json, key)
     expanded_gt_strings = []
     expanded_gt_idxs = []
 
-    for gen_id, gen_string in zip(gen_idxs, gen_strings, strict=False):
+    for gen_id, _gen_string in zip(gen_idxs, gen_strings, strict=False):
         # Robustly parse generated id. We expect keys like:
         #  - generated_dataset_367_649524_1
         #  - generated_dataset_egodex_dataset_assemble_disassemble_jigsaw_puzzle_1
@@ -189,7 +188,7 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
 
         results_list[task_id][episode_id][gid][metric_type] = scores_list[idx]
 
-    avg_score = np.mean(scores).tolist()
+    avg_score = np.mean(scores).tolist()  # noqa: F841 - np.mean warns on empty scores as upstream.
 
     return scores
 
@@ -228,5 +227,5 @@ def compute_semantic_alignment(json_path, gt_path, semantics_model):
         }
     ]
 
-    results = evaluate_runs_configs(eval_configs, json_path, gt_path, semantics_model)
+    evaluate_runs_configs(eval_configs, json_path, gt_path, semantics_model)
     return results_list

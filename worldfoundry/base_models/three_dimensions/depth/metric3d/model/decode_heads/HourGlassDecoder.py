@@ -2,8 +2,6 @@
 # https://github.com/YvanYin/Metric3D
 # Licensed under the BSD-2 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> three_dimensions -> depth -> metric3d -> model -> decode_heads -> HourGlassDecoder.py functionality."""
-
 import math
 
 import torch
@@ -12,28 +10,13 @@ import torch.nn.functional as F
 
 
 def compute_depth_expectation(prob, depth_values):
-    """Compute depth expectation.
-
-    Args:
-        prob: The prob.
-        depth_values: The depth values.
-    """
     depth_values = depth_values.view(*depth_values.shape, 1, 1)
     depth = torch.sum(prob * depth_values, 1)
     return depth
 
 
 class ConvBlock(nn.Module):
-    """Conv block implementation."""
-
     def __init__(self, in_channels, out_channels, kernel_size=3):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-        """
         super().__init__()
 
         if kernel_size == 3:
@@ -47,27 +30,13 @@ class ConvBlock(nn.Module):
         self.nonlin = nn.ELU(inplace=True)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         out = self.conv(x)
         out = self.nonlin(out)
         return out
 
 
 class ConvBlock_double(nn.Module):
-    """Conv block double implementation."""
-
     def __init__(self, in_channels, out_channels, kernel_size=3):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-        """
         super().__init__()
 
         if kernel_size == 3:
@@ -83,11 +52,6 @@ class ConvBlock_double(nn.Module):
         self.nonlin_2 = nn.ELU(inplace=True)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         out = self.conv(x)
         out = self.nonlin(out)
         out = self.conv_2(out)
@@ -96,15 +60,7 @@ class ConvBlock_double(nn.Module):
 
 
 class DecoderFeature(nn.Module):
-    """Decoder feature implementation."""
-
     def __init__(self, feat_channels, num_ch_dec=[64, 64, 128, 256]):
-        """Init.
-
-        Args:
-            feat_channels: The feat channels.
-            num_ch_dec: The num ch dec.
-        """
         super().__init__()
         self.num_ch_dec = num_ch_dec
         self.feat_channels = feat_channels
@@ -132,11 +88,6 @@ class DecoderFeature(nn.Module):
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
 
     def forward(self, ref_feature):
-        """Forward.
-
-        Args:
-            ref_feature: The ref feature.
-        """
         x = ref_feature[3]
 
         x = self.upconv_3_0(x)
@@ -154,17 +105,7 @@ class DecoderFeature(nn.Module):
 
 
 class UNet(nn.Module):
-    """U net implementation."""
-
     def __init__(self, inp_ch=32, output_chal=1, down_sample_times=3, channel_mode="v0"):
-        """Init.
-
-        Args:
-            inp_ch: The inp ch.
-            output_chal: The output chal.
-            down_sample_times: The down sample times.
-            channel_mode: The channel mode.
-        """
         super().__init__()
         basic_block = ConvBnReLU
         num_depth = 128
@@ -218,11 +159,6 @@ class UNet(nn.Module):
             self.prob = nn.Conv2d(num_depth, output_chal, 1, stride=1, padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         features = {}
         conv0 = self.conv0(x)
         x = conv0
@@ -237,18 +173,7 @@ class UNet(nn.Module):
 
 
 class ConvBnReLU(nn.Module):
-    """Conv bn re lu implementation."""
-
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, pad=1):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-            stride: The stride.
-            pad: The pad.
-        """
         super().__init__()
         self.conv = nn.Conv2d(
             in_channels,
@@ -261,23 +186,11 @@ class ConvBnReLU(nn.Module):
         self.bn = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return F.relu(self.bn(self.conv(x)), inplace=True)
 
 
 class HourglassDecoder(nn.Module):
-    """Hourglass decoder implementation."""
-
     def __init__(self, cfg):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-        """
         super().__init__()
         self.inchannels = cfg.model.decode_head.in_channels  #  [256, 512, 1024, 2048]
         self.decoder_channels = cfg.model.decode_head.decoder_channel  # [64, 64, 128, 256]
@@ -326,41 +239,19 @@ class HourglassDecoder(nn.Module):
         )
 
     def get_bins(self, bins_num):
-        """Get bins.
-
-        Args:
-            bins_num: The bins num.
-        """
         depth_bins_vec = torch.linspace(math.log(self.min_val), math.log(self.max_val), bins_num, device="cuda")
         depth_bins_vec = torch.exp(depth_bins_vec)
         return depth_bins_vec
 
     def register_depth_expectation_anchor(self, bins_num, B):
-        """Register depth expectation anchor.
-
-        Args:
-            bins_num: The bins num.
-            B: The b.
-        """
         depth_bins_vec = self.get_bins(bins_num)
         depth_bins_vec = depth_bins_vec.unsqueeze(0).repeat(B, 1)
         self.register_buffer("depth_expectation_anchor", depth_bins_vec, persistent=False)
 
     def upsample(self, x, scale_factor=2):
-        """Upsample.
-
-        Args:
-            x: The x.
-            scale_factor: The scale factor.
-        """
         return F.interpolate(x, scale_factor=scale_factor, mode="nearest")
 
     def regress_depth_2(self, feature_map_d):
-        """Regress depth 2.
-
-        Args:
-            feature_map_d: The feature map d.
-        """
         prob = self.depth_regressor_2(feature_map_d).softmax(dim=1)
         B = prob.shape[0]
         if "depth_expectation_anchor" not in self._buffers:
@@ -369,15 +260,6 @@ class HourglassDecoder(nn.Module):
         return d
 
     def create_mesh_grid(self, height, width, batch, device="cuda", set_buffer=True):
-        """Create mesh grid.
-
-        Args:
-            height: The height.
-            width: The width.
-            batch: The batch.
-            device: The device.
-            set_buffer: The set buffer.
-        """
         y, x = torch.meshgrid(
             [
                 torch.arange(0, height, dtype=torch.float32, device=device),

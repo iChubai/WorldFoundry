@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> util -> vl_utils.py functionality."""
-
 import os
 import random
 
@@ -89,11 +87,7 @@ def build_captions_and_token_span(cat_list, force_lowercase):
 
 
 def build_id2posspan_and_caption(category_dict: dict):
-    """Build id2pos_span and caption from category_dict
-
-    Args:
-        category_dict (dict): category_dict
-    """
+    """Build id2pos_span and caption from category_dict"""
     cat_list = [item["name"].lower() for item in category_dict]
     id2catname = {item["id"]: item["name"].lower() for item in category_dict}
     caption, cat2posspan = build_captions_and_token_span(cat_list, force_lowercase=True)

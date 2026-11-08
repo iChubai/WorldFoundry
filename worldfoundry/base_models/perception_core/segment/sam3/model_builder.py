@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model_builder.py functionality."""
-
 from importlib.resources import files
 
 import torch
@@ -590,8 +588,6 @@ def build_sam3_image_model(
     compile=False,
 ):
     """
-    Build SAM3 image model
-
     Args:
         bpe_path: Path to the BPE tokenizer vocabulary
         device: Device to load the model on ('cuda' or 'cpu')
@@ -812,7 +808,6 @@ def build_sam3_video_model(
 
 
 def build_sam3_video_predictor(*model_args, gpus_to_use=None, **model_kwargs):
-    """Build sam3 video predictor."""
     return Sam3VideoPredictorMultiGPU(*model_args, gpus_to_use=gpus_to_use, **model_kwargs)
 
 

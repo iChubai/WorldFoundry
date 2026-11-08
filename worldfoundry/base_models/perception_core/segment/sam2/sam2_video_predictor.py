@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> sam2_video_predictor.py functionality."""
-
 from collections import OrderedDict
 
 import torch
@@ -36,14 +34,6 @@ class SAM2VideoPredictor(SAM2Base):
         add_all_frames_to_correct_as_cond=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            fill_hole_area: The fill hole area.
-            non_overlap_masks: The non overlap masks.
-            clear_non_cond_mem_around_input: The clear non cond mem around input.
-            add_all_frames_to_correct_as_cond: The add all frames to correct as cond.
-        """
         super().__init__(**kwargs)
         self.fill_hole_area = fill_hole_area
         self.non_overlap_masks = non_overlap_masks
@@ -881,11 +871,6 @@ class SAM2VideoPredictor(SAM2Base):
 
         # Step 2: For per-object tensor storage, we shift their obj_idx in the dict keys.
         def _map_keys(container):
-            """Helper function to map keys.
-
-            Args:
-                container: The container.
-            """
             new_kvs = []
             for k in old_obj_inds:
                 v = container.pop(k)
@@ -945,12 +930,10 @@ class SAM2VideoPredictorVOS(SAM2VideoPredictor):
     """Optimized for the VOS setting"""
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         self._compile_all_components()
 
     def _compile_all_components(self):
-        """Helper function to compile all components."""
         print("Compiling all components for VOS setting. First time may be very slow.")
         self.memory_encoder.forward = torch.compile(
             self.memory_encoder.forward,

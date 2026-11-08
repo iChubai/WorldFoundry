@@ -2,8 +2,6 @@
 # https://github.com/SpatialVision/Prior-Depth-Anything
 # Licensed under the Apache-2.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> three_dimensions -> depth -> priorda -> priorda.py functionality."""
-
 import os
 import time
 from collections import OrderedDict
@@ -42,8 +40,6 @@ def resolve_priorda_file(filename: str, explicit_dir: str | None = None) -> str:
 
 
 class PriorDepthAnything(nn.Module):
-    """Prior depth anything implementation."""
-
     def __init__(
         self,
         device="cuda:0",
@@ -54,17 +50,6 @@ class PriorDepthAnything(nn.Module):
         conditioned_model_size=None,
         coarse_only=False,
     ):
-        """Init.
-
-        Args:
-            device: The device.
-            fmde_dir: The fmde dir.
-            cmde_dir: The cmde dir.
-            ckpt_dir: The ckpt dir.
-            frozen_model_size: The frozen model size.
-            conditioned_model_size: The conditioned model size.
-            coarse_only: The coarse only.
-        """
         super().__init__()
 
         self.args = Arguments()
@@ -106,13 +91,6 @@ class PriorDepthAnything(nn.Module):
         self.sampler = SparseSampler(device=device)
 
     def load_checkpoints(self, model, ckpt_dir, device="cuda:0"):
-        """Load checkpoints.
-
-        Args:
-            model: The model.
-            ckpt_dir: The ckpt dir.
-            device: The device.
-        """
         ckpt_name = f"prior_depth_anything_{self.args.conditioned_model_size}.pth"
         ckpt_path = resolve_priorda_file(ckpt_name, ckpt_dir)
 
@@ -190,13 +168,6 @@ class PriorDepthAnything(nn.Module):
         return metric_depths
 
     def zero_one_normalize(self, depth_maps, valid_masks=None, affine_only=False):
-        """Zero one normalize.
-
-        Args:
-            depth_maps: The depth maps.
-            valid_masks: The valid masks.
-            affine_only: The affine only.
-        """
         if valid_masks is not None:
             masked_min = (
                 depth_maps.masked_fill(~valid_masks, float("inf")).min(dim=-1).values.min(dim=-1).values

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> export -> gs.py functionality."""
-
 import os
 from typing import Literal
 
@@ -45,13 +43,6 @@ def export_to_gs_ply(
     export_dir: str,
     gs_views_interval: int | None = 1,  # export GS every N views, useful for extremely dense inputs
 ):
-    """Export to gs ply.
-
-    Args:
-        prediction: The prediction.
-        export_dir: The export dir.
-        gs_views_interval: The gs views interval.
-    """
     gs_world = prediction.gaussians
     pred_depth = torch.from_numpy(prediction.depth).unsqueeze(-1).to(gs_world.means)  # v h w 1
     idx = 0
@@ -96,25 +87,6 @@ def export_to_gs_video(
     output_name: str | None = None,
     video_quality: Literal["low", "medium", "high"] = "high",
 ) -> None:
-    """Export to gs video.
-
-    Args:
-        prediction: The prediction.
-        export_dir: The export dir.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        out_image_hw: The out image hw.
-        chunk_size: The chunk size.
-        trj_mode: The trj mode.
-        color_mode: The color mode.
-        vis_depth: The vis depth.
-        enable_tqdm: The enable tqdm.
-        output_name: The output name.
-        video_quality: The video quality.
-
-    Returns:
-        The return value.
-    """
     gs_world = prediction.gaussians
     # if target poses are not provided, render the (smooth/interpolate) input poses
     if extrinsics is not None:

@@ -29,7 +29,6 @@ from worldfoundry.core.kernels.triton_autotune import custom_autotune
 
 
 def get_cuda_autotune_config():
-    """Get cuda autotune config."""
     return [
         triton.Config({"BLOCK_SIZE_C": 256, "BLOCK_SIZE_N": 64}, num_stages=3, num_warps=8),
         triton.Config({"BLOCK_SIZE_C": 256, "BLOCK_SIZE_N": 32}, num_stages=4, num_warps=4),
@@ -52,7 +51,6 @@ def get_cuda_autotune_config():
 
 
 def get_autotune_config():
-    """Get autotune config."""
     return get_cuda_autotune_config()
 
 

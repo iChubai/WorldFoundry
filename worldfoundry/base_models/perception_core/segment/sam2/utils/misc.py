@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> utils -> misc.py functionality."""
-
 import os
 import warnings
 from threading import Thread
@@ -17,7 +15,6 @@ from tqdm import tqdm
 
 
 def get_sdpa_settings():
-    """Get sdpa settings."""
     if torch.cuda.is_available():
         old_gpu = torch.cuda.get_device_properties(0).major < 7
         # only use Flash Attention on Ampere (8.0) or newer GPUs
@@ -93,12 +90,6 @@ def mask_to_box(masks: torch.Tensor):
 
 
 def _load_img_as_tensor(img_path, image_size):
-    """Helper function to load img as tensor.
-
-    Args:
-        img_path: The img path.
-        image_size: The image size.
-    """
     img_pil = Image.open(img_path)
     img_np = np.array(img_pil.convert("RGB").resize((image_size, image_size)))
     if img_np.dtype == np.uint8:  # np.uint8 is expected for JPEG images
@@ -124,16 +115,6 @@ class AsyncVideoFrameLoader:
         img_std,
         compute_device,
     ):
-        """Init.
-
-        Args:
-            img_paths: The img paths.
-            image_size: The image size.
-            offload_video_to_cpu: The offload video to cpu.
-            img_mean: The img mean.
-            img_std: The img std.
-            compute_device: The compute device.
-        """
         self.img_paths = img_paths
         self.image_size = image_size
         self.offload_video_to_cpu = offload_video_to_cpu
@@ -154,7 +135,6 @@ class AsyncVideoFrameLoader:
 
         # load the rest of frames asynchronously without blocking the session start
         def _load_frames():
-            """Helper function to load frames."""
             try:
                 for n in tqdm(range(len(self.images)), desc="frame loading (JPEG)"):
                     self.__getitem__(n)
@@ -165,11 +145,6 @@ class AsyncVideoFrameLoader:
         self.thread.start()
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         if self.exception is not None:
             raise RuntimeError("Failure in frame loading thread") from self.exception
 
@@ -189,7 +164,6 @@ class AsyncVideoFrameLoader:
         return img
 
     def __len__(self):
-        """Len."""
         return len(self.images)
 
 

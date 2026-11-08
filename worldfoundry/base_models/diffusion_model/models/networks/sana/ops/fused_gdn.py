@@ -68,7 +68,6 @@ _KCFG = None
 
 
 def _kcfg():
-    """Helper function to kcfg."""
     global _KCFG
     if _KCFG is None:
         _KCFG = _get_kernel_config()
@@ -80,14 +79,6 @@ def _kcfg():
 # precision=2 → bf16  dots   + fp32 state    (DOT_PRECISION=0, STATE_FP32=1) [default]
 # precision=3 → bf16  dots   + bf16 state    (DOT_PRECISION=0, STATE_FP32=0)
 def _precision_params(precision: int) -> tuple:
-    """Helper function to precision params.
-
-    Args:
-        precision: The precision.
-
-    Returns:
-        The return value.
-    """
     if precision == 0:
         return 2, True
     elif precision == 1:
@@ -182,17 +173,6 @@ def _fused_qk_inv_rms_kernel(
     eps,
     BLOCK_C: tl.constexpr,
 ):
-    """Helper function to fused qk inv rms kernel.
-
-    Args:
-        qkv_ptr: The qkv ptr.
-        q_inv_rms_ptr: The q inv rms ptr.
-        k_inv_rms_ptr: The k inv rms ptr.
-        N: The n.
-        C: The c.
-        eps: The eps.
-        BLOCK_C: The block c.
-    """
     bn_id = tl.program_id(0)
     qkv_row_stride = 3 * C
     row_base = bn_id * qkv_row_stride

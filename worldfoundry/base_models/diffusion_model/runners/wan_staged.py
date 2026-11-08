@@ -46,13 +46,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
     """Research-oriented Wan execution with custom staged conditioning."""
 
     def __init__(self, device="cuda", torch_dtype=torch.float16, tokenizer_path=None):
-        """Init.
-
-        Args:
-            device: The device.
-            torch_dtype: The torch dtype.
-            tokenizer_path: The tokenizer path.
-        """
         super().__init__(device=device, torch_dtype=torch_dtype)
         self.scheduler = FlowMatchScheduler(shift=5, sigma_min=0.0, extra_one_step=True)
         self.prompter = WanPrompter(tokenizer_path=tokenizer_path)
@@ -94,11 +87,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         return pipe
 
     def enable_vram_management(self, num_persistent_param_in_dit=None):
-        """Enable vram management.
-
-        Args:
-            num_persistent_param_in_dit: The num persistent param in dit.
-        """
         dtype = next(iter(self.text_encoder.parameters())).dtype
         enable_vram_management(
             self.text_encoder,
@@ -221,11 +209,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         self.enable_cpu_offload()
 
     def fetch_models(self, model_source):
-        """Fetch models.
-
-        Args:
-            model_manager: The model manager.
-        """
         text_encoder_model_and_path = model_source.fetch_model("wan_video_text_encoder", require_model_path=True)
         if text_encoder_model_and_path is not None:
             self.text_encoder, tokenizer_path = text_encoder_model_and_path
@@ -239,14 +222,7 @@ class WanStagedPipeline(StagedDiffusionPipeline):
 
     @staticmethod
     def from_model_source(model_source, torch_dtype=None, device=None, use_usp=False):
-        """From model manager.
-
-        Args:
-            model_manager: The model manager.
-            torch_dtype: The torch dtype.
-            device: The device.
-            use_usp: The use usp.
-        """
+        """From model manager."""
         if device is None:
             device = model_source.device
         if torch_dtype is None:
@@ -269,34 +245,15 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         return pipe
 
     def denoising_model(self):
-        """Denoising model."""
         return self.dit
 
     def encode_prompt(self, prompt, positive=True):
-        """Encode prompt.
-
-        Args:
-            prompt: The prompt.
-            positive: The positive.
-        """
         prompt_emb = self.prompter.encode_prompt(prompt, positive=positive, device=self.device)
         return {"context": prompt_emb}
 
     def encode_image(
         self, image, end_image, num_frames, height, width, tiled=False, tile_size=(34, 34), tile_stride=(18, 16)
     ):
-        """Encode image.
-
-        Args:
-            image: The image.
-            end_image: The end image.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         image = self.preprocess_image(image.resize((width, height))).to(self.device)
         clip_context = None
         if self.image_encoder is not None:
@@ -342,14 +299,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         return result
 
     def encode_control_video(self, control_video, tiled=True, tile_size=(34, 34), tile_stride=(18, 16)):
-        """Encode control video.
-
-        Args:
-            control_video: The control video.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         control_video = self.preprocess_images(control_video)
         control_video = torch.stack(control_video, dim=2).to(dtype=self.torch_dtype, device=self.device)
         latents = self.encode_video(control_video, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(
@@ -358,13 +307,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         return latents
 
     def prepare_reference_image(self, reference_image, height, width):
-        """Prepare reference image.
-
-        Args:
-            reference_image: The reference image.
-            height: The height.
-            width: The width.
-        """
         if reference_image is not None:
             self.load_models_to_device(["vae"])
             reference_image = reference_image.resize((width, height))
@@ -387,19 +329,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         tile_size=(34, 34),
         tile_stride=(18, 16),
     ):
-        """Prepare controlnet kwargs.
-
-        Args:
-            control_video: The control video.
-            num_frames: The num frames.
-            height: The height.
-            width: The width.
-            clip_feature: The clip feature.
-            y: The y.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if control_video is not None:
             control_latents = self.encode_control_video(
                 control_video, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
@@ -417,62 +346,30 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         return {"clip_feature": clip_feature, "y": y}
 
     def tensor2video(self, frames):
-        """Tensor2video.
-
-        Args:
-            frames: The frames.
-        """
         frames = rearrange(frames, "C T H W -> T H W C")
         frames = ((frames.float() + 1) * 127.5).clip(0, 255).cpu().numpy().astype(np.uint8)
         frames = [Image.fromarray(frame) for frame in frames]
         return frames
 
     def prepare_extra_input(self, latents=None):
-        """Prepare extra input.
-
-        Args:
-            latents: The latents.
-        """
         return {}
 
     def encode_video(self, input_video, tiled=True, tile_size=(34, 34), tile_stride=(18, 16)):
-        """Encode video.
-
-        Args:
-            input_video: The input video.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         latents = self.vae.encode(
             input_video, device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
         )
         return latents
 
     def decode_video(self, latents, tiled=True, tile_size=(34, 34), tile_stride=(18, 16)):
-        """Decode video.
-
-        Args:
-            latents: The latents.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         model_dtype = next(iter(self.vae.parameters())).dtype
         latents = latents.to(dtype=model_dtype)
         frames = self.vae.decode(latents, device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
         return frames
 
     def prepare_unified_sequence_parallel(self):
-        """Prepare unified sequence parallel."""
         return {"use_unified_sequence_parallel": self.use_unified_sequence_parallel}
 
     def prepare_motion_bucket_id(self, motion_bucket_id):
-        """Prepare motion bucket id.
-
-        Args:
-            motion_bucket_id: The motion bucket id.
-        """
         motion_bucket_id = torch.Tensor((motion_bucket_id,)).to(dtype=self.torch_dtype, device=self.device)
         return {"motion_bucket_id": motion_bucket_id}
 
@@ -492,23 +389,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         tile_size=(34, 34),
         tile_stride=(18, 16),
     ):
-        """Prepare vace kwargs.
-
-        Args:
-            latents: The latents.
-            vace_video: The vace video.
-            vace_mask: The vace mask.
-            vace_reference_image: The vace reference image.
-            vace_scale: The vace scale.
-            height: The height.
-            width: The width.
-            num_frames: The num frames.
-            seed: The seed.
-            rand_device: The rand device.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         if vace_video is not None or vace_mask is not None or vace_reference_image is not None:
             self.load_models_to_device(["vae"])
             if vace_video is None:
@@ -601,38 +481,6 @@ class WanStagedPipeline(StagedDiffusionPipeline):
         progress_bar_cmd=tqdm,
         progress_bar_st=None,
     ):
-        """Call.
-
-        Args:
-            prompt: The prompt.
-            negative_prompt: The negative prompt.
-            input_image: The input image.
-            end_image: The end image.
-            input_video: The input video.
-            control_video: The control video.
-            reference_image: The reference image.
-            vace_video: The vace video.
-            vace_video_mask: The vace video mask.
-            vace_reference_image: The vace reference image.
-            vace_scale: The vace scale.
-            denoising_strength: The denoising strength.
-            seed: The seed.
-            rand_device: The rand device.
-            height: The height.
-            width: The width.
-            num_frames: The num frames.
-            cfg_scale: The cfg scale.
-            num_inference_steps: The num inference steps.
-            sigma_shift: The sigma shift.
-            motion_bucket_id: The motion bucket id.
-            tiled: The tiled.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-            tea_cache_l1_thresh: The tea cache l1 thresh.
-            tea_cache_model_id: The tea cache model id.
-            progress_bar_cmd: The progress bar cmd.
-            progress_bar_st: The progress bar st.
-        """
         # Parameter check
         height, width = self.check_resize_height_width(height, width)
         if num_frames % 4 != 1:
@@ -801,13 +649,6 @@ class TeaCache:
     """
 
     def __init__(self, num_inference_steps, rel_l1_thresh, model_id):
-        """Init.
-
-        Args:
-            num_inference_steps: The num inference steps.
-            rel_l1_thresh: The rel l1 thresh.
-            model_id: The model id.
-        """
         self.num_inference_steps = num_inference_steps
         self.step = 0
         self.accumulated_rel_l1_distance = 0

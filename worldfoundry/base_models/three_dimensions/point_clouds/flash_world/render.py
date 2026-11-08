@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> flash_world -> render.py functionality."""
-
 import torch
 from gsplat import rasterization
 
@@ -11,29 +9,10 @@ modified from https://github.com/arthurhero/Long-LRM/blob/main/model/llrm.py
 
 
 class GaussianRendererWithCheckpoint(torch.autograd.Function):
-    """Gaussian renderer with checkpoint implementation."""
-
     @staticmethod
     def render(
         xyz, feature, scale, rotation, opacity, test_c2w, test_intr, W, H, sh_degree, near_plane, far_plane, backgrounds
     ):
-        """Render.
-
-        Args:
-            xyz: The xyz.
-            feature: The feature.
-            scale: The scale.
-            rotation: The rotation.
-            opacity: The opacity.
-            test_c2w: The test c2w.
-            test_intr: The test intr.
-            W: The w.
-            H: The h.
-            sh_degree: The sh degree.
-            near_plane: The near plane.
-            far_plane: The far plane.
-            backgrounds: The backgrounds.
-        """
         test_w2c = test_c2w.float().inverse().unsqueeze(0)  # (1, 4, 4)
         test_intr_i = torch.zeros(3, 3).to(test_intr.device)
         test_intr_i[0, 0] = test_intr[0]
@@ -86,24 +65,6 @@ class GaussianRendererWithCheckpoint(torch.autograd.Function):
         far_plane,
         backgrounds,
     ):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            xyz: The xyz.
-            feature: The feature.
-            scale: The scale.
-            rotation: The rotation.
-            opacity: The opacity.
-            test_c2ws: The test c2ws.
-            test_intr: The test intr.
-            W: The w.
-            H: The h.
-            sh_degree: The sh degree.
-            near_plane: The near plane.
-            far_plane: The far plane.
-            backgrounds: The backgrounds.
-        """
         ctx.save_for_backward(xyz, feature, scale, rotation, opacity, test_c2ws, test_intr, backgrounds)
         ctx.W = W
         ctx.H = H
@@ -137,12 +98,6 @@ class GaussianRendererWithCheckpoint(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            grad_output: The grad output.
-        """
         xyz, feature, scale, rotation, opacity, test_c2ws, test_intr, backgrounds = ctx.saved_tensors
         xyz = xyz.detach().requires_grad_()
         feature = feature.detach().requires_grad_()
@@ -203,21 +158,6 @@ def gaussian_render(
     sh_degree=0,
     bg_mode="random",
 ):
-    """Gaussian render.
-
-    Args:
-        gaussian_params: The gaussian params.
-        test_c2ws: The test c2ws.
-        test_intr: The test intr.
-        W: The w.
-        H: The h.
-        near_plane: The near plane.
-        far_plane: The far plane.
-        use_checkpoint: The use checkpoint.
-        sh_degree: The sh degree.
-        bg_mode: The bg mode.
-    """
-
     if not torch.is_grad_enabled():
         use_checkpoint = False
 

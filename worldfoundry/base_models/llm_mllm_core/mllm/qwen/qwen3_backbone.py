@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen3_backbone.py functionality."""
-
 import logging
 
 import torch
@@ -102,13 +100,6 @@ class Qwen3Backbone(torch.nn.Module):
                     logger.debug(f"Casting trainable parameter {n} to fp32")
 
     def set_trainable_parameters(self, tune_llm: bool, tune_visual: bool, tune_top_llm_layers: int):
-        """Set trainable parameters.
-
-        Args:
-            tune_llm: The tune llm.
-            tune_visual: The tune visual.
-            tune_top_llm_layers: The tune top llm layers.
-        """
         self.tune_llm = tune_llm
         self.tune_visual = tune_visual
         for p in self.parameters():
@@ -145,25 +136,9 @@ class Qwen3Backbone(torch.nn.Module):
                 self.model.visual.eval()
 
     def prepare_input(self, batch: dict) -> BatchFeature:
-        """Prepare input.
-
-        Args:
-            batch: The batch.
-
-        Returns:
-            The return value.
-        """
         return BatchFeature(data=batch)
 
     def forward(self, vl_input: BatchFeature) -> BatchFeature:
-        """Forward.
-
-        Args:
-            vl_input: The vl input.
-
-        Returns:
-            The return value.
-        """
         self.set_frozen_modules_to_eval_mode()
         # 0. Set frozen module to eval
         keys_to_use = ["input_ids", "attention_mask", "pixel_values", "image_grid_thw"]

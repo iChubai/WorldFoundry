@@ -2,8 +2,6 @@
 # https://github.com/SpatialVision/Prior-Depth-Anything
 # Licensed under the Apache-2.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> three_dimensions -> depth -> priorda -> depth_completion.py functionality."""
-
 import os
 import re
 import time
@@ -16,21 +14,11 @@ from .utils import depth2disparity
 
 
 class DepthCompletion(torch.nn.Module):
-    """Depth completion implementation."""
-
     @staticmethod
     def build(**kwargs):
-        """Build."""
         return DepthCompletion(**kwargs)
 
     def __init__(self, args, fmde_path, device=None):
-        """Init.
-
-        Args:
-            args: The args.
-            fmde_path: The fmde path.
-            device: The device.
-        """
         super().__init__()
 
         self.args = args
@@ -40,11 +28,6 @@ class DepthCompletion(torch.nn.Module):
         self.depth_model = self.init_depth_model(fmde_path)
 
     def set_device(self, device=None):
-        """Set device.
-
-        Args:
-            device: The device.
-        """
         if device is not None:
             self.device = device
             return
@@ -63,16 +46,6 @@ class DepthCompletion(torch.nn.Module):
         prior_depths,
         geometric_depths,
     ):
-        """Unify format.
-
-        Args:
-            images: The images.
-            sparse_depths: The sparse depths.
-            sparse_masks: The sparse masks.
-            cover_masks: The cover masks.
-            prior_depths: The prior depths.
-            geometric_depths: The geometric depths.
-        """
         # Tune the shape of the tensors.
         if images.max() <= 1:
             images = images * 255
@@ -270,14 +243,6 @@ class DepthCompletion(torch.nn.Module):
         return depth_model
 
     def calc_scale_shift(self, k_sparse_targets, k_pred_targets, currk_dists=None, knn=False):
-        """Calc scale shift.
-
-        Args:
-            k_sparse_targets: The k sparse targets.
-            k_pred_targets: The k pred targets.
-            currk_dists: The currk dists.
-            knn: The knn.
-        """
         k_pred_targets += torch.rand(*k_pred_targets.shape, device=self.device) * 1e-5
         X = torch.stack([k_pred_targets, torch.ones_like(k_pred_targets, device=self.device)], dim=2)
 
@@ -397,11 +362,6 @@ class DepthCompletion(torch.nn.Module):
         K: int,
         chunk_size: int = 65536,
     ) -> torch.Tensor:
-        """Helper function to torch knn indices.
-
-        Returns:
-            The return value.
-        """
         indices: list[torch.Tensor] = []
         for batch_id in batch_y.unique(sorted=True):
             x_mask = batch_x == batch_id

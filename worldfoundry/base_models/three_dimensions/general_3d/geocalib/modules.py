@@ -34,7 +34,6 @@ class ConvModule(nn.Module):
         Args:
             in_channels (int): Input channels.
             out_channels (int): Output channels.
-            kernel_size (int): Kernel size.
             padding (int, optional): Padding. Defaults to 0.
             use_norm (bool, optional): Whether to use normalization. Defaults to False.
             bias (bool, optional): Whether to use bias. Defaults to True.
@@ -45,7 +44,6 @@ class ConvModule(nn.Module):
         self.activate = nn.ReLU(inplace=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         x = self.conv(x)
         x = self.bn(x)
         return self.activate(x)
@@ -68,7 +66,6 @@ class ResidualConvUnit(nn.Module):
         self.relu = torch.nn.ReLU(inplace=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         out = self.relu(x)
         out = self.conv1(out)
         out = self.relu(out)
@@ -77,8 +74,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(self, features: int, unit2only=False, upsample=True):
         """Feature fusion block.
 
@@ -95,7 +90,6 @@ class FeatureFusionBlock(nn.Module):
         self.resConfUnit2 = ResidualConvUnit(features)
 
     def forward(self, *xs: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         output = xs[0]
 
         if len(xs) == 2:
@@ -126,18 +120,6 @@ class NMF2D(nn.Module):
         self.inv_t = 1
 
     def _build_bases(self, B: int, S: int, D: int, R: int, device: str = "cpu") -> torch.Tensor:
-        """Helper function to build bases.
-
-        Args:
-            B: The b.
-            S: The s.
-            D: The d.
-            R: The r.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         bases = torch.rand((B * S, D, R)).to(device)
         return F.normalize(bases, dim=1)
 
@@ -167,7 +149,6 @@ class NMF2D(nn.Module):
         return coef * numerator / (denominator + 1e-6)
 
     def local_inference(self, x: torch.Tensor, bases: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """Local inference."""
         # (B * S, D, N)^T @ (B * S, D, R) -> (B * S, N, R)
         coef = torch.bmm(x.transpose(1, 2), bases)
         coef = F.softmax(self.inv_t * coef, dim=-1)
@@ -179,7 +160,6 @@ class NMF2D(nn.Module):
         return bases, coef
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         B, C, H, W = x.shape
 
         # (B, C, H, W) -> (B * S, D, N)
@@ -218,7 +198,6 @@ class Hamburger(nn.Module):
         self.ham_out = ConvModule(ham_channels, ham_channels, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         enjoy = self.ham_in(x)
         enjoy = F.relu(enjoy, inplace=False)
         enjoy = self.ham(enjoy)
@@ -263,7 +242,6 @@ class LightHamHead(nn.Module):
         self.ll_fusion = FeatureFusionBlock(self.out_channels, upsample=False)
 
     def forward(self, features: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward pass."""
         inputs = [features["hl"][i] for i in self.in_index]
 
         inputs = [
@@ -312,7 +290,6 @@ class DWConv(nn.Module):
         self.dwconv = nn.Conv2d(dim, dim, 3, 1, 1, bias=True, groups=dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         return self.dwconv(x)
 
 
@@ -338,7 +315,6 @@ class Mlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
-        """Forward pass."""
         x = self.fc1(x)
 
         x = self.dwconv(x)
@@ -383,7 +359,6 @@ class StemConv(nn.Module):
         )
 
     def forward(self, x):
-        """Forward pass."""
         x = self.proj(x)
         _, _, H, W = x.size()
         x = x.flatten(2).transpose(1, 2)
@@ -391,8 +366,6 @@ class StemConv(nn.Module):
 
 
 class AttentionModule(nn.Module):
-    """Attention module."""
-
     def __init__(self, dim: int):
         """Attention module.
 
@@ -412,7 +385,6 @@ class AttentionModule(nn.Module):
         self.conv3 = nn.Conv2d(dim, dim, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         u = x.clone()
         attn = self.conv0(x)
 
@@ -447,7 +419,6 @@ class SpatialAttention(nn.Module):
         self.proj_2 = nn.Conv2d(dim, dim, 1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass."""
         shorcut = x.clone()
         x = self.proj_1(x)
         x = self.activation(x)
@@ -492,7 +463,6 @@ class Block(nn.Module):
         self.layer_scale_2 = nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
 
     def forward(self, x: torch.Tensor, H: int, W: int) -> torch.Tensor:
-        """Forward pass."""
         B, N, C = x.shape
         x = x.permute(0, 2, 1).view(B, C, H, W)
         x = x + self.drop_path(self.layer_scale_1[..., None, None] * self.attn(self.norm1(x)))
@@ -531,7 +501,6 @@ class OverlapPatchEmbed(nn.Module):
         self.norm = nn.BatchNorm2d(embed_dim)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, int, int]:
-        """Forward pass."""
         x = self.proj(x)
         _, _, H, W = x.shape
         x = self.norm(x)
@@ -581,7 +550,6 @@ class MSCAN(nn.Module):
             setattr(self, f"norm{i + 1}", norm)
 
     def forward(self, data):
-        """Forward pass."""
         # rgb -> bgr and from [0, 1] to [0, 255]
         x = data["image"][:, [2, 1, 0], :, :] * 255.0
         B = x.shape[0]

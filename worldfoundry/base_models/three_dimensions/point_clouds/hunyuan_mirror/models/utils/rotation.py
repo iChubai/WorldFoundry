@@ -1,7 +1,5 @@
 # Modified from PyTorch3D, https://github.com/facebookresearch/pytorch3d
 
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> utils -> rotation.py functionality."""
-
 import torch
 import torch.nn.functional as F
 

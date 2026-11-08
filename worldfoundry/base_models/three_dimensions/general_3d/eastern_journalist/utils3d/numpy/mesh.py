@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> mesh.py functionality."""
-
 from typing import *
 
 import numpy as np
@@ -375,11 +373,6 @@ def flatten_mesh_indices(faces1: ndarray, attr1: ndarray, *more_faces_attrs_pair
 
 
 def flatten_mesh_indices(*args: ndarray) -> Tuple[ndarray, ...]:
-    """Flatten mesh indices.
-
-    Returns:
-        The return value.
-    """
     assert len(args) % 2 == 0, "The number of arguments must be even."
     T, P = args[0].shape
     assert all(arg.shape[0] == T and arg.shape[1] == P for arg in args[::2]), "The faces must have the same shape."

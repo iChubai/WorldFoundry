@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> download.py functionality."""
-
 from pathlib import Path
 from typing import *
 
@@ -10,17 +8,6 @@ __all__ = ["download_bytes", "download_file"]
 
 
 def download_file(url: str, filepath: Union[str, Path], headers: dict | None = None, resume: bool = True) -> None:
-    """Download file.
-
-    Args:
-        url: The url.
-        filepath: The filepath.
-        headers: The headers.
-        resume: The resume.
-
-    Returns:
-        The return value.
-    """
     # Ensure headers is a dict if not provided
     headers = headers or {}
 
@@ -57,15 +44,6 @@ def download_file(url: str, filepath: Union[str, Path], headers: dict | None = N
 
 
 def download_bytes(url: str, headers: dict | None = None) -> bytes:
-    """Download bytes.
-
-    Args:
-        url: The url.
-        headers: The headers.
-
-    Returns:
-        The return value.
-    """
     # Ensure headers is a dict if not provided
     headers = headers or {}
 

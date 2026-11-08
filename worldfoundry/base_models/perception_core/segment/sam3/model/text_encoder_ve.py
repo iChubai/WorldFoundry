@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> text_encoder_ve.py functionality."""
-
 from collections import OrderedDict
 from collections.abc import Callable
 
@@ -15,8 +13,6 @@ from .model_misc import LayerScale
 
 
 class ResidualAttentionBlock(nn.Module):
-    """Residual attention block implementation."""
-
     def __init__(
         self,
         d_model: int,
@@ -26,16 +22,6 @@ class ResidualAttentionBlock(nn.Module):
         act_layer: Callable[[], nn.Module] = nn.GELU,
         norm_layer: Callable[[int], nn.Module] = nn.LayerNorm,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            n_head: The n head.
-            mlp_ratio: The mlp ratio.
-            ls_init_value: The ls init value.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-        """
         super().__init__()
         # Attention
         self.attn = nn.MultiheadAttention(d_model, n_head, batch_first=True)
@@ -66,17 +52,6 @@ class ResidualAttentionBlock(nn.Module):
         v_x: torch.Tensor | None = None,
         attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Attention.
-
-        Args:
-            q_x: The q x.
-            k_x: The k x.
-            v_x: The v x.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
         k_x = k_x if k_x is not None else q_x
         v_x = v_x if v_x is not None else q_x
         if attn_mask is not None:
@@ -93,17 +68,6 @@ class ResidualAttentionBlock(nn.Module):
         v_x: torch.Tensor | None = None,
         attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            q_x: The q x.
-            k_x: The k x.
-            v_x: The v x.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
         k_x = self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
         v_x = self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
         x = q_x + self.ls_1(self.attention(q_x=self.ln_1(q_x), k_x=k_x, v_x=v_x, attn_mask=attn_mask))
@@ -112,8 +76,6 @@ class ResidualAttentionBlock(nn.Module):
 
 
 class Transformer(nn.Module):
-    """Transformer implementation."""
-
     def __init__(
         self,
         width: int,
@@ -126,19 +88,6 @@ class Transformer(nn.Module):
         compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
-        """Init.
-
-        Args:
-            width: The width.
-            layers: The layers.
-            heads: The heads.
-            mlp_ratio: The mlp ratio.
-            ls_init_value: The ls init value.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            compile_mode: The compile mode.
-            use_act_checkpoint: The use act checkpoint.
-        """
         super().__init__()
         self.width = width
         self.layers = layers
@@ -167,15 +116,6 @@ class Transformer(nn.Module):
         x: torch.Tensor,
         attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
         for _, r in enumerate(self.resblocks):
             if self.grad_checkpointing and not torch.jit.is_scripting() and self.training:
                 x = checkpoint(r, x, None, None, attn_mask, use_reentrant=False)
@@ -190,16 +130,6 @@ class Transformer(nn.Module):
 def text_global_pool(
     x: torch.Tensor, text: torch.Tensor | None = None, pool_type: str = "argmax"
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Text global pool.
-
-    Args:
-        x: The x.
-        text: The text.
-        pool_type: The pool type.
-
-    Returns:
-        The return value.
-    """
     if pool_type == "first":
         pooled, tokens = x[:, 0], x[:, 1:]
     elif pool_type == "last":
@@ -214,8 +144,6 @@ def text_global_pool(
 
 
 class TextTransformer(nn.Module):
-    """Text transformer implementation."""
-
     def __init__(
         self,
         context_length: int = 77,
@@ -236,27 +164,6 @@ class TextTransformer(nn.Module):
         compile_mode: str | None = None,
         use_act_checkpoint: bool = False,
     ):
-        """Init.
-
-        Args:
-            context_length: The context length.
-            vocab_size: The vocab size.
-            width: The width.
-            heads: The heads.
-            layers: The layers.
-            mlp_ratio: The mlp ratio.
-            ls_init_value: The ls init value.
-            output_dim: The output dim.
-            no_causal_mask: The no causal mask.
-            pool_type: The pool type.
-            proj_bias: The proj bias.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            output_tokens: The output tokens.
-            use_ln_post: The use ln post.
-            compile_mode: The compile mode.
-            use_act_checkpoint: The use act checkpoint.
-        """
         super().__init__()
         assert pool_type in ("first", "last", "argmax", "none")
         self.output_tokens = output_tokens
@@ -291,11 +198,6 @@ class TextTransformer(nn.Module):
             self.text_projection = nn.Parameter(torch.empty(width, output_dim))
 
     def build_causal_mask(self) -> torch.Tensor:
-        """Build causal mask.
-
-        Returns:
-            The return value.
-        """
         # lazily create causal attention mask, with full attention between the tokens
         # pytorch uses additive attention mask; fill with -inf
         mask = torch.empty(self.num_pos, self.num_pos)
@@ -304,14 +206,6 @@ class TextTransformer(nn.Module):
         return mask
 
     def forward(self, text: torch.Tensor) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            text: The text.
-
-        Returns:
-            The return value.
-        """
         seq_len = text.shape[1]
         x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
 
@@ -335,8 +229,6 @@ class TextTransformer(nn.Module):
 
 
 class VETextEncoder(nn.Module):
-    """Ve text encoder implementation."""
-
     def __init__(
         self,
         d_model: int,
@@ -350,20 +242,6 @@ class VETextEncoder(nn.Module):
         compile_mode: str | None = None,
         use_act_checkpoint: bool = True,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            tokenizer: The tokenizer.
-            width: The width.
-            heads: The heads.
-            layers: The layers.
-            context_length: The context length.
-            vocab_size: The vocab size.
-            use_ln_post: The use ln post.
-            compile_mode: The compile mode.
-            use_act_checkpoint: The use act checkpoint.
-        """
         super().__init__()
         self.context_length = context_length
         self.use_ln_post = use_ln_post
@@ -389,16 +267,6 @@ class VETextEncoder(nn.Module):
         input_boxes: list | None = None,
         device: torch.device = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            text: The text.
-            input_boxes: The input boxes.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         if isinstance(text[0], str):
             # no use case for this
             assert input_boxes is None or len(input_boxes) == 0, "not supported"

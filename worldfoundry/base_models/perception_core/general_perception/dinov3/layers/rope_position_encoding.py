@@ -3,8 +3,6 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> rope_position_encoding.py functionality."""
-
 import math
 from typing import Literal
 
@@ -31,11 +29,6 @@ class RopePositionEmbedding(nn.Module):
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-        """
         super().__init__()
         assert embed_dim % (4 * num_heads) == 0
         both_periods = min_period is not None and max_period is not None
@@ -61,11 +54,6 @@ class RopePositionEmbedding(nn.Module):
         self._init_weights()
 
     def forward(self, *, H: int, W: int) -> tuple[Tensor, Tensor]:
-        """Forward.
-
-        Returns:
-            The return value.
-        """
         device = self.periods.device
         dtype = self.dtype
         dd = {"device": device, "dtype": dtype}
@@ -112,7 +100,6 @@ class RopePositionEmbedding(nn.Module):
         return (sin, cos)
 
     def _init_weights(self):
-        """Helper function to init weights."""
         device = self.periods.device
         dtype = self.dtype
         if self.base is not None:

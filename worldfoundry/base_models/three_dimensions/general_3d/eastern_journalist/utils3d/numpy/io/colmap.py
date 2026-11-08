@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> io -> colmap.py functionality."""
-
 from pathlib import Path
 from typing import *
 

@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> general_3d -> lagernvs -> lagernvs_runtime -> models -> encoder_decoder.py functionality."""
-
 import sys
 from pathlib import Path
 
@@ -35,8 +33,6 @@ from vggt.models.vggt import VGGT
 
 
 class EncoderDecoder(nn.Module):
-    """Encoder decoder implementation."""
-
     def __init__(
         self,
         depth,
@@ -48,18 +44,6 @@ class EncoderDecoder(nn.Module):
         attention_to_features_type="bidirectional_cross_attention",
         pretrained_patch_embed=False,
     ):
-        """Init.
-
-        Args:
-            depth: The depth.
-            hidden_size: The hidden size.
-            patch_size: The patch size.
-            num_heads: The num heads.
-            freeze_vggt: The freeze vggt.
-            pretrained_vggt: The pretrained vggt.
-            attention_to_features_type: The attention to features type.
-            pretrained_patch_embed: The pretrained patch embed.
-        """
         super().__init__()
         self.reconstructor = Reconstructor(
             hidden_size,
@@ -84,15 +68,6 @@ class EncoderDecoder(nn.Module):
         num_cond_views,
         timeit=False,
     ):
-        """Forward.
-
-        Args:
-            images: The images.
-            rays: The rays.
-            cam_token: The cam token.
-            num_cond_views: The num cond views.
-            timeit: The timeit.
-        """
         input_images = images[:, :num_cond_views, ...]
         cam_token = cam_token[:, :num_cond_views]
         target_rays = rays[:, num_cond_views:]
@@ -132,15 +107,6 @@ class Reconstructor(nn.Module):
         freeze_vggt=False,
         pretrained_patch_embed=False,
     ):
-        """Init.
-
-        Args:
-            renderer_hidden_size: The renderer hidden size.
-            target_patch_size: The target patch size.
-            pretrained_vggt: The pretrained vggt.
-            freeze_vggt: The freeze vggt.
-            pretrained_patch_embed: The pretrained patch embed.
-        """
         super().__init__()
         self.vggt = VGGT(
             enable_camera=False,
@@ -214,5 +180,4 @@ class Reconstructor(nn.Module):
 
 
 def EncDec_VitB8(**kwargs):
-    """Encdec vitb8."""
     return EncoderDecoder(depth=12, hidden_size=768, patch_size=8, num_heads=12, **kwargs)

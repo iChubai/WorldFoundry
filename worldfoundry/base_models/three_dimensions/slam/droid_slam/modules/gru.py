@@ -1,19 +1,9 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> modules -> gru.py functionality."""
-
 import torch
 import torch.nn as nn
 
 
 class ConvGRU(nn.Module):
-    """Conv gru implementation."""
-
     def __init__(self, h_planes=128, i_planes=128):
-        """Init.
-
-        Args:
-            h_planes: The h planes.
-            i_planes: The i planes.
-        """
         super().__init__()
         self.do_checkpoint = False
         self.convz = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)
@@ -27,11 +17,6 @@ class ConvGRU(nn.Module):
         self.convq_glo = nn.Conv2d(h_planes, h_planes, 1, padding=0)
 
     def forward(self, net, *inputs):
-        """Forward.
-
-        Args:
-            net: The net.
-        """
         inp = torch.cat(inputs, dim=1)
         net_inp = torch.cat([net, inp], dim=1)
 

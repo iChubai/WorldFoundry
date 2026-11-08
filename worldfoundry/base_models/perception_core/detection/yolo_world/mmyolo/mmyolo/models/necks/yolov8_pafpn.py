@@ -56,8 +56,7 @@ class YOLOv8PAFPN(YOLOv5PAFPN):
         )
 
     def build_reduce_layer(self, idx: int) -> nn.Module:
-        """build reduce layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -67,8 +66,7 @@ class YOLOv8PAFPN(YOLOv5PAFPN):
         return nn.Identity()
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -85,8 +83,7 @@ class YOLOv8PAFPN(YOLOv5PAFPN):
         )
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
 

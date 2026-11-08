@@ -54,11 +54,6 @@ class Qwen2RMSNorm(nn.Module):
         self.variance_epsilon = eps
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         input_dtype = hidden_states.dtype
         hidden_states = hidden_states.to(torch.float32)
         variance = hidden_states.pow(2).mean(-1, keepdim=True)
@@ -66,7 +61,6 @@ class Qwen2RMSNorm(nn.Module):
         return self.weight * hidden_states.to(input_dtype)
 
     def extra_repr(self):
-        """Extra repr."""
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
@@ -84,17 +78,6 @@ class Qwen2RotaryEmbedding(nn.Module):
         rope_type="default",
         config: Qwen2Config | None = None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            max_position_embeddings: The max position embeddings.
-            base: The base.
-            device: The device.
-            scaling_factor: The scaling factor.
-            rope_type: The rope type.
-            config: The config.
-        """
         super().__init__()
         # TODO (joao): remove the `if` below, only used for BC
         self.rope_kwargs = {}
@@ -149,12 +132,6 @@ class Qwen2RotaryEmbedding(nn.Module):
 
     @torch.no_grad()
     def forward(self, x, position_ids):
-        """Forward.
-
-        Args:
-            x: The x.
-            position_ids: The position ids.
-        """
         if "dynamic" in self.rope_type:
             self._dynamic_frequency_update(position_ids, device=x.device)
 
@@ -218,11 +195,6 @@ class Qwen2MLP(nn.Module):
     """Qwen mlp implementation."""
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
@@ -232,11 +204,6 @@ class Qwen2MLP(nn.Module):
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, hidden_state):
-        """Forward.
-
-        Args:
-            hidden_state: The hidden state.
-        """
         return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
 
 
@@ -260,12 +227,6 @@ class Qwen2Attention(nn.Module):
     """
 
     def __init__(self, config: Qwen2Config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -307,21 +268,6 @@ class Qwen2Attention(nn.Module):
         cache_position: torch.LongTensor | None = None,
         position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
     ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-
-        Returns:
-            The return value.
-        """
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -421,7 +367,6 @@ class Qwen2FlashAttention2(Qwen2Attention):
 
     # Copied from transformers.models.llama.modeling_llama.LlamaFlashAttention2.__init__
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
 
         # TODO: Should be removed once Flash Attention for RoCm is bumped to 2.1.
@@ -440,18 +385,6 @@ class Qwen2FlashAttention2(Qwen2Attention):
         cache_position: torch.LongTensor | None = None,
         position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-        """
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -516,14 +449,6 @@ class Qwen2FlashAttention2(Qwen2Attention):
         ):
 
             def mask_mod(b, h, q_idx, kv_idx):
-                """Mask mod.
-
-                Args:
-                    b: The b.
-                    h: The h.
-                    q_idx: The q idx.
-                    kv_idx: The kv idx.
-                """
                 causal_mask = q_idx >= kv_idx
                 if (
                     self.config.use_sliding_window
@@ -606,12 +531,6 @@ class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config: Qwen2Config, layer_idx: int):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -1011,11 +930,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.model = Qwen2Model(config)
         self.vocab_size = config.vocab_size
@@ -1025,12 +939,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
         self.post_init()
 
     def custom_init_pretrained(self, mllm_state_dict, logger):
-        """Custom init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-            logger: The logger.
-        """
         print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "moe_gen" in name:
@@ -1046,39 +954,21 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
         return mllm_state_dict
 
     def get_input_embeddings(self):
-        """Get input embeddings."""
         return self.model.embed_tokens
 
     def set_input_embeddings(self, value):
-        """Set input embeddings.
-
-        Args:
-            value: The value.
-        """
         self.model.embed_tokens = value
 
     def get_output_embeddings(self):
-        """Get output embeddings."""
         return self.lm_head
 
     def set_output_embeddings(self, new_embeddings):
-        """Set output embeddings.
-
-        Args:
-            new_embeddings: The new embeddings.
-        """
         self.lm_head = new_embeddings
 
     def set_decoder(self, decoder):
-        """Set decoder.
-
-        Args:
-            decoder: The decoder.
-        """
         self.model = decoder
 
     def get_decoder(self):
-        """Get decoder."""
         return self.model
 
     @add_start_docstrings_to_model_forward(QWEN2_INPUTS_DOCSTRING)

@@ -26,10 +26,10 @@ except ImportError:
     transformers = None
 
     class BaseModelOutput:
-        """Base model output implementation."""
+        pass
 
     class PretrainedConfig:
-        """Pretrained config implementation."""
+        pass
 
 
 from .hf_configs import arch_dict
@@ -37,11 +37,6 @@ from .hf_configs import arch_dict
 
 # utils
 def _camel2snake(s):
-    """Helper function to camel2snake.
-
-    Args:
-        s: The s.
-    """
     return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
 
 
@@ -60,12 +55,6 @@ class MeanPooler(nn.Module):
     """Mean pooling"""
 
     def forward(self, x: BaseModelOutput, attention_mask: TensorType):
-        """Forward.
-
-        Args:
-            x: The x.
-            attention_mask: The attention mask.
-        """
         masked_output = x.last_hidden_state * attention_mask.unsqueeze(-1)
         return masked_output.sum(dim=1) / attention_mask.sum(-1, keepdim=True)
 
@@ -75,12 +64,6 @@ class MaxPooler(nn.Module):
     """Max pooling"""
 
     def forward(self, x: BaseModelOutput, attention_mask: TensorType):
-        """Forward.
-
-        Args:
-            x: The x.
-            attention_mask: The attention mask.
-        """
         masked_output = x.last_hidden_state.masked_fill(attention_mask.unsqueeze(-1), -torch.inf)
         return masked_output.max(1).values
 
@@ -90,22 +73,11 @@ class ClsPooler(nn.Module):
     """CLS token pooling"""
 
     def __init__(self, use_pooler_output=True):
-        """Init.
-
-        Args:
-            use_pooler_output: The use pooler output.
-        """
         super().__init__()
         self.cls_token_position = 0
         self.use_pooler_output = use_pooler_output
 
     def forward(self, x: BaseModelOutput, attention_mask: TensorType):
-        """Forward.
-
-        Args:
-            x: The x.
-            attention_mask: The attention mask.
-        """
         if (
             self.use_pooler_output
             and isinstance(x, (BaseModelOutputWithPooling, BaseModelOutputWithPoolingAndCrossAttentions))
@@ -123,17 +95,10 @@ class ClsLastHiddenStatePooler(nn.Module):
     """
 
     def __init__(self):
-        """Init."""
         super().__init__()
         self.cls_token_position = 0
 
     def forward(self, x: BaseModelOutput, attention_mask: TensorType):
-        """Forward.
-
-        Args:
-            x: The x.
-            attention_mask: The attention mask.
-        """
         return x.last_hidden_state[:, self.cls_token_position, :]
 
 
@@ -150,17 +115,6 @@ class HFTextEncoder(nn.Module):
         pretrained: bool = True,
         output_tokens: bool = False,
     ):
-        """Init.
-
-        Args:
-            model_name_or_path: The model name or path.
-            output_dim: The output dim.
-            config: The config.
-            pooler_type: The pooler type.
-            proj_type: The proj type.
-            pretrained: The pretrained.
-            output_tokens: The output tokens.
-        """
         super().__init__()
         self.output_tokens = output_tokens
         self.output_dim = output_dim
@@ -214,11 +168,6 @@ class HFTextEncoder(nn.Module):
             )
 
     def forward(self, x: TensorType):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         attn_mask = (x != self.config.pad_token_id).long()
         out = self.transformer(input_ids=x, attention_mask=attn_mask)
         pooled_out = self.pooler(out, attn_mask)
@@ -236,12 +185,6 @@ class HFTextEncoder(nn.Module):
         return projected
 
     def lock(self, unlocked_layers: int = 0, freeze_layer_norm: bool = True):
-        """Lock.
-
-        Args:
-            unlocked_layers: The unlocked layers.
-            freeze_layer_norm: The freeze layer norm.
-        """
         if not unlocked_layers:  # full freezing
             for n, p in self.transformer.named_parameters():
                 p.requires_grad = (not freeze_layer_norm) if "LayerNorm" in n.split(".") else False
@@ -260,13 +203,7 @@ class HFTextEncoder(nn.Module):
                 p.requires_grad = (not freeze_layer_norm) if "LayerNorm" in n.split(".") else False
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         self.transformer.gradient_checkpointing_enable()
 
     def init_parameters(self):
-        """Init parameters."""
+        pass

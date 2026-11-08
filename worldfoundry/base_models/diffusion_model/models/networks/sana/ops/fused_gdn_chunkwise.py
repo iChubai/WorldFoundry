@@ -246,14 +246,6 @@ def _arch_key(cap: tuple) -> str:
 
 
 def _prec_key(dot_prec: int) -> str:
-    """Helper function to prec key.
-
-    Args:
-        dot_prec: The dot prec.
-
-    Returns:
-        The return value.
-    """
     return "fp32" if dot_prec >= 1 else "bf16"
 
 
@@ -344,33 +336,6 @@ def _phase_a_kv_kernel(
     BLOCK_S: tl.constexpr,
     SKIP_RELU: tl.constexpr = False,
 ):
-    """Helper function to phase a kv kernel.
-
-    Args:
-        qkv_ptr: The qkv ptr.
-        stride_b: The stride b.
-        stride_n: The stride n.
-        stride_3: The stride 3.
-        stride_h: The stride h.
-        stride_d: The stride d.
-        beta_ptr: The beta ptr.
-        k_inv_rms_ptr: The k inv rms ptr.
-        k_norm_w_ptr: The k norm w ptr.
-        rope_cos_ptr: The rope cos ptr.
-        rope_sin_ptr: The rope sin ptr.
-        I_minus_P_kv_ptr: The i minus p kv ptr.
-        A_ptr: The a ptr.
-        H: The h.
-        F: The f.
-        S: The s.
-        D: The d.
-        K_SCALE: The k scale.
-        NORM_EPS: The norm eps.
-        DOT_PRECISION: The dot precision.
-        BLOCK_D: The block d.
-        BLOCK_S: The block s.
-        SKIP_RELU: The skip relu.
-    """
     dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
@@ -689,33 +654,6 @@ def _phase_b_kernel(
     # buffer downstream (Phase C runs once on M_hist instead of twice).
     SKIP_Z: tl.constexpr,
 ):
-    """Helper function to phase b kernel.
-
-    Args:
-        I_P_kv_ptr: The i p kv ptr.
-        A_ptr: The a ptr.
-        I_P_z_ptr: The i p z ptr.
-        B_ptr: The b ptr.
-        decay_ptr: The decay ptr.
-        M_fwd_ptr: The m fwd ptr.
-        z_fwd_ptr: The z fwd ptr.
-        M_rev_ptr: The m rev ptr.
-        z_rev_ptr: The z rev ptr.
-        init_state_kv_ptr: The init state kv ptr.
-        init_state_z_ptr: The init state z ptr.
-        final_state_kv_ptr: The final state kv ptr.
-        final_state_z_ptr: The final state z ptr.
-        BH: The bh.
-        F: The f.
-        BLOCK_D: The block d.
-        DOT_PRECISION: The dot precision.
-        USE_ACC_FUSION: The use acc fusion.
-        LOAD_INIT_STATE: The load init state.
-        SAVE_FINAL_STATE: The save final state.
-        DIRECTION: The direction.
-        COMBINED_HISTORY: The combined history.
-        SKIP_Z: The skip z.
-    """
     dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
@@ -1022,34 +960,6 @@ def _phase_b_dtile_kernel(
     COMBINED_HISTORY: tl.constexpr,
     SKIP_Z: tl.constexpr,
 ):
-    """Helper function to phase b dtile kernel.
-
-    Args:
-        I_P_kv_ptr: The i p kv ptr.
-        A_ptr: The a ptr.
-        I_P_z_ptr: The i p z ptr.
-        B_ptr: The b ptr.
-        decay_ptr: The decay ptr.
-        M_fwd_ptr: The m fwd ptr.
-        z_fwd_ptr: The z fwd ptr.
-        M_rev_ptr: The m rev ptr.
-        z_rev_ptr: The z rev ptr.
-        init_state_kv_ptr: The init state kv ptr.
-        init_state_z_ptr: The init state z ptr.
-        final_state_kv_ptr: The final state kv ptr.
-        final_state_z_ptr: The final state z ptr.
-        BH: The bh.
-        F: The f.
-        BLOCK_D: The block d.
-        D_TILE: The d tile.
-        DOT_PRECISION: The dot precision.
-        USE_ACC_FUSION: The use acc fusion.
-        LOAD_INIT_STATE: The load init state.
-        SAVE_FINAL_STATE: The save final state.
-        DIRECTION: The direction.
-        COMBINED_HISTORY: The combined history.
-        SKIP_Z: The skip z.
-    """
     dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
@@ -1279,36 +1189,6 @@ def _phase_c_kernel(
     SKIP_RELU: tl.constexpr = False,
     NUM_ONLY: tl.constexpr = False,
 ):
-    """Helper function to phase c kernel.
-
-    Args:
-        qkv_ptr: The qkv ptr.
-        stride_b: The stride b.
-        stride_n: The stride n.
-        stride_3: The stride 3.
-        stride_h: The stride h.
-        stride_d: The stride d.
-        q_inv_rms_ptr: The q inv rms ptr.
-        q_norm_w_ptr: The q norm w ptr.
-        rope_cos_ptr: The rope cos ptr.
-        rope_sin_ptr: The rope sin ptr.
-        M_ptr: The m ptr.
-        z_ptr: The z ptr.
-        num_ptr: The num ptr.
-        den_ptr: The den ptr.
-        H: The h.
-        F: The f.
-        S: The s.
-        D: The d.
-        NORM_EPS: The norm eps.
-        DOT_PRECISION: The dot precision.
-        BLOCK_D: The block d.
-        BLOCK_S: The block s.
-        ACCUMULATE: The accumulate.
-        SKIP_LAST_F: The skip last f.
-        SKIP_RELU: The skip relu.
-        NUM_ONLY: The num only.
-    """
     dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 

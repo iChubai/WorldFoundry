@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> modules -> transformer.py functionality."""
-
 import torch
 import torch.nn.functional as F
 from einops import rearrange
@@ -7,41 +5,17 @@ from torch import einsum, nn
 
 
 class GEGLU(nn.Module):
-    """Geglu implementation."""
-
     def __init__(self, dim_in, dim_out):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x, gate = self.proj(x).chunk(2, dim=-1)
         return x * F.gelu(gate)
 
 
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
-
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.0):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            mult: The mult.
-            glu: The glu.
-            dropout: The dropout.
-        """
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = dim
@@ -53,27 +27,11 @@ class FeedForward(nn.Module):
         self.net = nn.Sequential(project_in, nn.Dropout(dropout), linear)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.net(x)
 
 
 class CrossAttention(nn.Module):
-    """Cross attention implementation."""
-
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            context_dim: The context dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-        """
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = context_dim
@@ -90,13 +48,6 @@ class CrossAttention(nn.Module):
         self.to_out.bias.data.fill_(0)
 
     def forward(self, x, context=None, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
         h = self.heads
 
         q = self.to_q(x)
@@ -135,17 +86,8 @@ def checkpoint(func, inputs, params, flag):
 
 
 class CheckpointFunction(torch.autograd.Function):
-    """Checkpoint function implementation."""
-
     @staticmethod
     def forward(ctx, run_function, length, *args):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            run_function: The run function.
-            length: The length.
-        """
         ctx.run_function = run_function
         ctx.input_tensors = list(args[:length])
         ctx.input_params = list(args[length:])
@@ -160,11 +102,6 @@ class CheckpointFunction(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, *output_grads):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-        """
         ctx.input_tensors = [x.detach().requires_grad_(True) for x in ctx.input_tensors]
         with torch.enable_grad(), torch.cuda.amp.autocast(**ctx.gpu_autocast_kwargs):
             # Fixes a bug where the first op in run_function modifies the
@@ -185,8 +122,6 @@ class CheckpointFunction(torch.autograd.Function):
 
 
 class BasicTransformerBlock(nn.Module):
-    """Basic transformer block implementation."""
-
     def __init__(
         self,
         dim,
@@ -198,18 +133,6 @@ class BasicTransformerBlock(nn.Module):
         disable_self_attn=False,
         use_checkpoint=True,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            n_heads: The n heads.
-            d_head: The d head.
-            dropout: The dropout.
-            context_dim: The context dim.
-            gated_ff: The gated ff.
-            disable_self_attn: The disable self attn.
-            use_checkpoint: The use checkpoint.
-        """
         super().__init__()
 
         self.attn1 = CrossAttention(
@@ -223,26 +146,12 @@ class BasicTransformerBlock(nn.Module):
         self.use_checkpoint = use_checkpoint
 
     def forward(self, x, context=None, query_pe=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            query_pe: The query pe.
-        """
         if self.use_checkpoint:
             return checkpoint(self._forward, (x, context, query_pe), self.parameters(), self.checkpoint)
         else:
             return self._forward(x, context, query_pe)
 
     def _forward(self, x, context=None, query_pe=None):
-        """Helper function to forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            query_pe: The query pe.
-        """
         if context is None:
             context = x
         query = x
@@ -257,8 +166,6 @@ class BasicTransformerBlock(nn.Module):
 
 
 class PosEmbedding(nn.Module):
-    """Pos embedding implementation."""
-
     def __init__(self, in_channels, N_freqs, logscale=True):
         """
         Defines a function that embeds x to (x, sin(2^k x), cos(2^k x), ...)

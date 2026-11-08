@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> common -> gaussians.py functionality."""
-
 import torch
 from einops import rearrange
 from jaxtyping import Float
@@ -11,15 +9,6 @@ def quaternion_to_matrix(
     quaternions: Float[Tensor, "*batch 4"],
     eps: float = 1e-8,
 ) -> Float[Tensor, "*batch 3 3"]:
-    """Quaternion to matrix.
-
-    Args:
-        quaternions: The quaternions.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     # Order changed to match scipy format!
     i, j, k, r = torch.unbind(quaternions, dim=-1)
     two_s = 2 / ((quaternions * quaternions).sum(dim=-1) + eps)
@@ -45,15 +34,6 @@ def build_covariance(
     scale: Float[Tensor, "*#batch 3"],
     rotation_xyzw: Float[Tensor, "*#batch 4"],
 ) -> Float[Tensor, "*batch 3 3"]:
-    """Build covariance.
-
-    Args:
-        scale: The scale.
-        rotation_xyzw: The rotation xyzw.
-
-    Returns:
-        The return value.
-    """
     scale = scale.diag_embed()
     rotation = quaternion_to_matrix(rotation_xyzw)
     return rotation @ scale @ rearrange(scale, "... i j -> ... j i") @ rearrange(rotation, "... i j -> ... j i")

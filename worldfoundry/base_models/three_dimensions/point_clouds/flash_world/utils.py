@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> flash_world -> utils.py functionality."""
-
 import importlib
 import math
 
@@ -11,29 +9,16 @@ from plyfile import PlyData, PlyElement
 
 
 class EmbedContainer(nn.Module):
-    """Embed container implementation."""
-
     def __init__(self, tensor):
-        """Init.
-
-        Args:
-            tensor: The tensor.
-        """
         super().__init__()
         self.tensor = nn.Parameter(tensor)
 
     def forward(self):
-        """Forward."""
         return self.tensor
 
 
 @torch.no_grad
 def zero_init(module):
-    """Zero init.
-
-    Args:
-        module: The module.
-    """
     if type(module) is torch.nn.Conv2d or type(module) is torch.nn.Linear:
         module.weight.zero_()
         module.bias.zero_()
@@ -41,11 +26,6 @@ def zero_init(module):
 
 
 def import_str(string):
-    """Import str.
-
-    Args:
-        string: The string.
-    """
     # From https://github.com/CompVis/taming-transformers
     module, cls = string.rsplit(".", 1)
     return getattr(importlib.import_module(module, package=None), cls)
@@ -66,23 +46,12 @@ class EMA_FSDP:
     """Fsdp implementation."""
 
     def __init__(self, fsdp_module: torch.nn.Module, decay: float = 0.999):
-        """Init.
-
-        Args:
-            fsdp_module: The fsdp module.
-            decay: The decay.
-        """
         self.decay = decay
         self.shadow = {}
         self._init_shadow(fsdp_module)
 
     @torch.no_grad()
     def _init_shadow(self, fsdp_module):
-        """Helper function to init shadow.
-
-        Args:
-            fsdp_module: The fsdp module.
-        """
         # 判断是否是FSDP模型
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
@@ -96,11 +65,6 @@ class EMA_FSDP:
 
     @torch.no_grad()
     def update(self, fsdp_module):
-        """Update.
-
-        Args:
-            fsdp_module: The fsdp module.
-        """
         d = self.decay
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
@@ -115,23 +79,12 @@ class EMA_FSDP:
 
     # Optional helpers ---------------------------------------------------
     def state_dict(self):
-        """State dict."""
         return self.shadow  # picklable
 
     def load_state_dict(self, sd):
-        """Load state dict.
-
-        Args:
-            sd: The sd.
-        """
         self.shadow = {k: v.clone() for k, v in sd.items()}
 
     def copy_to(self, fsdp_module):
-        """Copy to.
-
-        Args:
-            fsdp_module: The fsdp module.
-        """
         # load EMA weights into an (unwrapped) copy of the generator
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
@@ -142,13 +95,6 @@ class EMA_FSDP:
 
 
 def create_raymaps(cameras, h, w):
-    """Create raymaps.
-
-    Args:
-        cameras: The cameras.
-        h: The h.
-        w: The w.
-    """
     rays_o, rays_d = create_rays(cameras, h, w)
     raymaps = torch.cat([rays_d, rays_o - (rays_o * rays_d).sum(dim=-1, keepdim=True) * rays_d], dim=-1)
     return raymaps
@@ -161,24 +107,12 @@ def create_raymaps(cameras, h, w):
 
 
 class EMANorm(nn.Module):
-    """Ema norm implementation."""
-
     def __init__(self, beta):
-        """Init.
-
-        Args:
-            beta: The beta.
-        """
         super().__init__()
         self.register_buffer("magnitude_ema", torch.ones([]))
         self.beta = beta
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.training:
             magnitude_cur = x.detach().to(torch.float32).square().mean()
             self.magnitude_ema.copy_(magnitude_cur.lerp(self.magnitude_ema.to(torch.float32), self.beta))
@@ -188,17 +122,7 @@ class EMANorm(nn.Module):
 
 
 class TimestepEmbedding(nn.Module):
-    """Timestep embedding implementation."""
-
     def __init__(self, dim, max_period=10000, time_factor: float = 1000.0, zero_weight: bool = True):
-        """Init.
-
-        Args:
-            dim: The dim.
-            max_period: The max period.
-            time_factor: The time factor.
-            zero_weight: The zero weight.
-        """
         super().__init__()
         self.max_period = max_period
         self.time_factor = time_factor
@@ -209,11 +133,6 @@ class TimestepEmbedding(nn.Module):
             self.weight = None
 
     def forward(self, t):
-        """Forward.
-
-        Args:
-            t: The t.
-        """
         if self.weight is None:
             return timestep_embedding(t, self.dim, self.max_period, self.time_factor)
         else:
@@ -365,15 +284,6 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
 
 @torch.amp.autocast(device_type="cuda", enabled=False)
 def normalize_cameras(cameras, return_meta=False, ref_w2c=None, T_norm=None, n_frame=None):
-    """Normalize cameras.
-
-    Args:
-        cameras: The cameras.
-        return_meta: The return meta.
-        ref_w2c: The ref w2c.
-        T_norm: The t norm.
-        n_frame: The n frame.
-    """
     B, N = cameras.shape[:2]
 
     c2ws = torch.zeros(B, N, 3, 4, device=cameras.device)
@@ -404,14 +314,6 @@ def normalize_cameras(cameras, return_meta=False, ref_w2c=None, T_norm=None, n_f
 
 
 def create_rays(cameras, h, w, uv_offset=None):
-    """Create rays.
-
-    Args:
-        cameras: The cameras.
-        h: The h.
-        w: The w.
-        uv_offset: The uv offset.
-    """
     prefix_shape = cameras.shape[:-1]
     cameras = cameras.flatten(0, -2)
     device = cameras.device
@@ -452,11 +354,6 @@ def create_rays(cameras, h, w, uv_offset=None):
 
 
 def matrix_to_square(mat):
-    """Matrix to square.
-
-    Args:
-        mat: The mat.
-    """
     l = len(mat.shape)
     if l == 3:
         return torch.cat([mat, torch.tensor([0, 0, 0, 1]).repeat(mat.shape[0], 1, 1).to(mat.device)], dim=1)
@@ -467,16 +364,6 @@ def matrix_to_square(mat):
 
 
 def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=None, spz_path=None):
-    """Export gaussians.
-
-    Args:
-        gaussians: The gaussians.
-        opacity_threshold: The opacity threshold.
-        T_norm: The t norm.
-        ply_path: The ply path.
-        spz_path: The spz path.
-    """
-
     sh_degree = int(math.sqrt((gaussians.shape[-1] - sum([3, 1, 3, 4])) / 3 - 1))
 
     xyz, opacity, scale, rotation, feature = gaussians.float().split([3, 1, 3, 4, (sh_degree + 1) ** 2 * 3], dim=-1)
@@ -628,13 +515,6 @@ def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):
 
 
 def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):
-    """Sample from dense cameras.
-
-    Args:
-        dense_cameras: The dense cameras.
-        t: The t.
-        noise_strengths: The noise strengths.
-    """
     N, C = dense_cameras.shape
     _M = t.shape
 

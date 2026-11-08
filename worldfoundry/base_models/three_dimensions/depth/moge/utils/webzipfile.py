@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> webzipfile.py functionality."""
-
 import struct
 from typing import *
 from zipfile import (
@@ -26,15 +24,7 @@ from .webfile import WebFile
 
 
 class _SharedWebFile(WebFile):
-    """Shared web file implementation."""
-
     def __init__(self, webfile: WebFile, pos: int):
-        """Init.
-
-        Args:
-            webfile: The webfile.
-            pos: The pos.
-        """
         super().__init__(webfile.url, webfile.session, size=webfile.size)
         self.seek(pos)
 

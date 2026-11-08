@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> raft -> raft.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,11 +14,6 @@ try:
     _torch_amp_autocast = torch.amp.autocast
 
     def autocast(enabled):
-        """Autocast.
-
-        Args:
-            enabled: The enabled.
-        """
         return _torch_amp_autocast("cuda" if torch.cuda.is_available() else "cpu", enabled=enabled)
 except AttributeError:
     try:
@@ -28,31 +21,18 @@ except AttributeError:
     except Exception:
         # dummy autocast for PyTorch < 1.6
         class autocast:
-            """Autocast implementation."""
-
             def __init__(self, enabled):
-                """Init.
-
-                Args:
-                    enabled: The enabled.
-                """
+                pass
 
             def __enter__(self):
-                """Enter."""
+                pass
 
             def __exit__(self, *args):
-                """Exit."""
+                pass
 
 
 class RAFT(nn.Module):
-    """Raft implementation."""
-
     def __init__(self, args):
-        """Init.
-
-        Args:
-            args: The args.
-        """
         super().__init__()
         self.args = args
 
@@ -86,7 +66,6 @@ class RAFT(nn.Module):
             self.update_block = BasicUpdateBlock(self.args, hidden_dim=hdim)
 
     def freeze_bn(self):
-        """Freeze bn."""
         for m in self.modules():
             if isinstance(m, nn.BatchNorm2d):
                 m.eval()

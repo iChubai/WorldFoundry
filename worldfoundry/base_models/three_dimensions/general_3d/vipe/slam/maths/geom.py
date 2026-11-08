@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> slam -> maths -> geom.py functionality."""
-
 import torch
 
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import slam_ext

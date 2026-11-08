@@ -1,12 +1,8 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> configs.py functionality."""
-
 from dataclasses import dataclass
 
 
 @dataclass
 class FGLRConfig:
-    """Fglr config implementation."""
-
     means: float = 1.6e-4
     opacities: float = 1e-2
     scales: float = 5e-3
@@ -17,8 +13,6 @@ class FGLRConfig:
 
 @dataclass
 class BGLRConfig:
-    """Bglr config implementation."""
-
     means: float = 1.6e-4
     opacities: float = 5e-2
     scales: float = 5e-3
@@ -28,31 +22,23 @@ class BGLRConfig:
 
 @dataclass
 class MotionLRConfig:
-    """Motion lr config implementation."""
-
     rots: float = 1.6e-4
     transls: float = 1.6e-4
 
 
 @dataclass
 class CameraScalesLRConfig:
-    """Camera scales lr config implementation."""
-
     camera_scales: float = 1e-4
 
 
 @dataclass
 class CameraPoseLRConfig:
-    """Camera pose lr config implementation."""
-
     Rs: float = 1e-3
     ts: float = 1e-3
 
 
 @dataclass
 class SceneLRConfig:
-    """Scene lr config implementation."""
-
     fg: FGLRConfig
     bg: BGLRConfig
     motion_bases: MotionLRConfig
@@ -62,8 +48,6 @@ class SceneLRConfig:
 
 @dataclass
 class LossesConfig:
-    """Losses config implementation."""
-
     w_rgb: float = 1.0
     w_depth_reg: float = 0.5
     w_depth_const: float = 0.1
@@ -83,8 +67,6 @@ class LossesConfig:
 
 @dataclass
 class OptimizerConfig:
-    """Optimizer config implementation."""
-
     max_steps: int = 5000
     ## Adaptive gaussian control
     warmup_steps: int = 200

@@ -44,14 +44,7 @@ def _local_fp16_variant_kwargs(model_id, *, subfolder, weight_stem):
 
 
 class PanoOutpaintGenerator(nn.Module):
-    """Pano outpaint generator implementation."""
-
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__()
 
         self.diff_timestep = config["model"]["diff_timestep"]
@@ -82,11 +75,6 @@ class PanoOutpaintGenerator(nn.Module):
         self.mv_base_model = MultiViewBaseModel(unet, config["model"])
 
     def load_model(self, model_id):
-        """Load model.
-
-        Args:
-            model_id: The model id.
-        """
         vae = AutoencoderKL.from_pretrained(
             model_id,
             subfolder="vae",
@@ -119,12 +107,6 @@ class PanoOutpaintGenerator(nn.Module):
 
     @torch.no_grad()
     def encode_text(self, text, device):
-        """Encode text.
-
-        Args:
-            text: The text.
-            device: The device.
-        """
         text_inputs = self.tokenizer(
             text, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
         )
@@ -139,12 +121,6 @@ class PanoOutpaintGenerator(nn.Module):
 
     @torch.no_grad()
     def encode_image(self, x_input, vae):
-        """Encode image.
-
-        Args:
-            x_input: The x input.
-            vae: The vae.
-        """
         _b = x_input.shape[0]
 
         z = vae.encode(x_input).latent_dist  # (bs, 2, 4, 64, 64)
@@ -158,12 +134,6 @@ class PanoOutpaintGenerator(nn.Module):
 
     @torch.no_grad()
     def decode_latent(self, latents, vae):
-        """Decode latent.
-
-        Args:
-            latents: The latents.
-            vae: The vae.
-        """
         b, m = latents.shape[0:2]
         latents = 1 / vae.config.scaling_factor * latents
 
@@ -180,30 +150,12 @@ class PanoOutpaintGenerator(nn.Module):
         return image
 
     def prepare_mask_latents(self, mask, masked_image, batch_size, height, width):
-        """Prepare mask latents.
-
-        Args:
-            mask: The mask.
-            masked_image: The masked image.
-            batch_size: The batch size.
-            height: The height.
-            width: The width.
-        """
-
         mask = torch.nn.functional.interpolate(mask, size=(height // 8, width // 8))
         masked_image_latents = self.encode_image(masked_image, self.vae)
 
         return mask, masked_image_latents
 
     def gen_cls_free_guide_pair(self, latents, timestep, prompt_embd, batch):
-        """Gen cls free guide pair.
-
-        Args:
-            latents: The latents.
-            timestep: The timestep.
-            prompt_embd: The prompt embd.
-            batch: The batch.
-        """
         latents = torch.cat([latents] * 2)
         timestep = torch.cat([timestep] * 2)
 
@@ -216,15 +168,6 @@ class PanoOutpaintGenerator(nn.Module):
 
     @torch.no_grad()
     def forward_cls_free(self, latents_high_res, _timestep, prompt_embd, batch, model):
-        """Forward cls free.
-
-        Args:
-            latents_high_res: The latents high res.
-            _timestep: The timestep.
-            prompt_embd: The prompt embd.
-            batch: The batch.
-            model: The model.
-        """
         latents, _timestep, _prompt_embd, meta = self.gen_cls_free_guide_pair(
             latents_high_res, _timestep, prompt_embd, batch
         )
@@ -237,11 +180,6 @@ class PanoOutpaintGenerator(nn.Module):
         return noise_pred
 
     def prepare_mask_image(self, images):
-        """Prepare mask image.
-
-        Args:
-            images: The images.
-        """
         bs, m, _, h, w = images.shape
         mask = torch.ones(bs, m, 1, h, w, device=images.device)
         mask[:, 0] = 0
@@ -264,11 +202,6 @@ class PanoOutpaintGenerator(nn.Module):
 
     @torch.no_grad()
     def inference(self, batch):
-        """Inference.
-
-        Args:
-            batch: The batch.
-        """
         images = batch["images"]
 
         bs, m, h, w, _ = images.shape

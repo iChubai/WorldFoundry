@@ -225,7 +225,6 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
         targets.
 
         Args:
-            cost_matrix (Tensor): Cost matrix.
             pairwise_ious (Tensor): Pairwise iou matrix.
             num_gt (int): Number of gt.
             valid_mask (Tensor): Mask for valid bboxes.

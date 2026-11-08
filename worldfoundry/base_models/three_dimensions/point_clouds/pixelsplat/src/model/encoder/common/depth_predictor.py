@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> common -> depth_predictor.py functionality."""
-
 import torch
 from einops import rearrange
 from jaxtyping import Float, Int64
@@ -10,22 +8,12 @@ from ..epipolar.distribution_sampler import DistributionSampler
 
 
 class DepthPredictor(nn.Module):
-    """Depth predictor implementation."""
-
     sampler: DistributionSampler
 
     def __init__(
         self,
         use_transmittance: bool,
     ) -> None:
-        """Init.
-
-        Args:
-            use_transmittance: The use transmittance.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.sampler = DistributionSampler()
         self.to_pdf = nn.Softmax(dim=-1)
@@ -44,18 +32,6 @@ class DepthPredictor(nn.Module):
         Float[Tensor, "batch view ray surface sample"],  # opacity
         Int64[Tensor, "batch view ray surface sample"],  # index
     ]:
-        """Forward.
-
-        Args:
-            features: The features.
-            near: The near.
-            far: The far.
-            deterministic: The deterministic.
-            gaussians_per_pixel: The gaussians per pixel.
-
-        Returns:
-            The return value.
-        """
         # Convert the features into a depth distribution plus intra-bucket offsets.
         pdf_raw, offset_raw = features.unbind(dim=-1)
         pdf = self.to_pdf(pdf_raw)

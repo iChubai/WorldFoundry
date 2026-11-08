@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> export -> colmap.py functionality."""
-
 import os
 
 import numpy as np
@@ -34,18 +32,6 @@ def export_to_colmap(
     conf_thresh_percentile: float = 40.0,
     process_res_method: str = "upper_bound_resize",
 ) -> None:
-    """Export to colmap.
-
-    Args:
-        prediction: The prediction.
-        export_dir: The export dir.
-        image_paths: The image paths.
-        conf_thresh_percentile: The conf thresh percentile.
-        process_res_method: The process res method.
-
-    Returns:
-        The return value.
-    """
     # 1. Data preparation
     conf_thresh = np.percentile(prediction.conf, conf_thresh_percentile)
     points, colors = _depths_to_world_points_with_colors(

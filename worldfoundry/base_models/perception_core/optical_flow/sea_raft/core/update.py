@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> update.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,40 +6,18 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.layer i
 
 
 class FlowHead(nn.Module):
-    """Flow head implementation."""
-
     def __init__(self, input_dim=128, hidden_dim=256, output_dim=4):
-        """Init.
-
-        Args:
-            input_dim: The input dim.
-            hidden_dim: The hidden dim.
-            output_dim: The output dim.
-        """
         super().__init__()
         self.conv1 = nn.Conv2d(input_dim, hidden_dim, 3, padding=1)
         self.conv2 = nn.Conv2d(hidden_dim, output_dim, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.conv2(self.relu(self.conv1(x)))
 
 
 class BasicMotionEncoder(nn.Module):
-    """Basic motion encoder implementation."""
-
     def __init__(self, args, dim=128):
-        """Init.
-
-        Args:
-            args: The args.
-            dim: The dim.
-        """
         super().__init__()
         cor_planes = args.corr_channel
         self.convc1 = nn.Conv2d(cor_planes, dim * 2, 1, padding=0)
@@ -51,12 +27,6 @@ class BasicMotionEncoder(nn.Module):
         self.conv = nn.Conv2d(dim * 2, dim - 2, 3, padding=1)
 
     def forward(self, flow, corr):
-        """Forward.
-
-        Args:
-            flow: The flow.
-            corr: The corr.
-        """
         cor = F.relu(self.convc1(corr))
         cor = F.relu(self.convc2(cor))
         flo = F.relu(self.convf1(flow))
@@ -68,16 +38,7 @@ class BasicMotionEncoder(nn.Module):
 
 
 class BasicUpdateBlock(nn.Module):
-    """Basic update block implementation."""
-
     def __init__(self, args, hdim=128, cdim=128):
-        """Init.
-
-        Args:
-            args: The args.
-            hdim: The hdim.
-            cdim: The cdim.
-        """
         # net: hdim, inp: cdim
         super().__init__()
         self.args = args
@@ -88,15 +49,6 @@ class BasicUpdateBlock(nn.Module):
         self.refine = nn.ModuleList(self.refine)
 
     def forward(self, net, inp, corr, flow, upsample=True):
-        """Forward.
-
-        Args:
-            net: The net.
-            inp: The inp.
-            corr: The corr.
-            flow: The flow.
-            upsample: The upsample.
-        """
         motion_features = self.encoder(flow, corr)
         inp = torch.cat([inp, motion_features], dim=1)
         for blk in self.refine:

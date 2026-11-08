@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> networks -> encoders -> __init__.py functionality."""
-
 from torch import nn
 
 from ..layers.normalization import FrozenBatchNorm2d
@@ -11,13 +9,6 @@ from .resnet import ResNet50
 
 
 def build_encoder(name, frozen_bn=True, freeze_at=-1):
-    """Build encoder.
-
-    Args:
-        name: The name.
-        frozen_bn: The frozen bn.
-        freeze_at: The freeze at.
-    """
     BatchNorm = FrozenBatchNorm2d if frozen_bn else nn.BatchNorm2d
 
     if name == "resnet50":

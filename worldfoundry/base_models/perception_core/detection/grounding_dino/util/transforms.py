@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> util -> transforms.py functionality."""
-
 from __future__ import annotations
 
 import random
@@ -18,16 +16,6 @@ def _resolve_size(
     size: int | Sequence[int],
     max_size: int | None,
 ) -> tuple[int, int]:
-    """Helper function to resolve size.
-
-    Args:
-        image_size: The image size.
-        size: The size.
-        max_size: The max size.
-
-    Returns:
-        The return value.
-    """
     if isinstance(size, Sequence):
         width, height = size
         return int(height), int(width)
@@ -48,14 +36,6 @@ def _resolve_size(
 
 
 def resize(image, target, size: int | Sequence[int], max_size: int | None = None):
-    """Resize.
-
-    Args:
-        image: The image.
-        target: The target.
-        size: The size.
-        max_size: The max size.
-    """
     resolved_size = _resolve_size(image.size, size, max_size)
     resized = F.resize(image, resolved_size)
     if target is None:
@@ -72,67 +52,25 @@ def resize(image, target, size: int | Sequence[int], max_size: int | None = None
 
 
 class RandomResize:
-    """Random resize implementation."""
-
     def __init__(self, sizes: Sequence[int], max_size: int | None = None) -> None:
-        """Init.
-
-        Args:
-            sizes: The sizes.
-            max_size: The max size.
-
-        Returns:
-            The return value.
-        """
         self.sizes = tuple(sizes)
         self.max_size = max_size
 
     def __call__(self, image, target=None):
-        """Call.
-
-        Args:
-            image: The image.
-            target: The target.
-        """
         return resize(image, target, random.choice(self.sizes), self.max_size)
 
 
 class ToTensor:
-    """To tensor implementation."""
-
     def __call__(self, image, target):
-        """Call.
-
-        Args:
-            image: The image.
-            target: The target.
-        """
         return F.to_tensor(image), target
 
 
 class Normalize:
-    """Normalize implementation."""
-
     def __init__(self, mean: Sequence[float], std: Sequence[float]) -> None:
-        """Init.
-
-        Args:
-            mean: The mean.
-            std: The std.
-
-        Returns:
-            The return value.
-        """
         self.mean = tuple(mean)
         self.std = tuple(std)
 
     def __call__(self, image, target=None):
-        """Call.
-
-        Args:
-            image: The image.
-            target: The target.
-        """
         image = F.normalize(image, mean=self.mean, std=self.std)
         if target is None:
             return image, None
@@ -149,35 +87,14 @@ class Normalize:
 
 
 class Compose:
-    """Compose implementation."""
-
     def __init__(self, transforms) -> None:
-        """Init.
-
-        Args:
-            transforms: The transforms.
-
-        Returns:
-            The return value.
-        """
         self.transforms = tuple(transforms)
 
     def __call__(self, image, target):
-        """Call.
-
-        Args:
-            image: The image.
-            target: The target.
-        """
         for transform in self.transforms:
             image, target = transform(image, target)
         return image, target
 
     def __repr__(self) -> str:
-        """Repr.
-
-        Returns:
-            The return value.
-        """
         body = "\n".join(f"    {transform}" for transform in self.transforms)
         return f"{self.__class__.__name__}(\n{body}\n)"

@@ -156,15 +156,6 @@ def get_chunk_index_from_config(config: Any, num_frames: int | None = None) -> l
         return None
 
     def _get_model_attr(name: str, default: Any) -> Any:
-        """Helper function to get model attr.
-
-        Args:
-            name: The name.
-            default: The default.
-
-        Returns:
-            The return value.
-        """
         if hasattr(model, "get"):
             return model.get(name, default)
         if isinstance(model, dict):

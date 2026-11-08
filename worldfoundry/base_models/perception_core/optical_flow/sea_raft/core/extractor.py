@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> extractor.py functionality."""
-
 import torch
 import torch.nn as nn
 
@@ -13,16 +11,6 @@ class ResNetFPN(nn.Module):
     """
 
     def __init__(self, args, input_dim=3, output_dim=256, ratio=1.0, norm_layer=nn.BatchNorm2d, init_weight=False):
-        """Init.
-
-        Args:
-            args: The args.
-            input_dim: The input dim.
-            output_dim: The output dim.
-            ratio: The ratio.
-            norm_layer: The norm layer.
-            init_weight: The init weight.
-        """
         super().__init__()
         # Config
         block = BasicBlock
@@ -51,12 +39,6 @@ class ResNetFPN(nn.Module):
         self._init_weights(args)
 
     def _init_weights(self, args):
-        """Helper function to init weights.
-
-        Args:
-            args: The args.
-        """
-
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
@@ -85,15 +67,6 @@ class ResNetFPN(nn.Module):
             self.load_state_dict(model_dict, strict=False)
 
     def _make_layer(self, block, dim, stride=1, norm_layer=nn.BatchNorm2d, num=2):
-        """Helper function to make layer.
-
-        Args:
-            block: The block.
-            dim: The dim.
-            stride: The stride.
-            norm_layer: The norm layer.
-            num: The num.
-        """
         layers = []
         layers.append(block(self.in_planes, dim, stride=stride, norm_layer=norm_layer))
         for _i in range(num - 1):
@@ -102,11 +75,6 @@ class ResNetFPN(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # ResNet Backbone
         x = self.relu(self.bn1(self.conv1(x)))
         for i in range(len(self.layer1)):

@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> util -> inference.py functionality."""
-
 from __future__ import annotations
 
 import bisect
@@ -25,14 +23,6 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slco
 
 
 def preprocess_caption(caption: str) -> str:
-    """Preprocess caption.
-
-    Args:
-        caption: The caption.
-
-    Returns:
-        The return value.
-    """
     result = caption.lower().strip()
     if result.endswith("."):
         return result
@@ -40,13 +30,6 @@ def preprocess_caption(caption: str) -> str:
 
 
 def load_model(model_config_path: str, model_checkpoint_path: str, device: str = "cuda"):
-    """Load model.
-
-    Args:
-        model_config_path: The model config path.
-        model_checkpoint_path: The model checkpoint path.
-        device: The device.
-    """
     args = SLConfig.fromfile(model_config_path)
     args.device = device
     local_text_encoder = os.environ.get("WORLDFOUNDRY_GROUNDING_DINO_TEXT_ENCODER_DIR")
@@ -60,14 +43,6 @@ def load_model(model_config_path: str, model_checkpoint_path: str, device: str =
 
 
 def load_image(image_path: str) -> tuple[np.array, torch.Tensor]:
-    """Load image.
-
-    Args:
-        image_path: The image path.
-
-    Returns:
-        The return value.
-    """
     transform = T.Compose(
         [
             T.RandomResize([800], max_size=1333),
@@ -90,20 +65,6 @@ def predict(
     device: str = "cuda",
     remove_combined: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor, list[str]]:
-    """Predict.
-
-    Args:
-        model: The model.
-        image: The image.
-        caption: The caption.
-        box_threshold: The box threshold.
-        text_threshold: The text threshold.
-        device: The device.
-        remove_combined: The remove combined.
-
-    Returns:
-        The return value.
-    """
     caption = preprocess_caption(caption=caption)
 
     model = model.to(device)
@@ -172,16 +133,7 @@ def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor
 
 
 class Model:
-    """Model implementation."""
-
     def __init__(self, model_config_path: str, model_checkpoint_path: str, device: str = "cuda"):
-        """Init.
-
-        Args:
-            model_config_path: The model config path.
-            model_checkpoint_path: The model checkpoint path.
-            device: The device.
-        """
         self.model = load_model(
             model_config_path=model_config_path, model_checkpoint_path=model_checkpoint_path, device=device
         ).to(device)
@@ -261,14 +213,6 @@ class Model:
 
     @staticmethod
     def preprocess_image(image_bgr: np.ndarray) -> torch.Tensor:
-        """Preprocess image.
-
-        Args:
-            image_bgr: The image bgr.
-
-        Returns:
-            The return value.
-        """
         transform = T.Compose(
             [
                 T.RandomResize([800], max_size=1333),
@@ -282,17 +226,6 @@ class Model:
 
     @staticmethod
     def post_process_result(source_h: int, source_w: int, boxes: torch.Tensor, logits: torch.Tensor) -> sv.Detections:
-        """Post process result.
-
-        Args:
-            source_h: The source h.
-            source_w: The source w.
-            boxes: The boxes.
-            logits: The logits.
-
-        Returns:
-            The return value.
-        """
         import supervision as sv
 
         boxes = boxes * torch.Tensor([source_w, source_h, source_w, source_h])
@@ -302,15 +235,6 @@ class Model:
 
     @staticmethod
     def phrases2classes(phrases: list[str], classes: list[str]) -> np.ndarray:
-        """Phrases2classes.
-
-        Args:
-            phrases: The phrases.
-            classes: The classes.
-
-        Returns:
-            The return value.
-        """
         class_ids = []
         for phrase in phrases:
             for class_ in classes:

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> helpers.py functionality."""
-
 import importlib
 import time
 import warnings
@@ -10,15 +8,8 @@ from typing import *
 
 
 def suppress_traceback(fn):
-    """Suppress traceback.
-
-    Args:
-        fn: The fn.
-    """
-
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        """Wrapper."""
         try:
             return fn(*args, **kwargs)
         except Exception as e:
@@ -33,30 +24,13 @@ R = TypeVar("R")
 
 
 class no_warnings:
-    """No warnings implementation."""
-
     def __init__(self, action: str = "ignore", **kwargs):
-        """Init.
-
-        Args:
-            action: The action.
-        """
         self.action = action
         self.filter_kwargs = kwargs
 
     def __call__(self, fn: Callable[[P], R]) -> Callable[[P], R]:
-        """Call.
-
-        Args:
-            fn: The fn.
-
-        Returns:
-            The return value.
-        """
-
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            """Wrapper."""
             with warnings.catch_warnings():
                 warnings.simplefilter(self.action, **self.filter_kwargs)
                 return fn(*args, **kwargs)
@@ -64,41 +38,21 @@ class no_warnings:
         return wrapper
 
     def __enter__(self):
-        """Enter."""
         self.warnings_manager = warnings.catch_warnings()
         self.warnings_manager.__enter__()
         warnings.simplefilter(self.action, **self.filter_kwargs)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit.
-
-        Args:
-            exc_type: The exc type.
-            exc_val: The exc val.
-            exc_tb: The exc tb.
-        """
         self.warnings_manager.__exit__(exc_type, exc_val, exc_tb)
 
 
 def lazy_import(globals: Dict[str, Any], module: str, as_: str | None = None):
-    """Lazy import.
-
-    Args:
-        globals: The globals.
-        module: The module.
-        as_: The as.
-    """
     old_getattr = globals.get("__getattr__", None)
     current_package = globals["__name__"]
     as_ = module if as_ is None else as_
 
     @suppress_traceback
     def lazy_import_getattr(name):
-        """Lazy import getattr.
-
-        Args:
-            name: The name.
-        """
         if name == as_:
             globals[as_] = importlib.import_module(module, current_package)
             return globals[as_]
@@ -111,23 +65,11 @@ def lazy_import(globals: Dict[str, Any], module: str, as_: str | None = None):
 
 
 def lazy_import_from(globals: Dict[str, Any], module: str, members: List[str]):
-    """Lazy import from.
-
-    Args:
-        globals: The globals.
-        module: The module.
-        members: The members.
-    """
     old_getattr = globals.get("__getattr__", None)
     current_package = globals["__name__"]
 
     @suppress_traceback
     def lazy_import_from_getattr(name):
-        """Lazy import from getattr.
-
-        Args:
-            name: The name.
-        """
         if name in members:
             imported_module = importlib.import_module(module, current_package)
             for m in members:
@@ -143,14 +85,6 @@ def lazy_import_from(globals: Dict[str, Any], module: str, members: List[str]):
 
 @suppress_traceback
 def _get_all_members_from_module(module) -> dict:
-    """Helper function to get all members from module.
-
-    Args:
-        module: The module.
-
-    Returns:
-        The return value.
-    """
     if hasattr(module, "__all__"):
         all_members = {m: getattr(module, m) for m in module.__all__}
     else:
@@ -160,15 +94,6 @@ def _get_all_members_from_module(module) -> dict:
 
 @suppress_traceback
 def _write_all_members(meta_filepath: Path, all_members: Sequence[str]) -> dict:
-    """Helper function to write all members.
-
-    Args:
-        meta_filepath: The meta filepath.
-        all_members: The all members.
-
-    Returns:
-        The return value.
-    """
     Path(meta_filepath).write_text(
         "# Auto-generated for lazy_import_all_from\n"
         "__all__ = [\n" + "".join(f"    {m!r},\n" for m in all_members) + "]\n"
@@ -176,19 +101,10 @@ def _write_all_members(meta_filepath: Path, all_members: Sequence[str]) -> dict:
 
 
 class LazyImportWarning(UserWarning):
-    """Lazy import warning implementation."""
+    pass
 
 
 def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
-    """Lazy import all from.
-
-    Args:
-        globals: The globals.
-        module: The module.
-
-    Returns:
-        The return value.
-    """
     old_getattr = globals.get("__getattr__", None)
     current_package = globals["__name__"]
     current_file = globals.get("__file__", None)
@@ -219,11 +135,6 @@ def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
     # Overiding __getattr__
     @suppress_traceback
     def lazy_import_all_from_getattr(name):
-        """Lazy import all from getattr.
-
-        Args:
-            name: The name.
-        """
         if name in all_members:
             imported_module = importlib.import_module(f"{module}", current_package)
             imported_all_members = _get_all_members_from_module(imported_module)
@@ -254,11 +165,6 @@ def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
 
 @contextmanager
 def timeit(name: str | None = None):
-    """Timeit.
-
-    Args:
-        name: The name.
-    """
     start_t = time.time()
     yield
     end_t = time.time()

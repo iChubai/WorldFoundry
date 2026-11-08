@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> mesh_extractor.py functionality."""
-
 import numpy as np
 import open3d as o3d
 import torch
@@ -56,14 +54,6 @@ def transform_poses_pca(
 
 
 def to_cam_open3d(viewpoint_stack, Ks, W, H):
-    """To cam open3d.
-
-    Args:
-        viewpoint_stack: The viewpoint stack.
-        Ks: The ks.
-        W: The w.
-        H: The h.
-    """
     camera_traj = []
     for _i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks, strict=False)):
         intrinsic = o3d.camera.PinholeCameraIntrinsic(
@@ -88,8 +78,6 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
 
 
 class MeshExtractor:
-    """Mesh extractor implementation."""
-
     def __init__(
         self,
         # TODO (WZ): parse Gaussian model in gsplat
@@ -116,14 +104,6 @@ class MeshExtractor:
         self,
         viewpoint_stack: torch.Tensor,
     ) -> None:
-        """Set viewpoint stack.
-
-        Args:
-            viewpoint_stack: The viewpoint stack.
-
-        Returns:
-            The return value.
-        """
         self.viewpoint_stack = viewpoint_stack
 
     @torch.no_grad()
@@ -131,14 +111,6 @@ class MeshExtractor:
         self,
         Ks: torch.Tensor,
     ) -> None:
-        """Set ks.
-
-        Args:
-            Ks: The ks.
-
-        Returns:
-            The return value.
-        """
         self.Ks = Ks
 
     @torch.no_grad()
@@ -146,14 +118,6 @@ class MeshExtractor:
         self,
         rgb_maps: torch.Tensor,
     ) -> None:
-        """Set rgb maps.
-
-        Args:
-            rgb_maps: The rgb maps.
-
-        Returns:
-            The return value.
-        """
         self.rgbmaps = rgb_maps
 
     @torch.no_grad()
@@ -161,19 +125,10 @@ class MeshExtractor:
         self,
         depth_maps: torch.Tensor,
     ) -> None:
-        """Set depth maps.
-
-        Args:
-            depth_maps: The depth maps.
-
-        Returns:
-            The return value.
-        """
         self.depthmaps = depth_maps
 
     @torch.no_grad()
     def clean(self):
-        """Clean."""
         self.depthmaps = []
         self.rgbmaps = []
         self.viewpoint_stack = []

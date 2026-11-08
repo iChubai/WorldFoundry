@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 # pyre-unsafe
-"""Module for base_models -> perception_core -> segment -> sam3 -> logger.py functionality."""
-
 import logging
 import os
 
@@ -19,7 +17,6 @@ class ColoredFormatter(logging.Formatter):
     """A command line formatter with different colors for each level."""
 
     def __init__(self):
-        """Init."""
         super().__init__()
         reset = "\033[0m"
         colors = {
@@ -36,11 +33,6 @@ class ColoredFormatter(logging.Formatter):
         self.default_formatter = self.formatters[logging.INFO]
 
     def format(self, record):
-        """Format.
-
-        Args:
-            record: The record.
-        """
         formatter = self.formatters.get(record.levelno, self.default_formatter)
         return formatter.format(record)
 

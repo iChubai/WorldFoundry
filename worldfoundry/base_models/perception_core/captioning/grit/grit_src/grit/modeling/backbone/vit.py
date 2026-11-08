@@ -271,7 +271,6 @@ class ViT(Backbone):
         """
         Args:
             img_size (int): Input image size.
-            patch_size (int): Patch size.
             in_chans (int): Number of input image channels.
             embed_dim (int): Patch embedding dimension.
             depth (int): Depth of ViT.

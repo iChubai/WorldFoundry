@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam_encoder.py functionality."""
-
 import math
 
 import torch
@@ -25,14 +23,6 @@ class PatchEmbed(nn.Module):
         in_chans,
         embed_dim,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-        """
         super().__init__()
         self.proj = nn.Conv2d(
             in_chans,
@@ -43,19 +33,12 @@ class PatchEmbed(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, C, H, W = x.shape
         x = self.proj(x)
         return x
 
 
 class Attention(nn.Module):
-    """Attention implementation."""
-
     def __init__(
         self,
         dim,
@@ -63,14 +46,6 @@ class Attention(nn.Module):
         qkv_bias,
         qk_scale=None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-        """
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -79,11 +54,6 @@ class Attention(nn.Module):
         self.proj = nn.Linear(dim, dim)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = (
@@ -99,8 +69,6 @@ class Attention(nn.Module):
 
 
 class Mlp(nn.Module):
-    """Mlp implementation."""
-
     def __init__(
         self,
         in_features,
@@ -108,14 +76,6 @@ class Mlp(nn.Module):
         out_features=None,
         act_layer=nn.GELU,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -124,11 +84,6 @@ class Mlp(nn.Module):
         self.fc2 = nn.Linear(hidden_features, out_features)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.fc2(x)
@@ -136,8 +91,6 @@ class Mlp(nn.Module):
 
 
 class Block(nn.Module):
-    """Block implementation."""
-
     def __init__(
         self,
         dim,
@@ -147,16 +100,6 @@ class Block(nn.Module):
         qk_scale=None,
         act_layer=nn.GELU,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            act_layer: The act layer.
-        """
         super().__init__()
         self.norm1 = nn.LayerNorm(dim, eps=1e-6)
         self.attn = Attention(
@@ -174,11 +117,6 @@ class Block(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = x + self.attn(self.norm1(x))
         x = x + self.mlp(self.norm2(x))
         return x
@@ -219,8 +157,6 @@ def get_abs_pos(abs_pos: torch.Tensor, has_cls_token: bool, hw: list[int]) -> to
 
 # Image encoder for efficient SAM.
 class ImageEncoderViT(nn.Module):
-    """Image encoder vi t implementation."""
-
     def __init__(
         self,
         img_size: int,
@@ -237,7 +173,6 @@ class ImageEncoderViT(nn.Module):
         """
         Args:
             img_size (int): Input image size.
-            patch_size (int): Patch size.
             in_chans (int): Number of input image channels.
             patch_embed_dim (int): Patch embedding dimension.
             depth (int): Depth of ViT.
@@ -280,14 +215,6 @@ class ImageEncoderViT(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         assert x.shape[2] == self.img_size and x.shape[3] == self.img_size, "input image size must match self.img_size"
         x = self.patch_embed(x)
         # B C H W -> B H W C

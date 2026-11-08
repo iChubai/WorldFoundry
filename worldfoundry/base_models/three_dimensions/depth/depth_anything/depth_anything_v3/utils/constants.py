@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> constants.py functionality."""
-
 DEFAULT_MODEL = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
 DEFAULT_EXPORT_DIR = "workspace/gallery/scene"
 DEFAULT_GALLERY_DIR = "workspace/gallery"

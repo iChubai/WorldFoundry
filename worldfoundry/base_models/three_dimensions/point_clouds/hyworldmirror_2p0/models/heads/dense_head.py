@@ -1,6 +1,4 @@
 # inspired by https://github.com/DepthAnything/Depth-Anything-V2
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> heads -> dense_head.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,21 +26,6 @@ class _BaseDPTHead(nn.Module):
         gradient_checkpoint: bool = False,
         _cast_pos_embed_dtype: bool = True,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            features: The features.
-            out_channels: The out channels.
-            pos_embed: The pos embed.
-            down_ratio: The down ratio.
-            gradient_checkpoint: The gradient checkpoint.
-            _cast_pos_embed_dtype: The cast pos embed dtype.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.patch_size = patch_size
         self.pos_embed = pos_embed
@@ -79,17 +62,6 @@ class _BaseDPTHead(nn.Module):
         self.scratch.output_conv1 = nn.Conv2d(head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1)
 
     def _apply_pos_embed(self, x: torch.Tensor, W: int, H: int, ratio: float = 0.1) -> torch.Tensor:
-        """Helper function to apply pos embed.
-
-        Args:
-            x: The x.
-            W: The w.
-            H: The h.
-            ratio: The ratio.
-
-        Returns:
-            The return value.
-        """
         patch_w = x.shape[-1]
         patch_h = x.shape[-2]
         pos_embed = create_uv_grid(patch_w, patch_h, aspect_ratio=W / H, dtype=x.dtype, device=x.device)
@@ -101,14 +73,6 @@ class _BaseDPTHead(nn.Module):
         return x + pos_embed
 
     def scratch_forward(self, features: list[torch.Tensor]) -> torch.Tensor:
-        """Scratch forward.
-
-        Args:
-            features: The features.
-
-        Returns:
-            The return value.
-        """
         layer_1, layer_2, layer_3, layer_4 = features
 
         layer_1_rn = self.scratch.layer1_rn(layer_1)
@@ -226,24 +190,6 @@ class DPTHead(_BaseDPTHead):
         enable_depth_mask: bool = False,
         gradient_checkpoint: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            output_dim: The output dim.
-            activation: The activation.
-            features: The features.
-            out_channels: The out channels.
-            pos_embed: The pos embed.
-            down_ratio: The down ratio.
-            is_gsdpt: The is gsdpt.
-            enable_depth_mask: The enable depth mask.
-            gradient_checkpoint: The gradient checkpoint.
-
-        Returns:
-            The return value.
-        """
         super().__init__(
             dim_in=dim_in,
             patch_size=patch_size,
@@ -269,7 +215,6 @@ class DPTHead(_BaseDPTHead):
             self.input_merger = nn.Sequential(nn.Conv2d(3, conv2_in_channels, 7, 1, 3), nn.ReLU())
 
     def to(self, *args, **kwargs):
-        """To."""
         self.norm = self.norm.to(*args, **kwargs)
         self.projects = self.projects.to(*args, **kwargs)
         self.resize_layers = self.resize_layers.to(*args, **kwargs)
@@ -517,9 +462,6 @@ class DPTHead(_BaseDPTHead):
         """
         Apply inverse logarithm transform: sign(y) * (exp(|y|) - 1)
 
-        Args:
-            input_tensor: Input tensor
-
         Returns:
             Transformed tensor
         """
@@ -532,17 +474,6 @@ class DPTHead(_BaseDPTHead):
 
 
 def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        size: The size.
-        has_residual: The has residual.
-        groups: The groups.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=True),
@@ -557,17 +488,6 @@ def _make_fusion_block(features: int, size: int | None = None, has_residual: boo
 
 
 def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     out_shape1 = out_shape
     out_shape2 = out_shape
@@ -647,8 +567,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,

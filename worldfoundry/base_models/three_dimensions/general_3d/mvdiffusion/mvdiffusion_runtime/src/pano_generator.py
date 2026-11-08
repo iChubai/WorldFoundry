@@ -9,14 +9,7 @@ from .models.pano.MVGenModel import MultiViewBaseModel
 
 
 class PanoGenerator(nn.Module):
-    """Pano generator implementation."""
-
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__()
 
         self.diff_timestep = config["model"]["diff_timestep"]
@@ -33,11 +26,6 @@ class PanoGenerator(nn.Module):
         self.mv_base_model = MultiViewBaseModel(unet, config["model"])
 
     def load_model(self, model_id):
-        """Load model.
-
-        Args:
-            model_id: The model id.
-        """
         vae = AutoencoderKL.from_pretrained(model_id, subfolder="vae")
         vae.eval()
         scheduler = DDIMScheduler.from_pretrained(model_id, subfolder="scheduler")
@@ -46,12 +34,6 @@ class PanoGenerator(nn.Module):
 
     @torch.no_grad()
     def encode_text(self, text, device):
-        """Encode text.
-
-        Args:
-            text: The text.
-            device: The device.
-        """
         text_inputs = self.tokenizer(
             text, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
         )
@@ -66,12 +48,6 @@ class PanoGenerator(nn.Module):
 
     @torch.no_grad()
     def encode_image(self, x_input, vae):
-        """Encode image.
-
-        Args:
-            x_input: The x input.
-            vae: The vae.
-        """
         b = x_input.shape[0]
 
         x_input = x_input.permute(0, 1, 4, 2, 3)  # (bs, 2, 3, 512, 512)
@@ -88,12 +64,6 @@ class PanoGenerator(nn.Module):
 
     @torch.no_grad()
     def decode_latent(self, latents, vae):
-        """Decode latent.
-
-        Args:
-            latents: The latents.
-            vae: The vae.
-        """
         b, m = latents.shape[0:2]
         latents = 1 / vae.config.scaling_factor * latents
         images = []
@@ -108,14 +78,6 @@ class PanoGenerator(nn.Module):
         return image
 
     def gen_cls_free_guide_pair(self, latents, timestep, prompt_embd, batch):
-        """Gen cls free guide pair.
-
-        Args:
-            latents: The latents.
-            timestep: The timestep.
-            prompt_embd: The prompt embd.
-            batch: The batch.
-        """
         latents = torch.cat([latents] * 2)
         timestep = torch.cat([timestep] * 2)
 
@@ -131,15 +93,6 @@ class PanoGenerator(nn.Module):
 
     @torch.no_grad()
     def forward_cls_free(self, latents_high_res, _timestep, prompt_embd, batch, model):
-        """Forward cls free.
-
-        Args:
-            latents_high_res: The latents high res.
-            _timestep: The timestep.
-            prompt_embd: The prompt embd.
-            batch: The batch.
-            model: The model.
-        """
         latents, _timestep, _prompt_embd, meta = self.gen_cls_free_guide_pair(
             latents_high_res, _timestep, prompt_embd, batch
         )
@@ -153,11 +106,6 @@ class PanoGenerator(nn.Module):
 
     @torch.no_grad()
     def inference(self, batch):
-        """Inference.
-
-        Args:
-            batch: The batch.
-        """
         images = batch["images"]
         bs, m, h, w, _ = images.shape
         device = images.device

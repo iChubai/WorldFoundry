@@ -74,11 +74,6 @@ class SRResidualCausalBlock3D(nn.Module):
     """Sr residual causal block d implementation."""
 
     def __init__(self, channels: int):
-        """Init.
-
-        Args:
-            channels: The channels.
-        """
         super().__init__()
         self.block = nn.Sequential(
             CausalConv3d(channels, channels, kernel_size=3),
@@ -89,14 +84,6 @@ class SRResidualCausalBlock3D(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x + self.block(x)
 
 
@@ -112,15 +99,6 @@ class SRTo720pUpsampler(nn.Module, NativeConfigMixin):
         num_blocks: int = 6,
         global_residual: bool = False,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            hidden_channels: The hidden channels.
-            num_blocks: The num blocks.
-            global_residual: The global residual.
-        """
         super().__init__()
         if hidden_channels is None:
             hidden_channels = 64
@@ -130,14 +108,6 @@ class SRTo720pUpsampler(nn.Module, NativeConfigMixin):
         self.global_residual = bool(global_residual)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         residual = x
         y = self.in_conv(x)
         for blk in self.blocks:
@@ -160,15 +130,6 @@ class SRTo1080pUpsampler(nn.Module, NativeConfigMixin):
         num_res_blocks: int = 2,
         is_residual: bool = False,
     ):
-        """Init.
-
-        Args:
-            z_channels: The z channels.
-            out_channels: The out channels.
-            block_out_channels: The block out channels.
-            num_res_blocks: The num res blocks.
-            is_residual: The is residual.
-        """
         super().__init__()
         self.num_res_blocks = num_res_blocks
         self.block_out_channels = block_out_channels

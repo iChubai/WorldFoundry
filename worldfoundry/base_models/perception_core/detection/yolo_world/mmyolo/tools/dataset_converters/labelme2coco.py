@@ -61,8 +61,6 @@ def format_coco_annotations(points: list, image_id: int, annotations_id: int, ca
 
     Args:
         points (list): Coordinates of four vertices of rectangle bbox.
-        image_id (int): Image id.
-        annotations_id (int): Annotations id.
         category_id (int): Image dir path.
 
     Return:

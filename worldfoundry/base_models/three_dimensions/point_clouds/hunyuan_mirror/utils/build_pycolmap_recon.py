@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> build_pycolmap_recon.py functionality."""
-
 import numpy as np
 import pycolmap
 

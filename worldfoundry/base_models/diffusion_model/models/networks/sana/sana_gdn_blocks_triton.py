@@ -127,7 +127,6 @@ class BidirectionalGDNTriton(BidirectionalGDN):
     """
 
     def __init__(self, *args, use_autograd_kernel: bool = False, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.use_autograd_kernel = use_autograd_kernel
 
@@ -141,19 +140,6 @@ class BidirectionalGDNTriton(BidirectionalGDN):
         apply_output_gate: bool = True,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            apply_output_gate: The apply output gate.
-
-        Returns:
-            The return value.
-        """
         if not _triton_gdn_is_supported():
             return BidirectionalGDN.forward(
                 self,
@@ -284,7 +270,6 @@ class BidirectionalGDNUCPESinglePathLiteLATriton(BidirectionalGDNUCPESinglePathL
     """
 
     def __init__(self, *args, use_autograd_kernel: bool = False, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.use_autograd_kernel = use_autograd_kernel
 
@@ -299,20 +284,6 @@ class BidirectionalGDNUCPESinglePathLiteLATriton(BidirectionalGDNUCPESinglePathL
         chunk_size: int | None = None,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            camera_conditions: The camera conditions.
-            chunk_size: The chunk size.
-
-        Returns:
-            The return value.
-        """
         if self.cam_debug_ratios:
             self.reset_cam_debug_stats()
         if self.training:
@@ -400,17 +371,6 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
         rotary_emb: torch.Tensor | None,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Helper function to forward cam branch.
-
-        Args:
-            x: The x.
-            HW: The hw.
-            camera_conditions: The camera conditions.
-            rotary_emb: The rotary emb.
-
-        Returns:
-            The return value.
-        """
         if not _triton_gdn_is_supported():
             return super()._forward_cam_branch(
                 x,

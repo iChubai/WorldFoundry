@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> __init__.py functionality."""
-
 from dataclasses import asdict, replace
 
 from torch.utils.data import Dataset
@@ -18,15 +16,6 @@ from .nvidia_dataset import NvidiaDataConfig, NvidiaDataset, NvidiaDatasetVideoV
 def get_train_val_datasets(
     data_cfg: iPhoneDataConfig | DavisDataConfig | CustomDataConfig | NvidiaDataConfig, load_val: bool
 ) -> tuple[BaseDataset, Dataset | None, Dataset | None, Dataset | None]:
-    """Get train val datasets.
-
-    Args:
-        data_cfg: The data cfg.
-        load_val: The load val.
-
-    Returns:
-        The return value.
-    """
     train_video_view = None
     val_img_dataset = None
     val_kpt_dataset = None

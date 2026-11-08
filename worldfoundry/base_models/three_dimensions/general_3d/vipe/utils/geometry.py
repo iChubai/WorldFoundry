@@ -489,20 +489,10 @@ class ScaledTransform:
 
 @dataclass(slots=True, kw_only=True)
 class IncompleteRigScaledTransform:
-    """Incomplete rig scaled transform implementation."""
-
     transform: ScaledTransform
     right_translation: torch.Tensor
 
     def apply_se3(self, se3: SE3) -> SE3:
-        """Apply se3.
-
-        Args:
-            se3: The se3.
-
-        Returns:
-            The return value.
-        """
         sim3 = Sim3(se3)
         sim3_prior = self.transform.to_sim3()[None] * sim3
         sim3_post = Sim3.Identity(1).to(sim3.device)
@@ -511,28 +501,10 @@ class IncompleteRigScaledTransform:
         return SE3(sim3_final.data[..., :7])
 
     def apply_points(self, points: torch.Tensor) -> torch.Tensor:
-        """Apply points.
-
-        Args:
-            points: The points.
-
-        Returns:
-            The return value.
-        """
         return self.transform.apply_points(points + self.right_translation[None])
 
 
 def align_trajectories(source_traj: SE3, target_traj: SE3, scale: bool = True) -> ScaledTransform:
-    """Align trajectories.
-
-    Args:
-        source_traj: The source traj.
-        target_traj: The target traj.
-        scale: The scale.
-
-    Returns:
-        The return value.
-    """
     return align_points(
         source_traj.translation()[:, :3],
         target_traj.translation()[:, :3],

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> depth_video.py functionality."""
-
 import lietorch
 import torch
 from torch.multiprocessing import Value
@@ -13,18 +11,7 @@ from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import 
 
 
 class DepthVideo:
-    """Depth video implementation."""
-
     def __init__(self, image_size=[480, 640], buffer=1024, stereo=False, device="cuda:0"):
-        """Init.
-
-        Args:
-            image_size: The image size.
-            buffer: The buffer.
-            stereo: The stereo.
-            device: The device.
-        """
-
         # current keyframe count
         self.counter = Value("i", 0)
         self.ready = Value("i", 0)
@@ -54,11 +41,6 @@ class DepthVideo:
         self.poses[:] = torch.as_tensor([0, 0, 0, 0, 0, 0, 1], dtype=torch.float, device=device)
 
     def to(self, device="cuda"):
-        """To.
-
-        Args:
-            device: The device.
-        """
         self.tstamp = self.tstamp.to(device=device)
         self.images = self.images.to(device=device)
         self.dirty = self.dirty.to(device=device)
@@ -76,7 +58,6 @@ class DepthVideo:
         return self
 
     def __del__(self):
-        """Del."""
         # delete all tensors
         del self.tstamp
         del self.images
@@ -92,16 +73,9 @@ class DepthVideo:
         del self.inps
 
     def get_lock(self):
-        """Get lock."""
         return self.counter.get_lock()
 
     def __item_setter(self, index, item):
-        """Helper function to item setter.
-
-        Args:
-            index: The index.
-            item: The item.
-        """
         if isinstance(index, int) and index >= self.counter.value:
             self.counter.value = index + 1
 
@@ -135,12 +109,6 @@ class DepthVideo:
             self.inps[index] = item[8]
 
     def __setitem__(self, index, item):
-        """Setitem.
-
-        Args:
-            index: The index.
-            item: The item.
-        """
         with self.get_lock():
             self.__item_setter(index, item)
 
@@ -164,7 +132,6 @@ class DepthVideo:
         return item
 
     def append(self, *item):
-        """Append."""
         with self.get_lock():
             self.__item_setter(self.counter.value, item)
 

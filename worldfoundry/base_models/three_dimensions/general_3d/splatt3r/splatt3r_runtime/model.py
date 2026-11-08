@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> splatt3r -> splatt3r_runtime -> model.py functionality."""
-
 import einops
 import torch
 from torch import nn
@@ -16,11 +14,6 @@ class MAST3RGaussians(nn.Module):
     """Inference-only Splatt3R Gaussian predictor."""
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__()
         self.config = config
 
@@ -52,12 +45,6 @@ class MAST3RGaussians(nn.Module):
         self.decoder = pixelsplat_decoder.DecoderSplattingCUDA(background_color=[0.0, 0.0, 0.0])
 
     def forward(self, view1, view2):
-        """Forward.
-
-        Args:
-            view1: The view1.
-            view2: The view2.
-        """
         with torch.no_grad():
             (shape1, shape2), (feat1, feat2), (pos1, pos2) = self.encoder._encode_symmetrized(view1, view2)
             dec1, dec2 = self.encoder._decoder(feat1, pos1, feat2, pos2)

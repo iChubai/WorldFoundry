@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> sam.py functionality."""
-
 from typing import Any
 
 import torch
@@ -18,8 +16,6 @@ from .prompt_encoder import PromptEncoder
 
 
 class Sam(nn.Module):
-    """Sam implementation."""
-
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 
@@ -52,11 +48,6 @@ class Sam(nn.Module):
 
     @property
     def device(self) -> Any:
-        """Device.
-
-        Returns:
-            The return value.
-        """
         return self.pixel_mean.device
 
     @torch.no_grad()

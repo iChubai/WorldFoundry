@@ -52,22 +52,6 @@ class ConvLayer(nn.Module):
         norm="bn2d",
         act="relu",
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            kernel_size: The kernel size.
-            stride: The stride.
-            dilation: The dilation.
-            groups: The groups.
-            padding: The padding.
-            use_bias: The use bias.
-            dropout: The dropout.
-            conv_type: The conv type.
-            norm: The norm.
-            act: The act.
-        """
         super().__init__()
         if padding is None:
             padding = get_same_padding(kernel_size)
@@ -112,14 +96,6 @@ class ConvLayer(nn.Module):
         self.act = build_act(act)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         if self.dropout is not None:
             x = self.dropout(x)
         x = self.conv(x)
@@ -155,20 +131,6 @@ class GLUMBConv(nn.Module):
         act=("silu", "silu", None),
         dilation=1,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_feature: The out feature.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-            dilation: The dilation.
-        """
         out_feature = out_feature or in_features
         super().__init__()
         use_bias = val2tuple(use_bias, 3)
@@ -225,15 +187,6 @@ class GLUMBConv(nn.Module):
         return torch.cat([self._apply_spatial(x[s : s + max_bt]) for s in range(0, BT, max_bt)], dim=0)
 
     def forward(self, x: torch.Tensor, HW=None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         if HW is None:
             H = W = int(N**0.5)
@@ -271,20 +224,6 @@ class GLUMBConvTemp(GLUMBConv):
         act=("silu", "silu", None),
         t_kernel_size=3,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_feature: The out feature.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-            t_kernel_size: The t kernel size.
-        """
         super().__init__(
             in_features=in_features,
             hidden_features=hidden_features,
@@ -311,15 +250,6 @@ class GLUMBConvTemp(GLUMBConv):
         nn.init.zeros_(self.t_conv.weight)
 
     def forward(self, x: torch.Tensor, HW=None, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         assert len(HW) == 3, "HW must be a tuple of (T, H, W)"
@@ -341,16 +271,6 @@ class ChunkGLUMBConvTemp(GLUMBConvTemp):
     """Chunk-causal temporal GLUMBConv for long video FFN passes."""
 
     def forward(self, x: torch.Tensor, HW=None, chunk_index: list[int] = [0]) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-            chunk_index: The chunk index.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         assert len(HW) == 3, "HW must be a tuple of (T, H, W)"
@@ -438,21 +358,9 @@ class CachedGLUMBConvTemp(GLUMBConvTemp):
     """Autoregressive temporal GLUMBConv that caches the depthwise halo."""
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
 
     def forward(self, x: torch.Tensor, HW=None, save_kv_cache=False, kv_cache=None, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-            save_kv_cache: The save kv cache.
-            kv_cache: The kv cache.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         assert len(HW) == 3, "HW must be a tuple of (T, H, W)"
@@ -514,20 +422,6 @@ class MBConvPreGLU(nn.Module):
         norm=(None, None, "ln2d"),
         act=("silu", "silu", None),
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            kernel_size: The kernel size.
-            stride: The stride.
-            mid_dim: The mid dim.
-            expand: The expand.
-            padding: The padding.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-        """
         super().__init__()
         use_bias = val2tuple(use_bias, 3)
         norm = val2tuple(norm, 3)
@@ -565,15 +459,6 @@ class MBConvPreGLU(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, HW=None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         if HW is None:
             H = W = int(N**0.5)
@@ -595,11 +480,6 @@ class MBConvPreGLU(nn.Module):
 
     @property
     def module_str(self) -> str:
-        """Module str.
-
-        Returns:
-            The return value.
-        """
         _str = f"{self.depth_conv.kernel_size}{type(self).__name__}("
         _str += f"in={self.inverted_conv.in_dim},mid={self.depth_conv.in_dim},out={self.point_conv.out_dim},s={self.depth_conv.stride}"
         _str += (
@@ -632,20 +512,6 @@ class DWMlp(Mlp):
         dilation=1,
         padding=None,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            bias: The bias.
-            drop: The drop.
-            kernel_size: The kernel size.
-            stride: The stride.
-            dilation: The dilation.
-            padding: The padding.
-        """
         super().__init__(
             in_features=in_features,
             hidden_features=hidden_features,
@@ -672,12 +538,6 @@ class DWMlp(Mlp):
         )
 
     def forward(self, x, HW=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-        """
         B, N, C = x.shape
         if HW is None:
             H = W = int(N**0.5)
@@ -698,16 +558,6 @@ class Mlp(Mlp):
     """MLP as used in Vision Transformer, MLP-Mixer and related networks"""
 
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, bias=True, drop=0.0):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            bias: The bias.
-            drop: The drop.
-        """
         super().__init__(
             in_features=in_features,
             hidden_features=hidden_features,
@@ -718,12 +568,6 @@ class Mlp(Mlp):
         )
 
     def forward(self, x, HW=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop1(x)

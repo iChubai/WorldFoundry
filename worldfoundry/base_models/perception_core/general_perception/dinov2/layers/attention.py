@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> layers -> attention.py functionality."""
-
 import logging
 import os
 
@@ -36,8 +34,6 @@ class Attention(QKVSelfAttention):
 
 
 class MemEffAttention(Attention):
-    """Mem eff attention implementation."""
-
     def forward(self, x: Tensor, attn_bias=None) -> Tensor:
         if not XFORMERS_AVAILABLE:
             if attn_bias is not None:

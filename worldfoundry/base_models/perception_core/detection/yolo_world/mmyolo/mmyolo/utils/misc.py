@@ -53,8 +53,7 @@ def auto_arrange_images(image_list: list, image_column: int = 2) -> np.ndarray:
 
 
 def get_file_list(source_root: str) -> [list, dict]:
-    """Get file list.
-
+    """
     Args:
         source_root (str): image or video source path
 

@@ -5,8 +5,6 @@
 # Licensed under the Apache License, Version 2.0 [see LICENSE for details]
 # ------------------------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> bertwarper.py functionality."""
-
 import inspect
 
 import torch
@@ -22,14 +20,7 @@ _prepare_head_mask = prepare_head_mask
 
 
 class BertModelWarper(nn.Module):
-    """Bert model warper implementation."""
-
     def __init__(self, bert_model):
-        """Init.
-
-        Args:
-            bert_model: The bert model.
-        """
         super().__init__()
         # self.bert = bert_modelc
 
@@ -174,20 +165,12 @@ class BertModelWarper(nn.Module):
 
 
 class TextEncoderShell(nn.Module):
-    """Text encoder shell implementation."""
-
     def __init__(self, text_encoder):
-        """Init.
-
-        Args:
-            text_encoder: The text encoder.
-        """
         super().__init__()
         self.text_encoder = text_encoder
         self.config = self.text_encoder.config
 
     def forward(self, **kw):
-        """Forward."""
         # feed into text encoder
         return self.text_encoder(**kw)
 
@@ -196,7 +179,6 @@ def generate_masks_with_special_tokens(tokenized, special_tokens_list, tokenizer
     """Generate attention mask between each pair of special tokens
     Args:
         input_ids (torch.Tensor): input ids. Shape: [bs, num_token]
-        special_tokens_mask (list): special tokens mask.
     Returns:
         torch.Tensor: attention mask between each special tokens.
     """
@@ -236,7 +218,6 @@ def generate_masks_with_special_tokens_and_transfer_map(tokenized, special_token
     """Generate attention mask between each pair of special tokens
     Args:
         input_ids (torch.Tensor): input ids. Shape: [bs, num_token]
-        special_tokens_mask (list): special tokens mask.
     Returns:
         torch.Tensor: attention mask between each special tokens.
     """

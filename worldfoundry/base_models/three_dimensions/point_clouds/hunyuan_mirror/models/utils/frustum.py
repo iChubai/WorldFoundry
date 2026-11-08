@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> utils -> frustum.py functionality."""
-
 import einops
 import torch
 

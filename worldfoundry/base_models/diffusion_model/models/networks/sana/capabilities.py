@@ -49,12 +49,10 @@ def is_flash_attn_available():
 
 
 def is_xformers_available():
-    """Is xformers available."""
     return _xformers_available
 
 
 def is_triton_module_available():
-    """Is triton module available."""
     return _triton_modules_available
 
 

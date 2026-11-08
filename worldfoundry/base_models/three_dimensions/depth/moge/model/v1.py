@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> model -> v1.py functionality."""
-
 import importlib
 import warnings
 from numbers import Number
@@ -26,8 +24,6 @@ from .utils import (
 
 
 class ResidualConvBlock(nn.Module):
-    """Residual conv block implementation."""
-
     def __init__(
         self,
         in_channels: int,
@@ -37,16 +33,6 @@ class ResidualConvBlock(nn.Module):
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
         norm: Literal["group_norm", "layer_norm"] = "group_norm",
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            hidden_channels: The hidden channels.
-            padding_mode: The padding mode.
-            activation: The activation.
-            norm: The norm.
-        """
         super().__init__()
         if out_channels is None:
             out_channels = in_channels
@@ -88,11 +74,6 @@ class ResidualConvBlock(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         skip = self.skip_connection(x)
         x = self.layers(x)
         x = x + skip
@@ -100,8 +81,6 @@ class ResidualConvBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
-
     def __init__(
         self,
         num_features: int,
@@ -116,21 +95,6 @@ class Head(nn.Module):
         last_conv_channels: int = 32,
         last_conv_size: int = 1,
     ):
-        """Init.
-
-        Args:
-            num_features: The num features.
-            dim_in: The dim in.
-            dim_out: The dim out.
-            dim_proj: The dim proj.
-            dim_upsample: The dim upsample.
-            dim_times_res_block_hidden: The dim times res block hidden.
-            num_res_blocks: The num res blocks.
-            res_block_norm: The res block norm.
-            last_res_blocks: The last res blocks.
-            last_conv_channels: The last conv channels.
-            last_conv_size: The last conv size.
-        """
         super().__init__()
 
         self.projects = nn.ModuleList(
@@ -177,12 +141,6 @@ class Head(nn.Module):
         )
 
     def _make_upsampler(self, in_channels: int, out_channels: int):
-        """Helper function to make upsampler.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
         upsampler = nn.Sequential(
             nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, padding_mode="replicate"),
@@ -200,17 +158,6 @@ class Head(nn.Module):
         last_conv_size: int,
         res_block_norm: Literal["group_norm", "layer_norm"],
     ):
-        """Helper function to make output block.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-            dim_times_res_block_hidden: The dim times res block hidden.
-            last_res_blocks: The last res blocks.
-            last_conv_channels: The last conv channels.
-            last_conv_size: The last conv size.
-            res_block_norm: The res block norm.
-        """
         return nn.Sequential(
             nn.Conv2d(dim_in, last_conv_channels, kernel_size=3, stride=1, padding=1, padding_mode="replicate"),
             *(
@@ -235,12 +182,6 @@ class Head(nn.Module):
         )
 
     def forward(self, hidden_states: torch.Tensor, image: torch.Tensor):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            image: The image.
-        """
         img_h, img_w = image.shape[-2:]
         patch_h, patch_w = img_h // 14, img_w // 14
 
@@ -282,8 +223,6 @@ class Head(nn.Module):
 
 
 class MoGeModel(nn.Module):
-    """Mo ge model implementation."""
-
     image_mean: torch.Tensor
     image_std: torch.Tensor
 
@@ -304,23 +243,6 @@ class MoGeModel(nn.Module):
         mask_threshold: float = 0.5,
         **deprecated_kwargs,
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            intermediate_layers: The intermediate layers.
-            dim_proj: The dim proj.
-            dim_upsample: The dim upsample.
-            dim_times_res_block_hidden: The dim times res block hidden.
-            num_res_blocks: The num res blocks.
-            remap_output: The remap output.
-            res_block_norm: The res block norm.
-            num_tokens_range: The num tokens range.
-            last_res_blocks: The last res blocks.
-            last_conv_channels: The last conv channels.
-            last_conv_size: The last conv size.
-            mask_threshold: The mask threshold.
-        """
         super().__init__()
 
         if deprecated_kwargs:
@@ -368,20 +290,10 @@ class MoGeModel(nn.Module):
 
     @property
     def device(self) -> torch.device:
-        """Device.
-
-        Returns:
-            The return value.
-        """
         return next(self.parameters()).device
 
     @property
     def dtype(self) -> torch.dtype:
-        """Dtype.
-
-        Returns:
-            The return value.
-        """
         return next(self.parameters()).dtype
 
     @classmethod
@@ -421,26 +333,16 @@ class MoGeModel(nn.Module):
         return model
 
     def init_weights(self):
-        """Init weights."""
         raise RuntimeError(
             "MoGe v1 init_weights() would require external DINOv2 weights. "
             "Use from_pretrained() with a local MoGe checkpoint instead."
         )
 
     def enable_gradient_checkpointing(self):
-        """Enable gradient checkpointing."""
         for i in range(len(self.backbone.blocks)):
             self.backbone.blocks[i] = wrap_module_with_gradient_checkpointing(self.backbone.blocks[i])
 
     def _remap_points(self, points: torch.Tensor) -> torch.Tensor:
-        """Helper function to remap points.
-
-        Args:
-            points: The points.
-
-        Returns:
-            The return value.
-        """
         if self.remap_output == "linear":
             pass
         elif self.remap_output == "sinh":
@@ -457,15 +359,6 @@ class MoGeModel(nn.Module):
         return points
 
     def forward(self, image: torch.Tensor, num_tokens: int) -> Dict[str, torch.Tensor]:
-        """Forward.
-
-        Args:
-            image: The image.
-            num_tokens: The num tokens.
-
-        Returns:
-            The return value.
-        """
         original_height, original_width = image.shape[-2:]
 
         # Resize to expected resolution defined by num_tokens

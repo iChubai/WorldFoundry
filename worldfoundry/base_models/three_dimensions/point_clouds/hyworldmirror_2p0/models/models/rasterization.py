@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> rasterization.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -13,7 +11,7 @@ except ImportError:
     rasterization = None
 
     class DefaultStrategy:  # type: ignore[no-redef]
-        """Default strategy implementation."""
+        pass
 
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils import act_gs, sh_utils
@@ -25,14 +23,6 @@ from ..utils.geometry import depth_to_world_coords_points
 
 
 def _as_homogeneous_matrix(matrices: Tensor) -> Tensor:
-    """Helper function to as homogeneous matrix.
-
-    Args:
-        matrices: The matrices.
-
-    Returns:
-        The return value.
-    """
     if matrices.shape[-2:] == (4, 4):
         output = matrices.clone()
         output[..., 3, :] = 0
@@ -52,8 +42,6 @@ def _as_homogeneous_matrix(matrices: Tensor) -> Tensor:
 
 
 class Rasterizer:
-    """Rasterizer implementation."""
-
     def __init__(
         self,
         rasterization_mode="classic",
@@ -65,18 +53,6 @@ class Rasterizer:
         distributed=False,
         grad_strategy=DefaultStrategy,
     ):
-        """Init.
-
-        Args:
-            rasterization_mode: The rasterization mode.
-            packed: The packed.
-            abs_grad: The abs grad.
-            with_eval3d: The with eval3d.
-            camera_model: The camera model.
-            sparse_grad: The sparse grad.
-            distributed: The distributed.
-            grad_strategy: The grad strategy.
-        """
         self.rasterization_mode = rasterization_mode
         self.packed = packed
         self.abs_grad = abs_grad
@@ -99,22 +75,6 @@ class Rasterizer:
         height: int,
         **kwargs,
     ) -> tuple[Tensor, Tensor, dict]:
-        """Rasterize splats.
-
-        Args:
-            means: The means.
-            quats: The quats.
-            scales: The scales.
-            opacities: The opacities.
-            colors: The colors.
-            viewmats: The viewmats.
-            Ks: The ks.
-            width: The width.
-            height: The height.
-
-        Returns:
-            The return value.
-        """
         if rasterization is None:
             raise ImportError(
                 "gsplat is required for rasterization rendering. Install it via "
@@ -145,19 +105,6 @@ class Rasterizer:
         return render_colors[..., :3], render_colors[..., 3:], render_alphas
 
     def rasterize_batches(self, means, quats, scales, opacities, colors, viewmats, Ks, width, height, **kwargs):
-        """Rasterize batches.
-
-        Args:
-            means: The means.
-            quats: The quats.
-            scales: The scales.
-            opacities: The opacities.
-            colors: The colors.
-            viewmats: The viewmats.
-            Ks: The ks.
-            width: The width.
-            height: The height.
-        """
         rendered_colors, rendered_depths, rendered_alphas = [], [], []
         batch_size = len(means)
         for i in range(batch_size):
@@ -184,8 +131,6 @@ class Rasterizer:
 
 
 class GaussianSplatRenderer(nn.Module):
-    """Gaussian splat renderer implementation."""
-
     def __init__(
         self,
         feature_dim: int = 256,  # Output channels of gs_feat_head
@@ -196,17 +141,6 @@ class GaussianSplatRenderer(nn.Module):
         conf_threshold_percent: float = 30.0,  # Confidence threshold percentage
         max_gaussians: int = 5000000,  # Maximum number of Gaussians
     ):
-        """Init.
-
-        Args:
-            feature_dim: The feature dim.
-            sh_degree: The sh degree.
-            enable_prune: The enable prune.
-            voxel_size: The voxel size.
-            enable_conf_filter: The enable conf filter.
-            conf_threshold_percent: The conf threshold percent.
-            max_gaussians: The max gaussians.
-        """
         super().__init__()
 
         self.feature_dim = feature_dim
@@ -629,12 +563,6 @@ class GaussianSplatRenderer(nn.Module):
         return splats
 
     def prepare_cameras(self, views, nums):
-        """Prepare cameras.
-
-        Args:
-            views: The views.
-            nums: The nums.
-        """
         viewmats = views["camera_poses"][:, :nums]
         Ks = views["camera_intrs"][:, :nums]
         return viewmats, Ks

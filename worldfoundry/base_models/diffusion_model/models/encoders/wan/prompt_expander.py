@@ -66,8 +66,6 @@ DEFAULT_SYS_PROMPTS = {
 
 @dataclass
 class PromptOutput:
-    """Prompt output implementation."""
-
     status: bool
     prompt: str
     seed: int
@@ -75,61 +73,23 @@ class PromptOutput:
     message: str
 
     def add_custom_field(self, key: str, value) -> None:
-        """Add custom field.
-
-        Args:
-            key: The key.
-            value: The value.
-
-        Returns:
-            The return value.
-        """
         self.__setattr__(key, value)
 
 
 class PromptExpander:
-    """Prompt expander implementation."""
-
     def __init__(self, model_name, task, is_vl=False, device=0, **kwargs):
-        """Init.
-
-        Args:
-            model_name: The model name.
-            task: The task.
-            is_vl: The is vl.
-            device: The device.
-        """
         self.model_name = model_name
         self.task = task
         self.is_vl = is_vl
         self.device = device
 
     def extend_with_img(self, prompt, system_prompt, image=None, seed=-1, *args, **kwargs):
-        """Extend with img.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            image: The image.
-            seed: The seed.
-        """
+        pass
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
-        """Extend.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            seed: The seed.
-        """
+        pass
 
     def decide_system_prompt(self, tar_lang="zh", prompt=None):
-        """Decide system prompt.
-
-        Args:
-            tar_lang: The tar lang.
-            prompt: The prompt.
-        """
         assert self.task is not None
         if "ti2v" in self.task:
             if self.is_vl:
@@ -141,15 +101,6 @@ class PromptExpander:
         return DEFAULT_SYS_PROMPTS[self.task][tar_lang]
 
     def __call__(self, prompt, system_prompt=None, tar_lang="zh", image=None, seed=-1, *args, **kwargs):
-        """Call.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            tar_lang: The tar lang.
-            image: The image.
-            seed: The seed.
-        """
         if system_prompt is None:
             system_prompt = self.decide_system_prompt(tar_lang=tar_lang, prompt=prompt)
         if seed < 0:
@@ -163,8 +114,6 @@ class PromptExpander:
 
 
 class DashScopePromptExpander(PromptExpander):
-    """Dash scope prompt expander implementation."""
-
     def __init__(
         self, api_key=None, model_name=None, task=None, max_image_size=512 * 512, retry_times=4, is_vl=False, **kwargs
     ):
@@ -198,13 +147,6 @@ class DashScopePromptExpander(PromptExpander):
         self.retry_times = retry_times
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
-        """Extend.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            seed: The seed.
-        """
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
 
         exception = None
@@ -230,14 +172,6 @@ class DashScopePromptExpander(PromptExpander):
         return PromptOutput(status=False, prompt=prompt, seed=seed, system_prompt=system_prompt, message=str(exception))
 
     def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
-        """Extend with img.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            image: The image.
-            seed: The seed.
-        """
         if isinstance(image, str):
             image = Image.open(image).convert("RGB")
         w = image.width
@@ -287,8 +221,6 @@ class DashScopePromptExpander(PromptExpander):
 
 
 class QwenPromptExpander(PromptExpander):
-    """Qwen prompt expander implementation."""
-
     model_dict: ClassVar[dict] = {
         "QwenVL2.5_3B": "Qwen/Qwen2.5-VL-3B-Instruct",
         "QwenVL2.5_7B": "Qwen/Qwen2.5-VL-7B-Instruct",
@@ -356,13 +288,6 @@ class QwenPromptExpander(PromptExpander):
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
-        """Extend.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            seed: The seed.
-        """
         self.model = self.model.to(self.device)
         messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
         text = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -385,14 +310,6 @@ class QwenPromptExpander(PromptExpander):
         )
 
     def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
-        """Extend with img.
-
-        Args:
-            prompt: The prompt.
-            system_prompt: The system prompt.
-            image: The image.
-            seed: The seed.
-        """
         self.model = self.model.to(self.device)
         messages = [
             {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
@@ -451,17 +368,6 @@ if __name__ == "__main__":
     image = "./examples/i2v_input.JPG"
 
     def test(method, prompt, model_name, task, image=None, en_prompt=None, seed=None):
-        """Test.
-
-        Args:
-            method: The method.
-            prompt: The prompt.
-            model_name: The model name.
-            task: The task.
-            image: The image.
-            en_prompt: The en prompt.
-            seed: The seed.
-        """
         prompt_expander = method(model_name=model_name, task=task, is_vl=image is not None)
         result = prompt_expander(prompt, image=image, tar_lang="zh")
         logging.info(f"zh prompt -> zh: {result.prompt}")

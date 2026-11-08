@@ -57,8 +57,6 @@ __all__ = ["DCAE", "dc_ae_f32c32", "dc_ae_f64c128", "dc_ae_f128c512", "dc_vae_f3
 
 @dataclass
 class EncoderConfig:
-    """Encoder config implementation."""
-
     in_channels: int = MISSING
     latent_channels: int = MISSING
     width_list: tuple[int, ...] = (128, 256, 512, 512, 1024, 1024)
@@ -78,8 +76,6 @@ class EncoderConfig:
 
 @dataclass
 class DecoderConfig:
-    """Decoder config implementation."""
-
     in_channels: int = MISSING
     latent_channels: int = MISSING
     in_shortcut: str | None = "duplicating"
@@ -98,8 +94,6 @@ class DecoderConfig:
 
 @dataclass
 class DCVAEConfig:
-    """Dcvae config implementation."""
-
     is_training: bool = False  # NOTE: set to True in vae train config
     use_spatial_tiling: bool = False
     use_temporal_tiling: bool = False
@@ -112,8 +106,6 @@ class DCVAEConfig:
 
 @dataclass
 class DCAEConfig:
-    """Dcae config implementation."""
-
     in_channels: int = 3
     latent_channels: int = 32
     encoder: EncoderConfig = field(
@@ -137,19 +129,6 @@ class DCAEConfig:
 def build_block(
     block_type: str, in_channels: int, out_channels: int, norm: str | None, act: str | None, is_video: bool
 ) -> nn.Module:
-    """Build block.
-
-    Args:
-        block_type: The block type.
-        in_channels: The in channels.
-        out_channels: The out channels.
-        norm: The norm.
-        act: The act.
-        is_video: The is video.
-
-    Returns:
-        The return value.
-    """
     if block_type == "ResBlock":
         assert in_channels == out_channels
         main_block = ResBlock(
@@ -181,20 +160,6 @@ def build_block(
 def build_stage_main(
     width: int, depth: int, block_type: str | list[str], norm: str, act: str, input_width: int, is_video: bool
 ) -> list[nn.Module]:
-    """Build stage main.
-
-    Args:
-        width: The width.
-        depth: The depth.
-        block_type: The block type.
-        norm: The norm.
-        act: The act.
-        input_width: The input width.
-        is_video: The is video.
-
-    Returns:
-        The return value.
-    """
     assert isinstance(block_type, str) or (isinstance(block_type, list) and depth == len(block_type))
     stage = []
     for d in range(depth):
@@ -263,19 +228,6 @@ def build_upsample_block(
     is_video: bool,
     temporal_upsample: bool = False,
 ) -> nn.Module:
-    """Build upsample block.
-
-    Args:
-        block_type: The block type.
-        in_channels: The in channels.
-        out_channels: The out channels.
-        shortcut: The shortcut.
-        is_video: The is video.
-        temporal_upsample: The temporal upsample.
-
-    Returns:
-        The return value.
-    """
     if block_type == "ConvPixelShuffle":
         if is_video:
             raise NotImplementedError("ConvPixelShuffle upsample is not supported for video")
@@ -308,15 +260,6 @@ def build_upsample_block(
 def build_encoder_project_in_block(
     in_channels: int, out_channels: int, factor: int, downsample_block_type: str, is_video: bool
 ):
-    """Build encoder project in block.
-
-    Args:
-        in_channels: The in channels.
-        out_channels: The out channels.
-        factor: The factor.
-        downsample_block_type: The downsample block type.
-        is_video: The is video.
-    """
     if factor == 1:
         block = ConvLayer(
             in_channels=in_channels,
@@ -347,16 +290,6 @@ def build_encoder_project_out_block(
     shortcut: str | None,
     is_video: bool,
 ):
-    """Build encoder project out block.
-
-    Args:
-        in_channels: The in channels.
-        out_channels: The out channels.
-        norm: The norm.
-        act: The act.
-        shortcut: The shortcut.
-        is_video: The is video.
-    """
     block = OpSequential(
         [
             build_norm(norm),
@@ -386,14 +319,6 @@ def build_encoder_project_out_block(
 
 
 def build_decoder_project_in_block(in_channels: int, out_channels: int, shortcut: str | None, is_video: bool):
-    """Build decoder project in block.
-
-    Args:
-        in_channels: The in channels.
-        out_channels: The out channels.
-        shortcut: The shortcut.
-        is_video: The is video.
-    """
     block = ConvLayer(
         in_channels=in_channels,
         out_channels=out_channels,
@@ -425,17 +350,6 @@ def build_decoder_project_out_block(
     act: str | None,
     is_video: bool,
 ):
-    """Build decoder project out block.
-
-    Args:
-        in_channels: The in channels.
-        out_channels: The out channels.
-        factor: The factor.
-        upsample_block_type: The upsample block type.
-        norm: The norm.
-        act: The act.
-        is_video: The is video.
-    """
     layers: list[nn.Module] = [
         build_norm(norm, in_channels),
         build_act(act),
@@ -467,15 +381,7 @@ def build_decoder_project_out_block(
 
 
 class Encoder(nn.Module):
-    """Encoder implementation."""
-
     def __init__(self, cfg: EncoderConfig, is_video: bool):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            is_video: The is video.
-        """
         super().__init__()
         self.cfg = cfg
         num_stages = len(cfg.width_list)
@@ -530,14 +436,6 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.project_in(x)
         for stage in self.stages:
             if len(stage.op_list) == 0:
@@ -548,15 +446,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """Decoder implementation."""
-
     def __init__(self, cfg: DecoderConfig, is_video: bool):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            is_video: The is video.
-        """
         super().__init__()
         self.cfg = cfg
         num_stages = len(cfg.width_list)
@@ -620,14 +510,6 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.project_in(x)
         for stage in reversed(self.stages):
             if len(stage.op_list) == 0:
@@ -638,14 +520,7 @@ class Decoder(nn.Module):
 
 
 class DCAE(nn.Module):
-    """Dcae implementation."""
-
     def __init__(self, cfg: DCAEConfig):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-        """
         super().__init__()
         self.cfg = cfg
         is_video = cfg.video is not None
@@ -677,7 +552,6 @@ class DCAE(nn.Module):
             self.load_model()
 
     def load_model(self):
-        """Load model."""
         if self.cfg.pretrained_source == "dc-ae":
             state_dict = torch.load(self.cfg.pretrained_path, map_location="cpu", weights_only=True)["state_dict"]
             self.load_state_dict(state_dict)
@@ -686,26 +560,11 @@ class DCAE(nn.Module):
 
     @property
     def spatial_compression_ratio(self) -> int:
-        """Spatial compression ratio.
-
-        Returns:
-            The return value.
-        """
         if self.video_spatial_compression_ratio:
             return self.video_spatial_compression_ratio
         return 2 ** (self.decoder.num_stages - 1)
 
     def blend_v(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
-        """Blend v.
-
-        Args:
-            a: The a.
-            b: The b.
-            blend_extent: The blend extent.
-
-        Returns:
-            The return value.
-        """
         blend_extent = min(a.shape[-2], b.shape[-2], blend_extent)
         for y in range(blend_extent):
             b[:, :, :, y, :] = a[:, :, :, -blend_extent + y, :] * (1 - y / blend_extent) + b[:, :, :, y, :] * (
@@ -714,16 +573,6 @@ class DCAE(nn.Module):
         return b
 
     def blend_h(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
-        """Blend h.
-
-        Args:
-            a: The a.
-            b: The b.
-            blend_extent: The blend extent.
-
-        Returns:
-            The return value.
-        """
         blend_extent = min(a.shape[-1], b.shape[-1], blend_extent)
         for x in range(blend_extent):
             b[:, :, :, :, x] = a[:, :, :, :, -blend_extent + x] * (1 - x / blend_extent) + b[:, :, :, :, x] * (
@@ -732,16 +581,6 @@ class DCAE(nn.Module):
         return b
 
     def blend_t(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
-        """Blend t.
-
-        Args:
-            a: The a.
-            b: The b.
-            blend_extent: The blend extent.
-
-        Returns:
-            The return value.
-        """
         blend_extent = min(a.shape[-3], b.shape[-3], blend_extent)
         for x in range(blend_extent):
             b[:, :, x, :, :] = a[:, :, -blend_extent + x, :, :] * (1 - x / blend_extent) + b[:, :, x, :, :] * (
@@ -750,14 +589,6 @@ class DCAE(nn.Module):
         return b
 
     def spatial_tiled_encode(self, x: torch.Tensor) -> torch.Tensor:
-        """Spatial tiled encode.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         net_size = int(self.spatial_tile_size * (1 - self.tile_overlap_factor))
         blend_extent = int(self.spatial_tile_latent_size * self.tile_overlap_factor)
         row_limit = self.spatial_tile_latent_size - blend_extent
@@ -787,14 +618,6 @@ class DCAE(nn.Module):
         return torch.cat(result_rows, dim=-2)
 
     def temporal_tiled_encode(self, x: torch.Tensor) -> torch.Tensor:
-        """Temporal tiled encode.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         overlap_size = int(self.temporal_tile_size * (1 - self.tile_overlap_factor))
         blend_extent = int(self.temporal_tile_latent_size * self.tile_overlap_factor)
         t_limit = self.temporal_tile_latent_size - blend_extent
@@ -819,28 +642,12 @@ class DCAE(nn.Module):
         return torch.cat(result_row, dim=2)
 
     def video_encode(self, x: torch.Tensor) -> torch.Tensor:
-        """Video encode.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x_ret = []
         for i in range(x.shape[0]):
             x_ret.append(self.encoder(x[i : i + 1]))
         return torch.cat(x_ret, dim=0)
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
-        """Encode.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         # NOTE scaling factor is used outside
         if self.cfg.video:
             if self.use_temporal_tiling and x.shape[2] > self.temporal_tile_size:
@@ -855,28 +662,12 @@ class DCAE(nn.Module):
         return x
 
     def video_decode(self, z: torch.Tensor) -> torch.Tensor:
-        """Video decode.
-
-        Args:
-            z: The z.
-
-        Returns:
-            The return value.
-        """
         x_ret = []
         for i in range(z.shape[0]):
             x_ret.append(self.decoder(z[i : i + 1]))
         return torch.cat(x_ret, dim=0)
 
     def spatial_tiled_decode(self, z: torch.FloatTensor) -> torch.Tensor:
-        """Spatial tiled decode.
-
-        Args:
-            z: The z.
-
-        Returns:
-            The return value.
-        """
         net_size = int(self.spatial_tile_latent_size * (1 - self.tile_overlap_factor))
         blend_extent = int(self.spatial_tile_size * self.tile_overlap_factor)
         row_limit = self.spatial_tile_size - blend_extent
@@ -907,14 +698,6 @@ class DCAE(nn.Module):
         return torch.cat(result_rows, dim=-2)
 
     def temporal_tiled_decode(self, z: torch.Tensor) -> torch.Tensor:
-        """Temporal tiled decode.
-
-        Args:
-            z: The z.
-
-        Returns:
-            The return value.
-        """
         overlap_size = int(self.temporal_tile_latent_size * (1 - self.tile_overlap_factor))
         blend_extent = int(self.temporal_tile_size * self.tile_overlap_factor)
         t_limit = self.temporal_tile_size - blend_extent
@@ -938,14 +721,6 @@ class DCAE(nn.Module):
         return torch.cat(result_row, dim=2)
 
     def decode(self, x: torch.Tensor) -> torch.Tensor:
-        """Decode.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         # NOTE scaling factor is used outside
         if self.cfg.video:
             if self.use_temporal_tiling and x.shape[2] > self.temporal_tile_latent_size:
@@ -961,30 +736,12 @@ class DCAE(nn.Module):
         return x
 
     def forward(self, x: torch.Tensor, global_step: int) -> tuple[Any, Tensor, dict[Any, Any]]:
-        """Forward.
-
-        Args:
-            x: The x.
-            global_step: The global step.
-
-        Returns:
-            The return value.
-        """
         x = self.encoder(x)
         x = self.decoder(x)
         return x, torch.tensor(0), {}
 
 
 def dc_vae_f32(name: str, pretrained_path: str) -> DCAEConfig:
-    """Dc vae f32.
-
-    Args:
-        name: The name.
-        pretrained_path: The pretrained path.
-
-    Returns:
-        The return value.
-    """
     if name in ["dc-vae-f32t4c128"]:
         cfg_str = (
             "video.time_compression_ratio=4 "
@@ -1052,15 +809,6 @@ def dc_vae_f32(name: str, pretrained_path: str) -> DCAEConfig:
 
 
 def dc_ae_f32c32(name: str, pretrained_path: str) -> DCAEConfig:
-    """Dc ae f32c32.
-
-    Args:
-        name: The name.
-        pretrained_path: The pretrained path.
-
-    Returns:
-        The return value.
-    """
     if name in ["dc-ae-f32c32-in-1.0", "dc-ae-f32c32-mix-1.0"]:
         cfg_str = (
             "latent_channels=32 "
@@ -1104,15 +852,6 @@ def dc_ae_f32c32(name: str, pretrained_path: str) -> DCAEConfig:
 
 
 def dc_ae_f64c128(name: str, pretrained_path: str | None = None) -> DCAEConfig:
-    """Dc ae f64c128.
-
-    Args:
-        name: The name.
-        pretrained_path: The pretrained path.
-
-    Returns:
-        The return value.
-    """
     if name in ["dc-ae-f64c128-in-1.0", "dc-ae-f64c128-mix-1.0"]:
         cfg_str = (
             "latent_channels=128 "
@@ -1131,15 +870,6 @@ def dc_ae_f64c128(name: str, pretrained_path: str | None = None) -> DCAEConfig:
 
 
 def dc_ae_f128c512(name: str, pretrained_path: str | None = None) -> DCAEConfig:
-    """Dc ae f128c512.
-
-    Args:
-        name: The name.
-        pretrained_path: The pretrained path.
-
-    Returns:
-        The return value.
-    """
     if name in ["dc-ae-f128c512-in-1.0", "dc-ae-f128c512-mix-1.0"]:
         cfg_str = (
             "latent_channels=512 "

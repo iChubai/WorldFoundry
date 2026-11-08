@@ -77,15 +77,6 @@ class MultiHeadCrossAttention(nn.Module):
     """Caption (and optional image-embed) cross-attention over packed tokens."""
 
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0, qk_norm=False, **block_kwargs):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_heads: The num heads.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            qk_norm: The qk norm.
-        """
         super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
@@ -106,13 +97,6 @@ class MultiHeadCrossAttention(nn.Module):
             self.k_norm = nn.Identity()
 
     def forward(self, x, cond, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            cond: The cond.
-            mask: The mask.
-        """
         # query: img tokens; key/value: condition; mask: if padding tokens
         B, N, C = x.shape
         first_dim = 1 if _xformers_available else B
@@ -145,18 +129,7 @@ class MultiHeadCrossAttention(nn.Module):
 
 
 class MultiHeadCrossAttentionImageEmbed(nn.Module):
-    """Multi head cross attention image embed implementation."""
-
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0, qk_norm=False, **block_kwargs):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_heads: The num heads.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            qk_norm: The qk norm.
-        """
         super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
@@ -181,14 +154,6 @@ class MultiHeadCrossAttentionImageEmbed(nn.Module):
             self.image_k_norm = nn.Identity()
 
     def forward(self, x, cond, mask=None, image_embeds=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            cond: The cond.
-            mask: The mask.
-            image_embeds: The image embeds.
-        """
         # query: img tokens; key/value: condition; mask: if padding tokens
         B, N, C = x.shape
 
@@ -224,26 +189,10 @@ class MultiHeadCrossAttentionImageEmbed(nn.Module):
 
 
 class MultiHeadCrossVallinaAttention(MultiHeadCrossAttention):
-    """Multi head cross vallina attention implementation."""
-
     @staticmethod
     def scaled_dot_product_attention(
         query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False, scale=None
     ) -> torch.Tensor:
-        """Scaled dot product attention.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            attn_mask: The attn mask.
-            dropout_p: The dropout p.
-            is_causal: The is causal.
-            scale: The scale.
-
-        Returns:
-            The return value.
-        """
         B, H, L, S = *query.size()[:-1], key.size(-2)
         scale_factor = 1 / math.sqrt(query.size(-1)) if scale is None else scale
         attn_bias = torch.zeros(B, H, L, S, dtype=query.dtype, device=query.device)
@@ -260,13 +209,6 @@ class MultiHeadCrossVallinaAttention(MultiHeadCrossAttention):
         return attn_weight @ value
 
     def forward(self, x, cond, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            cond: The cond.
-            mask: The mask.
-        """
         # query: img tokens; key/value: condition; mask: if padding tokens
         B, N, C = x.shape
 
@@ -321,19 +263,6 @@ class LiteLA(Attention_):
         qk_norm=False,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            heads: The heads.
-            heads_ratio: The heads ratio.
-            dim: The dim.
-            eps: The eps.
-            use_bias: The use bias.
-            qk_norm: The qk norm.
-            norm_eps: The norm eps.
-        """
         heads = heads or int(out_dim // dim * heads_ratio)
         super().__init__(in_dim, num_heads=heads, qkv_bias=use_bias)
 
@@ -353,16 +282,6 @@ class LiteLA(Attention_):
 
     @torch.amp.autocast("cuda", enabled=os.environ.get("AUTOCAST_LINEAR_ATTN", False) == "true")
     def attn_matmul(self, q, k, v: torch.Tensor) -> torch.Tensor:
-        """Attn matmul.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-
-        Returns:
-            The return value.
-        """
         # lightweight linear attention
         q = self.kernel_func(q)  # B, h, h_d, N
         k = self.kernel_func(k)
@@ -384,19 +303,6 @@ class LiteLA(Attention_):
     def forward(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, C)
@@ -424,18 +330,12 @@ class LiteLA(Attention_):
 
     @property
     def module_str(self) -> str:
-        """Module str.
-
-        Returns:
-            The return value.
-        """
         _str = type(self).__name__ + "("
         eps = f"{self.eps:.1E}"
         _str += f"i={self.in_dim},o={self.out_dim},h={self.heads},d={self.dim},eps={eps}"
         return _str
 
     def __repr__(self):
-        """Repr."""
         return f"EPS{self.eps}-" + super().__repr__()
 
 
@@ -456,19 +356,6 @@ class LiteLAReLURope(Attention_):
         qk_norm=False,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            heads: The heads.
-            heads_ratio: The heads ratio.
-            dim: The dim.
-            eps: The eps.
-            use_bias: The use bias.
-            qk_norm: The qk norm.
-            norm_eps: The norm eps.
-        """
         heads = heads or int(out_dim // dim * heads_ratio)
         super().__init__(in_dim, num_heads=heads, qkv_bias=use_bias)
 
@@ -489,18 +376,6 @@ class LiteLAReLURope(Attention_):
         self.qkv_store_buffer = None
 
     def forward(self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, C)
@@ -520,12 +395,6 @@ class LiteLAReLURope(Attention_):
         k = self.kernel_func(k)
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.permute(0, 1, 3, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).permute(0, 1, 3, 2)
             return x_out.type_as(hidden_states)
@@ -558,8 +427,6 @@ class LiteLAReLURope(Attention_):
 
 
 class ChunkCausalAttention(LiteLAReLURope):
-    r"""Chunk causal attention"""
-
     def __init__(
         self,
         in_dim: int,
@@ -572,37 +439,11 @@ class ChunkCausalAttention(LiteLAReLURope):
         qk_norm=False,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            heads: The heads.
-            heads_ratio: The heads ratio.
-            dim: The dim.
-            eps: The eps.
-            use_bias: The use bias.
-            qk_norm: The qk norm.
-            norm_eps: The norm eps.
-        """
         super().__init__(in_dim, out_dim, heads, heads_ratio, dim, eps, use_bias, qk_norm, norm_eps)
 
     def forward(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, chunk_index: list[int] = [0]
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            chunk_index: The chunk index.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, C)
@@ -622,12 +463,6 @@ class ChunkCausalAttention(LiteLAReLURope):
         k = self.kernel_func(k)
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.permute(0, 1, 3, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).permute(0, 1, 3, 2)
             return x_out.type_as(hidden_states)
@@ -699,10 +534,7 @@ class ChunkCausalAttention(LiteLAReLURope):
 
 
 class CachedCausalAttention(LiteLAReLURope):
-    """Cached causal attention implementation."""
-
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
 
     def forward(
@@ -716,21 +548,6 @@ class CachedCausalAttention(LiteLAReLURope):
         kv_cache=None,
         **kwargs,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            save_kv_cache: The save kv cache.
-            kv_cache: The kv cache.
-
-        Returns:
-            The return value.
-        """
-
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, C)
@@ -750,12 +567,6 @@ class CachedCausalAttention(LiteLAReLURope):
         k = self.kernel_func(k)
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.permute(0, 1, 3, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).permute(0, 1, 3, 2)
             return x_out.type_as(hidden_states)
@@ -801,29 +612,11 @@ class PAGCFGIdentitySelfAttnProcessorLiteLA:
     r"""Self Attention with Perturbed Attention & CFG Guidance"""
 
     def __init__(self, attn):
-        """Init.
-
-        Args:
-            attn: The attn.
-        """
         self.attn = attn
 
     def __call__(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None, **kwargs
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         x_uncond, x_org, x_ptb = x.chunk(3)
         x_org = torch.cat([x_uncond, x_org])
         B, N, C = x_org.shape
@@ -871,29 +664,11 @@ class PAGIdentitySelfAttnProcessorLiteLA:
     r"""Self Attention with Perturbed Attention Guidance"""
 
     def __init__(self, attn):
-        """Init.
-
-        Args:
-            attn: The attn.
-        """
         self.attn = attn
 
     def __call__(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None, **kwargs
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         x_org, x_ptb = x.chunk(2)
         B, N, C = x_org.shape
 
@@ -940,29 +715,11 @@ class SelfAttnProcessorLiteLA:
     r"""Self Attention with Lite Linear Attention"""
 
     def __init__(self, attn):
-        """Init.
-
-        Args:
-            attn: The attn.
-        """
         self.attn = attn
 
     def __call__(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None, **kwargs
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         if HW is None:
             H = W = int(N**0.5)
@@ -1000,29 +757,11 @@ class SelfAttnProcessorLiteLAReLURope:
     r"""Self Attention with Lite Linear Attention"""
 
     def __init__(self, attn):
-        """Init.
-
-        Args:
-            attn: The attn.
-        """
         self.attn = attn
 
     def __call__(
         self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None, **kwargs
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         qkv = self.attn.qkv(x).reshape(B, N, 3, C)
@@ -1042,12 +781,6 @@ class SelfAttnProcessorLiteLAReLURope:
         k = self.attn.kernel_func(k)
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.permute(0, 1, 3, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).permute(0, 1, 3, 2)
             return x_out.type_as(hidden_states)
@@ -1097,16 +830,6 @@ class FlashAttention(Attention_):
         self.qkv_store_buffer = None
 
     def forward(self, x, mask=None, HW=None, rotary_emb=None, block_id=None, block_mask=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_id: The block id.
-            block_mask: The block mask.
-        """
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, C)
@@ -1130,12 +853,6 @@ class FlashAttention(Attention_):
             attn_bias.masked_fill_(mask.squeeze(1).repeat(self.num_heads, 1, 1) == 0, float("-inf"))
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.transpose(1, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).transpose(1, 2)
             return x_out.type_as(hidden_states)
@@ -1171,15 +888,7 @@ class FlashAttention(Attention_):
 #   AMP attention with fp32 softmax to fix loss NaN problem during training     #
 #################################################################################
 class Attention(Attention_):
-    """Attention implementation."""
-
     def forward(self, x, HW=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         # B,N,3,H,C -> B,H,N,C
@@ -1205,25 +914,12 @@ class FinalLayer(nn.Module):
     """
 
     def __init__(self, hidden_size, patch_size, out_channels):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            patch_size: The patch size.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=True)
         self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
 
     def forward(self, x, c):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-        """
         shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
         x = modulate(self.norm_final(x), shift, scale)
         x = self.linear(x)
@@ -1236,13 +932,6 @@ class T2IFinalLayer(nn.Module):
     """
 
     def __init__(self, hidden_size, patch_size, out_channels):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            patch_size: The patch size.
-            out_channels: The out channels.
-        """
         super().__init__()
         if isinstance(patch_size, int):
             patch_size = [patch_size, patch_size]
@@ -1252,12 +941,6 @@ class T2IFinalLayer(nn.Module):
         self.out_channels = out_channels
 
     def forward_frame_aware(self, x, t):
-        """Forward frame aware.
-
-        Args:
-            x: The x.
-            t: The t.
-        """
         # t: B,1,F,D
         B, N, C = x.shape
         num_frames = t.shape[2]
@@ -1270,12 +953,6 @@ class T2IFinalLayer(nn.Module):
         return x
 
     def forward(self, x, t):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-        """
         if len(t.shape) > 2:
             return self.forward_frame_aware(x, t)
         shift, scale = (self.scale_shift_table[None] + t[:, None]).chunk(2, dim=1)
@@ -1290,26 +967,12 @@ class MaskFinalLayer(nn.Module):
     """
 
     def __init__(self, final_hidden_size, c_emb_size, patch_size, out_channels):
-        """Init.
-
-        Args:
-            final_hidden_size: The final hidden size.
-            c_emb_size: The c emb size.
-            patch_size: The patch size.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.norm_final = nn.LayerNorm(final_hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(final_hidden_size, patch_size * patch_size * out_channels, bias=True)
         self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(c_emb_size, 2 * final_hidden_size, bias=True))
 
     def forward(self, x, t):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-        """
         shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
         x = modulate(self.norm_final(x), shift, scale)
         x = self.linear(x)
@@ -1322,24 +985,12 @@ class DecoderLayer(nn.Module):
     """
 
     def __init__(self, hidden_size, decoder_hidden_size):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            decoder_hidden_size: The decoder hidden size.
-        """
         super().__init__()
         self.norm_decoder = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, decoder_hidden_size, bias=True)
         self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
 
     def forward(self, x, t):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-        """
         shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
         x = modulate(self.norm_decoder(x), shift, scale)
         x = self.linear(x)
@@ -1355,12 +1006,6 @@ class TimestepEmbedder(nn.Module):
     """
 
     def __init__(self, hidden_size, frequency_embedding_size=256):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            frequency_embedding_size: The frequency embedding size.
-        """
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(frequency_embedding_size, hidden_size, bias=True),
@@ -1391,18 +1036,12 @@ class TimestepEmbedder(nn.Module):
         return embedding
 
     def forward(self, t):
-        """Forward.
-
-        Args:
-            t: The t.
-        """
         t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(self.dtype)
         t_emb = self.mlp(t_freq)
         return t_emb
 
     @property
     def dtype(self):
-        """Dtype."""
         execution_dtype = getattr(self, "_worldfoundry_execution_dtype", None)
         if isinstance(execution_dtype, torch.dtype):
             return execution_dtype
@@ -1418,12 +1057,6 @@ class SizeEmbedder(TimestepEmbedder):
     """
 
     def __init__(self, hidden_size, frequency_embedding_size=256):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            frequency_embedding_size: The frequency embedding size.
-        """
         super().__init__(hidden_size=hidden_size, frequency_embedding_size=frequency_embedding_size)
         self.mlp = nn.Sequential(
             nn.Linear(frequency_embedding_size, hidden_size, bias=True),
@@ -1434,12 +1067,6 @@ class SizeEmbedder(TimestepEmbedder):
         self.outdim = hidden_size
 
     def forward(self, s, bs):
-        """Forward.
-
-        Args:
-            s: The s.
-            bs: The bs.
-        """
         if s.ndim == 1:
             s = s[:, None]
         assert s.ndim == 2
@@ -1455,7 +1082,6 @@ class SizeEmbedder(TimestepEmbedder):
 
     @property
     def dtype(self):
-        """Dtype."""
         execution_dtype = getattr(self, "_worldfoundry_execution_dtype", None)
         if isinstance(execution_dtype, torch.dtype):
             return execution_dtype
@@ -1471,13 +1097,6 @@ class LabelEmbedder(nn.Module):
     """
 
     def __init__(self, num_classes, hidden_size, dropout_prob):
-        """Init.
-
-        Args:
-            num_classes: The num classes.
-            hidden_size: The hidden size.
-            dropout_prob: The dropout prob.
-        """
         super().__init__()
         use_cfg_embedding = dropout_prob > 0
         self.embedding_table = nn.Embedding(num_classes + use_cfg_embedding, hidden_size)
@@ -1496,13 +1115,6 @@ class LabelEmbedder(nn.Module):
         return labels
 
     def forward(self, labels, train, force_drop_ids=None):
-        """Forward.
-
-        Args:
-            labels: The labels.
-            train: The train.
-            force_drop_ids: The force drop ids.
-        """
         use_dropout = self.dropout_prob > 0
         if (train and use_dropout) or (force_drop_ids is not None):
             labels = self.token_drop(labels, force_drop_ids)
@@ -1523,15 +1135,6 @@ class CaptionEmbedder(nn.Module):
         act_layer=nn.GELU(approximate="tanh"),
         token_num=120,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            uncond_prob: The uncond prob.
-            act_layer: The act layer.
-            token_num: The token num.
-        """
         super().__init__()
         self.y_proj = Mlp(
             in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0
@@ -1540,11 +1143,6 @@ class CaptionEmbedder(nn.Module):
         self.uncond_prob = uncond_prob
 
     def initialize_gemma_params(self, model_name="google/gemma-2b-it"):
-        """Initialize gemma params.
-
-        Args:
-            model_name: The model name.
-        """
         num_layers = len(self.custom_gemma_layers)
         text_encoder = AutoModelForCausalLM.from_pretrained(model_name).get_decoder()
         pretrained_layers = text_encoder.layers[-num_layers:]
@@ -1565,14 +1163,6 @@ class CaptionEmbedder(nn.Module):
         return caption
 
     def forward(self, caption, train, force_drop_ids=None, mask=None):
-        """Forward.
-
-        Args:
-            caption: The caption.
-            train: The train.
-            force_drop_ids: The force drop ids.
-            mask: The mask.
-        """
         y_embedding = self.y_embedding
         if train:
             if caption.shape[-2] < self.y_embedding.shape[-2]:
@@ -1596,15 +1186,6 @@ class CaptionEmbedderDoubleBr(nn.Module):
     """
 
     def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            uncond_prob: The uncond prob.
-            act_layer: The act layer.
-            token_num: The token num.
-        """
         super().__init__()
         self.proj = Mlp(
             in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0
@@ -1626,13 +1207,6 @@ class CaptionEmbedderDoubleBr(nn.Module):
         return global_caption, caption
 
     def forward(self, caption, train, force_drop_ids=None):
-        """Forward.
-
-        Args:
-            caption: The caption.
-            train: The train.
-            force_drop_ids: The force drop ids.
-        """
         assert caption.shape[2:] == self.y_embedding.shape
         global_caption = caption.mean(dim=2).squeeze()
         use_dropout = self.uncond_prob > 0
@@ -1644,28 +1218,12 @@ class CaptionEmbedderDoubleBr(nn.Module):
 
 # copy from https://github.com/huggingface/diffusers/blob/01abfc873659e29a8d002f20782fa5b5e6d03f9c/src/diffusers/models/transformers/transformer_hunyuan_video_framepack.py#L72
 class ClipVisionProjection(nn.Module):
-    """Clip vision projection implementation."""
-
     def __init__(self, in_channels: int, out_channels: int):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.up = nn.Linear(in_channels, out_channels * 3)
         self.down = nn.Linear(out_channels * 3, out_channels)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-
-        Returns:
-            The return value.
-        """
         hidden_states = self.up(hidden_states)
         hidden_states = F.silu(hidden_states)
         hidden_states = self.down(hidden_states)
@@ -1687,19 +1245,6 @@ class PatchEmbed(nn.Module):
         flatten=True,
         bias=True,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            kernel_size: The kernel size.
-            padding: The padding.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            bias: The bias.
-        """
         super().__init__()
         kernel_size = kernel_size or patch_size
         if isinstance(kernel_size, (tuple, list)):
@@ -1719,11 +1264,6 @@ class PatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, C, H, W = x.shape
         assert self.img_size[0] == H, f"Input image height ({H}) doesn't match model ({self.img_size[0]})."
         assert self.img_size[1] == W, f"Input image width ({W}) doesn't match model ({self.img_size[1]})."
@@ -1748,18 +1288,6 @@ class PatchEmbedMS(nn.Module):
         flatten=True,
         bias=True,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            kernel_size: The kernel size.
-            padding: The padding.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            bias: The bias.
-        """
         super().__init__()
         kernel_size = kernel_size or patch_size
         if isinstance(kernel_size, (tuple, list)):
@@ -1775,11 +1303,6 @@ class PatchEmbedMS(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
@@ -1801,18 +1324,6 @@ class PatchEmbedMS3D(nn.Module):
         flatten=True,
         bias=True,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            kernel_size: The kernel size.
-            padding: The padding.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            bias: The bias.
-        """
         super().__init__()
         kernel_size = kernel_size or patch_size
         patch_size = to_3tuple(patch_size)
@@ -1828,11 +1339,6 @@ class PatchEmbedMS3D(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # BCTHW -> BNC
@@ -1841,29 +1347,13 @@ class PatchEmbedMS3D(nn.Module):
 
 
 class RopePosEmbed(nn.Module):
-    """Rope pos embed implementation."""
-
     # modified from https://github.com/black-forest-labs/flux/blob/c00d7c60b085fce8058b9df845e036090873f2ce/src/flux/modules/layers.py#L11
     def __init__(self, theta: int, axes_dim: list[int]):
-        """Init.
-
-        Args:
-            theta: The theta.
-            axes_dim: The axes dim.
-        """
         super().__init__()
         self.theta = theta
         self.axes_dim = axes_dim
 
     def forward(self, ids: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            ids: The ids.
-
-        Returns:
-            The return value.
-        """
         n_axes = ids.shape[-1]
         cos_out = []
         sin_out = []
@@ -1888,16 +1378,6 @@ class RopePosEmbed(nn.Module):
 
     @staticmethod
     def _prepare_latent_image_ids(batch_size, height, width, device, dtype, frame=None):
-        """Helper function to prepare latent image ids.
-
-        Args:
-            batch_size: The batch size.
-            height: The height.
-            width: The width.
-            device: The device.
-            dtype: The dtype.
-            frame: The frame.
-        """
         if frame is None:
             frame = 1
         latent_image_ids = torch.zeros(frame, height, width, 3)
@@ -1921,8 +1401,6 @@ class RopePosEmbed(nn.Module):
 
 
 class WanRotaryPosEmbed(nn.Module):
-    """Wan rotary pos embed implementation."""
-
     def __init__(
         self,
         attention_head_dim: int,
@@ -1931,15 +1409,6 @@ class WanRotaryPosEmbed(nn.Module):
         theta: float = 10000.0,
         fhw_dim: tuple[int, int, int] | None = None,
     ):
-        """Init.
-
-        Args:
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            max_seq_len: The max seq len.
-            theta: The theta.
-            fhw_dim: The fhw dim.
-        """
         super().__init__()
 
         self.attention_head_dim = attention_head_dim
@@ -1964,15 +1433,6 @@ class WanRotaryPosEmbed(nn.Module):
         self.freqs = torch.cat(freqs, dim=1)
 
     def forward(self, fhw: torch.Tensor, device: torch.device) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            fhw: The fhw.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         ppf, pph, ppw = fhw
 
         self.freqs = self.freqs.to(device)
@@ -1993,18 +1453,7 @@ class WanRotaryPosEmbed(nn.Module):
 
 
 class CausalWanRotaryPosEmbed(WanRotaryPosEmbed):
-    """Causal wan rotary pos embed implementation."""
-
     def forward(self, fhw: torch.Tensor, device: torch.device) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            fhw: The fhw.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         (f_start, f_end), pph, ppw = fhw
 
         self.freqs = self.freqs.to(device)
@@ -2025,19 +1474,9 @@ class CausalWanRotaryPosEmbed(WanRotaryPosEmbed):
 
 
 class WanRotaryTemporalPosEmbed(nn.Module):
-    """Wan rotary temporal pos embed implementation."""
-
     def __init__(
         self, attention_head_dim: int, patch_size: tuple[int, int, int], max_seq_len: int, theta: float = 10000.0
     ):
-        """Init.
-
-        Args:
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            max_seq_len: The max seq len.
-            theta: The theta.
-        """
         super().__init__()
 
         self.attention_head_dim = attention_head_dim
@@ -2055,15 +1494,6 @@ class WanRotaryTemporalPosEmbed(nn.Module):
         self.freqs = torch.cat(freqs, dim=1)
 
     def forward(self, fhw: torch.Tensor, device: torch.device) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            fhw: The fhw.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         ppf, pph, ppw = fhw
 
         self.freqs = self.freqs.to(device)
@@ -2277,12 +1707,6 @@ class WindowAttention(FlashAttention):
 
         # 3. apply RoPE
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.transpose(1, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).transpose(1, 2)
             return x_out.type_as(hidden_states)
@@ -2389,11 +1813,6 @@ class WindowAttention(FlashAttention):
         return x
 
     def extra_repr(self) -> str:
-        """Extra repr.
-
-        Returns:
-            The return value.
-        """
         return f"window_count={self.window_count}, pad_if_needed={self.pad_if_needed}"
 
 
@@ -2401,23 +1820,10 @@ class ChunkedLiteLAReLURope(LiteLAReLURope):
     r"""Lightweight linear attention with first relu kernel and then rope, with chunked computation for large token sequences"""
 
     def __init__(self, *args, chunk_size=200_000, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.chunk_size = chunk_size
 
     def forward(self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         # if token number is not large, use original method
@@ -2442,12 +1848,6 @@ class ChunkedLiteLAReLURope(LiteLAReLURope):
         k = self.kernel_func(k)
 
         def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
-            """Apply rotary emb.
-
-            Args:
-                hidden_states: The hidden states.
-                freqs: The freqs.
-            """
             x_rotated = torch.view_as_complex(hidden_states.permute(0, 1, 3, 2).to(torch.float64).unflatten(3, (-1, 2)))
             x_out = torch.view_as_real(x_rotated * freqs).flatten(3, 4).permute(0, 1, 3, 2)
             return x_out.type_as(hidden_states)

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> scene_model.py functionality."""
-
 import roma
 import torch
 import torch.nn as nn
@@ -11,8 +9,6 @@ from flow3d.params import CameraPoses, GaussianParams, MotionBases
 
 
 class SceneModel(nn.Module):
-    """Scene model implementation."""
-
     def __init__(
         self,
         Ks: Tensor,
@@ -23,17 +19,6 @@ class SceneModel(nn.Module):
         bg_params: GaussianParams | None = None,
         use_2dgs: bool = False,
     ):
-        """Init.
-
-        Args:
-            Ks: The ks.
-            w2cs: The w2cs.
-            fg_params: The fg params.
-            motion_bases: The motion bases.
-            camera_poses: The camera poses.
-            bg_params: The bg params.
-            use_2dgs: The use 2dgs.
-        """
         super().__init__()
         self.num_frames = motion_bases.num_frames
         self.fg = fg_params
@@ -53,47 +38,22 @@ class SceneModel(nn.Module):
 
     @property
     def num_gaussians(self) -> int:
-        """Num gaussians.
-
-        Returns:
-            The return value.
-        """
         return self.num_bg_gaussians + self.num_fg_gaussians
 
     @property
     def num_bg_gaussians(self) -> int:
-        """Num bg gaussians.
-
-        Returns:
-            The return value.
-        """
         return self.bg.num_gaussians if self.bg is not None else 0
 
     @property
     def num_fg_gaussians(self) -> int:
-        """Num fg gaussians.
-
-        Returns:
-            The return value.
-        """
         return self.fg.num_gaussians
 
     @property
     def num_motion_bases(self) -> int:
-        """Num motion bases.
-
-        Returns:
-            The return value.
-        """
         return self.motion_bases.num_bases
 
     @property
     def has_bg(self) -> bool:
-        """Has bg.
-
-        Returns:
-            The return value.
-        """
         return self.bg is not None
 
     def compute_poses_bg(self) -> tuple[torch.Tensor, torch.Tensor]:
@@ -106,15 +66,6 @@ class SceneModel(nn.Module):
         return self.bg.params["means"], self.bg.get_quats()
 
     def compute_transforms(self, ts: torch.Tensor, inds: torch.Tensor | None = None) -> torch.Tensor:
-        """Compute transforms.
-
-        Args:
-            ts: The ts.
-            inds: The inds.
-
-        Returns:
-            The return value.
-        """
         coefs = self.fg.get_coefs()  # (G, K)
         if inds is not None:
             coefs = coefs[inds]
@@ -152,14 +103,6 @@ class SceneModel(nn.Module):
         return means, quats
 
     def compute_poses_all(self, ts: torch.Tensor | None) -> tuple[torch.Tensor, torch.Tensor]:
-        """Compute poses all.
-
-        Args:
-            ts: The ts.
-
-        Returns:
-            The return value.
-        """
         means, quats = self.compute_poses_fg(ts)
         if self.has_bg:
             bg_means, bg_quats = self.compute_poses_bg()
@@ -168,22 +111,12 @@ class SceneModel(nn.Module):
         return means, quats
 
     def get_colors_all(self) -> torch.Tensor:
-        """Get colors all.
-
-        Returns:
-            The return value.
-        """
         colors = self.fg.get_colors()
         if self.bg is not None:
             colors = torch.cat([colors, self.bg.get_colors()], dim=0).contiguous()
         return colors
 
     def get_scales_all(self) -> torch.Tensor:
-        """Get scales all.
-
-        Returns:
-            The return value.
-        """
         scales = self.fg.get_scales()
         if self.bg is not None:
             scales = torch.cat([scales, self.bg.get_scales()], dim=0).contiguous()
@@ -200,12 +133,6 @@ class SceneModel(nn.Module):
 
     @staticmethod
     def init_from_state_dict(state_dict, prefix=""):
-        """Init from state dict.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         fg = GaussianParams.init_from_state_dict(state_dict, prefix=f"{prefix}fg.params.")
         bg = None
         if any("bg." in k for k in state_dict):
@@ -240,30 +167,6 @@ class SceneModel(nn.Module):
         fg_only: bool = False,
         filter_mask: torch.Tensor | None = None,
     ) -> dict:
-        """Render.
-
-        Args:
-            t: The t.
-            w2cs: The w2cs.
-            Ks: The ks.
-            img_wh: The img wh.
-            target_ts: The target ts.
-            target_w2cs: The target w2cs.
-            bg_color: The bg color.
-            colors_override: The colors override.
-            means: The means.
-            quats: The quats.
-            target_means: The target means.
-            return_color: The return color.
-            return_depth: The return depth.
-            return_mask: The return mask.
-            fg_only: The fg only.
-            filter_mask: The filter mask.
-
-        Returns:
-            The return value.
-        """
-
         curr_w2cs = w2cs
 
         if target_w2cs is not None:

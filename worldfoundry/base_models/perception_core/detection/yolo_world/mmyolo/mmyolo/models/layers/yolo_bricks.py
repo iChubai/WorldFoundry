@@ -581,7 +581,6 @@ class PPYOLOESELayer(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        """Init weights."""
         nn.init.normal_(self.fc.weight, mean=0, std=0.001)
 
     def forward(self, feat: Tensor, avg_feat: Tensor) -> Tensor:
@@ -1131,8 +1130,7 @@ class CSPResLayer(nn.Module):
             self.attn = None
 
     def build_blocks_layer(self, blocks_channels: int) -> nn.Module:
-        """Build blocks layer.
-
+        """
         Args:
             blocks_channels: The channels of this Module.
         """

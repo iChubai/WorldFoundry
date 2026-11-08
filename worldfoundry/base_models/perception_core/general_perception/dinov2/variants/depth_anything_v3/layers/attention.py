@@ -8,8 +8,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> depth_anything_v3 -> layers -> attention.py functionality."""
-
 import logging
 
 from worldfoundry.core.attention import QKNormRopeSelfAttention

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> projection.py functionality."""
-
 from math import prod
 
 import torch
@@ -50,14 +48,6 @@ def project_camera_space(
     epsilon,
     infinity,
 ):
-    """Project camera space.
-
-    Args:
-        points: The points.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-        infinity: The infinity.
-    """
     points = points / (points[..., -1:] + epsilon)
     points = points.nan_to_num(posinf=infinity, neginf=-infinity)
     points = einsum(intrinsics, points, "... i j, ... j -> ... i")
@@ -70,14 +60,6 @@ def project(
     intrinsics,
     epsilon,
 ):
-    """Project.
-
-    Args:
-        points: The points.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-    """
     points = homogenize_points(points)
     points = transform_world2cam(points, extrinsics)[..., :-1]
     in_front_of_camera = points[..., -1] >= 0
@@ -104,13 +86,6 @@ def get_world_rays(
     extrinsics,
     intrinsics,
 ):
-    """Get world rays.
-
-    Args:
-        coordinates: The coordinates.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-    """
     # Get camera-space ray directions.
     directions = unproject(
         coordinates,
@@ -155,14 +130,6 @@ def sample_training_rays(
     extrinsics,
     num_rays: int,
 ):
-    """Sample training rays.
-
-    Args:
-        image: The image.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-        num_rays: The num rays.
-    """
     device = extrinsics.device
     b, v, _, *grid_shape = image.shape
 
@@ -247,19 +214,9 @@ def intersect_rays(
 
 
 def get_fov(intrinsics):
-    """Get fov.
-
-    Args:
-        intrinsics: The intrinsics.
-    """
     intrinsics_inv = intrinsics.inverse()
 
     def process_vector(vector):
-        """Process vector.
-
-        Args:
-            vector: The vector.
-        """
         vector = torch.tensor(vector, dtype=torch.float32, device=intrinsics.device)
         vector = einsum(intrinsics_inv, vector, "b i j, j -> b i")
         return vector / vector.norm(dim=-1, keepdim=True)

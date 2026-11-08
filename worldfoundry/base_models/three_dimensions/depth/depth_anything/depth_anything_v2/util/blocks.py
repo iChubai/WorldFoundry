@@ -1,17 +1,7 @@
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v2 -> util -> blocks.py functionality."""
-
 import torch.nn as nn
 
 
 def _make_scratch(in_shape, out_shape, groups=1, expand=False):
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-    """
     scratch = nn.Module()
 
     out_shape1 = out_shape
@@ -48,8 +38,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -72,8 +61,7 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -98,11 +86,8 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(self, features, activation, deconv=False, bn=False, expand=False, align_corners=True, size=None):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -128,8 +113,7 @@ class FeatureFusionBlock(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """

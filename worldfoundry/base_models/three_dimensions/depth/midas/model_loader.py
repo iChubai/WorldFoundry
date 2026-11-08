@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> model_loader.py functionality."""
-
 import cv2
 import torch
 from torchvision.transforms import Compose

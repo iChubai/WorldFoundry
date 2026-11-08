@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_tracking.py functionality."""
-
 from collections import defaultdict
 
 import numpy as np
@@ -68,11 +66,6 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import
 
 
 def recursive_to(data, *args, **kwargs):
-    """Recursive to.
-
-    Args:
-        data: The data.
-    """
     if isinstance(data, torch.Tensor):
         ret = data.to(*args, **kwargs)
     elif isinstance(data, np.ndarray):
@@ -209,14 +202,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         inference_state["visual_prompt_mask"] = None
 
     def _get_visual_prompt(self, inference_state, frame_idx, boxes_cxcywh, box_labels):
-        """Helper function to get visual prompt.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            boxes_cxcywh: The boxes cxcywh.
-            box_labels: The box labels.
-        """
         batch_size = 1
         geometric_prompt = Prompt(
             box_embeddings=torch.zeros(0, batch_size, 4, device=inference_state["device"]),
@@ -242,16 +227,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         use_cv2=False,
         input_is_mp4=False,
     ):
-        """Init state.
-
-        Args:
-            resource_path: The resource path.
-            offload_video_to_cpu: The offload video to cpu.
-            async_loading_frames: The async loading frames.
-            use_torchcodec: The use torchcodec.
-            use_cv2: The use cv2.
-            input_is_mp4: The input is mp4.
-        """
         # Initialize inference state (inlined from Sam3DemoMixin.init_state)
         if use_torchcodec:
             video_loader_type = "torchcodec"
@@ -288,11 +263,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         return inference_state
 
     def reset_state(self, inference_state):
-        """Reset state.
-
-        Args:
-            inference_state: The inference state.
-        """
         # Inlined from Sam3DemoMixin.reset_state
         inference_state["input_batch"].find_text_batch[0] = "<text placeholder>"
         inference_state["text_prompt"] = None
@@ -314,14 +284,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         inference_state["cached_frame_outputs"] = {}
 
     def _get_processing_order(self, inference_state, start_frame_idx, max_frame_num_to_track, reverse):
-        """Helper function to get processing order.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-            max_frame_num_to_track: The max frame num to track.
-            reverse: The reverse.
-        """
         num_frames = inference_state["num_frames"]
         previous_stages_out = inference_state["previous_stages_out"]
         if all(out is None for out in previous_stages_out) and start_frame_idx is None:
@@ -683,15 +645,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         suppressed_obj_ids=None,
         unconfirmed_obj_ids=None,
     ):
-        """Helper function to postprocess output.
-
-        Args:
-            inference_state: The inference state.
-            out: The out.
-            removed_obj_ids: The removed obj ids.
-            suppressed_obj_ids: The suppressed obj ids.
-            unconfirmed_obj_ids: The unconfirmed obj ids.
-        """
         obj_id_to_mask = out["obj_id_to_mask"]  # low res masks
         curr_obj_ids = sorted(obj_id_to_mask.keys())
         H_video, W_video = inference_state["orig_height"], inference_state["orig_width"]
@@ -1185,16 +1138,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         removed_obj_ids=None,
         unconfirmed_obj_ids=None,
     ):
-        """Helper function to cache frame outputs.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            obj_id_to_mask: The obj id to mask.
-            suppressed_obj_ids: The suppressed obj ids.
-            removed_obj_ids: The removed obj ids.
-            unconfirmed_obj_ids: The unconfirmed obj ids.
-        """
         if "cached_frame_outputs" not in inference_state:
             inference_state["cached_frame_outputs"] = {}
 
@@ -1217,13 +1160,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         inference_state["cached_frame_outputs"][frame_idx] = filtered_obj_id_to_mask
 
     def _build_sam2_output(self, inference_state, frame_idx, refined_obj_id_to_mask=None):
-        """Helper function to build sam2 output.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            refined_obj_id_to_mask: The refined obj id to mask.
-        """
         if frame_idx not in inference_state["cached_frame_outputs"]:
             return {}
 
@@ -1342,12 +1278,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         self._model_is_compiled = True
 
     def _warm_up_vg_propagation(self, inference_state, start_frame_idx=0):
-        """Helper function to warm up vg propagation.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-        """
         # use different tracking score thresholds for each round to simulate different number of output objects
         num_objects_list = range(self.num_obj_for_compile + 1)
         num_rounds = 3
@@ -1474,13 +1404,6 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         return inference_state
 
     def add_fake_objects_to_inference_state(self, inference_state, num_objects, frame_idx):
-        """Add fake objects to inference state.
-
-        Args:
-            inference_state: The inference state.
-            num_objects: The num objects.
-            frame_idx: The frame idx.
-        """
         new_det_obj_ids_local = np.arange(num_objects)
         high_res_H, high_res_W = self.tracker.maskmem_backbone.mask_downsampler.interpol_size
         new_det_masks = torch.ones(len(new_det_obj_ids_local), high_res_H, high_res_W).to(self.device)
@@ -1765,16 +1688,6 @@ class Sam3MultiplexTrackingProd(Sam3MultiplexTracking):
         use_cv2=False,
         input_is_mp4=False,
     ):
-        """Init state.
-
-        Args:
-            resource_path: The resource path.
-            offload_video_to_cpu: The offload video to cpu.
-            async_loading_frames: The async loading frames.
-            use_torchcodec: The use torchcodec.
-            use_cv2: The use cv2.
-            input_is_mp4: The input is mp4.
-        """
         inference_state = super().init_state(
             resource_path=resource_path,
             offload_video_to_cpu=offload_video_to_cpu,
@@ -1793,11 +1706,6 @@ class Sam3MultiplexTrackingProd(Sam3MultiplexTracking):
         return inference_state
 
     def reset_state(self, inference_state):
-        """Reset state.
-
-        Args:
-            inference_state: The inference state.
-        """
         super().reset_state(inference_state)
         # Reset generator state for batched processing
         inference_state["generator_state"] = {
@@ -2128,16 +2036,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         use_cv2=False,
         input_is_mp4=False,
     ):
-        """Init state.
-
-        Args:
-            resource_path: The resource path.
-            offload_video_to_cpu: The offload video to cpu.
-            async_loading_frames: The async loading frames.
-            use_torchcodec: The use torchcodec.
-            use_cv2: The use cv2.
-            input_is_mp4: The input is mp4.
-        """
         inference_state = super().init_state(
             resource_path=resource_path,
             offload_video_to_cpu=offload_video_to_cpu,
@@ -2154,11 +2052,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         return inference_state
 
     def reset_state(self, inference_state):
-        """Reset state.
-
-        Args:
-            inference_state: The inference state.
-        """
         super().reset_state(inference_state)
         # reset extra states
         inference_state["action_history"].clear()
@@ -2166,11 +2059,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
             inference_state["sam2_inference_states"] = [self._init_new_sam2_state(inference_state)]
 
     def _init_new_sam2_state(self, inference_state):
-        """Helper function to init new sam2 state.
-
-        Args:
-            inference_state: The inference state.
-        """
         return self.tracker.init_state(
             cached_features=inference_state["feature_cache"],
             video_height=inference_state["orig_height"],
@@ -2191,12 +2079,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         )
 
     def fetch_and_process_single_frame_results(self, inference_state, frame_idx):
-        """Fetch and process single frame results.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-        """
         tracker_metadata = inference_state["tracker_metadata"]
         obj_id_to_mask = inference_state["cached_frame_outputs"][frame_idx]
         # post processing - remove suppressed obj_ids
@@ -2223,18 +2105,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         is_instance_processing=False,
         is_last_batch: bool = False,
     ):
-        """Propagate in video.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-            max_frame_num_to_track: The max frame num to track.
-            reverse: The reverse.
-            output_prob_thresh: The output prob thresh.
-            compute_stability_score: The compute stability score.
-            is_instance_processing: The is instance processing.
-            is_last_batch: The is last batch.
-        """
         # step 1: check which type of propagation to run, should be the same for all GPUs.
         propagation_type, obj_ids = self.parse_action_history_for_propagation(inference_state)
         self.add_action_history(
@@ -2402,12 +2272,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         inference_state["action_history"].append(action)
 
     def _has_object_been_refined(self, inference_state, obj_id):
-        """Helper function to has object been refined.
-
-        Args:
-            inference_state: The inference state.
-            obj_id: The obj id.
-        """
         if "action_history" not in inference_state:
             return False
         action_history = inference_state["action_history"]
@@ -2418,11 +2282,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         return False
 
     def parse_action_history_for_propagation(self, inference_state):
-        """Parse action history for propagation.
-
-        Args:
-            inference_state: The inference state.
-        """
         action_history = inference_state["action_history"]
         if len(action_history) == 1 and action_history[0]["type"] == "propagation_cancel":
             # only one action and it is cancel, we do full propagation
@@ -2559,13 +2418,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         return states
 
     def _prepare_backbone_feats(self, inference_state, frame_idx, reverse):
-        """Helper function to prepare backbone feats.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            reverse: The reverse.
-        """
         input_batch = inference_state["input_batch"]
         feature_cache = inference_state["feature_cache"]
         num_frames = inference_state["num_frames"]
@@ -2599,22 +2451,6 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         obj_id=None,
         rel_coordinates=True,
     ):
-        """Add prompt.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            text_str: The text str.
-            clear_old_points: The clear old points.
-            points: The points.
-            point_labels: The point labels.
-            boxes_xywh: The boxes xywh.
-            box_labels: The box labels.
-            clear_old_boxes: The clear old boxes.
-            output_prob_thresh: The output prob thresh.
-            obj_id: The obj id.
-            rel_coordinates: The rel coordinates.
-        """
         if points is not None:
             # SAM2 instance prompts
             assert text_str is None and boxes_xywh is None, (

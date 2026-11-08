@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> layer.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,54 +8,25 @@ GRAD_CLIP = 0.1
 
 
 class GradClip(torch.autograd.Function):
-    """Grad clip implementation."""
-
     @staticmethod
     def forward(ctx, x):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            x: The x.
-        """
         return x
 
     @staticmethod
     def backward(ctx, grad_x):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            grad_x: The grad x.
-        """
         grad_x = torch.where(torch.isnan(grad_x), torch.zeros_like(grad_x), grad_x)
         return grad_x.clamp(min=-0.01, max=0.01)
 
 
 class GradientClip(nn.Module):
-    """Gradient clip implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return GradClip.apply(x)
 
 
 def _make_divisible(v, divisor, min_value=None):
-    """Helper function to make divisible.
-
-    Args:
-        v: The v.
-        divisor: The divisor.
-        min_value: The min value.
-    """
     if min_value is None:
         min_value = divisor
     new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
@@ -80,13 +49,6 @@ class ConvNextBlock(nn.Module):
     """
 
     def __init__(self, dim, output_dim, layer_scale_init_value=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            output_dim: The output dim.
-            layer_scale_init_value: The layer scale init value.
-        """
         super().__init__()
         self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim)  # depthwise conv
         self.norm = LayerNorm(dim, eps=1e-6)
@@ -101,11 +63,6 @@ class ConvNextBlock(nn.Module):
         self.final = nn.Conv2d(dim, output_dim, kernel_size=1, padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         input = x
         x = self.dwconv(x)
         x = x.permute(0, 2, 3, 1)  # (N, C, H, W) -> (N, H, W, C)
@@ -128,13 +85,6 @@ class LayerNorm(nn.Module):
     """
 
     def __init__(self, normalized_shape, eps=1e-6, data_format="channels_last"):
-        """Init.
-
-        Args:
-            normalized_shape: The normalized shape.
-            eps: The eps.
-            data_format: The data format.
-        """
         super().__init__()
         self.weight = nn.Parameter(torch.ones(normalized_shape))
         self.bias = nn.Parameter(torch.zeros(normalized_shape))
@@ -145,11 +95,6 @@ class LayerNorm(nn.Module):
         self.normalized_shape = (normalized_shape,)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.data_format == "channels_last":
             return F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
         elif self.data_format == "channels_first":
@@ -171,17 +116,7 @@ def conv3x3(in_planes, out_planes, stride=1):
 
 
 class BasicBlock(nn.Module):
-    """Basic block implementation."""
-
     def __init__(self, in_planes, planes, stride=1, norm_layer=nn.BatchNorm2d):
-        """Init.
-
-        Args:
-            in_planes: The in planes.
-            planes: The planes.
-            stride: The stride.
-            norm_layer: The norm layer.
-        """
         super().__init__()
 
         # self.sparse = sparse
@@ -197,11 +132,6 @@ class BasicBlock(nn.Module):
             self.downsample = nn.Sequential(conv1x1(in_planes, planes, stride=stride), self.bn3)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         y = x
         y = self.relu(self.bn1(self.conv1(y)))
         y = self.relu(self.bn2(self.conv2(y)))

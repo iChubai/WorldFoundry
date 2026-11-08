@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> blocks.py functionality."""
-
 import torch
 import torch.nn as nn
 from timm import create_model
@@ -51,20 +49,6 @@ def _make_encoder(
     use_readout="ignore",
     in_features=[96, 256, 512, 1024],
 ):
-    """Helper function to make encoder.
-
-    Args:
-        backbone: The backbone.
-        features: The features.
-        use_pretrained: The use pretrained.
-        groups: The groups.
-        expand: The expand.
-        exportable: The exportable.
-        hooks: The hooks.
-        use_vit_only: The use vit only.
-        use_readout: The use readout.
-        in_features: The in features.
-    """
     if backbone == "beitl16_512":
         pretrained = _make_pretrained_beitl16_512(use_pretrained, hooks=hooks, use_readout=use_readout)
         scratch = _make_scratch([256, 512, 1024, 1024], features, groups=groups, expand=expand)  # BEiT_512-L (backbone)
@@ -134,14 +118,6 @@ def _make_encoder(
 
 
 def _make_scratch(in_shape, out_shape, groups=1, expand=False):
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-    """
     scratch = nn.Module()
 
     out_shape1 = out_shape
@@ -175,12 +151,6 @@ def _make_scratch(in_shape, out_shape, groups=1, expand=False):
 
 
 def _make_pretrained_efficientnet_lite3(use_pretrained, exportable=False):
-    """Helper function to make pretrained efficientnet lite3.
-
-    Args:
-        use_pretrained: The use pretrained.
-        exportable: The exportable.
-    """
     efficientnet = create_model(
         "tf_efficientnet_lite3",
         pretrained=use_pretrained,
@@ -190,11 +160,6 @@ def _make_pretrained_efficientnet_lite3(use_pretrained, exportable=False):
 
 
 def _make_efficientnet_backbone(effnet):
-    """Helper function to make efficientnet backbone.
-
-    Args:
-        effnet: The effnet.
-    """
     pretrained = nn.Module()
 
     # Modern timm folds the stem activation into ``bn1``. Keep an identity
@@ -209,11 +174,6 @@ def _make_efficientnet_backbone(effnet):
 
 
 def _make_resnet_backbone(resnet):
-    """Helper function to make resnet backbone.
-
-    Args:
-        resnet: The resnet.
-    """
     pretrained = nn.Module()
     pretrained.layer1 = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool, resnet.layer1)
 
@@ -225,11 +185,6 @@ def _make_resnet_backbone(resnet):
 
 
 def _make_pretrained_resnext101_wsl(use_pretrained):
-    """Helper function to make pretrained resnext101 wsl.
-
-    Args:
-        use_pretrained: The use pretrained.
-    """
     resnet = torch.hub.load("facebookresearch/WSL-Images", "resnext101_32x8d_wsl")
     return _make_resnet_backbone(resnet)
 
@@ -238,8 +193,7 @@ class Interpolate(nn.Module):
     """Interpolation module."""
 
     def __init__(self, scale_factor, mode, align_corners=False):
-        """Init.
-
+        """
         Args:
             scale_factor (float): scaling
             mode (str): interpolation mode
@@ -252,8 +206,7 @@ class Interpolate(nn.Module):
         self.align_corners = align_corners
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -270,8 +223,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -284,8 +236,7 @@ class ResidualConvUnit(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -301,11 +252,8 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(self, features):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -315,8 +263,7 @@ class FeatureFusionBlock(nn.Module):
         self.resConfUnit2 = ResidualConvUnit(features)
 
     def forward(self, *xs):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """
@@ -336,8 +283,7 @@ class ResidualConvUnit_custom(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -360,8 +306,7 @@ class ResidualConvUnit_custom(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -391,8 +336,7 @@ class FeatureFusionBlock_custom(nn.Module):
     """Feature fusion block."""
 
     def __init__(self, features, activation, deconv=False, bn=False, expand=False, align_corners=True, size=None):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -418,8 +362,7 @@ class FeatureFusionBlock_custom(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """

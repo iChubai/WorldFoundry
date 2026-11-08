@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> generate_video_tool -> pano_video_generation.py functionality."""
-
 import os
 import sys
 
@@ -15,13 +13,6 @@ from tqdm import tqdm
 
 
 def generate_video(image_paths, out_dir, gen_video=True):
-    """Generate video.
-
-    Args:
-        image_paths: The image paths.
-        out_dir: The out dir.
-        gen_video: The gen video.
-    """
     pers = [cv2.imread(image_path) for image_path in image_paths]
 
     ee = m_P2E.Perspective(

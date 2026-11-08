@@ -86,7 +86,6 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
         """
 
     def _update_label_text(self, results: dict) -> dict:
-        """Update label text."""
         if "texts" not in results:
             return results
 

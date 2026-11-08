@@ -36,7 +36,6 @@ def window_partition(x, window_size):
     """
     Args:
         x: (B, H, W, C)
-        window_size (int): window size
 
     Returns:
         windows: (num_windows*B, window_size, window_size, C)
@@ -51,7 +50,6 @@ def window_reverse(windows, window_size, H, W):
     """
     Args:
         windows: (num_windows*B, window_size, window_size, C)
-        window_size (int): Window size
         H (int): Height of image
         W (int): Width of image
 
@@ -164,13 +162,11 @@ class WindowAttention(nn.Module):
 
 
 class SwinTransformerBlock(nn.Module):
-    r"""Swin Transformer Block.
-
+    r"""
     Args:
         dim (int): Number of input channels.
         input_resolution (tuple[int]): Input resulotion.
         num_heads (int): Number of attention heads.
-        window_size (int): Window size.
         shift_size (int): Shift size for SW-MSA.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
@@ -370,7 +366,6 @@ class BasicLayer(nn.Module):
 
     Args:
         dim (int): Number of input channels.
-        input_resolution (tuple[int]): Input resolution.
         depth (int): Number of blocks.
         num_heads (int): Number of attention heads.
         window_size (int): Local window size.

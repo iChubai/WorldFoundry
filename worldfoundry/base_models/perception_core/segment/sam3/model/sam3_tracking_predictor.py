@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_tracking_predictor.py functionality."""
-
 import logging
 from collections import OrderedDict
 
@@ -50,16 +48,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
         # checkpoint_file=None,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            clear_non_cond_mem_around_input: The clear non cond mem around input.
-            clear_non_cond_mem_for_multi_obj: The clear non cond mem for multi obj.
-            fill_hole_area: The fill hole area.
-            always_start_from_first_ann_frame: The always start from first ann frame.
-            max_point_num_in_prompt_enc: The max point num in prompt enc.
-            non_overlap_masks_for_output: The non overlap masks for output.
-        """
         super().__init__(**kwargs)
         self.clear_non_cond_mem_around_input = clear_non_cond_mem_around_input
         self.clear_non_cond_mem_for_multi_obj = clear_non_cond_mem_for_multi_obj
@@ -745,14 +733,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
             inference_state["first_ann_frame_idx"] = min(output_dict["cond_frame_outputs"], default=None)
 
     def _get_processing_order(self, inference_state, start_frame_idx, max_frame_num_to_track, reverse):
-        """Helper function to get processing order.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-            max_frame_num_to_track: The max frame num to track.
-            reverse: The reverse.
-        """
         num_frames = inference_state["num_frames"]
         # set start index, end index, and processing order
         if self.always_start_from_first_ann_frame:
@@ -1198,11 +1178,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
         # (note that "consolidated_frame_inds" doesn't need to be updated in this step as
         # it's already handled in Step 0)
         def _map_keys(container):
-            """Helper function to map keys.
-
-            Args:
-                container: The container.
-            """
             new_kvs = []
             for k in old_obj_inds:
                 v = container.pop(k)
@@ -1217,12 +1192,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
 
         # Step 3: For packed tensor storage, we index the remaining ids and rebuild the per-object slices.
         def _slice_state(output_dict, storage_key):
-            """Helper function to slice state.
-
-            Args:
-                output_dict: The output dict.
-                storage_key: The storage key.
-            """
             for frame_idx, out in output_dict[storage_key].items():
                 out["maskmem_features"] = out["maskmem_features"][remain_old_obj_inds]
                 out["maskmem_pos_enc"] = [x[remain_old_obj_inds] for x in out["maskmem_pos_enc"]]
@@ -1285,13 +1254,6 @@ class Sam3TrackerPredictor(Sam3TrackerBase):
                 non_cond_frame_outputs.pop(t, None)
 
     def _suppress_shrinked_masks(self, pred_masks, new_pred_masks, shrink_threshold=0.3):
-        """Helper function to suppress shrinked masks.
-
-        Args:
-            pred_masks: The pred masks.
-            new_pred_masks: The new pred masks.
-            shrink_threshold: The shrink threshold.
-        """
         area_before = (pred_masks > 0).sum(dim=(-1, -2))
         area_after = (new_pred_masks > 0).sum(dim=(-1, -2))
         area_before = torch.clamp(area_before, min=1.0)

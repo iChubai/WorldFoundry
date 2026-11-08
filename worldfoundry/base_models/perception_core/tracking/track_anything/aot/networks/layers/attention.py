@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> networks -> layers -> attention.py functionality."""
-
 import math
 
 import torch
@@ -19,11 +17,6 @@ _SPATIAL_CORR_EXT_AVAILABLE: bool | None = None
 
 
 def _has_spatial_correlation_ext() -> bool:
-    """Helper function to has spatial correlation ext.
-
-    Returns:
-        The return value.
-    """
     global _SPATIAL_CORR_EXT_AVAILABLE
     if _SPATIAL_CORR_EXT_AVAILABLE is None:
         try:
@@ -36,13 +29,6 @@ def _has_spatial_correlation_ext() -> bool:
 
 
 def multiply_by_ychunks(x, y, chunks=1):
-    """Multiply by ychunks.
-
-    Args:
-        x: The x.
-        y: The y.
-        chunks: The chunks.
-    """
     if chunks <= 1:
         return x @ y
     else:
@@ -50,13 +36,6 @@ def multiply_by_ychunks(x, y, chunks=1):
 
 
 def multiply_by_xchunks(x, y, chunks=1):
-    """Multiply by xchunks.
-
-    Args:
-        x: The x.
-        y: The y.
-        chunks: The chunks.
-    """
     if chunks <= 1:
         return x @ y
     else:
@@ -65,8 +44,6 @@ def multiply_by_xchunks(x, y, chunks=1):
 
 # Long-term attention
 class MultiheadAttention(nn.Module):
-    """Multihead attention implementation."""
-
     def __init__(
         self,
         d_model,
@@ -79,19 +56,6 @@ class MultiheadAttention(nn.Module):
         max_mem_len_ratio=-1,
         top_k=-1,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_head: The num head.
-            dropout: The dropout.
-            use_linear: The use linear.
-            d_att: The d att.
-            use_dis: The use dis.
-            qk_chunks: The qk chunks.
-            max_mem_len_ratio: The max mem len ratio.
-            top_k: The top k.
-        """
         super().__init__()
         self.d_model = d_model
         self.num_head = num_head
@@ -173,7 +137,6 @@ class MultiheadAttention(nn.Module):
         return outputs, attn
 
     def _init_weight(self):
-        """Helper function to init weight."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
@@ -193,17 +156,6 @@ class MultiheadLocalAttentionV1(nn.Module):
         use_linear=True,
         enable_corr=True,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_head: The num head.
-            dropout: The dropout.
-            max_dis: The max dis.
-            dilation: The dilation.
-            use_linear: The use linear.
-            enable_corr: The enable corr.
-        """
         super().__init__()
         self.dilation = dilation
         self.window_size = 2 * max_dis + 1
@@ -251,13 +203,6 @@ class MultiheadLocalAttentionV1(nn.Module):
         self.drop_prob = dropout
 
     def forward(self, q, k, v):
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-        """
         n, c, h, w = v.size()
 
         if self.use_linear:
@@ -315,11 +260,6 @@ class MultiheadLocalAttentionV1(nn.Module):
         return output, local_attn
 
     def pad_and_unfold(self, x):
-        """Pad and unfold.
-
-        Args:
-            x: The x.
-        """
         pad_pixel = self.max_dis * self.dilation
         x = F.pad(x, (pad_pixel, pad_pixel, pad_pixel, pad_pixel), mode="constant", value=0)
         x = F.unfold(
@@ -346,19 +286,6 @@ class MultiheadLocalAttentionV2(nn.Module):
         d_att=None,
         use_dis=False,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_head: The num head.
-            dropout: The dropout.
-            max_dis: The max dis.
-            dilation: The dilation.
-            use_linear: The use linear.
-            enable_corr: The enable corr.
-            d_att: The d att.
-            use_dis: The use dis.
-        """
         super().__init__()
         self.dilation = dilation
         self.window_size = 2 * max_dis + 1
@@ -414,13 +341,6 @@ class MultiheadLocalAttentionV2(nn.Module):
         self.qk_mask = None
 
     def forward(self, q, k, v):
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-        """
         n, c, h, w = v.size()
 
         if self.use_linear:
@@ -487,13 +407,6 @@ class MultiheadLocalAttentionV2(nn.Module):
         return output, local_attn
 
     def local2global(self, local_attn, height, width):
-        """Local2global.
-
-        Args:
-            local_attn: The local attn.
-            height: The height.
-            width: The width.
-        """
         batch_size = local_attn.size()[0]
 
         pad_height = height + 2 * self.max_dis
@@ -534,11 +447,6 @@ class MultiheadLocalAttentionV2(nn.Module):
         return global_attn
 
     def pad_and_unfold(self, x):
-        """Pad and unfold.
-
-        Args:
-            x: The x.
-        """
         pad_pixel = self.max_dis * self.dilation
         x = F.pad(x, (pad_pixel, pad_pixel, pad_pixel, pad_pixel), mode="constant", value=0)
         x = F.unfold(
@@ -554,16 +462,6 @@ class MultiheadLocalAttentionV3(nn.Module):
     """Multihead local attention implementation."""
 
     def __init__(self, d_model, num_head, dropout=0.0, max_dis=7, dilation=1, use_linear=True):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_head: The num head.
-            dropout: The dropout.
-            max_dis: The max dis.
-            dilation: The dilation.
-            use_linear: The use linear.
-        """
         super().__init__()
         self.dilation = dilation
         self.window_size = 2 * max_dis + 1
@@ -602,13 +500,6 @@ class MultiheadLocalAttentionV3(nn.Module):
         self.qk_mask = None
 
     def forward(self, q, k, v):
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-        """
         n, c, h, w = q.size()
 
         if self.use_linear:
@@ -671,13 +562,6 @@ class MultiheadLocalAttentionV3(nn.Module):
         return output, local_attn
 
     def compute_mask(self, height, width, device=None):
-        """Compute mask.
-
-        Args:
-            height: The height.
-            width: The width.
-            device: The device.
-        """
         pad_height = height + 2 * self.max_dis
         pad_width = width + 2 * self.max_dis
 
@@ -720,28 +604,15 @@ class MultiheadLocalAttentionV3(nn.Module):
 
 
 def linear_gate(x, dim=-1):
-    """Linear gate.
-
-    Args:
-        x: The x.
-        dim: The dim.
-    """
     # return F.relu_(x).pow(2.) / x.size()[dim]
     return torch.softmax(x, dim=dim)
 
 
 def silu(x):
-    """Silu.
-
-    Args:
-        x: The x.
-    """
     return x * torch.sigmoid(x)
 
 
 class GatedPropagation(nn.Module):
-    """Gated propagation implementation."""
-
     def __init__(
         self,
         d_qk,
@@ -756,21 +627,6 @@ class GatedPropagation(nn.Module):
         top_k=-1,
         expand_ratio=2.0,
     ):
-        """Init.
-
-        Args:
-            d_qk: The d qk.
-            d_vu: The d vu.
-            num_head: The num head.
-            dropout: The dropout.
-            use_linear: The use linear.
-            d_att: The d att.
-            use_dis: The use dis.
-            qk_chunks: The qk chunks.
-            max_mem_len_ratio: The max mem len ratio.
-            top_k: The top k.
-            expand_ratio: The expand ratio.
-        """
         super().__init__()
         expand_ratio = expand_ratio
         self.expand_d_vu = int(d_vu * expand_ratio)
@@ -820,12 +676,6 @@ class GatedPropagation(nn.Module):
             Q = K = self.linear_QK(Q)
 
             def cat(X1, X2):
-                """Cat.
-
-                Args:
-                    X1: The x1.
-                    X2: The x2.
-                """
                 if num_head > 1:
                     X1 = X1.view(-1, bs, num_head, hidden_dim // 2)
                     X2 = X2.view(-1, bs, num_head, hidden_dim // 2)
@@ -886,15 +736,12 @@ class GatedPropagation(nn.Module):
         return outputs, attn
 
     def _init_weight(self):
-        """Helper function to init weight."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
 
 class LocalGatedPropagation(nn.Module):
-    """Local gated propagation implementation."""
-
     def __init__(
         self,
         d_qk,
@@ -909,21 +756,6 @@ class LocalGatedPropagation(nn.Module):
         use_dis=False,
         expand_ratio=2.0,
     ):
-        """Init.
-
-        Args:
-            d_qk: The d qk.
-            d_vu: The d vu.
-            num_head: The num head.
-            dropout: The dropout.
-            max_dis: The max dis.
-            dilation: The dilation.
-            use_linear: The use linear.
-            enable_corr: The enable corr.
-            d_att: The d att.
-            use_dis: The use dis.
-            expand_ratio: The expand ratio.
-        """
         super().__init__()
         expand_ratio = expand_ratio
         self.expand_d_vu = int(d_vu * expand_ratio)
@@ -976,15 +808,6 @@ class LocalGatedPropagation(nn.Module):
         self.qk_mask = None
 
     def forward(self, q, k, v, u, size_2d):
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            u: The u.
-            size_2d: The size 2d.
-        """
         n, c, h, w = v.size()
         hidden_dim = self.hidden_dim
 
@@ -1054,13 +877,6 @@ class LocalGatedPropagation(nn.Module):
         return output, local_attn
 
     def local2global(self, local_attn, height, width):
-        """Local2global.
-
-        Args:
-            local_attn: The local attn.
-            height: The height.
-            width: The width.
-        """
         batch_size = local_attn.size()[0]
 
         pad_height = height + 2 * self.max_dis
@@ -1103,11 +919,6 @@ class LocalGatedPropagation(nn.Module):
         return global_attn
 
     def pad_and_unfold(self, x):
-        """Pad and unfold.
-
-        Args:
-            x: The x.
-        """
         pad_pixel = self.max_dis * self.dilation
         x = F.pad(x, (pad_pixel, pad_pixel, pad_pixel, pad_pixel), mode="constant", value=0)
         x = F.unfold(

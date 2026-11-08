@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> trajectories.py functionality."""
-
 import numpy as np
 import roma
 import torch
@@ -9,11 +7,6 @@ from .transforms import rt_to_mat4
 
 
 def get_avg_w2c(w2cs: torch.Tensor):
-    """Get avg w2c.
-
-    Args:
-        w2cs: The w2cs.
-    """
     c2ws = torch.linalg.inv(w2cs)
     # 1. Compute the center
     center = c2ws[:, :3, -1].mean(0)
@@ -79,33 +72,11 @@ def get_complex_w2cs(
     num_frames: int,
     **_,
 ) -> torch.Tensor:
-    """Get complex w2cs.
-
-    Args:
-        ref_w2c: The ref w2c.
-        lookat: The lookat.
-        up: The up.
-        num_frames: The num frames.
-
-    Returns:
-        The return value.
-    """
-
     def linear_interpolate_camera(
         cam1: torch.Tensor,
         cam2: torch.Tensor,
         nframes: int,
     ) -> torch.Tensor:
-        """Linear interpolate camera.
-
-        Args:
-            cam1: The cam1.
-            cam2: The cam2.
-            nframes: The nframes.
-
-        Returns:
-            The return value.
-        """
         out_pos = []
         for i in range(nframes):
             interp_pos = cam1 * (nframes - i) / nframes + cam2 * (i / nframes)
@@ -162,18 +133,6 @@ def get_arc_w2cs(
     degree: float,
     **_,
 ) -> torch.Tensor:
-    """Get arc w2cs.
-
-    Args:
-        ref_w2c: The ref w2c.
-        lookat: The lookat.
-        up: The up.
-        num_frames: The num frames.
-        degree: The degree.
-
-    Returns:
-        The return value.
-    """
     ref_position = torch.linalg.inv(ref_w2c)[:3, 3]
     thetas = (
         torch.sin(torch.linspace(0.0, torch.pi * 2.0, num_frames + 1, device=ref_w2c.device)[:-1])
@@ -199,18 +158,6 @@ def get_lemniscate_w2cs(
     degree: float,
     **_,
 ) -> torch.Tensor:
-    """Get lemniscate w2cs.
-
-    Args:
-        ref_w2c: The ref w2c.
-        lookat: The lookat.
-        up: The up.
-        num_frames: The num frames.
-        degree: The degree.
-
-    Returns:
-        The return value.
-    """
     ref_c2w = torch.linalg.inv(ref_w2c)
     a = torch.linalg.norm(ref_c2w[:3, 3] - lookat) * np.tan(degree / 360 * np.pi)
     # Lemniscate curve in camera space. Starting at the origin.
@@ -238,20 +185,6 @@ def get_spiral_w2cs(
     rots: int,
     **_,
 ) -> torch.Tensor:
-    """Get spiral w2cs.
-
-    Args:
-        ref_w2c: The ref w2c.
-        lookat: The lookat.
-        up: The up.
-        num_frames: The num frames.
-        rads: The rads.
-        zrate: The zrate.
-        rots: The rots.
-
-    Returns:
-        The return value.
-    """
     ref_c2w = torch.linalg.inv(ref_w2c)
     thetas = torch.linspace(0, 2 * torch.pi * rots, num_frames + 1, device=ref_w2c.device)[:-1]
     # Spiral curve in camera space. Starting at the origin.
@@ -275,13 +208,6 @@ def get_spiral_w2cs(
 
 
 def get_wander_w2cs(ref_w2c, focal_length, num_frames, **_):
-    """Get wander w2cs.
-
-    Args:
-        ref_w2c: The ref w2c.
-        focal_length: The focal length.
-        num_frames: The num frames.
-    """
     device = ref_w2c.device
     c2w = np.linalg.inv(ref_w2c.detach().cpu().numpy())
     max_disp = 48.0

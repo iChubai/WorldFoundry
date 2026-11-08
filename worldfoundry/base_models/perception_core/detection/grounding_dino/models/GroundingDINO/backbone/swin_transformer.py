@@ -11,8 +11,6 @@
 # modified from https://github.com/SwinTransformer/Swin-Transformer-Object-Detection/blob/master/mmdet/models/backbones/swin_transformer.py
 # --------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> backbone -> swin_transformer.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -27,15 +25,6 @@ class Mlp(nn.Module):
     """Multilayer perceptron."""
 
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -45,11 +34,6 @@ class Mlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
@@ -62,7 +46,6 @@ def window_partition(x, window_size):
     """
     Args:
         x: (B, H, W, C)
-        window_size (int): window size
     Returns:
         windows: (num_windows*B, window_size, window_size, C)
     """
@@ -76,7 +59,6 @@ def window_reverse(windows, window_size, H, W):
     """
     Args:
         windows: (num_windows*B, window_size, window_size, C)
-        window_size (int): Window size
         H (int): Height of image
         W (int): Width of image
     Returns:
@@ -111,18 +93,6 @@ class WindowAttention(nn.Module):
         attn_drop=0.0,
         proj_drop=0.0,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            window_size: The window size.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-        """
-
         super().__init__()
         self.dim = dim
         self.window_size = window_size  # Wh, Ww
@@ -157,7 +127,7 @@ class WindowAttention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x, mask=None):
-        """Forward function.
+        """
         Args:
             x: input features with shape of (num_windows*B, N, C)
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
@@ -192,11 +162,10 @@ class WindowAttention(nn.Module):
 
 
 class SwinTransformerBlock(nn.Module):
-    """Swin Transformer Block.
+    """
     Args:
         dim (int): Number of input channels.
         num_heads (int): Number of attention heads.
-        window_size (int): Window size.
         shift_size (int): Shift size for SW-MSA.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
@@ -223,22 +192,6 @@ class SwinTransformerBlock(nn.Module):
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            shift_size: The shift size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop: The drop.
-            attn_drop: The attn drop.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-        """
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
@@ -267,7 +220,7 @@ class SwinTransformerBlock(nn.Module):
         self.W = None
 
     def forward(self, x, mask_matrix):
-        """Forward function.
+        """
         Args:
             x: Input feature, tensor size (B, H*W, C).
             H, W: Spatial resolution of the input feature.
@@ -333,19 +286,13 @@ class PatchMerging(nn.Module):
     """
 
     def __init__(self, dim, norm_layer=nn.LayerNorm):
-        """Init.
-
-        Args:
-            dim: The dim.
-            norm_layer: The norm layer.
-        """
         super().__init__()
         self.dim = dim
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
 
     def forward(self, x, H, W):
-        """Forward function.
+        """
         Args:
             x: Input feature, tensor size (B, H*W, C).
             H, W: Spatial resolution of the input feature.
@@ -407,23 +354,6 @@ class BasicLayer(nn.Module):
         downsample=None,
         use_checkpoint=False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            depth: The depth.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop: The drop.
-            attn_drop: The attn drop.
-            drop_path: The drop path.
-            norm_layer: The norm layer.
-            downsample: The downsample.
-            use_checkpoint: The use checkpoint.
-        """
         super().__init__()
         self.window_size = window_size
         self.shift_size = window_size // 2
@@ -457,7 +387,7 @@ class BasicLayer(nn.Module):
             self.downsample = None
 
     def forward(self, x, H, W):
-        """Forward function.
+        """
         Args:
             x: Input feature, tensor size (B, H*W, C).
             H, W: Spatial resolution of the input feature.
@@ -509,14 +439,6 @@ class PatchEmbed(nn.Module):
     """
 
     def __init__(self, patch_size=4, in_chans=3, embed_dim=96, norm_layer=None):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            norm_layer: The norm layer.
-        """
         super().__init__()
         patch_size = to_2tuple(patch_size)
         self.patch_size = patch_size
@@ -531,7 +453,6 @@ class PatchEmbed(nn.Module):
             self.norm = None
 
     def forward(self, x):
-        """Forward function."""
         # padding
         _, _, H, W = x.size()
         if W % self.patch_size[1] != 0:
@@ -601,30 +522,6 @@ class SwinTransformer(nn.Module):
         dilation=False,
         use_checkpoint=False,
     ):
-        """Init.
-
-        Args:
-            pretrain_img_size: The pretrain img size.
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            depths: The depths.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop_rate: The drop rate.
-            attn_drop_rate: The attn drop rate.
-            drop_path_rate: The drop path rate.
-            norm_layer: The norm layer.
-            ape: The ape.
-            patch_norm: The patch norm.
-            out_indices: The out indices.
-            frozen_stages: The frozen stages.
-            dilation: The dilation.
-            use_checkpoint: The use checkpoint.
-        """
         super().__init__()
 
         self.pretrain_img_size = pretrain_img_size
@@ -707,7 +604,6 @@ class SwinTransformer(nn.Module):
         self._freeze_stages()
 
     def _freeze_stages(self):
-        """Helper function to freeze stages."""
         if self.frozen_stages >= 0:
             self.patch_embed.eval()
             for param in self.patch_embed.parameters():
@@ -782,11 +678,6 @@ class SwinTransformer(nn.Module):
         return tuple(outs)
 
     def forward(self, tensor_list: NestedTensor):
-        """Forward.
-
-        Args:
-            tensor_list: The tensor list.
-        """
         x = tensor_list.tensors
 
         """Forward function."""
@@ -835,12 +726,6 @@ class SwinTransformer(nn.Module):
 
 
 def build_swin_transformer(modelname, pretrain_img_size, **kw):
-    """Build swin transformer.
-
-    Args:
-        modelname: The modelname.
-        pretrain_img_size: The pretrain img size.
-    """
     assert modelname in [
         "swin_T_224_1k",
         "swin_B_224_22k",

@@ -14,59 +14,36 @@ MyTensor = Union[torch.Tensor, list[Any]]
 
 
 class NestedTensor:
-    """Nested tensor implementation."""
-
     def __init__(self, tensors, mask):
-        """Init.
-
-        Args:
-            tensors: The tensors.
-            mask: The mask.
-        """
         self.tensors = tensors
         self.mask = mask
 
     def to(self, *args, **kwargs):
-        """To."""
         cast_tensor = self.tensors.to(*args, **kwargs)
         cast_mask = self.mask.to(*args, **kwargs) if self.mask is not None else None
         return type(self)(cast_tensor, cast_mask)
 
     def clone(self):
-        """Clone."""
         new_tensors = self.tensors.clone()
         new_mask = None if self.mask is None else self.mask.clone()
         return NestedTensor(new_tensors, new_mask)
 
     def __getitem__(self, idx):
-        """Getitem.
-
-        Args:
-            idx: The idx.
-        """
         return self.tensors[idx]
 
     def __len__(self):
-        """Len."""
         return len(self.tensors)
 
     @property
     def device(self):
-        """Device."""
         return self.tensors.device
 
     @property
     def shape(self):
-        """Shape."""
         return self.tensors.shape
 
     # custom memory pinning method on custom type
     def pin_memory(self, device=None):
-        """Pin memory.
-
-        Args:
-            device: The device.
-        """
         self.tensors = self.tensors.pin_memory(device)
         if self.mask is not None:
             self.mask = self.mask.pin_memory(device)
@@ -105,8 +82,6 @@ def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corne
 
 @dataclass
 class BatchedPointer:
-    """Batched pointer implementation."""
-
     stage_ids: MyTensor
     stage_ids__type = torch.long
     query_ids: MyTensor
@@ -121,8 +96,6 @@ class BatchedPointer:
 
 @dataclass
 class FindStage:
-    """Find stage implementation."""
-
     img_ids: MyTensor
     img_ids__type = torch.long
     text_ids: MyTensor
@@ -156,8 +129,6 @@ class FindStage:
 
 @dataclass
 class BatchedFindTarget:
-    """Batched find target implementation."""
-
     # The number of boxes in each find query
     num_boxes: MyTensor
     num_boxes__type = torch.long
@@ -233,8 +204,6 @@ class BatchedInferenceMetadata:
 
 @dataclass
 class BatchedDatapoint:
-    """Batched datapoint implementation."""
-
     img_batch: torch.Tensor
     find_text_batch: list[str]
     find_inputs: list[FindStage]
@@ -245,21 +214,7 @@ class BatchedDatapoint:
 
 
 def convert_my_tensors(obj):
-    """Convert my tensors.
-
-    Args:
-        obj: The obj.
-    """
-
     def is_optional_field(field) -> bool:
-        """Is optional field.
-
-        Args:
-            field: The field.
-
-        Returns:
-            The return value.
-        """
         return get_origin(field) is Union and type(None) in get_args(field)
 
     for field in fields(obj):

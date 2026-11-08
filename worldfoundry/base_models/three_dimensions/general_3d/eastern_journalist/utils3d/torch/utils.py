@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> utils.py functionality."""
-
 from itertools import chain
 from numbers import Integral, Number
 from typing import *

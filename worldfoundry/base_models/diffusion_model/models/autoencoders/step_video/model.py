@@ -24,14 +24,6 @@ from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistributi
 
 
 def base_group_norm(x, norm_layer, act_silu=False, channel_last=False):
-    """Base group norm.
-
-    Args:
-        x: The x.
-        norm_layer: The norm layer.
-        act_silu: The act silu.
-        channel_last: The channel last.
-    """
     if hasattr(base_group_norm, "spatial") and base_group_norm.spatial:
         assert channel_last == True
         x_shape = x.shape
@@ -63,14 +55,6 @@ def base_group_norm(x, norm_layer, act_silu=False, channel_last=False):
 
 
 def base_conv2d(x, conv_layer, channel_last=False, residual=None):
-    """Base conv2d.
-
-    Args:
-        x: The x.
-        conv_layer: The conv layer.
-        channel_last: The channel last.
-        residual: The residual.
-    """
     if channel_last:
         x = x.permute(0, 3, 1, 2)  # NHWC to NCHW
     out = F.conv2d(x, conv_layer.weight, conv_layer.bias, stride=conv_layer.stride, padding=conv_layer.padding)
@@ -84,15 +68,6 @@ def base_conv2d(x, conv_layer, channel_last=False, residual=None):
 
 
 def base_conv3d(x, conv_layer, channel_last=False, residual=None, only_return_output=False):
-    """Base conv3d.
-
-    Args:
-        x: The x.
-        conv_layer: The conv layer.
-        channel_last: The channel last.
-        residual: The residual.
-        only_return_output: The only return output.
-    """
     if only_return_output:
         size = cal_outsize(x.shape, conv_layer.weight.shape, conv_layer.stride, conv_layer.padding)
         return torch.empty(size, device=x.device, dtype=x.dtype)
@@ -109,14 +84,6 @@ def base_conv3d(x, conv_layer, channel_last=False, residual=None, only_return_ou
 
 
 def cal_outsize(input_sizes, kernel_sizes, stride, padding):
-    """Cal outsize.
-
-    Args:
-        input_sizes: The input sizes.
-        kernel_sizes: The kernel sizes.
-        stride: The stride.
-        padding: The padding.
-    """
     stride_d, stride_h, stride_w = stride
     padding_d, padding_h, padding_w = padding
     dilation_d, dilation_h, dilation_w = 1, 1, 1
@@ -139,26 +106,10 @@ def cal_outsize(input_sizes, kernel_sizes, stride, padding):
 
 
 def calc_out_(in_size, padding, dilation, kernel, stride):
-    """Calc out.
-
-    Args:
-        in_size: The in size.
-        padding: The padding.
-        dilation: The dilation.
-        kernel: The kernel.
-        stride: The stride.
-    """
     return (in_size + 2 * padding - dilation * (kernel - 1) - 1) // stride + 1
 
 
 def base_conv3d_channel_last(x, conv_layer, residual=None):
-    """Base conv3d channel last.
-
-    Args:
-        x: The x.
-        conv_layer: The conv layer.
-        residual: The residual.
-    """
     in_numel = x.numel()
     out_numel = int(x.numel() * conv_layer.out_channels / conv_layer.in_channels)
     if (in_numel >= 2**30) or (out_numel >= 2**30):
@@ -200,14 +151,6 @@ class Upsample2D(nn.Module):
     """Upsample d implementation."""
 
     def __init__(self, channels, use_conv=False, use_conv_transpose=False, out_channels=None):
-        """Init.
-
-        Args:
-            channels: The channels.
-            use_conv: The use conv.
-            use_conv_transpose: The use conv transpose.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -221,12 +164,6 @@ class Upsample2D(nn.Module):
             self.conv = nn.ConvTranspose2d(channels, self.out_channels, 4, 2, 1)
 
     def forward(self, x, output_size=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            output_size: The output size.
-        """
         assert x.shape[-1] == self.channels
 
         if self.use_conv_transpose:
@@ -258,14 +195,6 @@ class Downsample2D(nn.Module):
     """Downsample d implementation."""
 
     def __init__(self, channels, use_conv=False, out_channels=None, padding=1):
-        """Init.
-
-        Args:
-            channels: The channels.
-            use_conv: The use conv.
-            out_channels: The out channels.
-            padding: The padding.
-        """
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -280,11 +209,6 @@ class Downsample2D(nn.Module):
             self.conv = nn.AvgPool2d(kernel_size=stride, stride=stride)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         assert x.shape[-1] == self.channels
         if self.use_conv and self.padding == 0:
             pad = (0, 0, 0, 1, 0, 1)
@@ -297,16 +221,7 @@ class Downsample2D(nn.Module):
 
 
 class CausalConv(nn.Module):
-    """Causal conv implementation."""
-
     def __init__(self, chan_in, chan_out, kernel_size, **kwargs):
-        """Init.
-
-        Args:
-            chan_in: The chan in.
-            chan_out: The chan out.
-            kernel_size: The kernel size.
-        """
         super().__init__()
 
         if isinstance(kernel_size, int):
@@ -327,13 +242,6 @@ class CausalConv(nn.Module):
         self.is_first_run = True
 
     def forward(self, x, is_init=True, residual=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-            residual: The residual.
-        """
         x = nn.functional.pad(x, self.time_causal_padding if is_init else self.time_uncausal_padding)
 
         x = self.conv(x)
@@ -351,13 +259,6 @@ class ChannelDuplicatingPixelUnshuffleUpSampleLayer3D(nn.Module):
         out_channels: int,
         factor: int,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            factor: The factor.
-        """
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -366,15 +267,6 @@ class ChannelDuplicatingPixelUnshuffleUpSampleLayer3D(nn.Module):
         self.repeats = out_channels * factor**3 // in_channels
 
     def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-
-        Returns:
-            The return value.
-        """
         x = x.repeat_interleave(self.repeats, dim=1)
         x = x.view(x.size(0), self.out_channels, self.factor, self.factor, self.factor, x.size(2), x.size(3), x.size(4))
         x = x.permute(0, 1, 5, 2, 6, 3, 7, 4).contiguous()
@@ -395,44 +287,18 @@ class ConvPixelShuffleUpSampleLayer3D(nn.Module):
         kernel_size: int,
         factor: int,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-            factor: The factor.
-        """
         super().__init__()
         self.factor = factor
         out_ratio = factor**3
         self.conv = CausalConv(in_channels, out_channels * out_ratio, kernel_size=kernel_size)
 
     def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-
-        Returns:
-            The return value.
-        """
         x = self.conv(x, is_init)
         x = self.pixel_shuffle_3d(x, self.factor)
         return x
 
     @staticmethod
     def pixel_shuffle_3d(x: torch.Tensor, factor: int) -> torch.Tensor:
-        """Pixel shuffle 3d.
-
-        Args:
-            x: The x.
-            factor: The factor.
-
-        Returns:
-            The return value.
-        """
         batch_size, channels, depth, height, width = x.size()
         new_channels = channels // (factor**3)
         new_depth = depth * factor
@@ -456,14 +322,6 @@ class ConvPixelUnshuffleDownSampleLayer3D(nn.Module):
         kernel_size: int,
         factor: int,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-            factor: The factor.
-        """
         super().__init__()
         self.factor = factor
         out_ratio = factor**3
@@ -471,30 +329,12 @@ class ConvPixelUnshuffleDownSampleLayer3D(nn.Module):
         self.conv = CausalConv(in_channels, out_channels // out_ratio, kernel_size=kernel_size)
 
     def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-
-        Returns:
-            The return value.
-        """
         x = self.conv(x, is_init)
         x = self.pixel_unshuffle_3d(x, self.factor)
         return x
 
     @staticmethod
     def pixel_unshuffle_3d(x: torch.Tensor, factor: int) -> torch.Tensor:
-        """Pixel unshuffle 3d.
-
-        Args:
-            x: The x.
-            factor: The factor.
-
-        Returns:
-            The return value.
-        """
         pad = (0, 0, 0, 0, factor - 1, 0)  # (left, right, top, bottom, front, back)
         x = F.pad(x, pad)
         B, C, D, H, W = x.shape
@@ -513,13 +353,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         out_channels: int,
         factor: int,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            factor: The factor.
-        """
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -528,15 +361,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         self.group_size = in_channels * factor**3 // out_channels
 
     def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-
-        Returns:
-            The return value.
-        """
         pad = (0, 0, 0, 0, self.factor - 1, 0)  # (left, right, top, bottom, front, back)
         x = F.pad(x, pad)
         B, C, D, H, W = x.shape
@@ -553,13 +377,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         out_channels: int,
         factor: int,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            factor: The factor.
-        """
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -568,15 +385,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         self.group_size = in_channels * factor**3 // out_channels
 
     def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-
-        Returns:
-            The return value.
-        """
         pad = (0, 0, 0, 0, self.factor - 1, 0)  # (left, right, top, bottom, front, back)
         x = F.pad(x, pad)
         B, C, D, H, W = x.shape
@@ -589,14 +397,6 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
 
 
 def base_group_norm_with_zero_pad(x, norm_layer, act_silu=True, pad_size=2):
-    """Base group norm with zero pad.
-
-    Args:
-        x: The x.
-        norm_layer: The norm layer.
-        act_silu: The act silu.
-        pad_size: The pad size.
-    """
     out_shape = list(x.shape)
     out_shape[1] += pad_size
     out = torch.empty(out_shape, dtype=x.dtype, device=x.device)
@@ -606,29 +406,13 @@ def base_group_norm_with_zero_pad(x, norm_layer, act_silu=True, pad_size=2):
 
 
 class CausalConvChannelLast(CausalConv):
-    """Causal conv channel last implementation."""
-
     def __init__(self, chan_in, chan_out, kernel_size, **kwargs):
-        """Init.
-
-        Args:
-            chan_in: The chan in.
-            chan_out: The chan out.
-            kernel_size: The kernel size.
-        """
         super().__init__(chan_in, chan_out, kernel_size, **kwargs)
 
         self.time_causal_padding = (0, 0) + self.time_causal_padding
         self.time_uncausal_padding = (0, 0) + self.time_uncausal_padding
 
     def forward(self, x, is_init=True, residual=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-            residual: The residual.
-        """
         if self.is_first_run:
             self.is_first_run = False
             # self.conv.weight = nn.Parameter(self.conv.weight.permute(0,2,3,4,1).contiguous())
@@ -640,16 +424,7 @@ class CausalConvChannelLast(CausalConv):
 
 
 class CausalConvAfterNorm(CausalConv):
-    """Causal conv after norm implementation."""
-
     def __init__(self, chan_in, chan_out, kernel_size, **kwargs):
-        """Init.
-
-        Args:
-            chan_in: The chan in.
-            chan_out: The chan out.
-            kernel_size: The kernel size.
-        """
         super().__init__(chan_in, chan_out, kernel_size, **kwargs)
 
         if self.time_causal_padding == (1, 1, 1, 1, 2, 0):
@@ -661,13 +436,6 @@ class CausalConvAfterNorm(CausalConv):
         self.is_first_run = True
 
     def forward(self, x, is_init=True, residual=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-            residual: The residual.
-        """
         if self.is_first_run:
             self.is_first_run = False
 
@@ -681,14 +449,7 @@ class CausalConvAfterNorm(CausalConv):
 
 
 class AttnBlock(nn.Module):
-    """Attn block implementation."""
-
     def __init__(self, in_channels):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-        """
         super().__init__()
 
         self.norm = nn.GroupNorm(num_groups=32, num_channels=in_channels)
@@ -698,12 +459,6 @@ class AttnBlock(nn.Module):
         self.proj_out = CausalConvChannelLast(in_channels, in_channels, kernel_size=1)
 
     def attention(self, x, is_init=True):
-        """Attention.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-        """
         x = base_group_norm(x, self.norm, act_silu=False, channel_last=True)
         q = self.q(x, is_init)
         k = self.k(x, is_init)
@@ -717,11 +472,6 @@ class AttnBlock(nn.Module):
         return x
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = x.permute(0, 2, 3, 4, 1).contiguous()
         h = self.attention(x)
         x = self.proj_out(h, residual=x)
@@ -739,14 +489,6 @@ class Resnet3DBlock(nn.Module):
         temb_channels=512,
         conv_shortcut=False,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            temb_channels: The temb channels.
-            conv_shortcut: The conv shortcut.
-        """
         super().__init__()
 
         self.in_channels = in_channels
@@ -770,13 +512,6 @@ class Resnet3DBlock(nn.Module):
                 self.nin_shortcut = CausalConvAfterNorm(in_channels, out_channels, kernel_size=1)
 
     def forward(self, x, temb=None, is_init=True):
-        """Forward.
-
-        Args:
-            x: The x.
-            temb: The temb.
-            is_init: The is init.
-        """
         x = x.permute(0, 2, 3, 4, 1).contiguous()
 
         h = base_group_norm_with_zero_pad(x, self.norm1, act_silu=True, pad_size=2)
@@ -797,13 +532,6 @@ class Downsample3D(nn.Module):
     """Downsample d implementation."""
 
     def __init__(self, in_channels, with_conv, stride):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            with_conv: The with conv.
-            stride: The stride.
-        """
         super().__init__()
 
         self.with_conv = with_conv
@@ -811,19 +539,11 @@ class Downsample3D(nn.Module):
             self.conv = CausalConv(in_channels, in_channels, kernel_size=3, stride=stride)
 
     def forward(self, x, is_init=True):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-        """
         x = self.conv(x, is_init) if self.with_conv else nn.functional.avg_pool3d(x, kernel_size=2, stride=2)
         return x
 
 
 class VideoEncoder(nn.Module):
-    """Video encoder implementation."""
-
     def __init__(
         self,
         ch=32,
@@ -836,19 +556,6 @@ class VideoEncoder(nn.Module):
         resamp_with_conv=True,
         version=1,
     ):
-        """Init.
-
-        Args:
-            ch: The ch.
-            ch_mult: The ch mult.
-            num_res_blocks: The num res blocks.
-            in_channels: The in channels.
-            z_channels: The z channels.
-            double_z: The double z.
-            down_sampling_layer: The down sampling layer.
-            resamp_with_conv: The resamp with conv.
-            version: The version.
-        """
         super().__init__()
 
         temb_ch = 0
@@ -902,13 +609,6 @@ class VideoEncoder(nn.Module):
 
     @torch.inference_mode()
     def forward(self, x, video_frame_num, is_init=True):
-        """Forward.
-
-        Args:
-            x: The x.
-            video_frame_num: The video frame num.
-            is_init: The is init.
-        """
         # timestep embedding
         temb = None
 
@@ -962,14 +662,6 @@ class Res3DBlockUpsample(nn.Module):
     """Res d block upsample implementation."""
 
     def __init__(self, input_filters, num_filters, down_sampling_stride, down_sampling=False):
-        """Init.
-
-        Args:
-            input_filters: The input filters.
-            num_filters: The num filters.
-            down_sampling_stride: The down sampling stride.
-            down_sampling: The down sampling.
-        """
         super().__init__()
 
         self.input_filters = input_filters
@@ -996,12 +688,6 @@ class Res3DBlockUpsample(nn.Module):
             self.norm3 = nn.GroupNorm(32, num_filters)
 
     def forward(self, x, is_init=False):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-        """
         x = x.permute(0, 2, 3, 4, 1).contiguous()
 
         residual = x
@@ -1029,12 +715,6 @@ class Upsample3D(nn.Module):
     """Upsample d implementation."""
 
     def __init__(self, in_channels, scale_factor=2):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            scale_factor: The scale factor.
-        """
         super().__init__()
 
         self.scale_factor = scale_factor
@@ -1043,13 +723,6 @@ class Upsample3D(nn.Module):
         )
 
     def forward(self, x, is_init=True, is_split=True):
-        """Forward.
-
-        Args:
-            x: The x.
-            is_init: The is init.
-            is_split: The is split.
-        """
         b, c, t, h, w = x.shape
 
         # x = x.permute(0,2,3,4,1).contiguous().permute(0,4,1,2,3).to(memory_format=torch.channels_last_3d)
@@ -1066,8 +739,6 @@ class Upsample3D(nn.Module):
 
 
 class VideoDecoder(nn.Module):
-    """Video decoder implementation."""
-
     def __init__(
         self,
         ch=128,
@@ -1080,19 +751,6 @@ class VideoDecoder(nn.Module):
         resamp_with_conv=True,
         version=1,
     ):
-        """Init.
-
-        Args:
-            ch: The ch.
-            z_channels: The z channels.
-            out_channels: The out channels.
-            ch_mult: The ch mult.
-            num_res_blocks: The num res blocks.
-            temporal_up_layers: The temporal up layers.
-            temporal_downsample: The temporal downsample.
-            resamp_with_conv: The resamp with conv.
-            version: The version.
-        """
         super().__init__()
 
         temb_ch = 0
@@ -1147,12 +805,6 @@ class VideoDecoder(nn.Module):
 
     @torch.inference_mode()
     def forward(self, z, is_init=True):
-        """Forward.
-
-        Args:
-            z: The z.
-            is_init: The is init.
-        """
         z = rearrange(z, "b t c h w -> b c t h w")
 
         h = self.conv_in(z, is_init=is_init)
@@ -1199,13 +851,6 @@ class VideoDecoder(nn.Module):
 
 
 def rms_norm(input, normalized_shape, eps=1e-6):
-    """Rms norm.
-
-    Args:
-        input: The input.
-        normalized_shape: The normalized shape.
-        eps: The eps.
-    """
     dtype = input.dtype
     input = input.to(torch.float32)
     variance = input.pow(2).flatten(-len(normalized_shape)).mean(-1)[(...,) + (None,) * len(normalized_shape)]
@@ -1217,14 +862,6 @@ class _LegacyDiagonalGaussianDistribution:
     """Diagonal gaussian distribution implementation."""
 
     def __init__(self, parameters, deterministic=False, rms_norm_mean=False, only_return_mean=False):
-        """Init.
-
-        Args:
-            parameters: The parameters.
-            deterministic: The deterministic.
-            rms_norm_mean: The rms norm mean.
-            only_return_mean: The only return mean.
-        """
         self.parameters = parameters
         self.mean, self.logvar = torch.chunk(parameters, 2, dim=-3)  # N,[X],C,H,W
         self.logvar = torch.clamp(self.logvar, -30.0, 20.0)
@@ -1240,11 +877,6 @@ class _LegacyDiagonalGaussianDistribution:
         self.only_return_mean = only_return_mean
 
     def sample(self, generator=None):
-        """Sample.
-
-        Args:
-            generator: The generator.
-        """
         # make sure sample is on the same device
         # as the parameters and has same dtype
         sample = torch.randn(self.mean.shape, generator=generator, device=self.parameters.device)
@@ -1257,8 +889,6 @@ class _LegacyDiagonalGaussianDistribution:
 
 
 class AutoencoderKL(nn.Module):
-    """Autoencoder kl implementation."""
-
     def __init__(
         self,
         in_channels=3,
@@ -1270,18 +900,6 @@ class AutoencoderKL(nn.Module):
         world_size=1,
         version=1,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            z_channels: The z channels.
-            num_res_blocks: The num res blocks.
-            model_path: The model path.
-            weight_dict: The weight dict.
-            world_size: The world size.
-            version: The version.
-        """
         super().__init__()
 
         self.frame_len = 17
@@ -1312,11 +930,6 @@ class AutoencoderKL(nn.Module):
         self.world_size = world_size
 
     def init_from_ckpt(self, model_path):
-        """Init from ckpt.
-
-        Args:
-            model_path: The model path.
-        """
         from safetensors import safe_open
 
         p = {}
@@ -1329,24 +942,13 @@ class AutoencoderKL(nn.Module):
         return p
 
     def load_from_dict(self, p):
-        """Load from dict.
-
-        Args:
-            p: The p.
-        """
         self.load_state_dict(p)
 
     def convert_channel_last(self):
-        """Convert channel last."""
+        pass
         # Conv2d NCHW->NHWC
 
     def naive_encode(self, x, is_init_image=True):
-        """Naive encode.
-
-        Args:
-            x: The x.
-            is_init_image: The is init image.
-        """
         b, l, c, h, w = x.size()
         x = rearrange(x, "b l c h w -> b c l h w").contiguous()
         z = self.encoder(x, l, True)  # 下采样[1, 4, 8, 16, 16]
@@ -1354,11 +956,6 @@ class AutoencoderKL(nn.Module):
 
     @torch.inference_mode()
     def encode(self, x):
-        """Encode.
-
-        Args:
-            x: The x.
-        """
         # b (nc cf) c h w -> (b nc) cf c h w -> encode -> (b nc) cf c h w -> b (nc cf) c h w
         chunks = list(x.split(self.frame_len, dim=1))
         for i in range(len(chunks)):
@@ -1369,23 +966,12 @@ class AutoencoderKL(nn.Module):
         return posterior.sample()
 
     def decode_naive(self, z, is_init=True):
-        """Decode naive.
-
-        Args:
-            z: The z.
-            is_init: The is init.
-        """
         z = z.to(next(self.decoder.parameters()).dtype)
         dec = self.decoder(z, is_init)
         return dec
 
     @torch.inference_mode()
     def decode(self, z):
-        """Decode.
-
-        Args:
-            z: The z.
-        """
         # b (nc cf) c h w -> (b nc) cf c h w -> decode -> (b nc) c cf h w -> b (nc cf) c h w
         chunks = list(z.split(self.latent_len, dim=1))
 
@@ -1415,11 +1001,6 @@ class AutoencoderKL(nn.Module):
         return x
 
     def mix(self, x):
-        """Mix.
-
-        Args:
-            x: The x.
-        """
         remain_scale = 0.6
         mix_scale = 1.0 - remain_scale
         front = slice(self.frame_len - 1, x.size(1) - 1, self.frame_len)

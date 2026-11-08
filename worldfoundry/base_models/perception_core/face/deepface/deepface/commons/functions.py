@@ -295,9 +295,6 @@ def normalize_input(img, normalization="base"):
 def find_target_size(model_name):
     """Find the target size of the model.
 
-    Args:
-        model_name (str): the model name.
-
     Returns:
         tuple: the target size.
     """
@@ -335,8 +332,7 @@ def preprocess_face(
     enforce_detection=True,
     align=True,
 ):
-    """Preprocess face.
-
+    """
     Args:
         img (numpy array): the input image.
         target_size (tuple, optional): the target size. Defaults to (224, 224).

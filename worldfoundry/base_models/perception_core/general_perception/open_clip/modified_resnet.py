@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> modified_resnet.py functionality."""
-
 from collections import OrderedDict
 
 import torch
@@ -11,18 +9,9 @@ from .utils import feature_take_indices, freeze_batch_norm_2d
 
 
 class Bottleneck(nn.Module):
-    """Bottleneck implementation."""
-
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1):
-        """Init.
-
-        Args:
-            inplanes: The inplanes.
-            planes: The planes.
-            stride: The stride.
-        """
         super().__init__()
 
         # all conv layers have stride 1. an avgpool is performed after the second convolution when stride > 1
@@ -56,11 +45,6 @@ class Bottleneck(nn.Module):
             )
 
     def forward(self, x: torch.Tensor):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         identity = x
 
         out = self.act1(self.bn1(self.conv1(x)))
@@ -80,14 +64,6 @@ class AttentionPool2d(nn.Module):
     """Attention pool d implementation."""
 
     def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int | None = None):
-        """Init.
-
-        Args:
-            spacial_dim: The spacial dim.
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            output_dim: The output dim.
-        """
         super().__init__()
         self.positional_embedding = nn.Parameter(torch.randn(spacial_dim**2 + 1, embed_dim) / embed_dim**0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
@@ -97,11 +73,6 @@ class AttentionPool2d(nn.Module):
         self.num_heads = num_heads
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = x.reshape(x.shape[0], x.shape[1], x.shape[2] * x.shape[3]).permute(0, 2, 1)  # NCHW -> N(HW)C
         x = torch.cat([x.mean(dim=1, keepdim=True), x], dim=1)  # N(HW+1)C
         x = x + self.positional_embedding[None, :, :].to(x.dtype)  # N(HW+1)C
@@ -135,15 +106,6 @@ class ModifiedResNet(nn.Module):
         image_size: int = 224,
         width: int = 64,
     ):
-        """Init.
-
-        Args:
-            layers: The layers.
-            output_dim: The output dim.
-            heads: The heads.
-            image_size: The image size.
-            width: The width.
-        """
         super().__init__()
         self.output_dim = output_dim
         self.image_size = image_size
@@ -173,13 +135,6 @@ class ModifiedResNet(nn.Module):
         self.init_parameters()
 
     def _make_layer(self, planes, blocks, stride=1):
-        """Helper function to make layer.
-
-        Args:
-            planes: The planes.
-            blocks: The blocks.
-            stride: The stride.
-        """
         layers = [Bottleneck(self._inplanes, planes, stride)]
 
         self._inplanes = planes * Bottleneck.expansion
@@ -189,7 +144,6 @@ class ModifiedResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def init_parameters(self):
-        """Init parameters."""
         if self.attnpool is not None:
             std = self.attnpool.c_proj.in_features**-0.5
             nn.init.normal_(self.attnpool.q_proj.weight, std=std)
@@ -203,12 +157,6 @@ class ModifiedResNet(nn.Module):
                     nn.init.zeros_(param)
 
     def lock(self, unlocked_groups=0, freeze_bn_stats=False):
-        """Lock.
-
-        Args:
-            unlocked_groups: The unlocked groups.
-            freeze_bn_stats: The freeze bn stats.
-        """
         assert unlocked_groups == 0, "partial locking not currently supported for this model"
         for param in self.parameters():
             param.requires_grad = False
@@ -216,20 +164,10 @@ class ModifiedResNet(nn.Module):
             freeze_batch_norm_2d(self)
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
+        pass
         # FIXME support for non-transformer
 
     def stem(self, x):
-        """Stem.
-
-        Args:
-            x: The x.
-        """
         x = self.act1(self.bn1(self.conv1(x)))
         x = self.act2(self.bn2(self.conv2(x)))
         x = self.act3(self.bn3(self.conv3(x)))
@@ -284,11 +222,6 @@ class ModifiedResNet(nn.Module):
         return output
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.stem(x)
         x = self.layer1(x)
         x = self.layer2(x)

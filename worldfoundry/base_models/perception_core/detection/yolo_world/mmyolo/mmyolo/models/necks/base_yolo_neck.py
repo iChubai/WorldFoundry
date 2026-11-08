@@ -177,27 +177,27 @@ class BaseYOLONeck(BaseModule, metaclass=ABCMeta):
 
     @abstractmethod
     def build_reduce_layer(self, idx: int):
-        """build reduce layer."""
+        pass
 
     @abstractmethod
     def build_upsample_layer(self, idx: int):
-        """build upsample layer."""
+        pass
 
     @abstractmethod
     def build_top_down_layer(self, idx: int):
-        """build top down layer."""
+        pass
 
     @abstractmethod
     def build_downsample_layer(self, idx: int):
-        """build downsample layer."""
+        pass
 
     @abstractmethod
     def build_bottom_up_layer(self, idx: int):
-        """build bottom up layer."""
+        pass
 
     @abstractmethod
     def build_out_layer(self, idx: int):
-        """build out layer."""
+        pass
 
     def _freeze_all(self):
         """Freeze the model."""
@@ -215,7 +215,6 @@ class BaseYOLONeck(BaseModule, metaclass=ABCMeta):
             self._freeze_all()
 
     def forward(self, inputs: list[torch.Tensor]) -> tuple:
-        """Forward function."""
         assert len(inputs) == len(self.in_channels)
         # reduce layers
         reduce_outs = []

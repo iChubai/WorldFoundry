@@ -29,29 +29,15 @@ DEFAULT_NORM_STATS_PATH = "norm_stats.json"
 
 
 class AdaptiveEnsembler:
-    """Adaptive ensembler implementation."""
-
     def __init__(self, pred_action_horizon, adaptive_ensemble_alpha=0.0):
-        """Init.
-
-        Args:
-            pred_action_horizon: The pred action horizon.
-            adaptive_ensemble_alpha: The adaptive ensemble alpha.
-        """
         self.pred_action_horizon = pred_action_horizon
         self.action_history = deque(maxlen=self.pred_action_horizon)
         self.adaptive_ensemble_alpha = adaptive_ensemble_alpha
 
     def reset(self):
-        """Reset."""
         self.action_history.clear()
 
     def ensemble_action(self, cur_action):
-        """Ensemble action.
-
-        Args:
-            cur_action: The cur action.
-        """
         self.action_history.append(cur_action)
         num_actions = len(self.action_history)
         if cur_action.ndim == 1:
@@ -83,14 +69,6 @@ class AdaptiveEnsembler:
 
 
 def center_crop_image(image: np.ndarray | Image.Image) -> Image.Image:
-    """Center crop image.
-
-    Args:
-        image: The image.
-
-    Returns:
-        The return value.
-    """
     crop_scale = 0.9
     side_scale = float(np.sqrt(np.clip(crop_scale, 0.0, 1.0)))  # side length scale
     out_size = (224, 224)
@@ -133,14 +111,6 @@ def center_crop_image(image: np.ndarray | Image.Image) -> Image.Image:
 
 
 def resize_with_pad(img, width, height, pad_value=-1):
-    """Resize with pad.
-
-    Args:
-        img: The img.
-        width: The width.
-        height: The height.
-        pad_value: The pad value.
-    """
     # assume no-op when width height fits already
     if img.ndim != 4:
         raise ValueError(f"(b,c,h,w) expected, but {img.shape}")
@@ -210,11 +180,6 @@ class PolicyPreprocessMixin:
         return images, img_masks
 
     def prepare_state(self, observation):
-        """Prepare state.
-
-        Args:
-            observation: The observation.
-        """
         state = torch.from_numpy(observation["state"])
         if isinstance(state, np.ndarray):
             state = torch.from_numpy(state)
@@ -266,12 +231,6 @@ class PolicyPreprocessMixin:
 
     @torch.no_grad
     def select_action(self, observation: dict[str, Tensor], noise: Tensor | None = None):
-        """Select action.
-
-        Args:
-            observation: The observation.
-            noise: The noise.
-        """
         self.eval()
         images, img_masks = self.prepare_images(observation)
         state = self.prepare_state(observation)
@@ -302,12 +261,6 @@ class PI0InfernecePolicy(PolicyPreprocessMixin, PI0Policy):
 
 
 def merge_qwen_config(policy_config, qwen_config):
-    """Merge qwen config.
-
-    Args:
-        policy_config: The policy config.
-        qwen_config: The qwen config.
-    """
     config_dict = qwen_config.to_dict() if hasattr(qwen_config, "to_dict") else qwen_config
 
     text_keys = {
@@ -351,19 +304,6 @@ class QwenPiServer:
         use_length=1,  # to control the execution length of the action chunk, -1 denotes using action ensemble
         use_bf16=True,
     ) -> None:
-        """Init.
-
-        Args:
-            path_to_pi_model: The path to pi model.
-            adaptive_ensemble_alpha: The adaptive ensemble alpha.
-            action_ensemble_horizon: The action ensemble horizon.
-            use_length: The use length.
-            use_bf16: The use bf16.
-
-        Returns:
-            The return value.
-        """
-
         self.adaptive_ensemble_alpha = adaptive_ensemble_alpha
         self.action_ensemble_horizon = action_ensemble_horizon
         self.use_length = use_length
@@ -391,32 +331,14 @@ class QwenPiServer:
         self.action_std = np.array(norm_stats["norm_stats"]["actions"]["std"][:action_dim], dtype=np.float32)
 
     def state_normalizer(self, unnorm_state):
-        """State normalizer.
-
-        Args:
-            unnorm_state: The unnorm state.
-        """
         state = (unnorm_state - self.state_mean) / (self.state_std + 1e-6)
         return state
 
     def action_unnormalizer(self, norm_action):
-        """Action unnormalizer.
-
-        Args:
-            norm_action: The norm action.
-        """
         action = norm_action * (self.action_std + 1e-6) + self.action_mean
         return action
 
     def load_vla(self, path_to_pi_model) -> QwenPI0Policy:
-        """Load vla.
-
-        Args:
-            path_to_pi_model: The path to pi model.
-
-        Returns:
-            The return value.
-        """
         # load model
         print(f"loading model from: {path_to_pi_model}")
         config = PreTrainedConfig.from_pretrained(path_to_pi_model)
@@ -462,11 +384,6 @@ class QwenPiServer:
         return policy
 
     def reset(self) -> None:
-        """Reset.
-
-        Returns:
-            The return value.
-        """
         if self.use_length == -1:
             self.action_ensembler.reset()
 

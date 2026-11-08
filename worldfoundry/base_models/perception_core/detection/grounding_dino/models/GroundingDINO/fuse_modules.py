@@ -5,8 +5,6 @@
 # Licensed under the Apache License, Version 2.0 [see LICENSE for details]
 # ------------------------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> fuse_modules.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,14 +18,6 @@ class FeatureResizer(nn.Module):
     """
 
     def __init__(self, input_feat_size, output_feat_size, dropout, do_ln=True):
-        """Init.
-
-        Args:
-            input_feat_size: The input feat size.
-            output_feat_size: The output feat size.
-            dropout: The dropout.
-            do_ln: The do ln.
-        """
         super().__init__()
         self.do_ln = do_ln
         # Object feature encoding
@@ -36,11 +26,6 @@ class FeatureResizer(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, encoder_features):
-        """Forward.
-
-        Args:
-            encoder_features: The encoder features.
-        """
         x = self.fc(encoder_features)
         if self.do_ln:
             x = self.layer_norm(x)
@@ -112,19 +97,7 @@ def func_attention(query, context, smooth=1, raw_feature_norm="softmax", eps=1e-
 
 
 class BiMultiHeadAttention(nn.Module):
-    """Bi multi head attention implementation."""
-
     def __init__(self, v_dim, l_dim, embed_dim, num_heads, dropout=0.1, cfg=None):
-        """Init.
-
-        Args:
-            v_dim: The v dim.
-            l_dim: The l dim.
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            dropout: The dropout.
-            cfg: The cfg.
-        """
         super().__init__()
 
         self.embed_dim = embed_dim
@@ -154,17 +127,9 @@ class BiMultiHeadAttention(nn.Module):
         self._reset_parameters()
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        """Helper function to shape.
-
-        Args:
-            tensor: The tensor.
-            seq_len: The seq len.
-            bsz: The bsz.
-        """
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         nn.init.xavier_uniform_(self.v_proj.weight)
         self.v_proj.bias.data.fill_(0)
         nn.init.xavier_uniform_(self.l_proj.weight)
@@ -281,8 +246,6 @@ class BiMultiHeadAttention(nn.Module):
 
 # Bi-Direction MHA (text->image, image->text)
 class BiAttentionBlock(nn.Module):
-    """Bi attention block implementation."""
-
     def __init__(
         self,
         v_dim,
@@ -317,14 +280,6 @@ class BiAttentionBlock(nn.Module):
         self.gamma_l = nn.Parameter(init_values * torch.ones(l_dim), requires_grad=True)
 
     def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):
-        """Forward.
-
-        Args:
-            v: The v.
-            l: The l.
-            attention_mask_v: The attention mask v.
-            attention_mask_l: The attention mask l.
-        """
         v = self.layer_norm_v(v)
         l = self.layer_norm_l(l)
         delta_v, delta_l = self.attn(v, l, attention_mask_v=attention_mask_v, attention_mask_l=attention_mask_l)

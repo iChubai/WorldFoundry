@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> depth_predictor_monocular.py functionality."""
-
 import torch
 from einops import rearrange
 from jaxtyping import Float
@@ -10,8 +8,6 @@ from .distribution_sampler import DistributionSampler
 
 
 class DepthPredictorMonocular(nn.Module):
-    """Depth predictor monocular implementation."""
-
     projection: nn.Sequential
     sampler: DistributionSampler
     num_samples: int
@@ -24,17 +20,6 @@ class DepthPredictorMonocular(nn.Module):
         num_surfaces: int,
         use_transmittance: bool,
     ) -> None:
-        """Init.
-
-        Args:
-            d_in: The d in.
-            num_samples: The num samples.
-            num_surfaces: The num surfaces.
-            use_transmittance: The use transmittance.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.projection = nn.Sequential(
             nn.ReLU(),
@@ -60,18 +45,6 @@ class DepthPredictorMonocular(nn.Module):
         Float[Tensor, "batch view ray surface sample"],  # depth
         Float[Tensor, "batch view ray surface sample"],  # pdf
     ]:
-        """Forward.
-
-        Args:
-            features: The features.
-            near: The near.
-            far: The far.
-            deterministic: The deterministic.
-            gaussians_per_pixel: The gaussians per pixel.
-
-        Returns:
-            The return value.
-        """
         s = self.num_samples
 
         # Convert the features into a depth distribution plus intra-bucket offsets.

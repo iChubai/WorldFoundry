@@ -4,8 +4,6 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> heads -> linear_head.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -33,15 +31,6 @@ class LinearPts3d(nn.Module):
     """
 
     def __init__(self, net, has_conf=False, has_depth=False, has_rgb=False, has_pose_conf=False):
-        """Init.
-
-        Args:
-            net: The net.
-            has_conf: The has conf.
-            has_depth: The has depth.
-            has_rgb: The has rgb.
-            has_pose_conf: The has pose conf.
-        """
         super().__init__()
         self.patch_size = net.patch_embed.patch_size[0]
         self.depth_mode = net.depth_mode
@@ -57,19 +46,9 @@ class LinearPts3d(nn.Module):
             self.rgb_proj = Mlp(net.dec_embed_dim, out_features=3 * self.patch_size**2)
 
     def setup(self, croconet):
-        """Setup.
-
-        Args:
-            croconet: The croconet.
-        """
+        pass
 
     def forward(self, decout, img_shape):
-        """Forward.
-
-        Args:
-            decout: The decout.
-            img_shape: The img shape.
-        """
         H, W = img_shape
         tokens = decout[-1]
         B, S, D = tokens.shape
@@ -121,15 +100,6 @@ class LinearPts3d_Desc(nn.Module):
         local_feat_dim=24,
         hidden_dim_factor=4.0,
     ):
-        """Init.
-
-        Args:
-            net: The net.
-            has_conf: The has conf.
-            has_depth: The has depth.
-            local_feat_dim: The local feat dim.
-            hidden_dim_factor: The hidden dim factor.
-        """
         super().__init__()
         self.patch_size = net.patch_embed.patch_size[0]
         self.depth_mode = net.depth_mode
@@ -150,19 +120,9 @@ class LinearPts3d_Desc(nn.Module):
         )
 
     def setup(self, croconet):
-        """Setup.
-
-        Args:
-            croconet: The croconet.
-        """
+        pass
 
     def forward(self, decout, img_shape):
-        """Forward.
-
-        Args:
-            decout: The decout.
-            img_shape: The img shape.
-        """
         H, W = img_shape
         tokens = decout[-1]
         B, S, D = tokens.shape
@@ -194,14 +154,6 @@ class LinearPts3dPoseDirect(nn.Module):
     """
 
     def __init__(self, net, has_conf=False, has_rgb=False, has_pose=False):
-        """Init.
-
-        Args:
-            net: The net.
-            has_conf: The has conf.
-            has_rgb: The has rgb.
-            has_pose: The has pose.
-        """
         super().__init__()
         self.patch_size = net.patch_embed.patch_size[0]
         self.depth_mode = net.depth_mode
@@ -220,19 +172,9 @@ class LinearPts3dPoseDirect(nn.Module):
             self.cross_conf_proj = Mlp(net.dec_embed_dim, out_features=self.patch_size**2)
 
     def setup(self, croconet):
-        """Setup.
-
-        Args:
-            croconet: The croconet.
-        """
+        pass
 
     def forward(self, decout, img_shape):
-        """Forward.
-
-        Args:
-            decout: The decout.
-            img_shape: The img shape.
-        """
         H, W = img_shape
         tokens = decout[-1]
         if self.has_pose:
@@ -278,15 +220,6 @@ class LinearPts3dPose(nn.Module):
     """
 
     def __init__(self, net, has_conf=False, has_rgb=False, has_pose=False, mlp_ratio=4.0):
-        """Init.
-
-        Args:
-            net: The net.
-            has_conf: The has conf.
-            has_rgb: The has rgb.
-            has_pose: The has pose.
-            mlp_ratio: The mlp ratio.
-        """
         super().__init__()
         self.patch_size = net.patch_embed.patch_size[0]
         self.depth_mode = net.depth_mode
@@ -328,19 +261,9 @@ class LinearPts3dPose(nn.Module):
             )
 
     def setup(self, croconet):
-        """Setup.
-
-        Args:
-            croconet: The croconet.
-        """
+        pass
 
     def forward(self, decout, img_shape, **kwargs):
-        """Forward.
-
-        Args:
-            decout: The decout.
-            img_shape: The img shape.
-        """
         H, W = img_shape
         tokens = decout[-1]
         if self.has_pose:

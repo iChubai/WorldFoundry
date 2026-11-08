@@ -24,12 +24,6 @@ from ..model import (
 
 
 def torch_dfs(model: nn.Module, parent_name="root"):
-    """Torch dfs.
-
-    Args:
-        model: The model.
-        parent_name: The parent name.
-    """
     module_names, modules = [], []
     current_name = parent_name if parent_name else "root"
     module_names.append(current_name)
@@ -44,14 +38,6 @@ def torch_dfs(model: nn.Module, parent_name="root"):
 
 
 def rope_precompute(x, grid_sizes, freqs, start=None):
-    """Rope precompute.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        start: The start.
-    """
     b, s, n, c = x.size(0), x.size(1), x.size(2), x.size(3) // 2
 
     # split freqs
@@ -114,16 +100,6 @@ class CausalConv1d(nn.Module):
     """1-D causal convolution used by the S2V motion / audio encoders."""
 
     def __init__(self, chan_in, chan_out, kernel_size=3, stride=1, dilation=1, pad_mode="replicate", **kwargs):
-        """Init.
-
-        Args:
-            chan_in: The chan in.
-            chan_out: The chan out.
-            kernel_size: The kernel size.
-            stride: The stride.
-            dilation: The dilation.
-            pad_mode: The pad mode.
-        """
         super().__init__()
 
         self.pad_mode = pad_mode
@@ -133,11 +109,6 @@ class CausalConv1d(nn.Module):
         self.conv = nn.Conv1d(chan_in, chan_out, kernel_size, stride=stride, dilation=dilation, **kwargs)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = F.pad(x, self.time_causal_padding, mode=self.pad_mode)
         return self.conv(x)
 
@@ -146,16 +117,6 @@ class MotionEncoder_tc(nn.Module):
     """Temporal-convolution motion encoder for Wan 2.2 S2V."""
 
     def __init__(self, in_dim: int, hidden_dim: int, num_heads=int, need_global=True, dtype=None, device=None):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            hidden_dim: The hidden dim.
-            num_heads: The num heads.
-            need_global: The need global.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"dtype": dtype, "device": device}
         super().__init__()
 
@@ -178,11 +139,6 @@ class MotionEncoder_tc(nn.Module):
         self.padding_tokens = nn.Parameter(torch.zeros(1, 1, 1, hidden_dim))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = rearrange(x, "b t c -> b c t")
         x_ori = x.clone()
         b, c, t = x.shape
@@ -232,14 +188,6 @@ class FramePackMotioner(nn.Module):
     """FramePack-style motion tokenizer consumed by the S2V DiT."""
 
     def __init__(self, inner_dim=1024, num_heads=16, zip_frame_buckets=[1, 2, 16], drop_mode="drop", *args, **kwargs):
-        """Init.
-
-        Args:
-            inner_dim: The inner dim.
-            num_heads: The num heads.
-            zip_frame_buckets: The zip frame buckets.
-            drop_mode: The drop mode.
-        """
         super().__init__(*args, **kwargs)
         self.proj = nn.Conv3d(16, inner_dim, kernel_size=(1, 2, 2), stride=(1, 2, 2))
         self.proj_2x = nn.Conv3d(16, inner_dim, kernel_size=(2, 4, 4), stride=(2, 4, 4))
@@ -252,12 +200,6 @@ class FramePackMotioner(nn.Module):
         self.drop_mode = drop_mode
 
     def forward(self, motion_latents, add_last_motion=2):
-        """Forward.
-
-        Args:
-            motion_latents: The motion latents.
-            add_last_motion: The add last motion.
-        """
         _motion_frames = motion_latents[0].shape[1]
         mot = []
         mot_remb = []
@@ -358,25 +300,12 @@ class AdaLayerNorm(nn.Module):
         output_dim: int,
         norm_eps: float = 1e-5,
     ):
-        """Init.
-
-        Args:
-            embedding_dim: The embedding dim.
-            output_dim: The output dim.
-            norm_eps: The norm eps.
-        """
         super().__init__()
         self.silu = nn.SiLU()
         self.linear = nn.Linear(embedding_dim, output_dim)
         self.norm = nn.LayerNorm(output_dim // 2, norm_eps, elementwise_affine=False)
 
     def forward(self, x, temb):
-        """Forward.
-
-        Args:
-            x: The x.
-            temb: The temb.
-        """
         temb = self.linear(F.silu(temb))
         shift, scale = temb.chunk(2, dim=1)
         shift = shift[:, None, :]
@@ -398,17 +327,6 @@ class AudioInjector_WAN(nn.Module):
         enable_adain=False,
         adain_dim=2048,
     ):
-        """Init.
-
-        Args:
-            all_modules: The all modules.
-            all_modules_names: The all modules names.
-            dim: The dim.
-            num_heads: The num heads.
-            inject_layer: The inject layer.
-            enable_adain: The enable adain.
-            adain_dim: The adain dim.
-        """
         super().__init__()
         self.injected_block_id = {}
         audio_injector_id = 0
@@ -458,15 +376,6 @@ class CausalAudioEncoder(nn.Module):
     """Causal audio encoder that produces per-frame S2V condition tokens."""
 
     def __init__(self, dim=5120, num_layers=25, out_dim=2048, num_token=4, need_global=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_layers: The num layers.
-            out_dim: The out dim.
-            num_token: The num token.
-            need_global: The need global.
-        """
         super().__init__()
         self.encoder = MotionEncoder_tc(in_dim=dim, hidden_dim=out_dim, num_heads=num_token, need_global=need_global)
         weight = torch.ones((1, num_layers, 1, 1)) * 0.01
@@ -475,11 +384,6 @@ class CausalAudioEncoder(nn.Module):
         self.act = torch.nn.SiLU()
 
     def forward(self, features):
-        """Forward.
-
-        Args:
-            features: The features.
-        """
         # features B * num_layers * dim * video_length
         weights = self.act(self.weights.to(device=features.device, dtype=features.dtype))
         weights_sum = weights.sum(dim=1, keepdims=True)
@@ -493,15 +397,6 @@ class WanS2VDiTBlock(DiTBlock):
     """Wan 2.2 S2V DiT block (audio-aware residual on the native graph)."""
 
     def forward(self, x, context, t_mod, seq_len_x, freqs):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            t_mod: The t mod.
-            seq_len_x: The seq len x.
-            freqs: The freqs.
-        """
         t_mod = (self.modulation.unsqueeze(2).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(6, dim=1)
         # t_mod[:, :, 0] for x, t_mod[:, :, 1] for other like ref, motion, etc.
         t_mod = [
@@ -551,32 +446,6 @@ class WanS2VModel(torch.nn.Module):
         seperated_timestep: bool = False,
         require_clip_embedding: bool = False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            in_dim: The in dim.
-            ffn_dim: The ffn dim.
-            out_dim: The out dim.
-            text_dim: The text dim.
-            freq_dim: The freq dim.
-            eps: The eps.
-            patch_size: The patch size.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            cond_dim: The cond dim.
-            audio_dim: The audio dim.
-            num_audio_token: The num audio token.
-            enable_adain: The enable adain.
-            audio_inject_layers: The audio inject layers.
-            zero_timestep: The zero timestep.
-            add_last_motion: The add last motion.
-            framepack_drop_mode: The framepack drop mode.
-            fuse_vae_embedding_in_latents: The fuse vae embedding in latents.
-            require_vae_embedding: The require vae embedding.
-            seperated_timestep: The seperated timestep.
-            require_clip_embedding: The require clip embedding.
-        """
         super().__init__()
         self.dim = dim
         self.in_dim = in_dim
@@ -620,22 +489,11 @@ class WanS2VModel(torch.nn.Module):
         )
 
     def patchify(self, x: torch.Tensor):
-        """Patchify.
-
-        Args:
-            x: The x.
-        """
         grid_size = x.shape[2:]
         x = rearrange(x, "b c f h w -> b (f h w) c").contiguous()
         return x, grid_size  # x, grid_size: (f, h, w)
 
     def unpatchify(self, x: torch.Tensor, grid_size: torch.Tensor):
-        """Unpatchify.
-
-        Args:
-            x: The x.
-            grid_size: The grid size.
-        """
         return rearrange(
             x,
             "b (f h w) (x y z c) -> b c (f x) (h y) (w z)",
@@ -648,13 +506,6 @@ class WanS2VModel(torch.nn.Module):
         )
 
     def process_motion_frame_pack(self, motion_latents, drop_motion_frames=False, add_last_motion=2):
-        """Process motion frame pack.
-
-        Args:
-            motion_latents: The motion latents.
-            drop_motion_frames: The drop motion frames.
-            add_last_motion: The add last motion.
-        """
         flattern_mot, mot_remb = self.frame_packer(motion_latents, add_last_motion)
         if drop_motion_frames:
             return [m[:, :0] for m in flattern_mot], [m[:, :0] for m in mot_remb]
@@ -662,16 +513,6 @@ class WanS2VModel(torch.nn.Module):
             return flattern_mot, mot_remb
 
     def inject_motion(self, x, rope_embs, mask_input, motion_latents, drop_motion_frames=True, add_last_motion=2):
-        """Inject motion.
-
-        Args:
-            x: The x.
-            rope_embs: The rope embs.
-            mask_input: The mask input.
-            motion_latents: The motion latents.
-            drop_motion_frames: The drop motion frames.
-            add_last_motion: The add last motion.
-        """
         # inject the motion frames token to the hidden states
         mot, mot_remb = self.process_motion_frame_pack(
             motion_latents, drop_motion_frames=drop_motion_frames, add_last_motion=add_last_motion
@@ -700,16 +541,6 @@ class WanS2VModel(torch.nn.Module):
         original_seq_len,
         use_unified_sequence_parallel=False,
     ):
-        """After transformer block.
-
-        Args:
-            block_idx: The block idx.
-            hidden_states: The hidden states.
-            audio_emb_global: The audio emb global.
-            audio_emb: The audio emb.
-            original_seq_len: The original seq len.
-            use_unified_sequence_parallel: The use unified sequence parallel.
-        """
         if block_idx in self.audio_injector.injected_block_id.keys():
             audio_attn_id = self.audio_injector.injected_block_id[block_idx]
             num_frames = audio_emb.shape[1]
@@ -741,12 +572,6 @@ class WanS2VModel(torch.nn.Module):
         return hidden_states
 
     def cal_audio_emb(self, audio_input, motion_frames=[73, 19]):
-        """Cal audio emb.
-
-        Args:
-            audio_input: The audio input.
-            motion_frames: The motion frames.
-        """
         audio_input = torch.cat([audio_input[..., 0:1].repeat(1, 1, 1, motion_frames[0]), audio_input], dim=-1)
         audio_emb_global, audio_emb = self.casual_audio_encoder(audio_input)
         audio_emb_global = audio_emb_global[:, motion_frames[1] :].clone()
@@ -754,12 +579,6 @@ class WanS2VModel(torch.nn.Module):
         return audio_emb_global, merged_audio_emb
 
     def get_grid_sizes(self, grid_size_x, grid_size_ref):
-        """Get grid sizes.
-
-        Args:
-            grid_size_x: The grid size x.
-            grid_size_ref: The grid size ref.
-        """
         f, h, w = grid_size_x
         rf, rh, rw = grid_size_ref
         grid_sizes_x = torch.tensor([f, h, w], dtype=torch.long).unsqueeze(0)
@@ -784,18 +603,6 @@ class WanS2VModel(torch.nn.Module):
         use_gradient_checkpointing_offload=False,
         use_gradient_checkpointing=False,
     ):
-        """Forward.
-
-        Args:
-            latents: The latents.
-            timestep: The timestep.
-            context: The context.
-            audio_input: The audio input.
-            motion_latents: The motion latents.
-            pose_cond: The pose cond.
-            use_gradient_checkpointing_offload: The use gradient checkpointing offload.
-            use_gradient_checkpointing: The use gradient checkpointing.
-        """
         origin_ref_latents = latents[:, :, 0:1]
         x = latents[:, :, 1:]
 
@@ -842,14 +649,7 @@ class WanS2VModel(torch.nn.Module):
         t_mod = self.time_projection(t).unflatten(1, (6, self.dim)).unsqueeze(2).transpose(0, 2)
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs):
-                """Custom forward."""
                 return module(*inputs)
 
             return custom_forward
@@ -907,7 +707,6 @@ class WanS2VModel(torch.nn.Module):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return WanS2VModelStateDictConverter()
 
 
@@ -915,14 +714,9 @@ class WanS2VModelStateDictConverter:
     """Key remap / config recovery for Wan 2.2 S2V checkpoints."""
 
     def __init__(self):
-        """Init."""
+        pass
 
     def from_civitai(self, state_dict):
-        """From civitai.
-
-        Args:
-            state_dict: The state dict.
-        """
         config = {}
         if hash_state_dict_keys(state_dict) == "966cffdcc52f9c46c391768b27637614":
             config = {

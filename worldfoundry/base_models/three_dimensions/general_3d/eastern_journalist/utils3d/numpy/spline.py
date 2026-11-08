@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> spline.py functionality."""
-
 from typing import *
 
 import numpy as np
@@ -39,17 +37,6 @@ def linear_spline_interpolate(
 
 
 def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray:
-    """Helper function to solve tridiagonal.
-
-    Args:
-        a: The a.
-        b: The b.
-        c: The c.
-        d: The d.
-
-    Returns:
-        The return value.
-    """
     n = b.shape[-1]
     cc = np.zeros_like(b)
     dd = np.zeros_like(b)

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> pano -> utils.py functionality."""
-
 import torch
 import torch.nn.functional as F
 from einops import rearrange
@@ -8,14 +6,6 @@ from ..modules.utils import get_x_2d
 
 
 def get_correspondences(R, K, img_h, img_w):
-    """Get correspondences.
-
-    Args:
-        R: The r.
-        K: The k.
-        img_h: The img h.
-        img_w: The img w.
-    """
     m = R.shape[1]
 
     correspondences = torch.zeros((R.shape[0], m, m, img_h, img_w, 2), device=R.device)
@@ -47,18 +37,6 @@ def get_correspondences(R, K, img_h, img_w):
 
 
 def get_key_value(key_value, xy_l, homo_r, ori_h, ori_w, ori_h_r, query_h):
-    """Get key value.
-
-    Args:
-        key_value: The key value.
-        xy_l: The xy l.
-        homo_r: The homo r.
-        ori_h: The ori h.
-        ori_w: The ori w.
-        ori_h_r: The ori h r.
-        query_h: The query h.
-    """
-
     b, c, h, w = key_value.shape
     query_scale = ori_h // query_h
     key_scale = ori_h_r // h
@@ -105,18 +83,6 @@ def get_key_value(key_value, xy_l, homo_r, ori_h, ori_w, ori_h_r, query_h):
 
 
 def get_query_value(query, key_value, xy_l, homo_r, img_h_l, img_w_l, img_h_r=None, img_w_r=None):
-    """Get query value.
-
-    Args:
-        query: The query.
-        key_value: The key value.
-        xy_l: The xy l.
-        homo_r: The homo r.
-        img_h_l: The img h l.
-        img_w_l: The img w l.
-        img_h_r: The img h r.
-        img_w_r: The img w r.
-    """
     if img_h_r is None:
         img_h_r = img_h_l
         img_w_r = img_w_l

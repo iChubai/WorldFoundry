@@ -19,15 +19,6 @@ import torch.nn.functional as F
 
 
 def get_sample_indices(original_fps, total_frames, target_fps, num_sample, fixed_start=None):
-    """Get sample indices.
-
-    Args:
-        original_fps: The original fps.
-        total_frames: The total frames.
-        target_fps: The target fps.
-        num_sample: The num sample.
-        fixed_start: The fixed start.
-    """
     required_duration = num_sample / target_fps
     required_origin_frames = int(np.ceil(required_duration * original_fps))
     if required_duration > total_frames / original_fps:
@@ -71,7 +62,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
     """Wan v audio encoder implementation."""
 
     def __init__(self):
-        """Init."""
         super().__init__()
         from transformers import Wav2Vec2Config, Wav2Vec2ForCTC
 
@@ -130,16 +120,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
     def extract_audio_feat(
         self, input_audio, sample_rate, processor, return_all_layers=False, dtype=torch.float32, device="cpu"
     ):
-        """Extract audio feat.
-
-        Args:
-            input_audio: The input audio.
-            sample_rate: The sample rate.
-            processor: The processor.
-            return_all_layers: The return all layers.
-            dtype: The dtype.
-            device: The device.
-        """
         input_values = processor(input_audio, sampling_rate=sample_rate, return_tensors="pt").input_values.to(
             dtype=dtype, device=device
         )
@@ -151,14 +131,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
         return feat
 
     def get_audio_embed_bucket(self, audio_embed, stride=2, batch_frames=12, m=2):
-        """Get audio embed bucket.
-
-        Args:
-            audio_embed: The audio embed.
-            stride: The stride.
-            batch_frames: The batch frames.
-            m: The m.
-        """
         num_layers, audio_frame_num, audio_dim = audio_embed.shape
 
         return_all_layers = num_layers > 1
@@ -193,14 +165,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
         return batch_audio_eb, min_batch_num
 
     def get_audio_embed_bucket_fps(self, audio_embed, fps=16, batch_frames=81, m=0):
-        """Get audio embed bucket fps.
-
-        Args:
-            audio_embed: The audio embed.
-            fps: The fps.
-            batch_frames: The batch frames.
-            m: The m.
-        """
         num_layers, audio_frame_num, audio_dim = audio_embed.shape
 
         return_all_layers = num_layers > 1
@@ -246,18 +210,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
     def get_audio_feats_per_inference(
         self, input_audio, sample_rate, processor, fps=16, batch_frames=80, m=0, dtype=torch.float32, device="cpu"
     ):
-        """Get audio feats per inference.
-
-        Args:
-            input_audio: The input audio.
-            sample_rate: The sample rate.
-            processor: The processor.
-            fps: The fps.
-            batch_frames: The batch frames.
-            m: The m.
-            dtype: The dtype.
-            device: The device.
-        """
         audio_feat = self.extract_audio_feat(
             input_audio, sample_rate, processor, return_all_layers=True, dtype=dtype, device=device
         )
@@ -272,7 +224,6 @@ class WanS2VAudioEncoder(torch.nn.Module):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return WanS2VAudioEncoderStateDictConverter()
 
 
@@ -280,13 +231,8 @@ class WanS2VAudioEncoderStateDictConverter:
     """Wan v audio encoder state dict converter implementation."""
 
     def __init__(self):
-        """Init."""
+        pass
 
     def from_civitai(self, state_dict):
-        """From civitai.
-
-        Args:
-            state_dict: The state dict.
-        """
         state_dict = {"model." + k: v for k, v in state_dict.items()}
         return state_dict

@@ -12,7 +12,6 @@ try:
     import flash_attn_interface
 
     def is_hopper_gpu():
-        """Is hopper gpu."""
         if not torch.cuda.is_available():
             return False
         device_name = torch.cuda.get_device_name(0).lower()
@@ -93,11 +92,6 @@ def flash_attention(
         ).type(out_dtype)
 
     def half(x):
-        """Half.
-
-        Args:
-            x: The x.
-        """
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # preprocess query
@@ -186,23 +180,6 @@ def attention(
     dtype=torch.bfloat16,
     fa_version=None,
 ):
-    """Attention.
-
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-        q_lens: The q lens.
-        k_lens: The k lens.
-        dropout_p: The dropout p.
-        softmax_scale: The softmax scale.
-        q_scale: The q scale.
-        causal: The causal.
-        window_size: The window size.
-        deterministic: The deterministic.
-        dtype: The dtype.
-        fa_version: The fa version.
-    """
     if fa_version != "0" and (FLASH_ATTN_2_AVAILABLE or FLASH_ATTN_3_AVAILABLE):
         return flash_attention(
             q=q,

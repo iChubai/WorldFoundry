@@ -23,15 +23,6 @@ ENABLE_TENSORRT = os.getenv("ENABLE_TENSORRT", "False").lower() == "true"
 
 
 def sinusoidal_embedding_1d(dim: int, position: torch.Tensor) -> torch.Tensor:
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-
-    Returns:
-        The return value.
-    """
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -55,16 +46,6 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 # @amp.autocast(enabled=False)
 def rope_params_polar(max_seq_len: int, dim: int, theta: float = 10000) -> torch.Tensor:
-    """Rope params polar.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-
-    Returns:
-        The return value.
-    """
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len), 1.0 / torch.pow(theta, torch.arange(0, dim, 2).to(torch.float64).div(dim))
@@ -74,16 +55,6 @@ def rope_params_polar(max_seq_len: int, dim: int, theta: float = 10000) -> torch
 
 
 def rope_params_no_polar(max_seq_len: int, dim: int, theta: float = 10000) -> torch.Tensor:
-    """Rope params no polar.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-
-    Returns:
-        The return value.
-    """
     assert dim % 2 == 0
     inv_freq = 1.0 / torch.pow(theta, torch.arange(0, dim, 2).to(torch.float32) / dim)
     t = torch.arange(max_seq_len, dtype=inv_freq.dtype)
@@ -102,15 +73,6 @@ def rope_apply(x, grid_sizes, freqs):
 
 # @amp.autocast(enabled=False)
 def rope_apply_polar(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
-    """Rope apply polar.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-
-    Returns:
-        The return value.
-    """
     B, seq_len, n, _ = x.shape
 
     # precompute multipliers
@@ -123,15 +85,6 @@ def rope_apply_polar(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
 
 
 def rope_apply_no_polar(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
-    """Rope apply no polar.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-
-    Returns:
-        The return value.
-    """
     B, seq_len, n, D = x.shape
 
     # Reshape freqs to be broadcastable: (1, seq_len, 1, D)
@@ -149,17 +102,6 @@ def rope_apply_no_polar(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
 def rope_action_apply(
     x, freqs, freqs_action, freqs_state, action_register_length, num_action_per_block=32, num_state_per_block=1
 ):
-    """Rope action apply.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-        freqs_action: The freqs action.
-        freqs_state: The freqs state.
-        action_register_length: The action register length.
-        num_action_per_block: The num action per block.
-        num_state_per_block: The num state per block.
-    """
     if ENABLE_TENSORRT:
         return rope_action_apply_no_polar(
             x, freqs, freqs_action, freqs_state, action_register_length, num_action_per_block, num_state_per_block
@@ -179,20 +121,6 @@ def rope_action_apply_no_polar(
     num_action_per_block: int = 32,
     num_state_per_block: int = 1,
 ) -> torch.Tensor:
-    """Rope action apply no polar.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-        freqs_action: The freqs action.
-        freqs_state: The freqs state.
-        action_register_length: The action register length.
-        num_action_per_block: The num action per block.
-        num_state_per_block: The num state per block.
-
-    Returns:
-        The return value.
-    """
     B, seq_len, n, D = x.shape
 
     if action_register_length is not None:
@@ -224,20 +152,6 @@ def rope_action_apply_polar(
     num_action_per_block: int | None = None,
     num_state_per_block: int | None = None,
 ) -> torch.Tensor:
-    """Rope action apply polar.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-        freqs_action: The freqs action.
-        freqs_state: The freqs state.
-        action_register_length: The action register length.
-        num_action_per_block: The num action per block.
-        num_state_per_block: The num state per block.
-
-    Returns:
-        The return value.
-    """
     B, seq_len, n, _ = x.shape
 
     # precompute multipliers
@@ -265,12 +179,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -292,13 +200,6 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
 
@@ -306,15 +207,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -432,15 +324,6 @@ class WanI2VCrossAttention(WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps)
 
         self.k_img = nn.Linear(dim, dim)
@@ -508,18 +391,6 @@ class WanAttentionBlock(nn.Module):
         cross_attn_norm=False,
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -592,17 +463,6 @@ class GanAttentionBlock(nn.Module):
     def __init__(
         self, dim=1536, ffn_dim=8192, num_heads=12, window_size=(-1, -1), qk_norm=True, cross_attn_norm=True, eps=1e-6
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -658,12 +518,6 @@ class GanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-            """
             token = context + self.cross_attn(self.norm3(x), context)
             y = self.ffn(self.norm2(token)) + token  # * (1 + e[4]) + e[3])
             # with amp.autocast(dtype=torch.float32):
@@ -678,14 +532,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -717,12 +563,6 @@ class MLPProj(torch.nn.Module):
     """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-        """
         super().__init__()
 
         self.proj = torch.nn.Sequential(
@@ -734,11 +574,6 @@ class MLPProj(torch.nn.Module):
         )
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         clip_extra_context_tokens = self.proj(image_embeds)
         return clip_extra_context_tokens
 
@@ -747,22 +582,14 @@ class RegisterTokens(nn.Module):
     """Learned register / prefix tokens prepended to the packed sequence."""
 
     def __init__(self, num_registers: int, dim: int):
-        """Init.
-
-        Args:
-            num_registers: The num registers.
-            dim: The dim.
-        """
         super().__init__()
         self.register_tokens = nn.Parameter(torch.randn(num_registers, dim) * 0.02)
         self.rms_norm = WanRMSNorm(dim, eps=1e-6)
 
     def forward(self):
-        """Forward."""
         return self.rms_norm(self.register_tokens)
 
     def reset_parameters(self):
-        """Reset parameters."""
         nn.init.normal_(self.register_tokens, std=0.02)
 
 
@@ -886,12 +713,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
 
     def _set_gradient_checkpointing(self, module, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            module: The module.
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     def forward(
@@ -974,14 +795,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward

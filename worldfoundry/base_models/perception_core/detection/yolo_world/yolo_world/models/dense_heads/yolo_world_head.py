@@ -320,8 +320,6 @@ class RepYOLOWorldHeadModule(YOLOWorldHeadModule):
 
 @MODELS.register_module()
 class YOLOWorldHead(YOLOv8Head):
-    """YOLO-World Head"""
-
     def __init__(self, world_size=-1, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.world_size = world_size

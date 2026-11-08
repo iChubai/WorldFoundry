@@ -16,14 +16,6 @@ _QKV_RE = re.compile(
 
 
 def _load_checkpoint(path: str | Path) -> Mapping[str, torch.Tensor]:
-    """Helper function to load checkpoint.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     path = Path(path)
     if path.suffix == ".safetensors":
         from safetensors.torch import load_file
@@ -36,26 +28,10 @@ def _load_checkpoint(path: str | Path) -> Mapping[str, torch.Tensor]:
 
 
 def _strip_module_prefix(state_dict: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-    """Helper function to strip module prefix.
-
-    Args:
-        state_dict: The state dict.
-
-    Returns:
-        The return value.
-    """
     return {k.removeprefix("module."): v for k, v in state_dict.items()}
 
 
 def _map_audio_block_key(key: str) -> str:
-    """Helper function to map audio block key.
-
-    Args:
-        key: The key.
-
-    Returns:
-        The return value.
-    """
     match = _BLOCK_RE.match(key)
     if not match:
         return ""
@@ -81,15 +57,6 @@ def _convert_hf_clap_qkv(
     state_dict: Mapping[str, torch.Tensor],
     output: MutableMapping[str, torch.Tensor],
 ) -> None:
-    """Helper function to convert hf clap qkv.
-
-    Args:
-        state_dict: The state dict.
-        output: The output.
-
-    Returns:
-        The return value.
-    """
     grouped = {}
     for key, value in state_dict.items():
         match = _QKV_RE.match(key)

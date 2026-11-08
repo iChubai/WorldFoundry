@@ -33,12 +33,6 @@ def _llm_final_layer_norm(model: nn.Module) -> nn.Module:
 
 
 def use_default(value, default):
-    """Use default.
-
-    Args:
-        value: The value.
-        default: The default.
-    """
     return value if value is not None else default
 
 
@@ -49,15 +43,6 @@ def load_text_encoder(
     logger=None,
     device=None,
 ):
-    """Load text encoder.
-
-    Args:
-        text_encoder_type: The text encoder type.
-        text_encoder_precision: The text encoder precision.
-        text_encoder_path: The text encoder path.
-        logger: The logger.
-        device: The device.
-    """
     if text_encoder_path is None:
         raise ValueError("`text_encoder_path` not exists")
     if logger is not None:
@@ -88,14 +73,6 @@ def load_text_encoder(
 
 
 def load_tokenizer(tokenizer_type, tokenizer_path=None, padding_side="right", logger=None):
-    """Load tokenizer.
-
-    Args:
-        tokenizer_type: The tokenizer type.
-        tokenizer_path: The tokenizer path.
-        padding_side: The padding side.
-        logger: The logger.
-    """
     if tokenizer_path is None:
         raise ValueError("`tokenizer_path` not exists")
     if logger is not None:
@@ -136,8 +113,6 @@ class TextEncoderModelOutput(ModelOutput):
 
 
 class TextEncoder(nn.Module):
-    """Text encoder implementation."""
-
     def __init__(
         self,
         text_encoder_type: str,
@@ -157,26 +132,6 @@ class TextEncoder(nn.Module):
         logger=None,
         device=None,
     ):
-        """Init.
-
-        Args:
-            text_encoder_type: The text encoder type.
-            max_length: The max length.
-            text_encoder_precision: The text encoder precision.
-            text_encoder_path: The text encoder path.
-            tokenizer_type: The tokenizer type.
-            tokenizer_path: The tokenizer path.
-            output_key: The output key.
-            use_attention_mask: The use attention mask.
-            input_max_length: The input max length.
-            prompt_template: The prompt template.
-            prompt_template_video: The prompt template video.
-            hidden_state_skip_layer: The hidden state skip layer.
-            apply_final_norm: The apply final norm.
-            reproduce: The reproduce.
-            logger: The logger.
-            device: The device.
-        """
         super().__init__()
         self.text_encoder_type = text_encoder_type
         self.max_length = max_length
@@ -243,14 +198,11 @@ class TextEncoder(nn.Module):
         )
 
     def __repr__(self):
-        """Repr."""
         return f"{self.text_encoder_type} ({self.precision} - {self.model_path})"
 
     @staticmethod
     def apply_text_to_template(text, template, prevent_empty_text=True):
         """
-        Apply text to template.
-
         Args:
             text (str): Input text.
             template (str or list): Template string or list of chat conversation.
@@ -383,16 +335,6 @@ class TextEncoder(nn.Module):
         hidden_state_skip_layer=None,
         return_texts=False,
     ):
-        """Forward.
-
-        Args:
-            text: The text.
-            use_attention_mask: The use attention mask.
-            output_hidden_states: The output hidden states.
-            do_sample: The do sample.
-            hidden_state_skip_layer: The hidden state skip layer.
-            return_texts: The return texts.
-        """
         batch_encoding = self.text2tokens(text)
         return self.encode(
             batch_encoding,

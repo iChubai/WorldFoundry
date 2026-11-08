@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> utils -> checkpoint.py functionality."""
-
 import os
 import shutil
 
@@ -12,15 +10,6 @@ import torch
 
 
 def load_network_and_optimizer(net, opt, pretrained_dir, gpu, scaler=None):
-    """Load network and optimizer.
-
-    Args:
-        net: The net.
-        opt: The opt.
-        pretrained_dir: The pretrained dir.
-        gpu: The gpu.
-        scaler: The scaler.
-    """
     pretrained = torch.load(pretrained_dir, map_location=torch.device("cuda:" + str(gpu)))
     pretrained_dict = pretrained["state_dict"]
     model_dict = net.state_dict()
@@ -44,15 +33,6 @@ def load_network_and_optimizer(net, opt, pretrained_dir, gpu, scaler=None):
 
 
 def load_network_and_optimizer_v2(net, opt, pretrained_dir, gpu, scaler=None):
-    """Load network and optimizer v2.
-
-    Args:
-        net: The net.
-        opt: The opt.
-        pretrained_dir: The pretrained dir.
-        gpu: The gpu.
-        scaler: The scaler.
-    """
     pretrained = torch.load(pretrained_dir, map_location=torch.device("cuda:" + str(gpu)))
     # load model
     pretrained_dict = pretrained["state_dict"]
@@ -94,13 +74,6 @@ def load_network_and_optimizer_v2(net, opt, pretrained_dir, gpu, scaler=None):
 
 
 def load_network(net, pretrained_dir, gpu):
-    """Load network.
-
-    Args:
-        net: The net.
-        pretrained_dir: The pretrained dir.
-        gpu: The gpu.
-    """
     pretrained = torch.load(
         pretrained_dir,
         map_location=torch.device("cuda:" + str(gpu)),
@@ -130,17 +103,6 @@ def load_network(net, pretrained_dir, gpu):
 
 
 def save_network(net, opt, step, save_path, max_keep=8, backup_dir="./saved_models", scaler=None):
-    """Save network.
-
-    Args:
-        net: The net.
-        opt: The opt.
-        step: The step.
-        save_path: The save path.
-        max_keep: The max keep.
-        backup_dir: The backup dir.
-        scaler: The scaler.
-    """
     ckpt = {"state_dict": net.state_dict(), "optimizer": opt.state_dict()}
     if scaler is not None:
         ckpt["scaler"] = scaler.state_dict()
@@ -172,12 +134,6 @@ def save_network(net, opt, step, save_path, max_keep=8, backup_dir="./saved_mode
 
 
 def cp_ckpt(remote_dir="data_wd/youtube_vos_jobs/result", curr_dir="backup"):
-    """Cp ckpt.
-
-    Args:
-        remote_dir: The remote dir.
-        curr_dir: The curr dir.
-    """
     exps = os.listdir(curr_dir)
     for exp in exps:
         exp_dir = os.path.join(curr_dir, exp)

@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> utils -> transforms.py functionality."""
-
 from copy import deepcopy
 
 import numpy as np
@@ -22,14 +20,6 @@ class ResizeLongestSide:
     """
 
     def __init__(self, target_length: int) -> None:
-        """Init.
-
-        Args:
-            target_length: The target length.
-
-        Returns:
-            The return value.
-        """
         self.target_length = target_length
 
     def apply_image(self, image: np.ndarray) -> np.ndarray:

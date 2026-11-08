@@ -3,8 +3,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> encoder.py functionality."""
-
 import torch
 from torch import Tensor, nn
 
@@ -274,16 +272,6 @@ class TransformerEncoder(nn.Module):
         frozen: bool = False,
         use_act_checkpoint: bool = False,
     ):
-        """Init.
-
-        Args:
-            layer: The layer.
-            num_layers: The num layers.
-            d_model: The d model.
-            num_feature_levels: The num feature levels.
-            frozen: The frozen.
-            use_act_checkpoint: The use act checkpoint.
-        """
         super().__init__()
         self.layers = get_clones(layer, num_layers)
         self.num_layers = num_layers
@@ -307,13 +295,6 @@ class TransformerEncoder(nn.Module):
 
     @staticmethod
     def get_reference_points(spatial_shapes, valid_ratios, device):
-        """Get reference points.
-
-        Args:
-            spatial_shapes: The spatial shapes.
-            valid_ratios: The valid ratios.
-            device: The device.
-        """
         with torch.no_grad():
             reference_points_list = []
             for lvl, (H_, W_) in enumerate(spatial_shapes):
@@ -331,13 +312,6 @@ class TransformerEncoder(nn.Module):
         return reference_points
 
     def _prepare_multilevel_features(self, srcs, masks, pos_embeds):
-        """Helper function to prepare multilevel features.
-
-        Args:
-            srcs: The srcs.
-            masks: The masks.
-            pos_embeds: The pos embeds.
-        """
         assert len(srcs) == self.num_feature_levels, "mismatch between expected and received # of feature levels"
 
         src_flatten = []
@@ -495,17 +469,6 @@ class TransformerEncoderFusion(TransformerEncoder):
         compile_mode: str | None = None,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            layer: The layer.
-            num_layers: The num layers.
-            d_model: The d model.
-            num_feature_levels: The num feature levels.
-            add_pooled_text_to_img_feat: The add pooled text to img feat.
-            pool_text_with_mask: The pool text with mask.
-            compile_mode: The compile mode.
-        """
         super().__init__(
             layer,
             num_layers,
@@ -522,13 +485,6 @@ class TransformerEncoderFusion(TransformerEncoder):
 
     @staticmethod
     def get_reference_points(spatial_shapes, valid_ratios, device):
-        """Get reference points.
-
-        Args:
-            spatial_shapes: The spatial shapes.
-            valid_ratios: The valid ratios.
-            device: The device.
-        """
         # Not needed here
         return None
 
@@ -543,18 +499,6 @@ class TransformerEncoderFusion(TransformerEncoder):
         feat_sizes: list[int] | None = None,
         encoder_extra_kwargs: dict | None = None,
     ):
-        """Forward.
-
-        Args:
-            src: The src.
-            prompt: The prompt.
-            src_key_padding_mask: The src key padding mask.
-            src_pos: The src pos.
-            prompt_key_padding_mask: The prompt key padding mask.
-            prompt_pos: The prompt pos.
-            feat_sizes: The feat sizes.
-            encoder_extra_kwargs: The encoder extra kwargs.
-        """
         # Restore spatial shapes of vision
         bs = src[0].shape[1]  # seq first
         if feat_sizes is not None:
@@ -606,13 +550,6 @@ class TransformerEncoderFusion(TransformerEncoder):
 
 
 def pool_text_feat(prompt, prompt_mask, pool_with_mask):
-    """Pool text feat.
-
-    Args:
-        prompt: The prompt.
-        prompt_mask: The prompt mask.
-        pool_with_mask: The pool with mask.
-    """
     # prompt has shape (seq, bs, dim)
     if not pool_with_mask:
         return prompt.mean(dim=0)

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> maps.py functionality."""
-
 import math
 from typing import *
 
@@ -85,11 +83,6 @@ def image_uv(
     height: Optional[int] = None,
     **kwargs,
 ) -> ndarray:
-    """Image uv.
-
-    Returns:
-        The return value.
-    """
     if width is not None or height is not None:
         if width is None or height is None:
             raise ValueError("Both width and height must be provided.")
@@ -503,16 +496,6 @@ def depth_to_points(
     intrinsics: ndarray,
     extrinsics: ndarray = None,
 ) -> ndarray:
-    """Depth to points.
-
-    Args:
-        depth: The depth.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-
-    Returns:
-        The return value.
-    """
     return depth_map_to_point_map(depth, intrinsics, extrinsics)
 
 

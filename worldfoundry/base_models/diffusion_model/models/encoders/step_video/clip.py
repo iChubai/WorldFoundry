@@ -57,12 +57,6 @@ class HunyuanClip(nn.Module):
     """
 
     def __init__(self, model_dir, max_length=77):
-        """Init.
-
-        Args:
-            model_dir: The model dir.
-            max_length: The max length.
-        """
         super().__init__()
 
         self.max_length = max_length
@@ -71,12 +65,6 @@ class HunyuanClip(nn.Module):
 
     @torch.no_grad
     def forward(self, prompts, with_mask=True):
-        """Forward.
-
-        Args:
-            prompts: The prompts.
-            with_mask: The with mask.
-        """
         self.device = next(self.text_encoder.parameters()).device
         text_inputs = self.tokenizer(
             prompts,

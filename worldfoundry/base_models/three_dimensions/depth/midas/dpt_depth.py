@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> dpt_depth.py functionality."""
-
 import torch
 import torch.nn as nn
 from timm.models.layers import get_act_layer
@@ -18,13 +16,6 @@ from .blocks import (
 
 
 def _make_fusion_block(features, use_bn, size=None):
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        use_bn: The use bn.
-        size: The size.
-    """
     return FeatureFusionBlock_custom(
         features,
         nn.ReLU(False),
@@ -161,15 +152,7 @@ class DPT(BaseModel):
 
 
 class DPTDepthModel(DPT):
-    """Dpt depth model implementation."""
-
     def __init__(self, path=None, non_negative=True, **kwargs):
-        """Init.
-
-        Args:
-            path: The path.
-            non_negative: The non negative.
-        """
         features = kwargs["features"] if "features" in kwargs else 256
         head_features_1 = kwargs["head_features_1"] if "head_features_1" in kwargs else features
         head_features_2 = kwargs["head_features_2"] if "head_features_2" in kwargs else 32
@@ -192,9 +175,4 @@ class DPTDepthModel(DPT):
             self.load(path)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return super().forward(x).squeeze(dim=1)

@@ -12,10 +12,7 @@ import torch.nn.functional as F
 
 
 class DepthProEncoder(nn.Module):
-    """DepthPro Encoder.
-
-    An encoder aimed at creating multi-resolution encodings from Vision Transformers.
-    """
+    """An encoder aimed at creating multi-resolution encodings from Vision Transformers."""
 
     def __init__(
         self,

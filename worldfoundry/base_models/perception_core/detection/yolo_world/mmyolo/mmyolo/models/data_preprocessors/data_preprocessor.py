@@ -174,8 +174,7 @@ class PPYOLOEDetDataPreprocessor(DetDataPreprocessor):
 #  mmdet's batch aug, and it must be compatible in the future.
 @MODELS.register_module()
 class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
-    """PPYOLOE batch random resize.
-
+    """
     Args:
         random_size_range (tuple): The multi-scale random range during
             multi-scale training.

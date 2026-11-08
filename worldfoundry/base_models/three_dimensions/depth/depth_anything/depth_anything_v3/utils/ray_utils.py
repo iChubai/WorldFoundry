@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> ray_utils.py functionality."""
-
 import torch
 from einops import repeat
 
@@ -102,11 +100,6 @@ def compute_optimal_rotation_intrinsics_batch(
 
 # https://www.reddit.com/r/learnmath/comments/v1crd7/linear_algebra_qr_to_ql_decomposition/
 def ql_decomposition(A):
-    """Ql decomposition.
-
-    Args:
-        A: The a.
-    """
     P = torch.tensor([[0, 0, 1], [0, 1, 0], [1, 0, 0]], device=A.device).float()
     A_tilde = torch.matmul(A, P)
     Q_tilde, R_tilde = torch.linalg.qr(A_tilde)
@@ -423,12 +416,6 @@ def ransac_find_homography_weighted_fast_batch(
 
 
 def get_params_for_ransac(N, device):
-    """Get params for ransac.
-
-    Args:
-        N: The n.
-        device: The device.
-    """
     n_iter = 100
     sample_ratio = 0.3
     num_sample_for_ransac = 8
@@ -507,15 +494,6 @@ def camray_to_caminfo(camray, confidence=None, reproj_threshold=0.2, training=Fa
 
 
 def get_extrinsic_from_camray(camray, conf, patch_size_y, patch_size_x, training=False):
-    """Get extrinsic from camray.
-
-    Args:
-        camray: The camray.
-        conf: The conf.
-        patch_size_y: The patch size y.
-        patch_size_x: The patch size x.
-        training: The training.
-    """
     pred_R, pred_T, pred_focal_lengths, pred_principal_points = camray_to_caminfo(
         camray, confidence=conf.squeeze(-1), training=training
     )

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> backbones -> vit.py functionality."""
-
 import math
 import types
 
@@ -19,23 +17,10 @@ from .utils import (
 
 
 def forward_vit(pretrained, x):
-    """Forward vit.
-
-    Args:
-        pretrained: The pretrained.
-        x: The x.
-    """
     return forward_adapted_unflatten(pretrained, x, "forward_flex")
 
 
 def _resize_pos_embed(self, posemb, gs_h, gs_w):
-    """Helper function to resize pos embed.
-
-    Args:
-        posemb: The posemb.
-        gs_h: The gs h.
-        gs_w: The gs w.
-    """
     posemb_tok, posemb_grid = (
         posemb[:, : self.start_index],
         posemb[0, self.start_index :],
@@ -53,11 +38,6 @@ def _resize_pos_embed(self, posemb, gs_h, gs_w):
 
 
 def forward_flex(self, x):
-    """Forward flex.
-
-    Args:
-        x: The x.
-    """
     b, c, h, w = x.shape
 
     pos_embed = self._resize_pos_embed(self.pos_embed, h // self.patch_size[1], w // self.patch_size[0])
@@ -103,18 +83,6 @@ def _make_vit_b16_backbone(
     start_index=1,
     start_index_readout=1,
 ):
-    """Helper function to make vit b16 backbone.
-
-    Args:
-        model: The model.
-        features: The features.
-        size: The size.
-        hooks: The hooks.
-        vit_features: The vit features.
-        use_readout: The use readout.
-        start_index: The start index.
-        start_index_readout: The start index readout.
-    """
     pretrained = make_backbone_default(
         model, features, size, hooks, vit_features, use_readout, start_index, start_index_readout
     )
@@ -128,13 +96,6 @@ def _make_vit_b16_backbone(
 
 
 def _make_pretrained_vitl16_384(pretrained, use_readout="ignore", hooks=None):
-    """Helper function to make pretrained vitl16 384.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-    """
     model = timm.create_model("vit_large_patch16_384", pretrained=pretrained)
 
     hooks = [5, 11, 17, 23] if hooks == None else hooks
@@ -148,13 +109,6 @@ def _make_pretrained_vitl16_384(pretrained, use_readout="ignore", hooks=None):
 
 
 def _make_pretrained_vitb16_384(pretrained, use_readout="ignore", hooks=None):
-    """Helper function to make pretrained vitb16 384.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-    """
     model = timm.create_model("vit_base_patch16_384", pretrained=pretrained)
 
     hooks = [2, 5, 8, 11] if hooks == None else hooks
@@ -173,20 +127,6 @@ def _make_vit_b_rn50_backbone(
     use_readout="ignore",
     start_index=1,
 ):
-    """Helper function to make vit b rn50 backbone.
-
-    Args:
-        model: The model.
-        features: The features.
-        size: The size.
-        hooks: The hooks.
-        vit_features: The vit features.
-        patch_size: The patch size.
-        number_stages: The number stages.
-        use_vit_only: The use vit only.
-        use_readout: The use readout.
-        start_index: The start index.
-    """
     pretrained = nn.Module()
 
     pretrained.model = model
@@ -260,14 +200,6 @@ def _make_vit_b_rn50_backbone(
 
 
 def _make_pretrained_vitb_rn50_384(pretrained, use_readout="ignore", hooks=None, use_vit_only=False):
-    """Helper function to make pretrained vitb rn50 384.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-        use_vit_only: The use vit only.
-    """
     model = timm.create_model("vit_base_resnet50_384", pretrained=pretrained)
 
     hooks = [0, 1, 8, 11] if hooks == None else hooks

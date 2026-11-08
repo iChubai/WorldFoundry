@@ -69,11 +69,9 @@ class HubOperation:
         """Push a model-like folder to the hub
 
         Args:
-            repo_id: The repo id
             folder_path: The local folder path
             path_in_repo: Which remote folder to put the local files in
             commit_message: The commit message of git
-            commit_description: The commit description
             token: The hub token
             private: Private hub or not
             revision: The revision to push to
@@ -88,7 +86,6 @@ class HubOperation:
         """Load a dataset from the repo
 
         Args:
-            dataset_id: The dataset id
             subset_name: The subset name of the dataset
             split: The split info
             streaming: Streaming mode

@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> layers -> block.py functionality."""
-
 import logging
 import os
 from collections.abc import Callable
@@ -128,8 +126,6 @@ def drop_add_residual_stochastic_depth_list(
 
 
 class NestedTensorBlock(Block):
-    """Nested tensor block implementation."""
-
     def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         assert isinstance(self.attn, MemEffAttention)
 

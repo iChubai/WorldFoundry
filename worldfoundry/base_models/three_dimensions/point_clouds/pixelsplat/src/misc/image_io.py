@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> misc -> image_io.py functionality."""
-
 from pathlib import Path
 from typing import Union
 
@@ -19,14 +17,6 @@ FloatImage = Union[
 
 
 def prep_image(image: FloatImage) -> UInt8[np.ndarray, "height width channel"]:
-    """Prep image.
-
-    Args:
-        image: The image.
-
-    Returns:
-        The return value.
-    """
     # Handle batched images.
     if image.ndim == 4:
         image = rearrange(image, "b c h w -> c h (b w)")
@@ -62,12 +52,4 @@ def save_image(
 def load_image(
     path: Path | str,
 ) -> Float[Tensor, "3 height width"]:
-    """Load image.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     return tf.ToTensor()(Image.open(path))[:3]

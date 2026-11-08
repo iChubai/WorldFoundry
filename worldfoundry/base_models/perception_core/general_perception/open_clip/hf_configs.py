@@ -1,6 +1,4 @@
 # HF architecture dict:
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> hf_configs.py functionality."""
-
 arch_dict = {
     # https://huggingface.co/docs/transformers/model_doc/roberta#roberta
     "roberta": {

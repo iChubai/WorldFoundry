@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> geometry -> epipolar_lines.py functionality."""
-
 import itertools
 from collections.abc import Iterable
 from typing import Literal, TypedDict
@@ -46,8 +44,6 @@ def _is_positive_t(
 
 
 class PointProjection(TypedDict):
-    """Point projection implementation."""
-
     t: Float[Tensor, " *batch"]  # ray parameter, as in xyz = origin + t * direction
     xy: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)
 
@@ -113,15 +109,6 @@ def _compare_projections(
     intersections: Iterable[PointProjection],
     reduction: Literal["min", "max"],
 ) -> PointProjection:
-    """Helper function to compare projections.
-
-    Args:
-        intersections: The intersections.
-        reduction: The reduction.
-
-    Returns:
-        The return value.
-    """
     intersections = {k: v.clone() for k, v in default_collate(intersections).items()}
     t = intersections["t"]
     xy = intersections["xy"]
@@ -150,16 +137,6 @@ def _compute_point_projection(
     t: Float[Tensor, "*#batch"],
     intrinsics: Float[Tensor, "*#batch 3 3"],
 ) -> PointProjection:
-    """Helper function to compute point projection.
-
-    Args:
-        xyz: The xyz.
-        t: The t.
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     xy = project_camera_space(xyz, intrinsics)
     return {
         "t": t,
@@ -169,8 +146,6 @@ def _compute_point_projection(
 
 
 class RaySegmentProjection(TypedDict):
-    """Ray segment projection implementation."""
-
     t_min: Float[Tensor, " *batch"]  # ray parameter
     t_max: Float[Tensor, " *batch"]  # ray parameter
     xy_min: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)
@@ -189,20 +164,6 @@ def project_rays(
     far: Float[Tensor, "*#batch"] | None = None,
     epsilon: float = 1e-6,
 ) -> RaySegmentProjection:
-    """Project rays.
-
-    Args:
-        origins: The origins.
-        directions: The directions.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        near: The near.
-        far: The far.
-        epsilon: The epsilon.
-
-    Returns:
-        The return value.
-    """
     # Transform the rays into camera space.
     world_to_cam = torch.linalg.inv(extrinsics)
     origins = homogenize_points(origins)
@@ -292,8 +253,6 @@ def project_rays(
 
 
 class RaySegmentProjection(TypedDict):
-    """Ray segment projection implementation."""
-
     t_min: Float[Tensor, " *batch"]  # ray parameter
     t_max: Float[Tensor, " *batch"]  # ray parameter
     xy_min: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)

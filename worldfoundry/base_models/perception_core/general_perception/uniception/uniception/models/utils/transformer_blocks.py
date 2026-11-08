@@ -413,8 +413,6 @@ class LayerScale(nn.Module):
 
 
 class SelfAttentionBlock(nn.Module):
-    "Self-Attention Block"
-
     def __init__(
         self,
         dim: int,
@@ -515,8 +513,6 @@ class SelfAttentionBlock(nn.Module):
 
 
 class CrossAttentionBlock(nn.Module):
-    "Cross-Attention Block"
-
     def __init__(
         self,
         dim: int,

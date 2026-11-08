@@ -116,27 +116,6 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         steps_offset: int = 0,
         final_sigmas_type: str | None = "zero",  # "zero", "sigma_min"
     ):
-        """Init.
-
-        Args:
-            num_train_timesteps: The num train timesteps.
-            solver_order: The solver order.
-            prediction_type: The prediction type.
-            shift: The shift.
-            use_dynamic_shifting: The use dynamic shifting.
-            thresholding: The thresholding.
-            dynamic_thresholding_ratio: The dynamic thresholding ratio.
-            sample_max_value: The sample max value.
-            predict_x0: The predict x0.
-            solver_type: The solver type.
-            lower_order_final: The lower order final.
-            disable_corrector: The disable corrector.
-            solver_p: The solver p.
-            timestep_spacing: The timestep spacing.
-            steps_offset: The steps offset.
-            final_sigmas_type: The final sigmas type.
-        """
-
         if solver_type not in ["bh1", "bh2"]:
             if solver_type in ["midpoint", "heun", "logrho"]:
                 self.register_to_config(solver_type="bh2")
@@ -308,30 +287,13 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
 
     # Copied from diffusers.schedulers.scheduling_flow_match_euler_discrete.FlowMatchEulerDiscreteScheduler._sigma_to_t
     def _sigma_to_t(self, sigma):
-        """Helper function to sigma to t.
-
-        Args:
-            sigma: The sigma.
-        """
         return sigma * self.config.num_train_timesteps
 
     def _sigma_to_alpha_sigma_t(self, sigma):
-        """Helper function to sigma to alpha sigma t.
-
-        Args:
-            sigma: The sigma.
-        """
         return 1 - sigma, sigma
 
     # Copied from diffusers.schedulers.scheduling_flow_match_euler_discrete.set_timesteps
     def time_shift(self, mu: float, sigma: float, t: torch.Tensor):
-        """Time shift.
-
-        Args:
-            mu: The mu.
-            sigma: The sigma.
-            t: The t.
-        """
         return math.exp(mu) / (math.exp(mu) + (1 / t - 1) ** sigma)
 
     def convert_model_output(
@@ -682,12 +644,6 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         return x_t
 
     def index_for_timestep(self, timestep, schedule_timesteps=None):
-        """Index for timestep.
-
-        Args:
-            timestep: The timestep.
-            schedule_timesteps: The schedule timesteps.
-        """
         if schedule_timesteps is None:
             schedule_timesteps = self.timesteps
 
@@ -818,16 +774,6 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         noise: torch.Tensor,
         timesteps: torch.IntTensor,
     ) -> torch.Tensor:
-        """Add noise.
-
-        Args:
-            original_samples: The original samples.
-            noise: The noise.
-            timesteps: The timesteps.
-
-        Returns:
-            The return value.
-        """
         # Make sure sigmas and timesteps have the same device and dtype as original_samples
         sigmas = self.sigmas.to(device=original_samples.device, dtype=original_samples.dtype)
         if original_samples.device.type == "mps" and torch.is_floating_point(timesteps):
@@ -864,5 +810,4 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         return noisy_samples
 
     def __len__(self):
-        """Len."""
         return self.config.num_train_timesteps

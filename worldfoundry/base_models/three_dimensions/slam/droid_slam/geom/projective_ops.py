@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> projective_ops.py functionality."""
-
 import torch
 from lietorch import SE3, Sim3
 
@@ -7,21 +5,10 @@ MIN_DEPTH = 0.2
 
 
 def extract_intrinsics(intrinsics):
-    """Extract intrinsics.
-
-    Args:
-        intrinsics: The intrinsics.
-    """
     return intrinsics[..., None, None, :].unbind(dim=-1)
 
 
 def coords_grid(ht, wd, **kwargs):
-    """Coords grid.
-
-    Args:
-        ht: The ht.
-        wd: The wd.
-    """
     y, x = torch.meshgrid(
         torch.arange(ht, dtype=torch.float, **kwargs),
         torch.arange(wd, dtype=torch.float, **kwargs),

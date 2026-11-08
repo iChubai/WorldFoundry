@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 # pyre-unsafe
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_image_processor.py functionality."""
-
 import numpy as np
 import PIL
 import torch
@@ -20,14 +18,6 @@ class Sam3Processor:
     """ """
 
     def __init__(self, model, resolution=1008, device="cuda", confidence_threshold=0.5):
-        """Init.
-
-        Args:
-            model: The model.
-            resolution: The resolution.
-            device: The device.
-            confidence_threshold: The confidence threshold.
-        """
         self.model = model
         self.resolution = resolution
         self.device = device
@@ -178,11 +168,6 @@ class Sam3Processor:
 
     @torch.inference_mode()
     def _forward_grounding(self, state: dict):
-        """Helper function to forward grounding.
-
-        Args:
-            state: The state.
-        """
         outputs = self.model.forward_grounding(
             backbone_out=state["backbone_out"],
             find_input=self.find_stage,

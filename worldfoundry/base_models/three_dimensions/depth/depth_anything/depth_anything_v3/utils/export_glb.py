@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> export_glb.py functionality."""
-
 from __future__ import annotations
 
 import itertools
@@ -28,13 +26,6 @@ from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_
 
 
 def set_sky_depth(prediction: Prediction, sky_mask: np.ndarray, sky_depth_def: float = 98.0):
-    """Set sky depth.
-
-    Args:
-        prediction: The prediction.
-        sky_mask: The sky mask.
-        sky_depth_def: The sky depth def.
-    """
     non_sky_mask = ~sky_mask
     valid_depth = prediction.depth[non_sky_mask]
     if valid_depth.size > 0:
@@ -49,15 +40,6 @@ def get_conf_thresh(
     conf_thresh_percentile: float = 10.0,
     ensure_thresh_percentile: float = 90.0,
 ):
-    """Get conf thresh.
-
-    Args:
-        prediction: The prediction.
-        sky_mask: The sky mask.
-        conf_thresh: The conf thresh.
-        conf_thresh_percentile: The conf thresh percentile.
-        ensure_thresh_percentile: The ensure thresh percentile.
-    """
     conf_pixels = prediction.conf[~sky_mask] if sky_mask is not None and (~sky_mask).sum() > 10 else prediction.conf
     lower = np.percentile(conf_pixels, conf_thresh_percentile)
     upper = np.percentile(conf_pixels, ensure_thresh_percentile)
@@ -259,13 +241,6 @@ def _depths_to_world_points_with_colors(
 
 
 def _filter_and_downsample(points: np.ndarray, colors: np.ndarray, num_max: int):
-    """Helper function to filter and downsample.
-
-    Args:
-        points: The points.
-        colors: The colors.
-        num_max: The num max.
-    """
     if points.shape[0] == 0:
         return points, colors
     finite = np.isfinite(points).all(axis=1)
@@ -277,15 +252,6 @@ def _filter_and_downsample(points: np.ndarray, colors: np.ndarray, num_max: int)
 
 
 def _estimate_scene_scale(points: np.ndarray, fallback: float = 1.0) -> float:
-    """Helper function to estimate scene scale.
-
-    Args:
-        points: The points.
-        fallback: The fallback.
-
-    Returns:
-        The return value.
-    """
     if points.shape[0] < 2:
         return fallback
     lo = np.percentile(points, 5, axis=0)
@@ -382,18 +348,6 @@ def _add_cameras_to_scene(
 
 
 def _camera_frustum_lines(K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, scale: float) -> np.ndarray:
-    """Helper function to camera frustum lines.
-
-    Args:
-        K: The k.
-        ext_w2c: The ext w2c.
-        W: The w.
-        H: The h.
-        scale: The scale.
-
-    Returns:
-        The return value.
-    """
     corners = np.array(
         [
             [0, 0, 1.0],
@@ -436,15 +390,6 @@ def _camera_frustum_lines(K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, sc
 
 
 def _index_color_rgb(i: int, n: int) -> np.ndarray:
-    """Helper function to index color rgb.
-
-    Args:
-        i: The i.
-        n: The n.
-
-    Returns:
-        The return value.
-    """
     h = (i + 0.5) / max(n, 1)
     s, v = 0.85, 0.95
     r, g, b = _hsv_to_rgb(h, s, v)
@@ -452,16 +397,6 @@ def _index_color_rgb(i: int, n: int) -> np.ndarray:
 
 
 def _hsv_to_rgb(h: float, s: float, v: float) -> tuple[float, float, float]:
-    """Helper function to hsv to rgb.
-
-    Args:
-        h: The h.
-        s: The s.
-        v: The v.
-
-    Returns:
-        The return value.
-    """
     i = int(h * 6.0)
     f = h * 6.0 - i
     p = v * (1.0 - s)

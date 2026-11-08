@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> layers -> camera_head.py functionality."""
-
 from copy import deepcopy
 
 import torch
@@ -11,15 +9,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models
 
 
 class CameraHead(nn.Module):
-    """Camera head implementation."""
-
     def __init__(self, dim=512, output_quat=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            output_quat: The output quat.
-        """
         super().__init__()
         output_dim = dim
         self.output_quat = output_quat
@@ -35,13 +25,6 @@ class CameraHead(nn.Module):
             self.fc_rot = nn.Linear(output_dim, 9)
 
     def forward(self, feat, patch_h, patch_w):
-        """Forward.
-
-        Args:
-            feat: The feat.
-            patch_h: The patch h.
-            patch_w: The patch w.
-        """
         BN, hw, c = feat.shape
 
         for i in range(2):
@@ -64,14 +47,6 @@ class CameraHead(nn.Module):
                 return pose
 
     def convert_quat_to_4x4(self, B, q, t, device):
-        """Convert quat to 4x4.
-
-        Args:
-            B: The b.
-            q: The q.
-            t: The t.
-            device: The device.
-        """
         # q: [B, 4] (w, x, y, z)
         # t: [B, 3]
 
@@ -103,14 +78,6 @@ class CameraHead(nn.Module):
         return pose
 
     def convert_pose_to_4x4(self, B, out_r, out_t, device):
-        """Convert pose to 4x4.
-
-        Args:
-            B: The b.
-            out_r: The out r.
-            out_t: The out t.
-            device: The device.
-        """
         out_r = self.svd_orthogonalize(out_r)  # [N,3,3]
         pose = torch.zeros((B, 4, 4), device=device)
         pose[:, :3, :3] = out_r

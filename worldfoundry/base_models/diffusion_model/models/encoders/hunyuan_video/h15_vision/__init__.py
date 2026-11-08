@@ -41,12 +41,6 @@ VISION_ENCODER_PATH = {}
 
 
 def use_default(value, default):
-    """Use default.
-
-    Args:
-        value: The value.
-        default: The default.
-    """
     return value if value is not None else default
 
 
@@ -57,15 +51,6 @@ def load_vision_encoder(
     logger=None,
     device=None,
 ):
-    """Load vision encoder.
-
-    Args:
-        vision_encoder_type: The vision encoder type.
-        vision_encoder_precision: The vision encoder precision.
-        vision_encoder_path: The vision encoder path.
-        logger: The logger.
-        device: The device.
-    """
     if vision_encoder_path is None:
         vision_encoder_path = VISION_ENCODER_PATH[vision_encoder_type]
 
@@ -87,13 +72,6 @@ def load_vision_encoder(
 
 
 def load_image_processor(processor_type, processor_path=None, logger=None):
-    """Load image processor.
-
-    Args:
-        processor_type: The processor type.
-        processor_path: The processor path.
-        logger: The logger.
-    """
     if processor_path is None:
         processor_path = VISION_ENCODER_PATH[processor_type]
 
@@ -128,8 +106,6 @@ class VisionEncoderModelOutput(ModelOutput):
 
 
 class VisionEncoder(nn.Module):
-    """Vision encoder implementation."""
-
     def __init__(
         self,
         vision_encoder_type: str,
@@ -141,18 +117,6 @@ class VisionEncoder(nn.Module):
         logger=None,
         device=None,
     ):
-        """Init.
-
-        Args:
-            vision_encoder_type: The vision encoder type.
-            vision_encoder_precision: The vision encoder precision.
-            vision_encoder_path: The vision encoder path.
-            processor_type: The processor type.
-            processor_path: The processor path.
-            output_key: The output key.
-            logger: The logger.
-            device: The device.
-        """
         super().__init__()
         self.vision_encoder_type = vision_encoder_type
         self.precision = vision_encoder_precision
@@ -183,7 +147,6 @@ class VisionEncoder(nn.Module):
         )
 
     def __repr__(self):
-        """Repr."""
         return f"{self.vision_encoder_type} ({self.precision} - {self.model_path})"
 
     def encode_latents_to_images(self, latents, vae, reorg_token=False):

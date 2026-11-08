@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> dataset -> view_sampler -> view_sampler_evaluation.py functionality."""
-
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,8 +19,6 @@ from .view_sampler import ViewSampler
 
 @dataclass
 class ViewSamplerEvaluationCfg:
-    """View sampler evaluation cfg implementation."""
-
     name: Literal["evaluation"]
     index_path: Path
     num_context_views: int
@@ -35,8 +31,6 @@ class IndexEntry:
 
 
 class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
-    """View sampler evaluation implementation."""
-
     index: dict[str, IndexEntry | None]
 
     def __init__(
@@ -46,17 +40,6 @@ class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
         is_overfitting: bool,
         cameras_are_circular: bool,
     ) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            stage: The stage.
-            is_overfitting: The is overfitting.
-            cameras_are_circular: The cameras are circular.
-
-        Returns:
-            The return value.
-        """
         super().__init__(cfg, stage, is_overfitting, cameras_are_circular)
 
         dacite_config = Config(cast=[tuple])
@@ -75,17 +58,6 @@ class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
         Int64[Tensor, " context_view"],  # indices for context views
         Int64[Tensor, " target_view"],  # indices for target views
     ]:
-        """Sample.
-
-        Args:
-            scene: The scene.
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         entry = self.index.get(scene)
         if entry is None:
             raise ValueError(f"No indices available for scene {scene}.")
@@ -101,18 +73,8 @@ class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
 
     @property
     def num_context_views(self) -> int:
-        """Num context views.
-
-        Returns:
-            The return value.
-        """
         return 0
 
     @property
     def num_target_views(self) -> int:
-        """Num target views.
-
-        Returns:
-            The return value.
-        """
         return 0

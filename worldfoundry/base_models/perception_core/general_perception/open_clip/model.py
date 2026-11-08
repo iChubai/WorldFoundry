@@ -35,8 +35,6 @@ from .utils import to_2tuple
 
 @dataclass
 class CLIPVisionCfg:
-    """Clip vision cfg implementation."""
-
     layers: tuple[int, int, int, int] | int = 12
     width: int = 768
     head_width: int = 64
@@ -83,8 +81,6 @@ class CLIPVisionCfg:
 
 @dataclass
 class CLIPTextCfg:
-    """Clip text cfg implementation."""
-
     context_length: int = 77
     vocab_size: int = 49408
     hf_tokenizer_name: str | None = None
@@ -127,11 +123,6 @@ class CLIPTextCfg:
 
 
 def get_cast_dtype(precision: str):
-    """Get cast dtype.
-
-    Args:
-        precision: The precision.
-    """
     cast_dtype = None
     if precision == "bf16":
         cast_dtype = torch.bfloat16
@@ -141,11 +132,6 @@ def get_cast_dtype(precision: str):
 
 
 def get_input_dtype(precision: str):
-    """Get input dtype.
-
-    Args:
-        precision: The precision.
-    """
     input_dtype = None
     if precision in ("bf16", "pure_bf16"):
         input_dtype = torch.bfloat16
@@ -157,14 +143,6 @@ def get_input_dtype(precision: str):
 def _build_vision_tower(
     embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: torch.dtype | None = None
 ):
-    """Helper function to build vision tower.
-
-    Args:
-        embed_dim: The embed dim.
-        vision_cfg: The vision cfg.
-        quick_gelu: The quick gelu.
-        cast_dtype: The cast dtype.
-    """
     if isinstance(vision_cfg, dict):
         vision_cfg = CLIPVisionCfg(**vision_cfg)
 
@@ -245,14 +223,6 @@ def _build_text_tower(
     quick_gelu: bool = False,
     cast_dtype: torch.dtype | None = None,
 ):
-    """Helper function to build text tower.
-
-    Args:
-        embed_dim: The embed dim.
-        text_cfg: The text cfg.
-        quick_gelu: The quick gelu.
-        cast_dtype: The cast dtype.
-    """
     if isinstance(text_cfg, dict):
         text_cfg = CLIPTextCfg(**text_cfg)
 
@@ -304,8 +274,6 @@ def _build_text_tower(
 
 
 class CLIP(nn.Module):
-    """Clip implementation."""
-
     def __init__(
         self,
         embed_dim: int,
@@ -318,19 +286,6 @@ class CLIP(nn.Module):
         cast_dtype: torch.dtype | None = None,
         output_dict: bool = False,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            vision_cfg: The vision cfg.
-            text_cfg: The text cfg.
-            quick_gelu: The quick gelu.
-            init_logit_scale: The init logit scale.
-            init_logit_bias: The init logit bias.
-            nonscalar_logit_scale: The nonscalar logit scale.
-            cast_dtype: The cast dtype.
-            output_dict: The output dict.
-        """
         super().__init__()
         self.output_dict = output_dict
 
@@ -356,37 +311,18 @@ class CLIP(nn.Module):
             self.logit_bias = None
 
     def lock_image_tower(self, unlocked_groups=0, freeze_bn_stats=False):
-        """Lock image tower.
-
-        Args:
-            unlocked_groups: The unlocked groups.
-            freeze_bn_stats: The freeze bn stats.
-        """
         # lock image tower as per LiT - https://arxiv.org/abs/2111.07991
         self.visual.lock(unlocked_groups=unlocked_groups, freeze_bn_stats=freeze_bn_stats)
 
     def lock_text_tower(self, unlocked_layers: int = 0, freeze_layer_norm: bool = True):
-        """Lock text tower.
-
-        Args:
-            unlocked_layers: The unlocked layers.
-            freeze_layer_norm: The freeze layer norm.
-        """
         assert freeze_layer_norm, "Unfreezing LayerNorm is not supported. LayerNorm treated like other weights."
         lock_text_tower(self, unlocked_layers)
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         self.visual.set_grad_checkpointing(enable, impl=impl)
         self.transformer.set_grad_checkpointing(enable, impl=impl)
 
     def no_weight_decay(self):
-        """No weight decay."""
         # for timm optimizers, 1d params like logit_scale, logit_bias, ln/bn scale, biases are excluded by default
         no_wd = {"positional_embedding"}
         if hasattr(self.visual, "no_weight_decay"):
@@ -395,31 +331,13 @@ class CLIP(nn.Module):
         return no_wd
 
     def _encode_image(self, image, normalize: bool = False):
-        """Helper function to encode image.
-
-        Args:
-            image: The image.
-            normalize: The normalize.
-        """
         features = self.visual(image)
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_image(self, image, normalize: bool = False):
-        """Encode image.
-
-        Args:
-            image: The image.
-            normalize: The normalize.
-        """
         return self._encode_image(image, normalize=normalize)
 
     def _encode_text(self, text, normalize: bool = False):
-        """Helper function to encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         cast_dtype = self.transformer.get_cast_dtype()
 
         x = self.token_embedding(text).to(cast_dtype)  # [batch_size, n_ctx, d_model]
@@ -434,21 +352,9 @@ class CLIP(nn.Module):
         return F.normalize(x, dim=-1) if normalize else x
 
     def encode_text(self, text, normalize: bool = False):
-        """Encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         return self._encode_text(text, normalize=normalize)
 
     def get_logits(self, image, text):
-        """Get logits.
-
-        Args:
-            image: The image.
-            text: The text.
-        """
         image_features = self._encode_image(image, normalize=True)
         text_features = self._encode_text(text, normalize=True)
         image_logits = self.logit_scale.exp() * image_features @ text_features.T
@@ -561,12 +467,6 @@ class CLIP(nn.Module):
         image: torch.Tensor | None = None,
         text: torch.Tensor | None = None,
     ):
-        """Forward.
-
-        Args:
-            image: The image.
-            text: The text.
-        """
         image_features = self._encode_image(image, normalize=True) if image is not None else None
         text_features = self._encode_text(text, normalize=True) if text is not None else None
 
@@ -586,8 +486,6 @@ class CLIP(nn.Module):
 
 
 class CustomTextCLIP(nn.Module):
-    """Custom text clip implementation."""
-
     def __init__(
         self,
         embed_dim: int,
@@ -600,19 +498,6 @@ class CustomTextCLIP(nn.Module):
         cast_dtype: torch.dtype | None = None,
         output_dict: bool = False,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            vision_cfg: The vision cfg.
-            text_cfg: The text cfg.
-            quick_gelu: The quick gelu.
-            init_logit_scale: The init logit scale.
-            init_logit_bias: The init logit bias.
-            nonscalar_logit_scale: The nonscalar logit scale.
-            cast_dtype: The cast dtype.
-            output_dict: The output dict.
-        """
         super().__init__()
         self.output_dict = output_dict
         self.visual = _build_vision_tower(embed_dim, vision_cfg, quick_gelu, cast_dtype)
@@ -628,36 +513,17 @@ class CustomTextCLIP(nn.Module):
             self.logit_bias = None
 
     def lock_image_tower(self, unlocked_groups=0, freeze_bn_stats=False):
-        """Lock image tower.
-
-        Args:
-            unlocked_groups: The unlocked groups.
-            freeze_bn_stats: The freeze bn stats.
-        """
         # lock image tower as per LiT - https://arxiv.org/abs/2111.07991
         self.visual.lock(unlocked_groups=unlocked_groups, freeze_bn_stats=freeze_bn_stats)
 
     def lock_text_tower(self, unlocked_layers: int = 0, freeze_layer_norm: bool = True):
-        """Lock text tower.
-
-        Args:
-            unlocked_layers: The unlocked layers.
-            freeze_layer_norm: The freeze layer norm.
-        """
         self.text.lock(unlocked_layers, freeze_layer_norm)
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         self.visual.set_grad_checkpointing(enable, impl=impl)
         self.text.set_grad_checkpointing(enable, impl=impl)
 
     def no_weight_decay(self):
-        """No weight decay."""
         # for timm optimizers, 1d params like logit_scale, logit_bias, ln/bn scale, biases are excluded by default
         no_wd = set()
         if hasattr(self.visual, "no_weight_decay"):
@@ -669,50 +535,20 @@ class CustomTextCLIP(nn.Module):
         return no_wd
 
     def _encode_image(self, image, normalize: bool = False):
-        """Helper function to encode image.
-
-        Args:
-            image: The image.
-            normalize: The normalize.
-        """
         features = self.visual(image)
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_image(self, image, normalize: bool = False):
-        """Encode image.
-
-        Args:
-            image: The image.
-            normalize: The normalize.
-        """
         return self._encode_image(image, normalize=normalize)
 
     def _encode_text(self, text, normalize: bool = False):
-        """Helper function to encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         features = self.text(text)
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):
-        """Encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         return self._encode_text(text, normalize=normalize)
 
     def get_logits(self, image, text):
-        """Get logits.
-
-        Args:
-            image: The image.
-            text: The text.
-        """
         image_features = self._encode_image(image, normalize=True)
         text_features = self._encode_text(text, normalize=True)
         image_logits = self.logit_scale.exp() * image_features @ text_features.T
@@ -816,12 +652,6 @@ class CustomTextCLIP(nn.Module):
         image: torch.Tensor | None = None,
         text: torch.Tensor | None = None,
     ):
-        """Forward.
-
-        Args:
-            image: The image.
-            text: The text.
-        """
         image_features = self._encode_image(image, normalize=True) if image is not None else None
         text_features = self._encode_text(text, normalize=True) if text is not None else None
 
@@ -844,11 +674,6 @@ def convert_weights_to_lp(model: nn.Module, dtype=torch.float16):
     """Convert applicable model parameters to low-precision (bf16 or fp16)"""
 
     def _convert_weights(l):
-        """Helper function to convert weights.
-
-        Args:
-            l: The l.
-        """
         if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
             l.weight.data = l.weight.data.to(dtype)
             if l.bias is not None:
@@ -880,11 +705,6 @@ convert_weights_to_fp16 = convert_weights_to_lp  # backwards compat
 
 # used to maintain checkpoint compatibility
 def convert_to_custom_text_state_dict(state_dict: dict):
-    """Convert to custom text state dict.
-
-    Args:
-        state_dict: The state dict.
-    """
     if "text_projection" in state_dict:
         # old format state_dict, move text tower -> .text
         new_state_dict = {}
@@ -906,14 +726,6 @@ def convert_to_custom_text_state_dict(state_dict: dict):
 
 
 def resize_pos_embed(state_dict, model, interpolation: str = "bicubic", antialias: bool = True):
-    """Resize pos embed.
-
-    Args:
-        state_dict: The state dict.
-        model: The model.
-        interpolation: The interpolation.
-        antialias: The antialias.
-    """
     # Rescale the grid of position embeddings when loading from state_dict
     old_pos_embed = state_dict.get("visual.positional_embedding", None)
     if old_pos_embed is None or not hasattr(model.visual, "grid_size"):
@@ -945,14 +757,6 @@ def resize_pos_embed(state_dict, model, interpolation: str = "bicubic", antialia
 
 
 def resize_text_pos_embed(state_dict, model, interpolation: str = "linear", antialias: bool = False):
-    """Resize text pos embed.
-
-    Args:
-        state_dict: The state dict.
-        model: The model.
-        interpolation: The interpolation.
-        antialias: The antialias.
-    """
     pos_embed_key = "positional_embedding" if "positional_embedding" in state_dict else "text.positional_embedding"
     old_pos_embed = state_dict.get(pos_embed_key, None)
     if old_pos_embed is None:
@@ -986,11 +790,6 @@ def resize_text_pos_embed(state_dict, model, interpolation: str = "linear", anti
 
 
 def get_model_preprocess_cfg(model):
-    """Get model preprocess cfg.
-
-    Args:
-        model: The model.
-    """
     module = getattr(model, "visual", model)
     preprocess_cfg = getattr(module, "preprocess_cfg", {})
     if not preprocess_cfg:
@@ -1008,12 +807,6 @@ def get_model_preprocess_cfg(model):
 
 
 def set_model_preprocess_cfg(model, preprocess_cfg: dict[str, Any]):
-    """Set model preprocess cfg.
-
-    Args:
-        model: The model.
-        preprocess_cfg: The preprocess cfg.
-    """
     module = getattr(model, "visual", model)
     module.image_mean = preprocess_cfg["mean"]  # legacy attribute, keeping for bwd compat
     module.image_std = preprocess_cfg["std"]  # legacy attribute, keeping for bwd compat
@@ -1021,11 +814,6 @@ def set_model_preprocess_cfg(model, preprocess_cfg: dict[str, Any]):
 
 
 def get_model_tokenize_cfg(model):
-    """Get model tokenize cfg.
-
-    Args:
-        model: The model.
-    """
     module = getattr(model, "text", model)
     cfg = {}
     context_length = getattr(module, "context_length", None)

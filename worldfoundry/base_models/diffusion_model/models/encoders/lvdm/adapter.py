@@ -26,15 +26,6 @@ class Downsample(nn.Module):
     """
 
     def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1):
-        """Init.
-
-        Args:
-            channels: The channels.
-            use_conv: The use conv.
-            dims: The dims.
-            out_channels: The out channels.
-            padding: The padding.
-        """
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -48,29 +39,12 @@ class Downsample(nn.Module):
             self.op = avg_pool_nd(dims, kernel_size=stride, stride=stride)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         assert x.shape[1] == self.channels
         return self.op(x)
 
 
 class ResnetBlock(nn.Module):
-    """Resnet block implementation."""
-
     def __init__(self, in_c, out_c, down, ksize=3, sk=False, use_conv=True):
-        """Init.
-
-        Args:
-            in_c: The in c.
-            out_c: The out c.
-            down: The down.
-            ksize: The ksize.
-            sk: The sk.
-            use_conv: The use conv.
-        """
         super().__init__()
         ps = ksize // 2
         if in_c != out_c or sk == False:
@@ -92,11 +66,6 @@ class ResnetBlock(nn.Module):
             self.down_opt = Downsample(in_c, use_conv=use_conv)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.down == True:
             x = self.down_opt(x)
         if self.in_conv is not None:  # edit
@@ -112,19 +81,7 @@ class ResnetBlock(nn.Module):
 
 
 class Adapter(nn.Module):
-    """Adapter implementation."""
-
     def __init__(self, channels=[320, 640, 1280, 1280], nums_rb=3, cin=64, ksize=3, sk=False, use_conv=True):
-        """Init.
-
-        Args:
-            channels: The channels.
-            nums_rb: The nums rb.
-            cin: The cin.
-            ksize: The ksize.
-            sk: The sk.
-            use_conv: The use conv.
-        """
         super().__init__()
         self.unshuffle = nn.PixelUnshuffle(8)
         self.channels = channels
@@ -144,11 +101,6 @@ class Adapter(nn.Module):
         self.conv_in = nn.Conv2d(cin, channels[0], 3, 1, 1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # unshuffle
         x = self.unshuffle(x)
         # extract features

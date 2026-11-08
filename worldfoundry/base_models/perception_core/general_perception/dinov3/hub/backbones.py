@@ -3,8 +3,6 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov3 -> hub -> backbones.py functionality."""
-
 import os
 from enum import Enum
 from pathlib import Path
@@ -14,34 +12,16 @@ from .utils import _DINOV3_BASE_URL, _safe_load_state_dict_from_url
 
 
 class Weights(Enum):
-    """Weights implementation."""
-
     LVD1689M = "LVD1689M"
     SAT493M = "SAT493M"
 
 
 def is_url(path: str) -> bool:
-    """Is url.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     parsed = urlparse(path)
     return parsed.scheme in ("https", "file")
 
 
 def convert_path_or_url_to_url(path: str) -> str:
-    """Convert path or url to url.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     if is_url(path):
         return path
     return Path(path).expanduser().resolve().as_uri()
@@ -52,7 +32,6 @@ def _make_dinov3_vit_model_arch(
     patch_size: int = 16,
     compact_arch_name: str = "vitb",
 ):
-    """Helper function to make dinov3 vit model arch."""
     if "plus" in compact_arch_name:
         model_arch = compact_arch_name.replace("plus", f"{patch_size}plus")
     else:
@@ -68,7 +47,6 @@ def _make_dinov3_vit_model_url(
     weights: Weights | str = Weights.LVD1689M,
     hash: str | None = None,
 ):
-    """Helper function to make dinov3 vit model url."""
     model_name = "dinov3"
     model_arch = _make_dinov3_vit_model_arch(patch_size=patch_size, compact_arch_name=compact_arch_name)
     version_suffix = f"_{version}" if version else ""
@@ -113,7 +91,6 @@ def _make_dinov3_vit(
     check_hash: bool = False,
     **kwargs,
 ):
-    """Helper function to make dinov3 vit."""
     from ..models.vision_transformer import DinoVisionTransformer
 
     vit_kwargs = {
@@ -170,7 +147,6 @@ def _make_dinov3_convnext_model_url(
     weights: Weights | str = Weights.LVD1689M,
     hash: str | None = None,
 ):
-    """Helper function to make dinov3 convnext model url."""
     model_name = "dinov3"
     weights_name = weights.value.lower()
     hash_suffix = f"-{hash}" if hash else ""
@@ -191,19 +167,6 @@ def _make_dinov3_convnext(
     hash: str | None = None,
     **kwargs,
 ):
-    """Helper function to make dinov3 convnext.
-
-    Args:
-        in_chans: The in chans.
-        depths: The depths.
-        dims: The dims.
-        compact_arch_name: The compact arch name.
-        drop_path_rate: The drop path rate.
-        layer_scale_init_value: The layer scale init value.
-        pretrained: The pretrained.
-        weights: The weights.
-        hash: The hash.
-    """
     from ..models.convnext import ConvNeXt
 
     model_kwargs = {

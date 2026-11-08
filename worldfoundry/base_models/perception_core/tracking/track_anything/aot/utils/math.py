@@ -2,20 +2,10 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> utils -> math.py functionality."""
-
 import torch
 
 
 def generate_permute_matrix(dim, num, keep_first=True, gpu_id=0):
-    """Generate permute matrix.
-
-    Args:
-        dim: The dim.
-        num: The num.
-        keep_first: The keep first.
-        gpu_id: The gpu id.
-    """
     all_matrix = []
     for _idx in range(num):
         random_matrix = torch.eye(dim, device=torch.device("cuda", gpu_id))
@@ -29,13 +19,6 @@ def generate_permute_matrix(dim, num, keep_first=True, gpu_id=0):
 
 
 def truncated_normal_(tensor, mean=0, std=0.02):
-    """Truncated normal.
-
-    Args:
-        tensor: The tensor.
-        mean: The mean.
-        std: The std.
-    """
     size = tensor.shape
     tmp = tensor.new_empty(size + (4,)).normal_()
     valid = (tmp < 2) & (tmp > -2)

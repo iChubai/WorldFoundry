@@ -1,7 +1,5 @@
 # Copyright Alibaba Inc. All Rights Reserved.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> models -> vggt.py functionality."""
-
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
@@ -18,8 +16,6 @@ from ..models.aggregator import Aggregator
 
 
 class VGGT(nn.Module, PyTorchModelHubMixin):
-    """Vggt implementation."""
-
     def __init__(
         self,
         img_size=518,
@@ -34,21 +30,6 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
         load_path=None,
         DPT_patch_size=16,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            number_frame: The number frame.
-            freq_dim: The freq dim.
-            enable_camera: The enable camera.
-            enable_depth: The enable depth.
-            enable_point: The enable point.
-            enable_track: The enable track.
-            load_path: The load path.
-            DPT_patch_size: The dpt patch size.
-        """
         super().__init__()
 
         self.spatial_frame = (number_frame - 1) // 4 + 1
@@ -159,15 +140,6 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
     def _process_wan_input(
         self, patch_token: torch.Tensor, query_points: torch.Tensor = None, camera_token: torch.Tensor = None, t=None
     ):
-        """Helper function to process wan input.
-
-        Args:
-            patch_token: The patch token.
-            query_points: The query points.
-            camera_token: The camera token.
-            t: The t.
-        """
-
         if query_points is not None and len(query_points.shape) == 2:
             query_points = query_points.unsqueeze(0)
 
@@ -181,13 +153,6 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
         return patch_token, camera_token, e0
 
     def _head_predction(self, patch_token, patch_start_idx, aggregated_tokens_list):
-        """Helper function to head predction.
-
-        Args:
-            patch_token: The patch token.
-            patch_start_idx: The patch start idx.
-            aggregated_tokens_list: The aggregated tokens list.
-        """
         predictions = {}
         with torch.cuda.amp.autocast(enabled=True, dtype=torch.bfloat16):
             if self.camera_head is not None:

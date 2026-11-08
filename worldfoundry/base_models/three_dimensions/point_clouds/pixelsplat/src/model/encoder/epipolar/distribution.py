@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> distribution.py functionality."""
-
 import torch
 from einops import einsum
 from jaxtyping import Bool, Float
@@ -7,8 +5,6 @@ from torch import Tensor, nn
 
 
 class Distribution(nn.Module):
-    """Distribution implementation."""
-
     scale: float
     to_q: nn.Linear
     to_k: nn.Linear
@@ -19,13 +15,6 @@ class Distribution(nn.Module):
         dim_k: int,
         dim_inner: int = 64,
     ):
-        """Init.
-
-        Args:
-            dim_q: The dim q.
-            dim_k: The dim k.
-            dim_inner: The dim inner.
-        """
         super().__init__()
         self.scale = dim_inner**-0.5
         self.to_q = nn.Linear(dim_q, dim_inner, bias=False)
@@ -37,16 +26,6 @@ class Distribution(nn.Module):
         keys: Float[Tensor, "batch token_key dim_key"],
         force_last_token: Bool[Tensor, " batch"] | None = None,
     ) -> Float[Tensor, "batch token_query token_key"]:
-        """Forward.
-
-        Args:
-            queries: The queries.
-            keys: The keys.
-            force_last_token: The force last token.
-
-        Returns:
-            The return value.
-        """
         # Compute softmax attention.
         q = self.to_q(queries)
         k = self.to_k(keys)

@@ -126,7 +126,7 @@ class ViCLIP(nn.Module):
         return self.vision_encoder(image)
 
     def encode_text(self, text):
-        """encode text.
+        """
         Args:
             text (dict): The output of huggingface's `PreTrainedTokenizer`. contains keys:
                 - input_ids (torch.Tensor): Token ids to be fed to a model. Shape: [B,L].
@@ -135,7 +135,6 @@ class ViCLIP(nn.Module):
         Returns: tuple.
             - text_embeds (torch.Tensor): The features of all tokens. Shape: [B,L,C].
             - pooled_text_embeds (torch.Tensor): The pooled features. Shape: [B,C].
-
         """
         device = next(self.text_encoder.parameters()).device
         text = self.text_encoder.tokenize(text, context_length=self.max_txt_l).to(device)

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> optical_flow -> track_anything -> aot -> networks -> engines -> deaot_engine.py functionality."""
-
 import numpy as np
 
 from ...utils.image import one_hot_mask
@@ -8,8 +6,6 @@ from .aot_engine import AOTEngine, AOTInferEngine
 
 
 class DeAOTEngine(AOTEngine):
-    """De aot engine implementation."""
-
     def __init__(
         self,
         aot_model,
@@ -19,28 +15,10 @@ class DeAOTEngine(AOTEngine):
         layer_loss_scaling_ratio=2.0,
         max_len_long_term=9999,
     ):
-        """Init.
-
-        Args:
-            aot_model: The aot model.
-            gpu_id: The gpu id.
-            long_term_mem_gap: The long term mem gap.
-            short_term_mem_skip: The short term mem skip.
-            layer_loss_scaling_ratio: The layer loss scaling ratio.
-            max_len_long_term: The max len long term.
-        """
         super().__init__(aot_model, gpu_id, long_term_mem_gap, short_term_mem_skip, max_len_long_term)
         self.layer_loss_scaling_ratio = layer_loss_scaling_ratio
 
     def update_short_term_memory(self, curr_mask, curr_id_emb=None, skip_long_term_update=False):
-        """Update short term memory.
-
-        Args:
-            curr_mask: The curr mask.
-            curr_id_emb: The curr id emb.
-            skip_long_term_update: The skip long term update.
-        """
-
         if curr_id_emb is None:
             if len(curr_mask.size()) == 3 or curr_mask.size()[0] == 1:
                 curr_one_hot_mask = one_hot_mask(curr_mask, self.max_obj_num)
@@ -77,8 +55,6 @@ class DeAOTEngine(AOTEngine):
 
 
 class DeAOTInferEngine(AOTInferEngine):
-    """De aot infer engine implementation."""
-
     def __init__(
         self,
         aot_model,
@@ -88,27 +64,9 @@ class DeAOTInferEngine(AOTInferEngine):
         max_aot_obj_num=None,
         max_len_long_term=9999,
     ):
-        """Init.
-
-        Args:
-            aot_model: The aot model.
-            gpu_id: The gpu id.
-            long_term_mem_gap: The long term mem gap.
-            short_term_mem_skip: The short term mem skip.
-            max_aot_obj_num: The max aot obj num.
-            max_len_long_term: The max len long term.
-        """
         super().__init__(aot_model, gpu_id, long_term_mem_gap, short_term_mem_skip, max_aot_obj_num, max_len_long_term)
 
     def add_reference_frame(self, img, mask, obj_nums, frame_step=-1):
-        """Add reference frame.
-
-        Args:
-            img: The img.
-            mask: The mask.
-            obj_nums: The obj nums.
-            frame_step: The frame step.
-        """
         if isinstance(obj_nums, list):
             obj_nums = obj_nums[0]
         self.obj_nums = obj_nums

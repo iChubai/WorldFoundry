@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> pipeline_qwen_pano.py functionality."""
-
 from collections.abc import Callable
 from typing import Any
 
@@ -85,32 +83,6 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
         callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         max_sequence_length: int = 512,
     ):
-        """Call.
-
-        Args:
-            image: The image.
-            prompt: The prompt.
-            negative_prompt: The negative prompt.
-            true_cfg_scale: The true cfg scale.
-            height: The height.
-            width: The width.
-            num_inference_steps: The num inference steps.
-            sigmas: The sigmas.
-            guidance_scale: The guidance scale.
-            num_images_per_prompt: The num images per prompt.
-            generator: The generator.
-            latents: The latents.
-            prompt_embeds: The prompt embeds.
-            prompt_embeds_mask: The prompt embeds mask.
-            negative_prompt_embeds: The negative prompt embeds.
-            negative_prompt_embeds_mask: The negative prompt embeds mask.
-            output_type: The output type.
-            return_dict: The return dict.
-            attention_kwargs: The attention kwargs.
-            callback_on_step_end: The callback on step end.
-            callback_on_step_end_tensor_inputs: The callback on step end tensor inputs.
-            max_sequence_length: The max sequence length.
-        """
         # ── Output size ────────────────────────────────────────────────
         # Derive height/width from the input image's aspect ratio if not
         # specified, targeting a fixed pixel budget (1024²).

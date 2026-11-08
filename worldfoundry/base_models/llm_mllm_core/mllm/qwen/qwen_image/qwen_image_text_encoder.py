@@ -1,14 +1,9 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_text_encoder.py functionality."""
-
 import torch
 from transformers import Qwen2_5_VLModel
 
 
 class QwenImageTextEncoder(torch.nn.Module):
-    """Qwen image text encoder implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         from transformers import Qwen2_5_VLConfig
 
@@ -216,22 +211,14 @@ class QwenImageTextEncoder(torch.nn.Module):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return QwenImageTextEncoderStateDictConverter()
 
 
 class QwenImageTextEncoderStateDictConverter:
-    """Qwen image text encoder state dict converter implementation."""
-
     def __init__(self):
-        """Init."""
+        pass
 
     def from_diffusers(self, state_dict):
-        """From diffusers.
-
-        Args:
-            state_dict: The state dict.
-        """
         state_dict_ = {}
         for k, v in state_dict.items():
             if k.startswith("visual."):

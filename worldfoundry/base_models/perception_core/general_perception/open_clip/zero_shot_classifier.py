@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> zero_shot_classifier.py functionality."""
-
 from collections.abc import Callable, Sequence
 from functools import partial
 from itertools import islice
@@ -52,11 +50,6 @@ def build_zero_shot_classifier(
         iter_wrap = iter
 
     def _process_batch(batch_classnames):
-        """Helper function to process batch.
-
-        Args:
-            batch_classnames: The batch classnames.
-        """
         num_batch_classes = len(batch_classnames)
         texts = [template.format(c) if use_format else template(c) for c in batch_classnames for template in templates]
         texts = tokenizer(texts).to(device)

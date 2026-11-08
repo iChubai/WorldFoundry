@@ -18,8 +18,7 @@ def _cat_multi_level_tensor_in_place(*multi_level_tensor, place_hold_var):
 
 
 class BatchYOLOv7Assigner(nn.Module):
-    """Batch YOLOv7 Assigner.
-
+    """
     It consists of two assigning steps:
 
         1. YOLOv5 cross-grid sample assigning
@@ -71,7 +70,6 @@ class BatchYOLOv7Assigner(nn.Module):
         grid_offset,
         near_neighbor_thr=0.5,
     ) -> dict:
-        """Forward function."""
         # (num_base_priors, num_batch_gt, 7)
         # 7 is mean (batch_idx, cls_id, x_norm, y_norm,
         # w_norm, h_norm, prior_idx)
@@ -168,7 +166,6 @@ class BatchYOLOv7Assigner(nn.Module):
         return mlvl_positive_infos, mlvl_priors
 
     def simota_assigner(self, pred_results, batch_targets_normed, mlvl_positive_infos, mlvl_priors, batch_input_shape):
-        """SimOTA assigner."""
         num_batch_gts = batch_targets_normed.shape[1]
         assert num_batch_gts > 0
         num_levels = len(mlvl_positive_infos)

@@ -35,12 +35,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -92,29 +86,6 @@ class ActionModule(nn.Module):
         blocks=[],
         local_attn_size=6,
     ):
-        """Init.
-
-        Args:
-            mouse_dim_in: The mouse dim in.
-            keyboard_dim_in: The keyboard dim in.
-            hidden_size: The hidden size.
-            img_hidden_size: The img hidden size.
-            keyboard_hidden_dim: The keyboard hidden dim.
-            mouse_hidden_dim: The mouse hidden dim.
-            vae_time_compression_ratio: The vae time compression ratio.
-            windows_size: The windows size.
-            heads_num: The heads num.
-            patch_size: The patch size.
-            qk_norm: The qk norm.
-            qkv_bias: The qkv bias.
-            rope_dim_list: The rope dim list.
-            rope_theta: The rope theta.
-            mouse_qk_dim_list: The mouse qk dim list.
-            enable_mouse: The enable mouse.
-            enable_keyboard: The enable keyboard.
-            blocks: The blocks.
-            local_attn_size: The local attn size.
-        """
         super().__init__()
         self.local_attn_size = local_attn_size
         self.enable_mouse = enable_mouse
@@ -189,15 +160,6 @@ class ActionModule(nn.Module):
         return imgs
 
     def get_rotary_pos_embed(self, video_length, height, width, head_dim, rope_dim_list=None):
-        """Get rotary pos embed.
-
-        Args:
-            video_length: The video length.
-            height: The height.
-            width: The width.
-            head_dim: The head dim.
-            rope_dim_list: The rope dim list.
-        """
         target_ndim = 3
         ndim = 5 - 2
         latents_size = [video_length, height, width]

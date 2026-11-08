@@ -703,7 +703,6 @@ class Template(ProcessorMixin):
         Args:
             media_type: The modal.
             index: The index of the medias, for index 0 represents the first elements in `images`
-            inputs: The inputs
 
         Returns:
             The content or input_ids after replacement.
@@ -724,7 +723,6 @@ class Template(ProcessorMixin):
         Args:
             ref: Description of the bbox
             index: The index in the `objects` key
-            inputs: The inputs
 
         Returns:
             The contents or input_ids replaced
@@ -734,9 +732,6 @@ class Template(ProcessorMixin):
     def replace_cot_process(self, inputs: StdTemplateInputs) -> list[Context]:
         """Replace the cot process label for PRM training or inference.
         Override this function to do your own replace operation.
-
-        Args:
-            inputs: The inputs
 
         Returns:
             The contents or input_ids replaced
@@ -757,7 +752,6 @@ class Template(ProcessorMixin):
         Args:
             bbox: [x, y] or [x1, y1, x2, y2]
             index: The index in the `objects` key
-            inputs: The inputs
 
         Returns:
             The contents or input_ids replaced
@@ -792,7 +786,6 @@ class Template(ProcessorMixin):
 
         Args:
             context_list: The content list
-            loss_scale_list: The loss scale list
         Returns:
             The context_list and loss_scale_list after replacement.
         """
@@ -1622,7 +1615,6 @@ class Template(ProcessorMixin):
 
         Args:
             sequences: The input sequences in tensor.
-            padding_value: The padding value
 
         Returns:
             A tensor after padding

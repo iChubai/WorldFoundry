@@ -28,7 +28,6 @@ import triton.language as tl
 
 
 def get_cuda_autotune_config():
-    """Get cuda autotune config."""
     return [
         triton.Config({"BLOCK_SIZE_H": 128, "BLOCK_SIZE_W": 256}, num_stages=3, num_warps=8),
         triton.Config({"BLOCK_SIZE_H": 64, "BLOCK_SIZE_W": 256}, num_stages=4, num_warps=4),
@@ -51,7 +50,6 @@ def get_cuda_autotune_config():
 
 
 def get_autotune_config():
-    """Get autotune config."""
     return get_cuda_autotune_config()
 
 
@@ -180,7 +178,6 @@ def depthwise_conv_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor
 
 
 def debug():
-    """Debug."""
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
     torch.cuda.manual_seed(0)

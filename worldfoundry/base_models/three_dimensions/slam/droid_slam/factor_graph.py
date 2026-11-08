@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> factor_graph.py functionality."""
-
 from functools import partial
 
 import numpy as np
@@ -13,19 +11,7 @@ autocast = partial(torch.autocast, device_type="cuda") if torch.__version__.star
 
 
 class FactorGraph:
-    """Factor graph implementation."""
-
     def __init__(self, video, update_op, device="cuda", corr_impl="volume", max_factors=-1, upsample=False):
-        """Init.
-
-        Args:
-            video: The video.
-            update_op: The update op.
-            device: The device.
-            corr_impl: The corr impl.
-            max_factors: The max factors.
-            upsample: The upsample.
-        """
         self.video = video
         self.update_op = update_op
         self.device = device
@@ -74,7 +60,6 @@ class FactorGraph:
         return ii, jj
 
     def print_edges(self):
-        """Print edges."""
         ii = self.ii.cpu().numpy()
         jj = self.jj.cpu().numpy()
 
@@ -98,7 +83,6 @@ class FactorGraph:
         self.rm_factors(mask, store=False)
 
     def clear_edges(self):
-        """Clear edges."""
         self.rm_factors(self.ii >= 0)
         self.net = None
         self.inp = None

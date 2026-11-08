@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> gs_renderer.py functionality."""
-
 import math
 from math import isqrt
 from typing import Literal
@@ -61,21 +59,6 @@ def render_3dgs(
     torch.Tensor,  # "batch_views 3 height width"
     torch.Tensor,  # "batch_views height width"
 ]:
-    """Render 3dgs.
-
-    Args:
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        image_shape: The image shape.
-        gaussian: The gaussian.
-        background_color: The background color.
-        use_sh: The use sh.
-        num_view: The num view.
-        color_mode: The color mode.
-
-    Returns:
-        The return value.
-    """
     # extract gaussian params
     gaussian_means = gaussian.means
     gaussian_scales = gaussian.scales
@@ -112,12 +95,6 @@ def render_3dgs(
     batch_scene = b // num_view
 
     def index_i_gs_attr(full_attr, idx):
-        """Index i gs attr.
-
-        Args:
-            full_attr: The full attr.
-            idx: The idx.
-        """
         # return rearrange(full_attr, "(b v) ... -> b v ...", v=num_view)[idx, 0]
         return full_attr[idx]
 
@@ -197,21 +174,6 @@ def run_renderer_in_chunk_w_trj_mode(
     torch.Tensor,  # color, "batch view 3 height width"
     torch.Tensor,  # depth, "batch view height width"
 ]:
-    """Run renderer in chunk w trj mode.
-
-    Args:
-        gaussians: The gaussians.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        image_shape: The image shape.
-        chunk_size: The chunk size.
-        trj_mode: The trj mode.
-        input_shape: The input shape.
-        enable_tqdm: The enable tqdm.
-
-    Returns:
-        The return value.
-    """
     cam2world = affine_inverse(as_homogeneous(extrinsics))
     if input_shape is not None:
         in_h, in_w = input_shape
@@ -227,12 +189,6 @@ def run_renderer_in_chunk_w_trj_mode(
         ], "Please set trj_mode to 'wander' or 'dolly_zoom' when n_views=1"
 
     def _smooth_trj_fn_batch(raw_c2ws, k_size=50):
-        """Helper function to smooth trj fn batch.
-
-        Args:
-            raw_c2ws: The raw c2ws.
-            k_size: The k size.
-        """
         try:
             smooth_c2ws = torch.stack(
                 [render_stabilization_path(c2w_i, k_size) for c2w_i in raw_c2ws],

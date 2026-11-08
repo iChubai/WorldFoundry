@@ -31,7 +31,6 @@ def autocast(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrap(self, *args):
-        """Wrap."""
         device = torch.device("cpu")
         dtype = None
         if isinstance(self, TensorWrapper):

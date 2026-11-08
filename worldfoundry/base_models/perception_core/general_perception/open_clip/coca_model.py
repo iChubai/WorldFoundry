@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> coca_model.py functionality."""
-
 import logging
 from dataclasses import dataclass
 
@@ -21,8 +19,6 @@ from .transformer import (
 
 @dataclass
 class MultimodalCfg(CLIPTextCfg):
-    """Multimodal cfg implementation."""
-
     mlp_ratio: int = 4
     dim_head: int = 64
     heads: int = 8
@@ -36,14 +32,6 @@ def _build_text_decoder_tower(
     quick_gelu: bool = False,
     cast_dtype: torch.dtype | None = None,
 ):
-    """Helper function to build text decoder tower.
-
-    Args:
-        embed_dim: The embed dim.
-        multimodal_cfg: The multimodal cfg.
-        quick_gelu: The quick gelu.
-        cast_dtype: The cast dtype.
-    """
     multimodal_cfg = MultimodalCfg(**multimodal_cfg) if isinstance(multimodal_cfg, dict) else multimodal_cfg
     act_layer = QuickGELU if quick_gelu else nn.GELU
     norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
@@ -63,8 +51,6 @@ def _build_text_decoder_tower(
 
 
 class CoCa(nn.Module):
-    """Co ca implementation."""
-
     def __init__(
         self,
         embed_dim,
@@ -78,20 +64,6 @@ class CoCa(nn.Module):
         cast_dtype: torch.dtype | None = None,
         pad_id: int = 0,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            multimodal_cfg: The multimodal cfg.
-            text_cfg: The text cfg.
-            vision_cfg: The vision cfg.
-            quick_gelu: The quick gelu.
-            init_logit_scale: The init logit scale.
-            init_logit_bias: The init logit bias.
-            nonscalar_logit_scale: The nonscalar logit scale.
-            cast_dtype: The cast dtype.
-            pad_id: The pad id.
-        """
         super().__init__()
         multimodal_cfg = MultimodalCfg(**multimodal_cfg) if isinstance(multimodal_cfg, dict) else multimodal_cfg
         text_cfg = CLIPTextCfg(**text_cfg) if isinstance(text_cfg, dict) else text_cfg
@@ -131,55 +103,25 @@ class CoCa(nn.Module):
         self.context_length = multimodal_cfg.context_length
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         self.visual.set_grad_checkpointing(enable, impl=impl)
         self.text.set_grad_checkpointing(enable, impl=impl)
         self.text_decoder.set_grad_checkpointing(enable, impl=impl)
 
     def _encode_image(self, images, normalize: bool = True):
-        """Helper function to encode image.
-
-        Args:
-            images: The images.
-            normalize: The normalize.
-        """
         image_latent, tokens_embs = self.visual(images)
         image_latent = F.normalize(image_latent, dim=-1) if normalize else image_latent
         return image_latent, tokens_embs
 
     def _encode_text(self, text, normalize: bool = True):
-        """Helper function to encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         text_latent, token_emb = self.text(text)
         text_latent = F.normalize(text_latent, dim=-1) if normalize else text_latent
         return text_latent, token_emb
 
     def encode_image(self, images, normalize: bool = True):
-        """Encode image.
-
-        Args:
-            images: The images.
-            normalize: The normalize.
-        """
         image_latent, _ = self._encode_image(images, normalize=normalize)
         return image_latent
 
     def encode_text(self, text, normalize: bool = True):
-        """Encode text.
-
-        Args:
-            text: The text.
-            normalize: The normalize.
-        """
         text_latent, _ = self._encode_text(text, normalize=normalize)
         return text_latent
 
@@ -272,14 +214,6 @@ class CoCa(nn.Module):
         image_latent: torch.Tensor | None = None,
         image_embs: torch.Tensor | None = None,
     ):
-        """Forward.
-
-        Args:
-            image: The image.
-            text: The text.
-            image_latent: The image latent.
-            image_embs: The image embs.
-        """
         if image is not None and (image_latent is None or image_embs is None):
             image_latent, image_embs = self._encode_image(image)
 
@@ -324,28 +258,6 @@ class CoCa(nn.Module):
         fixed_output_length=False,
         generation_config=None,
     ):
-        """Generate.
-
-        Args:
-            image: The image.
-            text: The text.
-            seq_len: The seq len.
-            max_seq_len: The max seq len.
-            temperature: The temperature.
-            generation_type: The generation type.
-            top_p: The top p.
-            top_k: The top k.
-            pad_token_id: The pad token id.
-            eos_token_id: The eos token id.
-            sot_token_id: The sot token id.
-            num_beams: The num beams.
-            num_beam_groups: The num beam groups.
-            min_seq_len: The min seq len.
-            stopping_criteria: The stopping criteria.
-            repetition_penalty: The repetition penalty.
-            fixed_output_length: The fixed output length.
-            generation_config: The generation config.
-        """
         assert seq_len > min_seq_len, "seq_len must be larger than min_seq_len"
         if stopping_criteria is not None:
             import warnings

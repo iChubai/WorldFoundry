@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> pano -> modules.py functionality."""
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -10,32 +8,13 @@ from .utils import get_query_value
 
 
 class CPBlock(nn.Module):
-    """Cp block implementation."""
-
     def __init__(self, dim, flag360=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            flag360: The flag360.
-        """
         super().__init__()
         self.attn1 = CPAttn(dim, flag360=flag360)
         self.attn2 = CPAttn(dim, flag360=flag360)
         self.resnet = BasicResNetBlock(dim, dim, zero_init=True)
 
     def forward(self, x, correspondences, img_h, img_w, R, K, m):
-        """Forward.
-
-        Args:
-            x: The x.
-            correspondences: The correspondences.
-            img_h: The img h.
-            img_w: The img w.
-            R: The r.
-            K: The k.
-            m: The m.
-        """
         x = self.attn1(x, correspondences, img_h, img_w, R, K, m)
         x = self.attn2(x, correspondences, img_h, img_w, R, K, m)
         x = self.resnet(x)
@@ -43,32 +22,13 @@ class CPBlock(nn.Module):
 
 
 class CPAttn(nn.Module):
-    """Cp attn implementation."""
-
     def __init__(self, dim, flag360=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            flag360: The flag360.
-        """
         super().__init__()
         self.flag360 = flag360
         self.transformer = BasicTransformerBlock(dim, dim // 32, 32, context_dim=dim)
         self.pe = PosEmbedding(2, dim // 4)
 
     def forward(self, x, correspondences, img_h, img_w, R, K, m):
-        """Forward.
-
-        Args:
-            x: The x.
-            correspondences: The correspondences.
-            img_h: The img h.
-            img_w: The img w.
-            R: The r.
-            K: The k.
-            m: The m.
-        """
         b, c, h, w = x.shape
         x = rearrange(x, "(b m) c h w -> b m c h w", m=m)
         outs = []

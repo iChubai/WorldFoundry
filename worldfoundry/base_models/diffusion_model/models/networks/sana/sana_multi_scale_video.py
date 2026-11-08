@@ -112,24 +112,6 @@ class SanaVideoMSBlock(nn.Module):
         flash_attn_window_count=None,
         **block_kwargs,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            drop_path: The drop path.
-            qk_norm: The qk norm.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_image_embeds: The cross attn image embeds.
-            t_kernel_size: The t kernel size.
-            additional_flash_attn: The additional flash attn.
-            flash_attn_window_count: The flash attn window count.
-        """
         super().__init__()
         self.hidden_size = hidden_size
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -249,17 +231,6 @@ class SanaVideoMSBlock(nn.Module):
         self.block_hook: BlockHook | None = None
 
     def forward_frame_aware(self, x, y, t, mask=None, THW=None, rotary_emb=None, chunk_index=None, **kwargs):
-        """Forward frame aware.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            chunk_index: The chunk index.
-        """
         B, N, C = x.shape
         num_frames = t.shape[2]
 
@@ -306,17 +277,6 @@ class SanaVideoMSBlock(nn.Module):
         return x
 
     def forward(self, x, y, t, mask=None, THW=None, rotary_emb=None, chunk_index=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            chunk_index: The chunk index.
-        """
         if len(t.shape) > 2:
             return self.forward_frame_aware(
                 x,
@@ -442,44 +402,6 @@ class SanaMSVideo(Sana):
         pack_latents=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            input_size: The input size.
-            patch_size: The patch size.
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            class_dropout_prob: The class dropout prob.
-            learn_sigma: The learn sigma.
-            pred_sigma: The pred sigma.
-            drop_path: The drop path.
-            caption_channels: The caption channels.
-            pe_interpolation: The pe interpolation.
-            config: The config.
-            model_max_length: The model max length.
-            qk_norm: The qk norm.
-            y_norm: The y norm.
-            norm_eps: The norm eps.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            use_pe: The use pe.
-            y_norm_scale_factor: The y norm scale factor.
-            patch_embed_kernel: The patch embed kernel.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_type: The cross attn type.
-            cross_attn_image_embeds: The cross attn image embeds.
-            image_embed_channels: The image embed channels.
-            pos_embed_type: The pos embed type.
-            rope_fhw_dim: The rope fhw dim.
-            t_kernel_size: The t kernel size.
-            flash_attn_window_count: The flash attn window count.
-            pack_latents: The pack latents.
-        """
         super().__init__(
             input_size=input_size,
             patch_size=patch_size,
@@ -583,14 +505,6 @@ class SanaMSVideo(Sana):
         self.initialize()
 
     def get_rope(self, pos_embed_type, attention_head_dim, patch_size, rope_fhw_dim):
-        """Get rope.
-
-        Args:
-            pos_embed_type: The pos embed type.
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            rope_fhw_dim: The rope fhw dim.
-        """
         if pos_embed_type == "wan_rope":
             rope = WanRotaryPosEmbed(
                 attention_head_dim=attention_head_dim, patch_size=patch_size, max_seq_len=1024, fhw_dim=rope_fhw_dim
@@ -610,16 +524,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _pack_latents(latents, batch_size, num_channels_latents, height, width, frame):
-        """Helper function to pack latents.
-
-        Args:
-            latents: The latents.
-            batch_size: The batch size.
-            num_channels_latents: The num channels latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         latents = latents.view(batch_size, num_channels_latents, frame, height // 2, 2, width // 2, 2)
         latents = latents.permute(0, 1, 4, 6, 2, 3, 5)
         latents = latents.reshape(batch_size, num_channels_latents * 4, frame, height // 2, width // 2)
@@ -628,14 +532,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _unpack_latents(latents, height, width, frame):
-        """Helper function to unpack latents.
-
-        Args:
-            latents: The latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         batch_size, channels, frame, H, W = latents.shape
 
         assert height % 2 == 0 and width % 2 == 0
@@ -648,14 +544,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _unpack_latents_additional_layers(latents, height, width, frame):
-        """Helper function to unpack latents additional layers.
-
-        Args:
-            latents: The latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         batch_size, num_patches, channels = latents.shape
 
         # latent height and width to be divisible by 2.
@@ -932,16 +820,10 @@ class SanaMSVideo(Sana):
         return imgs
 
     def initialize(self):
-        """Initialize."""
         super().initialize_weights()
 
         # Initialize transformer layers:
         def _basic_init(module):
-            """Helper function to basic init.
-
-            Args:
-                module: The module.
-            """
             if isinstance(module, nn.Linear):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -1148,20 +1030,11 @@ class SanaMSVideo(Sana):
         return super().load_state_dict(new_state_dict, strict=strict, assign=assign)
 
     def register_block_hook(self, layers=None, device="cpu", detach=True, score_only=True):
-        """Register block hook.
-
-        Args:
-            layers: The layers.
-            device: The device.
-            detach: The detach.
-            score_only: The score only.
-        """
         for i, block in enumerate(self.blocks):
             if layers is None or i in layers:
                 block.block_hook = BlockHook(device, detach, score_only)
 
     def get_block_output(self):
-        """Get block output."""
         block_outputs = {}
         for i, block in enumerate(self.blocks):
             if block.block_hook is not None:
@@ -1176,29 +1049,24 @@ class SanaMSVideo(Sana):
 
 
 def SanaMSVideo_600M_P1_D28(**kwargs):
-    """Sanamsvideo 600m p1 d28."""
     return SanaMSVideo(depth=28, hidden_size=1152, patch_size=(1, 1, 1), num_heads=16, **kwargs)
 
 
 def SanaMSVideo_600M_P2_D28(**kwargs):
-    """Sanamsvideo 600m p2 d28."""
     return SanaMSVideo(depth=28, hidden_size=1152, patch_size=(1, 2, 2), num_heads=16, **kwargs)
 
 
 def SanaMSVideo_2000M_P1_D20(**kwargs):
-    """Sanamsvideo 2000m p1 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(depth=20, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_2000M_P2_D20(**kwargs):
-    """Sanamsvideo 2000m p2 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(depth=20, hidden_size=2240, patch_size=(1, 2, 2), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_2000M_P2S1_D20(**kwargs):
-    """Sanamsvideo 2000m p2s1 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(
         depth=20, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, patch_embed_kernel=(1, 2, 2), **kwargs
@@ -1206,18 +1074,15 @@ def SanaMSVideo_2000M_P2S1_D20(**kwargs):
 
 
 def SanaMSVideo_4000M_P2_D28(**kwargs):
-    """Sanamsvideo 4000m p2 d28."""
     # 28 layers, 3459.49M
     return SanaMSVideo(depth=28, hidden_size=2560, patch_size=(1, 2, 2), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_4800M_P1_D60(**kwargs):
-    """Sanamsvideo 4800m p1 d60."""
     # 60 layers, 4800M
     return SanaMSVideo(depth=60, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_4800M_P2_D60(**kwargs):
-    """Sanamsvideo 4800m p2 d60."""
     # 60 layers, 4800M
     return SanaMSVideo(depth=60, hidden_size=2240, patch_size=(1, 2, 2), num_heads=20, **kwargs)

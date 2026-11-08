@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> backbone -> backbone_resnet.py functionality."""
-
 import functools
 from dataclasses import dataclass
 from typing import Literal
@@ -20,8 +18,6 @@ from .backbone import Backbone
 
 @dataclass
 class BackboneResnetCfg:
-    """Backbone resnet cfg implementation."""
-
     name: Literal["resnet"]
     model: Literal["resnet18", "resnet34", "resnet50", "resnet101", "resnet152", "dino_resnet50"]
     num_layers: int
@@ -30,20 +26,9 @@ class BackboneResnetCfg:
 
 
 class BackboneResnet(Backbone[BackboneResnetCfg]):
-    """Backbone resnet implementation."""
-
     model: ResNet
 
     def __init__(self, cfg: BackboneResnetCfg, d_in: int) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            d_in: The d in.
-
-        Returns:
-            The return value.
-        """
         super().__init__(cfg)
 
         assert d_in == 3
@@ -80,14 +65,6 @@ class BackboneResnet(Backbone[BackboneResnetCfg]):
         self,
         context: BatchedViews,
     ) -> Float[Tensor, "batch view d_out height width"]:
-        """Forward.
-
-        Args:
-            context: The context.
-
-        Returns:
-            The return value.
-        """
         # Merge the batch dimensions.
         b, v, _, h, w = context["image"].shape
         x = rearrange(context["image"], "b v c h w -> (b v) c h w")
@@ -115,9 +92,4 @@ class BackboneResnet(Backbone[BackboneResnetCfg]):
 
     @property
     def d_out(self) -> int:
-        """D out.
-
-        Returns:
-            The return value.
-        """
         return self.cfg.d_out

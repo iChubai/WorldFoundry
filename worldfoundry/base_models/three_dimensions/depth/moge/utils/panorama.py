@@ -61,22 +61,12 @@ def get_cubemap_cameras(fov_deg: float = 90.0) -> tuple[np.ndarray, np.ndarray]:
 
 
 def spherical_uv_to_directions(uv: np.ndarray):
-    """Spherical uv to directions.
-
-    Args:
-        uv: The uv.
-    """
     theta, phi = (1 - uv[..., 0]) * (2 * np.pi), uv[..., 1] * np.pi
     directions = np.stack([np.sin(phi) * np.cos(theta), np.sin(phi) * np.sin(theta), np.cos(phi)], axis=-1)
     return directions
 
 
 def directions_to_spherical_uv(directions: np.ndarray):
-    """Directions to spherical uv.
-
-    Args:
-        directions: The directions.
-    """
     directions = directions / np.clip(np.linalg.norm(directions, axis=-1, keepdims=True), 1e-8, None)
     u = 1 - np.arctan2(directions[..., 1], directions[..., 0]) / (2 * np.pi) % 1.0
     v = np.arccos(np.clip(directions[..., 2], -1, 1)) / np.pi
@@ -84,14 +74,6 @@ def directions_to_spherical_uv(directions: np.ndarray):
 
 
 def split_panorama_image(image: np.ndarray, extrinsics: np.ndarray, intrinsics: np.ndarray, resolution: int):
-    """Split panorama image.
-
-    Args:
-        image: The image.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        resolution: The resolution.
-    """
     height, width = image.shape[:2]
     uv = uv_map((resolution, resolution))
     splitted_images = []
@@ -170,17 +152,6 @@ def merge_cubemap_blended_to_panorama(
 
 
 def poisson_equation(width: int, height: int, wrap_x: bool = False, wrap_y: bool = False) -> csr_array:
-    """Poisson equation.
-
-    Args:
-        width: The width.
-        height: The height.
-        wrap_x: The wrap x.
-        wrap_y: The wrap y.
-
-    Returns:
-        The return value.
-    """
     grid_index = np.arange(height * width).reshape(height, width)
     grid_index = np.pad(grid_index, ((0, 0), (1, 1)), mode="wrap" if wrap_x else "edge")
     grid_index = np.pad(grid_index, ((1, 1), (0, 0)), mode="wrap" if wrap_y else "edge")
@@ -203,17 +174,6 @@ def poisson_equation(width: int, height: int, wrap_x: bool = False, wrap_y: bool
 
 
 def grad_equation(width: int, height: int, wrap_x: bool = False, wrap_y: bool = False) -> csr_array:
-    """Grad equation.
-
-    Args:
-        width: The width.
-        height: The height.
-        wrap_x: The wrap x.
-        wrap_y: The wrap y.
-
-    Returns:
-        The return value.
-    """
     grid_index = np.arange(width * height).reshape(height, width)
     if wrap_x:
         grid_index = np.pad(grid_index, ((0, 0), (0, 1)), mode="wrap")
@@ -284,16 +244,6 @@ def merge_panorama_depth(
     extrinsics: Sequence[np.ndarray],
     intrinsics: Sequence[np.ndarray],
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Merge panorama depth.
-
-    Args:
-        width: The width.
-        height: The height.
-        distance_maps: The distance maps.
-        pred_masks: The pred masks.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-    """
     if max(width, height) > 256:
         panorama_depth_init, _ = merge_panorama_depth(
             width // 2, height // 2, distance_maps, pred_masks, extrinsics, intrinsics

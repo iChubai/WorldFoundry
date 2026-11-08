@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_detector_utils.py functionality."""
-
 import logging
 
 import numpy as np
@@ -354,15 +352,6 @@ def perf_mask_iou(pred_masks: torch.Tensor, gt_masks: torch.Tensor) -> torch.Ten
 
 
 def perf_mask_iom(pred_masks: torch.Tensor, gt_masks: torch.Tensor) -> torch.Tensor:
-    """Perf mask iom.
-
-    Args:
-        pred_masks: The pred masks.
-        gt_masks: The gt masks.
-
-    Returns:
-        The return value.
-    """
     assert pred_masks.dtype == gt_masks.dtype == torch.bool
     from worldfoundry.base_models.perception_core.segment.sam3.perflib.iou import pairwise_iom
 

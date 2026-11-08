@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> io_utils.py functionality."""
-
 import contextlib
 import os
 import queue
@@ -363,15 +361,6 @@ class AsyncImageFrameLoader:
     """
 
     def __init__(self, img_paths, image_size, offload_video_to_cpu, img_mean, img_std):
-        """Init.
-
-        Args:
-            img_paths: The img paths.
-            image_size: The image size.
-            offload_video_to_cpu: The offload video to cpu.
-            img_mean: The img mean.
-            img_std: The img std.
-        """
         self.img_paths = img_paths
         self.image_size = image_size
         self.offload_video_to_cpu = offload_video_to_cpu
@@ -391,7 +380,6 @@ class AsyncImageFrameLoader:
 
         # load the rest of frames asynchronously without blocking the session start
         def _load_frames():
-            """Helper function to load frames."""
             try:
                 for n in tqdm(
                     range(len(self.images)),
@@ -405,11 +393,6 @@ class AsyncImageFrameLoader:
         self.thread.start()
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         if self.exception is not None:
             raise RuntimeError("Failure in frame loading thread") from self.exception
 
@@ -431,11 +414,6 @@ class AsyncImageFrameLoader:
         return img
 
     def __len__(self) -> int:
-        """Len.
-
-        Returns:
-            The return value.
-        """
         return len(self.images)
 
 
@@ -452,17 +430,6 @@ class TorchCodecDecoder:
         device: str = "cpu",
         num_threads: int = 1,
     ) -> None:
-        """Init.
-
-        Args:
-            source: The source.
-            dimension_order: The dimension order.
-            device: The device.
-            num_threads: The num threads.
-
-        Returns:
-            The return value.
-        """
         from torchcodec import _core as core
 
         self._source = source  # hold a reference to the source to prevent it from GC
@@ -490,22 +457,9 @@ class TorchCodecDecoder:
         self._num_frames = self.metadata.num_frames_from_content
 
     def __len__(self) -> int:
-        """Len.
-
-        Returns:
-            The return value.
-        """
         return self._num_frames
 
     def __getitem__(self, key: int) -> torch.Tensor:
-        """Getitem.
-
-        Args:
-            key: The key.
-
-        Returns:
-            The return value.
-        """
         from torchcodec import _core as core
 
         if key < 0:
@@ -523,17 +477,11 @@ class FIFOLock:
     """A lock that ensures FIFO ordering of lock acquisitions."""
 
     def __init__(self):
-        """Init."""
         self._lock = Lock()
         self._waiters = queue.Queue()
         self._condition = Condition()
 
     def acquire(self) -> None:
-        """Acquire.
-
-        Returns:
-            The return value.
-        """
         ident = get_ident()
         with self._condition:
             self._waiters.put(ident)
@@ -542,22 +490,12 @@ class FIFOLock:
                 # got the lock and it's our turn
 
     def release(self) -> None:
-        """Release.
-
-        Returns:
-            The return value.
-        """
         with self._condition:
             self._lock.release()
             self._waiters.get()
             self._condition.notify_all()
 
     def __enter__(self) -> None:
-        """Enter.
-
-        Returns:
-            The return value.
-        """
         self.acquire()
 
     def __exit__(
@@ -566,16 +504,6 @@ class FIFOLock:
         v: BaseException | None,
         tb: types.TracebackType | None,
     ) -> None:
-        """Exit.
-
-        Args:
-            t: The t.
-            v: The v.
-            tb: The tb.
-
-        Returns:
-            The return value.
-        """
         self.release()
 
 
@@ -598,21 +526,6 @@ class AsyncVideoFileLoaderWithTorchCodec:
         gpu_device: torch.device | None = None,
         use_rand_seek_in_loading: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            video_path: The video path.
-            image_size: The image size.
-            offload_video_to_cpu: The offload video to cpu.
-            img_mean: The img mean.
-            img_std: The img std.
-            gpu_acceleration: The gpu acceleration.
-            gpu_device: The gpu device.
-            use_rand_seek_in_loading: The use rand seek in loading.
-
-        Returns:
-            The return value.
-        """
         # Check and possibly infer the output device (and also get its GPU id when applicable)
         assert gpu_device is None or gpu_device.type == "cuda"
         gpu_id = (
@@ -674,17 +587,11 @@ class AsyncVideoFileLoaderWithTorchCodec:
         self._start_video_loading()
 
     def _load_one_frame(self, idx):
-        """Helper function to load one frame.
-
-        Args:
-            idx: The idx.
-        """
         frame_resized = self._transform_frame(self.async_reader[idx])
         return frame_resized
 
     @torch.inference_mode()
     def _start_video_loading(self):
-        """Helper function to start video loading."""
         desc = f"frame loading (TorchCodec w/ {'GPU' if self.gpu_acceleration else 'CPU'}) [rank={RANK}]"
         pbar = tqdm(desc=desc, total=self.num_frames)
         self.num_loaded_frames = 0
@@ -698,7 +605,6 @@ class AsyncVideoFileLoaderWithTorchCodec:
 
         # load the frames asynchronously without blocking the session start
         def _load_frames():
-            """Helper function to load frames."""
             finished = self.all_frames_loaded
             chunk_size = 16
             while not finished:
@@ -760,11 +666,6 @@ class AsyncVideoFileLoaderWithTorchCodec:
         self.thread.start()
 
     def _transform_frame(self, frame):
-        """Helper function to transform frame.
-
-        Args:
-            frame: The frame.
-        """
         frame = frame.clone()  # make a copy to avoid modifying the original frame bytes
         frame = frame.float()  # convert to float32 before interpolation
         frame_resized = F.interpolate(
@@ -785,14 +686,6 @@ class AsyncVideoFileLoaderWithTorchCodec:
         return frame_resized
 
     def __getitem__(self, index: int) -> torch.Tensor:
-        """Getitem.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         if self.exception is not None:
             raise RuntimeError("Failure in frame loading thread") from self.exception
 
@@ -815,11 +708,6 @@ class AsyncVideoFileLoaderWithTorchCodec:
         raise RuntimeError(f"Failed to load frame {index} after {max_tries} tries")
 
     def __len__(self) -> int:
-        """Len.
-
-        Returns:
-            The return value.
-        """
         return len(self.images)
 
     def __getstate__(self) -> dict[str, Any]:

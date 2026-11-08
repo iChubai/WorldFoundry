@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> audio -> tower.py functionality."""
-
 import logging
 from collections.abc import Mapping
 from pathlib import Path
@@ -22,22 +20,10 @@ _HTSAT_CONFIGS = {
 
 
 def _htsat_output_dim(swin_embed_dim, num_layers=4):
-    """Helper function to htsat output dim.
-
-    Args:
-        swin_embed_dim: The swin embed dim.
-        num_layers: The num layers.
-    """
     return int(swin_embed_dim * 2 ** (num_layers - 1))
 
 
 def _load_audio_checkpoint(path: str | Path, weights_only: bool = True):
-    """Helper function to load audio checkpoint.
-
-    Args:
-        path: The path.
-        weights_only: The weights only.
-    """
     checkpoint = load_torch_checkpoint(
         path,
         map_location="cpu",
@@ -60,12 +46,6 @@ class AudioTower(nn.Module):
     """Audio encoder wrapper for CLAP models."""
 
     def __init__(self, audio_cfg: CLIPAudioCfg, embed_dim: int):
-        """Init.
-
-        Args:
-            audio_cfg: The audio cfg.
-            embed_dim: The embed dim.
-        """
         super().__init__()
         if isinstance(audio_cfg, dict):
             audio_cfg = CLIPAudioCfg(**audio_cfg)
@@ -117,7 +97,6 @@ class AudioTower(nn.Module):
                 module.use_checkpoint = enable
 
     def no_weight_decay(self):
-        """No weight decay."""
         no_wd = set()
         if hasattr(self.encoder, "no_weight_decay"):
             for name in self.encoder.no_weight_decay():
@@ -125,12 +104,6 @@ class AudioTower(nn.Module):
         return no_wd
 
     def load_pretrained_encoder(self, path: str | Path, weights_only: bool = True):
-        """Load pretrained encoder.
-
-        Args:
-            path: The path.
-            weights_only: The weights only.
-        """
         checkpoint = _load_audio_checkpoint(path, weights_only=weights_only)
         if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
             checkpoint = checkpoint["state_dict"]
@@ -148,12 +121,6 @@ class AudioTower(nn.Module):
         return self.encoder.load_state_dict(state_dict, strict=False)
 
     def forward(self, audio, apply_proj=True):
-        """Forward.
-
-        Args:
-            audio: The audio.
-            apply_proj: The apply proj.
-        """
         device = self.proj[0].weight.device
         if self._is_whisper:
             audio_input = dict(audio)

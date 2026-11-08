@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_video_inference.py functionality."""
-
 import logging
 from collections import defaultdict
 
@@ -251,14 +249,6 @@ class Sam3VideoInference(Sam3VideoBase):
         return boxes_cxcywh, box_labels, new_visual_prompt
 
     def _get_processing_order(self, inference_state, start_frame_idx, max_frame_num_to_track, reverse):
-        """Helper function to get processing order.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-            max_frame_num_to_track: The max frame num to track.
-            reverse: The reverse.
-        """
         num_frames = inference_state["num_frames"]
         previous_stages_out = inference_state["previous_stages_out"]
         if all(out is None for out in previous_stages_out) and start_frame_idx is None:
@@ -458,15 +448,6 @@ class Sam3VideoInference(Sam3VideoBase):
         suppressed_obj_ids=None,
         unconfirmed_obj_ids=None,
     ):
-        """Helper function to postprocess output.
-
-        Args:
-            inference_state: The inference state.
-            out: The out.
-            removed_obj_ids: The removed obj ids.
-            suppressed_obj_ids: The suppressed obj ids.
-            unconfirmed_obj_ids: The unconfirmed obj ids.
-        """
         obj_id_to_mask = out["obj_id_to_mask"]  # low res masks
         curr_obj_ids = sorted(obj_id_to_mask.keys())
         H_video, W_video = inference_state["orig_height"], inference_state["orig_width"]
@@ -550,16 +531,6 @@ class Sam3VideoInference(Sam3VideoBase):
         removed_obj_ids=None,
         unconfirmed_obj_ids=None,
     ):
-        """Helper function to cache frame outputs.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            obj_id_to_mask: The obj id to mask.
-            suppressed_obj_ids: The suppressed obj ids.
-            removed_obj_ids: The removed obj ids.
-            unconfirmed_obj_ids: The unconfirmed obj ids.
-        """
         # Filter out suppressed, removed, and unconfirmed objects from the cache
         filtered_obj_id_to_mask = obj_id_to_mask.copy()
 
@@ -579,13 +550,6 @@ class Sam3VideoInference(Sam3VideoBase):
         inference_state["cached_frame_outputs"][frame_idx] = filtered_obj_id_to_mask
 
     def _build_tracker_output(self, inference_state, frame_idx, refined_obj_id_to_mask=None):
-        """Helper function to build tracker output.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            refined_obj_id_to_mask: The refined obj id to mask.
-        """
         if "cached_frame_outputs" in inference_state and frame_idx in inference_state["cached_frame_outputs"]:
             obj_id_to_mask = inference_state["cached_frame_outputs"][frame_idx].copy()
         else:
@@ -679,12 +643,6 @@ class Sam3VideoInference(Sam3VideoBase):
         self._model_is_compiled = True
 
     def _warm_up_vg_propagation(self, inference_state, start_frame_idx=0):
-        """Helper function to warm up vg propagation.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-        """
         # use different tracking score thresholds for each round to simulate different number of output objects
         num_objects_list = range(self.num_obj_for_compile + 1)
         new_det_score_thresh_list = [0.3, 0.5, 0.7]
@@ -759,13 +717,6 @@ class Sam3VideoInference(Sam3VideoBase):
         return inference_state
 
     def add_fake_objects_to_inference_state(self, inference_state, num_objects, frame_idx):
-        """Add fake objects to inference state.
-
-        Args:
-            inference_state: The inference state.
-            num_objects: The num objects.
-            frame_idx: The frame idx.
-        """
         new_det_obj_ids_local = np.arange(num_objects)
         high_res_H, high_res_W = self.tracker.maskmem_backbone.mask_downsampler.interpol_size
         new_det_masks = torch.ones(len(new_det_obj_ids_local), high_res_H, high_res_W).to(self.device)
@@ -973,11 +924,6 @@ class Sam3VideoInference(Sam3VideoBase):
         return {video_id: preds}
 
     def back_convert(self, targets):
-        """Back convert.
-
-        Args:
-            targets: The targets.
-        """
         # Needed for retraining compatibility with trainer
         return targets
 
@@ -1005,11 +951,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         self.refinement_detector_cond_frame_removal_window = refinement_detector_cond_frame_removal_window
 
     def _init_new_tracker_state(self, inference_state):
-        """Helper function to init new tracker state.
-
-        Args:
-            inference_state: The inference state.
-        """
         return self.tracker.init_state(
             cached_features=inference_state["feature_cache"],
             video_height=inference_state["orig_height"],
@@ -1026,14 +967,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         max_frame_num_to_track=None,
         reverse=False,
     ):
-        """Propagate in video.
-
-        Args:
-            inference_state: The inference state.
-            start_frame_idx: The start frame idx.
-            max_frame_num_to_track: The max frame num to track.
-            reverse: The reverse.
-        """
         # step 1: check which type of propagation to run, should be the same for all GPUs.
         propagation_type, obj_ids = self.parse_action_history_for_propagation(inference_state)
         self.add_action_history(
@@ -1212,12 +1145,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         inference_state["action_history"].append(action)
 
     def _has_object_been_refined(self, inference_state, obj_id):
-        """Helper function to has object been refined.
-
-        Args:
-            inference_state: The inference state.
-            obj_id: The obj id.
-        """
         action_history = inference_state["action_history"]
         for action in action_history:
             if action["type"] in ["add", "refine"] and action.get("obj_ids"):
@@ -1333,13 +1260,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         return states
 
     def _prepare_backbone_feats(self, inference_state, frame_idx, reverse):
-        """Helper function to prepare backbone feats.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            reverse: The reverse.
-        """
         input_batch = inference_state["input_batch"]
         feature_cache = inference_state["feature_cache"]
         num_frames = inference_state["num_frames"]
@@ -1371,19 +1291,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         obj_id=None,
         rel_coordinates=True,
     ):
-        """Add prompt.
-
-        Args:
-            inference_state: The inference state.
-            frame_idx: The frame idx.
-            text_str: The text str.
-            boxes_xywh: The boxes xywh.
-            box_labels: The box labels.
-            points: The points.
-            point_labels: The point labels.
-            obj_id: The obj id.
-            rel_coordinates: The rel coordinates.
-        """
         if points is not None:
             # Tracker instance prompts
             assert text_str is None and boxes_xywh is None, (
@@ -1678,14 +1585,6 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
 
 
 def is_image_type(resource_path: str) -> bool:
-    """Is image type.
-
-    Args:
-        resource_path: The resource path.
-
-    Returns:
-        The return value.
-    """
     if isinstance(resource_path, list):
         return len(resource_path) == 1
     return resource_path.lower().endswith(tuple(IMAGE_EXTS))

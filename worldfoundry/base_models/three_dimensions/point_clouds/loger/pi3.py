@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> pi3.py functionality."""
-
 from copy import deepcopy
 from functools import partial
 
@@ -48,37 +46,12 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         pi3x: bool = False,
         pi3x_metric: bool = True,
     ):
-        """Init.
-
-        Args:
-            pos_type: The pos type.
-            decoder_size: The decoder size.
-            ttt_insert_after: The ttt insert after.
-            ttt_head_dim: The ttt head dim.
-            ttt_inter_multi: The ttt inter multi.
-            num_muon_update_steps: The num muon update steps.
-            use_momentum: The use momentum.
-            ttt_update_steps: The ttt update steps.
-            conf: The conf.
-            attn_insert_after: The attn insert after.
-            ttt_pre_norm: The ttt pre norm.
-            pi3x: The pi3x.
-            pi3x_metric: The pi3x metric.
-        """
         super().__init__()
 
         # ----------------------
         #        Encoder
         # ----------------------
         def _normalize_insert_positions(value: int | list[int] | None) -> list[int]:
-            """Helper function to normalize insert positions.
-
-            Args:
-                value: The value.
-
-            Returns:
-                The return value.
-            """
             if isinstance(value, (int, float)):
                 return [int(value)]
             if isinstance(value, (list, tuple)):
@@ -364,7 +337,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             print(f"  Initialized {kind}_layer[{layer_idx}] from decoder[{decoder_idx}]")
 
     def _initialize_swa_from_global(self):
-        """Helper function to initialize swa from global."""
         if self.swa_layers is None:
             return
         self._initialize_ttt_layers_from_global(self.swa_layers, "swa", self.attn_insert_after)
@@ -382,23 +354,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         turn_off_ttt=False,
         turn_off_swa=False,
     ) -> torch.Tensor:
-        """Decode.
-
-        Args:
-            hidden: The hidden.
-            N: The n.
-            H: The h.
-            W: The w.
-            ttt_dict: The ttt dict.
-            window_size: The window size.
-            overlap_size: The overlap size.
-            is_first_window: The is first window.
-            turn_off_ttt: The turn off ttt.
-            turn_off_swa: The turn off swa.
-
-        Returns:
-            The return value.
-        """
         BN, hw, _ = hidden.shape
         B = BN // N
 
@@ -649,11 +604,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         )
 
     def forward(self, imgs, *args, **kwargs):
-        """Forward.
-
-        Args:
-            imgs: The imgs.
-        """
         # Windowing controls (optional)
         window_size = kwargs.pop("window_size", -1)
         overlap_size = kwargs.pop("overlap_size", 1)
@@ -883,12 +833,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 points = torch.einsum("bnij, bnhwj -> bnhwi", camera_poses, homogenize_points(local_points))[..., :3]
 
             def maybe_detach(t, no_detach=no_detach):
-                """Maybe detach.
-
-                Args:
-                    t: The t.
-                    no_detach: The no detach.
-                """
                 if t is None:
                     return None
                 return t if self.training or no_detach else t.detach().cpu()
@@ -1120,15 +1064,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             current_allow_scale: bool,
             forced_scale: torch.Tensor | None = None,
         ):
-            """Helper function to estimate relative sim3.
-
-            Args:
-                prev_aligned: The prev aligned.
-                curr_raw: The curr raw.
-                overlap: The overlap.
-                current_allow_scale: The current allow scale.
-                forced_scale: The forced scale.
-            """
             if overlap <= 0:
                 return torch.ones_like(one_scale), identity_rot, zero_trans
 
@@ -1309,14 +1244,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             aligned_pred["local_points"] = aligned_local_points
 
             def _transform_camera(cam_tensor: torch.Tensor | None) -> torch.Tensor | None:
-                """Helper function to transform camera.
-
-                Args:
-                    cam_tensor: The cam tensor.
-
-                Returns:
-                    The return value.
-                """
                 if cam_tensor is None:
                     return None
                 frames = cam_tensor.shape[1]

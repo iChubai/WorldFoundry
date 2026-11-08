@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> inference_utils.py functionality."""
-
 import glob
 import os
 
@@ -256,14 +254,6 @@ def prepare_images_to_tensor(file_paths, resize_strategy="crop", target_size=518
 
 
 def extract_load_and_preprocess_images(image_folder_or_video_path, fps=1, target_size=518, mode="crop"):
-    """Extract load and preprocess images.
-
-    Args:
-        image_folder_or_video_path: The image folder or video path.
-        fps: The fps.
-        target_size: The target size.
-        mode: The mode.
-    """
     # Support multiple image formats
     if image_folder_or_video_path.is_file() and image_folder_or_video_path.suffix.lower() in VIDEO_EXTS:
         frame_paths = video_to_image_frames(str(image_folder_or_video_path), fps=fps)

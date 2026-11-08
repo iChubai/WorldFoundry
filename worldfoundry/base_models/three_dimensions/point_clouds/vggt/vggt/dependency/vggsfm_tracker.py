@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> vggsfm_tracker.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,10 +15,7 @@ from .track_modules.track_refine import refine_track
 
 
 class TrackerPredictor(nn.Module):
-    """Tracker predictor implementation."""
-
     def __init__(self, **extra_args):
-        """Init."""
         super().__init__()
         """
         Initializes the tracker predictor.

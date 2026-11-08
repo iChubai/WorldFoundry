@@ -121,11 +121,6 @@ class MidasNet_small(BaseModel):
 
 
 def fuse_model(m):
-    """Fuse model.
-
-    Args:
-        m: The m.
-    """
     prev_previous_type = nn.Identity()
     prev_previous_name = ""
     previous_type = nn.Identity()

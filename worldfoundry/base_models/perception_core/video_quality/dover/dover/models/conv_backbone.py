@@ -289,8 +289,7 @@ class BlockV23D(nn.Module):
 
 
 class ConvNeXtV2(nn.Module):
-    """ConvNeXt V2
-
+    """
     Args:
         in_chans (int): Number of input image channels. Default: 3
         num_classes (int): Number of classes for classification head. Default: 1000

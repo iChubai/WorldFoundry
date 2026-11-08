@@ -20,17 +20,7 @@ __all__ = ["XLMRoberta", "xlm_roberta_large"]
 
 
 class SelfAttention(nn.Module):
-    """Self attention implementation."""
-
     def __init__(self, dim, num_heads, dropout=0.1, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            dropout: The dropout.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -68,18 +58,7 @@ class SelfAttention(nn.Module):
 
 
 class AttentionBlock(nn.Module):
-    """Attention block implementation."""
-
     def __init__(self, dim, num_heads, post_norm, dropout=0.1, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            post_norm: The post norm.
-            dropout: The dropout.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
@@ -93,12 +72,6 @@ class AttentionBlock(nn.Module):
         self.norm2 = nn.LayerNorm(dim, eps=eps)
 
     def forward(self, x, mask):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-        """
         if self.post_norm:
             x = self.norm1(x + self.attn(x, mask))
             x = self.norm2(x + self.ffn(x))
@@ -126,20 +99,6 @@ class XLMRoberta(nn.Module):
         dropout=0.1,
         eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            vocab_size: The vocab size.
-            max_seq_len: The max seq len.
-            type_size: The type size.
-            pad_id: The pad id.
-            dim: The dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            post_norm: The post norm.
-            dropout: The dropout.
-            eps: The eps.
-        """
         super().__init__()
         self.vocab_size = vocab_size
         self.max_seq_len = max_seq_len

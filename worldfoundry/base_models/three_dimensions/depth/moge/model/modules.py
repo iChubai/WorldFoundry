@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> model -> modules.py functionality."""
-
 import functools
 import importlib
 import itertools
@@ -20,8 +18,6 @@ from ..utils.geometry_torch import normalized_view_plane_uv  # noqa: F401 - Keep
 
 
 class ResidualConvBlock(nn.Module):
-    """Residual conv block implementation."""
-
     def __init__(
         self,
         in_channels: int,
@@ -33,18 +29,6 @@ class ResidualConvBlock(nn.Module):
         in_norm: Literal["group_norm", "layer_norm", "instance_norm", "none"] = "layer_norm",
         hidden_norm: Literal["group_norm", "layer_norm", "instance_norm"] = "group_norm",
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            hidden_channels: The hidden channels.
-            kernel_size: The kernel size.
-            padding_mode: The padding mode.
-            activation: The activation.
-            in_norm: The in norm.
-            hidden_norm: The hidden norm.
-        """
         super().__init__()
         if out_channels is None:
             out_channels = in_channels
@@ -102,11 +86,6 @@ class ResidualConvBlock(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         skip = self.skip_connection(x)
         x = self.layers(x)
         x = x + skip
@@ -122,13 +101,6 @@ class DINOv2Encoder(nn.Module):
     dim_features: int
 
     def __init__(self, backbone: str, intermediate_layers: Union[int, List[int]], dim_out: int, **deprecated_kwargs):
-        """Init.
-
-        Args:
-            backbone: The backbone.
-            intermediate_layers: The intermediate layers.
-            dim_out: The dim out.
-        """
         super().__init__()
 
         self.intermediate_layers = intermediate_layers
@@ -161,31 +133,22 @@ class DINOv2Encoder(nn.Module):
 
     @property
     def onnx_compatible_mode(self):
-        """Onnx compatible mode."""
         return getattr(self, "_onnx_compatible_mode", False)
 
     @onnx_compatible_mode.setter
     def onnx_compatible_mode(self, value: bool):
-        """Onnx compatible mode.
-
-        Args:
-            value: The value.
-        """
         self._onnx_compatible_mode = value
         self.backbone.onnx_compatible_mode = value
 
     def init_weights(self):
-        """Init weights."""
         pretrained_backbone_state_dict = self.hub_loader(pretrained=True).state_dict()
         self.backbone.load_state_dict(pretrained_backbone_state_dict)
 
     def enable_gradient_checkpointing(self):
-        """Enable gradient checkpointing."""
         for i in range(len(self.backbone.blocks)):
             wrap_module_with_gradient_checkpointing(self.backbone.blocks[i])
 
     def enable_pytorch_native_sdpa(self):
-        """Enable pytorch native sdpa."""
         for i in range(len(self.backbone.blocks)):
             wrap_dinov2_attention_with_sdpa(self.backbone.blocks[i].attn)
 
@@ -196,17 +159,6 @@ class DINOv2Encoder(nn.Module):
         token_cols: Union[int, torch.LongTensor],
         return_class_token: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            image: The image.
-            token_rows: The token rows.
-            token_cols: The token cols.
-            return_class_token: The return class token.
-
-        Returns:
-            The return value.
-        """
         image_14 = F.interpolate(
             image,
             (token_rows * 14, token_cols * 14),
@@ -235,8 +187,6 @@ class DINOv2Encoder(nn.Module):
 
 
 class Resampler(nn.Sequential):
-    """Resampler implementation."""
-
     def __init__(
         self,
         in_channels: int,
@@ -246,14 +196,6 @@ class Resampler(nn.Sequential):
         ],
         scale_factor: int = 2,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            type_: The type.
-            scale_factor: The scale factor.
-        """
         if type_ == "pixel_shuffle":
             nn.Sequential.__init__(
                 self,
@@ -316,14 +258,7 @@ class Resampler(nn.Sequential):
 
 
 class MLP(nn.Sequential):
-    """Mlp implementation."""
-
     def __init__(self, dims: Sequence[int]):
-        """Init.
-
-        Args:
-            dims: The dims.
-        """
         nn.Sequential.__init__(
             self,
             *itertools.chain(
@@ -337,8 +272,6 @@ class MLP(nn.Sequential):
 
 
 class ConvStack(nn.Module):
-    """Conv stack implementation."""
-
     def __init__(
         self,
         dim_in: List[Optional[int]],
@@ -356,19 +289,6 @@ class ConvStack(nn.Module):
         res_block_hidden_norm: Literal["layer_norm", "group_norm", "instance_norm", "none"] = "group_norm",
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_res_blocks: The dim res blocks.
-            dim_out: The dim out.
-            resamplers: The resamplers.
-            dim_times_res_block_hidden: The dim times res block hidden.
-            num_res_blocks: The num res blocks.
-            res_block_in_norm: The res block in norm.
-            res_block_hidden_norm: The res block hidden norm.
-            activation: The activation.
-        """
         super().__init__()
         self.input_blocks = nn.ModuleList(
             [
@@ -425,7 +345,6 @@ class ConvStack(nn.Module):
         )
 
     def enable_gradient_checkpointing(self):
-        """Enable gradient checkpointing."""
         for i in range(len(self.resamplers)):
             self.resamplers[i] = wrap_module_with_gradient_checkpointing(self.resamplers[i])
         for i in range(len(self.res_blocks)):
@@ -433,11 +352,6 @@ class ConvStack(nn.Module):
                 self.res_blocks[i][j] = wrap_module_with_gradient_checkpointing(self.res_blocks[i][j])
 
     def forward(self, in_features: List[torch.Tensor]):
-        """Forward.
-
-        Args:
-            in_features: The in features.
-        """
         out_features = []
         for i in range(len(self.res_blocks)):
             feature = self.input_blocks[i](in_features[i])

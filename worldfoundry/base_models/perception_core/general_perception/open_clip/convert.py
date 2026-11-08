@@ -17,13 +17,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
     from timm.layers import resample_abs_pos_embed, resample_patch_embed
 
     def _n2p(w, t=True, idx=None):
-        """Helper function to n2p.
-
-        Args:
-            w: The w.
-            t: The t.
-            idx: The idx.
-        """
         if idx is not None:
             w = w[idx]
         if w.ndim == 4 and w.shape[0] == w.shape[1] == w.shape[2] == 1:
@@ -42,24 +35,12 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
     antialias = False
 
     def _linear_patch_embed_to_conv(embed_w, conv_weight_shape):
-        """Helper function to linear patch embed to conv.
-
-        Args:
-            embed_w: The embed w.
-            conv_weight_shape: The conv weight shape.
-        """
         out_channels, in_channels, patch_height, patch_width = conv_weight_shape
         if embed_w.shape != (out_channels, in_channels * patch_height * patch_width):
             return embed_w
         return embed_w.reshape(out_channels, patch_height, patch_width, in_channels).permute(0, 3, 1, 2)
 
     def _reshape_grid_pos_embed(pos_embed_w, target_shape):
-        """Helper function to reshape grid pos embed.
-
-        Args:
-            pos_embed_w: The pos embed w.
-            target_shape: The target shape.
-        """
         if pos_embed_w.ndim == 3:
             pos_embed_w = pos_embed_w.unsqueeze(0)
         if pos_embed_w.shape == target_shape:
@@ -81,12 +62,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
         return pos_embed_w
 
     def _copy_map_head(module, prefix):
-        """Helper function to copy map head.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         if module.attn_pool is None:
             return
 
@@ -112,12 +87,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
             getattr(module.attn_pool.mlp, f"fc{r + 1}").bias.copy_(_n2p(w[f"{block_prefix}MlpBlock_0/Dense_{r}/bias"]))
 
     def _copy_timm_img_blocks(blocks, prefix):
-        """Helper function to copy timm img blocks.
-
-        Args:
-            blocks: The blocks.
-            prefix: The prefix.
-        """
         mha_sub, b_sub, ln1_sub = (0, 0, 1)
         for i, block in enumerate(blocks.children()):
             if f"{prefix}Transformer/encoderblock/LayerNorm_0/scale" in w:
@@ -155,12 +124,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
                 )
 
     def _convert_timm_img(module, prefix):
-        """Helper function to convert timm img.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         embed_conv_w = _n2p(w[f"{prefix}embedding/kernel"])
         if embed_conv_w.ndim == 2:
             embed_conv_w = _linear_patch_embed_to_conv(embed_conv_w, module.patch_embed.proj.weight.shape)
@@ -203,12 +166,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
         _copy_map_head(module, prefix)
 
     def _convert_naflex_timm_img(module, prefix):
-        """Helper function to convert naflex timm img.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         module.embeds.proj.weight.copy_(_n2p(w[f"{prefix}embedding/kernel"]))
         if module.embeds.proj.bias is not None:
             module.embeds.proj.bias.copy_(_n2p(w[f"{prefix}embedding/bias"]))
@@ -229,12 +186,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
         _copy_map_head(module, prefix)
 
     def _convert_openclip_transformer(module: Transformer, prefix):
-        """Helper function to convert openclip transformer.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         for i, block in enumerate(module.resblocks.children()):
             if f"{prefix}encoderblock/LayerNorm_0/scale" in w:
                 block_prefix = f"{prefix}encoderblock/"
@@ -268,12 +219,6 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
             block.mlp.c_proj.bias.copy_(_n2p(w[f"{block_prefix}MlpBlock_0/Dense_1/bias"], idx=idx))
 
     def _convert_openclip_txt(module: TextTransformer, prefix):
-        """Helper function to convert openclip txt.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         module.token_embedding.weight.copy_(_n2p(w[f"{prefix}Embed_0/embedding"], t=False))
         pos_embed_w = _n2p(w[f"{prefix}pos_embedding"], t=False).squeeze(0)
         module.positional_embedding.copy_(pos_embed_w)
@@ -296,20 +241,7 @@ def load_big_vision_weights(model: CustomTextCLIP, checkpoint_path: str):
 
 @torch.no_grad()
 def convert_mobile_clip_state_dict(model: CustomTextCLIP, state_dict, fastvit=True):
-    """Convert mobile clip state dict.
-
-    Args:
-        model: The model.
-        state_dict: The state dict.
-        fastvit: The fastvit.
-    """
-
     def _convert_timm_img(state_dict):
-        """Helper function to convert timm img.
-
-        Args:
-            state_dict: The state dict.
-        """
         if fastvit:
             from timm.models.fastvit import checkpoint_filter_fn
         else:
@@ -319,12 +251,6 @@ def convert_mobile_clip_state_dict(model: CustomTextCLIP, state_dict, fastvit=Tr
         return timm_state_dict
 
     def _convert_openclip_txt(state_dict, prefix="text_encoder."):
-        """Helper function to convert openclip txt.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         text_dict = {}
         for k, v in state_dict.items():
             if not k.startswith(prefix):
@@ -355,12 +281,6 @@ def convert_mobile_clip_state_dict(model: CustomTextCLIP, state_dict, fastvit=Tr
 
 
 def convert_state_dict(model: CustomTextCLIP | CLIP, state_dict):
-    """Convert state dict.
-
-    Args:
-        model: The model.
-        state_dict: The state dict.
-    """
     if "image_encoder.model.patch_embed.0.rbr_conv.0.conv.weight" in state_dict:
         # Apple MobileCLIP s1 & s2 state_dicts (s0 and b not currently supported)
         state_dict = convert_mobile_clip_state_dict(model, state_dict)

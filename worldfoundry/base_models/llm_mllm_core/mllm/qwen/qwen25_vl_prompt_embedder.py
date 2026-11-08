@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen25_vl_prompt_embedder.py functionality."""
-
 import torch
 
 
@@ -7,14 +5,6 @@ class Qwen25VL_7b_Embedder(torch.nn.Module):
     """Qwen b embedder implementation."""
 
     def __init__(self, model_path, max_length=640, dtype=torch.bfloat16, device="cuda"):
-        """Init.
-
-        Args:
-            model_path: The model path.
-            max_length: The max length.
-            dtype: The dtype.
-            device: The device.
-        """
         super().__init__()
         self.max_length = max_length
         self.dtype = dtype
@@ -43,22 +33,9 @@ User Prompt:"""
 
     @staticmethod
     def from_pretrained(path, torch_dtype=torch.bfloat16, device="cuda"):
-        """From pretrained.
-
-        Args:
-            path: The path.
-            torch_dtype: The torch dtype.
-            device: The device.
-        """
         return Qwen25VL_7b_Embedder(path, dtype=torch_dtype, device=device)
 
     def forward(self, caption, ref_images):
-        """Forward.
-
-        Args:
-            caption: The caption.
-            ref_images: The ref images.
-        """
         text_list = caption
         embs = torch.zeros(
             len(text_list),
@@ -82,11 +59,6 @@ User Prompt:"""
         )
 
         def split_string(s):
-            """Split string.
-
-            Args:
-                s: The s.
-            """
             s = s.replace("“", '"').replace("”", '"').replace("'", '''"''')  # use english quotes
             result = []
             in_quotes = False

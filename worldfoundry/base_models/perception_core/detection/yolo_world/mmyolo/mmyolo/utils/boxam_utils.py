@@ -325,8 +325,6 @@ class BoxAMDetectorVisualizer:
 
 
 class DetAblationLayer(AblationLayer):
-    """Det AblationLayer."""
-
     def __init__(self):
         super().__init__()
         self.activations = None

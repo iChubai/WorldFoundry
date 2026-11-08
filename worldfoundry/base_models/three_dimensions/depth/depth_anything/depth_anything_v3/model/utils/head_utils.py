@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> head_utils.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -87,26 +85,10 @@ class Permute(nn.Module):
     dims: tuple[int, ...]
 
     def __init__(self, dims: tuple[int, ...]) -> None:
-        """Init.
-
-        Args:
-            dims: The dims.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.dims = dims
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore[override]
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.permute(*self.dims)
 
 

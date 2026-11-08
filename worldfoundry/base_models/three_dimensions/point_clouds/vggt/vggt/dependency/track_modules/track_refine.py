@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> track_refine.py functionality."""
-
 import torch
 from einops import rearrange
 
@@ -373,17 +371,6 @@ def compute_score_fn(query_point_feat, patch_feat, fine_pred_track, sradius, psi
 def extract_glimpse(
     tensor: torch.Tensor, size: tuple[int, int], offsets, mode="bilinear", padding_mode="zeros", debug=False, orib=None
 ):
-    """Extract glimpse.
-
-    Args:
-        tensor: The tensor.
-        size: The size.
-        offsets: The offsets.
-        mode: The mode.
-        padding_mode: The padding mode.
-        debug: The debug.
-        orib: The orib.
-    """
     B, C, W, H = tensor.shape
 
     h, w = size

@@ -195,8 +195,7 @@ class RTMDetSepBNHeadModule(BaseModule):
 
 @MODELS.register_module()
 class RTMDetHead(YOLOv5Head):
-    """RTMDet head.
-
+    """
     Args:
         head_module(ConfigType): Base module used for RTMDetHead
         prior_generator: Points generator feature maps in

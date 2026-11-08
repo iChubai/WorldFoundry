@@ -51,11 +51,6 @@ from models.encoder_decoder import EncDec_VitB8
 
 
 def _resolve_checkpoint(model_repo):
-    """Helper function to resolve checkpoint.
-
-    Args:
-        model_repo: The model repo.
-    """
     path = Path(model_repo).expanduser()
     if path.is_file():
         return str(path)
@@ -68,7 +63,6 @@ def _resolve_checkpoint(model_repo):
 
 
 def main():
-    """Main."""
     parser = argparse.ArgumentParser(description="LagerNVS minimal inference")
     parser.add_argument(
         "--images",

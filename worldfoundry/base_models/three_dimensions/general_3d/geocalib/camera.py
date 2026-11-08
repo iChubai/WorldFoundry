@@ -210,11 +210,6 @@ class BaseCamera(TensorWrapper):
             for idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    """Func.
-
-                    Args:
-                        x: The x.
-                    """
                     params = torch.cat([self._data[idx, :6], x[None]], -1)
                     return self.__class__(params).distort(p2d[idx], return_scale=True)[0]
 
@@ -242,11 +237,6 @@ class BaseCamera(TensorWrapper):
             for batch_idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    """Func.
-
-                    Args:
-                        x: The x.
-                    """
                     params = torch.cat([self._data[batch_idx, :6], x[None]], -1)
                     return self.__class__(params).undistort(p2d[batch_idx])[0]
 
@@ -276,11 +266,6 @@ class BaseCamera(TensorWrapper):
             for batch_idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    """Func.
-
-                    Args:
-                        x: The x.
-                    """
                     params = torch.cat([self._data[batch_idx, :6], x[None]], -1)[None]
                     return self.__class__(params).up_projection_offset(p2d[batch_idx][None])
 
@@ -798,16 +783,6 @@ class SimpleMei(BaseCamera):
 
     @staticmethod
     def build_from_other(camera: BaseCamera, max_r: float = 1.0, resolution: int = 50) -> "SimpleMei":
-        """Build from other.
-
-        Args:
-            camera: The camera.
-            max_r: The max r.
-            resolution: The resolution.
-
-        Returns:
-            The return value.
-        """
         import numpy as np
         from scipy.optimize import curve_fit
 
@@ -817,13 +792,6 @@ class SimpleMei(BaseCamera):
         ref_radial = ref_radial.cpu().numpy()[0, :, 0]
 
         def mei_model(r, k1, f):
-            """Mei model.
-
-            Args:
-                r: The r.
-                k1: The k1.
-                f: The f.
-            """
             return 1 / (1 + k1 * np.sqrt(1 + r**2)) * f
 
         popt, pcov = curve_fit(mei_model, r_samples, ref_radial)
@@ -842,7 +810,6 @@ class SimpleMei(BaseCamera):
         return SimpleMei(data)
 
     def pinhole(self):
-        """Pinhole."""
         original_data = self._data[..., :6].clone()
         # breakpoint()
         scale = 1 / (1 + self.k1)

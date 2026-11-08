@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> backbones -> hieradet.py functionality."""
-
 import logging
 from functools import partial
 
@@ -24,16 +22,6 @@ from worldfoundry.core.nn.blocks.layers import DropPath, SamHeadMLP
 
 
 def do_pool(x: torch.Tensor, pool: nn.Module, norm: nn.Module = None) -> torch.Tensor:
-    """Do pool.
-
-    Args:
-        x: The x.
-        pool: The pool.
-        norm: The norm.
-
-    Returns:
-        The return value.
-    """
     if pool is None:
         return x
     # (B, H, W, C) -> (B, C, H, W)
@@ -48,8 +36,6 @@ def do_pool(x: torch.Tensor, pool: nn.Module, norm: nn.Module = None) -> torch.T
 
 
 class MultiScaleAttention(nn.Module):
-    """Multi scale attention implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -57,14 +43,6 @@ class MultiScaleAttention(nn.Module):
         num_heads: int,
         q_pool: nn.Module = None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            num_heads: The num heads.
-            q_pool: The q pool.
-        """
         super().__init__()
 
         self.dim = dim
@@ -75,14 +53,6 @@ class MultiScaleAttention(nn.Module):
         self.proj = nn.Linear(dim_out, dim_out)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         B, H, W, _ = x.shape
         # qkv with shape (B, H * W, 3, nHead, C)
         qkv = self.qkv(x).reshape(B, H * W, 3, self.num_heads, -1)
@@ -111,8 +81,6 @@ class MultiScaleAttention(nn.Module):
 
 
 class MultiScaleBlock(nn.Module):
-    """Multi scale block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -125,19 +93,6 @@ class MultiScaleBlock(nn.Module):
         act_layer: nn.Module = nn.GELU,
         window_size: int = 0,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            drop_path: The drop path.
-            norm_layer: The norm layer.
-            q_stride: The q stride.
-            act_layer: The act layer.
-            window_size: The window size.
-        """
         super().__init__()
 
         if isinstance(norm_layer, str):
@@ -174,14 +129,6 @@ class MultiScaleBlock(nn.Module):
             self.proj = nn.Linear(dim, dim_out)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         shortcut = x  # B, H, W, C
         x = self.norm1(x)
 
@@ -248,23 +195,6 @@ class Hiera(nn.Module):
         weights_path=None,
         return_interm_layers=True,  # return feats from every stage
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            drop_path_rate: The drop path rate.
-            q_pool: The q pool.
-            q_stride: The q stride.
-            stages: The stages.
-            dim_mul: The dim mul.
-            head_mul: The head mul.
-            window_pos_embed_bkg_spatial_size: The window pos embed bkg spatial size.
-            window_spec: The window spec.
-            global_att_blocks: The global att blocks.
-            weights_path: The weights path.
-            return_interm_layers: The return interm layers.
-        """
         super().__init__()
 
         assert len(stages) == len(window_spec)
@@ -332,14 +262,6 @@ class Hiera(nn.Module):
             logging.info("loading Hiera", self.load_state_dict(chkpt, strict=False))
 
     def _get_pos_embed(self, hw: tuple[int, int]) -> torch.Tensor:
-        """Helper function to get pos embed.
-
-        Args:
-            hw: The hw.
-
-        Returns:
-            The return value.
-        """
         h, w = hw
         window_embed = self.pos_embed_window
         pos_embed = F.interpolate(self.pos_embed, size=(h, w), mode="bicubic")
@@ -350,14 +272,6 @@ class Hiera(nn.Module):
         return pos_embed
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.patch_embed(x)
         # x: (B, H, W, C)
 
@@ -374,11 +288,6 @@ class Hiera(nn.Module):
         return outputs
 
     def get_layer_id(self, layer_name):
-        """Get layer id.
-
-        Args:
-            layer_name: The layer name.
-        """
         # https://github.com/microsoft/unilm/blob/master/beit/optim_factory.py#L33
         num_layers = self.get_num_layers()
 
@@ -392,9 +301,4 @@ class Hiera(nn.Module):
             return num_layers + 1
 
     def get_num_layers(self) -> int:
-        """Get num layers.
-
-        Returns:
-            The return value.
-        """
         return len(self.blocks)

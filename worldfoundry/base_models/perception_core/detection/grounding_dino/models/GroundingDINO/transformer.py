@@ -16,8 +16,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 # ------------------------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> transformer.py functionality."""
-
 import torch
 import torch.utils.checkpoint as checkpoint
 from torch import Tensor, nn
@@ -38,8 +36,6 @@ from .utils import (
 
 
 class Transformer(nn.Module):
-    """Transformer implementation."""
-
     def __init__(
         self,
         d_model=256,
@@ -74,37 +70,6 @@ class Transformer(nn.Module):
         fusion_dropout=0.1,
         fusion_droppath=0.0,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            nhead: The nhead.
-            num_queries: The num queries.
-            num_encoder_layers: The num encoder layers.
-            num_unicoder_layers: The num unicoder layers.
-            num_decoder_layers: The num decoder layers.
-            dim_feedforward: The dim feedforward.
-            dropout: The dropout.
-            activation: The activation.
-            normalize_before: The normalize before.
-            return_intermediate_dec: The return intermediate dec.
-            query_dim: The query dim.
-            num_patterns: The num patterns.
-            num_feature_levels: The num feature levels.
-            enc_n_points: The enc n points.
-            dec_n_points: The dec n points.
-            learnable_tgt_init: The learnable tgt init.
-            two_stage_type: The two stage type.
-            embed_init_tgt: The embed init tgt.
-            use_text_enhancer: The use text enhancer.
-            use_fusion_layer: The use fusion layer.
-            use_checkpoint: The use checkpoint.
-            use_transformer_ckpt: The use transformer ckpt.
-            use_text_cross_attention: The use text cross attention.
-            text_dropout: The text dropout.
-            fusion_dropout: The fusion dropout.
-            fusion_droppath: The fusion droppath.
-        """
         super().__init__()
         self.num_feature_levels = num_feature_levels
         self.num_encoder_layers = num_encoder_layers
@@ -218,7 +183,6 @@ class Transformer(nn.Module):
         self._reset_parameters()
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
@@ -229,11 +193,6 @@ class Transformer(nn.Module):
             nn.init.normal_(self.level_embed)
 
     def get_valid_ratio(self, mask):
-        """Get valid ratio.
-
-        Args:
-            mask: The mask.
-        """
         _, H, W = mask.shape
         valid_H = torch.sum(~mask[:, :, 0], 1)
         valid_W = torch.sum(~mask[:, 0, :], 1)
@@ -243,11 +202,6 @@ class Transformer(nn.Module):
         return valid_ratio
 
     def init_ref_points(self, use_num_queries):
-        """Init ref points.
-
-        Args:
-            use_num_queries: The use num queries.
-        """
         self.refpoint_embed = nn.Embedding(use_num_queries, 4)
 
     def forward(self, srcs, masks, refpoint_embed, pos_embeds, tgt, attn_mask=None, text_dict=None):
@@ -432,8 +386,6 @@ class Transformer(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
-    """Transformer encoder implementation."""
-
     def __init__(
         self,
         encoder_layer,
@@ -490,13 +442,6 @@ class TransformerEncoder(nn.Module):
 
     @staticmethod
     def get_reference_points(spatial_shapes, valid_ratios, device):
-        """Get reference points.
-
-        Args:
-            spatial_shapes: The spatial shapes.
-            valid_ratios: The valid ratios.
-            device: The device.
-        """
         reference_points_list = []
         for lvl, (H_, W_) in enumerate(spatial_shapes):
             ref_y, ref_x = torch.meshgrid(
@@ -621,8 +566,6 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
-    """Transformer decoder implementation."""
-
     def __init__(
         self,
         decoder_layer,
@@ -633,17 +576,6 @@ class TransformerDecoder(nn.Module):
         query_dim=4,
         num_feature_levels=1,
     ):
-        """Init.
-
-        Args:
-            decoder_layer: The decoder layer.
-            num_layers: The num layers.
-            norm: The norm.
-            return_intermediate: The return intermediate.
-            d_model: The d model.
-            query_dim: The query dim.
-            num_feature_levels: The num feature levels.
-        """
         super().__init__()
         if num_layers > 0:
             self.layers = _get_clones(decoder_layer, num_layers)
@@ -770,8 +702,6 @@ class TransformerDecoder(nn.Module):
 
 
 class DeformableTransformerEncoderLayer(nn.Module):
-    """Deformable transformer encoder layer implementation."""
-
     def __init__(
         self,
         d_model=256,
@@ -782,17 +712,6 @@ class DeformableTransformerEncoderLayer(nn.Module):
         n_heads=8,
         n_points=4,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            d_ffn: The d ffn.
-            dropout: The dropout.
-            activation: The activation.
-            n_levels: The n levels.
-            n_heads: The n heads.
-            n_points: The n points.
-        """
         super().__init__()
 
         # self attention
@@ -816,36 +735,15 @@ class DeformableTransformerEncoderLayer(nn.Module):
 
     @staticmethod
     def with_pos_embed(tensor, pos):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         return tensor if pos is None else tensor + pos
 
     def forward_ffn(self, src):
-        """Forward ffn.
-
-        Args:
-            src: The src.
-        """
         src2 = self.linear2(self.dropout2(self.activation(self.linear1(src))))
         src = src + self.dropout3(src2)
         src = self.norm2(src)
         return src
 
     def forward(self, src, pos, reference_points, spatial_shapes, level_start_index, key_padding_mask=None):
-        """Forward.
-
-        Args:
-            src: The src.
-            pos: The pos.
-            reference_points: The reference points.
-            spatial_shapes: The spatial shapes.
-            level_start_index: The level start index.
-            key_padding_mask: The key padding mask.
-        """
         # self attention
         # import ipdb; ipdb.set_trace()
         src2 = self.self_attn(
@@ -866,8 +764,6 @@ class DeformableTransformerEncoderLayer(nn.Module):
 
 
 class DeformableTransformerDecoderLayer(nn.Module):
-    """Deformable transformer decoder layer implementation."""
-
     def __init__(
         self,
         d_model=256,
@@ -880,19 +776,6 @@ class DeformableTransformerDecoderLayer(nn.Module):
         use_text_feat_guide=False,
         use_text_cross_attention=False,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            d_ffn: The d ffn.
-            dropout: The dropout.
-            activation: The activation.
-            n_levels: The n levels.
-            n_heads: The n heads.
-            n_points: The n points.
-            use_text_feat_guide: The use text feat guide.
-            use_text_cross_attention: The use text cross attention.
-        """
         super().__init__()
 
         # cross attention
@@ -931,27 +814,15 @@ class DeformableTransformerDecoderLayer(nn.Module):
         self.use_text_cross_attention = use_text_cross_attention
 
     def rm_self_attn_modules(self):
-        """Rm self attn modules."""
         self.self_attn = None
         self.dropout2 = None
         self.norm2 = None
 
     @staticmethod
     def with_pos_embed(tensor, pos):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         return tensor if pos is None else tensor + pos
 
     def forward_ffn(self, tgt):
-        """Forward ffn.
-
-        Args:
-            tgt: The tgt.
-        """
         if hasattr(torch, "amp"):
             autocast_context = torch.amp.autocast(device_type=tgt.device.type, enabled=False)
         else:
@@ -1025,11 +896,6 @@ class DeformableTransformerDecoderLayer(nn.Module):
 
 
 def build_transformer(args):
-    """Build transformer.
-
-    Args:
-        args: The args.
-    """
     return Transformer(
         d_model=args.hidden_dim,
         dropout=args.dropout,

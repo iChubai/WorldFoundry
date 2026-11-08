@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> open_flamingo -> src -> factory.py functionality."""
-
 import open_clip
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -71,18 +69,10 @@ def create_model_and_transforms(
     if "mpt-1b-redpajama-200b" in lang_encoder_path:
 
         class EmbeddingFnMixin:
-            """Embedding fn mixin implementation."""
-
             def get_input_embeddings(self):
-                """Get input embeddings."""
                 return self.transformer.wte
 
             def set_input_embeddings(self, new_embeddings):
-                """Set input embeddings.
-
-                Args:
-                    new_embeddings: The new embeddings.
-                """
                 self.transformer.wte = new_embeddings
 
         extend_instance(lang_encoder, EmbeddingFnMixin)
@@ -124,11 +114,6 @@ def create_model_and_transforms(
 
 
 def _infer_decoder_layers_attr_name(model):
-    """Helper function to infer decoder layers attr name.
-
-    Args:
-        model: The model.
-    """
     for k in __KNOWN_DECODER_LAYERS_ATTR_NAMES:
         if k.lower() in model.__class__.__name__.lower():
             return __KNOWN_DECODER_LAYERS_ATTR_NAMES[k]

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> colmap.py functionality."""
-
 import os
 import struct
 from dataclasses import dataclass
@@ -9,12 +7,6 @@ import numpy as np
 
 
 def get_colmap_camera_params(colmap_dir, img_files):
-    """Get colmap camera params.
-
-    Args:
-        colmap_dir: The colmap dir.
-        img_files: The img files.
-    """
     cameras = read_cameras_binary(colmap_dir + "/cameras.bin")
     images = read_images_binary(colmap_dir + "/images.bin")
     colmap_image_idcs = {v.name: k for k, v in images.items()}
@@ -34,12 +26,6 @@ def get_colmap_camera_params(colmap_dir, img_files):
 
 
 def get_colmap_camera_params_txt(colmap_dir, img_files):
-    """Get colmap camera params txt.
-
-    Args:
-        colmap_dir: The colmap dir.
-        img_files: The img files.
-    """
     cameras_pth = os.path.join(colmap_dir + "/cameras.txt")
     images_pth = os.path.join(colmap_dir + "/images.txt")
 
@@ -64,8 +50,6 @@ def get_colmap_camera_params_txt(colmap_dir, img_files):
 
 @dataclass(frozen=True)
 class CameraModel:
-    """Camera model implementation."""
-
     model_id: int
     model_name: str
     num_params: int
@@ -73,8 +57,6 @@ class CameraModel:
 
 @dataclass(frozen=True)
 class Camera:
-    """Camera implementation."""
-
     id: int
     model: str
     width: int
@@ -84,8 +66,6 @@ class Camera:
 
 @dataclass(frozen=True)
 class BaseImage:
-    """Base image implementation."""
-
     id: int
     qvec: np.ndarray
     tvec: np.ndarray
@@ -108,10 +88,7 @@ class Point3D:
 
 
 class Image(BaseImage):
-    """Image implementation."""
-
     def qvec2rotmat(self):
-        """Qvec2rotmat."""
         return qvec2rotmat(self.qvec)
 
 
@@ -338,11 +315,6 @@ def read_points3d_binary(path_to_model_file: str | Path) -> dict[int, Point3D]:
 
 
 def qvec2rotmat(qvec):
-    """Qvec2rotmat.
-
-    Args:
-        qvec: The qvec.
-    """
     return np.array(
         [
             [
@@ -365,12 +337,6 @@ def qvec2rotmat(qvec):
 
 
 def get_intrinsics_extrinsics(img, cameras):
-    """Get intrinsics extrinsics.
-
-    Args:
-        img: The img.
-        cameras: The cameras.
-    """
     # world to cam transformation
     R = qvec2rotmat(img.qvec)
     # translation

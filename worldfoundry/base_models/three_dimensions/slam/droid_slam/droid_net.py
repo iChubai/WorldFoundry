@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_net.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,12 +33,6 @@ def cvx_upsample(data, mask):
 
 
 def upsample_disp(disp, mask):
-    """Upsample disp.
-
-    Args:
-        disp: The disp.
-        mask: The mask.
-    """
     batch, num, ht, wd = disp.shape
     disp = disp.view(batch * num, ht, wd, 1)
     mask = mask.view(batch * num, -1, ht, wd)
@@ -48,10 +40,7 @@ def upsample_disp(disp, mask):
 
 
 class GraphAgg(nn.Module):
-    """Graph agg implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         self.conv1 = nn.Conv2d(128, 128, 3, padding=1)
         self.conv2 = nn.Conv2d(128, 128, 3, padding=1)
@@ -62,12 +51,6 @@ class GraphAgg(nn.Module):
         self.upmask = nn.Sequential(nn.Conv2d(128, 8 * 8 * 9, 1, padding=0))
 
     def forward(self, net, ii):
-        """Forward.
-
-        Args:
-            net: The net.
-            ii: The ii.
-        """
         batch, num, ch, ht, wd = net.shape
         net = net.view(batch * num, ch, ht, wd)
 
@@ -87,10 +70,7 @@ class GraphAgg(nn.Module):
 
 
 class UpdateModule(nn.Module):
-    """Update module implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         cor_planes = 4 * (2 * 3 + 1) ** 2
 
@@ -159,10 +139,7 @@ class UpdateModule(nn.Module):
 
 
 class DroidNet(nn.Module):
-    """Droid net implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         self.fnet = BasicEncoder(output_dim=128, norm_fn="instance")
         self.cnet = BasicEncoder(output_dim=256, norm_fn="none")

@@ -46,21 +46,6 @@ def _rms_norm_2d_fwd_fused(
     eps,  # epsilon to avoid division by zero
     BLOCK_SIZE: tl.constexpr,
 ):
-    """Helper function to rms norm 2d fwd fused.
-
-    Args:
-        X: The x.
-        Y: The y.
-        W: The w.
-        B: The b.
-        Rrms: The rrms.
-        M: The m.
-        C: The c.
-        N: The n.
-        num_blocks: The num blocks.
-        eps: The eps.
-        BLOCK_SIZE: The block size.
-    """
     # Map the program id to the row of X and Y it should compute.
     m_n = tl.program_id(0)
     m, n = m_n // num_blocks, m_n % num_blocks
@@ -111,26 +96,6 @@ def _rms_norm_2d_bwd_dx_fused(
     BLOCK_SIZE: tl.constexpr,
     BLOCK_SIZE_C: tl.constexpr,
 ):
-    """Helper function to rms norm 2d bwd dx fused.
-
-    Args:
-        DX: The dx.
-        DY: The dy.
-        DW: The dw.
-        DB: The db.
-        X: The x.
-        W: The w.
-        B: The b.
-        Rrms: The rrms.
-        M: The m.
-        C: The c.
-        N: The n.
-        num_blocks: The num blocks.
-        eps: The eps.
-        GROUP_SIZE_M: The group size m.
-        BLOCK_SIZE: The block size.
-        BLOCK_SIZE_C: The block size c.
-    """
     # Map the program id to the elements of X, DX, and DY it should compute.
     m_n = tl.program_id(0)
     m, n = m_n // num_blocks, m_n % num_blocks
@@ -180,15 +145,6 @@ class TritonRMSNorm2dFunc(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, x, weight, bias, eps):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            x: The x.
-            weight: The weight.
-            bias: The bias.
-            eps: The eps.
-        """
         # allocate output
         y = torch.empty_like(x)
         # reshape input data into 2D tensor
@@ -224,12 +180,6 @@ class TritonRMSNorm2dFunc(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, dy):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            dy: The dy.
-        """
         x, w, b, rrms = ctx.saved_tensors
         num_blocks = ctx.num_blocks
 

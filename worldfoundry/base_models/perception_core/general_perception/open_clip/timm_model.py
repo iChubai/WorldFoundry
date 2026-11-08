@@ -38,21 +38,6 @@ class TimmModel(nn.Module):
         pretrained: bool = False,
         model_kwargs: dict | None = None,
     ):
-        """Init.
-
-        Args:
-            model_name: The model name.
-            embed_dim: The embed dim.
-            image_size: The image size.
-            pool: The pool.
-            proj: The proj.
-            proj_bias: The proj bias.
-            drop: The drop.
-            drop_path: The drop path.
-            patch_drop: The patch drop.
-            pretrained: The pretrained.
-            model_kwargs: The model kwargs.
-        """
         super().__init__()
         if timm is None:
             raise RuntimeError("Please install the latest timm (`pip install timm`) to use timm based models.")
@@ -152,12 +137,6 @@ class TimmModel(nn.Module):
                 freeze_batch_norm_2d(self.trunk, gmodules)
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         if impl == "composable":
             _logger.warning(
                 "Composable activation checkpointing is not supported for timm models, falling back to inline."
@@ -236,11 +215,6 @@ class TimmModel(nn.Module):
             _logger.info(f"timm model {self.trunk.__class__.__name__} does not have set_input_size method. Skipping.")
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.trunk(x)
         x = self.head(x)
         return x

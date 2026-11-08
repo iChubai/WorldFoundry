@@ -924,12 +924,7 @@ class YOLOv5RandomAffine(BaseTransform):
         return PolygonMasks(new_masks, gt_masks.height, gt_masks.width)
 
     def filter_gt_bboxes(self, origin_bboxes: HorizontalBoxes, wrapped_bboxes: HorizontalBoxes) -> torch.Tensor:
-        """Filter gt bboxes.
-
-        Args:
-            origin_bboxes (HorizontalBoxes): Origin bboxes.
-            wrapped_bboxes (HorizontalBoxes): Wrapped bboxes
-
+        """
         Returns:
             dict: The result dict.
         """
@@ -946,8 +941,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
     @cache_randomness
     def _get_random_homography_matrix(self, height: int, width: int) -> tuple[np.ndarray, float]:
-        """Get random homography matrix.
-
+        """
         Args:
             height (int): Image height.
             width (int): Image width.
@@ -978,11 +972,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
     @staticmethod
     def _get_rotation_matrix(rotate_degrees: float) -> np.ndarray:
-        """Get rotation matrix.
-
-        Args:
-            rotate_degrees (float): Rotate degrees.
-
+        """
         Returns:
             np.ndarray: The rotation matrix.
         """
@@ -995,11 +985,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
     @staticmethod
     def _get_scaling_matrix(scale_ratio: float) -> np.ndarray:
-        """Get scaling matrix.
-
-        Args:
-            scale_ratio (float): Scale ratio.
-
+        """
         Returns:
             np.ndarray: The scaling matrix.
         """
@@ -1008,12 +994,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
     @staticmethod
     def _get_shear_matrix(x_shear_degrees: float, y_shear_degrees: float) -> np.ndarray:
-        """Get shear matrix.
-
-        Args:
-            x_shear_degrees (float): X shear degrees.
-            y_shear_degrees (float): Y shear degrees.
-
+        """
         Returns:
             np.ndarray: The shear matrix.
         """
@@ -1026,8 +1007,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
     @staticmethod
     def _get_translation_matrix(x: float, y: float) -> np.ndarray:
-        """Get translation matrix.
-
+        """
         Args:
             x (float): X translation.
             y (float): Y translation.

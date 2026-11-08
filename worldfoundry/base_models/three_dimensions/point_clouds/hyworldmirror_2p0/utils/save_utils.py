@@ -20,7 +20,6 @@ except ImportError:
 
 
 def _require_plyfile():
-    """Helper function to require plyfile."""
     if PlyData is None or PlyElement is None:
         raise ImportError(
             "plyfile is required for saving point clouds and Gaussian splats. "
@@ -66,30 +65,12 @@ def save_camera_params(extrinsics, intrinsics, target_dir):
 
 
 def save_image_png(path: Path, image_tensor: torch.Tensor) -> None:
-    """Save image png.
-
-    Args:
-        path: The path.
-        image_tensor: The image tensor.
-
-    Returns:
-        The return value.
-    """
     # image_tensor: [H, W, 3]
     img = (image_tensor.detach().cpu() * 255.0).to(torch.uint8).numpy()
     Image.fromarray(img).save(str(path))
 
 
 def save_depth_png(path: Path, depth_tensor: torch.Tensor) -> None:
-    """Save depth png.
-
-    Args:
-        path: The path.
-        depth_tensor: The depth tensor.
-
-    Returns:
-        The return value.
-    """
     # depth_tensor: [H, W]
     d = depth_tensor.detach()
     d = d - d.min()
@@ -99,15 +80,6 @@ def save_depth_png(path: Path, depth_tensor: torch.Tensor) -> None:
 
 
 def save_depth_npy(path: Path, depth_tensor: torch.Tensor) -> None:
-    """Save depth npy.
-
-    Args:
-        path: The path.
-        depth_tensor: The depth tensor.
-
-    Returns:
-        The return value.
-    """
     # depth_tensor: [H, W]
     # Save actual depth values in numpy format
     d = depth_tensor.detach().cpu().numpy()
@@ -115,15 +87,6 @@ def save_depth_npy(path: Path, depth_tensor: torch.Tensor) -> None:
 
 
 def save_normal_png(path: Path, normal_hwc: torch.Tensor) -> None:
-    """Save normal png.
-
-    Args:
-        path: The path.
-        normal_hwc: The normal hwc.
-
-    Returns:
-        The return value.
-    """
     # normal_hwc: [H, W, 3], in [-1, 1]
     n = (normal_hwc.detach().cpu() + 1.0) * 0.5
     img = (n.clamp(0, 1) * 255.0).to(torch.uint8).numpy()
@@ -268,12 +231,6 @@ def convert_gs_to_ply(means, scales, rotations, rgbs, opacities):
 
 
 def process_ply_to_splat(plydata, output_path):
-    """Process ply to splat.
-
-    Args:
-        plydata: The plydata.
-        output_path: The output path.
-    """
     vert = plydata["vertex"]
     sorted_indices = np.argsort(
         -np.exp(vert["scale_0"] + vert["scale_1"] + vert["scale_2"]) / (1 + np.exp(-vert["opacity"]))

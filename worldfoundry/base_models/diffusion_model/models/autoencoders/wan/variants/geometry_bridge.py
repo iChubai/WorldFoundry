@@ -35,18 +35,11 @@ class CausalConv3d(nn.Conv3d):
     """
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
         self._padding = (self.padding[2], self.padding[2], self.padding[1], self.padding[1], 2 * self.padding[0], 0)
         self.padding = (0, 0, 0)
 
     def forward(self, x, cache_x=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            cache_x: The cache x.
-        """
         padding = list(self._padding)
         if cache_x is not None and self._padding[4] > 0:
             cache_x = cache_x.to(x.device)
@@ -61,14 +54,6 @@ class RMS_norm(nn.Module):
     """Norm implementation."""
 
     def __init__(self, dim, channel_first=True, images=True, bias=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            channel_first: The channel first.
-            images: The images.
-            bias: The bias.
-        """
         super().__init__()
         broadcastable_dims = (1, 1, 1) if not images else (1, 1)
         shape = (dim, *broadcastable_dims) if channel_first else (dim,)
@@ -79,17 +64,10 @@ class RMS_norm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
 
 
 class Upsample(nn.Upsample):
-    """Upsample implementation."""
-
     def forward(self, x):
         """
         Fix bfloat16 support for nearest neighbor interpolation.
@@ -98,15 +76,7 @@ class Upsample(nn.Upsample):
 
 
 class Resample(nn.Module):
-    """Resample implementation."""
-
     def __init__(self, dim, mode):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mode: The mode.
-        """
         assert mode in ("none", "upsample2d", "upsample3d", "downsample2d", "downsample3d")
         super().__init__()
         self.dim = dim
@@ -124,13 +94,6 @@ class Resample(nn.Module):
             self.resample = nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         b, c, t, h, w = x.size()
         if self.mode == "upsample3d" and feat_cache is not None:
             idx = feat_idx[0]
@@ -162,11 +125,6 @@ class Resample(nn.Module):
         return x
 
     def init_weight(self, conv):
-        """Init weight.
-
-        Args:
-            conv: The conv.
-        """
         conv_weight = conv.weight
         nn.init.zeros_(conv_weight)
         c1, c2, t, h, w = conv_weight.size()
@@ -179,11 +137,6 @@ class Resample(nn.Module):
         nn.init.zeros_(conv.bias.data)
 
     def init_weight2(self, conv):
-        """Init weight2.
-
-        Args:
-            conv: The conv.
-        """
         conv_weight = conv.weight.data
         nn.init.zeros_(conv_weight)
         c1, c2, t, h, w = conv_weight.size()
@@ -196,16 +149,7 @@ class Resample(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    """Residual block implementation."""
-
     def __init__(self, in_dim, out_dim, dropout=0.0):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            dropout: The dropout.
-        """
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -223,13 +167,6 @@ class ResidualBlock(nn.Module):
         self.shortcut = CausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         h = self.shortcut(x)
         for layer in self.residual:
             if isinstance(layer, CausalConv3d) and feat_cache is not None:
@@ -249,16 +186,7 @@ class ResidualBlock(nn.Module):
 
 
 class ResidualBlock_Half(nn.Module):
-    """Residual block half implementation."""
-
     def __init__(self, in_dim, out_dim, dropout=0.0):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            dropout: The dropout.
-        """
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -270,13 +198,6 @@ class ResidualBlock_Half(nn.Module):
         self.shortcut = CausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         h = self.shortcut(x)
         for layer in self.residual:
             if isinstance(layer, CausalConv3d) and feat_cache is not None:
@@ -301,11 +222,6 @@ class AttentionBlock(nn.Module):
     """
 
     def __init__(self, dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-        """
         super().__init__()
         self.dim = dim
 
@@ -318,11 +234,6 @@ class AttentionBlock(nn.Module):
         nn.init.zeros_(self.proj.weight)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         identity = x
         b, c, t, h, w = x.size()
         x = rearrange(x, "b c t h w -> (b t) c h w")
@@ -357,17 +268,6 @@ class Encoder3d(nn.Module):
         temperal_downsample=[True, True, False],
         dropout=0.0,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            num_res_blocks: The num res blocks.
-            attn_scales: The attn scales.
-            temperal_downsample: The temperal downsample.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.z_dim = z_dim
@@ -411,13 +311,6 @@ class Encoder3d(nn.Module):
         )
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -472,17 +365,6 @@ class Decoder3d_Simple(nn.Module):
         dropout=0.0,
         residual=False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            attn_scales: The attn scales.
-            temperal_upsample: The temperal upsample.
-            dropout: The dropout.
-            residual: The residual.
-        """
         super().__init__()
         self.dim = dim
         self.z_dim = z_dim
@@ -503,25 +385,12 @@ class Decoder3d_Simple(nn.Module):
         self.upsamples = nn.Sequential(*upsamples)
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
-
         for layer in self.upsamples:
             x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
         return x
 
 
 def count_conv3d(model):
-    """Count conv3d.
-
-    Args:
-        model: The model.
-    """
     count = 0
     for m in model.modules():
         if isinstance(m, CausalConv3d):
@@ -542,17 +411,6 @@ class WanVAE_(nn.Module):
         dropout=0.0,
         location=None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            attn_scales: The attn scales.
-            temperal_downsample: The temperal downsample.
-            dropout: The dropout.
-            location: The location.
-        """
         super().__init__()
         self.temperal_upsample = temperal_downsample[::-1]
         self.conv2 = None
@@ -567,11 +425,6 @@ class WanVAE_(nn.Module):
             )
 
     def decode(self, z):
-        """Decode.
-
-        Args:
-            z: The z.
-        """
         self.clear_cache()
         iter_ = z.shape[2]
         x = self.conv2(z) if self.conv2 is not None else z
@@ -587,7 +440,6 @@ class WanVAE_(nn.Module):
         return out
 
     def clear_cache(self):
-        """Clear cache."""
         self._conv_num = count_conv3d(self.decoder)
         self._conv_idx = [0]
         self._feat_map = [None] * self._conv_num
@@ -622,17 +474,7 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
 
 
 class WanVAE:
-    """Wan vae implementation."""
-
     def __init__(self, z_dim=16, vae_pth="cache/vae_step_411000.pth", dtype=torch.float, device="cuda"):
-        """Init.
-
-        Args:
-            z_dim: The z dim.
-            vae_pth: The vae pth.
-            dtype: The dtype.
-            device: The device.
-        """
         self.dtype = dtype
         self.device = device
 
@@ -695,33 +537,16 @@ class WanVAE:
             return [self.model.encode(u.unsqueeze(0), self.scale).float().squeeze(0) for u in videos]
 
     def decode(self, zs):
-        """Decode.
-
-        Args:
-            zs: The zs.
-        """
         with amp.autocast(dtype=self.dtype):
             return [self.model.decode(u.unsqueeze(0), self.scale).float().clamp_(-1, 1).squeeze(0) for u in zs]
 
 
 class ChannelExpandAndReshape(nn.Module):
-    """Channel expand and reshape implementation."""
-
     def __init__(self, input_channels):
-        """Init.
-
-        Args:
-            input_channels: The input channels.
-        """
         super().__init__()
         self.expand_channels = nn.Conv1d(in_channels=input_channels, out_channels=input_channels * 4, kernel_size=1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, N, C = x.shape
         x = x.transpose(1, 2)
         x = self.expand_channels(x)

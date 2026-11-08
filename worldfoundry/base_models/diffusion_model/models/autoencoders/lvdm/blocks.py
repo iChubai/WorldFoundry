@@ -16,22 +16,11 @@ from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistributi
 
 
 def nonlinearity(x):
-    """Nonlinearity.
-
-    Args:
-        x: The x.
-    """
     # swish
     return x * torch.sigmoid(x)
 
 
 def Normalize(in_channels, num_groups=32):
-    """Normalize.
-
-    Args:
-        in_channels: The in channels.
-        num_groups: The num groups.
-    """
     return torch.nn.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
 
 
@@ -39,23 +28,11 @@ class LinAttnBlock(LinearAttention):
     """to match AttnBlock usage"""
 
     def __init__(self, in_channels):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-        """
         super().__init__(dim=in_channels, heads=1, dim_head=in_channels)
 
 
 class AttnBlock(nn.Module):
-    """Attn block implementation."""
-
     def __init__(self, in_channels):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-        """
         super().__init__()
         self.in_channels = in_channels
 
@@ -66,11 +43,6 @@ class AttnBlock(nn.Module):
         self.proj_out = torch.nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         h_ = x
         h_ = self.norm(h_)
         q = self.q(h_)
@@ -99,12 +71,6 @@ class AttnBlock(nn.Module):
 
 
 def make_attn(in_channels, attn_type="vanilla"):
-    """Make attn.
-
-    Args:
-        in_channels: The in channels.
-        attn_type: The attn type.
-    """
     assert attn_type in ["vanilla", "linear", "none"], f"attn_type {attn_type} unknown"
     # print(f"making attention of type '{attn_type}' with {in_channels} in_channels")
     if attn_type == "vanilla":
@@ -116,15 +82,7 @@ def make_attn(in_channels, attn_type="vanilla"):
 
 
 class Downsample(nn.Module):
-    """Downsample implementation."""
-
     def __init__(self, in_channels, with_conv):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            with_conv: The with conv.
-        """
         super().__init__()
         self.with_conv = with_conv
         self.in_channels = in_channels
@@ -133,11 +91,6 @@ class Downsample(nn.Module):
             self.conv = torch.nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=2, padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.with_conv:
             pad = (0, 1, 0, 1)
             x = torch.nn.functional.pad(x, pad, mode="constant", value=0)
@@ -148,15 +101,7 @@ class Downsample(nn.Module):
 
 
 class Upsample(nn.Module):
-    """Upsample implementation."""
-
     def __init__(self, in_channels, with_conv):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            with_conv: The with conv.
-        """
         super().__init__()
         self.with_conv = with_conv
         self.in_channels = in_channels
@@ -164,11 +109,6 @@ class Upsample(nn.Module):
             self.conv = torch.nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = torch.nn.functional.interpolate(x, scale_factor=2.0, mode="nearest")
         if self.with_conv:
             x = self.conv(x)
@@ -197,10 +137,7 @@ def get_timestep_embedding(timesteps, embedding_dim):
 
 
 class ResnetBlock(nn.Module):
-    """Resnet block implementation."""
-
     def __init__(self, *, in_channels, out_channels=None, conv_shortcut=False, dropout, temb_channels=512):
-        """Init."""
         super().__init__()
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
@@ -221,12 +158,6 @@ class ResnetBlock(nn.Module):
                 self.nin_shortcut = torch.nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x, temb):
-        """Forward.
-
-        Args:
-            x: The x.
-            temb: The temb.
-        """
         h = x
         h = self.norm1(h)
         h = nonlinearity(h)
@@ -247,8 +178,6 @@ class ResnetBlock(nn.Module):
 
 
 class Model(nn.Module):
-    """Model implementation."""
-
     def __init__(
         self,
         *,
@@ -265,7 +194,6 @@ class Model(nn.Module):
         use_linear_attn=False,
         attn_type="vanilla",
     ):
-        """Init."""
         super().__init__()
         if use_linear_attn:
             attn_type = "linear"
@@ -359,13 +287,6 @@ class Model(nn.Module):
         self.conv_out = torch.nn.Conv2d(block_in, out_ch, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x, t=None, context=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-        """
         # assert x.shape[2] == x.shape[3] == self.resolution
         if context is not None:
             # assume aligned context, cat along channel axis
@@ -413,13 +334,10 @@ class Model(nn.Module):
         return h
 
     def get_last_layer(self):
-        """Get last layer."""
         return self.conv_out.weight
 
 
 class Encoder(nn.Module):
-    """Encoder implementation."""
-
     def __init__(
         self,
         *,
@@ -438,7 +356,6 @@ class Encoder(nn.Module):
         attn_type="vanilla",
         **ignore_kwargs,
     ):
-        """Init."""
         super().__init__()
         if use_linear_attn:
             attn_type = "linear"
@@ -495,11 +412,6 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # timestep embedding
         temb = None
 
@@ -536,8 +448,6 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    """Decoder implementation."""
-
     def __init__(
         self,
         *,
@@ -557,7 +467,6 @@ class Decoder(nn.Module):
         attn_type="vanilla",
         **ignorekwargs,
     ):
-        """Init."""
         super().__init__()
         if use_linear_attn:
             attn_type = "linear"
@@ -618,11 +527,6 @@ class Decoder(nn.Module):
         self.conv_out = torch.nn.Conv2d(block_in, out_ch, kernel_size=3, stride=1, padding=1)
 
     def forward(self, z):
-        """Forward.
-
-        Args:
-            z: The z.
-        """
         # assert z.shape[1:] == self.z_shape[1:]
         self.last_z_shape = z.shape
 
@@ -665,15 +569,7 @@ class Decoder(nn.Module):
 
 
 class SimpleDecoder(nn.Module):
-    """Simple decoder implementation."""
-
     def __init__(self, in_channels, out_channels, *args, **kwargs):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.model = nn.ModuleList(
             [
@@ -690,11 +586,6 @@ class SimpleDecoder(nn.Module):
         self.conv_out = torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for i, layer in enumerate(self.model):
             x = layer(x, None) if i in [1, 2, 3] else layer(x)
 
@@ -705,20 +596,7 @@ class SimpleDecoder(nn.Module):
 
 
 class UpsampleDecoder(nn.Module):
-    """Upsample decoder implementation."""
-
     def __init__(self, in_channels, out_channels, ch, num_res_blocks, resolution, ch_mult=(2, 2), dropout=0.0):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            ch: The ch.
-            num_res_blocks: The num res blocks.
-            resolution: The resolution.
-            ch_mult: The ch mult.
-            dropout: The dropout.
-        """
         super().__init__()
         # upsampling
         self.temb_ch = 0
@@ -748,11 +626,6 @@ class UpsampleDecoder(nn.Module):
         self.conv_out = torch.nn.Conv2d(block_in, out_channels, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # upsampling
         h = x
         for k, i_level in enumerate(range(self.num_resolutions)):
@@ -767,18 +640,7 @@ class UpsampleDecoder(nn.Module):
 
 
 class LatentRescaler(nn.Module):
-    """Latent rescaler implementation."""
-
     def __init__(self, factor, in_channels, mid_channels, out_channels, depth=2):
-        """Init.
-
-        Args:
-            factor: The factor.
-            in_channels: The in channels.
-            mid_channels: The mid channels.
-            out_channels: The out channels.
-            depth: The depth.
-        """
         super().__init__()
         # residual block, interpolate, residual block
         self.factor = factor
@@ -804,11 +666,6 @@ class LatentRescaler(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.conv_in(x)
         for block in self.res_block1:
             x = block(x, None)
@@ -823,8 +680,6 @@ class LatentRescaler(nn.Module):
 
 
 class MergedRescaleEncoder(nn.Module):
-    """Merged rescale encoder implementation."""
-
     def __init__(
         self,
         in_channels,
@@ -839,21 +694,6 @@ class MergedRescaleEncoder(nn.Module):
         rescale_factor=1.0,
         rescale_module_depth=1,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            ch: The ch.
-            resolution: The resolution.
-            out_ch: The out ch.
-            num_res_blocks: The num res blocks.
-            attn_resolutions: The attn resolutions.
-            dropout: The dropout.
-            resamp_with_conv: The resamp with conv.
-            ch_mult: The ch mult.
-            rescale_factor: The rescale factor.
-            rescale_module_depth: The rescale module depth.
-        """
         super().__init__()
         intermediate_chn = ch * ch_mult[-1]
         self.encoder = Encoder(
@@ -878,19 +718,12 @@ class MergedRescaleEncoder(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.encoder(x)
         x = self.rescaler(x)
         return x
 
 
 class MergedRescaleDecoder(nn.Module):
-    """Merged rescale decoder implementation."""
-
     def __init__(
         self,
         z_channels,
@@ -905,21 +738,6 @@ class MergedRescaleDecoder(nn.Module):
         rescale_factor=1.0,
         rescale_module_depth=1,
     ):
-        """Init.
-
-        Args:
-            z_channels: The z channels.
-            out_ch: The out ch.
-            resolution: The resolution.
-            num_res_blocks: The num res blocks.
-            attn_resolutions: The attn resolutions.
-            ch: The ch.
-            ch_mult: The ch mult.
-            dropout: The dropout.
-            resamp_with_conv: The resamp with conv.
-            rescale_factor: The rescale factor.
-            rescale_module_depth: The rescale module depth.
-        """
         super().__init__()
         tmp_chn = z_channels * ch_mult[-1]
         self.decoder = Decoder(
@@ -943,29 +761,13 @@ class MergedRescaleDecoder(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.rescaler(x)
         x = self.decoder(x)
         return x
 
 
 class Upsampler(nn.Module):
-    """Upsampler implementation."""
-
     def __init__(self, in_size, out_size, in_channels, out_channels, ch_mult=2):
-        """Init.
-
-        Args:
-            in_size: The in size.
-            out_size: The out size.
-            in_channels: The in channels.
-            out_channels: The out channels.
-            ch_mult: The ch mult.
-        """
         super().__init__()
         assert out_size >= in_size
         num_blocks = int(np.log2(out_size // in_size)) + 1
@@ -988,27 +790,13 @@ class Upsampler(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.rescaler(x)
         x = self.decoder(x)
         return x
 
 
 class Resize(nn.Module):
-    """Resize implementation."""
-
     def __init__(self, in_channels=None, learned=False, mode="bilinear"):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            learned: The learned.
-            mode: The mode.
-        """
         super().__init__()
         self.with_conv = learned
         self.mode = mode
@@ -1020,12 +808,6 @@ class Resize(nn.Module):
             self.conv = torch.nn.Conv2d(in_channels, in_channels, kernel_size=4, stride=2, padding=1)
 
     def forward(self, x, scale_factor=1.0):
-        """Forward.
-
-        Args:
-            x: The x.
-            scale_factor: The scale factor.
-        """
         if scale_factor == 1.0:
             return x
         else:
@@ -1034,8 +816,6 @@ class Resize(nn.Module):
 
 
 class FirstStagePostProcessor(nn.Module):
-    """First stage post processor implementation."""
-
     def __init__(
         self,
         ch_mult: list,
@@ -1046,17 +826,6 @@ class FirstStagePostProcessor(nn.Module):
         dropout=0.0,
         pretrained_config=None,
     ):
-        """Init.
-
-        Args:
-            ch_mult: The ch mult.
-            in_channels: The in channels.
-            pretrained_model: The pretrained model.
-            reshape: The reshape.
-            n_channels: The n channels.
-            dropout: The dropout.
-            pretrained_config: The pretrained config.
-        """
         super().__init__()
         if pretrained_config is None:
             assert pretrained_model is not None, 'Either "pretrained_model" or "pretrained_config" must not be None'
@@ -1085,11 +854,6 @@ class FirstStagePostProcessor(nn.Module):
         self.downsampler = nn.ModuleList(downs)
 
     def instantiate_pretrained(self, config):
-        """Instantiate pretrained.
-
-        Args:
-            config: The config.
-        """
         model = instantiate_from_config(config)
         self.pretrained_model = model.eval()
         # self.pretrained_model.train = False
@@ -1098,22 +862,12 @@ class FirstStagePostProcessor(nn.Module):
 
     @torch.no_grad()
     def encode_with_pretrained(self, x):
-        """Encode with pretrained.
-
-        Args:
-            x: The x.
-        """
         c = self.pretrained_model.encode(x)
         if isinstance(c, DiagonalGaussianDistribution):
             c = c.mode()
         return c
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         z_fs = self.encode_with_pretrained(x)
         z = self.proj_norm(z_fs)
         z = self.proj(z)

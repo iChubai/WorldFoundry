@@ -4,8 +4,6 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> heads -> dpt_head.py functionality."""
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -30,11 +28,6 @@ class DPTOutputAdapter_fix(DPTOutputAdapter):
     """
 
     def init(self, dim_tokens_enc=768):
-        """Init.
-
-        Args:
-            dim_tokens_enc: The dim tokens enc.
-        """
         super().init(dim_tokens_enc)
 
         del self.act_1_postprocess
@@ -43,12 +36,6 @@ class DPTOutputAdapter_fix(DPTOutputAdapter):
         del self.act_4_postprocess
 
     def forward(self, encoder_tokens: list[torch.Tensor], image_size=None):
-        """Forward.
-
-        Args:
-            encoder_tokens: The encoder tokens.
-            image_size: The image size.
-        """
         assert self.dim_tokens_enc is not None, "Need to call init(dim_tokens_enc) function first"
 
         image_size = self.image_size if image_size is None else image_size
@@ -93,7 +80,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         conf_mode=None,
         **kwargs,
     ):
-        """Init."""
         super().__init__()
         self.return_all_layers = True  # backbone needs to return all layers
         self.postprocess = postprocess
@@ -109,12 +95,6 @@ class PixelwiseTaskWithDPT(nn.Module):
         self.dpt.init(**dpt_init_args)
 
     def forward(self, x, img_info):
-        """Forward.
-
-        Args:
-            x: The x.
-            img_info: The img info.
-        """
         out = self.dpt(x, image_size=(img_info[0], img_info[1]))
         if self.postprocess:
             out = self.postprocess(out, self.depth_mode, self.conf_mode)
@@ -149,14 +129,6 @@ class DPTPts3dPose(nn.Module):
     """Dpt pts d pose implementation."""
 
     def __init__(self, net, has_conf=False, has_rgb=False, has_pose=False):
-        """Init.
-
-        Args:
-            net: The net.
-            has_conf: The has conf.
-            has_rgb: The has rgb.
-            has_pose: The has pose.
-        """
         super().__init__()
         self.return_all_layers = True  # backbone needs to return all layers
         self.depth_mode = net.depth_mode
@@ -231,12 +203,6 @@ class DPTPts3dPose(nn.Module):
             self.pose_head = PoseDecoder(hidden_size=in_dim)
 
     def forward(self, x, img_info, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            img_info: The img info.
-        """
         if self.has_pose:
             pose_token = x[-1][:, 0].clone()
             token = x[-1][:, 1:]

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> validator.py functionality."""
-
 import os
 import os.path as osp
 from typing import cast
@@ -26,10 +24,10 @@ try:
 except ModuleNotFoundError:
 
     class CameraState:  # type: ignore[no-redef]
-        """Camera state implementation."""
+        pass
 
     class Viewer:  # type: ignore[no-redef]
-        """Viewer implementation."""
+        pass
 
 
 try:
@@ -37,28 +35,14 @@ try:
 except ModuleNotFoundError:
 
     class SSIM(torch.nn.Module):  # type: ignore[no-redef]
-        """Ssim implementation."""
-
         def __init__(self, *_, **__):
-            """Init."""
             super().__init__()
 
         def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-            """Forward.
-
-            Args:
-                preds: The preds.
-                targets: The targets.
-
-            Returns:
-                The return value.
-            """
             return torch.clamp(1.0 - F.mse_loss(preds, targets), min=0.0, max=1.0)
 
 
 class Validator:
-    """Validator implementation."""
-
     def __init__(
         self,
         model: SceneModel,
@@ -68,16 +52,6 @@ class Validator:
         val_kpt_loader: DataLoader | None,
         save_dir: str,
     ):
-        """Init.
-
-        Args:
-            model: The model.
-            device: The device.
-            train_loader: The train loader.
-            val_img_loader: The val img loader.
-            val_kpt_loader: The val kpt loader.
-            save_dir: The save dir.
-        """
         self.model = model
         self.device = device
         self.train_loader = train_loader
@@ -100,7 +74,6 @@ class Validator:
         self.pck_metric = PCK()
 
     def reset_metrics(self):
-        """Reset metrics."""
         self.psnr_metric.reset()
         self.ssim_metric.reset()
         self.lpips_metric.reset()
@@ -114,7 +87,6 @@ class Validator:
 
     @torch.no_grad()
     def validate(self):
-        """Validate."""
         self.reset_metrics()
         metric_imgs = self.validate_imgs() or {}
         metric_kpts = self.validate_keypoints() or {}
@@ -122,7 +94,6 @@ class Validator:
 
     @torch.no_grad()
     def validate_imgs(self):
-        """Validate imgs."""
         guru.info("rendering validation images...")
         if self.val_img_loader is None:
             return
@@ -191,7 +162,6 @@ class Validator:
 
     @torch.no_grad()
     def validate_keypoints(self):
-        """Validate keypoints."""
         if self.val_kpt_loader is None:
             return
         pred_keypoints_3d_all = []
@@ -276,11 +246,6 @@ class Validator:
 
     @torch.no_grad()
     def save_train_videos(self, epoch: int):
-        """Save train videos.
-
-        Args:
-            epoch: The epoch.
-        """
         if self.train_loader is None:
             return
         video_dir = osp.join(self.save_dir, "videos", f"epoch_{epoch:04d}")

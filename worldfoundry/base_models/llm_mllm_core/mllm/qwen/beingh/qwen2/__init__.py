@@ -1,8 +1,6 @@
 # Copyright 2024 The Qwen Team and The HuggingFace Inc. team.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen2 -> __init__.py functionality."""
-
 from typing import TYPE_CHECKING
 
 from transformers.utils import (

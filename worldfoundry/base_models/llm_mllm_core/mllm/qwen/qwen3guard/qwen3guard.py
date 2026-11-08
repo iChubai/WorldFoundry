@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen3guard -> qwen3guard.py functionality."""
-
 import argparse
 import re
 
@@ -60,11 +58,6 @@ class Qwen3Guard(ContentSafetyGuardrail):
             log.debug("Moved Qwen3Guard model to CPU")
 
     def extract_label_and_categories(self, prompt):
-        """Extract label and categories.
-
-        Args:
-            prompt: The prompt.
-        """
         safe_pattern = r"Safety: (Safe|Unsafe|Controversial)"
         category_pattern = r"(" + "|".join(UNSAFE_CATEGORIES.values()) + ")"
         messages = [{"role": "user", "content": prompt}]
@@ -93,18 +86,12 @@ class Qwen3Guard(ContentSafetyGuardrail):
 
 
 def parse_args():
-    """Parse args."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", type=str, required=True, help="Input prompt")
     return parser.parse_args()
 
 
 def main(args):
-    """Main.
-
-    Args:
-        args: The args.
-    """
     qwen3guard = Qwen3Guard()
     runner = GuardrailRunner(safety_models=[qwen3guard])
     with misc.timer("Qwen3Guard safety check"):

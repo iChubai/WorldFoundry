@@ -24,37 +24,16 @@ TWorkItem = namedtuple("TWorkItem", ("input_tensor", "block_index"))
 
 
 def conv(n_in, n_out, **kwargs):
-    """Conv.
-
-    Args:
-        n_in: The n in.
-        n_out: The n out.
-    """
     return nn.Conv2d(n_in, n_out, 3, padding=1, **kwargs)
 
 
 class Clamp(nn.Module):
-    """Clamp implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return torch.tanh(x / 3) * 3
 
 
 class MemBlock(nn.Module):
-    """Mem block implementation."""
-
     def __init__(self, n_in, n_out):
-        """Init.
-
-        Args:
-            n_in: The n in.
-            n_out: The n out.
-        """
         super().__init__()
         self.conv = nn.Sequential(
             conv(n_in * 2, n_out), nn.ReLU(inplace=True), conv(n_out, n_out), nn.ReLU(inplace=True), conv(n_out, n_out)
@@ -63,59 +42,27 @@ class MemBlock(nn.Module):
         self.act = nn.ReLU(inplace=True)
 
     def forward(self, x, past):
-        """Forward.
-
-        Args:
-            x: The x.
-            past: The past.
-        """
         return self.act(self.conv(torch.cat([x, past], 1)) + self.skip(x))
 
 
 class TPool(nn.Module):
-    """T pool implementation."""
-
     def __init__(self, n_f, stride):
-        """Init.
-
-        Args:
-            n_f: The n f.
-            stride: The stride.
-        """
         super().__init__()
         self.stride = stride
         self.conv = nn.Conv2d(n_f * stride, n_f, 1, bias=False)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         _NT, C, H, W = x.shape
         return self.conv(x.reshape(-1, self.stride * C, H, W))
 
 
 class TGrow(nn.Module):
-    """T grow implementation."""
-
     def __init__(self, n_f, stride):
-        """Init.
-
-        Args:
-            n_f: The n f.
-            stride: The stride.
-        """
         super().__init__()
         self.stride = stride
         self.conv = nn.Conv2d(n_f, n_f * stride, 1, bias=False)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         _NT, C, H, W = x.shape
         x = self.conv(x)
         return x.reshape(-1, C, H, W)
@@ -223,8 +170,6 @@ def apply_model_with_memblocks(model, x, parallel, show_progress_bar):
 
 
 class TAEHV(nn.Module):
-    """Taehv implementation."""
-
     latent_channels = 16
     image_channels = 3
 
@@ -333,11 +278,6 @@ class TAEHV(nn.Module):
         return x
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.c(x)
 
 
@@ -350,24 +290,15 @@ def main():
     import cv2  # no highly esteemed deed is commemorated here
 
     class VideoTensorReader:
-        """Video tensor reader implementation."""
-
         def __init__(self, video_file_path):
-            """Init.
-
-            Args:
-                video_file_path: The video file path.
-            """
             self.cap = cv2.VideoCapture(video_file_path)
             assert self.cap.isOpened(), f"Could not load {video_file_path}"
             self.fps = self.cap.get(cv2.CAP_PROP_FPS)
 
         def __iter__(self):
-            """Iter."""
             return self
 
         def __next__(self):
-            """Next."""
             ret, frame = self.cap.read()
             if not ret:
                 self.cap.release()
@@ -375,32 +306,17 @@ def main():
             return torch.from_numpy(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).permute(2, 0, 1)  # BGR HWC -> RGB CHW
 
     class VideoTensorWriter:
-        """Video tensor writer implementation."""
-
         def __init__(self, video_file_path, width_height, fps=30):
-            """Init.
-
-            Args:
-                video_file_path: The video file path.
-                width_height: The width height.
-                fps: The fps.
-            """
             self.writer = cv2.VideoWriter(video_file_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, width_height)
             assert self.writer.isOpened(), f"Could not create writer for {video_file_path}"
 
         def write(self, frame_tensor):
-            """Write.
-
-            Args:
-                frame_tensor: The frame tensor.
-            """
             assert frame_tensor.ndim == 3 and frame_tensor.shape[0] == 3, f"{frame_tensor.shape}??"
             self.writer.write(
                 cv2.cvtColor(frame_tensor.permute(1, 2, 0).numpy(), cv2.COLOR_RGB2BGR)
             )  # RGB CHW -> BGR HWC
 
         def __del__(self):
-            """Del."""
             if hasattr(self, "writer"):
                 self.writer.release()
 

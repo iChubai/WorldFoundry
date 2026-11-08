@@ -158,7 +158,6 @@ def reduce_masked_mean(input, mask, dim=None, keepdim=False):
 
     Args:
         inout (Tensor): input tensor.
-        mask (Tensor): mask.
         dim (int, optional): Dimension to sum over. Defaults to None.
         keepdim (bool, optional): Keep the summed dimension. Defaults to False.
 

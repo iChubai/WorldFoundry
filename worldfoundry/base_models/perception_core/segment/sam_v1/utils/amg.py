@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> utils -> amg.py functionality."""
-
 import math
 from collections.abc import Generator
 from copy import deepcopy
@@ -30,14 +28,6 @@ def is_box_near_crop_edge(
 
 
 def box_xyxy_to_xywh(box_xyxy: torch.Tensor) -> torch.Tensor:
-    """Box xyxy to xywh.
-
-    Args:
-        box_xyxy: The box xyxy.
-
-    Returns:
-        The return value.
-    """
     box_xywh = deepcopy(box_xyxy)
     box_xywh[2] = box_xywh[2] - box_xywh[0]
     box_xywh[3] = box_xywh[3] - box_xywh[1]
@@ -45,14 +35,6 @@ def box_xyxy_to_xywh(box_xyxy: torch.Tensor) -> torch.Tensor:
 
 
 def batch_iterator(batch_size: int, *args) -> Generator[list[Any], None, None]:
-    """Batch iterator.
-
-    Args:
-        batch_size: The batch size.
-
-    Returns:
-        The return value.
-    """
     assert len(args) > 0 and all(len(a) == len(args[0]) for a in args), (
         "Batched iteration must have inputs of all the same size."
     )
@@ -107,14 +89,6 @@ def rle_to_mask(rle: dict[str, Any]) -> np.ndarray:
 
 
 def area_from_rle(rle: dict[str, Any]) -> int:
-    """Area from rle.
-
-    Args:
-        rle: The rle.
-
-    Returns:
-        The return value.
-    """
     return sum(rle["counts"][1::2])
 
 
@@ -166,13 +140,6 @@ def generate_crop_boxes(
     layer_idxs.append(0)
 
     def crop_len(orig_len, n_crops, overlap):
-        """Crop len.
-
-        Args:
-            orig_len: The orig len.
-            n_crops: The n crops.
-            overlap: The overlap.
-        """
         return int(math.ceil((overlap * (n_crops - 1) + orig_len) / n_crops))
 
     for i_layer in range(n_layers):
@@ -195,15 +162,6 @@ def generate_crop_boxes(
 
 
 def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
-    """Uncrop boxes xyxy.
-
-    Args:
-        boxes: The boxes.
-        crop_box: The crop box.
-
-    Returns:
-        The return value.
-    """
     x0, y0, _, _ = crop_box
     offset = torch.tensor([[x0, y0, x0, y0]], device=boxes.device)
     # Check if boxes has a channel dimension
@@ -213,15 +171,6 @@ def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
 
 
 def uncrop_points(points: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
-    """Uncrop points.
-
-    Args:
-        points: The points.
-        crop_box: The crop box.
-
-    Returns:
-        The return value.
-    """
     x0, y0, _, _ = crop_box
     offset = torch.tensor([[x0, y0]], device=points.device)
     # Check if points has a channel dimension
@@ -231,17 +180,6 @@ def uncrop_points(points: torch.Tensor, crop_box: list[int]) -> torch.Tensor:
 
 
 def uncrop_masks(masks: torch.Tensor, crop_box: list[int], orig_h: int, orig_w: int) -> torch.Tensor:
-    """Uncrop masks.
-
-    Args:
-        masks: The masks.
-        crop_box: The crop box.
-        orig_h: The orig h.
-        orig_w: The orig w.
-
-    Returns:
-        The return value.
-    """
     x0, y0, x1, y1 = crop_box
     if x0 == 0 and y0 == 0 and x1 == orig_w and y1 == orig_h:
         return masks
@@ -277,14 +215,6 @@ def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> tup
 
 
 def coco_encode_rle(uncompressed_rle: dict[str, Any]) -> dict[str, Any]:
-    """Coco encode rle.
-
-    Args:
-        uncompressed_rle: The uncompressed rle.
-
-    Returns:
-        The return value.
-    """
     from pycocotools import mask as mask_utils  # type: ignore
 
     h, w = uncompressed_rle["size"]

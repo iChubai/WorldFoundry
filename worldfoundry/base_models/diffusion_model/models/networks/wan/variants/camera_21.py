@@ -88,12 +88,6 @@ def rope_apply(x, grid_sizes, freqs):
 
 @torch.amp.autocast("cuda", enabled=False)
 def rope_apply_given_freqs(x, freqs):
-    """Rope apply given freqs.
-
-    Args:
-        x: The x.
-        freqs: The freqs.
-    """
     n, c = x.size(2), x.size(3) // 2
     seq_len = freqs.size(0)
     # loop over samples
@@ -113,12 +107,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -140,13 +128,6 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
     def forward(self, x):
@@ -161,15 +142,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -313,15 +285,6 @@ class WanI2VCrossAttention(WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps)
 
         # self.k_img = nn.Linear(dim, dim)
@@ -408,18 +371,6 @@ class WanAttentionBlock(nn.Module):
         cross_attn_norm=False,
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -486,17 +437,6 @@ class GanAttentionBlock(nn.Module):
     def __init__(
         self, dim=1536, ffn_dim=8192, num_heads=12, window_size=(-1, -1), qk_norm=True, cross_attn_norm=True, eps=1e-6
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -552,12 +492,6 @@ class GanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-            """
             token = context + self.cross_attn(self.norm3(x), context)
             y = self.ffn(self.norm2(token)) + token  # * (1 + e[4]) + e[3])
             # with amp.autocast(dtype=torch.float32):
@@ -572,14 +506,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -611,12 +537,6 @@ class MLPProj(torch.nn.Module):
     """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-        """
         super().__init__()
 
         self.proj = torch.nn.Sequential(
@@ -628,11 +548,6 @@ class MLPProj(torch.nn.Module):
         )
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         clip_extra_context_tokens = self.proj(image_embeds)
         return clip_extra_context_tokens
 
@@ -757,23 +672,12 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
 
     def _set_gradient_checkpointing(self, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self._forward(*args, **kwargs)
 
     def init_freqs(self, device):
-        """Init freqs.
-
-        Args:
-            device: The device.
-        """
         d = self.dim // self.num_heads
         self.freqs = torch.cat(
             [rope_params(1024, d - 4 * (d // 6)), rope_params(1024, 2 * (d // 6)), rope_params(1024, 2 * (d // 6))],
@@ -782,7 +686,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.freqs = self.freqs.to(device)
 
     def get_transformer_module(self):
-        """Get transformer module."""
         return {type(self.blocks[0])}
 
     def _forward(
@@ -895,14 +798,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         kwargs = {"e": e0, "seq_lens": seq_lens, "freqs": freqs_x, "context": context, "context_lens": context_lens}
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward

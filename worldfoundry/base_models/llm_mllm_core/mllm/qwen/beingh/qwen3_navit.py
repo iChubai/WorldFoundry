@@ -1,8 +1,6 @@
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen3_navit.py functionality."""
-
 import glob
 import re
 from functools import partial
@@ -44,27 +42,13 @@ class Qwen3Config(_Qwen3Config):
     keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(self, qk_norm=True, layer_module="Qwen3DecoderLayer", **kwargs):
-        """Init.
-
-        Args:
-            qk_norm: The qk norm.
-            layer_module: The layer module.
-        """
         super().__init__(**kwargs)
         self.qk_norm = qk_norm
         self.layer_module = layer_module
 
 
 class PackedAttention(Qwen3Attention):
-    """Packed attention implementation."""
-
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__(config, layer_idx)
         if self.config.qk_norm:
             self.q_norm = Qwen3RMSNorm(self.head_dim, eps=config.rms_norm_eps)
@@ -74,7 +58,6 @@ class PackedAttention(Qwen3Attention):
             self.k_norm = nn.Identity()
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -85,15 +68,6 @@ class PackedAttention(Qwen3Attention):
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ):
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-        """
         total_seq_len = packed_sequence.shape[0]
         dtype, device = packed_sequence.dtype, packed_sequence.device
         packed_query_states = torch.zeros((total_seq_len, self.num_heads * self.head_dim), dtype=dtype, device=device)
@@ -167,15 +141,7 @@ class PackedAttention(Qwen3Attention):
 
 
 class PackedAttentionMoT(Qwen3Attention):
-    """Packed attention mo t implementation."""
-
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__(config, layer_idx)
 
         if self.config.qk_norm:
@@ -202,7 +168,6 @@ class PackedAttentionMoT(Qwen3Attention):
         self.o_proj_mot_gen = nn.Linear(self.num_heads * self.head_dim, mot_gen_hidden_size, bias=config.attention_bias)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -215,18 +180,6 @@ class PackedAttentionMoT(Qwen3Attention):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ):
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-        """
-
         total_seq_len = packed_sequence_und.shape[0] + packed_sequence_gen.shape[0]
         dtype, device = packed_sequence_und.dtype, packed_sequence_und.device
 
@@ -318,12 +271,6 @@ class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config: Qwen3Config, layer_idx: int):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = PackedAttention(config=config, layer_idx=layer_idx)
@@ -334,7 +281,6 @@ class Qwen3DecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -346,19 +292,6 @@ class Qwen3DecoderLayer(nn.Module):
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-
-        Returns:
-            The return value.
-        """
         # [seq_len, dim]
         residual = packed_sequence_und
         packed_sequence = self.input_layernorm(packed_sequence_und)
@@ -393,13 +326,6 @@ class Qwen3MoTDecoderLayer(nn.Module):
         layer_idx: int | None = None,
         attn_module: Qwen3Attention | None = PackedAttentionMoT,
     ):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-            attn_module: The attn module.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -418,7 +344,6 @@ class Qwen3MoTDecoderLayer(nn.Module):
         )
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -431,21 +356,6 @@ class Qwen3MoTDecoderLayer(nn.Module):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual_und = packed_sequence_und
         residual_gen = packed_sequence_gen
 
@@ -496,26 +406,6 @@ class Qwen3MoTDecoderLayer(nn.Module):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_query_sequence
         if mode == "und":
             packed_query_sequence = self.input_layernorm(packed_query_sequence)
@@ -578,11 +468,6 @@ class Qwen3Model(Qwen3PreTrainedModel):
     """Qwen model implementation."""
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
@@ -600,7 +485,6 @@ class Qwen3Model(Qwen3PreTrainedModel):
         self.post_init()
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -613,21 +497,6 @@ class Qwen3Model(Qwen3PreTrainedModel):
         packed_und_token_indexes: torch.LongTensor | None = None,
         packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_ids: The packed position ids.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         # create position embeddings to be shared across the decoder layers
         cos, sin = self.rotary_emb(packed_sequence_und, packed_position_ids.unsqueeze(0))
         cos = cos.squeeze(0)
@@ -675,11 +544,6 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
     _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.model = Qwen3Model(config)
 
@@ -695,12 +559,6 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         self.post_init()
 
     def custom_init_pretrained(self, mllm_state_dict, logger):
-        """Custom init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-            logger: The logger.
-        """
         logger.info("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "mot_gen" in name:
@@ -716,12 +574,6 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         return mllm_state_dict
 
     def init_pretrained(self, mllm_state_dict, enable=True):
-        """Init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-            enable: The enable.
-        """
         if not enable:
             print("Initializing LLM decoder randomly")
             return mllm_state_dict
@@ -801,43 +653,24 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
                 param.data.copy_(self.state_dict()[original_name].data)
 
     def get_input_embeddings(self):
-        """Get input embeddings."""
         return self.model.embed_tokens
 
     def set_input_embeddings(self, value):
-        """Set input embeddings.
-
-        Args:
-            value: The value.
-        """
         self.model.embed_tokens = value
 
     def get_output_embeddings(self):
-        """Get output embeddings."""
         return self.lm_head
 
     def set_output_embeddings(self, new_embeddings):
-        """Set output embeddings.
-
-        Args:
-            new_embeddings: The new embeddings.
-        """
         self.lm_head = new_embeddings
 
     def set_decoder(self, decoder):
-        """Set decoder.
-
-        Args:
-            decoder: The decoder.
-        """
         self.model = decoder
 
     def get_decoder(self):
-        """Get decoder."""
         return self.model
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
 
     def forward_train(
@@ -850,21 +683,6 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         packed_und_token_indexes: torch.LongTensor | None = None,
         packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_ids: The packed position ids.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         outputs = self.model(
             packed_sequence_und=packed_sequence_und,
             packed_sequence_gen=packed_sequence_gen,

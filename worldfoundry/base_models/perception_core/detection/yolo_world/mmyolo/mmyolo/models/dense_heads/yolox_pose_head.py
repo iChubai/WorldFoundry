@@ -346,7 +346,6 @@ class YOLOXPoseHead(YOLOXHead):
         Args:
             batch_gt_instances (Tensor): Ground truth
                 a 2D-Tensor for whole batch, shape [all_gt_bboxes, 6]
-            batch_size (int): Batch size.
 
         Returns:
             List: batch gt instances data, shape [batch_size, InstanceData]

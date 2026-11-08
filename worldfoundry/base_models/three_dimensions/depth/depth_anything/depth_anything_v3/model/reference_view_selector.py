@@ -77,11 +77,6 @@ def select_reference_view(
 
         # Normalize all metrics to [0, 1]
         def normalize_metric(metric):
-            """Normalize metric.
-
-            Args:
-                metric: The metric.
-            """
             min_val = metric.min(dim=1, keepdim=True).values
             max_val = metric.max(dim=1, keepdim=True).values
             return (metric - min_val) / (max_val - min_val + 1e-8)

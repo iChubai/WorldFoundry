@@ -24,15 +24,7 @@ from worldfoundry.core.nn.diffusion.utils import extract_into_tensor, noise_like
 
 
 class DDIMSampler:
-    """Ddim sampler implementation."""
-
     def __init__(self, model, schedule="linear", **kwargs):
-        """Init.
-
-        Args:
-            model: The model.
-            schedule: The schedule.
-        """
         super().__init__()
         self.model = model
         self.ddpm_num_timesteps = model.num_timesteps
@@ -44,11 +36,6 @@ class DDIMSampler:
         from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention_vid2world import CrossAttention
 
         def inject_recursive(module):
-            """Inject recursive.
-
-            Args:
-                module: The module.
-            """
             for child in module.children():
                 if isinstance(child, CrossAttention):
                     child.kv_cache_manager = cache_manager
@@ -58,12 +45,6 @@ class DDIMSampler:
         inject_recursive(self.model.model.diffusion_model)
 
     def register_buffer(self, name, attr):
-        """Register buffer.
-
-        Args:
-            name: The name.
-            attr: The attr.
-        """
         if type(attr) is torch.Tensor:
             target_device = torch.device(self.model.device)
             if attr.device != target_device:
@@ -71,14 +52,6 @@ class DDIMSampler:
         setattr(self, name, attr)
 
     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0.0, verbose=True):
-        """Make schedule.
-
-        Args:
-            ddim_num_steps: The ddim num steps.
-            ddim_discretize: The ddim discretize.
-            ddim_eta: The ddim eta.
-            verbose: The verbose.
-        """
         self.ddim_timesteps = make_ddim_timesteps(
             ddim_discr_method=ddim_discretize,
             num_ddim_timesteps=ddim_num_steps,
@@ -156,41 +129,6 @@ class DDIMSampler:
         z=None,
         **kwargs,
     ):
-        """Sample.
-
-        Args:
-            S: The s.
-            batch_size: The batch size.
-            shape: The shape.
-            conditioning: The conditioning.
-            callback: The callback.
-            normals_sequence: The normals sequence.
-            img_callback: The img callback.
-            quantize_x0: The quantize x0.
-            eta: The eta.
-            mask: The mask.
-            x0: The x0.
-            temperature: The temperature.
-            noise_dropout: The noise dropout.
-            score_corrector: The score corrector.
-            corrector_kwargs: The corrector kwargs.
-            verbose: The verbose.
-            schedule_verbose: The schedule verbose.
-            x_T: The x t.
-            log_every_t: The log every t.
-            unconditional_guidance_scale: The unconditional guidance scale.
-            unconditional_conditioning: The unconditional conditioning.
-            precision: The precision.
-            fs: The fs.
-            timestep_spacing: The timestep spacing.
-            guidance_rescale: The guidance rescale.
-            ar: The ar.
-            ar_alter_history_frames: The ar alter history frames.
-            ar_noise_schedule: The ar noise schedule.
-            cond_frame: The cond frame.
-            z: The z.
-        """
-
         # check condition bs
         if conditioning is not None:
             if isinstance(conditioning, dict):
@@ -279,36 +217,6 @@ class DDIMSampler:
         z=None,
         **kwargs,
     ):
-        """Ddim sampling.
-
-        Args:
-            cond: The cond.
-            shape: The shape.
-            x_T: The x t.
-            ddim_use_original_steps: The ddim use original steps.
-            callback: The callback.
-            timesteps: The timesteps.
-            quantize_denoised: The quantize denoised.
-            mask: The mask.
-            x0: The x0.
-            img_callback: The img callback.
-            log_every_t: The log every t.
-            temperature: The temperature.
-            noise_dropout: The noise dropout.
-            score_corrector: The score corrector.
-            corrector_kwargs: The corrector kwargs.
-            unconditional_guidance_scale: The unconditional guidance scale.
-            unconditional_conditioning: The unconditional conditioning.
-            verbose: The verbose.
-            precision: The precision.
-            fs: The fs.
-            guidance_rescale: The guidance rescale.
-            ar: The ar.
-            ar_alter_history_frames: The ar alter history frames.
-            ar_noise_schedule: The ar noise schedule.
-            cond_frame: The cond frame.
-            z: The z.
-        """
         device = self.model.betas.device
         b = shape[0]  # shape: (B,C,T,H_latent,W_latent)
         img = torch.randn(shape, device=device) if x_T is None else x_T
@@ -550,30 +458,6 @@ class DDIMSampler:
         kv_cache_info_uncond=None,
         **kwargs,
     ):
-        """P sample ddim.
-
-        Args:
-            x: The x.
-            c: The c.
-            t: The t.
-            index: The index.
-            repeat_noise: The repeat noise.
-            use_original_steps: The use original steps.
-            quantize_denoised: The quantize denoised.
-            temperature: The temperature.
-            noise_dropout: The noise dropout.
-            score_corrector: The score corrector.
-            corrector_kwargs: The corrector kwargs.
-            unconditional_guidance_scale: The unconditional guidance scale.
-            unconditional_conditioning: The unconditional conditioning.
-            uc_type: The uc type.
-            conditional_guidance_scale_temporal: The conditional guidance scale temporal.
-            mask: The mask.
-            x0: The x0.
-            guidance_rescale: The guidance rescale.
-            kv_cache_info: The kv cache info.
-            kv_cache_info_uncond: The kv cache info uncond.
-        """
         b, *_, device = *x.shape, x.device
         is_video = x.dim() == 5
         # import pdb; pdb.set_trace()
@@ -657,18 +541,6 @@ class DDIMSampler:
         use_original_steps=False,
         callback=None,
     ):
-        """Decode.
-
-        Args:
-            x_latent: The x latent.
-            cond: The cond.
-            t_start: The t start.
-            unconditional_guidance_scale: The unconditional guidance scale.
-            unconditional_conditioning: The unconditional conditioning.
-            use_original_steps: The use original steps.
-            callback: The callback.
-        """
-
         timesteps = np.arange(self.ddpm_num_timesteps) if use_original_steps else self.ddim_timesteps
         timesteps = timesteps[:t_start]
 
@@ -696,14 +568,6 @@ class DDIMSampler:
 
     @torch.no_grad()
     def stochastic_encode(self, x0, t, use_original_steps=False, noise=None):
-        """Stochastic encode.
-
-        Args:
-            x0: The x0.
-            t: The t.
-            use_original_steps: The use original steps.
-            noise: The noise.
-        """
         # fast, but does not allow for exact reconstruction
         # t serves as an index to gather the correct alphas
         if use_original_steps:

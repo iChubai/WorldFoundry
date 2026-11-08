@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> video_tracking_multiplex.py functionality."""
-
 from collections import defaultdict
 
 """
@@ -62,8 +60,6 @@ neck_outs = ["interactive", "sam2_backbone_out"]
 
 
 class SAMOutput(TypedDict, total=True):
-    """Sam output implementation."""
-
     # Outputs from a single SAM head forward
     low_res_multimasks: torch.Tensor
     high_res_multimasks: torch.Tensor
@@ -75,8 +71,6 @@ class SAMOutput(TypedDict, total=True):
 
 
 class StageOutput(TypedDict, total=False):
-    """Stage output implementation."""
-
     # metadata
     conditioning_objects: Required[set[int]]
 
@@ -107,8 +101,6 @@ class StageOutput(TypedDict, total=False):
 
 
 class VideoTrackingMultiplex(nn.Module):
-    """Video tracking multiplex implementation."""
-
     def __init__(
         self,
         backbone: nn.Module,
@@ -282,93 +274,6 @@ class VideoTrackingMultiplex(nn.Module):
         object_score_logit_threshold: float = 0.0,
         stability_score_attentuation: bool = False,  # select from multimask based on iou*stability_score
     ):
-        """Init.
-
-        Args:
-            backbone: The backbone.
-            transformer: The transformer.
-            maskmem_backbone: The maskmem backbone.
-            multiplex_controller: The multiplex controller.
-            num_maskmem: The num maskmem.
-            image_size: The image size.
-            backbone_stride: The backbone stride.
-            prob_to_use_pt_input_for_train: The prob to use pt input for train.
-            prob_to_use_pt_input_for_eval: The prob to use pt input for eval.
-            prob_to_use_box_input_for_train: The prob to use box input for train.
-            prob_to_use_box_input_for_eval: The prob to use box input for eval.
-            apply_sigmoid_to_mask_logits_for_mem_enc: The apply sigmoid to mask logits for mem enc.
-            sigmoid_scale_for_mem_enc: The sigmoid scale for mem enc.
-            sigmoid_bias_for_mem_enc: The sigmoid bias for mem enc.
-            binarize_mask_from_pts_for_mem_enc: The binarize mask from pts for mem enc.
-            use_mask_input_as_output_without_sam: The use mask input as output without sam.
-            num_frames_to_correct_for_train: The num frames to correct for train.
-            num_frames_to_correct_for_eval: The num frames to correct for eval.
-            rand_frames_to_correct_for_train: The rand frames to correct for train.
-            rand_frames_to_correct_for_eval: The rand frames to correct for eval.
-            prob_correct_all_objects_for_train: The prob correct all objects for train.
-            ratio_of_objects_to_correct_for_train: The ratio of objects to correct for train.
-            force_correct_all_for_conditional_inputs: The force correct all for conditional inputs.
-            rand_objects_to_correct_for_train: The rand objects to correct for train.
-            num_init_cond_frames_for_train: The num init cond frames for train.
-            num_init_cond_frames_for_eval: The num init cond frames for eval.
-            rand_init_cond_frames_for_train: The rand init cond frames for train.
-            rand_init_cond_frames_for_eval: The rand init cond frames for eval.
-            max_cond_frames_in_attn: The max cond frames in attn.
-            keep_first_cond_frame: The keep first cond frame.
-            add_all_frames_to_correct_as_cond: The add all frames to correct as cond.
-            num_correction_pt_per_frame: The num correction pt per frame.
-            pt_sampling_for_eval: The pt sampling for eval.
-            prob_to_sample_from_gt_for_train: The prob to sample from gt for train.
-            directly_add_no_mem_embed: The directly add no mem embed.
-            use_high_res_features_in_sam: The use high res features in sam.
-            multimask_output_in_sam: The multimask output in sam.
-            multimask_min_pt_num: The multimask min pt num.
-            multimask_max_pt_num: The multimask max pt num.
-            multimask_output_for_tracking: The multimask output for tracking.
-            use_multimask_token_for_obj_ptr: The use multimask token for obj ptr.
-            use_best_iou_mask_for_mem_enc: The use best iou mask for mem enc.
-            iou_prediction_use_sigmoid: The iou prediction use sigmoid.
-            iter_use_prev_mask_pred: The iter use prev mask pred.
-            forward_backbone_per_frame_for_eval: The forward backbone per frame for eval.
-            memory_temporal_stride_for_eval: The memory temporal stride for eval.
-            offload_output_to_cpu_for_eval: The offload output to cpu for eval.
-            trim_past_non_cond_mem_for_eval: The trim past non cond mem for eval.
-            non_overlap_masks_for_mem_enc: The non overlap masks for mem enc.
-            use_obj_ptrs_in_encoder: The use obj ptrs in encoder.
-            max_obj_ptrs_in_encoder: The max obj ptrs in encoder.
-            add_tpos_enc_to_obj_ptrs: The add tpos enc to obj ptrs.
-            proj_tpos_enc_in_obj_ptrs: The proj tpos enc in obj ptrs.
-            use_signed_tpos_enc_to_obj_ptrs: The use signed tpos enc to obj ptrs.
-            only_obj_ptrs_in_the_past_for_eval: The only obj ptrs in the past for eval.
-            pred_obj_scores: The pred obj scores.
-            pred_obj_scores_mlp: The pred obj scores mlp.
-            fixed_no_obj_ptr: The fixed no obj ptr.
-            use_no_obj_ptr: The use no obj ptr.
-            use_mlp_for_obj_ptr_proj: The use mlp for obj ptr proj.
-            use_linear_no_obj_ptr: The use linear no obj ptr.
-            no_obj_embed_spatial: The no obj embed spatial.
-            sincos_tpos_enc: The sincos tpos enc.
-            sam_mask_decoder_extra_args: The sam mask decoder extra args.
-            compile_all_components: The compile all components.
-            save_image_features: The save image features.
-            num_multimask_outputs: The num multimask outputs.
-            decode_mask_with_shared_tokens: The decode mask with shared tokens.
-            decode_mask_attribute_with_shared_tokens: The decode mask attribute with shared tokens.
-            share_necks: The share necks.
-            randomness_fix: The randomness fix.
-            add_output_suppression_embeddings: The add output suppression embeddings.
-            add_object_conditional_embeddings: The add object conditional embeddings.
-            add_object_unconditional_embeddings: The add object unconditional embeddings.
-            condition_as_mask_input: The condition as mask input.
-            condition_as_mask_input_fg: The condition as mask input fg.
-            condition_as_mask_input_bg: The condition as mask input bg.
-            use_maskmem_tpos_v2: The use maskmem tpos v2.
-            use_memory_selection: The use memory selection.
-            mf_threshold: The mf threshold.
-            is_dynamic_model: The is dynamic model.
-            object_score_logit_threshold: The object score logit threshold.
-            stability_score_attentuation: The stability score attentuation.
-        """
         super().__init__()
 
         # the interactive sam mask deocder can use dynamic_multimask_via_stability
@@ -593,14 +498,6 @@ class VideoTrackingMultiplex(nn.Module):
             self._compile_all_components()
 
     def _get_tpos_enc(self, rel_pos_list, device, max_abs_pos=None, dummy=False):
-        """Helper function to get tpos enc.
-
-        Args:
-            rel_pos_list: The rel pos list.
-            device: The device.
-            max_abs_pos: The max abs pos.
-            dummy: The dummy.
-        """
         if dummy:
             return torch.zeros(len(rel_pos_list), self.mem_dim, device=device)
 
@@ -698,15 +595,6 @@ class VideoTrackingMultiplex(nn.Module):
             self.obj_ptr_tpos_proj = torch.nn.Identity()
 
     def _get_interactive_pix_mem(self, features: torch.Tensor, feat_sizes: list[tuple]) -> torch.Tensor:
-        """Helper function to get interactive pix mem.
-
-        Args:
-            features: The features.
-            feat_sizes: The feat sizes.
-
-        Returns:
-            The return value.
-        """
         assert self.directly_add_no_mem_embed
         pix_feat_with_mem = features[-1] + self.interactivity_no_mem_embed
         B = features[-1].size(1)  # batch size on this frame
@@ -1049,12 +937,6 @@ class VideoTrackingMultiplex(nn.Module):
         return outputs
 
     def forward(self, input: BatchedDatapoint, is_inference=False):
-        """Forward.
-
-        Args:
-            input: The input.
-            is_inference: The is inference.
-        """
         if self.training or not self.forward_backbone_per_frame_for_eval:
             # precompute image features on all frames before tracking
             backbone_out = self.forward_image(input.img_batch, need_interactive_out=True, need_propagation_out=True)
@@ -1122,13 +1004,6 @@ class VideoTrackingMultiplex(nn.Module):
         return backbone_out
 
     def _prepare_prompt_inputs_meta(self, backbone_out, input, start_frame_idx=0):
-        """Helper function to prepare prompt inputs meta.
-
-        Args:
-            backbone_out: The backbone out.
-            input: The input.
-            start_frame_idx: The start frame idx.
-        """
         # Load the ground-truth masks on all frames (so that we can later
         # sample correction points from them)
         gt_masks_per_frame = {
@@ -1205,11 +1080,6 @@ class VideoTrackingMultiplex(nn.Module):
         return backbone_out
 
     def _prepare_conditional_frames(self, backbone_out):
-        """Helper function to prepare conditional frames.
-
-        Args:
-            backbone_out: The backbone out.
-        """
         init_cond_frames = backbone_out["init_cond_frames"]
         gt_masks_per_frame = backbone_out["gt_masks_per_frame"]
         use_pt_input = backbone_out["use_pt_input"]
@@ -2333,17 +2203,6 @@ class VideoTrackingMultiplex(nn.Module):
         current_out: StageOutput,
         memory_encoder_was_used: bool,
     ) -> StageOutput:
-        """Helper function to trim output and memory.
-
-        Args:
-            frame_idx: The frame idx.
-            output_dict: The output dict.
-            current_out: The current out.
-            memory_encoder_was_used: The memory encoder was used.
-
-        Returns:
-            The return value.
-        """
         # Optionally, offload the outputs to CPU memory during evaluation to avoid
         # GPU OOM on very long videos or very large resolution or too many objects
         if self.offload_output_to_cpu_for_eval and not self.training:
@@ -2370,15 +2229,6 @@ class VideoTrackingMultiplex(nn.Module):
         # before the current frame) during evaluation. This is intended to save GPU or CPU
         # memory for semi-supervised VOS eval, where only the first frame receives prompts.
         def _trim_past_out(past_out: StageOutput, current_out: StageOutput) -> StageOutput | None:
-            """Helper function to trim past out.
-
-            Args:
-                past_out: The past out.
-                current_out: The current out.
-
-            Returns:
-                The return value.
-            """
             if past_out is None:
                 return None
             trimmed_past_out: StageOutput = {
@@ -2442,11 +2292,6 @@ class VideoTrackingMultiplex(nn.Module):
         # be interacted with in the correction stage
         objects_to_interact: list[int] | None = None,
     ) -> StageOutput:
-        """Track step.
-
-        Returns:
-            The return value.
-        """
         current_out, _ = self._track_step_aux(
             frame_idx=frame_idx,
             is_init_cond_frame=is_init_cond_frame,
@@ -2563,12 +2408,6 @@ class VideoTrackingMultiplex(nn.Module):
         return self.image_pe_layer((self.sam_image_embedding_size, self.sam_image_embedding_size)).unsqueeze(0)
 
     def cal_mem_score(self, object_score_logits, iou_score):
-        """Cal mem score.
-
-        Args:
-            object_score_logits: The object score logits.
-            iou_score: The iou score.
-        """
         object_score_norm = torch.where(
             object_score_logits > 0,
             object_score_logits.sigmoid() * 2 - 1,  # rescale to [0, 1]
@@ -2578,15 +2417,6 @@ class VideoTrackingMultiplex(nn.Module):
         return score_per_frame
 
     def frame_filter(self, output_dict, track_in_reverse, frame_idx, num_frames, r):
-        """Frame filter.
-
-        Args:
-            output_dict: The output dict.
-            track_in_reverse: The track in reverse.
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            r: The r.
-        """
         if (frame_idx == 0 and not track_in_reverse) or (frame_idx == num_frames - 1 and track_in_reverse):
             return []
 
@@ -2637,16 +2467,6 @@ def concat_points(old_point_inputs, new_points, new_labels):
 
 
 def _append(d1: StageOutput, d2: SAMOutput, k1: str, k2: str, dim: int = 0, strict: bool = True):
-    """Helper function to append.
-
-    Args:
-        d1: The d1.
-        d2: The d2.
-        k1: The k1.
-        k2: The k2.
-        dim: The dim.
-        strict: The strict.
-    """
     if strict:
         assert k1 in d1, f"{k1} not found"
     else:
@@ -2664,16 +2484,6 @@ def _merge(
     d2_idx: list[int],
     strict: bool = True,
 ):
-    """Helper function to merge.
-
-    Args:
-        d1: The d1.
-        d2: The d2.
-        k1: The k1.
-        k2: The k2.
-        d2_idx: The d2 idx.
-        strict: The strict.
-    """
     if strict:
         assert k1 in d1, f"{k1} not found"
     else:
@@ -2683,8 +2493,6 @@ def _merge(
 
 
 class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
-    """Video tracking dynamic multiplex implementation."""
-
     def __init__(
         self,
         enable_dynamic_training: bool = True,  # Allows the number of objects to increase across frames during training
@@ -2696,17 +2504,6 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         is_dynamic_vos_evaluation: bool = False,  # For datasets like YouTubeVOS which have new objects
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            enable_dynamic_training: The enable dynamic training.
-            rand_num_transition_points: The rand num transition points.
-            max_num_transition_points: The max num transition points.
-            add_all_transition_frames_as_cond: The add all transition frames as cond.
-            max_trans_frames_in_attn: The max trans frames in attn.
-            is_dynamic_model: The is dynamic model.
-            is_dynamic_vos_evaluation: The is dynamic vos evaluation.
-        """
         super().__init__(is_dynamic_model=is_dynamic_model, **kwargs)
 
         self.enable_dynamic_training = enable_dynamic_training
@@ -3249,11 +3046,6 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         new_object_ids: list[int] | None = None,
         are_new_masks_from_pts: bool = False,
     ) -> StageOutput:
-        """Track step.
-
-        Returns:
-            The return value.
-        """
         # First, run track_step_aux.
         # This includes propagation, interaction, and correction.
         current_out, aux_out = self._track_step_aux(

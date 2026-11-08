@@ -5,8 +5,6 @@
 # Licensed under the Apache License, Version 2.0 [see LICENSE for details]
 # ------------------------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> utils.py functionality."""
-
 import copy
 import math
 
@@ -16,13 +14,6 @@ from torch import Tensor, nn
 
 
 def _get_clones(module, N, layer_share=False):
-    """Helper function to get clones.
-
-    Args:
-        module: The module.
-        N: The n.
-        layer_share: The layer share.
-    """
     # import ipdb; ipdb.set_trace()
     if layer_share:
         return nn.ModuleList([module for i in range(N)])
@@ -51,11 +42,6 @@ def get_sine_pos_embed(
     dim_t = temperature ** (2 * torch.div(dim_t, 2, rounding_mode="floor") / num_pos_feats)
 
     def sine_func(x: torch.Tensor):
-        """Sine func.
-
-        Args:
-            x: The x.
-        """
         sin_x = x * scale / dim_t
         sin_x = torch.stack((sin_x[..., 0::2].sin(), sin_x[..., 1::2].cos()), dim=3).flatten(2)
         return sin_x
@@ -128,31 +114,10 @@ def gen_encoder_output_proposals(memory: Tensor, memory_padding_mask: Tensor, sp
 
 
 class RandomBoxPerturber:
-    """Random box perturber implementation."""
-
     def __init__(self, x_noise_scale=0.2, y_noise_scale=0.2, w_noise_scale=0.2, h_noise_scale=0.2) -> None:
-        """Init.
-
-        Args:
-            x_noise_scale: The x noise scale.
-            y_noise_scale: The y noise scale.
-            w_noise_scale: The w noise scale.
-            h_noise_scale: The h noise scale.
-
-        Returns:
-            The return value.
-        """
         self.noise_scale = torch.Tensor([x_noise_scale, y_noise_scale, w_noise_scale, h_noise_scale])
 
     def __call__(self, refanchors: Tensor) -> Tensor:
-        """Call.
-
-        Args:
-            refanchors: The refanchors.
-
-        Returns:
-            The return value.
-        """
         nq, bs, query_dim = refanchors.shape
         device = refanchors.device
 
@@ -198,25 +163,12 @@ class MLP(nn.Module):
     """Very simple multi-layer perceptron (also called FFN)"""
 
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
-        """Init.
-
-        Args:
-            input_dim: The input dim.
-            hidden_dim: The hidden dim.
-            output_dim: The output dim.
-            num_layers: The num layers.
-        """
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
         self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim], strict=False))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
         return x
@@ -239,11 +191,6 @@ def _get_activation_fn(activation, d_model=256, batch_dim=0):
 
 
 def gen_sineembed_for_position(pos_tensor):
-    """Gen sineembed for position.
-
-    Args:
-        pos_tensor: The pos tensor.
-    """
     # n_query, bs, _ = pos_tensor.size()
     # sineembed_tensor = torch.zeros(n_query, bs, 256)
     scale = 2 * math.pi
@@ -273,8 +220,6 @@ def gen_sineembed_for_position(pos_tensor):
 
 
 class ContrastiveEmbed(nn.Module):
-    """Contrastive embed implementation."""
-
     def __init__(self, max_text_len=256):
         """
         Args:

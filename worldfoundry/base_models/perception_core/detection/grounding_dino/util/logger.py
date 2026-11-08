@@ -1,6 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> util -> logger.py functionality."""
-
 import functools
 import logging
 import os
@@ -10,10 +8,7 @@ from termcolor import colored
 
 
 class _ColorfulFormatter(logging.Formatter):
-    """Colorful formatter implementation."""
-
     def __init__(self, *args, **kwargs):
-        """Init."""
         self._root_name = kwargs.pop("root_name") + "."
         self._abbrev_name = kwargs.pop("abbrev_name", "")
         if len(self._abbrev_name):
@@ -21,11 +16,6 @@ class _ColorfulFormatter(logging.Formatter):
         super().__init__(*args, **kwargs)
 
     def formatMessage(self, record):
-        """Formatmessage.
-
-        Args:
-            record: The record.
-        """
         record.name = record.name.replace(self._root_name, self._abbrev_name)
         log = super().formatMessage(record)
         if record.levelno == logging.WARNING:
@@ -95,9 +85,4 @@ def setup_logger(output=None, distributed_rank=0, *, color=True, name="imagenet"
 # with the same file name can safely write to the same file.
 @functools.cache
 def _cached_log_stream(filename):
-    """Helper function to cached log stream.
-
-    Args:
-        filename: The filename.
-    """
     return open(filename, "a")

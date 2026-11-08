@@ -1,7 +1,5 @@
 # Copyright Alibaba Inc. All Rights Reserved.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> layers -> block.py functionality."""
-
 from collections.abc import Callable
 from typing import Any
 
@@ -15,8 +13,6 @@ XFORMERS_AVAILABLE = False
 
 
 class Block(nn.Module):
-    """Block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -37,30 +33,6 @@ class Block(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.norm1 = norm_layer(dim)
@@ -92,30 +64,11 @@ class Block(nn.Module):
         self.sample_drop_ratio = drop_path
 
     def attn_residual_func(self, x: Tensor, pos=None, e=None) -> Tensor:
-        """Attn residual func.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            e: The e.
-
-        Returns:
-            The return value.
-        """
         if e is None:
             return self.ls1(self.attn(self.norm1(x), pos=pos))
         return self.ls1(self.attn(self.norm1(x) * (1 + e[1]) + e[0], pos=pos))
 
     def ffn_residual_func(self, x: Tensor, e=None) -> Tensor:
-        """Ffn residual func.
-
-        Args:
-            x: The x.
-            e: The e.
-
-        Returns:
-            The return value.
-        """
         if e is None:
             return self.ls2(self.mlp(self.norm2(x)))
         return self.ls2(self.mlp(self.norm2(x)) * (1 + e[4]) + e[3]) * e[5]
@@ -129,20 +82,6 @@ class Block(nn.Module):
         run_remaining: bool = False,
         modifiers: tuple | None = None,  # e_mod
     ) -> Tensor | tuple[Tensor, tuple]:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            e0: The e0.
-            return_partial: The return partial.
-            run_remaining: The run remaining.
-            modifiers: The modifiers.
-
-        Returns:
-            The return value.
-        """
-
         if run_remaining:
             assert modifiers is not None, "run_remaining need modifiers"
             e_mod = modifiers
@@ -170,33 +109,15 @@ class Block(nn.Module):
         return x
 
     def forward_partial(self, *args, **kwargs):
-        """Forward partial."""
         return self.forward(*args, **kwargs, return_partial=True)
 
     def forward_remaining(self, x: Tensor, e=None):
-        """Forward remaining.
-
-        Args:
-            x: The x.
-            e: The e.
-        """
         return self.forward(x, run_remaining=True, modifiers=e)
 
 
 def drop_add_residual_stochastic_depth(
     x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
 ) -> Tensor:
-    """Drop add residual stochastic depth.
-
-    Args:
-        x: The x.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        pos: The pos.
-
-    Returns:
-        The return value.
-    """
     # 1) extract subset using permutation
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
@@ -222,12 +143,6 @@ def drop_add_residual_stochastic_depth(
 
 
 def get_branges_scales(x, sample_drop_ratio=0.0):
-    """Get branges scales.
-
-    Args:
-        x: The x.
-        sample_drop_ratio: The sample drop ratio.
-    """
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
     brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
@@ -236,15 +151,6 @@ def get_branges_scales(x, sample_drop_ratio=0.0):
 
 
 def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    """Add residual.
-
-    Args:
-        x: The x.
-        brange: The brange.
-        residual: The residual.
-        residual_scale_factor: The residual scale factor.
-        scaling_vector: The scaling vector.
-    """
     if scaling_vector is None:
         x_flat = x.flatten(1)
         residual = residual.flatten(1)
@@ -289,17 +195,6 @@ def drop_add_residual_stochastic_depth_list(
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
 ) -> Tensor:
-    """Drop add residual stochastic depth list.
-
-    Args:
-        x_list: The x list.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        scaling_vector: The scaling vector.
-
-    Returns:
-        The return value.
-    """
     # 1) generate random set of indices for dropping samples in the batch
     branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
     branges = [s[0] for s in branges_scales]
@@ -320,8 +215,6 @@ def drop_add_residual_stochastic_depth_list(
 
 
 class NestedTensorBlock(Block):
-    """Nested tensor block implementation."""
-
     def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
@@ -331,27 +224,9 @@ class NestedTensorBlock(Block):
         if self.training and self.sample_drop_ratio > 0.0:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.attn(self.norm1(x), attn_bias=attn_bias)
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.mlp(self.norm2(x))
 
             x_list = drop_add_residual_stochastic_depth_list(
@@ -370,27 +245,9 @@ class NestedTensorBlock(Block):
         else:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls2(self.mlp(self.norm2(x)))
 
             attn_bias, x = get_attn_bias_and_cat(x_list)
@@ -399,11 +256,6 @@ class NestedTensorBlock(Block):
             return attn_bias.split(x)
 
     def forward(self, x_or_x_list):
-        """Forward.
-
-        Args:
-            x_or_x_list: The x or x list.
-        """
         if isinstance(x_or_x_list, Tensor):
             return super().forward(x_or_x_list)
         elif isinstance(x_or_x_list, list):
@@ -415,28 +267,12 @@ class NestedTensorBlock(Block):
 
 
 class CamTokenProjector(nn.Module):
-    """Cam token projector implementation."""
-
     def __init__(self, out_dim: int, hidden: int = 128):
-        """Init.
-
-        Args:
-            out_dim: The out dim.
-            hidden: The hidden.
-        """
         super().__init__()
         self.out_dim = out_dim
         self.mlp = nn.Sequential(nn.Linear(36, hidden), nn.GELU(), nn.Linear(hidden, out_dim))
 
     def forward(self, cam: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            cam: The cam.
-
-        Returns:
-            The return value.
-        """
         B, V_in, _ = cam.shape
         repeat = 3
         pad = cam[:, :1, :].repeat(1, repeat, 1)
@@ -451,21 +287,12 @@ class CamTokenProjector(nn.Module):
 
 
 class Projection_Head(nn.Module):
-    """Projection head implementation."""
-
     def __init__(
         self,
         mode: str = "conv",
         in_channels: int = 5120,
         out_channels: int = 1024,
     ):
-        """Init.
-
-        Args:
-            mode: The mode.
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
         super().__init__()
         assert mode in {"conv", "linear"}
         self.mode = mode
@@ -478,15 +305,6 @@ class Projection_Head(nn.Module):
         self.norm = nn.LayerNorm(out_channels)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
-
         if self.mode == "conv":
             x = x.permute(0, 4, 1, 2, 3).contiguous()
             x = self.proj(x)

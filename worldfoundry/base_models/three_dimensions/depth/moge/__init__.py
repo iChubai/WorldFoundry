@@ -12,11 +12,6 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    """Getattr.
-
-    Args:
-        name: The name.
-    """
     if name == "MogeModel":
         from .adapter import MogeModel
 

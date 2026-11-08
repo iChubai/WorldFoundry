@@ -3,8 +3,6 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov3 -> layers -> __init__.py functionality."""
-
 from worldfoundry.core.nn.blocks.layers import DropPath as DropPath
 from worldfoundry.core.nn.blocks.layers import LayerScale as LayerScale
 from worldfoundry.core.nn.blocks.layers import Mlp as Mlp

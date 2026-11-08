@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> modeling -> mask_decoder.py functionality."""
-
 import torch
 from torch import nn
 
@@ -13,8 +11,6 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 
 
 class MaskDecoder(nn.Module):
-    """Mask decoder implementation."""
-
     def __init__(
         self,
         *,

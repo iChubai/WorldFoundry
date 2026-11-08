@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> worldmirror.py functionality."""
-
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -24,8 +22,6 @@ from .visual_transformer import VisualGeometryTransformer
 
 
 class WorldMirror(nn.Module, PyTorchModelHubMixin):
-    """World mirror implementation."""
-
     def __init__(
         self,
         img_size=518,
@@ -61,42 +57,6 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         set_sky_region_to_maxdepth=False,
         disable_gs_depth=False,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            model_size: The model size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            gs_dim: The gs dim.
-            num_register_tokens: The num register tokens.
-            enable_cond: The enable cond.
-            enable_cam: The enable cam.
-            enable_pts: The enable pts.
-            enable_depth: The enable depth.
-            enable_depth_mask: The enable depth mask.
-            enable_norm: The enable norm.
-            enable_gs: The enable gs.
-            enable_bf16: The enable bf16.
-            patch_embed: The patch embed.
-            fixed_patch_embed: The fixed patch embed.
-            sampling_strategy: The sampling strategy.
-            dpt_gradient_checkpoint: The dpt gradient checkpoint.
-            condition_strategy: The condition strategy.
-            rope_base: The rope base.
-            normalized_rope: The normalized rope.
-            rope_normalize_coords: The rope normalize coords.
-            rope_shift_coords: The rope shift coords.
-            rope_jitter_coords: The rope jitter coords.
-            rope_rescale_coords: The rope rescale coords.
-            sp_size: The sp size.
-            set_sky_region_to_maxdepth: The set sky region to maxdepth.
-            disable_gs_depth: The disable gs depth.
-        """
-
         super().__init__()
 
         self.intermediate_layer_idx = {
@@ -194,7 +154,6 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return WorldMirrorStateDictConverter()
 
     def _store_config(self):
@@ -860,14 +819,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
 
 
 class WorldMirrorStateDictConverter:
-    """World mirror state dict converter implementation."""
-
     def from_civitai(self, state_dict):
-        """From civitai.
-
-        Args:
-            state_dict: The state dict.
-        """
         if hash_state_dict_keys(state_dict) == "1a1d001a35f78f3a7796a1e719ead340":
             return state_dict, {
                 "enable_depth_mask": False,
@@ -877,9 +829,4 @@ class WorldMirrorStateDictConverter:
         return state_dict, {"strict_load": False}
 
     def from_diffusers(self, state_dict):
-        """From diffusers.
-
-        Args:
-            state_dict: The state dict.
-        """
         return self.from_civitai(state_dict)

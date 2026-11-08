@@ -62,63 +62,33 @@ def get_pairs(word):
 
 
 def basic_clean(text):
-    """Basic clean.
-
-    Args:
-        text: The text.
-    """
     text = ftfy.fix_text(text)
     text = html.unescape(html.unescape(text))
     return text.strip()
 
 
 def whitespace_clean(text):
-    """Whitespace clean.
-
-    Args:
-        text: The text.
-    """
     text = re.sub(r"\s+", " ", text)
     text = text.strip()
     return text
 
 
 def _clean_canonicalize(x):
-    """Helper function to clean canonicalize.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace, remove punctuation, lower case
     return canonicalize_text(basic_clean(x))
 
 
 def _clean_lower(x):
-    """Helper function to clean lower.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace, lower case
     return whitespace_clean(basic_clean(x)).lower()
 
 
 def _clean_whitespace(x):
-    """Helper function to clean whitespace.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace
     return whitespace_clean(basic_clean(x))
 
 
 def get_clean_fn(type: str):
-    """Get clean fn.
-
-    Args:
-        type: The type.
-    """
     if type == "canonicalize":
         return _clean_canonicalize
     elif type == "lower":
@@ -152,8 +122,6 @@ def canonicalize_text(text, *, keep_punctuation_exact_string=None):
 
 
 class SimpleTokenizer:
-    """Simple tokenizer implementation."""
-
     def __init__(
         self,
         bpe_path: str | os.PathLike,
@@ -161,14 +129,6 @@ class SimpleTokenizer:
         context_length: int | None = DEFAULT_CONTEXT_LENGTH,
         clean: str = "lower",
     ):
-        """Init.
-
-        Args:
-            bpe_path: The bpe path.
-            additional_special_tokens: The additional special tokens.
-            context_length: The context length.
-            clean: The clean.
-        """
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
         with g_pathmgr.open(bpe_path, "rb") as fh:
@@ -202,11 +162,6 @@ class SimpleTokenizer:
         self.clean_fn = get_clean_fn(clean)
 
     def bpe(self, token):
-        """Bpe.
-
-        Args:
-            token: The token.
-        """
         if token in self.cache:
             return self.cache[token]
         word = tuple(token[:-1]) + (token[-1] + "</w>",)
@@ -245,11 +200,6 @@ class SimpleTokenizer:
         return word
 
     def encode(self, text):
-        """Encode.
-
-        Args:
-            text: The text.
-        """
         bpe_tokens = []
         text = self.clean_fn(text)
         for token in re.findall(self.pat, text):
@@ -258,11 +208,6 @@ class SimpleTokenizer:
         return bpe_tokens
 
     def decode(self, tokens):
-        """Decode.
-
-        Args:
-            tokens: The tokens.
-        """
         text = "".join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
         return text

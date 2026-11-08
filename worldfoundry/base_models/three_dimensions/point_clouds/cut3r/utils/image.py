@@ -4,8 +4,6 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> utils -> image.py functionality."""
-
 import os
 
 import numpy as np
@@ -29,11 +27,6 @@ ImgNorm = tvf.Compose([tvf.ToTensor(), tvf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5,
 
 
 def img_to_arr(img):
-    """Img to arr.
-
-    Args:
-        img: The img.
-    """
     if isinstance(img, str):
         img = imread_cv2(img)
     return img
@@ -52,12 +45,6 @@ def imread_cv2(path, options=cv2.IMREAD_COLOR):
 
 
 def rgb(ftensor, true_shape=None):
-    """Rgb.
-
-    Args:
-        ftensor: The ftensor.
-        true_shape: The true shape.
-    """
     if isinstance(ftensor, list):
         return [rgb(x, true_shape=true_shape) for x in ftensor]
     if isinstance(ftensor, torch.Tensor):
@@ -74,12 +61,6 @@ def rgb(ftensor, true_shape=None):
 
 
 def _resize_pil_image(img, long_edge_size):
-    """Helper function to resize pil image.
-
-    Args:
-        img: The img.
-        long_edge_size: The long edge size.
-    """
     S = max(img.size)
     if long_edge_size < S:
         interp = PIL.Image.LANCZOS

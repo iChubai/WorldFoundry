@@ -14,8 +14,6 @@
 # https://github.com/open-mmlab/mmcv/blob/master/mmcv/ops/multi_scale_deform_attn.py
 # ------------------------------------------------------------------------------------------------
 
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> ms_deform_attn.py functionality."""
-
 import math
 import warnings
 
@@ -37,19 +35,12 @@ except Exception:
 
 # helpers
 def _is_power_of_2(n):
-    """Helper function to is power of 2.
-
-    Args:
-        n: The n.
-    """
     if (not isinstance(n, int)) or (n < 0):
         raise ValueError(f"invalid input for _is_power_of_2: {n} (type: {type(n)})")
     return (n & (n - 1) == 0) and n != 0
 
 
 class MultiScaleDeformableAttnFunction(Function):
-    """Multi scale deformable attn function implementation."""
-
     @staticmethod
     def forward(
         ctx,
@@ -60,17 +51,6 @@ class MultiScaleDeformableAttnFunction(Function):
         attention_weights,
         im2col_step,
     ):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            value: The value.
-            value_spatial_shapes: The value spatial shapes.
-            value_level_start_index: The value level start index.
-            sampling_locations: The sampling locations.
-            attention_weights: The attention weights.
-            im2col_step: The im2col step.
-        """
         ctx.im2col_step = im2col_step
         output = _C.ms_deform_attn_forward(
             value,
@@ -92,12 +72,6 @@ class MultiScaleDeformableAttnFunction(Function):
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            grad_output: The grad output.
-        """
         (
             value,
             value_spatial_shapes,
@@ -124,18 +98,6 @@ def multi_scale_deformable_attn_pytorch(
     sampling_locations: torch.Tensor,
     attention_weights: torch.Tensor,
 ) -> torch.Tensor:
-    """Multi scale deformable attn pytorch.
-
-    Args:
-        value: The value.
-        value_spatial_shapes: The value spatial shapes.
-        sampling_locations: The sampling locations.
-        attention_weights: The attention weights.
-
-    Returns:
-        The return value.
-    """
-
     bs, _, num_heads, embed_dims = value.shape
     _, num_queries, num_heads, num_levels, num_points, _ = sampling_locations.shape
     value_list = value.split([H_ * W_ for H_, W_ in value_spatial_shapes], dim=1)
@@ -197,16 +159,6 @@ class MultiScaleDeformableAttention(nn.Module):
         img2col_step: int = 64,
         batch_first: bool = False,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            num_levels: The num levels.
-            num_points: The num points.
-            img2col_step: The img2col step.
-            batch_first: The batch first.
-        """
         super().__init__()
         if embed_dim % num_heads != 0:
             raise ValueError(f"embed_dim must be divisible by num_heads, but got {embed_dim} and {num_heads}")
@@ -236,7 +188,6 @@ class MultiScaleDeformableAttention(nn.Module):
         self.init_weights()
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         return self.init_weights()
 
     def init_weights(self):
@@ -263,13 +214,11 @@ class MultiScaleDeformableAttention(nn.Module):
         constant_(self.output_proj.bias.data, 0.0)
 
     def freeze_sampling_offsets(self):
-        """Freeze sampling offsets."""
         print("Freeze sampling offsets")
         self.sampling_offsets.weight.requires_grad = False
         self.sampling_offsets.bias.requires_grad = False
 
     def freeze_attention_weights(self):
-        """Freeze attention weights."""
         print("Freeze attention weights")
         self.attention_weights.weight.requires_grad = False
         self.attention_weights.bias.requires_grad = False
@@ -413,12 +362,9 @@ def create_dummy_class(klass, dependency, message=""):
         err = err + " " + message
 
     class _DummyMetaClass(type):
-        """Dummy meta class implementation."""
-
         # throw error on class attribute access
         def __getattr__(_, __):
-            """Getattr.
-
+            """
             Args:
                 _: The _.
                 __: The __.
@@ -426,11 +372,8 @@ def create_dummy_class(klass, dependency, message=""):
             raise ImportError(err)
 
     class _Dummy(metaclass=_DummyMetaClass):
-        """Dummy implementation."""
-
         # throw error on constructor
         def __init__(self, *args, **kwargs):
-            """Init."""
             raise ImportError(err)
 
     return _Dummy
@@ -456,7 +399,6 @@ def create_dummy_func(func, dependency, message=""):
         dependency = ",".join(dependency)
 
     def _dummy(*args, **kwargs):
-        """Helper function to dummy."""
         raise ImportError(err)
 
     return _dummy

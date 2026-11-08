@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> __init__.py functionality."""
-
 from .coca_model import CoCa as CoCa
 from .constants import OPENAI_DATASET_MEAN as OPENAI_DATASET_MEAN
 from .constants import OPENAI_DATASET_STD as OPENAI_DATASET_STD

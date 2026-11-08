@@ -132,19 +132,6 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
         split_special_tokens=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            vocab_file: The vocab file.
-            merges_file: The merges file.
-            errors: The errors.
-            unk_token: The unk token.
-            bos_token: The bos token.
-            eos_token: The eos token.
-            pad_token: The pad token.
-            clean_up_tokenization_spaces: The clean up tokenization spaces.
-            split_special_tokens: The split special tokens.
-        """
         # Qwen vocab does not contain control tokens; added tokens need to be special
         bos_token = (
             AddedToken(bos_token, lstrip=False, rstrip=False, special=True, normalized=False)
@@ -207,25 +194,14 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
 
     @property
     def vocab_size(self) -> int:
-        """Vocab size.
-
-        Returns:
-            The return value.
-        """
         return len(self.encoder)
 
     # Copied from transformers.models.gpt2.tokenization_gpt2.GPT2Tokenizer.get_vocab
     def get_vocab(self):
-        """Get vocab."""
         return dict(self.encoder, **self.added_tokens_encoder)
 
     # Copied from transformers.models.gpt2.tokenization_gpt2.GPT2Tokenizer.bpe
     def bpe(self, token):
-        """Bpe.
-
-        Args:
-            token: The token.
-        """
         if token in self.cache:
             return self.cache[token]
         word = tuple(token)
@@ -303,17 +279,6 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
         spaces_between_special_tokens: bool = False,
         **kwargs,
     ) -> str:
-        """Decode.
-
-        Args:
-            token_ids: The token ids.
-            skip_special_tokens: The skip special tokens.
-            clean_up_tokenization_spaces: The clean up tokenization spaces.
-            spaces_between_special_tokens: The spaces between special tokens.
-
-        Returns:
-            The return value.
-        """
         # `spaces_between_special_tokens` defaults to True for _decode in slow tokenizers
         # and cannot be configured elsewhere, but it should default to False for Qwen2Tokenizer
         return super().decode(
@@ -326,15 +291,6 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
 
     # Copied from transformers.models.gpt2.tokenization_gpt2.GPT2Tokenizer.save_vocabulary
     def save_vocabulary(self, save_directory: str, filename_prefix: str | None = None) -> tuple[str]:
-        """Save vocabulary.
-
-        Args:
-            save_directory: The save directory.
-            filename_prefix: The filename prefix.
-
-        Returns:
-            The return value.
-        """
         if not os.path.isdir(save_directory):
             logger.error(f"Vocabulary path ({save_directory}) should be a directory")
             return
@@ -364,10 +320,5 @@ class Qwen2Tokenizer(PreTrainedTokenizer):
         return vocab_file, merge_file
 
     def prepare_for_tokenization(self, text, **kwargs):
-        """Prepare for tokenization.
-
-        Args:
-            text: The text.
-        """
         text = unicodedata.normalize("NFC", text)
         return (text, kwargs)

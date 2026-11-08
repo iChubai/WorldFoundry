@@ -612,16 +612,6 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         return freqs_cos, freqs_sin
 
     def reorder_txt_token(self, byt5_txt, txt, byt5_text_mask, text_mask, zero_feat=False, is_reorder=True):
-        """Reorder txt token.
-
-        Args:
-            byt5_txt: The byt5 txt.
-            txt: The txt.
-            byt5_text_mask: The byt5 text mask.
-            text_mask: The text mask.
-            zero_feat: The zero feat.
-            is_reorder: The is reorder.
-        """
         if is_reorder:
             reorder_txt = []
             reorder_mask = []
@@ -880,11 +870,6 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         return imgs
 
     def set_attn_mode(self, attn_mode: str):
-        """Set attn mode.
-
-        Args:
-            attn_mode: The attn mode.
-        """
         normalized_attn_mode = normalize_attention_backend(attn_mode)
         attn_mode = resolve_attention_backend(
             normalized_attn_mode,

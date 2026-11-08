@@ -4,29 +4,18 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> backbones -> image_encoder.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class ImageEncoder(nn.Module):
-    """Image encoder implementation."""
-
     def __init__(
         self,
         trunk: nn.Module,
         neck: nn.Module,
         scalp: int = 0,
     ):
-        """Init.
-
-        Args:
-            trunk: The trunk.
-            neck: The neck.
-            scalp: The scalp.
-        """
         super().__init__()
         self.trunk = trunk
         self.neck = neck
@@ -36,11 +25,6 @@ class ImageEncoder(nn.Module):
         )
 
     def forward(self, sample: torch.Tensor):
-        """Forward.
-
-        Args:
-            sample: The sample.
-        """
         # Forward through backbone
         features, pos = self.neck(self.trunk(sample))
         if self.scalp > 0:
@@ -114,12 +98,6 @@ class FpnNeck(nn.Module):
         self.fpn_top_down_levels = list(fpn_top_down_levels)
 
     def forward(self, xs: list[torch.Tensor]):
-        """Forward.
-
-        Args:
-            xs: The xs.
-        """
-
         out = [None] * len(self.convs)
         pos = [None] * len(self.convs)
         assert len(xs) == len(self.convs)

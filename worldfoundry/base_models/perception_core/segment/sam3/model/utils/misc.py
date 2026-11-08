@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> utils -> misc.py functionality."""
-
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
@@ -13,21 +11,11 @@ import torch
 
 
 def _is_named_tuple(x) -> bool:
-    """Helper function to is named tuple.
-
-    Args:
-        x: The x.
-
-    Returns:
-        The return value.
-    """
     return isinstance(x, tuple) and hasattr(x, "_asdict") and hasattr(x, "_fields")
 
 
 @runtime_checkable
 class _CopyableData(Protocol):
-    """Copyable data implementation."""
-
     def to(self, device: torch.device, *args: Any, **kwargs: Any):
         """Copy data to the specified device"""
         ...

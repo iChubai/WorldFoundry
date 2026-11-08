@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> droid.py functionality."""
-
 from collections import OrderedDict
 
 import torch
@@ -13,14 +11,7 @@ from worldfoundry.base_models.three_dimensions.slam.droid_slam.trajectory_filler
 
 
 class Droid:
-    """Droid implementation."""
-
     def __init__(self, args):
-        """Init.
-
-        Args:
-            args: The args.
-        """
         super().__init__()
         self.load_weights(args.weights)
         self.args = args

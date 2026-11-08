@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> transforms -> video_transforms.py functionality."""
-
 import random
 
 import cv2
@@ -25,12 +23,6 @@ class Resize:
     """
 
     def __init__(self, output_size, use_padding=False):
-        """Init.
-
-        Args:
-            output_size: The output size.
-            use_padding: The use padding.
-        """
         assert isinstance(output_size, (int, tuple))
         if isinstance(output_size, int):
             self.output_size = (output_size, output_size)
@@ -39,19 +31,9 @@ class Resize:
         self.use_padding = use_padding
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         return self.padding(sample) if self.use_padding else self.rescale(sample)
 
     def rescale(self, sample):
-        """Rescale.
-
-        Args:
-            sample: The sample.
-        """
         prev_img = sample["prev_img"]
         h, w = prev_img.shape[:2]
         if self.output_size == (h, w):
@@ -84,11 +66,6 @@ class Resize:
         return sample
 
     def padding(self, sample):
-        """Padding.
-
-        Args:
-            sample: The sample.
-        """
         prev_img = sample["prev_img"]
         h, w = prev_img.shape[:2]
         if self.output_size == (h, w):
@@ -97,11 +74,6 @@ class Resize:
             new_h, new_w = self.output_size
 
         def sep_pad(x):
-            """Sep pad.
-
-            Args:
-                x: The x.
-            """
             x0 = np.random.randint(0, x + 1)
             x1 = x - x0
             return x0, x1
@@ -156,14 +128,6 @@ class BalancedRandomCrop:
     """
 
     def __init__(self, output_size, max_step=5, max_obj_num=5, min_obj_pixel_num=100):
-        """Init.
-
-        Args:
-            output_size: The output size.
-            max_step: The max step.
-            max_obj_num: The max obj num.
-            min_obj_pixel_num: The min obj pixel num.
-        """
         assert isinstance(output_size, (int, tuple))
         if isinstance(output_size, int):
             self.output_size = (output_size, output_size)
@@ -175,11 +139,6 @@ class BalancedRandomCrop:
         self.min_obj_pixel_num = min_obj_pixel_num
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         image = sample["prev_img"]
         h, w = image.shape[:2]
         new_h, new_w = self.output_size
@@ -273,23 +232,11 @@ class RandomScale:
     """
 
     def __init__(self, min_scale=1.0, max_scale=1.3, short_edge=None):
-        """Init.
-
-        Args:
-            min_scale: The min scale.
-            max_scale: The max scale.
-            short_edge: The short edge.
-        """
         self.min_scale = min_scale
         self.max_scale = max_scale
         self.short_edge = short_edge
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         # Fixed range of scales
         sc = np.random.uniform(self.min_scale, self.max_scale)
         # Align short edge
@@ -338,25 +285,12 @@ class RandomScaleV2:
         short_edge=None,
         ratio=[3.0 / 4.0, 4.0 / 3.0],
     ):
-        """Init.
-
-        Args:
-            min_scale: The min scale.
-            max_scale: The max scale.
-            short_edge: The short edge.
-            ratio: The ratio.
-        """
         self.min_scale = min_scale
         self.max_scale = max_scale
         self.short_edge = short_edge
         self.ratio = ratio
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         image = sample["prev_img"]
         h, w = image.shape[:2]
 
@@ -398,12 +332,6 @@ class RandomScaleV2:
         return sample
 
     def get_params(self, height, width):
-        """Get params.
-
-        Args:
-            height: The height.
-            width: The width.
-        """
         area = height * width
 
         log_ratio = [np.log(item) for item in self.ratio]
@@ -439,22 +367,11 @@ class RestrictSize:
     """
 
     def __init__(self, max_short_edge=None, max_long_edge=800 * 1.3):
-        """Init.
-
-        Args:
-            max_short_edge: The max short edge.
-            max_long_edge: The max long edge.
-        """
         self.max_short_edge = max_short_edge
         self.max_long_edge = max_long_edge
         assert (max_short_edge is None) or (max_long_edge is None)
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         # Fixed range of scales
         sc = None
         image = sample["ref_img"]
@@ -498,19 +415,9 @@ class RandomHorizontalFlip:
     """Horizontally flip the given image and ground truth randomly with a probability of 0.5."""
 
     def __init__(self, prob):
-        """Init.
-
-        Args:
-            prob: The prob.
-        """
         self.p = prob
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         if random.random() < self.p:
             for elem in sample.keys():
                 if "meta" in elem:
@@ -533,19 +440,9 @@ class RandomVerticalFlip:
     """Vertically flip the given image and ground truth randomly with a probability of 0.5."""
 
     def __init__(self, prob=0.3):
-        """Init.
-
-        Args:
-            prob: The prob.
-        """
         self.p = prob
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         if random.random() < self.p:
             for elem in sample.keys():
                 if "meta" in elem:
@@ -565,23 +462,10 @@ class RandomVerticalFlip:
 
 
 class RandomGaussianBlur:
-    """Random gaussian blur implementation."""
-
     def __init__(self, prob=0.3, sigma=[0.1, 2.0]):
-        """Init.
-
-        Args:
-            prob: The prob.
-            sigma: The sigma.
-        """
         self.aug = TF.RandomApply([IT.GaussianBlur(sigma)], p=prob)
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         for elem in sample.keys():
             if "meta" in elem or "label" in elem:
                 continue
@@ -599,11 +483,6 @@ class RandomGaussianBlur:
         return sample
 
     def apply_augmentation(self, x):
-        """Apply augmentation.
-
-        Args:
-            x: The x.
-        """
         x = Image.fromarray(np.uint8(x))
         x = self.aug(x)
         x = np.array(x, dtype=np.float32)
@@ -611,52 +490,21 @@ class RandomGaussianBlur:
 
 
 class RandomGrayScale(RandomGaussianBlur):
-    """Random gray scale implementation."""
-
     def __init__(self, prob=0.2):
-        """Init.
-
-        Args:
-            prob: The prob.
-        """
         self.aug = TF.RandomGrayscale(p=prob)
 
 
 class RandomColorJitter(RandomGaussianBlur):
-    """Random color jitter implementation."""
-
     def __init__(self, prob=0.8, brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1):
-        """Init.
-
-        Args:
-            prob: The prob.
-            brightness: The brightness.
-            contrast: The contrast.
-            saturation: The saturation.
-            hue: The hue.
-        """
         self.aug = TF.RandomApply([TF.ColorJitter(brightness, contrast, saturation, hue)], p=prob)
 
 
 class SubtractMeanImage:
-    """Subtract mean image implementation."""
-
     def __init__(self, mean, change_channels=False):
-        """Init.
-
-        Args:
-            mean: The mean.
-            change_channels: The change channels.
-        """
         self.mean = mean
         self.change_channels = change_channels
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         for elem in sample.keys():
             if "image" in elem:
                 if self.change_channels:
@@ -665,7 +513,6 @@ class SubtractMeanImage:
         return sample
 
     def __str__(self):
-        """Str."""
         return "SubtractMeanImage" + str(self.mean)
 
 
@@ -673,11 +520,6 @@ class ToTensor:
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         for elem in sample.keys():
             if "meta" in elem:
                 continue
@@ -714,8 +556,6 @@ class ToTensor:
 
 
 class MultiRestrictSize:
-    """Multi restrict size implementation."""
-
     def __init__(
         self,
         max_short_edge=None,
@@ -725,16 +565,6 @@ class MultiRestrictSize:
         align_corners=True,
         max_stride=16,
     ):
-        """Init.
-
-        Args:
-            max_short_edge: The max short edge.
-            max_long_edge: The max long edge.
-            flip: The flip.
-            multi_scale: The multi scale.
-            align_corners: The align corners.
-            max_stride: The max stride.
-        """
         self.max_short_edge = max_short_edge
         self.max_long_edge = max_long_edge
         self.multi_scale = multi_scale
@@ -743,11 +573,6 @@ class MultiRestrictSize:
         self.max_stride = max_stride
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         samples = []
         image = sample["current_img"]
         h, w = image.shape[:2]
@@ -818,14 +643,7 @@ class MultiRestrictSize:
 
 
 class MultiToTensor:
-    """Multi to tensor implementation."""
-
     def __call__(self, samples):
-        """Call.
-
-        Args:
-            samples: The samples.
-        """
         for idx in range(len(samples)):
             sample = samples[idx]
             for elem in sample.keys():

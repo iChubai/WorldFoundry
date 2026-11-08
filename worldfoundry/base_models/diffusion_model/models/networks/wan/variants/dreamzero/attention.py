@@ -13,7 +13,6 @@ try:
     import flash_attn_interface
 
     def is_hopper_gpu():
-        """Is hopper gpu."""
         if not torch.cuda.is_available():
             return False
         device_name = torch.cuda.get_device_name(0).lower()
@@ -154,11 +153,6 @@ def flash_attention(
     b, lq, lk, out_dtype = q.size(0), q.size(1), k.size(1), q.dtype
 
     def half(x):
-        """Half.
-
-        Args:
-            x: The x.
-        """
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # preprocess query
@@ -242,20 +236,6 @@ class AttentionModule(torch.nn.Module):
         dtype: torch.dtype = torch.bfloat16,
         backend: str | None = None,
     ):
-        """Init.
-
-        Args:
-            num_heads: The num heads.
-            head_dim: The head dim.
-            dropout_p: The dropout p.
-            softmax_scale: The softmax scale.
-            q_scale: The q scale.
-            causal: The causal.
-            window_size: The window size.
-            deterministic: The deterministic.
-            dtype: The dtype.
-            backend: The backend.
-        """
         super().__init__()
         if backend is None:
             backend = "torch"
@@ -277,16 +257,6 @@ class AttentionModule(torch.nn.Module):
         if backend == "torch":
 
             def _torch_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-                """Helper function to torch impl.
-
-                Args:
-                    q: The q.
-                    k: The k.
-                    v: The v.
-
-                Returns:
-                    The return value.
-                """
                 out_dtype = q.dtype
                 q = q.transpose(1, 2).to(dtype)
                 k = k.transpose(1, 2).to(dtype)
@@ -310,16 +280,6 @@ class AttentionModule(torch.nn.Module):
         elif backend == "torch_onnx":
 
             def _torch_onnx_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-                """Helper function to torch onnx impl.
-
-                Args:
-                    q: The q.
-                    k: The k.
-                    v: The v.
-
-                Returns:
-                    The return value.
-                """
                 out_dtype = q.dtype
                 # use _worldfoundry_scaled_dot_product_attention for tensorrt export
 
@@ -361,16 +321,6 @@ class AttentionModule(torch.nn.Module):
             )
 
             def _te_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-                """Helper function to te impl.
-
-                Args:
-                    q: The q.
-                    k: The k.
-                    v: The v.
-
-                Returns:
-                    The return value.
-                """
                 out_dtype = q.dtype
                 return self.attn_backend(
                     query_layer=q.to(dtype),
@@ -389,18 +339,6 @@ class AttentionModule(torch.nn.Module):
                 q_lens: torch.Tensor | None,
                 k_lens: torch.Tensor | None,
             ) -> torch.Tensor:
-                """Helper function to flash attn impl.
-
-                Args:
-                    q: The q.
-                    k: The k.
-                    v: The v.
-                    q_lens: The q lens.
-                    k_lens: The k lens.
-
-                Returns:
-                    The return value.
-                """
                 return flash_attention(
                     q=q,
                     k=k,
@@ -430,15 +368,6 @@ class AttentionModule(torch.nn.Module):
         q_lens: torch.Tensor | None = None,
         k_lens: torch.Tensor | None = None,
     ):
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            q_lens: The q lens.
-            k_lens: The k lens.
-        """
         if (
             self.backend == "torch"
             or self.backend == "torch_onnx"

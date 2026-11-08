@@ -84,7 +84,6 @@ def window_partition(x, window_size):
     """
     Args:
         x: (B, D, H, W, C)
-        window_size (tuple[int]): window size
 
     Returns:
         windows: (B*num_windows, window_size*window_size, C)
@@ -108,7 +107,6 @@ def window_reverse(windows, window_size, B, D, H, W):
     """
     Args:
         windows: (B*num_windows, window_size, window_size, C)
-        window_size (tuple[int]): Window size
         H (int): Height of image
         W (int): Width of image
 
@@ -217,7 +215,7 @@ class WindowAttention3D(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x, mask=None, fmask=None, resized_window_size=None):
-        """Forward function.
+        """
         Args:
             x: input features with shape of (num_windows*B, N, C)
             mask: (0/-inf) mask with shape of (num_windows, N, N) or None
@@ -285,7 +283,6 @@ class SwinTransformerBlock3D(nn.Module):
     Args:
         dim (int): Number of input channels.
         num_heads (int): Number of attention heads.
-        window_size (tuple[int]): Window size.
         shift_size (tuple[int]): Shift size for SW-MSA.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
@@ -432,8 +429,7 @@ class SwinTransformerBlock3D(nn.Module):
         return self.drop_path(self.mlp(self.norm2(x)))
 
     def forward(self, x, mask_matrix, resized_window_size=None):
-        """Forward function.
-
+        """
         Args:
             x: Input feature, tensor size (B, D, H, W, C).
             mask_matrix: Attention mask for cyclic shift.
@@ -467,8 +463,7 @@ class PatchMerging(nn.Module):
         self.norm = norm_layer(4 * dim)
 
     def forward(self, x):
-        """Forward function.
-
+        """
         Args:
             x: Input feature, tensor size (B, D, H, W, C).
         """
@@ -590,8 +585,7 @@ class BasicLayer(nn.Module):
             self.downsample = downsample(dim=dim, norm_layer=norm_layer)
 
     def forward(self, x, resized_window_size=None):
-        """Forward function.
-
+        """
         Args:
             x: Input feature, tensor size (B, C, D, H, W).
         """
@@ -643,7 +637,6 @@ class PatchEmbed3D(nn.Module):
             self.norm = None
 
     def forward(self, x):
-        """Forward function."""
         # padding
         _, _, D, H, W = x.size()
         if W % self.patch_size[2] != 0:
@@ -942,7 +935,6 @@ class SwinTransformer3D(nn.Module):
             raise TypeError("pretrained must be a str or None")
 
     def forward(self, x, multi=False, layer=-1, adaptive_window_size=False):
-        """Forward function."""
         if adaptive_window_size:
             resized_window_size = get_adaptive_window_size(self.window_size, x.shape[2:], self.base_x_size)
         else:

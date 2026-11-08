@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> layers -> block.py functionality."""
-
 import os
 from collections.abc import Callable
 from typing import Any
@@ -42,8 +40,6 @@ attn_bias_cache: dict[tuple, Any] = {}
 
 
 class BlockRope(nn.Module):
-    """Block rope implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -63,29 +59,6 @@ class BlockRope(nn.Module):
         qk_norm: bool = False,
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         # print(f"biases: qkv: {qkv_bias}, proj: {proj_bias}, ffn: {ffn_bias}")
         self.norm1 = norm_layer(dim)
@@ -153,37 +126,10 @@ class BlockRope(nn.Module):
         return x
 
     def forward(self, x: Tensor, xpos=None, attn_mask=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            xpos: The xpos.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
-
         def attn_residual_func(x: Tensor) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls1(self.attn(self.norm1(x), xpos=xpos, attn_mask=attn_mask))
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         x = x + attn_residual_func(x)

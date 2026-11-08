@@ -35,12 +35,6 @@ class SmoothedValue:
     """
 
     def __init__(self, window_size=20, fmt=None):
-        """Init.
-
-        Args:
-            window_size: The window size.
-            fmt: The fmt.
-        """
         if fmt is None:
             fmt = "{median:.4f} ({global_avg:.4f})"
         self.deque = deque(maxlen=window_size)
@@ -49,12 +43,6 @@ class SmoothedValue:
         self.fmt = fmt
 
     def update(self, value, n=1):
-        """Update.
-
-        Args:
-            value: The value.
-            n: The n.
-        """
         self.deque.append(value)
         self.count += n
         self.total += value * n
@@ -74,7 +62,6 @@ class SmoothedValue:
 
     @property
     def median(self):
-        """Median."""
         d = torch.tensor(list(self.deque))
         if d.shape[0] == 0:
             return 0
@@ -82,28 +69,23 @@ class SmoothedValue:
 
     @property
     def avg(self):
-        """Avg."""
         d = torch.tensor(list(self.deque), dtype=torch.float32)
         return d.mean().item()
 
     @property
     def global_avg(self):
-        """Global avg."""
         eps = 0.0001 if os.environ.get("SHILONG_AMP", None) == "1" else 1e-06
         return self.total / (self.count + eps)
 
     @property
     def max(self):
-        """Max."""
         return max(self.deque)
 
     @property
     def value(self):
-        """Value."""
         return self.deque[-1]
 
     def __str__(self):
-        """Str."""
         return self.fmt.format(
             median=self.median,
             avg=self.avg,
@@ -259,19 +241,11 @@ def reduce_dict(input_dict, average=True):
 
 
 class MetricLogger:
-    """Metric logger implementation."""
-
     def __init__(self, delimiter="\t"):
-        """Init.
-
-        Args:
-            delimiter: The delimiter.
-        """
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
 
     def update(self, **kwargs):
-        """Update."""
         for k, v in kwargs.items():
             if isinstance(v, torch.Tensor):
                 v = v.item()
@@ -279,11 +253,6 @@ class MetricLogger:
             self.meters[k].update(v)
 
     def __getattr__(self, attr):
-        """Getattr.
-
-        Args:
-            attr: The attr.
-        """
         if attr in self.meters:
             return self.meters[attr]
         if attr in self.__dict__:
@@ -291,7 +260,6 @@ class MetricLogger:
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
     def __str__(self):
-        """Str."""
         loss_str = []
         for name, meter in self.meters.items():
             # print(name, str(meter))
@@ -301,28 +269,13 @@ class MetricLogger:
         return self.delimiter.join(loss_str)
 
     def synchronize_between_processes(self):
-        """Synchronize between processes."""
         for meter in self.meters.values():
             meter.synchronize_between_processes()
 
     def add_meter(self, name, meter):
-        """Add meter.
-
-        Args:
-            name: The name.
-            meter: The meter.
-        """
         self.meters[name] = meter
 
     def log_every(self, iterable, print_freq, header=None, logger=None):
-        """Log every.
-
-        Args:
-            iterable: The iterable.
-            print_freq: The print freq.
-            header: The header.
-            logger: The logger.
-        """
         print_func = print if logger is None else logger.info
 
         i = 0
@@ -396,15 +349,9 @@ class MetricLogger:
 
 
 def get_sha():
-    """Get sha."""
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     def _run(command):
-        """Helper function to run.
-
-        Args:
-            command: The command.
-        """
         return subprocess.check_output(command, cwd=cwd).decode("ascii").strip()
 
     sha = "N/A"
@@ -423,11 +370,6 @@ def get_sha():
 
 
 def collate_fn(batch):
-    """Collate fn.
-
-    Args:
-        batch: The batch.
-    """
     # import ipdb; ipdb.set_trace()
     batch = list(zip(*batch, strict=False))
     batch[0] = nested_tensor_from_tensor_list(batch[0])
@@ -435,11 +377,6 @@ def collate_fn(batch):
 
 
 def _max_by_axis(the_list):
-    """Helper function to max by axis.
-
-    Args:
-        the_list: The the list.
-    """
     # type: (List[List[int]]) -> List[int]
     maxes = the_list[0]
     for sublist in the_list[1:]:
@@ -449,15 +386,7 @@ def _max_by_axis(the_list):
 
 
 class NestedTensor:
-    """Nested tensor implementation."""
-
     def __init__(self, tensors, mask: Tensor | None):
-        """Init.
-
-        Args:
-            tensors: The tensors.
-            mask: The mask.
-        """
         self.tensors = tensors
         self.mask = mask
         if mask == "auto":
@@ -470,7 +399,6 @@ class NestedTensor:
                 raise ValueError(f"tensors dim must be 3 or 4 but {self.tensors.dim()}({self.tensors.shape})")
 
     def imgsize(self):
-        """Imgsize."""
         res = []
         for i in range(self.tensors.shape[0]):
             mask = self.mask[i]
@@ -480,11 +408,6 @@ class NestedTensor:
         return res
 
     def to(self, device):
-        """To.
-
-        Args:
-            device: The device.
-        """
         # type: (Device) -> NestedTensor
         cast_tensor = self.tensors.to(device)
         mask = self.mask
@@ -496,12 +419,6 @@ class NestedTensor:
         return NestedTensor(cast_tensor, cast_mask)
 
     def to_img_list_single(self, tensor, mask):
-        """To img list single.
-
-        Args:
-            tensor: The tensor.
-            mask: The mask.
-        """
         assert tensor.dim() == 3, f"dim of tensor should be 3 but {tensor.dim()}"
         maxH = (~mask).sum(0).max()
         maxW = (~mask).sum(1).max()
@@ -526,29 +443,20 @@ class NestedTensor:
 
     @property
     def device(self):
-        """Device."""
         return self.tensors.device
 
     def decompose(self):
-        """Decompose."""
         return self.tensors, self.mask
 
     def __repr__(self):
-        """Repr."""
         return str(self.tensors)
 
     @property
     def shape(self):
-        """Shape."""
         return {"tensors.shape": self.tensors.shape, "mask.shape": self.mask.shape}
 
 
 def nested_tensor_from_tensor_list(tensor_list: list[Tensor]):
-    """Nested tensor from tensor list.
-
-    Args:
-        tensor_list: The tensor list.
-    """
     # TODO make this more general
     if tensor_list[0].ndim == 3:
         if torchvision._is_tracing():
@@ -577,14 +485,6 @@ def nested_tensor_from_tensor_list(tensor_list: list[Tensor]):
 # nested_tensor_from_tensor_list() that is supported by ONNX tracing.
 @torch.jit.unused
 def _onnx_nested_tensor_from_tensor_list(tensor_list: list[Tensor]) -> NestedTensor:
-    """Helper function to onnx nested tensor from tensor list.
-
-    Args:
-        tensor_list: The tensor list.
-
-    Returns:
-        The return value.
-    """
     max_size = []
     for i in range(tensor_list[0].dim()):
         max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(torch.int64)
@@ -621,7 +521,6 @@ def setup_for_distributed(is_master):
     builtin_print = __builtin__.print
 
     def print(*args, **kwargs):
-        """Print."""
         force = kwargs.pop("force", False)
         if is_master or force:
             builtin_print(*args, **kwargs)
@@ -630,43 +529,33 @@ def setup_for_distributed(is_master):
 
 
 def is_dist_avail_and_initialized():
-    """Is dist avail and initialized."""
     if not dist.is_available():
         return False
     return dist.is_initialized()
 
 
 def get_world_size():
-    """Get world size."""
     if not is_dist_avail_and_initialized():
         return 1
     return dist.get_world_size()
 
 
 def get_rank():
-    """Get rank."""
     if not is_dist_avail_and_initialized():
         return 0
     return dist.get_rank()
 
 
 def is_main_process():
-    """Is main process."""
     return get_rank() == 0
 
 
 def save_on_master(*args, **kwargs):
-    """Save on master."""
     if is_main_process():
         torch.save(*args, **kwargs)
 
 
 def init_distributed_mode(args):
-    """Init distributed mode.
-
-    Args:
-        args: The args.
-    """
     if "WORLD_SIZE" in os.environ and os.environ["WORLD_SIZE"] != "":  # 'RANK' in os.environ and
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ["WORLD_SIZE"])
@@ -770,17 +659,7 @@ def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corne
 
 
 class color_sys:
-    """Color sys implementation."""
-
     def __init__(self, num_colors) -> None:
-        """Init.
-
-        Args:
-            num_colors: The num colors.
-
-        Returns:
-            The return value.
-        """
         self.num_colors = num_colors
         colors = []
         for i in np.arange(0.0, 360.0, 360.0 / num_colors):
@@ -791,21 +670,10 @@ class color_sys:
         self.colors = colors
 
     def __call__(self, idx):
-        """Call.
-
-        Args:
-            idx: The idx.
-        """
         return self.colors[idx]
 
 
 def inverse_sigmoid(x, eps=1e-3):
-    """Inverse sigmoid.
-
-    Args:
-        x: The x.
-        eps: The eps.
-    """
     x = x.clamp(min=0, max=1)
     x1 = x.clamp(min=eps)
     x2 = (1 - x).clamp(min=eps)
@@ -813,11 +681,6 @@ def inverse_sigmoid(x, eps=1e-3):
 
 
 def clean_state_dict(state_dict):
-    """Clean state dict.
-
-    Args:
-        state_dict: The state dict.
-    """
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
         if k[:7] == "module.":

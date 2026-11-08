@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> utils -> geometry.py functionality."""
-
 import torch
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (

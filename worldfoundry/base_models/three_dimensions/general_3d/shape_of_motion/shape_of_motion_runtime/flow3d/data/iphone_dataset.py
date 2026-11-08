@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> iphone_dataset.py functionality."""
-
 import contextlib
 import json
 import os
@@ -35,8 +33,6 @@ from flow3d.transforms import rt_to_mat4
 
 @dataclass
 class iPhoneDataConfig:
-    """I phone data config implementation."""
-
     data_dir: str
     start: int = 0
     end: int = -1
@@ -59,8 +55,6 @@ class iPhoneDataConfig:
 
 
 class iPhoneDataset(BaseDataset):
-    """I phone dataset implementation."""
-
     def __init__(
         self,
         data_dir: str,
@@ -85,22 +79,6 @@ class iPhoneDataset(BaseDataset):
         skip_load_imgs: bool = False,
         **_,
     ):
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            start: The start.
-            end: The end.
-            factor: The factor.
-            split: The split.
-            depth_type: The depth type.
-            camera_type: The camera type.
-            use_median_filter: The use median filter.
-            num_targets_per_frame: The num targets per frame.
-            scene_norm_dict: The scene norm dict.
-            load_from_cache: The load from cache.
-            skip_load_imgs: The skip load imgs.
-        """
         super().__init__()
 
         self.data_dir = data_dir
@@ -278,11 +256,6 @@ class iPhoneDataset(BaseDataset):
             if self.training:
                 # Load normals.
                 def load_normal(frame_name):
-                    """Load normal.
-
-                    Args:
-                        frame_name: The frame name.
-                    """
                     from PIL import Image
 
                     normal = Image.open(osp.join(self.data_dir, f"normal_lotus/{factor}x/{frame_name}.png"))
@@ -315,12 +288,6 @@ class iPhoneDataset(BaseDataset):
 
                 # Load depths.
                 def load_depth(i, frame_name):
-                    """Load depth.
-
-                    Args:
-                        i: The i.
-                        frame_name: The frame name.
-                    """
                     if self.depth_type == "lidar":
                         depth = np.load(
                             osp.join(
@@ -469,83 +436,30 @@ class iPhoneDataset(BaseDataset):
 
     @property
     def num_frames(self) -> int:
-        """Num frames.
-
-        Returns:
-            The return value.
-        """
         return len(self.frame_names)
 
     def __len__(self):
-        """Len."""
         return self.imgs.shape[0]
 
     def get_w2cs(self) -> torch.Tensor:
-        """Get w2cs.
-
-        Returns:
-            The return value.
-        """
         return self.w2cs
 
     def get_Ks(self) -> torch.Tensor:
-        """Get ks.
-
-        Returns:
-            The return value.
-        """
         return self.Ks
 
     def get_image(self, index: int) -> torch.Tensor:
-        """Get image.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         return self.imgs[index]
 
     def get_depth(self, index: int) -> torch.Tensor:
-        """Get depth.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         return self.depths[index]
 
     def get_normal(self, index: int) -> torch.Tensor:
-        """Get normal.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         return self.normals[index]
 
     def get_masks(self, index: int) -> torch.Tensor:
-        """Get masks.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         return self.masks[index]
 
     def get_img_wh(self) -> tuple[int, int]:
-        """Get img wh.
-
-        Returns:
-            The return value.
-        """
         return iio.imread(osp.join(self.data_dir, f"rgb/{self.factor}x/{self.frame_names[0]}.png")).shape[1::-1]
 
     # def get_sam_features(self) -> list[torch.Tensor, tuple[int, int], tuple[int, int]]:
@@ -705,14 +619,6 @@ class iPhoneDataset(BaseDataset):
         )
 
     def get_bkgd_points(self, num_samples: int, **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Get bkgd points.
-
-        Args:
-            num_samples: The num samples.
-
-        Returns:
-            The return value.
-        """
         H, W = self.imgs.shape[1:3]
         grid = torch.stack(
             torch.meshgrid(
@@ -761,19 +667,9 @@ class iPhoneDataset(BaseDataset):
         return bkgd_points, bkgd_point_normals, bkgd_point_colors
 
     def get_video_dataset(self) -> Dataset:
-        """Get video dataset.
-
-        Returns:
-            The return value.
-        """
         return iPhoneDatasetVideoView(self)
 
     def __getitem__(self, index: int):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         if self.training:
             index = np.random.randint(0, self.num_frames)
         data = {
@@ -852,11 +748,6 @@ class iPhoneDataset(BaseDataset):
         return data
 
     def preprocess(self, data):
-        """Preprocess.
-
-        Args:
-            data: The data.
-        """
         return data
 
 
@@ -864,11 +755,6 @@ class iPhoneDatasetKeypointView(Dataset):
     """Return a dataset view of the annotated keypoints."""
 
     def __init__(self, dataset: iPhoneDataset):
-        """Init.
-
-        Args:
-            dataset: The dataset.
-        """
         super().__init__()
         self.dataset = dataset
         assert self.dataset.split == "train"
@@ -889,15 +775,9 @@ class iPhoneDatasetKeypointView(Dataset):
         self.keypoints[..., :2] *= 2.0 / self.dataset.factor
 
     def __len__(self):
-        """Len."""
         return len(self.time_pairs)
 
     def __getitem__(self, index: int):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         ts = self.time_pairs[index]
         return {
             "ts": ts,
@@ -912,26 +792,15 @@ class iPhoneDatasetVideoView(Dataset):
     """Return a dataset view of the video trajectory."""
 
     def __init__(self, dataset: iPhoneDataset):
-        """Init.
-
-        Args:
-            dataset: The dataset.
-        """
         super().__init__()
         self.dataset = dataset
         self.fps = self.dataset.fps
         assert self.dataset.split == "train"
 
     def __len__(self):
-        """Len."""
         return self.dataset.num_frames
 
     def __getitem__(self, index):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         return {
             "frame_names": self.dataset.frame_names[index],
             "ts": index,

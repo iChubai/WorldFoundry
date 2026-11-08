@@ -8,8 +8,6 @@
 # and https://github.com/facebookresearch/co-tracker/tree/main
 
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> track_modules -> utils.py functionality."""
-
 import torch
 import torch.nn.functional as F
 

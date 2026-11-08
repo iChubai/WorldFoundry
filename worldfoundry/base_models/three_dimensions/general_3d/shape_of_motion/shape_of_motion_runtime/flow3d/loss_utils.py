@@ -1,20 +1,9 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> loss_utils.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 
 def masked_mse_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
-    """Masked mse loss.
-
-    Args:
-        pred: The pred.
-        gt: The gt.
-        mask: The mask.
-        normalize: The normalize.
-        quantile: The quantile.
-    """
     if mask is None:
         return trimmed_mse_loss(pred, gt, quantile)
     else:
@@ -51,15 +40,6 @@ def masked_mse_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
 
 
 def masked_l1_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
-    """Masked l1 loss.
-
-    Args:
-        pred: The pred.
-        gt: The gt.
-        mask: The mask.
-        normalize: The normalize.
-        quantile: The quantile.
-    """
     if mask is None:
         return trimmed_l1_loss(pred, gt, quantile)
     else:
@@ -96,15 +76,6 @@ def masked_l1_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
 
 
 def masked_huber_loss(pred, gt, delta, mask=None, normalize=True):
-    """Masked huber loss.
-
-    Args:
-        pred: The pred.
-        gt: The gt.
-        delta: The delta.
-        mask: The mask.
-        normalize: The normalize.
-    """
     if mask is None:
         return F.huber_loss(pred, gt, delta=delta)
     else:
@@ -117,13 +88,6 @@ def masked_huber_loss(pred, gt, delta, mask=None, normalize=True):
 
 
 def trimmed_mse_loss(pred, gt, quantile=0.9):
-    """Trimmed mse loss.
-
-    Args:
-        pred: The pred.
-        gt: The gt.
-        quantile: The quantile.
-    """
     loss = F.mse_loss(pred, gt, reduction="none").mean(dim=-1)
     loss_at_quantile = torch.quantile(loss, quantile)
     trimmed_loss = loss[loss < loss_at_quantile].mean()
@@ -131,13 +95,6 @@ def trimmed_mse_loss(pred, gt, quantile=0.9):
 
 
 def trimmed_l1_loss(pred, gt, quantile=0.9):
-    """Trimmed l1 loss.
-
-    Args:
-        pred: The pred.
-        gt: The gt.
-        quantile: The quantile.
-    """
     loss = F.l1_loss(pred, gt, reduction="none").mean(dim=-1)
     loss_at_quantile = torch.quantile(loss, quantile)
     trimmed_loss = loss[loss < loss_at_quantile].mean()
@@ -165,15 +122,6 @@ def compute_gradient_loss(pred, gt, mask, quantile=0.98):
 
 
 def knn(x: torch.Tensor, k: int) -> tuple[np.ndarray, np.ndarray]:
-    """Knn.
-
-    Args:
-        x: The x.
-        k: The k.
-
-    Returns:
-        The return value.
-    """
     if x.numel() == 0:
         return np.empty((0, 0), dtype=np.float32), np.empty((0, 0), dtype=np.float32)
     with torch.no_grad():
@@ -186,12 +134,6 @@ def knn(x: torch.Tensor, k: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def get_weights_for_procrustes(clusters, visibilities=None):
-    """Get weights for procrustes.
-
-    Args:
-        clusters: The clusters.
-        visibilities: The visibilities.
-    """
     clusters_median = clusters.median(dim=-2, keepdim=True)[0]
     dists2clusters_center = torch.norm(clusters - clusters_median, dim=-1)
     dists2clusters_center /= dists2clusters_center.median(dim=-1, keepdim=True)[0]
@@ -238,11 +180,6 @@ def compute_se3_smoothness_loss(
 
 
 def compute_accel_loss(transls):
-    """Compute accel loss.
-
-    Args:
-        transls: The transls.
-    """
     accel = 2 * transls[:, 1:-1] - transls[:, :-2] - transls[:, 2:]
     loss = accel.norm(dim=-1).mean()
     return loss

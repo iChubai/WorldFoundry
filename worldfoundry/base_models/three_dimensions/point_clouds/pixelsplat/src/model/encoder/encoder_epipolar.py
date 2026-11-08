@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> encoder_epipolar.py functionality."""
-
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -22,8 +20,6 @@ from .epipolar.epipolar_transformer import EpipolarTransformer, EpipolarTransfor
 
 @dataclass
 class OpacityMappingCfg:
-    """Opacity mapping cfg implementation."""
-
     initial: float
     final: float
     warm_up: int
@@ -31,8 +27,6 @@ class OpacityMappingCfg:
 
 @dataclass
 class EncoderEpipolarCfg:
-    """Encoder epipolar cfg implementation."""
-
     name: Literal["epipolar"]
     d_feature: int
     num_monocular_samples: int
@@ -51,8 +45,6 @@ class EncoderEpipolarCfg:
 
 
 class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
-    """Encoder epipolar implementation."""
-
     backbone: Backbone
     backbone_projection: nn.Sequential
     epipolar_transformer: EpipolarTransformer | None
@@ -62,14 +54,6 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
     high_resolution_skip: nn.Sequential
 
     def __init__(self, cfg: EncoderEpipolarCfg) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-
-        Returns:
-            The return value.
-        """
         super().__init__(cfg)
 
         self.backbone = get_backbone(cfg.backbone, 3)
@@ -114,15 +98,6 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
         pdf: Float[Tensor, " *batch"],
         global_step: int,
     ) -> Float[Tensor, " *batch"]:
-        """Map pdf to opacity.
-
-        Args:
-            pdf: The pdf.
-            global_step: The global step.
-
-        Returns:
-            The return value.
-        """
         # https://www.desmos.com/calculator/opvwti3ba9
 
         # Figure out the exponent.
@@ -140,17 +115,6 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
         deterministic: bool = False,
         visualization_dump: dict | None = None,
     ) -> Gaussians:
-        """Forward.
-
-        Args:
-            context: The context.
-            global_step: The global step.
-            deterministic: The deterministic.
-            visualization_dump: The visualization dump.
-
-        Returns:
-            The return value.
-        """
         device = context["image"].device
         b, v, _, h, w = context["image"].shape
 
@@ -250,21 +214,7 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
         )
 
     def get_data_shim(self) -> DataShim:
-        """Get data shim.
-
-        Returns:
-            The return value.
-        """
-
         def data_shim(batch: BatchedExample) -> BatchedExample:
-            """Data shim.
-
-            Args:
-                batch: The batch.
-
-            Returns:
-                The return value.
-            """
             batch = apply_patch_shim(
                 batch,
                 patch_size=self.cfg.epipolar_transformer.self_attention.patch_size
@@ -282,6 +232,5 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
 
     @property
     def sampler(self):
-        """Sampler."""
         # hack to make the visualizer work
         return self.epipolar_transformer.epipolar_sampler

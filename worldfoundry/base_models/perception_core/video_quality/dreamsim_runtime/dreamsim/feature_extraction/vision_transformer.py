@@ -153,8 +153,6 @@ class PatchEmbed(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    """Vision Transformer"""
-
     def __init__(
         self,
         img_size=[224],

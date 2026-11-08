@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> scene_render.py functionality."""
-
 import contextlib
 from pathlib import Path
 
@@ -136,36 +134,12 @@ def render_interpolated_video(
     effect_type: int = 2,
     save_mode: str = "split",
 ) -> None:
-    """Render interpolated video.
-
-    Args:
-        gs_renderer: The gs renderer.
-        splats: The splats.
-        camtoworlds: The camtoworlds.
-        intrinsics: The intrinsics.
-        hw: The hw.
-        out_path: The out path.
-        interp_per_pair: The interp per pair.
-        loop_reverse: The loop reverse.
-        effects: The effects.
-        effect_type: The effect type.
-        save_mode: The save mode.
-
-    Returns:
-        The return value.
-    """
     # camtoworlds: [B, S, 4, 4], intrinsics: [B, S, 3, 3]
     b, s, _, _ = camtoworlds.shape
     h, w = hw
 
     # Build interpolated trajectory
     def build_interpolated_traj(index, nums):
-        """Build interpolated traj.
-
-        Args:
-            index: The index.
-            nums: The nums.
-        """
         exts, ints = [], []
         tmp_camtoworlds = camtoworlds[:, index]
         tmp_intrinsics = intrinsics[:, index]
@@ -215,12 +189,6 @@ def render_interpolated_video(
 
     # Build wobble trajectory
     def build_wobble_traj(nums, delta):
-        """Build wobble traj.
-
-        Args:
-            nums: The nums.
-            delta: The delta.
-        """
         assert s == 1
         t = torch.linspace(0, 1, nums, dtype=torch.float32, device=camtoworlds.device)
         t = (torch.cos(torch.pi * (t + 1)) + 1) / 2
@@ -412,14 +380,6 @@ def render_interpolated_video(
     depths = torch.cat(rendered_depths, dim=1)[0, ..., 0]  # [N, H, W]
 
     def depth_vis(d: torch.Tensor) -> torch.Tensor:
-        """Depth vis.
-
-        Args:
-            d: The d.
-
-        Returns:
-            The return value.
-        """
         valid = d > 0
         near = d[valid].float().quantile(0.01).log() if valid.any() else torch.tensor(0.0, device=d.device)
         far = d.flatten().float().quantile(0.99).log()
@@ -445,12 +405,6 @@ def render_interpolated_video(
             raise ValueError("save_mode must be 'both' or 'split'")
 
     def _make_video(frames, path):
-        """Helper function to make video.
-
-        Args:
-            frames: The frames.
-            path: The path.
-        """
         video = torch.stack(frames).clamp(0, 1)  # [N, 3, H, W]
         video = video.permute(0, 2, 3, 1)  # [N, H, W, 3] for video encoding
         video = (video * 255).to(torch.uint8).cpu().numpy()

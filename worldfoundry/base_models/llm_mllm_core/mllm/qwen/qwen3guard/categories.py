@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen3guard -> categories.py functionality."""
-
 UNSAFE_CATEGORIES = {
     "S1": "Violent",
     "S2": "Non-violent Illegal Acts",

@@ -14,8 +14,6 @@
 #         https://github.com/naver-ai/rope-vit
 
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> rope.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -297,15 +295,6 @@ class WanRotaryPosEmbed(nn.Module):
         theta: float = 10000.0,
         fhw_dim: tuple[int, int, int] | None = [20, 22, 22],
     ):
-        """Init.
-
-        Args:
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            max_seq_len: The max seq len.
-            theta: The theta.
-            fhw_dim: The fhw dim.
-        """
         super().__init__()
 
         self.attention_head_dim = attention_head_dim  # 注意力头的总维度

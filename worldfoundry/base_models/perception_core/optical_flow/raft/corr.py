@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> raft -> corr.py functionality."""
-
 import torch
 import torch.nn.functional as F
 
@@ -13,17 +11,7 @@ except BaseException:
 
 
 class CorrBlock:
-    """Corr block implementation."""
-
     def __init__(self, fmap1, fmap2, num_levels=4, radius=4):
-        """Init.
-
-        Args:
-            fmap1: The fmap1.
-            fmap2: The fmap2.
-            num_levels: The num levels.
-            radius: The radius.
-        """
         self.num_levels = num_levels
         self.radius = radius
         self.corr_pyramid = []
@@ -40,11 +28,6 @@ class CorrBlock:
             self.corr_pyramid.append(corr)
 
     def __call__(self, coords):
-        """Call.
-
-        Args:
-            coords: The coords.
-        """
         r = self.radius
         coords = coords.permute(0, 2, 3, 1)
         batch, h1, w1, _ = coords.shape
@@ -69,12 +52,6 @@ class CorrBlock:
 
     @staticmethod
     def corr(fmap1, fmap2):
-        """Corr.
-
-        Args:
-            fmap1: The fmap1.
-            fmap2: The fmap2.
-        """
         batch, dim, ht, wd = fmap1.shape
         fmap1 = fmap1.view(batch, dim, ht * wd)
         fmap2 = fmap2.view(batch, dim, ht * wd)
@@ -85,19 +62,8 @@ class CorrBlock:
 
 
 class AltCudaCorr(torch.autograd.Function):
-    """Alt cuda corr implementation."""
-
     @staticmethod
     def forward(ctx, fmap1, fmap2_i, coords, r):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            fmap1: The fmap1.
-            fmap2_i: The fmap2 i.
-            coords: The coords.
-            r: The r.
-        """
         ctx.save_for_backward(fmap1, fmap2_i, coords)
         ctx.r = r
         (corr,) = alt_cuda_corr.forward(fmap1, fmap2_i, coords, r)
@@ -106,12 +72,6 @@ class AltCudaCorr(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, corr_grad):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            corr_grad: The corr grad.
-        """
         fmap1, fmap2_i, coords = ctx.saved_tensors
         corr_grad = corr_grad.contiguous()
         fmap1_grad, fmap2_grad, coords_grad = alt_cuda_corr.backward(fmap1, fmap2_i, coords, corr_grad, ctx.r)
@@ -119,17 +79,7 @@ class AltCudaCorr(torch.autograd.Function):
 
 
 class AlternateCorrBlock:
-    """Alternate corr block implementation."""
-
     def __init__(self, fmap1, fmap2, num_levels=4, radius=4):
-        """Init.
-
-        Args:
-            fmap1: The fmap1.
-            fmap2: The fmap2.
-            num_levels: The num levels.
-            radius: The radius.
-        """
         self.num_levels = num_levels
         self.radius = radius
 
@@ -140,11 +90,6 @@ class AlternateCorrBlock:
             self.pyramid.append((fmap1, fmap2))
 
     def __call__(self, coords):
-        """Call.
-
-        Args:
-            coords: The coords.
-        """
         coords = coords.permute(0, 2, 3, 1)
         B, H, W, _ = coords.shape
         dim = self.pyramid[0][0].shape[1]

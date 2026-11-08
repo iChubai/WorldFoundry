@@ -1,33 +1,16 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> generate_video_tool -> lib -> multi_Perspec2Equirec.py functionality."""
-
 import cv2
 import lib.Perspec2Equirec as P2E
 import numpy as np
 
 
 class Perspective:
-    """Perspective implementation."""
-
     def __init__(self, img_array, F_T_P_array):
-        """Init.
-
-        Args:
-            img_array: The img array.
-            F_T_P_array: The f t p array.
-        """
-
         assert len(img_array) == len(F_T_P_array)
 
         self.img_array = img_array
         self.F_T_P_array = F_T_P_array
 
     def GetEquirec(self, height, width):
-        """Getequirec.
-
-        Args:
-            height: The height.
-            width: The width.
-        """
         #
         # THETA is left/right angle, PHI is up/down angle, both in degree
         #

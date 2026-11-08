@@ -62,8 +62,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         )
 
     def build_reduce_layer(self, idx: int) -> nn.Module:
-        """build reduce layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -84,8 +83,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         return layer
 
     def build_upsample_layer(self, idx: int) -> nn.Module:
-        """build upsample layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -100,8 +98,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -130,8 +127,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
             return nn.Sequential(layer0, layer1)
 
     def build_downsample_layer(self, idx: int) -> nn.Module:
-        """build downsample layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -148,8 +144,7 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         )
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -165,7 +160,6 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         )
 
     def build_out_layer(self, *args, **kwargs) -> nn.Module:
-        """build out layer."""
         return nn.Identity()
 
     def init_weights(self):
@@ -236,8 +230,7 @@ class YOLOv6CSPRepPAFPN(YOLOv6RepPAFPN):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -269,8 +262,7 @@ class YOLOv6CSPRepPAFPN(YOLOv6RepPAFPN):
             return nn.Sequential(layer0, layer1)
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -340,8 +332,7 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -370,8 +361,7 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
             return nn.Sequential(layer0, layer1)
 
     def build_upsample_layer(self, idx: int) -> nn.Module:
-        """build upsample layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -387,7 +377,6 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
         )
 
     def forward(self, inputs: list[torch.Tensor]) -> tuple:
-        """Forward function."""
         assert len(inputs) == len(self.in_channels) + 1
         # reduce layers
         reduce_outs = [inputs[0]]
@@ -479,8 +468,7 @@ class YOLOv6CSPRepBiPAFPN(YOLOv6RepBiPAFPN):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:
@@ -512,8 +500,7 @@ class YOLOv6CSPRepBiPAFPN(YOLOv6RepBiPAFPN):
             return nn.Sequential(layer0, layer1)
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
         Returns:

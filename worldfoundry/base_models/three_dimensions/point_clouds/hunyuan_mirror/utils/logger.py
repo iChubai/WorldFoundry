@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> logger.py functionality."""
-
 import logging
 from collections.abc import Mapping
 

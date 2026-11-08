@@ -161,7 +161,6 @@ class BatchTaskAlignedAssigner(nn.Module):
             pad_bbox_flag (Tensor): Ground truth bbox mask,
                 1 means bbox, 0 means no bbox,
                 shape(batch_size, num_gt, 1)
-            batch_size (int): Batch size.
             num_gt (int): Number of ground truth.
         Returns:
             pos_mask (Tensor): Possible mask,
@@ -210,7 +209,6 @@ class BatchTaskAlignedAssigner(nn.Module):
                 shape(batch_size, num_gt, 1)
             gt_bboxes (Tensor): Ground true bboxes,
                 shape(batch_size, num_gt, 4)
-            batch_size (int): Batch size.
             num_gt (int): Number of ground truth.
         Returns:
             alignment_metrics (Tensor): Align metric,
@@ -280,7 +278,6 @@ class BatchTaskAlignedAssigner(nn.Module):
                 shape(batch_size, num_priors)
             fg_mask_pre_prior (Tensor): Force ground truth matching mask,
                 shape(batch_size, num_priors)
-            batch_size (int): Batch size.
             num_gt (int): Number of ground truth.
         Returns:
             assigned_labels (Tensor): Assigned labels,

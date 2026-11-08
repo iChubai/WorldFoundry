@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> mesh.py functionality."""
-
 from typing import *
 
 import torch
@@ -840,8 +838,7 @@ def laplacian_smooth_mesh(vertices: Tensor, faces: Tensor, weight: str = "unifor
 
 
 def taubin_smooth_mesh(vertices: Tensor, faces: Tensor, lambda_: float = 0.5, mu_: float = -0.51) -> Tensor:
-    """Taubin smooth mesh
-
+    """
     ## Parameters
         vertices (Tensor): _description_
         faces (Tensor): _description_

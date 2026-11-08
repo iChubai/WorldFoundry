@@ -15,15 +15,6 @@ from torch import broadcast_tensors, nn
 
 
 def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0, device=None):
-    """Init t xy.
-
-    Args:
-        end_x: The end x.
-        end_y: The end y.
-        scale: The scale.
-        offset: The offset.
-        device: The device.
-    """
     t = torch.arange(end_x * end_y, dtype=torch.float32, device=device)
     t_x = (t % end_x).float()
     t_y = torch.div(t, end_x, rounding_mode="floor").float()
@@ -39,17 +30,6 @@ def compute_axial_cis(
     offset: int = 0,
     device=None,
 ):
-    """Compute axial cis.
-
-    Args:
-        dim: The dim.
-        end_x: The end x.
-        end_y: The end y.
-        theta: The theta.
-        scale_pos: The scale pos.
-        offset: The offset.
-        device: The device.
-    """
     freqs_x = 1.0 / (theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim))
     freqs_y = 1.0 / (theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim))
 
@@ -62,12 +42,6 @@ def compute_axial_cis(
 
 
 def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
-    """Reshape for broadcast.
-
-    Args:
-        freqs_cis: The freqs cis.
-        x: The x.
-    """
     ndim = x.ndim
     assert 0 <= 1 < ndim
     assert freqs_cis.shape == (x.shape[-2], x.shape[-1])
@@ -81,14 +55,6 @@ def apply_rotary_enc(
     freqs_cis: torch.Tensor,
     repeat_freqs_k: bool = False,
 ):
-    """Apply rotary enc.
-
-    Args:
-        xq: The xq.
-        xk: The xk.
-        freqs_cis: The freqs cis.
-        repeat_freqs_k: The repeat freqs k.
-    """
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2)) if xk.shape[-2] != 0 else None
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
@@ -105,14 +71,6 @@ def apply_rotary_enc(
 
 
 def complex_mult(xq_real, xq_imag, freqs_cis_real, freqs_cis_imag):
-    """Complex mult.
-
-    Args:
-        xq_real: The xq real.
-        xq_imag: The xq imag.
-        freqs_cis_real: The freqs cis real.
-        freqs_cis_imag: The freqs cis imag.
-    """
     # Compute the real part of the product
     real_part = xq_real * freqs_cis_real - xq_imag * freqs_cis_imag
     # Compute the imaginary part of the product
@@ -128,15 +86,6 @@ def apply_rotary_enc_real(
     freqs_cis_imag: torch.Tensor,
     repeat_freqs_k: bool = False,
 ):
-    """Apply rotary enc real.
-
-    Args:
-        xq: The xq.
-        xk: The xk.
-        freqs_cis_real: The freqs cis real.
-        freqs_cis_imag: The freqs cis imag.
-        repeat_freqs_k: The repeat freqs k.
-    """
     assert xk is not None
     assert xk.shape[-2] != 0
 
@@ -159,22 +108,11 @@ def apply_rotary_enc_real(
 
 # rotary embedding helper functions
 def broadcat(tensors, dim=-1):
-    """Broadcat.
-
-    Args:
-        tensors: The tensors.
-        dim: The dim.
-    """
     broadcasted_tensors = broadcast_tensors(*tensors)
     return torch.cat(broadcasted_tensors, dim=dim)
 
 
 def rotate_half(x: torch.Tensor):
-    """Rotate half.
-
-    Args:
-        x: The x.
-    """
     x = rearrange(x, "... (d r) -> ... d r", r=2)
     x1, x2 = x.unbind(dim=-1)
     x = torch.stack((-x2, x1), dim=-1)
@@ -182,8 +120,6 @@ def rotate_half(x: torch.Tensor):
 
 
 class VisionRotaryEmbeddingVE(nn.Module):
-    """Vision rotary embedding ve implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -192,15 +128,6 @@ class VisionRotaryEmbeddingVE(nn.Module):
         theta: float = 10000.0,
         offset: int = 1,  # specific to VE
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            seq_len: The seq len.
-            pt_seq_len: The pt seq len.
-            theta: The theta.
-            offset: The offset.
-        """
         super().__init__()
 
         freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
@@ -223,9 +150,4 @@ class VisionRotaryEmbeddingVE(nn.Module):
         self.register_buffer("freqs_sin", freqs_sin)
 
     def forward(self, t: torch.Tensor):
-        """Forward.
-
-        Args:
-            t: The t.
-        """
         return t * self.freqs_cos + rotate_half(t) * self.freqs_sin

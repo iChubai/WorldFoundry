@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> dvlt -> runtime.py functionality."""
-
 from __future__ import annotations
 
 import importlib.util
@@ -39,11 +37,6 @@ class DVLTRuntime:
         max_points: int = 500_000,
         confidence_percentile: float = 50.0,
     ) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         self.model_id = model_id
         self.model_name = self.DISPLAY_NAME
         self.generation_type = "3d_reconstruction"
@@ -108,53 +101,25 @@ class DVLTRuntime:
 
     @staticmethod
     def runtime_root() -> Path:
-        """Runtime root.
-
-        Returns:
-            The return value.
-        """
         return dvlt_runtime_root()
 
     @classmethod
     def runtime_src(cls) -> Path:
-        """Runtime src.
-
-        Returns:
-            The return value.
-        """
         return cls.runtime_root() / "src"
 
     @classmethod
     def _activate_runtime_path(cls) -> None:
-        """Helper function to activate runtime path.
-
-        Returns:
-            The return value.
-        """
         runtime_src = str(cls.runtime_src())
         if runtime_src not in sys.path:
             sys.path.insert(0, runtime_src)
 
     @staticmethod
     def _is_local_reference(value: str) -> bool:
-        """Helper function to is local reference.
-
-        Args:
-            value: The value.
-
-        Returns:
-            The return value.
-        """
         path = Path(value).expanduser()
         return value.startswith(("/", ".", "~")) or path.suffix in {".pt", ".pth", ".safetensors"}
 
     @staticmethod
     def _missing_dependencies() -> list[str]:
-        """Helper function to missing dependencies.
-
-        Returns:
-            The return value.
-        """
         modules = (
             "accelerate",
             "cv2",
@@ -171,16 +136,6 @@ class DVLTRuntime:
         return [module for module in modules if importlib.util.find_spec(module) is None]
 
     def _blocked_reason(self, images: Any, video: Any, allow_cpu: bool) -> str | None:
-        """Helper function to blocked reason.
-
-        Args:
-            images: The images.
-            video: The video.
-            allow_cpu: The allow cpu.
-
-        Returns:
-            The return value.
-        """
         if images is None and video is None:
             return "DVLT requires image paths, an image directory, PIL images, or a video path."
         if not allow_cpu and not str(self.device).startswith("cuda"):
@@ -208,16 +163,6 @@ class DVLTRuntime:
 
     @staticmethod
     def _load_frames(source: Any, load_sequence: Any, image_cls: Any) -> tuple[str, list[Any]]:
-        """Helper function to load frames.
-
-        Args:
-            source: The source.
-            load_sequence: The load sequence.
-            image_cls: The image cls.
-
-        Returns:
-            The return value.
-        """
         if isinstance(source, (str, Path)):
             return load_sequence(source)
         if hasattr(source, "convert"):
@@ -240,15 +185,6 @@ class DVLTRuntime:
 
     @staticmethod
     def _artifact_path(output_path: str | Path | None, sequence_name: str) -> Path:
-        """Helper function to artifact path.
-
-        Args:
-            output_path: The output path.
-            sequence_name: The sequence name.
-
-        Returns:
-            The return value.
-        """
         if output_path is None:
             return (Path.cwd() / f"{sequence_name}_dvlt.glb").resolve()
         path = Path(output_path).expanduser()
@@ -364,11 +300,6 @@ class DVLTRuntime:
 
 
 def load_runtime(*args: Any, **kwargs: Any) -> DVLTRuntime:
-    """Load runtime.
-
-    Returns:
-        The return value.
-    """
     return DVLTRuntime.from_pretrained(*args, **kwargs)
 
 

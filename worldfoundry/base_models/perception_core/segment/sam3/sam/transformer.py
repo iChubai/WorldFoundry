@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> sam -> transformer.py functionality."""
-
 import math
 from functools import partial
 
@@ -20,8 +18,6 @@ from worldfoundry.core.nn.blocks.layers import SamMLPBlock
 
 
 class TwoWayTransformer(nn.Module):
-    """Two way transformer implementation."""
-
     def __init__(
         self,
         depth: int,
@@ -113,8 +109,6 @@ class TwoWayTransformer(nn.Module):
 
 
 class TwoWayAttentionBlock(nn.Module):
-    """Two way attention block implementation."""
-
     def __init__(
         self,
         embedding_dim: int,
@@ -153,17 +147,6 @@ class TwoWayAttentionBlock(nn.Module):
         self.skip_first_layer_pe = skip_first_layer_pe
 
     def forward(self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor) -> tuple[Tensor, Tensor]:
-        """Forward.
-
-        Args:
-            queries: The queries.
-            keys: The keys.
-            query_pe: The query pe.
-            key_pe: The key pe.
-
-        Returns:
-            The return value.
-        """
         # Self attention block
         if self.skip_first_layer_pe:
             queries = self.self_attn(q=queries, k=queries, v=queries)
@@ -210,19 +193,6 @@ class Attention(nn.Module):
         kv_in_dim: int | None = None,
         use_fa3: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            embedding_dim: The embedding dim.
-            num_heads: The num heads.
-            downsample_rate: The downsample rate.
-            dropout: The dropout.
-            kv_in_dim: The kv in dim.
-            use_fa3: The use fa3.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.embedding_dim = embedding_dim
         self.kv_in_dim = kv_in_dim if kv_in_dim is not None else embedding_dim
@@ -239,43 +209,16 @@ class Attention(nn.Module):
         self.dropout_p = dropout
 
     def _separate_heads(self, x: Tensor, num_heads: int) -> Tensor:
-        """Helper function to separate heads.
-
-        Args:
-            x: The x.
-            num_heads: The num heads.
-
-        Returns:
-            The return value.
-        """
         b, n, c = x.shape
         x = x.reshape(b, n, num_heads, c // num_heads)
         return x.transpose(1, 2)  # B x N_heads x N_tokens x C_per_head
 
     def _recombine_heads(self, x: Tensor) -> Tensor:
-        """Helper function to recombine heads.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         b, n_heads, n_tokens, c_per_head = x.shape
         x = x.transpose(1, 2)
         return x.reshape(b, n_tokens, n_heads * c_per_head)  # B x N_tokens x C
 
     def forward(self, q: Tensor, k: Tensor, v: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-
-        Returns:
-            The return value.
-        """
         # Input projections
         q = self.q_proj(q)
         k = self.k_proj(k)
@@ -315,7 +258,6 @@ class RoPEAttention(Attention):
         use_rope_real=False,
         **kwargs,
     ):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.use_rope_real = use_rope_real
         self.compute_cis = partial(compute_axial_cis, dim=self.internal_dim // self.num_heads, theta=rope_theta)
@@ -327,17 +269,6 @@ class RoPEAttention(Attention):
         self.rope_k_repeat = rope_k_repeat
 
     def forward(self, q: Tensor, k: Tensor, v: Tensor, num_k_exclude_rope: int = 0) -> Tensor:
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            num_k_exclude_rope: The num k exclude rope.
-
-        Returns:
-            The return value.
-        """
         # Input projections
         q = self.q_proj(q)
         k = self.k_proj(k)

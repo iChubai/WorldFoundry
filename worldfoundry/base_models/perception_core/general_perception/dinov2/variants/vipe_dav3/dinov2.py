@@ -8,8 +8,6 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> vipe_dav3 -> dinov2.py functionality."""
-
 import torch.nn as nn
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav3.vision_transformer import (
@@ -33,16 +31,6 @@ class DinoV2(nn.Module):
         cat_token: bool = True,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            name: The name.
-            out_layers: The out layers.
-            alt_start: The alt start.
-            qknorm_start: The qknorm start.
-            rope_start: The rope start.
-            cat_token: The cat token.
-        """
         super().__init__()
         assert name in {"vits", "vitb", "vitl", "vitg"}
         self.name = name
@@ -70,11 +58,6 @@ class DinoV2(nn.Module):
         )
 
     def forward(self, x, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.pretrained.get_intermediate_layers(
             x,
             self.out_layers,

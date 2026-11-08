@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> utils -> grid.py functionality."""
-
 import torch
 
 

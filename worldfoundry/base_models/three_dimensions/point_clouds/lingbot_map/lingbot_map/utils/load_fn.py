@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> load_fn.py functionality."""
-
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
@@ -143,11 +141,6 @@ def load_and_preprocess_images(
     to_tensor = TF.ToTensor()
 
     def _load_one(idx_path):
-        """Helper function to load one.
-
-        Args:
-            idx_path: The idx path.
-        """
         i, image_path = idx_path
         img = Image.open(image_path)
         # Honor EXIF orientation (Sony / iPhone portrait shots store landscape

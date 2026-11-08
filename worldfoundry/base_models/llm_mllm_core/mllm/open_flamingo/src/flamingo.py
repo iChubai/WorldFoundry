@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> open_flamingo -> src -> flamingo.py functionality."""
-
 import torch
 from einops import rearrange
 from torch import nn
@@ -16,8 +14,6 @@ from .utils import apply_with_stopping_condition
 
 
 class Flamingo(nn.Module):
-    """Flamingo implementation."""
-
     def __init__(
         self,
         vision_encoder: nn.Module,
@@ -290,11 +286,6 @@ class Flamingo(nn.Module):
 
         # set up clip_grad_norm_ function
         def clip_grad_norm_(max_norm):
-            """Clip grad norm.
-
-            Args:
-                max_norm: The max norm.
-            """
             self.perceiver.clip_grad_norm_(max_norm)
             for layer in self.lang_encoder.gated_cross_attn_layers:
                 if layer is not None:

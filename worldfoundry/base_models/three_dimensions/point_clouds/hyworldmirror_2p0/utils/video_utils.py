@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> utils -> video_utils.py functionality."""
-
 import csv
 import json
 import os
@@ -177,12 +175,6 @@ def _save_old_metadata(save_directory, frame_indices, fps):
 
 
 def _resize_for_flow(frame, long_edge=320):
-    """Helper function to resize for flow.
-
-    Args:
-        frame: The frame.
-        long_edge: The long edge.
-    """
     height, width = frame.shape[:2]
     long_side = max(height, width)
     if long_side <= long_edge:
@@ -206,7 +198,6 @@ def _resize_for_clarity(frame, long_edge=480):
 
 
 def _create_dis_flow():
-    """Helper function to create dis flow."""
     if hasattr(cv2, "optflow") and hasattr(cv2.optflow, "createOptFlow_DIS"):
         return cv2.optflow.createOptFlow_DIS(cv2.optflow.DISOPTICAL_FLOW_PRESET_ULTRAFAST)
     if hasattr(cv2, "DISOpticalFlow_create"):
@@ -227,12 +218,6 @@ def _calculate_histogram(image):
 
 
 def _calculate_hist_similarity(hist1, hist2):
-    """Helper function to calculate hist similarity.
-
-    Args:
-        hist1: The hist1.
-        hist2: The hist2.
-    """
     return cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
 
 
@@ -400,11 +385,6 @@ def _compute_clarity_parallel(all_frames):
     """Parallel clarity calculation."""
 
     def _compute(item):
-        """Helper function to compute.
-
-        Args:
-            item: The item.
-        """
         window_idx, frame_idx, frame = item
         clarity_frame = _resize_for_clarity(frame, long_edge=480)
         gray = cv2.cvtColor(clarity_frame, cv2.COLOR_BGR2GRAY)
@@ -452,11 +432,6 @@ def _save_frames_parallel(target_to_best, candidate_indices, save_directory):
             path_frame_list.append((os.path.join(save_directory, f"frame_{len(path_frame_list):06d}.jpg"), best_frame))
 
     def _write(p_f):
-        """Helper function to write.
-
-        Args:
-            p_f: The p f.
-        """
         cv2.imwrite(p_f[0], p_f[1])
         return p_f[0]
 

@@ -35,31 +35,11 @@ def _self_attn_inf_mem_forward(
     memory_kv=None,
     capture_sink_qkv=False,
 ):
-    """Helper function to self attn inf mem forward.
-
-    Args:
-        x: The x.
-        seq_lens: The seq lens.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        block_mask: The block mask.
-        kv_cache: The kv cache.
-        current_start: The current start.
-        cache_start: The cache start.
-        sink_recache_after_switch: The sink recache after switch.
-        memory_kv: The memory kv.
-        capture_sink_qkv: The capture sink qkv.
-    """
     b, s, n, d = (*x.shape[:2], self.num_heads, self.head_dim)
     if cache_start is None:
         cache_start = current_start
 
     def qkv_fn(_x):
-        """Qkv fn.
-
-        Args:
-            _x: The x.
-        """
         q = self.norm_q(self.q(_x)).view(b, s, n, d)
         k = self.norm_k(self.k(_x)).view(b, s, n, d)
         v = self.v(_x).view(b, s, n, d)
@@ -251,25 +231,6 @@ def _block_inf_mem_forward(
     memory_kv=None,
     capture_sink_qkv=False,
 ):
-    """Helper function to block inf mem forward.
-
-    Args:
-        x: The x.
-        e: The e.
-        seq_lens: The seq lens.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        context: The context.
-        context_lens: The context lens.
-        block_mask: The block mask.
-        kv_cache: The kv cache.
-        crossattn_cache: The crossattn cache.
-        current_start: The current start.
-        cache_start: The cache start.
-        sink_recache_after_switch: The sink recache after switch.
-        memory_kv: The memory kv.
-        capture_sink_qkv: The capture sink qkv.
-    """
     num_frames, frame_seqlen = (e.shape[1], x.shape[1] // e.shape[1])
     e_mod = (self.modulation.unsqueeze(1) + e).chunk(6, dim=2)
     self_attn_result = self.self_attn(
@@ -308,13 +269,6 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
     def enable_infmem(
         self, relative_rope: bool = True, relative_rope_pmax: int = 21, num_frame_per_block_attr: int = 3
     ):
-        """Enable infmem.
-
-        Args:
-            relative_rope: The relative rope.
-            relative_rope_pmax: The relative rope pmax.
-            num_frame_per_block_attr: The num frame per block attr.
-        """
         self.relative_rope = relative_rope
         self.relative_rope_pmax = relative_rope_pmax
         self.num_frame_per_block_attr = num_frame_per_block_attr
@@ -333,11 +287,6 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
         _FIRST_BULK_LOGGED["flag"] = False
 
     def setup_memory_encoder(self, memory_kwargs):
-        """Setup memory encoder.
-
-        Args:
-            memory_kwargs: The memory kwargs.
-        """
         from .query_memory import QueryMemoryEncoder
 
         if isinstance(memory_kwargs, dict):
@@ -346,16 +295,10 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
 
     @property
     def num_frame_per_block(self):
-        """Num frame per block."""
         return getattr(self, "_num_frame_per_block", 1)
 
     @num_frame_per_block.setter
     def num_frame_per_block(self, value):
-        """Num frame per block.
-
-        Args:
-            value: The value.
-        """
         self._num_frame_per_block = int(value)
         for blk in self.blocks:
             blk.self_attn.num_frame_per_block_attr = int(value)
@@ -374,21 +317,6 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
         cache_start: int = 0,
         sink_recache_after_switch=False,
     ):
-        """Helper function to forward inference.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-            seq_len: The seq len.
-            clip_fea: The clip fea.
-            y: The y.
-            kv_cache: The kv cache.
-            crossattn_cache: The crossattn cache.
-            current_start: The current start.
-            cache_start: The cache start.
-            sink_recache_after_switch: The sink recache after switch.
-        """
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
         device = self.patch_embedding.weight.device
@@ -446,14 +374,7 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **_kwargs):
-                """Custom forward."""
                 return module(*inputs, **_kwargs)
 
             return custom_forward

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> model -> v2.py functionality."""
-
 import warnings
 from numbers import Number
 from pathlib import Path
@@ -49,18 +47,6 @@ class MoGeModel_v2(nn.Module):
         num_tokens_range: List[int] = [1200, 3600],
         **deprecated_kwargs,
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            neck: The neck.
-            points_head: The points head.
-            mask_head: The mask head.
-            normal_head: The normal head.
-            scale_head: The scale head.
-            remap_output: The remap output.
-            num_tokens_range: The num tokens range.
-        """
         super().__init__()
         if deprecated_kwargs:
             warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}", stacklevel=1)
@@ -81,38 +67,18 @@ class MoGeModel_v2(nn.Module):
 
     @property
     def device(self) -> torch.device:
-        """Device.
-
-        Returns:
-            The return value.
-        """
         return next(self.parameters()).device
 
     @property
     def dtype(self) -> torch.dtype:
-        """Dtype.
-
-        Returns:
-            The return value.
-        """
         return next(self.parameters()).dtype
 
     @property
     def onnx_compatible_mode(self) -> bool:
-        """Onnx compatible mode.
-
-        Returns:
-            The return value.
-        """
         return getattr(self, "_onnx_compatible_mode", False)
 
     @onnx_compatible_mode.setter
     def onnx_compatible_mode(self, value: bool):
-        """Onnx compatible mode.
-
-        Args:
-            value: The value.
-        """
         self._onnx_compatible_mode = value
         self.encoder.onnx_compatible_mode = value
 
@@ -155,11 +121,9 @@ class MoGeModel_v2(nn.Module):
         return model
 
     def init_weights(self):
-        """Init weights."""
         self.encoder.init_weights()
 
     def enable_gradient_checkpointing(self):
-        """Enable gradient checkpointing."""
         self.encoder.enable_gradient_checkpointing()
         self.neck.enable_gradient_checkpointing()
         for head in ["points_head", "normal_head", "mask_head"]:
@@ -167,18 +131,9 @@ class MoGeModel_v2(nn.Module):
                 getattr(self, head).enable_gradient_checkpointing()
 
     def enable_pytorch_native_sdpa(self):
-        """Enable pytorch native sdpa."""
         self.encoder.enable_pytorch_native_sdpa()
 
     def _remap_points(self, points: torch.Tensor) -> torch.Tensor:
-        """Helper function to remap points.
-
-        Args:
-            points: The points.
-
-        Returns:
-            The return value.
-        """
         if self.remap_output == "linear":
             pass
         elif self.remap_output == "sinh":
@@ -195,15 +150,6 @@ class MoGeModel_v2(nn.Module):
         return points
 
     def forward(self, image: torch.Tensor, num_tokens: Union[int, torch.LongTensor]) -> Dict[str, torch.Tensor]:
-        """Forward.
-
-        Args:
-            image: The image.
-            num_tokens: The num tokens.
-
-        Returns:
-            The return value.
-        """
         batch_size, _, img_h, img_w = image.shape
         device, dtype = image.device, image.dtype
 

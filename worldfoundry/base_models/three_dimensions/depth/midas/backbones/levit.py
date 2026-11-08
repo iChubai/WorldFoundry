@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> backbones -> levit.py functionality."""
-
 import numpy as np
 import timm
 import torch
@@ -9,12 +7,6 @@ from .utils import Transpose, activations, get_activation
 
 
 def forward_levit(pretrained, x):
-    """Forward levit.
-
-    Args:
-        pretrained: The pretrained.
-        x: The x.
-    """
     pretrained.model.forward_features(x)
 
     layer_1 = pretrained.activations["1"]
@@ -29,13 +21,6 @@ def forward_levit(pretrained, x):
 
 
 def _make_levit_backbone(model, hooks=[3, 11, 21], patch_grid=[14, 14]):
-    """Helper function to make levit backbone.
-
-    Args:
-        model: The model.
-        hooks: The hooks.
-        patch_grid: The patch grid.
-    """
     pretrained = nn.Module()
 
     pretrained.model = model
@@ -66,18 +51,6 @@ class ConvTransposeNorm(nn.Sequential):
     """
 
     def __init__(self, in_chs, out_chs, kernel_size=1, stride=1, pad=0, dilation=1, groups=1, bn_weight_init=1):
-        """Init.
-
-        Args:
-            in_chs: The in chs.
-            out_chs: The out chs.
-            kernel_size: The kernel size.
-            stride: The stride.
-            pad: The pad.
-            dilation: The dilation.
-            groups: The groups.
-            bn_weight_init: The bn weight init.
-        """
         super().__init__()
         self.add_module(
             "c", nn.ConvTranspose2d(in_chs, out_chs, kernel_size, stride, pad, dilation, groups, bias=False)
@@ -88,7 +61,6 @@ class ConvTransposeNorm(nn.Sequential):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         c, bn = self._modules.values()
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = c.weight * w[:, None, None, None]
@@ -122,12 +94,6 @@ def stem_b4_transpose(in_chs, out_chs, activation):
 
 
 def _make_pretrained_levit_384(pretrained, hooks=None):
-    """Helper function to make pretrained levit 384.
-
-    Args:
-        pretrained: The pretrained.
-        hooks: The hooks.
-    """
     model = timm.create_model("levit_384", pretrained=pretrained)
 
     hooks = [3, 11, 21] if hooks == None else hooks

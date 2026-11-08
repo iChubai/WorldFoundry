@@ -75,15 +75,6 @@ def resolve_recursive(
     config: Any,
     resolver: Callable[[DictConfig | ListConfig], DictConfig | ListConfig],
 ) -> Any:
-    """Resolve recursive.
-
-    Args:
-        config: The config.
-        resolver: The resolver.
-
-    Returns:
-        The return value.
-    """
     config = resolver(config)
     if isinstance(config, DictConfig):
         for k in config.keys():
@@ -161,11 +152,6 @@ def create_dataset(path: str, *args, **kwargs) -> Any:
 
 
 def to_dict_recursive(config_obj):
-    """To dict recursive.
-
-    Args:
-        config_obj: The config obj.
-    """
     if isinstance(config_obj, DictConfig):
         return {k: to_dict_recursive(v) for k, v in config_obj.items()}
     elif isinstance(config_obj, ListConfig):

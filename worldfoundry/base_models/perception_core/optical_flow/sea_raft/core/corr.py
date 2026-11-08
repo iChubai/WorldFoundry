@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> corr.py functionality."""
-
 import torch
 import torch.nn.functional as F
 
@@ -15,14 +13,6 @@ except BaseException:
 
 
 def coords_feature(fmap, b, x, y):
-    """Coords feature.
-
-    Args:
-        fmap: The fmap.
-        b: The b.
-        x: The x.
-        y: The y.
-    """
     H, W = fmap.shape[2:]
     mask = (x >= 0) & (x < W) & (y >= 0) & (y < H)
     b = b.long()
@@ -48,15 +38,6 @@ def bilinear_sampling(fmap, coords):
 
 
 def coords_corr(corr, idx, b, x, y):
-    """Coords corr.
-
-    Args:
-        corr: The corr.
-        idx: The idx.
-        b: The b.
-        x: The x.
-        y: The y.
-    """
     # corr: [N, H, W, H, W]
     H, W = corr.shape[-2:]
     mask = (x >= 0) & (x < W) & (y >= 0) & (y < H)
@@ -91,16 +72,7 @@ def bilinear_sampling_corr(corr, idx1, idx2):
 
 
 class CorrBlock:
-    """Corr block implementation."""
-
     def __init__(self, fmap1, fmap2, args):
-        """Init.
-
-        Args:
-            fmap1: The fmap1.
-            fmap2: The fmap2.
-            args: The args.
-        """
         self.num_levels = args.corr_levels
         self.radius = args.corr_radius
         self.args = args
@@ -114,12 +86,6 @@ class CorrBlock:
             self.corr_pyramid.append(corr)
 
     def __call__(self, coords, dilation=None):
-        """Call.
-
-        Args:
-            coords: The coords.
-            dilation: The dilation.
-        """
         r = self.radius
         coords = coords.permute(0, 2, 3, 1)
         batch, h1, w1, _ = coords.shape
@@ -149,13 +115,6 @@ class CorrBlock:
 
     @staticmethod
     def corr(fmap1, fmap2, num_head):
-        """Corr.
-
-        Args:
-            fmap1: The fmap1.
-            fmap2: The fmap2.
-            num_head: The num head.
-        """
         batch, dim, h1, w1 = fmap1.shape
         h2, w2 = fmap2.shape[2:]
         fmap1 = fmap1.view(batch, num_head, dim // num_head, h1 * w1)

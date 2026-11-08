@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> models -> streamvggt.py functionality."""
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -17,24 +15,12 @@ from .aggregator import Aggregator
 
 @dataclass
 class StreamVGGTOutput(ModelOutput):
-    """Stream vggt output implementation."""
-
     ress: list[dict] | None = None
     views: torch.Tensor | None = None
 
 
 class StreamVGGT(nn.Module, PyTorchModelHubMixin):
-    """Stream vggt implementation."""
-
     def __init__(self, img_size=518, patch_size=14, embed_dim=1024, total_budget=1200000):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            total_budget: The total budget.
-        """
         super().__init__()
 
         self.aggregator = Aggregator(img_size=img_size, patch_size=patch_size, embed_dim=embed_dim)
@@ -53,16 +39,6 @@ class StreamVGGT(nn.Module, PyTorchModelHubMixin):
         use_cache=False,
         past_frame_idx=0,
     ):
-        """Forward.
-
-        Args:
-            views: The views.
-            query_points: The query points.
-            history_info: The history info.
-            past_key_values: The past key values.
-            use_cache: The use cache.
-            past_frame_idx: The past frame idx.
-        """
         images = torch.stack([view["img"] for view in views], dim=0).permute(1, 0, 2, 3, 4)  # B S C H W
 
         # If without batch dimension, add it
@@ -137,16 +113,6 @@ class StreamVGGT(nn.Module, PyTorchModelHubMixin):
         cache_results: bool = True,
         total_budget=None,
     ):
-        """Inference.
-
-        Args:
-            frames: The frames.
-            query_points: The query points.
-            past_key_values: The past key values.
-            frame_writer: The frame writer.
-            cache_results: The cache results.
-            total_budget: The total budget.
-        """
         past_key_values = [None] * self.aggregator.depth
         past_key_values_camera = [None] * self.camera_head.trunk_depth
         total_budget = self.total_budget

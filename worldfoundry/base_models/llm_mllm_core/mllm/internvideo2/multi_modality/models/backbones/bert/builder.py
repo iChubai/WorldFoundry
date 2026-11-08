@@ -12,12 +12,10 @@ def build_bert(model_config, pretrain, checkpoint, encoder_width=None):
     """build text encoder.
 
     Args:
-        model_config (dict): model config.
         pretrain (bool): Whether to do pretrain or finetuning.
         checkpoint (bool): whether to do gradient_checkpointing.
 
     Returns: TODO
-
     """
     current_dir = str(package_data_path("models", "runtime", "configs", "internvideo2", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path
@@ -74,12 +72,10 @@ def build_bert_decoder(model_config, checkpoint, only_fusion_layer=True):
     """build text decoder the same as the multimodal encoder.
 
     Args:
-        model_config (dict): model config.
         pretrain (bool): Whether to do pretrain or finetuning.
         checkpoint (bool): whether to do gradient_checkpointing.
 
     Returns: TODO
-
     """
     current_dir = str(package_data_path("models", "runtime", "configs", "internvideo2", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path
@@ -104,12 +100,10 @@ def build_lm_bert_decoder(model_config, checkpoint):
     """build text decoder the same as the multimodal encoder.
 
     Args:
-        model_config (dict): model config.
         pretrain (bool): Whether to do pretrain or finetuning.
         checkpoint (bool): whether to do gradient_checkpointing.
 
     Returns: TODO
-
     """
     current_dir = str(package_data_path("models", "runtime", "configs", "internvideo2", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path

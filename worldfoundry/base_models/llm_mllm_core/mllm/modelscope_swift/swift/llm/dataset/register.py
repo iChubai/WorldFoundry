@@ -88,8 +88,7 @@ def get_dataset_list():
 
 
 def register_dataset(dataset_meta: DatasetMeta, *, exist_ok: bool = False) -> None:
-    """Register dataset
-
+    """
     Args:
         dataset_meta: The `DatasetMeta` info of the dataset.
         exist_ok: If the dataset id exists, raise error or update it.

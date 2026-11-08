@@ -1,7 +1,5 @@
 # Copied from https://github.com/kq-chen/qwen-vl-utils
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_vl_utils.py functionality."""
-
 from __future__ import annotations
 
 import base64
@@ -83,15 +81,6 @@ def smart_resize(
 
 
 def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACTOR) -> Image.Image:
-    """Fetch image.
-
-    Args:
-        ele: The ele.
-        size_factor: The size factor.
-
-    Returns:
-        The return value.
-    """
     image = ele["image"] if "image" in ele else ele["image_url"]
     image_obj = None
     if isinstance(image, Image.Image):
@@ -210,11 +199,6 @@ def _read_video_torchvision(
 
 
 def is_decord_available() -> bool:
-    """Is decord available.
-
-    Returns:
-        The return value.
-    """
     import importlib.util
 
     return importlib.util.find_spec("decord") is not None
@@ -261,11 +245,6 @@ FORCE_QWENVL_VIDEO_READER = os.getenv("FORCE_QWENVL_VIDEO_READER", None)
 
 @lru_cache(maxsize=1)
 def get_video_reader_backend() -> str:
-    """Get video reader backend.
-
-    Returns:
-        The return value.
-    """
     if FORCE_QWENVL_VIDEO_READER is not None:
         video_reader_backend = FORCE_QWENVL_VIDEO_READER
     elif is_decord_available():
@@ -277,15 +256,6 @@ def get_video_reader_backend() -> str:
 
 
 def fetch_video(ele: dict, image_factor: int = IMAGE_FACTOR) -> torch.Tensor | list[Image.Image]:
-    """Fetch video.
-
-    Args:
-        ele: The ele.
-        image_factor: The image factor.
-
-    Returns:
-        The return value.
-    """
     if isinstance(ele["video"], str):
         video_reader_backend = get_video_reader_backend()
         video = VIDEO_READER_BACKENDS[video_reader_backend](ele)
@@ -332,14 +302,6 @@ def fetch_video(ele: dict, image_factor: int = IMAGE_FACTOR) -> torch.Tensor | l
 
 
 def extract_vision_info(conversations: list[dict] | list[list[dict]]) -> list[dict]:
-    """Extract vision info.
-
-    Args:
-        conversations: The conversations.
-
-    Returns:
-        The return value.
-    """
     vision_infos = []
     if isinstance(conversations[0], dict):
         conversations = [conversations]
@@ -360,14 +322,6 @@ def extract_vision_info(conversations: list[dict] | list[list[dict]]) -> list[di
 def process_vision_info(
     conversations: list[dict] | list[list[dict]],
 ) -> tuple[list[Image.Image] | None, list[torch.Tensor | list[Image.Image]] | None]:
-    """Process vision info.
-
-    Args:
-        conversations: The conversations.
-
-    Returns:
-        The return value.
-    """
     vision_infos = extract_vision_info(conversations)
     ## Read images or videos
     image_inputs = []

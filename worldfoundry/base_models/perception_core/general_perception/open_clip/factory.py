@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> factory.py functionality."""
-
 import json
 import logging
 import os
@@ -56,16 +54,10 @@ _MODEL_CONFIGS = {}  # directory (model_name: config) of model architecture conf
 
 
 def _natural_key(string_):
-    """Helper function to natural key.
-
-    Args:
-        string_: The string.
-    """
     return [int(s) if s.isdigit() else s for s in re.split(r"(\d+)", string_.lower())]
 
 
 def _rescan_model_configs():
-    """Helper function to rescan model configs."""
     global _MODEL_CONFIGS
 
     config_ext = (".json",)
@@ -192,13 +184,6 @@ def load_state_dict(
     device="cpu",
     weights_only=True,
 ):
-    """Load state dict.
-
-    Args:
-        checkpoint_path: The checkpoint path.
-        device: The device.
-        weights_only: The weights only.
-    """
     # Check if safetensors or not and load weights accordingly
     if str(checkpoint_path).endswith(".safetensors"):
         from safetensors.torch import load_file
@@ -220,15 +205,6 @@ def load_checkpoint(
     weights_only: bool = True,
     device="cpu",
 ):
-    """Load checkpoint.
-
-    Args:
-        model: The model.
-        checkpoint_path: The checkpoint path.
-        strict: The strict.
-        weights_only: The weights only.
-        device: The device.
-    """
     if Path(checkpoint_path).suffix in (".npz", ".npy"):
         # Separate path loading numpy big_vision (SigLIP) weights
         from worldfoundry.base_models.perception_core.general_perception.open_clip.convert import (
@@ -274,14 +250,6 @@ def load_checkpoint(
 
 
 def _find_checkpoint_in_dir(dir_path: Path) -> str | None:
-    """Helper function to find checkpoint in dir.
-
-    Args:
-        dir_path: The dir path.
-
-    Returns:
-        The return value.
-    """
     checkpoints = list(dir_path.glob("*.safetensors")) + list(dir_path.glob("*.bin")) + list(dir_path.glob("*.pth"))
     if not checkpoints:
         return None
@@ -866,14 +834,6 @@ def get_tokenizer(
 def _set_model_device_and_precision(
     model: torch.nn.Module, device: torch.device, precision: str, is_timm_model: bool = False
 ):
-    """Helper function to set model device and precision.
-
-    Args:
-        model: The model.
-        device: The device.
-        precision: The precision.
-        is_timm_model: The is timm model.
-    """
     if precision in ("fp16", "bf16"):
         dtype = torch.float16 if "fp16" in precision else torch.bfloat16
         # manual mixed precision that matches original OpenAI behaviour
@@ -886,11 +846,6 @@ def _set_model_device_and_precision(
             model.to(device=device, dtype=dtype)
 
             def _convert_ln(m):
-                """Helper function to convert ln.
-
-                Args:
-                    m: The m.
-                """
                 if isinstance(m, LayerNormFp32):
                     m.weight.data = m.weight.data.to(torch.float32)
                     m.bias.data = m.bias.data.to(torch.float32)

@@ -1,6 +1,4 @@
 # Auto-generated for lazy_import_all_from
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> _transforms.__all__.py functionality."""
-
 __all__ = [
     "angle_between",
     "axis_angle_to_matrix",

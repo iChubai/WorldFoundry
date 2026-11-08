@@ -76,22 +76,12 @@ class SAM3VLBackbone(nn.Module):
         return output
 
     def forward_image(self, samples: torch.Tensor):
-        """Forward image.
-
-        Args:
-            samples: The samples.
-        """
         return activation_ckpt_wrapper(self._forward_image_no_act_ckpt)(
             samples=samples,
             act_ckpt_enable=self.act_ckpt_whole_vision_backbone and self.training,
         )
 
     def _forward_image_no_act_ckpt(self, samples):
-        """Helper function to forward image no act ckpt.
-
-        Args:
-            samples: The samples.
-        """
         # Forward through backbone
         sam3_features, sam3_pos, sam2_features, sam2_pos = self.vision_backbone.forward(samples)
         if self.scalp > 0:
@@ -127,14 +117,6 @@ class SAM3VLBackbone(nn.Module):
         return output
 
     def forward_text(self, captions, input_boxes=None, additional_text=None, device="cuda"):
-        """Forward text.
-
-        Args:
-            captions: The captions.
-            input_boxes: The input boxes.
-            additional_text: The additional text.
-            device: The device.
-        """
         return activation_ckpt_wrapper(self._forward_text_no_ack_ckpt)(
             captions=captions,
             input_boxes=input_boxes,
@@ -150,14 +132,6 @@ class SAM3VLBackbone(nn.Module):
         additional_text=None,
         device="cuda",
     ):
-        """Helper function to forward text no ack ckpt.
-
-        Args:
-            captions: The captions.
-            input_boxes: The input boxes.
-            additional_text: The additional text.
-            device: The device.
-        """
         output = {}
 
         # Forward through text_encoder
@@ -190,14 +164,6 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
     """VL backbone with triple-head vision (sam3, interactive, propagation) + text encoder."""
 
     def __init__(self, visual, text, compile_visual=False, scalp=0):
-        """Init.
-
-        Args:
-            visual: The visual.
-            text: The text.
-            compile_visual: The compile visual.
-            scalp: The scalp.
-        """
         super().__init__(visual=visual, text=text, compile_visual=compile_visual, scalp=scalp)
         assert isinstance(self.vision_backbone, Sam3TriViTDetNeck), (
             f"Expected vision backbone to be of type Sam3TriViTDetNeck, got {type(self.vision_backbone)}"
@@ -211,11 +177,6 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
         need_interactive_out: bool = True,
         need_propagation_out: bool = True,
     ):
-        """Forward image.
-
-        Args:
-            samples: The samples.
-        """
         return activation_ckpt_wrapper(self._forward_image_tri_no_act_ckpt)(
             samples=samples,
             need_sam3_out=need_sam3_out,
@@ -231,14 +192,6 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
         need_interactive_out=True,
         need_propagation_out=True,
     ):
-        """Helper function to forward image tri no act ckpt.
-
-        Args:
-            samples: The samples.
-            need_sam3_out: The need sam3 out.
-            need_interactive_out: The need interactive out.
-            need_propagation_out: The need propagation out.
-        """
         (
             sam3_features,
             sam3_pos,
@@ -297,8 +250,6 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
 
 
 class VisionOnly(nn.Module):
-    """Vision only implementation."""
-
     def __init__(
         self,
         visual,
@@ -310,18 +261,6 @@ class VisionOnly(nn.Module):
         compile_mode: str | None = None,
         compile_extra_args: dict | None = None,
     ):
-        """Init.
-
-        Args:
-            visual: The visual.
-            n_features: The n features.
-            forward_in_chunk_for_eval: The forward in chunk for eval.
-            eval_chunk_size: The eval chunk size.
-            eval_cast_to_cpu: The eval cast to cpu.
-            scalp: The scalp.
-            compile_mode: The compile mode.
-            compile_extra_args: The compile extra args.
-        """
         super().__init__()
         self.vision_backbone = visual
         self.should_compile = compile_mode is not None or compile_extra_args is not None
@@ -335,7 +274,6 @@ class VisionOnly(nn.Module):
         self.scalp = scalp
 
     def _compile(self):
-        """Helper function to compile."""
         if self.should_compile and not self.compiled:
             self.vision_backbone = torch.compile(
                 self.vision_backbone, mode=self.compile_mode, **self.compile_extra_args
@@ -343,11 +281,6 @@ class VisionOnly(nn.Module):
             self.compiled = True
 
     def forward_image(self, samples):
-        """Forward image.
-
-        Args:
-            samples: The samples.
-        """
         self._compile()
         # Forward through backbone
         features, pos = self.vision_backbone(samples)
@@ -373,14 +306,6 @@ class VisionOnly(nn.Module):
         additional_text=None,
         device="cuda",
     ):
-        """Forward text.
-
-        Args:
-            captions: The captions.
-            input_boxes: The input boxes.
-            additional_text: The additional text.
-            device: The device.
-        """
         bs = len(captions)
         output = {
             "language_features": torch.zeros((0, bs, self.n_features), device=device),
@@ -390,8 +315,6 @@ class VisionOnly(nn.Module):
 
 
 class TriHeadVisionOnly(VisionOnly):
-    """Tri head vision only implementation."""
-
     def __init__(
         self,
         visual,
@@ -403,18 +326,6 @@ class TriHeadVisionOnly(VisionOnly):
         compile_mode: str | None = None,
         compile_extra_args: dict | None = None,
     ):
-        """Init.
-
-        Args:
-            visual: The visual.
-            n_features: The n features.
-            forward_in_chunk_for_eval: The forward in chunk for eval.
-            eval_chunk_size: The eval chunk size.
-            eval_cast_to_cpu: The eval cast to cpu.
-            scalp: The scalp.
-            compile_mode: The compile mode.
-            compile_extra_args: The compile extra args.
-        """
         super().__init__(
             visual=visual,
             n_features=n_features,
@@ -437,11 +348,6 @@ class TriHeadVisionOnly(VisionOnly):
         need_interactive_out: bool = True,
         need_propagation_out: bool = True,
     ):
-        """Forward image.
-
-        Args:
-            samples: The samples.
-        """
         self._compile()
         # Forward through backbone
         (

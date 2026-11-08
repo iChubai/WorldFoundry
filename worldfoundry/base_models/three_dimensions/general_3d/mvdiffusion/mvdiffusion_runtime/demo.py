@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> demo.py functionality."""
-
 import argparse
 import os
 
@@ -32,12 +30,6 @@ def _checkpoint_path(filename):
 
 
 def load_mvdiffusion_state_dict(model, checkpoint_path):
-    """Load mvdiffusion state dict.
-
-    Args:
-        model: The model.
-        checkpoint_path: The checkpoint path.
-    """
     state_dict = torch.load(
         checkpoint_path,
         map_location="cpu",
@@ -63,15 +55,6 @@ def load_mvdiffusion_state_dict(model, checkpoint_path):
 
 
 def get_K_R(FOV, THETA, PHI, height, width):
-    """Get k r.
-
-    Args:
-        FOV: The fov.
-        THETA: The theta.
-        PHI: The phi.
-        height: The height.
-        width: The width.
-    """
     f = 0.5 * width * 1 / np.tan(0.5 * FOV / 180.0 * np.pi)
     cx = (width - 1) / 2.0
     cy = (height - 1) / 2.0
@@ -93,7 +76,6 @@ def get_K_R(FOV, THETA, PHI, height, width):
 
 
 def parse_args():
-    """Parse args."""
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "--text",
@@ -109,12 +91,6 @@ def parse_args():
 
 
 def resize_and_center_crop(img, size):
-    """Resize and center crop.
-
-    Args:
-        img: The img.
-        size: The size.
-    """
     H, W, _ = img.shape
     if H == W:
         img = cv2.resize(img, (size, size))

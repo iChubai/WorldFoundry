@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> utils -> gs_effects.py functionality."""
-
 from math import floor
 
 import numpy as np
@@ -106,11 +104,6 @@ class GSEffects:
         f = f * f * (3.0 - 2.0 * f)
 
         def get_hash_offset(offset):
-            """Get hash offset.
-
-            Args:
-                offset: The offset.
-            """
             return GSEffects.hash(i.to(p.dtype) + offset)
 
         n000 = get_hash_offset(torch.tensor([0, 0, 0], dtype=p.dtype, device=p.device))
@@ -146,13 +139,6 @@ class GSEffects:
         return rot
 
     def twister(self, pos, scale, t):
-        """Twister.
-
-        Args:
-            pos: The pos.
-            scale: The scale.
-            t: The t.
-        """
         h = self.hash(pos)[:, 0:1] + 0.1
         pos_xz_len = self.length_xz(pos)
         s = self.smoothstep(0.0, 8.0, t * t * 0.1 - pos_xz_len * 2.0 + 2.0)[:, None]
@@ -164,13 +150,6 @@ class GSEffects:
         return pos_new, s**4
 
     def rain(self, pos, scale, t):
-        """Rain.
-
-        Args:
-            pos: The pos.
-            scale: The scale.
-            t: The t.
-        """
         h = self.hash(pos)
         pos_xz_len = self.length_xz(pos)
         s = self.smoothstep(0.0, 5.0, t * t * 0.1 - pos_xz_len * 2.0 + 1.0) ** (0.5 + h[:, 0])

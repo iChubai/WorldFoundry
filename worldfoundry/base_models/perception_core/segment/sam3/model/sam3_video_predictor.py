@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_video_predictor.py functionality."""
-
 import datetime
 import multiprocessing as mp
 import os
@@ -37,19 +35,6 @@ class Sam3VideoPredictor(Sam3BasePredictor):
         apply_temporal_disambiguation: bool = True,
         compile: bool = False,
     ):
-        """Init.
-
-        Args:
-            checkpoint_path: The checkpoint path.
-            bpe_path: The bpe path.
-            has_presence_token: The has presence token.
-            geo_encoder_use_img_cross_attn: The geo encoder use img cross attn.
-            strict_state_dict_loading: The strict state dict loading.
-            async_loading_frames: The async loading frames.
-            video_loader_type: The video loader type.
-            apply_temporal_disambiguation: The apply temporal disambiguation.
-            compile: The compile.
-        """
         super().__init__()
         self.async_loading_frames = async_loading_frames
         self.video_loader_type = video_loader_type
@@ -116,7 +101,6 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
     """Sam video predictor multi gpu implementation."""
 
     def __init__(self, *model_args, gpus_to_use=None, **model_kwargs):
-        """Init."""
         if gpus_to_use is None:
             # if not specified, use only the current GPU by default
             gpus_to_use = [torch.cuda.current_device()]
@@ -234,7 +218,6 @@ class Sam3VideoPredictorMultiGPU(Sam3VideoPredictor):
         logger.info(f"spawned {world_size - 1} worker processes")
 
     def _start_nccl_process_group(self):
-        """Helper function to start nccl process group."""
         rank = int(os.environ["RANK"])
         world_size = int(os.environ["WORLD_SIZE"])
         if world_size == 1:

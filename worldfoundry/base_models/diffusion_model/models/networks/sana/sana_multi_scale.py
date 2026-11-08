@@ -93,21 +93,6 @@ class SanaMSBlock(nn.Module):
         cross_attn_type="flash",
         **block_kwargs,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            drop_path: The drop path.
-            qk_norm: The qk norm.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_type: The cross attn type.
-        """
         super().__init__()
         self.hidden_size = hidden_size
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -186,16 +171,6 @@ class SanaMSBlock(nn.Module):
         self.scale_shift_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
 
     def forward(self, x, y, t, mask=None, HW=None, image_rotary_emb=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            HW: The hw.
-            image_rotary_emb: The image rotary emb.
-        """
         B, N, C = x.shape
 
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
@@ -259,43 +234,6 @@ class SanaMS(Sana):
         timestep_norm_scale_factor=1.0,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            input_size: The input size.
-            patch_size: The patch size.
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            class_dropout_prob: The class dropout prob.
-            learn_sigma: The learn sigma.
-            pred_sigma: The pred sigma.
-            drop_path: The drop path.
-            caption_channels: The caption channels.
-            pe_interpolation: The pe interpolation.
-            config: The config.
-            model_max_length: The model max length.
-            qk_norm: The qk norm.
-            y_norm: The y norm.
-            norm_eps: The norm eps.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            use_pe: The use pe.
-            y_norm_scale_factor: The y norm scale factor.
-            patch_embed_kernel: The patch embed kernel.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_type: The cross attn type.
-            logvar: The logvar.
-            logvar_scale_factor: The logvar scale factor.
-            cfg_embed: The cfg embed.
-            cfg_embed_scale: The cfg embed scale.
-            lr_scale: The lr scale.
-            timestep_norm_scale_factor: The timestep norm scale factor.
-        """
         super().__init__(
             input_size=input_size,
             patch_size=patch_size,
@@ -505,16 +443,10 @@ class SanaMS(Sana):
         return imgs
 
     def initialize(self):
-        """Initialize."""
         super().initialize_weights()
 
         # Initialize transformer layers:
         def _basic_init(module):
-            """Helper function to basic init.
-
-            Args:
-                module: The module.
-            """
             if isinstance(module, nn.Linear):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -547,16 +479,6 @@ class SanaMSCM(SanaMS):
     """SANA-Sprint consistency-model head: same SanaMS graph, log-variance output."""
 
     def forward(self, x, timestep, y, data_info=None, return_logvar=False, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            timestep: The timestep.
-            y: The y.
-            data_info: The data info.
-            return_logvar: The return logvar.
-        """
-
         # TrigFlow --> Flow Transformation
         # the input now is [0, np.pi/2], arctan(N(P_mean, P_std))
         t = torch.sin(timestep) / (torch.cos(timestep) + torch.sin(timestep))
@@ -587,7 +509,6 @@ class SanaMSLinearFFN(SanaMS):
     """SanaMS variant using GLUMBConvLinear in the FFN blocks."""
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         ffn_type = kwargs.pop("ffn_type", "glumbconv_linear")
         if ffn_type != "glumbconv_linear":
             raise ValueError(f"SanaMSLinearFFN expects ffn_type='glumbconv_linear', got {ffn_type!r}")
@@ -600,66 +521,54 @@ class SanaMSLinearFFN(SanaMS):
 
 
 def SanaMS_600M_P1_D28(**kwargs):
-    """Sanams 600m p1 d28."""
     return SanaMS(depth=28, hidden_size=1152, patch_size=1, num_heads=16, **kwargs)
 
 
 def SanaMS_600M_P2_D28(**kwargs):
-    """Sanams 600m p2 d28."""
     return SanaMS(depth=28, hidden_size=1152, patch_size=2, num_heads=16, **kwargs)
 
 
 def SanaMS_600M_P4_D28(**kwargs):
-    """Sanams 600m p4 d28."""
     return SanaMS(depth=28, hidden_size=1152, patch_size=4, num_heads=16, **kwargs)
 
 
 def SanaMS_1600M_P1_D20(**kwargs):
-    """Sanams 1600m p1 d20."""
     # 20 layers, 1648.48M
     return SanaMS(depth=20, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 def SanaMS_1600M_P2_D20(**kwargs):
-    """Sanams 1600m p2 d20."""
     # 28 layers, 1648.48M
     return SanaMS(depth=20, hidden_size=2240, patch_size=2, num_heads=20, **kwargs)
 
 
 def SanaMSLinearFFN_1600M_P1_D20(**kwargs):
-    """Sanamslinearffn 1600m p1 d20."""
     # 20 layers, 1648.48M
     return SanaMSLinearFFN(depth=20, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 def SanaMS_2400M_P1_D30(**kwargs):
-    """Sanams 2400m p1 d30."""
     return SanaMS(depth=30, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 def SanaMS_3200M_P1_D40(**kwargs):
-    """Sanams 3200m p1 d40."""
     return SanaMS(depth=40, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 def SanaMS_4800M_P1_D60(**kwargs):
-    """Sanams 4800m p1 d60."""
     # 60 layers, 4800M
     return SanaMS(depth=60, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 # TrigFlow/sCM model
 def SanaMSCM_600M_P1_D28(**kwargs):
-    """Sanamscm 600m p1 d28."""
     return SanaMSCM(depth=28, hidden_size=1152, patch_size=1, num_heads=16, **kwargs)
 
 
 def SanaMSCM_1600M_P1_D20(**kwargs):
-    """Sanamscm 1600m p1 d20."""
     return SanaMSCM(depth=20, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)
 
 
 def SanaMSCM_2400M_P1_D30(**kwargs):
-    """Sanamscm 2400m p1 d30."""
     # 30 layers, 2400M
     return SanaMSCM(depth=30, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)

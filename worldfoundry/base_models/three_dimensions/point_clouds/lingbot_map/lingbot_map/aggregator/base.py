@@ -103,31 +103,6 @@ class AggregatorBase(nn.Module, ABC):
         use_reentrant: bool = False,
         use_gradient_checkpoint: bool = True,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            block_fn: The block fn.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            qk_norm: The qk norm.
-            init_values: The init values.
-            patch_embed: The patch embed.
-            pretrained_path: The pretrained path.
-            aa_order: The aa order.
-            aa_block_size: The aa block size.
-            rope_freq: The rope freq.
-            disable_global_rope: The disable global rope.
-            use_reentrant: The use reentrant.
-            use_gradient_checkpoint: The use gradient checkpoint.
-        """
         super().__init__()
 
         # Store configuration
@@ -559,8 +534,6 @@ class AggregatorBase(nn.Module, ABC):
         num_frame_per_block: int = 1,
     ) -> tuple[list[torch.Tensor], int]:
         """
-        Forward pass.
-
         Args:
             images: Input images [B, S, 3, H, W] in range [0, 1]
             selected_idx: Which block indices to output (None = all)

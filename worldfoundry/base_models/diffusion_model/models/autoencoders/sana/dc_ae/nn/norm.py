@@ -39,14 +39,6 @@ class LayerNorm2d(nn.LayerNorm):
     """Layer norm d implementation."""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         out = x - torch.mean(x, dim=1, keepdim=True)
         out = out / torch.sqrt(torch.square(out).mean(dim=1, keepdim=True) + self.eps)
         if self.elementwise_affine:
@@ -62,19 +54,10 @@ class TritonRMSNorm2d(nn.LayerNorm):
     """
 
     def zero_out(self):
-        """Zero out."""
         nn.init.constant_(self.weight, 0)
         nn.init.constant_(self.bias, 0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         output = x * torch.rsqrt(x.float().square().mean(dim=1, keepdim=True) + self.eps).to(x.dtype)
         if self.elementwise_affine:
             output = output * self.weight.view(1, -1, 1, 1)
@@ -89,17 +72,6 @@ class RMSNorm2d(nn.Module):
     def __init__(
         self, num_features: int, eps: float = 1e-5, elementwise_affine: bool = True, bias: bool = True
     ) -> None:
-        """Init.
-
-        Args:
-            num_features: The num features.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-            bias: The bias.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.num_features = num_features
         self.eps = eps
@@ -115,14 +87,6 @@ class RMSNorm2d(nn.Module):
             self.register_parameter("bias", None)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = (x / torch.sqrt(torch.square(x.float()).mean(dim=1, keepdim=True) + self.eps)).to(x.dtype)
         if self.elementwise_affine:
             x = x * self.weight.view(1, -1, 1, 1) + self.bias.view(1, -1, 1, 1)
@@ -133,14 +97,6 @@ class RMSNorm3d(RMSNorm2d):
     """Rms norm d implementation."""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = (x / torch.sqrt(torch.square(x.float()).mean(dim=1, keepdim=True) + self.eps)).to(x.dtype)
         if self.elementwise_affine:
             x = x * self.weight.view(1, -1, 1, 1, 1) + self.bias.view(1, -1, 1, 1, 1)
@@ -159,15 +115,6 @@ REGISTERED_NORM_DICT: dict[str, type] = {
 
 
 def build_norm(name="bn2d", num_features=None, **kwargs) -> nn.Module | None:
-    """Build norm.
-
-    Args:
-        name: The name.
-        num_features: The num features.
-
-    Returns:
-        The return value.
-    """
     if name in ["ln", "ln2d", "trms2d"]:
         kwargs["normalized_shape"] = num_features
     else:
@@ -181,15 +128,6 @@ def build_norm(name="bn2d", num_features=None, **kwargs) -> nn.Module | None:
 
 
 def set_norm_eps(model: nn.Module, eps: float | None = None) -> None:
-    """Set norm eps.
-
-    Args:
-        model: The model.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     for m in model.modules():
         if isinstance(m, (nn.GroupNorm, nn.LayerNorm, _BatchNorm)) and eps is not None:
             m.eps = eps

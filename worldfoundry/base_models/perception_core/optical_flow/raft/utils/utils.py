@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> raft -> utils -> utils.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -10,12 +8,6 @@ class InputPadder:
     """Pads images such that dimensions are divisible by 8"""
 
     def __init__(self, dims, mode="sintel"):
-        """Init.
-
-        Args:
-            dims: The dims.
-            mode: The mode.
-        """
         self.ht, self.wd = dims[-2:]
         pad_ht = (((self.ht // 8) + 1) * 8 - self.ht) % 8
         pad_wd = (((self.wd // 8) + 1) * 8 - self.wd) % 8
@@ -25,26 +17,15 @@ class InputPadder:
             self._pad = [pad_wd // 2, pad_wd - pad_wd // 2, 0, pad_ht]
 
     def pad(self, *inputs):
-        """Pad."""
         return [F.pad(x, self._pad, mode="replicate") for x in inputs]
 
     def unpad(self, x):
-        """Unpad.
-
-        Args:
-            x: The x.
-        """
         ht, wd = x.shape[-2:]
         c = [self._pad[2], ht - self._pad[3], self._pad[0], wd - self._pad[1]]
         return x[..., c[0] : c[1], c[2] : c[3]]
 
 
 def forward_interpolate(flow):
-    """Forward interpolate.
-
-    Args:
-        flow: The flow.
-    """
     flow = flow.detach().cpu().numpy()
     dx, dy = flow[0], flow[1]
 
@@ -91,25 +72,11 @@ def bilinear_sampler(img, coords, mode="bilinear", mask=False):
 
 
 def coords_grid(batch, ht, wd, device):
-    """Coords grid.
-
-    Args:
-        batch: The batch.
-        ht: The ht.
-        wd: The wd.
-        device: The device.
-    """
     coords = torch.meshgrid(torch.arange(ht, device=device), torch.arange(wd, device=device), indexing="ij")
     coords = torch.stack(coords[::-1], dim=0).float()
     return coords[None].repeat(batch, 1, 1, 1)
 
 
 def upflow8(flow, mode="bilinear"):
-    """Upflow8.
-
-    Args:
-        flow: The flow.
-        mode: The mode.
-    """
     new_size = (8 * flow.shape[2], 8 * flow.shape[3])
     return 8 * F.interpolate(flow, size=new_size, mode=mode, align_corners=True)

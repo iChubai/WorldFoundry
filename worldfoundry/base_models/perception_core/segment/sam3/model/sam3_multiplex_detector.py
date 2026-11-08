@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_detector.py functionality."""
-
 import os
 
 import torch
@@ -30,7 +28,6 @@ class Sam3MultiplexImageBase(Sam3Image):
         offload_outputs_to_cpu_for_eval: bool = False,
         **kwargs,
     ):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.tracking_score_thresh = tracking_score_thresh
         self.offload_outputs_to_cpu_for_eval = offload_outputs_to_cpu_for_eval
@@ -41,12 +38,6 @@ class Sam3MultiplexImageBase(Sam3Image):
         input: BatchedDatapoint,
         is_inference=False,  # (a dummy parameter not used anymore)
     ):
-        """Forward.
-
-        Args:
-            input: The input.
-            is_inference: The is inference.
-        """
         assert not self.training, "Sam3MultiplexImageBase should only be used in eval mode."
 
         device = self.device
@@ -83,14 +74,6 @@ class Sam3MultiplexImageBase(Sam3Image):
         geometric_prompt: Prompt,
         **kwargs,
     ):
-        """Forward video grounding.
-
-        Args:
-            backbone_out: The backbone out.
-            find_input: The find input.
-            find_target: The find target.
-            geometric_prompt: The geometric prompt.
-        """
         # route this to the image grounding forward method
         out = self.forward_grounding(
             backbone_out=backbone_out,
@@ -118,7 +101,7 @@ class Sam3MultiplexImageBase(Sam3Image):
         return dummy_obj_ids
 
     def _trim_outputs(self, *args, **kwargs):
-        """Helper function to trim outputs."""
+        pass
         # not needed for image-on-video
 
     def _batch_find_inputs(
@@ -261,12 +244,6 @@ class Sam3MultiplexImageBase(Sam3Image):
 
         # Helper function to batch tensors along specified dimension
         def batch_tensors(tensors, dim):
-            """Batch tensors.
-
-            Args:
-                tensors: The tensors.
-                dim: The dim.
-            """
             if tensors[0] is None:
                 return None
             return torch.cat(tensors, dim=dim)
@@ -319,7 +296,6 @@ class Sam3MultiplexDetector(Sam3MultiplexImageBase):
         is_multiplex=False,
         **kwargs,
     ):
-        """Init."""
         super().__init__(*args, **kwargs)
         self.rank = int(os.getenv("RANK", "0"))
         self.world_size = int(os.getenv("WORLD_SIZE", "1"))
@@ -596,11 +572,6 @@ class Sam3MultiplexDetector(Sam3MultiplexImageBase):
             multigpu_buffer[frame_idx_to_save] = frame_buffer
 
     def _gather_tensor(self, x):
-        """Helper function to gather tensor.
-
-        Args:
-            x: The x.
-        """
         if self.world_size == 1:
             return [x], None
 

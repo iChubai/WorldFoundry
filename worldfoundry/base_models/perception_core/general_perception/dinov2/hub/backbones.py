@@ -3,8 +3,6 @@
 # This source code is licensed under the Apache License, Version 2.0
 # found in the LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> hub -> backbones.py functionality."""
-
 from enum import Enum
 
 import torch
@@ -13,8 +11,6 @@ from .utils import _DINOV2_BASE_URL, _make_dinov2_model_name
 
 
 class Weights(Enum):
-    """Weights implementation."""
-
     LVD142M = "LVD142M"
 
 
@@ -33,7 +29,6 @@ def _make_dinov2_model(
     weights: Weights | str = Weights.LVD142M,
     **kwargs,
 ):
-    """Helper function to make dinov2 model."""
     from ..models import vision_transformer as vits
 
     if isinstance(weights, str):
@@ -161,11 +156,6 @@ def dinov2_vitg14_reg(*, pretrained: bool = True, weights: Weights | str = Weigh
 
 
 def DINOv2(model_name: str):
-    """Dinov2.
-
-    Args:
-        model_name: The model name.
-    """
     model_zoo = {
         "vits": ("vit_small", "mlp"),
         "vitb": ("vit_base", "mlp"),

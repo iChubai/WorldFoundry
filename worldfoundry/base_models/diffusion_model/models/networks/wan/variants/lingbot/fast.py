@@ -42,14 +42,6 @@ from .model import (
 
 
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
-    """Causal rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        start_frame: The start frame.
-    """
     n, c = x.size(2), x.size(3) // 2
     if not freqs.is_complex():
         freqs = torch.view_as_complex(freqs.contiguous())
@@ -87,16 +79,6 @@ class CausalWanSelfAttention(nn.Module):
     """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self, dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -299,18 +281,6 @@ class CausalWanAttentionBlock(nn.Module):
     def __init__(
         self, dim, ffn_dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, cross_attn_norm=False, eps=1e-6
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -399,15 +369,6 @@ class CausalWanAttentionBlock(nn.Module):
             crossattn_cache=None,
             cross_attn_first_call=None,
         ):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-                crossattn_cache: The crossattn cache.
-            """
             x = x + self.cross_attn(
                 self.norm3(x),
                 context,
@@ -443,14 +404,6 @@ class CausalHead(nn.Module):
     """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim

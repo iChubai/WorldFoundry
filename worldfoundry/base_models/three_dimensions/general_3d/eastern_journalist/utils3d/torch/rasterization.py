@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> rasterization.py functionality."""
-
 import threading
 from typing import *
 
@@ -37,11 +35,6 @@ class RastContext:
         backend: Literal["cuda", "gl"] = "cuda",
         device: Union[str, torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            nvd_ctx: The nvd ctx.
-        """
         if nvd_ctx is not None:
             self.nvd_ctx = nvd_ctx
             return
@@ -82,8 +75,6 @@ def rasterize_triangles(
     ctx: Optional[RastContext] = None,
 ) -> Tuple[Tensor, Tensor, Optional[Tensor]]:
     """
-    Rasterize triangles.
-
     Parameters
     ----
         size (Tuple[int, int]): (height, width) of the output image

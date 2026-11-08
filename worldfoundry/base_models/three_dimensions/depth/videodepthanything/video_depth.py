@@ -6,8 +6,6 @@
 
 #     http://www.apache.org/licenses/LICENSE-2.0
 
-"""Module for base_models -> three_dimensions -> depth -> videodepthanything -> video_depth.py functionality."""
-
 import gc
 
 import cv2
@@ -42,8 +40,6 @@ INTERP_LEN = 8
 
 
 class VideoDepthAnything(nn.Module):
-    """Video depth anything implementation."""
-
     def __init__(
         self,
         encoder="vitl",
@@ -54,17 +50,6 @@ class VideoDepthAnything(nn.Module):
         num_frames=32,
         pe="ape",
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            features: The features.
-            out_channels: The out channels.
-            use_bn: The use bn.
-            use_clstoken: The use clstoken.
-            num_frames: The num frames.
-            pe: The pe.
-        """
         super().__init__()
 
         self.intermediate_layer_idx = {"vits": [2, 5, 8, 11], "vitl": [4, 11, 17, 23]}
@@ -83,11 +68,6 @@ class VideoDepthAnything(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, T, C, H, W = x.shape
         patch_h, patch_w = H // 14, W // 14
         features = self.pretrained.get_intermediate_layers(
@@ -103,17 +83,6 @@ class VideoDepthAnything(nn.Module):
     def infer_video_depth(
         self, frame_list: list[np.ndarray], input_size: int = 518, device="cuda", fp32=True
     ) -> np.ndarray:
-        """Infer video depth.
-
-        Args:
-            frame_list: The frame list.
-            input_size: The input size.
-            device: The device.
-            fp32: The fp32.
-
-        Returns:
-            The return value.
-        """
         frame_height, frame_width = frame_list[0].shape[:2]
         ratio = max(frame_height, frame_width) / min(frame_height, frame_width)
         if ratio > 1.78:  # we recommend to process video with ratio smaller than 16:9 due to memory limitation

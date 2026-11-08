@@ -177,7 +177,6 @@ class TransformerArgsPreprocessor:
         return context.view(batch_size, -1, x.shape[-1])
 
     def _prepare_attention_mask(self, attention_mask: torch.Tensor | None, x_dtype: torch.dtype) -> torch.Tensor | None:
-        """Prepare attention mask."""
         if attention_mask is None or torch.is_floating_point(attention_mask):
             return attention_mask
 
@@ -225,7 +224,6 @@ class TransformerArgsPreprocessor:
         num_attention_heads: int,
         x_dtype: torch.dtype,
     ) -> torch.Tensor:
-        """Prepare positional embeddings."""
         freq_grid_generator = generate_freq_grid_np if self.double_precision_rope else generate_freq_grid_pytorch
         pe = precompute_freqs_cis(
             positions,

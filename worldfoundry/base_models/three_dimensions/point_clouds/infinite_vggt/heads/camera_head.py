@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> heads -> camera_head.py functionality."""
-
 import torch
 import torch.nn as nn
 
@@ -10,8 +8,6 @@ from ..layers.block import Block
 
 
 class CameraHead(nn.Module):
-    """Camera head implementation."""
-
     def __init__(
         self,
         dim_in: int = 2048,
@@ -24,19 +20,6 @@ class CameraHead(nn.Module):
         quat_act: str = "linear",
         fl_act: str = "relu",  # Field of view activations: ensures FOV values are positive.
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            trunk_depth: The trunk depth.
-            pose_encoding_type: The pose encoding type.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            init_values: The init values.
-            trans_act: The trans act.
-            quat_act: The quat act.
-            fl_act: The fl act.
-        """
         super().__init__()
 
         if pose_encoding_type == "absT_quaR_FoV":

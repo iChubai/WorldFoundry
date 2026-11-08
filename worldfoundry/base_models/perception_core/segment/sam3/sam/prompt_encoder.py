@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> sam -> prompt_encoder.py functionality."""
-
 import torch
 from torch import nn
 
@@ -11,8 +9,6 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, PositionEmbeddingRan
 
 
 class PromptEncoder(nn.Module):
-    """Prompt encoder implementation."""
-
     def __init__(
         self,
         embed_dim: int,
@@ -147,11 +143,6 @@ class PromptEncoder(nn.Module):
             return 1
 
     def _get_device(self) -> torch.device:
-        """Helper function to get device.
-
-        Returns:
-            The return value.
-        """
         return self.point_embeddings[0].weight.device
 
     def forward(

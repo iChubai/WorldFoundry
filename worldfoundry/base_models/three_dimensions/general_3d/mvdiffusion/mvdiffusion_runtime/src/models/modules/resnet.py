@@ -1,20 +1,8 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> modules -> resnet.py functionality."""
-
 import torch.nn as nn
 
 
 class BasicResNetBlock(nn.Module):
-    """Basic res net block implementation."""
-
     def __init__(self, in_channels, out_channels, stride=1, zero_init=False):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            stride: The stride.
-            zero_init: The zero init.
-        """
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.GroupNorm(32, out_channels)
@@ -34,11 +22,6 @@ class BasicResNetBlock(nn.Module):
                 self.conv2.bias.data.zero_()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         identity = x
 
         out = self.bn1(x)

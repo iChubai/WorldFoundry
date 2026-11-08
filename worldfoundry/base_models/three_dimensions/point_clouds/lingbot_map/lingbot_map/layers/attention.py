@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> attention.py functionality."""
-
 import torch
 from torch import Tensor, nn
 
@@ -28,8 +26,6 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 
 class Attention(nn.Module):
-    """Attention implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -43,23 +39,6 @@ class Attention(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
         self.num_heads = num_heads
@@ -78,19 +57,6 @@ class Attention(nn.Module):
     def forward(
         self, x: Tensor, pos=None, num_patches=None, num_special=None, num_frames=None, enable_3d_rope=False
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            num_patches: The num patches.
-            num_special: The num special.
-            num_frames: The num frames.
-            enable_3d_rope: The enable 3d rope.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
@@ -143,29 +109,6 @@ class CausalAttention(nn.Module):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,  # If True, only cache camera token (no scale token)
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-            elementwise_attn_output_gate: The elementwise attn output gate.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
         self.num_heads = num_heads
@@ -212,32 +155,6 @@ class CausalAttention(nn.Module):
         num_register_tokens=4,
         is_scale_frames=False,
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            block_mask: The block mask.
-            pos: The pos.
-            pos_kv: The pos kv.
-            frame_seqlen: The frame seqlen.
-            video_mask: The video mask.
-            kv_cache: The kv cache.
-            current_start: The current start.
-            current_end: The current end.
-            global_idx: The global idx.
-            num_frame_per_block: The num frame per block.
-            num_frame_for_scale: The num frame for scale.
-            enable_3d_rope: The enable 3d rope.
-            sliding_window_size: The sliding window size.
-            attend_to_scale_frames: The attend to scale frames.
-            num_random_frames: The num random frames.
-            attend_to_special_tokens: The attend to special tokens.
-            num_register_tokens: The num register tokens.
-            is_scale_frames: The is scale frames.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         # Calculate special token indices
@@ -485,28 +402,6 @@ class FlashInferAttention(Attention):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         if not FLASHINFER_AVAILABLE:
             raise RuntimeError("FlashInfer is not available. Please install flashinfer.")
 
@@ -726,28 +621,6 @@ class SDPAAttention(Attention):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         super().__init__(
             dim=dim,
             num_heads=num_heads,
@@ -780,24 +653,6 @@ class SDPAAttention(Attention):
         num_frame_for_scale=-1,
         num_register_tokens=4,
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            num_patches: The num patches.
-            num_special: The num special.
-            num_frames: The num frames.
-            enable_3d_rope: The enable 3d rope.
-            kv_cache: The kv cache.
-            global_idx: The global idx.
-            num_frame_per_block: The num frame per block.
-            num_frame_for_scale: The num frame for scale.
-            num_register_tokens: The num register tokens.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)

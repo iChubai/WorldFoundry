@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v2 -> util -> transform.py functionality."""
-
 import cv2
 import numpy as np
 
@@ -17,8 +15,7 @@ class Resize:
         resize_method="lower_bound",
         image_interpolation_method=cv2.INTER_AREA,
     ):
-        """Init.
-
+        """
         Args:
             width (int): desired output width
             height (int): desired output height
@@ -50,13 +47,6 @@ class Resize:
         self.__image_interpolation_method = image_interpolation_method
 
     def constrain_to_multiple_of(self, x, min_val=0, max_val=None):
-        """Constrain to multiple of.
-
-        Args:
-            x: The x.
-            min_val: The min val.
-            max_val: The max val.
-        """
         y = (np.round(x / self.__multiple_of) * self.__multiple_of).astype(int)
 
         if max_val is not None and y > max_val:
@@ -68,12 +58,6 @@ class Resize:
         return y
 
     def get_size(self, width, height):
-        """Get size.
-
-        Args:
-            width: The width.
-            height: The height.
-        """
         # determine new height and width
         scale_height = self.__height / height
         scale_width = self.__width / width
@@ -121,11 +105,6 @@ class Resize:
         return (new_width, new_height)
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         width, height = self.get_size(sample["image"].shape[1], sample["image"].shape[0])
 
         # resize sample
@@ -147,21 +126,10 @@ class NormalizeImage:
     """Normlize image by given mean and std."""
 
     def __init__(self, mean, std):
-        """Init.
-
-        Args:
-            mean: The mean.
-            std: The std.
-        """
         self.__mean = mean
         self.__std = std
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         sample["image"] = (sample["image"] - self.__mean) / self.__std
 
         return sample
@@ -171,14 +139,9 @@ class PrepareForNet:
     """Prepare sample for usage as network input."""
 
     def __init__(self):
-        """Init."""
+        pass
 
     def __call__(self, sample):
-        """Call.
-
-        Args:
-            sample: The sample.
-        """
         image = np.transpose(sample["image"], (2, 0, 1))
         sample["image"] = np.ascontiguousarray(image).astype(np.float32)
 

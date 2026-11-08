@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam.py functionality."""
-
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -16,8 +14,6 @@ from .two_way_transformer import TwoWayTransformer
 
 
 class EfficientSam(nn.Module):
-    """Efficient sam implementation."""
-
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 
@@ -133,13 +129,6 @@ class EfficientSam(nn.Module):
         return output_masks, iou_predictions
 
     def get_rescaled_pts(self, batched_points: torch.Tensor, input_h: int, input_w: int):
-        """Get rescaled pts.
-
-        Args:
-            batched_points: The batched points.
-            input_h: The input h.
-            input_w: The input w.
-        """
         return torch.stack(
             [
                 torch.where(
@@ -219,13 +208,6 @@ class EfficientSam(nn.Module):
 
 
 def build_efficient_sam(encoder_patch_embed_dim, encoder_num_heads, checkpoint=None):
-    """Build efficient sam.
-
-    Args:
-        encoder_patch_embed_dim: The encoder patch embed dim.
-        encoder_num_heads: The encoder num heads.
-        checkpoint: The checkpoint.
-    """
     img_size = 1024
     encoder_patch_size = 16
     encoder_depth = 12

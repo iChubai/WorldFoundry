@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> io -> obj.py functionality."""
-
 import os
 from io import TextIOWrapper
 from itertools import chain, repeat
@@ -319,13 +317,6 @@ def read_obj(
 
 
 def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encoding: Union[str, None] = None):
-    """Write obj.
-
-    Args:
-        file: The file.
-        obj: The obj.
-        encoding: The encoding.
-    """
     fp = Path(file).open("w", encoding=encoding) if isinstance(file, (str, Path, os.PathLike)) else file
 
     with fp:

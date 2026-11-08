@@ -1,20 +1,10 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> logger.py functionality."""
-
 from torch.utils.tensorboard import SummaryWriter
 
 SUM_FREQ = 100
 
 
 class Logger:
-    """Logger implementation."""
-
     def __init__(self, name, scheduler):
-        """Init.
-
-        Args:
-            name: The name.
-            scheduler: The scheduler.
-        """
         self.total_steps = 0
         self.running_loss = {}
         self.writer = None
@@ -22,7 +12,6 @@ class Logger:
         self.scheduler = scheduler
 
     def _print_training_status(self):
-        """Helper function to print training status."""
         if self.writer is None:
             self.writer = SummaryWriter("runs/%s" % self.name)
             print(list(self.running_loss))
@@ -41,12 +30,6 @@ class Logger:
             self.running_loss[key] = 0.0
 
     def push(self, metrics):
-        """Push.
-
-        Args:
-            metrics: The metrics.
-        """
-
         for key in metrics:
             if key not in self.running_loss:
                 self.running_loss[key] = 0.0
@@ -60,14 +43,8 @@ class Logger:
         self.total_steps += 1
 
     def write_dict(self, results):
-        """Write dict.
-
-        Args:
-            results: The results.
-        """
         for key in results:
             self.writer.add_scalar(key, results[key], self.total_steps)
 
     def close(self):
-        """Close."""
         self.writer.close()

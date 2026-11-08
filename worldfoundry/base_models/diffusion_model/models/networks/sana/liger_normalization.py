@@ -68,17 +68,6 @@ def get_rmsnorm_class() -> type[nn.Module]:
             eps: float = 1e-6,
             norm_dim: int = -1,
         ) -> None:
-            """Init.
-
-            Args:
-                dim: The dim.
-                scale_factor: The scale factor.
-                eps: The eps.
-                norm_dim: The norm dim.
-
-            Returns:
-                The return value.
-            """
             if norm_dim != -1:
                 raise ValueError(f"LigerRMSNorm only supports norm_dim=-1, got {norm_dim}")
             if scale_factor != 1.0:

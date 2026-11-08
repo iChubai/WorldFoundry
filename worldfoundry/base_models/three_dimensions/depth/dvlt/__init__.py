@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> dvlt -> __init__.py functionality."""
-
 from __future__ import annotations
 
 from importlib import import_module
@@ -8,20 +6,10 @@ from typing import Any
 
 
 def runtime_root() -> Path:
-    """Runtime root.
-
-    Returns:
-        The return value.
-    """
     return Path(__file__).resolve().parent / "dvlt_runtime"
 
 
 def runtime_src() -> Path:
-    """Runtime src.
-
-    Returns:
-        The return value.
-    """
     return runtime_root() / "src"
 
 
@@ -39,14 +27,6 @@ __all__ = [
 
 
 def __getattr__(name: str) -> Any:
-    """Getattr.
-
-    Args:
-        name: The name.
-
-    Returns:
-        The return value.
-    """
     if name in {
         "DEFAULT_DVLT_CHECKPOINT",
         "DEFAULT_DVLT_IMAGE_SIZE",

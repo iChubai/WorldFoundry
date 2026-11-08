@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> heads -> camera_head.py functionality."""
-
 import torch
 import torch.nn as nn
 
@@ -37,19 +35,6 @@ class CameraHead(nn.Module):
         quat_act: str = "linear",
         fl_act: str = "relu",  # Field of view activations: ensures FOV values are positive.
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            trunk_depth: The trunk depth.
-            pose_encoding_type: The pose encoding type.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            init_values: The init values.
-            trans_act: The trans act.
-            quat_act: The quat act.
-            fl_act: The fl act.
-        """
         super().__init__()
 
         if pose_encoding_type == "absT_quaR_FoV":

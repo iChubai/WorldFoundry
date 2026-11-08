@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> heads -> camera_head.py functionality."""
-
 from functools import partial
 
 import torch
@@ -38,19 +36,6 @@ class CameraHead(nn.Module):
         quat_act: str = "linear",
         fl_act: str = "relu",  # Field of view activations: ensures FOV values are positive.
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            trunk_depth: The trunk depth.
-            pose_encoding_type: The pose encoding type.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            init_values: The init values.
-            trans_act: The trans act.
-            quat_act: The quat act.
-            fl_act: The fl act.
-        """
         super().__init__()
 
         if pose_encoding_type == "absT_quaR_FoV":
@@ -198,33 +183,6 @@ class CameraCausalHead(nn.Module):
         max_frame_num: int = 1024,
         rope_theta: float = 10000.0,
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            trunk_depth: The trunk depth.
-            pose_encoding_type: The pose encoding type.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            init_values: The init values.
-            trans_act: The trans act.
-            quat_act: The quat act.
-            fl_act: The fl act.
-            num_iterations: The num iterations.
-            elementwise_attn_output_gate: The elementwise attn output gate.
-            sliding_window_size: The sliding window size.
-            attend_to_scale_frames: The attend to scale frames.
-            num_random_frames: The num random frames.
-            attn_class: The attn class.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-            enable_3d_rope: The enable 3d rope.
-            max_frame_num: The max frame num.
-            rope_theta: The rope theta.
-        """
         super().__init__()
 
         if pose_encoding_type == "absT_quaR_FoV":
@@ -299,7 +257,6 @@ class CameraCausalHead(nn.Module):
         self.frame_idx = 0
 
     def clean_kv_cache(self):
-        """Clean kv cache."""
         del self.kv_cache
         self.kv_cache = None
         self.frame_idx = 0
@@ -473,8 +430,6 @@ def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch
 
 
 class CameraDecoder(nn.Module):
-    """Camera decoder implementation."""
-
     def __init__(
         self,
         in_dim,
@@ -487,19 +442,6 @@ class CameraDecoder(nn.Module):
         need_project=True,
         use_checkpoint=False,
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            dec_embed_dim: The dec embed dim.
-            depth: The depth.
-            dec_num_heads: The dec num heads.
-            mlp_ratio: The mlp ratio.
-            rope: The rope.
-            need_project: The need project.
-            use_checkpoint: The use checkpoint.
-        """
         super().__init__()
 
         self.projects = nn.Linear(in_dim, dec_embed_dim) if need_project else nn.Identity()
@@ -530,12 +472,6 @@ class CameraDecoder(nn.Module):
         self.linear_out = nn.Linear(dec_embed_dim, out_dim)
 
     def forward(self, hidden, xpos=None):
-        """Forward.
-
-        Args:
-            hidden: The hidden.
-            xpos: The xpos.
-        """
         hidden = self.projects(hidden)
         B, V, P, C = hidden.shape
         hidden = hidden.view(hidden.shape[0] * hidden.shape[1], hidden.shape[2], hidden.shape[3])

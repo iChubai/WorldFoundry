@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_video_base.py functionality."""
-
 import datetime
 import logging
 import math
@@ -40,16 +38,12 @@ logger = get_logger(__name__)
 
 
 class MaskletConfirmationStatus(Enum):
-    """Masklet confirmation status implementation."""
-
     UNCONFIRMED = 1  # newly added masklet, not confirmed by any detection yet
     CONFIRMED = 2  # confirmed by at least one detection
 
 
 @dataclass
 class RealizedAssociateDetTrkresult:
-    """Realized associate det trkresult implementation."""
-
     new_det_fa_inds: np.array
     unmatched_trk_obj_ids: np.array
     det_to_matched_trk_obj_ids: dict[int, np.array]
@@ -60,14 +54,6 @@ class RealizedAssociateDetTrkresult:
     num_obj_dropped_due_to_limit: int | None = None
 
     def get_new_det_gpu_ids(self, tracker_metadata_prev, is_image_only, det_scores, tracking_obj):
-        """Get new det gpu ids.
-
-        Args:
-            tracker_metadata_prev: The tracker metadata prev.
-            is_image_only: The is image only.
-            det_scores: The det scores.
-            tracking_obj: The tracking obj.
-        """
         with torch.profiler.record_function("get_new_det_gpu_ids"):
             if self.new_det_obj_ids is None:
                 det_scores_np: np.ndarray = det_scores.cpu().numpy()
@@ -104,13 +90,6 @@ class RealizedAssociateDetTrkresult:
 
 
 def realize_adt_result(adt_lazy_result, tracker_metadata_prev, det_mask_preds):
-    """Realize adt result.
-
-    Args:
-        adt_lazy_result: The adt lazy result.
-        tracker_metadata_prev: The tracker metadata prev.
-        det_mask_preds: The det mask preds.
-    """
     if isinstance(adt_lazy_result, LazyAssociateDetTrkResult):
         adt_lazy_result._convert_to_numpy()
         return adt_lazy_result._create_cpu_metadata(tracker_metadata_prev["obj_ids_all_gpu"], det_mask_preds)
@@ -118,8 +97,6 @@ def realize_adt_result(adt_lazy_result, tracker_metadata_prev, det_mask_preds):
 
 
 class LazyAssociateDetTrkResult:
-    """Lazy associate det trk result implementation."""
-
     def __init__(
         self,
         trk_is_unmatched: Tensor,
@@ -131,18 +108,6 @@ class LazyAssociateDetTrkResult:
         det_keep: Tensor,
         im_mask: Tensor,
     ):
-        """Init.
-
-        Args:
-            trk_is_unmatched: The trk is unmatched.
-            trk_is_nonempty: The trk is nonempty.
-            is_new_det: The is new det.
-            det_to_max_iou_trk_idx: The det to max iou trk idx.
-            det_is_high_conf: The det is high conf.
-            det_is_high_iou: The det is high iou.
-            det_keep: The det keep.
-            im_mask: The im mask.
-        """
         self.trk_is_unmatched = trk_is_unmatched
         self.trk_is_nonempty = trk_is_nonempty
         self.is_new_det = is_new_det
@@ -153,7 +118,6 @@ class LazyAssociateDetTrkResult:
         self.im_mask = im_mask
 
     def _convert_to_numpy(self):
-        """Helper function to convert to numpy."""
         with torch.profiler.record_function("Convert to numpy"):
             self.trk_is_unmatched = self.trk_is_unmatched.cpu().numpy()
             self.trk_is_nonempty = self.trk_is_nonempty.cpu().numpy()
@@ -165,12 +129,6 @@ class LazyAssociateDetTrkResult:
             self.im_mask = self.im_mask.cpu().numpy()
 
     def _create_cpu_metadata(self, trk_obj_ids, det_masks):
-        """Helper function to create cpu metadata.
-
-        Args:
-            trk_obj_ids: The trk obj ids.
-            det_masks: The det masks.
-        """
         with torch.profiler.record_function("_create_cpu_metadata"):
             unmatched_trk_obj_ids = trk_obj_ids[self.trk_is_unmatched]
             empty_trk_obj_ids = trk_obj_ids[~self.trk_is_nonempty]
@@ -207,22 +165,6 @@ def _associate_det_trk_compilable(
     iom_thresh_recondition,
     iou_thresh_recondition,
 ):
-    """Helper function to associate det trk compilable.
-
-    Args:
-        det_masks: The det masks.
-        det_scores: The det scores.
-        det_keep: The det keep.
-        trk_masks: The trk masks.
-        new_det_thresh: The new det thresh.
-        iou_threshold_trk: The iou threshold trk.
-        iou_threshold: The iou threshold.
-        HIGH_CONF_THRESH: The high conf thresh.
-        use_iom_recondition: The use iom recondition.
-        o2o_matching_masklets_enable: The o2o matching masklets enable.
-        iom_thresh_recondition: The iom thresh recondition.
-        iou_thresh_recondition: The iou thresh recondition.
-    """
     det_masks_binary = det_masks > 0
     det_masks_binary[~det_keep] = 0
     trk_masks_binary = trk_masks > 0
@@ -352,35 +294,6 @@ class Sam3VideoBase(nn.Module):
         reconstruction_bbox_iou_thresh=0.0,
         reconstruction_bbox_det_score=0.0,
     ):
-        """Init.
-
-        Args:
-            detector: The detector.
-            tracker: The tracker.
-            score_threshold_detection: The score threshold detection.
-            det_nms_thresh: The det nms thresh.
-            assoc_iou_thresh: The assoc iou thresh.
-            trk_assoc_iou_thresh: The trk assoc iou thresh.
-            new_det_thresh: The new det thresh.
-            hotstart_delay: The hotstart delay.
-            hotstart_unmatch_thresh: The hotstart unmatch thresh.
-            hotstart_dup_thresh: The hotstart dup thresh.
-            suppress_unmatched_only_within_hotstart: The suppress unmatched only within hotstart.
-            init_trk_keep_alive: The init trk keep alive.
-            max_trk_keep_alive: The max trk keep alive.
-            min_trk_keep_alive: The min trk keep alive.
-            suppress_overlapping_based_on_recent_occlusion_threshold: The suppress overlapping based on recent occlusion threshold.
-            decrease_trk_keep_alive_for_empty_masklets: The decrease trk keep alive for empty masklets.
-            o2o_matching_masklets_enable: The o2o matching masklets enable.
-            suppress_det_close_to_boundary: The suppress det close to boundary.
-            fill_hole_area: The fill hole area.
-            max_num_objects: The max num objects.
-            recondition_every_nth_frame: The recondition every nth frame.
-            masklet_confirmation_enable: The masklet confirmation enable.
-            masklet_confirmation_consecutive_det_thresh: The masklet confirmation consecutive det thresh.
-            reconstruction_bbox_iou_thresh: The reconstruction bbox iou thresh.
-            reconstruction_bbox_det_score: The reconstruction bbox det score.
-        """
         super().__init__()
         self.detector = detector
         self.tracker = tracker
@@ -430,24 +343,16 @@ class Sam3VideoBase(nn.Module):
 
     @property
     def device(self):
-        """Device."""
         self._device = getattr(self, "_device", None) or next(self.parameters()).device
         return self._device
 
     def _init_dist_pg_cpu(self):
-        """Helper function to init dist pg cpu."""
         # a short 3-min timeout to quickly detect any synchronization failures
         timeout_sec = int(os.getenv("SAM3_COLLECTIVE_OP_TIMEOUT_SEC", "180"))
         timeout = datetime.timedelta(seconds=timeout_sec)
         self._dist_pg_cpu = dist.new_group(backend="gloo", timeout=timeout)
 
     def broadcast_python_obj_cpu(self, python_obj_list, src):
-        """Broadcast python obj cpu.
-
-        Args:
-            python_obj_list: The python obj list.
-            src: The src.
-        """
         if self._dist_pg_cpu is None:
             self._init_dist_pg_cpu()
         dist.broadcast_object_list(python_obj_list, src=src, group=self._dist_pg_cpu)
@@ -612,17 +517,6 @@ class Sam3VideoBase(nn.Module):
         reverse: bool,
         allow_new_detections: bool,
     ):
-        """Run backbone and detection.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            input_batch: The input batch.
-            geometric_prompt: The geometric prompt.
-            feature_cache: The feature cache.
-            reverse: The reverse.
-            allow_new_detections: The allow new detections.
-        """
         # Step 1: if text feature is not cached in `feature_cache`, compute and cache it
         text_batch_key = tuple(input_batch.find_text_batch)
         if "text" not in feature_cache or text_batch_key not in feature_cache["text"]:
@@ -708,15 +602,6 @@ class Sam3VideoBase(nn.Module):
         tracker_states_local: list[Any],
         tracker_metadata_prev: dict[str, npt.NDArray],
     ):
-        """Run tracker propagation.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            tracker_states_local: The tracker states local.
-            tracker_metadata_prev: The tracker metadata prev.
-        """
         # Step 1: propagate the local SAM2 states to get the current frame's prediction
         # `low_res_masks_local` of the existing masklets on this GPU
         # - obj_ids_local: List[int] -- list of object IDs
@@ -765,16 +650,6 @@ class Sam3VideoBase(nn.Module):
         tracker_metadata: dict[str, npt.NDArray],
         tracker_obj_scores_global: Tensor,
     ):
-        """Helper function to recondition masklets.
-
-        Args:
-            frame_idx: The frame idx.
-            det_out: The det out.
-            trk_id_to_max_iou_high_conf_det: The trk id to max iou high conf det.
-            tracker_states_local: The tracker states local.
-            tracker_metadata: The tracker metadata.
-            tracker_obj_scores_global: The tracker obj scores global.
-        """
         # Recondition the masklets based on the new detections
         for trk_obj_id, det_idx in trk_id_to_max_iou_high_conf_det.items():
             new_mask = det_out["mask"][det_idx : det_idx + 1]
@@ -826,19 +701,6 @@ class Sam3VideoBase(nn.Module):
         tracker_states_local: list[Any],
         is_image_only: bool = False,
     ):
-        """Run tracker update planning phase.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            det_out: The det out.
-            tracker_low_res_masks_global: The tracker low res masks global.
-            tracker_obj_scores_global: The tracker obj scores global.
-            tracker_metadata_prev: The tracker metadata prev.
-            tracker_states_local: The tracker states local.
-            is_image_only: The is image only.
-        """
         # initialize new metadata from previous metadata (its values will be updated later)
         tracker_metadata_new = self._create_planning_metadata(tracker_metadata_prev)
 
@@ -1178,20 +1040,6 @@ class Sam3VideoBase(nn.Module):
         feature_cache: dict,
         tracker_metadata_new=None,
     ):
-        """Run tracker update execution phase.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            det_out: The det out.
-            tracker_states_local: The tracker states local.
-            tracker_update_plan: The tracker update plan.
-            orig_vid_height: The orig vid height.
-            orig_vid_width: The orig vid width.
-            feature_cache: The feature cache.
-            tracker_metadata_new: The tracker metadata new.
-        """
         # initialize tracking scores with detection scores
         new_det_fa_inds: npt.NDArray = tracker_update_plan["new_det_fa_inds"]
         new_det_obj_ids: npt.NDArray = tracker_update_plan["new_det_obj_ids"]
@@ -1260,22 +1108,6 @@ class Sam3VideoBase(nn.Module):
         reconditioned_obj_ids: set | None = None,
         det_to_matched_trk_obj_ids: dict | None = None,
     ):
-        """Build outputs.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            det_out: The det out.
-            tracker_low_res_masks_global: The tracker low res masks global.
-            tracker_obj_scores_global: The tracker obj scores global.
-            tracker_metadata_prev: The tracker metadata prev.
-            tracker_update_plan: The tracker update plan.
-            orig_vid_height: The orig vid height.
-            orig_vid_width: The orig vid width.
-            reconditioned_obj_ids: The reconditioned obj ids.
-            det_to_matched_trk_obj_ids: The det to matched trk obj ids.
-        """
         new_det_fa_inds: npt.NDArray = tracker_update_plan["new_det_fa_inds"]
         new_det_obj_ids: npt.NDArray = tracker_update_plan["new_det_obj_ids"]
         obj_id_to_mask = {}  # obj_id --> output mask tensor
@@ -1347,15 +1179,6 @@ class Sam3VideoBase(nn.Module):
         frame_idx: int | None = None,
         reverse: bool = False,
     ):
-        """Helper function to get objects to suppress based on most recently occluded.
-
-        Args:
-            binary_low_res_masks: The binary low res masks.
-            last_occluded: The last occluded.
-            obj_ids: The obj ids.
-            frame_idx: The frame idx.
-            reverse: The reverse.
-        """
         # Suppress overlapping masks for objects that were most recently occluded
         assert binary_low_res_masks.dtype == torch.bool, f"Expected boolean tensor, got {binary_low_res_masks.dtype}"
         to_suppress = torch.zeros(
@@ -1922,15 +1745,6 @@ class Sam3VideoBase(nn.Module):
         det_to_matched_trk_obj_ids: dict[int, npt.NDArray],
         new_det_obj_ids: npt.NDArray,
     ):
-        """Update masklet confirmation status.
-
-        Args:
-            rank0_metadata: The rank0 metadata.
-            obj_ids_all_gpu_prev: The obj ids all gpu prev.
-            obj_ids_all_gpu_updated: The obj ids all gpu updated.
-            det_to_matched_trk_obj_ids: The det to matched trk obj ids.
-            new_det_obj_ids: The new det obj ids.
-        """
         confirmation_data = rank0_metadata["masklet_confirmation"]
 
         # a) first, expand "confirmation_data" to include new masklets added in this frame
@@ -1971,21 +1785,9 @@ class Sam3VideoBase(nn.Module):
         return rank0_metadata
 
     def forward(self, input: BatchedDatapoint, is_inference: bool = False):
-        """Forward.
-
-        Args:
-            input: The input.
-            is_inference: The is inference.
-        """
         raise NotImplementedError("Evaluation outside demo is not implemented yet")
 
     def _load_checkpoint(self, ckpt_path: str, strict: bool = True):
-        """Helper function to load checkpoint.
-
-        Args:
-            ckpt_path: The ckpt path.
-            strict: The strict.
-        """
         sd = torch.load(ckpt_path, map_location="cpu", weights_only=True)["model"]
         missing_keys, unexpected_keys = self.load_state_dict(sd, strict=strict)
         if len(missing_keys) > 0 or len(unexpected_keys) > 0:
@@ -2035,7 +1837,6 @@ class Sam3VideoBase(nn.Module):
         return preds
 
     def _encode_prompt(self, **kwargs):
-        """Helper function to encode prompt."""
         return self.detector._encode_prompt(**kwargs)
 
     def _drop_new_det_with_obj_limit(self, new_det_fa_inds, det_scores_np, num_to_keep):

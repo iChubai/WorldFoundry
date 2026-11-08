@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> aggregator.py functionality."""
-
 import torch
 import torch.nn as nn
 
@@ -30,21 +28,6 @@ class Aggregator(nn.Module):
         register_attention_block_indices: list[int] = [2, 6, 9, 14, 20],
         cached_layer_indices: tuple[int, ...] = (4, 11, 17, 23),
     ) -> None:
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            register_attention_block_indices: The register attention block indices.
-            cached_layer_indices: The cached layer indices.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.patch_embed = _build_patch_embed(patch_size=patch_size, embed_dim=embed_dim)
@@ -110,11 +93,6 @@ class Aggregator(nn.Module):
         self.init_weights()
 
     def init_weights(self) -> None:
-        """Init weights.
-
-        Returns:
-            The return value.
-        """
         nn.init.normal_(self.camera_token, std=1e-3)
         nn.init.normal_(self.register_token, std=1e-3)
 
@@ -122,14 +100,6 @@ class Aggregator(nn.Module):
         self,
         images: torch.Tensor,
     ) -> tuple[list[torch.Tensor | None], int]:
-        """Forward.
-
-        Args:
-            images: The images.
-
-        Returns:
-            The return value.
-        """
         batch_size, num_frames, num_channels, height, width = images.shape
         if num_channels != 3:
             raise ValueError(f"Expected 3 input channels, got {num_channels}")
@@ -192,20 +162,6 @@ class Aggregator(nn.Module):
         block_idx: int,
         rope_sincos: tuple[torch.Tensor, torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Helper function to run frame block.
-
-        Args:
-            tokens: The tokens.
-            batch_size: The batch size.
-            num_frames: The num frames.
-            num_tokens: The num tokens.
-            embed_dim: The embed dim.
-            block_idx: The block idx.
-            rope_sincos: The rope sincos.
-
-        Returns:
-            The return value.
-        """
         tokens = tokens.view(batch_size * num_frames, num_tokens, embed_dim)
         tokens = self.frame_blocks[block_idx](tokens, rope_sincos)
         return tokens, tokens.view(batch_size, num_frames, num_tokens, embed_dim)
@@ -220,20 +176,6 @@ class Aggregator(nn.Module):
         block_idx: int,
         attention_type: str,
     ) -> torch.Tensor:
-        """Helper function to run inter frame attention block.
-
-        Args:
-            tokens: The tokens.
-            batch_size: The batch size.
-            num_frames: The num frames.
-            num_tokens: The num tokens.
-            embed_dim: The embed dim.
-            block_idx: The block idx.
-            attention_type: The attention type.
-
-        Returns:
-            The return value.
-        """
         tokens = tokens.view(batch_size, num_frames, num_tokens, embed_dim)
 
         if attention_type == "global":
@@ -275,15 +217,6 @@ class Aggregator(nn.Module):
 
 
 def _build_patch_embed(patch_size: int, embed_dim: int) -> DinoVisionTransformer:
-    """Helper function to build patch embed.
-
-    Args:
-        patch_size: The patch size.
-        embed_dim: The embed dim.
-
-    Returns:
-        The return value.
-    """
     model = DinoVisionTransformer(
         img_size=224,
         patch_size=patch_size,
@@ -310,16 +243,6 @@ def _build_patch_embed(patch_size: int, embed_dim: int) -> DinoVisionTransformer
 
 
 def slice_expand_and_flatten(token_tensor: torch.Tensor, batch_size: int, num_frames: int) -> torch.Tensor:
-    """Slice expand and flatten.
-
-    Args:
-        token_tensor: The token tensor.
-        batch_size: The batch size.
-        num_frames: The num frames.
-
-    Returns:
-        The return value.
-    """
     first_frame_token = token_tensor[:, 0:1].expand(batch_size, 1, *token_tensor.shape[2:])
     other_frame_tokens = token_tensor[:, 1:].expand(batch_size, num_frames - 1, *token_tensor.shape[2:])
     tokens = torch.cat([first_frame_token, other_frame_tokens], dim=1)

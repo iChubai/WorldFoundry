@@ -66,14 +66,6 @@ _REPO_TO_MODEL_NAME = {
 
 
 def _model_name_from_repo_id(repo_id: str) -> str:
-    """Helper function to model name from repo id.
-
-    Args:
-        repo_id: The repo id.
-
-    Returns:
-        The return value.
-    """
     if repo_id in _REPO_TO_MODEL_NAME:
         return _REPO_TO_MODEL_NAME[repo_id]
 
@@ -102,14 +94,6 @@ def _model_name_from_repo_id(repo_id: str) -> str:
 
 
 def _load_state_dict_file(path: str | Path) -> dict[str, torch.Tensor]:
-    """Helper function to load state dict file.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     path = Path(path)
     if path.suffix == ".safetensors":
         try:
@@ -220,24 +204,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         return model
 
     def _load_flexible_state_dict(self, state: dict[str, torch.Tensor]) -> None:
-        """Helper function to load flexible state dict.
-
-        Args:
-            state: The state.
-
-        Returns:
-            The return value.
-        """
-
         def strip_prefix(prefix: str) -> dict[str, torch.Tensor]:
-            """Strip prefix.
-
-            Args:
-                prefix: The prefix.
-
-            Returns:
-                The return value.
-            """
             return {key[len(prefix) :]: value for key, value in state.items() if key.startswith(prefix)}
 
         candidates = [
@@ -491,7 +458,6 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         return imgs, ex_t, in_t
 
     def _normalize_extrinsics(self, ex_t: torch.Tensor | None) -> torch.Tensor | None:
-        """Normalize extrinsics"""
         if ex_t is None:
             return None
         transform = affine_inverse(ex_t[:, :1])

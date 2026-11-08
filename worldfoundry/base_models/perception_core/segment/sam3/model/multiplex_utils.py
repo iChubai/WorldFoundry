@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> multiplex_utils.py functionality."""
-
 import logging
 import math
 
@@ -69,11 +67,6 @@ class MultiplexState:
         self._initialize_assignments(assignments, object_ids=object_ids)
 
     def _initialize_assignments(self, assignments: list[list[int]], *, object_ids: list[int] | None = None):
-        """Helper function to initialize assignments.
-
-        Args:
-            assignments: The assignments.
-        """
         self.assignments = assignments
         self.num_buckets = len(self.assignments)
         if self.num_buckets == 0:
@@ -112,11 +105,6 @@ class MultiplexState:
 
     @property
     def available_slots(self) -> int:
-        """Available slots.
-
-        Returns:
-            The return value.
-        """
         # returns the number of available slots in the state
         return self.num_buckets * self.allowed_bucket_capacity - self.total_non_padding_entries
 
@@ -127,14 +115,6 @@ class MultiplexState:
         allow_new_buckets: bool = False,
         prefer_new_buckets: bool = False,
     ) -> list[int]:
-        """Find next batch of available indices.
-
-        Args:
-            num_objects: The num objects.
-
-        Returns:
-            The return value.
-        """
         # produce a list of consecutive indices that are available in the state
         # Note: prefer_new_buckets parameter is accepted for API compatibility but not used here
         # as the actual bucket allocation logic is in add_objects()
@@ -193,7 +173,6 @@ class MultiplexState:
         buckets_created = 0
 
         def _pop_next():
-            """Helper function to pop next."""
             idx = object_indices.pop()
             if object_ids is not None and self.object_ids is not None:
                 self.object_ids.append(object_ids.pop())
@@ -416,21 +395,12 @@ class MultiplexState:
 
 
 class MultiplexController(nn.Module):
-    """Multiplex controller implementation."""
-
     def __init__(
         self,
         multiplex_count: int,
         full_shuffle: bool = False,
         eval_multiplex_count: int = -1,
     ):
-        """Init.
-
-        Args:
-            multiplex_count: The multiplex count.
-            full_shuffle: The full shuffle.
-            eval_multiplex_count: The eval multiplex count.
-        """
         super().__init__()
 
         self.multiplex_count = multiplex_count
@@ -443,11 +413,6 @@ class MultiplexController(nn.Module):
 
     @property
     def allowed_bucket_capacity(self) -> int:
-        """Allowed bucket capacity.
-
-        Returns:
-            The return value.
-        """
         if self.training:
             return self.multiplex_count
         else:
@@ -462,17 +427,6 @@ class MultiplexController(nn.Module):
         *,
         object_ids: list[int] | None = None,  # object_ids is an auxiliary field that we pass to the state unmodified
     ) -> MultiplexState:
-        """Get state.
-
-        Args:
-            num_valid_entries: The num valid entries.
-            device: The device.
-            dtype: The dtype.
-            random: The random.
-
-        Returns:
-            The return value.
-        """
         # returns a state that maps elements in the batch to buckets of size self.multiplex_count
 
         allowed_bucket_capacity = self.allowed_bucket_capacity

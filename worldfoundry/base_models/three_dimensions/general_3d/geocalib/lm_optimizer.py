@@ -311,8 +311,6 @@ class LMOptimizer(nn.Module):
 
         Args:
             J (torch.Tensor): Jacobian.
-            residuals (torch.Tensor): Residuals.
-            weights (torch.Tensor): Weights.
             shared_intrinsics (bool): Whether to share the intrinsics across the batch.
 
         Returns:

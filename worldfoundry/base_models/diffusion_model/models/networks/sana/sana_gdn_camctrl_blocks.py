@@ -207,14 +207,6 @@ def torch_recurrent_cam_single_path_delta_rule(
     S = N // T
 
     def to_frame_seq(x: torch.Tensor) -> torch.Tensor:
-        """To frame seq.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.view(B, H, D, T, S).permute(0, 1, 3, 2, 4)
 
     q_rot_f = to_frame_seq(q_rot)
@@ -281,14 +273,6 @@ def torch_chunk_cam_single_path_delta_rule(
     S = N // T
 
     def to_frame_seq(x: torch.Tensor) -> torch.Tensor:
-        """To frame seq.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.view(B, H, D, T, S).permute(0, 1, 3, 2, 4)
 
     q_rot = to_frame_seq(q_rot)
@@ -320,16 +304,6 @@ def torch_chunk_cam_single_path_delta_rule(
     out_S_kv: list[torch.Tensor] = []
 
     def _chunk_scan_kv(w_kv: torch.Tensor, u_kv: torch.Tensor, s_kv: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """Helper function to chunk scan kv.
-
-        Args:
-            w_kv: The w kv.
-            u_kv: The u kv.
-            s_kv: The s kv.
-
-        Returns:
-            The return value.
-        """
         c_len = w_kv.shape[2]
         s_kv_list: list[torch.Tensor] = []
         for t in range(c_len):
@@ -383,15 +357,6 @@ class _GDNUCPEBase(GDN):
         patch_size: tuple[int, int, int] = (1, 2, 2),
         **kwargs: object,
     ) -> None:
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-
-        Returns:
-            The return value.
-        """
         cam_debug_ratios = bool(kwargs.pop("cam_debug_ratios", False))
         cam_debug_log_per_block = bool(kwargs.pop("cam_debug_log_per_block", False))
         cam_update_rule_func: str = str(kwargs.pop("cam_update_rule_func", "torch_chunk"))
@@ -1142,17 +1107,6 @@ class BidirectionalGDNUCPELiteLA(_GDNUCPEBase, BidirectionalGDN):
         rotary_emb: torch.Tensor | None,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Helper function to forward cam branch.
-
-        Args:
-            x: The x.
-            HW: The hw.
-            camera_conditions: The camera conditions.
-            rotary_emb: The rotary emb.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         T, H, W = HW
         S = H * W
@@ -1220,25 +1174,9 @@ class BidirectionalGDNUCPELiteLA(_GDNUCPEBase, BidirectionalGDN):
 
         # -- Backward pass (exclusive t+1..T) --
         def to_time(t: torch.Tensor) -> torch.Tensor:
-            """To time.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             return t.view(B, H_heads, D_head, T, S).permute(0, 1, 3, 2, 4)
 
         def from_time(t: torch.Tensor) -> torch.Tensor:
-            """From time.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             return t.permute(0, 1, 3, 2, 4).reshape(B, H_heads, D_head, N)
 
         q_T = to_time(q_cam)
@@ -1266,14 +1204,6 @@ class BidirectionalGDNUCPELiteLA(_GDNUCPEBase, BidirectionalGDN):
         )
 
         def flip_back(tensor: torch.Tensor) -> torch.Tensor:
-            """Flip back.
-
-            Args:
-                tensor: The tensor.
-
-            Returns:
-                The return value.
-            """
             d = tensor.shape[2]
             return torch.flip(
                 tensor.view(B, H_heads, d, T, S),
@@ -1315,19 +1245,6 @@ class BidirectionalGDNUCPELiteLAPostUCPERenorm(BidirectionalGDNUCPELiteLA):
         k_cam_trans: torch.Tensor,
         v_cam_trans: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Helper function to stabilize cam transforms.
-
-        Args:
-            q_cam: The q cam.
-            k_cam: The k cam.
-            v_cam: The v cam.
-            q_cam_trans: The q cam trans.
-            k_cam_trans: The k cam trans.
-            v_cam_trans: The v cam trans.
-
-        Returns:
-            The return value.
-        """
         q_cam_trans = self._downscale_to_reference_rms(q_cam, q_cam_trans)
         k_cam_trans = self._downscale_to_reference_rms(k_cam, k_cam_trans)
         v_cam_trans = self._downscale_to_reference_rms(v_cam, v_cam_trans)
@@ -1351,17 +1268,6 @@ class BidirectionalGDNUCPESinglePathLiteLA(BidirectionalGDNUCPELiteLAPostUCPERen
         rotary_emb: torch.Tensor | None,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Helper function to forward cam branch.
-
-        Args:
-            x: The x.
-            HW: The hw.
-            camera_conditions: The camera conditions.
-            rotary_emb: The rotary emb.
-
-        Returns:
-            The return value.
-        """
         B, N, _ = x.shape
         T, H, W = HW
         S = H * W
@@ -1421,25 +1327,9 @@ class BidirectionalGDNUCPESinglePathLiteLA(BidirectionalGDNUCPELiteLAPostUCPERen
         )
 
         def to_time(t: torch.Tensor) -> torch.Tensor:
-            """To time.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             return t.view(B, H_heads, D_head, T, S).permute(0, 1, 3, 2, 4)
 
         def from_time(t: torch.Tensor) -> torch.Tensor:
-            """From time.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             return t.permute(0, 1, 3, 2, 4).reshape(B, H_heads, D_head, N)
 
         q_rot_T = to_time(q_cam_trans)
@@ -1665,7 +1555,6 @@ class _SoftmaxUCPESinglePathLiteLA(
     """
 
     def __init__(self, *args, conv_kernel_size: int = 0, **kwargs):
-        """Init."""
         super().__init__(*args, conv_kernel_size=0, **kwargs)
 
     def forward(
@@ -1679,20 +1568,6 @@ class _SoftmaxUCPESinglePathLiteLA(
         chunk_size: int | None = None,
         **kwargs: object,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            camera_conditions: The camera conditions.
-            chunk_size: The chunk size.
-
-        Returns:
-            The return value.
-        """
         if self.cam_debug_ratios:
             self.reset_cam_debug_stats()
         if self.training:

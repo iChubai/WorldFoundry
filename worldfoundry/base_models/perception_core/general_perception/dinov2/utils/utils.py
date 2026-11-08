@@ -3,8 +3,6 @@
 # This source code is licensed under the Apache License, Version 2.0
 # found in the LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> utils -> utils.py functionality."""
-
 import logging
 import os
 import subprocess
@@ -17,13 +15,6 @@ logger = logging.getLogger("dinov2")
 
 
 def load_pretrained_weights(model, pretrained_weights, checkpoint_key):
-    """Load pretrained weights.
-
-    Args:
-        model: The model.
-        pretrained_weights: The pretrained weights.
-        checkpoint_key: The checkpoint key.
-    """
     if urlparse(pretrained_weights).scheme:  # If it looks like an URL
         state_dict = torch.hub.load_state_dict_from_url(pretrained_weights, map_location="cpu")
     else:
@@ -40,15 +31,9 @@ def load_pretrained_weights(model, pretrained_weights, checkpoint_key):
 
 
 def get_sha():
-    """Get sha."""
     cwd = os.path.dirname(os.path.abspath(__file__))
 
     def _run(command):
-        """Helper function to run.
-
-        Args:
-            command: The command.
-        """
         return subprocess.check_output(command, cwd=cwd).decode("ascii").strip()
 
     sha = "N/A"
@@ -67,19 +52,7 @@ def get_sha():
 
 
 class CosineScheduler:
-    """Cosine scheduler implementation."""
-
     def __init__(self, base_value, final_value, total_iters, warmup_iters=0, start_warmup_value=0, freeze_iters=0):
-        """Init.
-
-        Args:
-            base_value: The base value.
-            final_value: The final value.
-            total_iters: The total iters.
-            warmup_iters: The warmup iters.
-            start_warmup_value: The start warmup value.
-            freeze_iters: The freeze iters.
-        """
         super().__init__()
         self.final_value = final_value
         self.total_iters = total_iters
@@ -95,11 +68,6 @@ class CosineScheduler:
         assert len(self.schedule) == self.total_iters
 
     def __getitem__(self, it):
-        """Getitem.
-
-        Args:
-            it: The it.
-        """
         if it >= self.total_iters:
             return self.final_value
         else:

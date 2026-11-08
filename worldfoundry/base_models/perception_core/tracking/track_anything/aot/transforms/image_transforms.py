@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> transforms -> image_transforms.py functionality."""
-
 import math
 import numbers
 import random
@@ -26,11 +24,6 @@ _pil_interpolation_to_str = {
 
 
 def _get_image_size(img):
-    """Helper function to get image size.
-
-    Args:
-        img: The img.
-    """
     if TF._is_pil_image(img):
         return img.size
     elif isinstance(img, torch.Tensor) and img.dim() > 2:
@@ -47,11 +40,6 @@ class RandomHorizontalFlip:
     """
 
     def __init__(self, p=0.5):
-        """Init.
-
-        Args:
-            p: The p.
-        """
         self.p = p
 
     def __call__(self, img, mask):
@@ -68,7 +56,6 @@ class RandomHorizontalFlip:
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         return self.__class__.__name__ + f"(p={self.p})"
 
 
@@ -80,11 +67,6 @@ class RandomVerticalFlip:
     """
 
     def __init__(self, p=0.5):
-        """Init.
-
-        Args:
-            p: The p.
-        """
         self.p = p
 
     def __call__(self, img, mask):
@@ -101,7 +83,6 @@ class RandomVerticalFlip:
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         return self.__class__.__name__ + f"(p={self.p})"
 
 
@@ -109,19 +90,9 @@ class GaussianBlur:
     """Gaussian blur augmentation from SimCLR: https://arxiv.org/abs/2002.05709"""
 
     def __init__(self, sigma=[0.1, 2.0]):
-        """Init.
-
-        Args:
-            sigma: The sigma.
-        """
         self.sigma = sigma
 
     def __call__(self, x):
-        """Call.
-
-        Args:
-            x: The x.
-        """
         sigma = random.uniform(self.sigma[0], self.sigma[1])
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
         return x
@@ -165,16 +136,6 @@ class RandomAffine:
         resample=False,
         fillcolor=0,
     ):
-        """Init.
-
-        Args:
-            degrees: The degrees.
-            translate: The translate.
-            scale: The scale.
-            shear: The shear.
-            resample: The resample.
-            fillcolor: The fillcolor.
-        """
         if isinstance(degrees, numbers.Number):
             if degrees < 0:
                 raise ValueError("If degrees is a single number, it must be positive.")
@@ -269,7 +230,6 @@ class RandomAffine:
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         s = "{name}(degrees={degrees}"
         if self.translate is not None:
             s += ", translate={translate}"
@@ -324,15 +284,6 @@ class RandomCrop:
     """
 
     def __init__(self, size, padding=None, pad_if_needed=False, fill=0, padding_mode="constant"):
-        """Init.
-
-        Args:
-            size: The size.
-            padding: The padding.
-            pad_if_needed: The pad if needed.
-            fill: The fill.
-            padding_mode: The padding mode.
-        """
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
         else:
@@ -387,7 +338,6 @@ class RandomCrop:
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         return self.__class__.__name__ + f"(size={self.size}, padding={self.padding})"
 
 
@@ -413,14 +363,6 @@ class RandomResizedCrop:
         ratio=(3.0 / 4.0, 4.0 / 3.0),
         interpolation=Image.BILINEAR,
     ):
-        """Init.
-
-        Args:
-            size: The size.
-            scale: The scale.
-            ratio: The ratio.
-            interpolation: The interpolation.
-        """
         if isinstance(size, (tuple, list)):
             self.size = size
         else:
@@ -491,7 +433,6 @@ class RandomResizedCrop:
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
         format_string = self.__class__.__name__ + f"(size={self.size}"
         format_string += f", scale={tuple(round(s, 4) for s in self.scale)}"
@@ -508,12 +449,6 @@ class ToOnehot:
     """
 
     def __init__(self, max_obj_n, shuffle):
-        """Init.
-
-        Args:
-            max_obj_n: The max obj n.
-            shuffle: The shuffle.
-        """
         self.max_obj_n = max_obj_n
         self.shuffle = shuffle
 
@@ -547,7 +482,6 @@ class ToOnehot:
         return torch.from_numpy(new_mask), obj_list
 
     def __repr__(self):
-        """Repr."""
         return self.__class__.__name__ + f"(max_obj_n={self.max_obj_n})"
 
 
@@ -570,12 +504,6 @@ class Resize(torch.nn.Module):
     """
 
     def __init__(self, size, interpolation=Image.BILINEAR):
-        """Init.
-
-        Args:
-            size: The size.
-            interpolation: The interpolation.
-        """
         super().__init__()
         if not isinstance(size, (int, Sequence)):
             raise TypeError(f"Size should be int or sequence. Got {type(size)}")
@@ -597,6 +525,5 @@ class Resize(torch.nn.Module):
         return img, mask
 
     def __repr__(self):
-        """Repr."""
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
         return self.__class__.__name__ + f"(size={self.size}, interpolation={interpolate_str})"

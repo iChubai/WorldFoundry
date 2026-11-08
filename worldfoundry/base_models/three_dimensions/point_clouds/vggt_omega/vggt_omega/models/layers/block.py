@@ -9,8 +9,6 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> layers -> block.py functionality."""
-
 from collections.abc import Callable
 
 import torch
@@ -24,8 +22,6 @@ from .utils import cat_keep_shapes, uncat_with_shapes
 
 
 class SelfAttentionBlock(nn.Module):
-    """Self attention block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -46,30 +42,6 @@ class SelfAttentionBlock(nn.Module):
         use_qk_norm: bool = False,
         device=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            ffn_ratio: The ffn ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            mask_k_bias: The mask k bias.
-            use_qk_norm: The use qk norm.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         # print(f"biases: qkv: {qkv_bias}, proj: {proj_bias}, ffn: {ffn_bias}")
         self.norm1 = norm_layer(dim)
@@ -104,15 +76,6 @@ class SelfAttentionBlock(nn.Module):
 
     @staticmethod
     def _maybe_index_rope(rope: tuple[Tensor, Tensor] | None, indices: Tensor) -> tuple[Tensor, Tensor] | None:
-        """Helper function to maybe index rope.
-
-        Args:
-            rope: The rope.
-            indices: The indices.
-
-        Returns:
-            The return value.
-        """
         if rope is None:
             return None
 
@@ -245,15 +208,6 @@ class SelfAttentionBlock(nn.Module):
         return x_ffn
 
     def forward(self, x_or_x_list, rope_or_rope_list=None) -> list[Tensor]:
-        """Forward.
-
-        Args:
-            x_or_x_list: The x or x list.
-            rope_or_rope_list: The rope or rope list.
-
-        Returns:
-            The return value.
-        """
         if isinstance(x_or_x_list, Tensor):
             # for reference:
             # return self._forward(x_or_x_list, rope=rope_or_rope_list)
@@ -269,8 +223,6 @@ class SelfAttentionBlock(nn.Module):
 
 
 class CausalSelfAttentionBlock(nn.Module):
-    """Causal self attention block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -282,18 +234,6 @@ class CausalSelfAttentionBlock(nn.Module):
         norm_layer: Callable = nn.LayerNorm,
         dropout_prob: float = 0.0,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            ffn_ratio: The ffn ratio.
-            ls_init_value: The ls init value.
-            is_causal: The is causal.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            dropout_prob: The dropout prob.
-        """
         super().__init__()
 
         self.dim = dim
@@ -320,17 +260,6 @@ class CausalSelfAttentionBlock(nn.Module):
         init_fc_std: float | None = None,
         factor: float = 1.0,
     ) -> None:
-        """Init weights.
-
-        Args:
-            init_attn_std: The init attn std.
-            init_proj_std: The init proj std.
-            init_fc_std: The init fc std.
-            factor: The factor.
-
-        Returns:
-            The return value.
-        """
         init_attn_std = init_attn_std or (self.dim**-0.5)
         init_proj_std = init_proj_std or init_attn_std * factor
         init_fc_std = init_fc_std or (2 * self.dim) ** -0.5
@@ -344,12 +273,6 @@ class CausalSelfAttentionBlock(nn.Module):
         self,
         x: torch.Tensor,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
-
         x_attn = x + self.ls1(self.attention(self.attention_norm(x), self.is_causal))
         x_ffn = x_attn + self.ls2(self.feed_forward(self.ffn_norm(x_attn)))
         return x_ffn

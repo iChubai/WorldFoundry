@@ -53,21 +53,6 @@ class TritonLiteMLAFunction(torch.autograd.Function):
         head_dim: int,
         eps: float,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            x: The x.
-            qkv_weight: The qkv weight.
-            proj_weight: The proj weight.
-            proj_bias: The proj bias.
-            num_heads: The num heads.
-            head_dim: The head dim.
-            eps: The eps.
-
-        Returns:
-            The return value.
-        """
         ctx.x_dtype, ctx.qkv_weight_dtype, ctx.proj_dtype = x.dtype, qkv_weight.dtype, proj_weight.dtype
         if torch.is_autocast_enabled():
             autocast_dtype = torch.get_autocast_gpu_dtype()
@@ -96,12 +81,6 @@ class TritonLiteMLAFunction(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_y: torch.Tensor):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            grad_y: The grad y.
-        """
         x, qkv_weight, relu_mask, v, k, vk, q, vk_q, proj_input, proj_weight = ctx.saved_tensors
         B, N, H, C1 = vk_q.shape
         C = C1 - 1
@@ -144,14 +123,6 @@ class TritonLiteMLA(nn.Module):
         eps=1e-15,
         use_bias=False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            eps: The eps.
-            use_bias: The use bias.
-        """
         super().__init__()
         self.dim, self.num_heads, self.head_dim, self.eps = dim, num_heads, dim // num_heads, eps
         if use_bias:
@@ -160,33 +131,16 @@ class TritonLiteMLA(nn.Module):
         self.proj = nn.Linear(dim, dim)
 
     def forward(self, x: torch.Tensor, mask=None, HW=None, block_id=None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            HW: The hw.
-            block_id: The block id.
-
-        Returns:
-            The return value.
-        """
         return TritonLiteMLAFunction.apply(
             x, self.qkv.weight, self.proj.weight, self.proj.bias, self.num_heads, self.head_dim, self.eps
         )
 
     @property
     def module_str(self) -> str:
-        """Module str.
-
-        Returns:
-            The return value.
-        """
         _str = type(self).__name__ + "("
         eps = f"{self.eps:.1E}"
         _str += f"i={self.in_dim},o={self.out_dim},h={self.heads},d={self.dim},eps={eps}"
         return _str
 
     def __repr__(self):
-        """Repr."""
         return f"EPS{self.eps}-" + super().__repr__()

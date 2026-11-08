@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> raft.py functionality."""
-
 import math
 
 import torch
@@ -22,14 +20,7 @@ class RAFT(
     pipeline_tag="optical-flow-estimation",
     license="bsd-3-clause",
 ):
-    """Raft implementation."""
-
     def __init__(self, args):
-        """Init.
-
-        Args:
-            args: The args.
-        """
         super().__init__()
         self.args = args
         self.output_dim = args.dim * 2

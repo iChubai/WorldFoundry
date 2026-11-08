@@ -2,21 +2,12 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> perflib -> fused.py functionality."""
-
 import torch
 
 addmm_act_op = torch.ops.aten._addmm_activation
 
 
 def addmm_act(activation, linear, mat1):
-    """Addmm act.
-
-    Args:
-        activation: The activation.
-        linear: The linear.
-        mat1: The mat1.
-    """
     if torch.is_grad_enabled():
         raise ValueError("Expected grad to be disabled.")
     self = linear.bias.detach()

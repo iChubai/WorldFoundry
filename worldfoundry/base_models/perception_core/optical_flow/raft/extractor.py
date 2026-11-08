@@ -1,21 +1,9 @@
-"""Module for base_models -> perception_core -> optical_flow -> raft -> extractor.py functionality."""
-
 import torch
 import torch.nn as nn
 
 
 class ResidualBlock(nn.Module):
-    """Residual block implementation."""
-
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        """Init.
-
-        Args:
-            in_planes: The in planes.
-            planes: The planes.
-            norm_fn: The norm fn.
-            stride: The stride.
-        """
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
@@ -55,11 +43,6 @@ class ResidualBlock(nn.Module):
             self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         y = x
         y = self.relu(self.norm1(self.conv1(y)))
         y = self.relu(self.norm2(self.conv2(y)))
@@ -71,17 +54,7 @@ class ResidualBlock(nn.Module):
 
 
 class BottleneckBlock(nn.Module):
-    """Bottleneck block implementation."""
-
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        """Init.
-
-        Args:
-            in_planes: The in planes.
-            planes: The planes.
-            norm_fn: The norm fn.
-            stride: The stride.
-        """
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
@@ -126,11 +99,6 @@ class BottleneckBlock(nn.Module):
             self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm4)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         y = x
         y = self.relu(self.norm1(self.conv1(y)))
         y = self.relu(self.norm2(self.conv2(y)))
@@ -143,16 +111,7 @@ class BottleneckBlock(nn.Module):
 
 
 class BasicEncoder(nn.Module):
-    """Basic encoder implementation."""
-
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        """Init.
-
-        Args:
-            output_dim: The output dim.
-            norm_fn: The norm fn.
-            dropout: The dropout.
-        """
         super().__init__()
         self.norm_fn = norm_fn
 
@@ -193,12 +152,6 @@ class BasicEncoder(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, dim, stride=1):
-        """Helper function to make layer.
-
-        Args:
-            dim: The dim.
-            stride: The stride.
-        """
         layer1 = ResidualBlock(self.in_planes, dim, self.norm_fn, stride=stride)
         layer2 = ResidualBlock(dim, dim, self.norm_fn, stride=1)
         layers = (layer1, layer2)
@@ -207,12 +160,6 @@ class BasicEncoder(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
-
         # if input is list, combine batch dimension
         is_list = isinstance(x, (tuple, list))
         if is_list:
@@ -239,16 +186,7 @@ class BasicEncoder(nn.Module):
 
 
 class SmallEncoder(nn.Module):
-    """Small encoder implementation."""
-
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        """Init.
-
-        Args:
-            output_dim: The output dim.
-            norm_fn: The norm fn.
-            dropout: The dropout.
-        """
         super().__init__()
         self.norm_fn = norm_fn
 
@@ -288,12 +226,6 @@ class SmallEncoder(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, dim, stride=1):
-        """Helper function to make layer.
-
-        Args:
-            dim: The dim.
-            stride: The stride.
-        """
         layer1 = BottleneckBlock(self.in_planes, dim, self.norm_fn, stride=stride)
         layer2 = BottleneckBlock(dim, dim, self.norm_fn, stride=1)
         layers = (layer1, layer2)
@@ -302,12 +234,6 @@ class SmallEncoder(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
-
         # if input is list, combine batch dimension
         is_list = isinstance(x, (tuple, list))
         if is_list:

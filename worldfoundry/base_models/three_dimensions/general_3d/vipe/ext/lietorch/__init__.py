@@ -2,8 +2,6 @@
 # https://github.com/princeton-vl/lietorch
 # Licensed under the BSD-3 License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> lietorch -> __init__.py functionality."""
-
 __all__ = ["groups"]
 from .groups import SE3 as SE3
 from .groups import SO3 as SO3

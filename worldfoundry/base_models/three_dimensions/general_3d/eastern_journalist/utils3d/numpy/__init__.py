@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> __init__.py functionality."""
-
 import itertools
 from typing import TYPE_CHECKING
 

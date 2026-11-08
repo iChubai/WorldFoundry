@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/main/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> variants -> depth_anything_v3 -> vision_transformer.py functionality."""
-
 import math
 from collections.abc import Sequence
 
@@ -56,22 +54,13 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 
 
 class BlockChunk(nn.ModuleList):
-    """Block chunk implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for b in self:
             x = b(x)
         return x
 
 
 class DinoVisionTransformer(nn.Module):
-    """Dino vision transformer implementation."""
-
     def __init__(
         self,
         img_size=224,
@@ -105,7 +94,6 @@ class DinoVisionTransformer(nn.Module):
         """
         Args:
             img_size (int, tuple): input image size
-            patch_size (int, tuple): patch size
             in_chans (int): number of input channels
             embed_dim (int): embedding dimension
             depth (int): depth of transformer
@@ -168,7 +156,6 @@ class DinoVisionTransformer(nn.Module):
             logger.info("using Identity layer as FFN")
 
             def f(*args, **kwargs):
-                """F."""
                 return nn.Identity()
 
             ffn_layer = f
@@ -202,13 +189,6 @@ class DinoVisionTransformer(nn.Module):
         self.norm = norm_layer(embed_dim)
 
     def interpolate_pos_encoding(self, x, w, h):
-        """Interpolate pos encoding.
-
-        Args:
-            x: The x.
-            w: The w.
-            h: The h.
-        """
         previous_dtype = x.dtype
         npatch = x.shape[1] - 1
         N = self.pos_embed.shape[1] - 1
@@ -245,24 +225,11 @@ class DinoVisionTransformer(nn.Module):
         return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1).to(previous_dtype)
 
     def prepare_cls_token(self, B, S):
-        """Prepare cls token.
-
-        Args:
-            B: The b.
-            S: The s.
-        """
         cls_token = self.cls_token.expand(B, S, -1)
         cls_token = cls_token.reshape(B * S, -1, self.embed_dim)
         return cls_token
 
     def prepare_tokens_with_masks(self, x, masks=None, cls_token=None, **kwargs):
-        """Prepare tokens with masks.
-
-        Args:
-            x: The x.
-            masks: The masks.
-            cls_token: The cls token.
-        """
         B, S, nc, w, h = x.shape
         x = rearrange(x, "b s c h w -> (b s) c h w")
         x = self.patch_embed(x)
@@ -284,15 +251,6 @@ class DinoVisionTransformer(nn.Module):
         return x
 
     def _prepare_rope(self, B, S, H, W, device):
-        """Helper function to prepare rope.
-
-        Args:
-            B: The b.
-            S: The s.
-            H: The h.
-            W: The w.
-            device: The device.
-        """
         pos = None
         pos_nodiff = None
         if self.rope is not None:
@@ -309,13 +267,6 @@ class DinoVisionTransformer(nn.Module):
         return pos, pos_nodiff
 
     def _get_intermediate_layers_not_chunked(self, x, n=1, export_feat_layers=[], **kwargs):
-        """Helper function to get intermediate layers not chunked.
-
-        Args:
-            x: The x.
-            n: The n.
-            export_feat_layers: The export feat layers.
-        """
         B, S, _, H, W = x.shape
         x = self.prepare_tokens_with_masks(x)
         output, total_block_len, aux_output = [], len(self.blocks), []
@@ -370,15 +321,6 @@ class DinoVisionTransformer(nn.Module):
         return output, aux_output
 
     def process_attention(self, x, block, attn_type="global", pos=None, attn_mask=None):
-        """Process attention.
-
-        Args:
-            x: The x.
-            block: The block.
-            attn_type: The attn type.
-            pos: The pos.
-            attn_mask: The attn mask.
-        """
         b, s, n = x.shape[:3]
         if attn_type == "local":
             x = rearrange(x, "b s n c -> (b s) n c")
@@ -406,16 +348,6 @@ class DinoVisionTransformer(nn.Module):
         export_feat_layers: list[int] = [],
         **kwargs,
     ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
-        """Get intermediate layers.
-
-        Args:
-            x: The x.
-            n: The n.
-            export_feat_layers: The export feat layers.
-
-        Returns:
-            The return value.
-        """
         outputs, aux_outputs = self._get_intermediate_layers_not_chunked(
             x, n, export_feat_layers=export_feat_layers, **kwargs
         )
@@ -439,13 +371,6 @@ class DinoVisionTransformer(nn.Module):
 
 
 def vit_small(patch_size=16, num_register_tokens=0, depth=12, **kwargs):
-    """Vit small.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        depth: The depth.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
@@ -460,13 +385,6 @@ def vit_small(patch_size=16, num_register_tokens=0, depth=12, **kwargs):
 
 
 def vit_base(patch_size=16, num_register_tokens=0, depth=12, **kwargs):
-    """Vit base.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        depth: The depth.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
@@ -481,13 +399,6 @@ def vit_base(patch_size=16, num_register_tokens=0, depth=12, **kwargs):
 
 
 def vit_large(patch_size=16, num_register_tokens=0, depth=24, **kwargs):
-    """Vit large.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        depth: The depth.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=1024,

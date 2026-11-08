@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> misc -> collation.py functionality."""
-
 from collections.abc import Callable
 from typing import Union
 

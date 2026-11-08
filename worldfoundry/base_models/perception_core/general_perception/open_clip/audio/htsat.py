@@ -5,8 +5,6 @@
 # below codes are based and referred from https://github.com/microsoft/Swin-Transformer
 # Swin Transformer for Computer Vision: https://arxiv.org/pdf/2103.14030.pdf
 
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> audio -> htsat.py functionality."""
-
 import collections.abc
 import math
 import random
@@ -53,18 +51,7 @@ def interpolate(x, ratio):
 
 # from PyTorch internals
 def _ntuple(n):
-    """Helper function to ntuple.
-
-    Args:
-        n: The n.
-    """
-
     def parse(x):
-        """Parse.
-
-        Args:
-            x: The x.
-        """
         if isinstance(x, collections.abc.Iterable):
             return x
         return tuple(repeat(x, n))
@@ -101,20 +88,10 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        """Init.
-
-        Args:
-            drop_prob: The drop prob.
-        """
         super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return drop_path(x, self.drop_prob, self.training)
 
 
@@ -133,19 +110,6 @@ class PatchEmbed(nn.Module):
         enable_fusion=False,
         fusion_type="None",
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            patch_stride: The patch stride.
-            enable_fusion: The enable fusion.
-            fusion_type: The fusion type.
-        """
         super().__init__()
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -186,12 +150,6 @@ class PatchEmbed(nn.Module):
                 self.fusion_model = iAFF(channels=embed_dim, type="2D")
 
     def forward(self, x, longer_idx=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            longer_idx: The longer idx.
-        """
         if (self.enable_fusion) and (self.fusion_type in ["daf_2d", "aff_2d", "iaff_2d"]):
             global_x = x[:, 0:1, :, :]
 
@@ -245,15 +203,6 @@ class Mlp(nn.Module):
     """MLP as used in Vision Transformer, MLP-Mixer and related networks"""
 
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -263,11 +212,6 @@ class Mlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
@@ -277,24 +221,9 @@ class Mlp(nn.Module):
 
 
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
-    """Helper function to no grad trunc normal.
-
-    Args:
-        tensor: The tensor.
-        mean: The mean.
-        std: The std.
-        a: The a.
-        b: The b.
-    """
-
     # Cut & paste from PyTorch official master until it's in a few official releases - RW
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
     def norm_cdf(x):
-        """Norm cdf.
-
-        Args:
-            x: The x.
-        """
         # Computes standard normal cumulative distribution function
         return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
 
@@ -351,14 +280,6 @@ def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
 
 
 def variance_scaling_(tensor, scale=1.0, mode="fan_in", distribution="normal"):
-    """Variance scaling.
-
-    Args:
-        tensor: The tensor.
-        scale: The scale.
-        mode: The mode.
-        distribution: The distribution.
-    """
     fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
     if mode == "fan_in":
         denom = fan_in
@@ -382,11 +303,6 @@ def variance_scaling_(tensor, scale=1.0, mode="fan_in", distribution="normal"):
 
 
 def lecun_normal_(tensor):
-    """Lecun normal.
-
-    Args:
-        tensor: The tensor.
-    """
     variance_scaling_(tensor, mode="fan_in", distribution="truncated_normal")
 
 
@@ -394,7 +310,6 @@ def window_partition(x, window_size):
     """
     Args:
         x: (B, H, W, C)
-        window_size (int): window size
     Returns:
         windows: (num_windows*B, window_size, window_size, C)
     """
@@ -408,7 +323,6 @@ def window_reverse(windows, window_size, H, W):
     """
     Args:
         windows: (num_windows*B, window_size, window_size, C)
-        window_size (int): Window size
         H (int): Height of image
         W (int): Width of image
     Returns:
@@ -434,18 +348,6 @@ class WindowAttention(nn.Module):
     """
 
     def __init__(self, dim, window_size, num_heads, qkv_bias=True, qk_scale=None, attn_drop=0.0, proj_drop=0.0):
-        """Init.
-
-        Args:
-            dim: The dim.
-            window_size: The window size.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-        """
-
         super().__init__()
         self.dim = dim
         self.window_size = window_size  # Wh, Ww
@@ -516,18 +418,16 @@ class WindowAttention(nn.Module):
         return x, attn
 
     def extra_repr(self):
-        """Extra repr."""
         return f"dim={self.dim}, window_size={self.window_size}, num_heads={self.num_heads}"
 
 
 # We use the model based on Swintransformer Block, therefore we can use the swin-transformer pretrained model
 class SwinTransformerBlock(nn.Module):
-    r"""Swin Transformer Block.
+    r"""
     Args:
         dim (int): Number of input channels.
         input_resolution (tuple[int]): Input resulotion.
         num_heads (int): Number of attention heads.
-        window_size (int): Window size.
         shift_size (int): Shift size for SW-MSA.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         qkv_bias (bool, optional): If True, add a learnable bias to query, key, value. Default: True
@@ -556,24 +456,6 @@ class SwinTransformerBlock(nn.Module):
         norm_layer=nn.LayerNorm,
         norm_before_mlp="ln",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            input_resolution: The input resolution.
-            num_heads: The num heads.
-            window_size: The window size.
-            shift_size: The shift size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop: The drop.
-            attn_drop: The attn drop.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            norm_before_mlp: The norm before mlp.
-        """
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -639,11 +521,6 @@ class SwinTransformerBlock(nn.Module):
         self.register_buffer("attn_mask", attn_mask)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # pdb.set_trace()
         H, W = self.input_resolution
         # print("H: ", H)
@@ -687,7 +564,6 @@ class SwinTransformerBlock(nn.Module):
         return x, attn
 
     def extra_repr(self):
-        """Extra repr."""
         return (
             f"dim={self.dim}, input_resolution={self.input_resolution}, num_heads={self.num_heads}, "
             f"window_size={self.window_size}, shift_size={self.shift_size}, mlp_ratio={self.mlp_ratio}"
@@ -703,13 +579,6 @@ class PatchMerging(nn.Module):
     """
 
     def __init__(self, input_resolution, dim, norm_layer=nn.LayerNorm):
-        """Init.
-
-        Args:
-            input_resolution: The input resolution.
-            dim: The dim.
-            norm_layer: The norm layer.
-        """
         super().__init__()
         self.input_resolution = input_resolution
         self.dim = dim
@@ -740,7 +609,6 @@ class PatchMerging(nn.Module):
         return x
 
     def extra_repr(self):
-        """Extra repr."""
         return f"input_resolution={self.input_resolution}, dim={self.dim}"
 
 
@@ -748,7 +616,6 @@ class BasicLayer(nn.Module):
     """A basic Swin Transformer layer for one stage.
     Args:
         dim (int): Number of input channels.
-        input_resolution (tuple[int]): Input resolution.
         depth (int): Number of blocks.
         num_heads (int): Number of attention heads.
         window_size (int): Local window size.
@@ -781,26 +648,6 @@ class BasicLayer(nn.Module):
         use_checkpoint=False,
         norm_before_mlp="ln",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            input_resolution: The input resolution.
-            depth: The depth.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop: The drop.
-            attn_drop: The attn drop.
-            drop_path: The drop path.
-            norm_layer: The norm layer.
-            downsample: The downsample.
-            use_checkpoint: The use checkpoint.
-            norm_before_mlp: The norm before mlp.
-        """
-
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -836,11 +683,6 @@ class BasicLayer(nn.Module):
             self.downsample = None
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         attns = []
         attn = None
         for blk in self.blocks:
@@ -858,7 +700,6 @@ class BasicLayer(nn.Module):
         return x, attn
 
     def extra_repr(self):
-        """Extra repr."""
         return f"dim={self.dim}, input_resolution={self.input_resolution}, depth={self.depth}"
 
 
@@ -915,33 +756,6 @@ class HTSATEncoder(nn.Module):
         fusion_type="None",
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            spec_size: The spec size.
-            patch_size: The patch size.
-            patch_stride: The patch stride.
-            in_chans: The in chans.
-            num_classes: The num classes.
-            embed_dim: The embed dim.
-            depths: The depths.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            qk_scale: The qk scale.
-            drop_rate: The drop rate.
-            attn_drop_rate: The attn drop rate.
-            drop_path_rate: The drop path rate.
-            norm_layer: The norm layer.
-            ape: The ape.
-            patch_norm: The patch norm.
-            use_checkpoint: The use checkpoint.
-            norm_before_mlp: The norm before mlp.
-            config: The config.
-            enable_fusion: The enable fusion.
-            fusion_type: The fusion type.
-        """
         super().__init__()
 
         self.config = config
@@ -1095,11 +909,6 @@ class HTSATEncoder(nn.Module):
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
-        """Helper function to init weights.
-
-        Args:
-            m: The m.
-        """
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
@@ -1110,21 +919,13 @@ class HTSATEncoder(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay(self):
-        """No weight decay."""
         return {"absolute_pos_embed"}
 
     @torch.jit.ignore
     def no_weight_decay_keywords(self):
-        """No weight decay keywords."""
         return {"relative_position_bias_table"}
 
     def forward_features(self, x, longer_idx=None):
-        """Forward features.
-
-        Args:
-            x: The x.
-            longer_idx: The longer idx.
-        """
         # A deprecated optimization for using a hierarchical output from different blocks
 
         frames_num = x.shape[2]
@@ -1175,13 +976,6 @@ class HTSATEncoder(nn.Module):
         return output_dict
 
     def crop_wav(self, x, crop_size, spe_pos=None):
-        """Crop wav.
-
-        Args:
-            x: The x.
-            crop_size: The crop size.
-            spe_pos: The spe pos.
-        """
         time_steps = x.shape[2]
         tx = torch.zeros(x.shape[0], x.shape[1], crop_size, x.shape[3], device=x.device, dtype=x.dtype)
         for i in range(len(x)):
@@ -1191,11 +985,6 @@ class HTSATEncoder(nn.Module):
 
     # Reshape the wavform to a img size, if you want to use the pretrained swin transformer model
     def reshape_wav2img(self, x):
-        """Reshape wav2img.
-
-        Args:
-            x: The x.
-        """
         B, C, T, F = x.shape
         target_T = int(self.spec_size * self.freq_ratio)
         target_F = self.spec_size // self.freq_ratio
@@ -1214,12 +1003,6 @@ class HTSATEncoder(nn.Module):
 
     # Repeat the wavform to a img size, if you want to use the pretrained swin transformer model
     def repeat_wat2img(self, x, cur_pos):
-        """Repeat wat2img.
-
-        Args:
-            x: The x.
-            cur_pos: The cur pos.
-        """
         B, C, T, F = x.shape
         target_T = int(self.spec_size * self.freq_ratio)
         target_F = self.spec_size // self.freq_ratio
@@ -1235,15 +1018,6 @@ class HTSATEncoder(nn.Module):
         return x
 
     def forward(self, x: torch.Tensor, mixup_lambda=None, infer_mode=False, device=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            mixup_lambda: The mixup lambda.
-            infer_mode: The infer mode.
-            device: The device.
-        """
-
         if self.enable_fusion and x["longer"].sum() == 0:
             # if no audio is longer than 10s, then randomly select one audio to be longer
             if self.training:
@@ -1369,13 +1143,6 @@ class HTSATEncoder(nn.Module):
 
 
 def create_htsat_model(audio_cfg, enable_fusion=False, fusion_type="None"):
-    """Create htsat model.
-
-    Args:
-        audio_cfg: The audio cfg.
-        enable_fusion: The enable fusion.
-        fusion_type: The fusion type.
-    """
     try:
         assert audio_cfg.model_name in ["tiny", "base", "large"], "model name for HTS-AT is wrong!"
         if audio_cfg.model_name == "tiny":

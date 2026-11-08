@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> models -> aggregator.py functionality."""
-
 import logging
 
 import torch
@@ -77,27 +75,6 @@ class Aggregator(nn.Module):
         rope_freq=100,
         init_values=0.01,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            block_fn: The block fn.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            patch_embed: The patch embed.
-            aa_order: The aa order.
-            aa_block_size: The aa block size.
-            qk_norm: The qk norm.
-            rope_freq: The rope freq.
-            init_values: The init values.
-        """
         super().__init__()
 
         self.__build_patch_embed__(patch_embed, img_size, patch_size, num_register_tokens, embed_dim=embed_dim)
@@ -418,12 +395,6 @@ class Aggregator(nn.Module):
         return tokens, global_idx, intermediates
 
     def _calculate_dynamic_budgets(self, total_budget):
-        """Helper function to calculate dynamic budgets.
-
-        Args:
-            total_budget: The total budget.
-        """
-
         with torch.no_grad():
             diversity_scores = 1.0 - self.last_scores
             scaled_scores = diversity_scores / 0.5

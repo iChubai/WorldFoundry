@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> alignment.py functionality."""
-
 import math
 from typing import *
 
@@ -20,12 +18,6 @@ def scatter_min(size: int, dim: int, index: torch.LongTensor, src: torch.Tensor)
 
 
 def split_batch_fwd(fn: Callable, chunk_size: int, *args, **kwargs):
-    """Split batch fwd.
-
-    Args:
-        fn: The fn.
-        chunk_size: The chunk size.
-    """
     batch_size = next(x for x in (*args, *kwargs.values()) if isinstance(x, torch.Tensor)).shape[0]
     n_chunks = batch_size // chunk_size + (batch_size % chunk_size > 0)
     splited_args = tuple(
@@ -47,31 +39,14 @@ def split_batch_fwd(fn: Callable, chunk_size: int, *args, **kwargs):
 
 
 def _pad_inf(x_: torch.Tensor):
-    """Helper function to pad inf.
-
-    Args:
-        x_: The x.
-    """
     return torch.cat([torch.full_like(x_[..., :1], -torch.inf), x_, torch.full_like(x_[..., :1], torch.inf)], dim=-1)
 
 
 def _pad_cumsum(cumsum: torch.Tensor):
-    """Helper function to pad cumsum.
-
-    Args:
-        cumsum: The cumsum.
-    """
     return torch.cat([torch.zeros_like(cumsum[..., :1]), cumsum, cumsum[..., -1:]], dim=-1)
 
 
 def _compute_residual(a: torch.Tensor, xyw: torch.Tensor, trunc: float):
-    """Helper function to compute residual.
-
-    Args:
-        a: The a.
-        xyw: The xyw.
-        trunc: The trunc.
-    """
     return a.mul(xyw[..., 0]).sub_(xyw[..., 1]).abs_().mul_(xyw[..., 2]).clamp_max_(trunc).sum(dim=-1)
 
 

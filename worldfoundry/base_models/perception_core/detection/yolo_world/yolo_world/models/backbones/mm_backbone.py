@@ -120,7 +120,7 @@ class HuggingCLIPLanguageBackbone(BaseModule):
 
 @MODELS.register_module()
 class PseudoLanguageBackbone(BaseModule):
-    """Pseudo Language Backbone
+    """
     Args:
         text_embed_path (str): path to the text embedding file
     """

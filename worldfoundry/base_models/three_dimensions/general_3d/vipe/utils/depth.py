@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> utils -> depth.py functionality."""
-
 from typing import Literal
 
 import torch
@@ -109,15 +107,6 @@ def get_camera_rays(height: int, width: int, intrinsics: torch.Tensor, normalize
 
 
 def get_camera_rays_panorama(height: int, width: int) -> torch.Tensor:
-    """Get camera rays panorama.
-
-    Args:
-        height: The height.
-        width: The width.
-
-    Returns:
-        The return value.
-    """
     v, u = torch.meshgrid(torch.linspace(0.0, 1.0, height), torch.linspace(0.0, 1.0, width), indexing="ij")
     v = v * torch.pi
     u = (u - 0.5) * 2 * torch.pi
@@ -133,14 +122,6 @@ def bilinear_splatting_inplace(
     out_data: torch.Tensor,
     out_weight: torch.Tensor,
 ):
-    """Bilinear splatting inplace.
-
-    Args:
-        data: The data.
-        uv: The uv.
-        out_data: The out data.
-        out_weight: The out weight.
-    """
     H, W, V = out_data.shape
     assert out_weight.shape == (H, W)
     assert data.shape[-1] == V
@@ -160,13 +141,6 @@ def bilinear_splatting_inplace(
     flat_weight = out_weight.view(-1)
 
     def splat(x_idx, y_idx, w):
-        """Splat.
-
-        Args:
-            x_idx: The x idx.
-            y_idx: The y idx.
-            w: The w.
-        """
         idx = y_idx * W + x_idx  # flatten 2D to 1D
         flat_out.index_add_(0, idx, data * w.unsqueeze(-1))
         flat_weight.index_add_(0, idx, w)
@@ -192,8 +166,6 @@ def bilinear_splatting(
         uv (torch.Tensor): UV coordinates with shape ([B], H, W, 2).
             Note that this is the pixel center coordinates, e.g. 0.5, 0.5 is the center of the top-left pixel.
         weight (torch.Tensor): Weight with shape ([B], H, W).
-        target_height (int): Target height.
-        target_width (int): Target width.
 
     Returns:
         warped_data(torch.Tensor): Warped data with shape ([B], target_height, target_width, C).
@@ -224,11 +196,6 @@ def bilinear_splatting(
     trans_pos_ceil = torch.ceil(trans_pos_offset).long()  # (b, h, w, 2)
 
     def clamp_and_stack(src: torch.Tensor):
-        """Clamp and stack.
-
-        Args:
-            src: The src.
-        """
         return torch.stack(
             [
                 torch.clamp(src[..., 0], min=0, max=target_width + 1),

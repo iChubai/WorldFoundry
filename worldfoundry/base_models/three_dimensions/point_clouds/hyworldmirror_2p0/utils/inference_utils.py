@@ -421,11 +421,6 @@ def create_filter_mask(
             gs_mask_list.append(gs_frame_mask if apply_edge_mask else final_mask)
 
     def _stack(ml):
-        """Helper function to stack.
-
-        Args:
-            ml: The ml.
-        """
         return np.stack(ml, axis=0) if ml[0] is not None else np.ones((S, H, W), dtype=bool)
 
     pts_mask = _stack(final_mask_list)
@@ -586,31 +581,13 @@ def compute_filter_mask(
 
 
 def _timed_call(func, *args, **kwargs):
-    """Helper function to timed call.
-
-    Args:
-        func: The func.
-    """
     t0 = time.perf_counter()
     result = func(*args, **kwargs)
     return result, time.perf_counter() - t0
 
 
 def _save_depth_parallel(depth_cpu, depth_dir, S):
-    """Helper function to save depth parallel.
-
-    Args:
-        depth_cpu: The depth cpu.
-        depth_dir: The depth dir.
-        S: The s.
-    """
-
     def _save_one(i):
-        """Helper function to save one.
-
-        Args:
-            i: The i.
-        """
         save_depth_png(depth_dir / f"depth_{i:04d}.png", depth_cpu[i, :, :, 0])
         save_depth_npy(depth_dir / f"depth_{i:04d}.npy", depth_cpu[i, :, :, 0])
 
@@ -619,20 +596,7 @@ def _save_depth_parallel(depth_cpu, depth_dir, S):
 
 
 def _save_conf_parallel(depth_conf_cpu, conf_dir, S):
-    """Helper function to save conf parallel.
-
-    Args:
-        depth_conf_cpu: The depth conf cpu.
-        conf_dir: The conf dir.
-        S: The s.
-    """
-
     def _save_one(i):
-        """Helper function to save one.
-
-        Args:
-            i: The i.
-        """
         conf = depth_conf_cpu[i]
         c_min, c_max = conf.min(), conf.max()
         norm = (conf - c_min) / (c_max - c_min) if c_max - c_min > 1e-8 else torch.ones_like(conf)
@@ -645,20 +609,7 @@ def _save_conf_parallel(depth_conf_cpu, conf_dir, S):
 
 
 def _save_normal_parallel(normals_cpu, normal_dir, S):
-    """Helper function to save normal parallel.
-
-    Args:
-        normals_cpu: The normals cpu.
-        normal_dir: The normal dir.
-        S: The s.
-    """
-
     def _save_one(i):
-        """Helper function to save one.
-
-        Args:
-            i: The i.
-        """
         save_normal_png(normal_dir / f"normal_{i:04d}.png", normals_cpu[i])
 
     with ThreadPoolExecutor(max_workers=_IO_WORKERS) as pool:
@@ -666,20 +617,7 @@ def _save_normal_parallel(normals_cpu, normal_dir, S):
 
 
 def _save_sky_mask_parallel(sky_mask, sky_mask_dir, S):
-    """Helper function to save sky mask parallel.
-
-    Args:
-        sky_mask: The sky mask.
-        sky_mask_dir: The sky mask dir.
-        S: The s.
-    """
-
     def _save_one(i):
-        """Helper function to save one.
-
-        Args:
-            i: The i.
-        """
         Image.fromarray((~sky_mask[i]).astype(np.uint8) * 255, mode="L").save(
             str(sky_mask_dir / f"sky_mask_{i:04d}.png")
         )
@@ -708,11 +646,6 @@ def _voxel_prune_gaussians(means, scales, quats, colors, opacities, weights, vox
     wsum = torch.zeros(K, dtype=w.dtype).scatter_add_(0, inv, w).clamp(min=1e-8)
 
     def _wavg(vals):
-        """Helper function to wavg.
-
-        Args:
-            vals: The vals.
-        """
         out = torch.zeros(K, *vals.shape[1:], dtype=vals.dtype)
         for d in range(vals.shape[1]):
             out[:, d].scatter_add_(0, inv, vals[:, d] * w)
@@ -962,16 +895,6 @@ def save_results(
 
 
 def _save_points_artifacts(path, pts_np, cols_np, compress=False, max_points=2_000_000, voxel_size=0.005):
-    """Helper function to save points artifacts.
-
-    Args:
-        path: The path.
-        pts_np: The pts np.
-        cols_np: The cols np.
-        compress: The compress.
-        max_points: The max points.
-        voxel_size: The voxel size.
-    """
     timings = {}
     if compress:
         t0 = time.perf_counter()
@@ -990,13 +913,6 @@ def print_and_save_timings(timings, outdir):
     """Print formatted timing table and save to JSON."""
 
     def _p(label, value, indent=0):
-        """Helper function to p.
-
-        Args:
-            label: The label.
-            value: The value.
-            indent: The indent.
-        """
         print(f"{'  ' * (indent + 1)}{label:<38s} {value:>10.3f}s")
 
     print(f"\n{'=' * 72}\n  TIMING REPORT\n{'=' * 72}")

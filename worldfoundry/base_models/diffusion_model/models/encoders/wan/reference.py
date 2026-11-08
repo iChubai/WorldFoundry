@@ -32,11 +32,6 @@ __all__ = [
 
 
 def fp16_clamp(x):
-    """Fp16 clamp.
-
-    Args:
-        x: The x.
-    """
     if x.dtype == torch.float16 and torch.isinf(x).any():
         clamp = torch.finfo(x.dtype).max - 1000
         x = torch.clamp(x, min=-clamp, max=clamp)
@@ -44,11 +39,6 @@ def fp16_clamp(x):
 
 
 def init_weights(m):
-    """Init weights.
-
-    Args:
-        m: The m.
-    """
     if isinstance(m, T5LayerNorm):
         nn.init.ones_(m.weight)
     elif isinstance(m, T5Model):
@@ -67,14 +57,7 @@ def init_weights(m):
 
 
 class GELU(nn.Module):
-    """Gelu implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return 0.5 * x * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))))
 
 
@@ -82,23 +65,12 @@ class T5LayerNorm(nn.Module):
     """Layer norm implementation."""
 
     def __init__(self, dim, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = x * torch.rsqrt(x.float().pow(2).mean(dim=-1, keepdim=True) + self.eps)
         if self.weight.dtype in [torch.float16, torch.bfloat16]:
             x = x.type_as(self.weight)
@@ -109,14 +81,6 @@ class T5Attention(nn.Module):
     """Attention implementation."""
 
     def __init__(self, dim, dim_attn, num_heads, dropout=0.1):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_attn: The dim attn.
-            num_heads: The num heads.
-            dropout: The dropout.
-        """
         assert dim_attn % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -171,13 +135,6 @@ class T5FeedForward(nn.Module):
     """Feed forward implementation."""
 
     def __init__(self, dim, dim_ffn, dropout=0.1):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_ffn: The dim ffn.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.dim_ffn = dim_ffn
@@ -189,11 +146,6 @@ class T5FeedForward(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.fc1(x) * self.gate(x)
         x = self.dropout(x)
         x = self.fc2(x)
@@ -205,17 +157,6 @@ class T5SelfAttention(nn.Module):
     """Self attention implementation."""
 
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_attn: The dim attn.
-            dim_ffn: The dim ffn.
-            num_heads: The num heads.
-            num_buckets: The num buckets.
-            shared_pos: The shared pos.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
@@ -232,13 +173,6 @@ class T5SelfAttention(nn.Module):
         self.pos_embedding = None if shared_pos else T5RelativeEmbedding(num_buckets, num_heads, bidirectional=True)
 
     def forward(self, x, mask=None, pos_bias=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            pos_bias: The pos bias.
-        """
         e = pos_bias if self.shared_pos else self.pos_embedding(x.size(1), x.size(1))
         x = fp16_clamp(x + self.attn(self.norm1(x), mask=mask, pos_bias=e))
         x = fp16_clamp(x + self.ffn(self.norm2(x)))
@@ -249,17 +183,6 @@ class T5CrossAttention(nn.Module):
     """Cross attention implementation."""
 
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_attn: The dim attn.
-            dim_ffn: The dim ffn.
-            num_heads: The num heads.
-            num_buckets: The num buckets.
-            shared_pos: The shared pos.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
@@ -278,15 +201,6 @@ class T5CrossAttention(nn.Module):
         self.pos_embedding = None if shared_pos else T5RelativeEmbedding(num_buckets, num_heads, bidirectional=False)
 
     def forward(self, x, mask=None, encoder_states=None, encoder_mask=None, pos_bias=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            encoder_states: The encoder states.
-            encoder_mask: The encoder mask.
-            pos_bias: The pos bias.
-        """
         e = pos_bias if self.shared_pos else self.pos_embedding(x.size(1), x.size(1))
         x = fp16_clamp(x + self.self_attn(self.norm1(x), mask=mask, pos_bias=e))
         x = fp16_clamp(x + self.cross_attn(self.norm2(x), context=encoder_states, mask=encoder_mask))
@@ -298,14 +212,6 @@ class T5RelativeEmbedding(nn.Module):
     """Relative embedding implementation."""
 
     def __init__(self, num_buckets, num_heads, bidirectional, max_dist=128):
-        """Init.
-
-        Args:
-            num_buckets: The num buckets.
-            num_heads: The num heads.
-            bidirectional: The bidirectional.
-            max_dist: The max dist.
-        """
         super().__init__()
         self.num_buckets = num_buckets
         self.num_heads = num_heads
@@ -316,12 +222,6 @@ class T5RelativeEmbedding(nn.Module):
         self.embedding = nn.Embedding(num_buckets, num_heads)
 
     def forward(self, lq, lk):
-        """Forward.
-
-        Args:
-            lq: The lq.
-            lk: The lk.
-        """
         device = self.embedding.weight.device
         if device.type == "meta":
             # Accelerate's sequential CPU offload deliberately replaces child
@@ -345,11 +245,6 @@ class T5RelativeEmbedding(nn.Module):
         return rel_pos_embeds.contiguous()
 
     def _relative_position_bucket(self, rel_pos):
-        """Helper function to relative position bucket.
-
-        Args:
-            rel_pos: The rel pos.
-        """
         # preprocess
         if self.bidirectional:
             num_buckets = self.num_buckets // 2
@@ -377,19 +272,6 @@ class T5Encoder(nn.Module):
     """Encoder implementation."""
 
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        """Init.
-
-        Args:
-            vocab: The vocab.
-            dim: The dim.
-            dim_attn: The dim attn.
-            dim_ffn: The dim ffn.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            num_buckets: The num buckets.
-            shared_pos: The shared pos.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
@@ -415,12 +297,6 @@ class T5Encoder(nn.Module):
         self.apply(init_weights)
 
     def forward(self, ids, mask=None):
-        """Forward.
-
-        Args:
-            ids: The ids.
-            mask: The mask.
-        """
         x = self.token_embedding(ids)
         x = self.dropout(x)
         e = self.pos_embedding(x.size(1), x.size(1)) if self.shared_pos else None
@@ -435,19 +311,6 @@ class T5Decoder(nn.Module):
     """Decoder implementation."""
 
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        """Init.
-
-        Args:
-            vocab: The vocab.
-            dim: The dim.
-            dim_attn: The dim attn.
-            dim_ffn: The dim ffn.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            num_buckets: The num buckets.
-            shared_pos: The shared pos.
-            dropout: The dropout.
-        """
         super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
@@ -473,14 +336,6 @@ class T5Decoder(nn.Module):
         self.apply(init_weights)
 
     def forward(self, ids, mask=None, encoder_states=None, encoder_mask=None):
-        """Forward.
-
-        Args:
-            ids: The ids.
-            mask: The mask.
-            encoder_states: The encoder states.
-            encoder_mask: The encoder mask.
-        """
         b, s = ids.size()
 
         # causal mask
@@ -516,20 +371,6 @@ class T5Model(nn.Module):
         shared_pos=True,
         dropout=0.1,
     ):
-        """Init.
-
-        Args:
-            vocab_size: The vocab size.
-            dim: The dim.
-            dim_attn: The dim attn.
-            dim_ffn: The dim ffn.
-            num_heads: The num heads.
-            encoder_layers: The encoder layers.
-            decoder_layers: The decoder layers.
-            num_buckets: The num buckets.
-            shared_pos: The shared pos.
-            dropout: The dropout.
-        """
         super().__init__()
         self.vocab_size = vocab_size
         self.dim = dim
@@ -554,14 +395,6 @@ class T5Model(nn.Module):
         self.apply(init_weights)
 
     def forward(self, encoder_ids, encoder_mask, decoder_ids, decoder_mask):
-        """Forward.
-
-        Args:
-            encoder_ids: The encoder ids.
-            encoder_mask: The encoder mask.
-            decoder_ids: The decoder ids.
-            decoder_mask: The decoder mask.
-        """
         x = self.encoder(encoder_ids, encoder_mask)
         x = self.decoder(decoder_ids, decoder_mask, x, encoder_mask)
         x = self.head(x)
@@ -578,17 +411,6 @@ def _t5(
     device="cpu",
     **kwargs,
 ):
-    """Helper function to t5.
-
-    Args:
-        name: The name.
-        encoder_only: The encoder only.
-        decoder_only: The decoder only.
-        return_tokenizer: The return tokenizer.
-        tokenizer_kwargs: The tokenizer kwargs.
-        dtype: The dtype.
-        device: The device.
-    """
     # sanity check
     assert not (encoder_only and decoder_only)
 
@@ -624,7 +446,6 @@ def _t5(
 
 
 def umt5_xxl(**kwargs):
-    """Umt5 xxl."""
     cfg = {
         "vocab_size": 256384,
         "dim": 4096,
@@ -656,19 +477,6 @@ class T5EncoderModel:
         load_with_mmap=False,
         return_full_context=False,
     ):
-        """Init.
-
-        Args:
-            text_len: The text len.
-            dtype: The dtype.
-            device: The device.
-            checkpoint_path: The checkpoint path.
-            tokenizer_path: The tokenizer path.
-            shard_fn: The shard fn.
-            load_with_core_loader: The load with core loader.
-            load_with_mmap: The load with mmap.
-            return_full_context: The return full context.
-        """
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.text_len = text_len
@@ -706,21 +514,10 @@ class T5EncoderModel:
         self.tokenizer = HuggingfaceTokenizer(name=tokenizer_path, seq_len=text_len, clean="whitespace")
 
     def to(self, device):
-        """To.
-
-        Args:
-            device: The device.
-        """
         self.device = device
         self.model.to(device)
 
     def __call__(self, texts, device=None):
-        """Call.
-
-        Args:
-            texts: The texts.
-            device: The device.
-        """
         if device is None:
             device = self.device
         ids, mask = self.tokenizer(texts, return_mask=True, add_special_tokens=True)

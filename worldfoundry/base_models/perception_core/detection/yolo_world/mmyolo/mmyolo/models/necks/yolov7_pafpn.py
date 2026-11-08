@@ -90,8 +90,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
         )
 
     def build_reduce_layer(self, idx: int) -> nn.Module:
-        """build reduce layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -116,7 +115,6 @@ class YOLOv7PAFPN(BaseYOLONeck):
         return layer
 
     def build_upsample_layer(self, idx: int) -> nn.Module:
-        """build upsample layer."""
         return nn.Sequential(
             ConvModule(
                 self.out_channels[idx], self.out_channels[idx - 1], 1, norm_cfg=self.norm_cfg, act_cfg=self.act_cfg
@@ -125,8 +123,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -139,8 +136,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
         return MODELS.build(block_cfg)
 
     def build_downsample_layer(self, idx: int) -> nn.Module:
-        """build downsample layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -167,8 +163,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
             )
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -181,8 +176,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
         return MODELS.build(block_cfg)
 
     def build_out_layer(self, idx: int) -> nn.Module:
-        """build out layer.
-
+        """
         Args:
             idx (int): layer idx.
 

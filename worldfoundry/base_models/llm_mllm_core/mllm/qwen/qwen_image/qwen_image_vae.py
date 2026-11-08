@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_image -> qwen_image_vae.py functionality."""
-
 import itertools
 
 import torch
@@ -33,18 +31,6 @@ class QwenImageCausalConv3d(torch.nn.Conv3d):
         stride: int | tuple[int, int, int] = 1,
         padding: int | tuple[int, int, int] = 0,
     ) -> None:
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-
-        Returns:
-            The return value.
-        """
         super().__init__(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -58,12 +44,6 @@ class QwenImageCausalConv3d(torch.nn.Conv3d):
         self.padding = (0, 0, 0)
 
     def forward(self, x, cache_x=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            cache_x: The cache x.
-        """
         padding = list(self._padding)
         if cache_x is not None and self._padding[4] > 0:
             cache_x = cache_x.to(x.device)
@@ -86,17 +66,6 @@ class QwenImageRMS_norm(nn.Module):
     """
 
     def __init__(self, dim: int, channel_first: bool = True, images: bool = True, bias: bool = False) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            channel_first: The channel first.
-            images: The images.
-            bias: The bias.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         broadcastable_dims = (1, 1, 1) if not images else (1, 1)
         shape = (dim, *broadcastable_dims) if channel_first else (dim,)
@@ -107,11 +76,6 @@ class QwenImageRMS_norm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return (
             torch.nn.functional.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma
             + self.bias
@@ -136,17 +100,6 @@ class QwenImageResidualBlock(nn.Module):
         dropout: float = 0.0,
         non_linearity: str = "silu",
     ) -> None:
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            dropout: The dropout.
-            non_linearity: The non linearity.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -161,13 +114,6 @@ class QwenImageResidualBlock(nn.Module):
         self.conv_shortcut = QwenImageCausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         # Apply shortcut connection
         h = self.conv_shortcut(x)
 
@@ -219,11 +165,6 @@ class QwenImageAttentionBlock(nn.Module):
     """
 
     def __init__(self, dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-        """
         super().__init__()
         self.dim = dim
 
@@ -233,11 +174,6 @@ class QwenImageAttentionBlock(nn.Module):
         self.proj = nn.Conv2d(dim, dim, 1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         identity = x
         batch_size, channels, time, height, width = x.size()
 
@@ -277,11 +213,6 @@ class QwenImageUpsample(nn.Upsample):
     """
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return super().forward(x.float()).type_as(x)
 
 
@@ -300,15 +231,6 @@ class QwenImageResample(nn.Module):
     """
 
     def __init__(self, dim: int, mode: str) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            mode: The mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.dim = dim
         self.mode = mode
@@ -334,13 +256,6 @@ class QwenImageResample(nn.Module):
             self.resample = nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         b, c, t, h, w = x.size()
         if self.mode == "upsample3d" and feat_cache is not None:
             idx = feat_idx[0]
@@ -392,14 +307,6 @@ class QwenImageMidBlock(nn.Module):
     """
 
     def __init__(self, dim: int, dropout: float = 0.0, non_linearity: str = "silu", num_layers: int = 1):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dropout: The dropout.
-            non_linearity: The non linearity.
-            num_layers: The num layers.
-        """
         super().__init__()
         self.dim = dim
 
@@ -415,13 +322,6 @@ class QwenImageMidBlock(nn.Module):
         self.gradient_checkpointing = False
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         # First residual block
         x = self.resnets[0](x, feat_cache, feat_idx)
 
@@ -461,18 +361,6 @@ class QwenImageEncoder3d(nn.Module):
         dropout=0.0,
         non_linearity: str = "silu",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            num_res_blocks: The num res blocks.
-            attn_scales: The attn scales.
-            temperal_downsample: The temperal downsample.
-            dropout: The dropout.
-            non_linearity: The non linearity.
-        """
         super().__init__()
         self.dim = dim
         self.z_dim = z_dim
@@ -515,13 +403,6 @@ class QwenImageEncoder3d(nn.Module):
         self.gradient_checkpointing = False
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -580,16 +461,6 @@ class QwenImageUpBlock(nn.Module):
         upsample_mode: str | None = None,
         non_linearity: str = "silu",
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            num_res_blocks: The num res blocks.
-            dropout: The dropout.
-            upsample_mode: The upsample mode.
-            non_linearity: The non linearity.
-        """
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -657,18 +528,6 @@ class QwenImageDecoder3d(nn.Module):
         dropout=0.0,
         non_linearity: str = "silu",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            num_res_blocks: The num res blocks.
-            attn_scales: The attn scales.
-            temperal_upsample: The temperal upsample.
-            dropout: The dropout.
-            non_linearity: The non linearity.
-        """
         super().__init__()
         self.dim = dim
         self.z_dim = z_dim
@@ -723,13 +582,6 @@ class QwenImageDecoder3d(nn.Module):
         self.gradient_checkpointing = False
 
     def forward(self, x, feat_cache=None, feat_idx=[0]):
-        """Forward.
-
-        Args:
-            x: The x.
-            feat_cache: The feat cache.
-            feat_idx: The feat idx.
-        """
         ## conv1
         if feat_cache is not None:
             idx = feat_idx[0]
@@ -768,8 +620,6 @@ class QwenImageDecoder3d(nn.Module):
 
 
 class QwenImageVAE(torch.nn.Module):
-    """Qwen image vae implementation."""
-
     def __init__(
         self,
         base_dim: int = 96,
@@ -780,20 +630,6 @@ class QwenImageVAE(torch.nn.Module):
         temperal_downsample: list[bool] = [False, True, True],
         dropout: float = 0.0,
     ) -> None:
-        """Init.
-
-        Args:
-            base_dim: The base dim.
-            z_dim: The z dim.
-            dim_mult: The dim mult.
-            num_res_blocks: The num res blocks.
-            attn_scales: The attn scales.
-            temperal_downsample: The temperal downsample.
-            dropout: The dropout.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.z_dim = z_dim
@@ -850,11 +686,6 @@ class QwenImageVAE(torch.nn.Module):
         self.std = 1 / torch.tensor(std).view(1, 16, 1, 1, 1)
 
     def encode(self, x, **kwargs):
-        """Encode.
-
-        Args:
-            x: The x.
-        """
         x = x.unsqueeze(2)
         x = self.encoder(x)
         x = self.quant_conv(x)
@@ -865,11 +696,6 @@ class QwenImageVAE(torch.nn.Module):
         return x
 
     def decode(self, x, **kwargs):
-        """Decode.
-
-        Args:
-            x: The x.
-        """
         x = x.unsqueeze(2)
         mean, std = self.mean.to(dtype=x.dtype, device=x.device), self.std.to(dtype=x.dtype, device=x.device)
         x = x / std + mean
@@ -880,20 +706,12 @@ class QwenImageVAE(torch.nn.Module):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return QwenImageVAEStateDictConverter()
 
 
 class QwenImageVAEStateDictConverter:
-    """Qwen image vae state dict converter implementation."""
-
     def __init__(self):
-        """Init."""
+        pass
 
     def from_diffusers(self, state_dict):
-        """From diffusers.
-
-        Args:
-            state_dict: The state dict.
-        """
         return state_dict

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> optical_flow -> track_anything -> aot -> networks -> engines -> aot_engine.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -11,18 +9,7 @@ from ..layers.basic import seq_to_2d
 
 
 class AOTEngine(nn.Module):
-    """Aot engine implementation."""
-
     def __init__(self, aot_model, gpu_id=0, long_term_mem_gap=9999, short_term_mem_skip=1, max_len_long_term=9999):
-        """Init.
-
-        Args:
-            aot_model: The aot model.
-            gpu_id: The gpu id.
-            long_term_mem_gap: The long term mem gap.
-            short_term_mem_skip: The short term mem skip.
-            max_len_long_term: The max len long term.
-        """
         super().__init__()
 
         self.cfg = aot_model.cfg
@@ -50,19 +37,6 @@ class AOTEngine(nn.Module):
         enable_prev_frame=False,
         use_prev_prob=False,
     ):  # only used for training
-        """Forward.
-
-        Args:
-            all_frames: The all frames.
-            all_masks: The all masks.
-            batch_size: The batch size.
-            obj_nums: The obj nums.
-            step: The step.
-            tf_board: The tf board.
-            use_prev_pred: The use prev pred.
-            enable_prev_frame: The enable prev frame.
-            use_prev_prob: The use prev prob.
-        """
         if self.losses is None:
             self._init_losses()
 
@@ -131,7 +105,6 @@ class AOTEngine(nn.Module):
         return loss, all_pred_mask, all_frame_loss, boards
 
     def _init_losses(self):
-        """Helper function to init losses."""
         cfg = self.cfg
 
         from ..layers.loss import CrossEntropyLoss, SoftJaccordLoss
@@ -148,13 +121,6 @@ class AOTEngine(nn.Module):
         self.aux_step = cfg.TRAIN_TOTAL_STEPS * cfg.TRAIN_AUX_LOSS_RATIO + 1e-5
 
     def encode_one_img_mask(self, img=None, mask=None, frame_step=-1):
-        """Encode one img mask.
-
-        Args:
-            img: The img.
-            mask: The mask.
-            frame_step: The frame step.
-        """
         if frame_step == -1:
             frame_step = self.frame_step
 
@@ -175,12 +141,6 @@ class AOTEngine(nn.Module):
         return curr_enc_embs, curr_one_hot_mask
 
     def offline_encoder(self, all_frames, all_masks=None):
-        """Offline encoder.
-
-        Args:
-            all_frames: The all frames.
-            all_masks: The all masks.
-        """
         self.enable_offline_enc = True
         self.offline_frames = all_frames.size(0) // self.batch_size
 
@@ -198,11 +158,6 @@ class AOTEngine(nn.Module):
             self.update_size(all_frames.size()[2:], self.offline_enc_embs[0][-1].size()[2:])
 
     def assign_identity(self, one_hot_mask):
-        """Assign identity.
-
-        Args:
-            one_hot_mask: The one hot mask.
-        """
         if self.enable_id_shuffle:
             one_hot_mask = torch.einsum("bohw,bot->bthw", one_hot_mask, self.id_shuffle_matrix)
 
@@ -214,12 +169,6 @@ class AOTEngine(nn.Module):
         return id_emb
 
     def split_frames(self, xs, chunk_size):
-        """Split frames.
-
-        Args:
-            xs: The xs.
-            chunk_size: The chunk size.
-        """
         new_xs = []
         for x in xs:
             all_x = list(torch.split(x, chunk_size, dim=0))
@@ -227,15 +176,6 @@ class AOTEngine(nn.Module):
         return list(zip(*new_xs, strict=False))
 
     def add_reference_frame(self, img=None, mask=None, frame_step=-1, obj_nums=None, img_embs=None):
-        """Add reference frame.
-
-        Args:
-            img: The img.
-            mask: The mask.
-            frame_step: The frame step.
-            obj_nums: The obj nums.
-            img_embs: The img embs.
-        """
         if self.obj_nums is None and obj_nums is None:
             print("No objects for reference frame!")
             exit()
@@ -294,13 +234,6 @@ class AOTEngine(nn.Module):
         self.short_term_memories = lstt_short_memories
 
     def set_prev_frame(self, img=None, mask=None, frame_step=1):
-        """Set prev frame.
-
-        Args:
-            img: The img.
-            mask: The mask.
-            frame_step: The frame step.
-        """
         self.frame_step = frame_step
         curr_enc_embs, curr_one_hot_mask = self.encode_one_img_mask(img, mask, frame_step)
 
@@ -335,11 +268,6 @@ class AOTEngine(nn.Module):
         self.short_term_memories = lstt_short_memories
 
     def update_long_term_memory(self, new_long_term_memories):
-        """Update long term memory.
-
-        Args:
-            new_long_term_memories: The new long term memories.
-        """
         TOKEN_NUM = new_long_term_memories[0][0].shape[0]
         if self.long_term_memories is None:
             self.long_term_memories = new_long_term_memories
@@ -359,13 +287,6 @@ class AOTEngine(nn.Module):
         self.long_term_memories = updated_long_term_memories
 
     def update_short_term_memory(self, curr_mask, curr_id_emb=None, skip_long_term_update=False):
-        """Update short term memory.
-
-        Args:
-            curr_mask: The curr mask.
-            curr_id_emb: The curr id emb.
-            skip_long_term_update: The skip long term update.
-        """
         if curr_id_emb is None:
             if len(curr_mask.size()) == 3 or curr_mask.size()[0] == 1:
                 curr_one_hot_mask = one_hot_mask(curr_mask, self.max_obj_num)
@@ -397,12 +318,6 @@ class AOTEngine(nn.Module):
             self.last_mem_step = self.frame_step
 
     def match_propogate_one_frame(self, img=None, img_embs=None):
-        """Match propogate one frame.
-
-        Args:
-            img: The img.
-            img_embs: The img embs.
-        """
         self.frame_step += 1
         if img_embs is None:
             curr_enc_embs, _ = self.encode_one_img_mask(img, None, self.frame_step)
@@ -420,11 +335,6 @@ class AOTEngine(nn.Module):
         )
 
     def decode_current_logits(self, output_size=None):
-        """Decode current logits.
-
-        Args:
-            output_size: The output size.
-        """
         curr_enc_embs = self.curr_enc_embs
         curr_lstt_embs = self.curr_lstt_output[0]
 
@@ -447,12 +357,6 @@ class AOTEngine(nn.Module):
         return pred_id_logits
 
     def predict_current_mask(self, output_size=None, return_prob=False):
-        """Predict current mask.
-
-        Args:
-            output_size: The output size.
-            return_prob: The return prob.
-        """
         if output_size is None:
             output_size = self.input_size_2d
 
@@ -468,12 +372,6 @@ class AOTEngine(nn.Module):
             return pred_mask, pred_prob
 
     def calculate_current_loss(self, gt_mask, step):
-        """Calculate current loss.
-
-        Args:
-            gt_mask: The gt mask.
-            step: The step.
-        """
         pred_id_logits = self.pred_id_logits
 
         pred_id_logits = F.interpolate(
@@ -495,13 +393,6 @@ class AOTEngine(nn.Module):
         return total_loss
 
     def generate_loss_mask(self, gt_mask, step, return_prob=False):
-        """Generate loss mask.
-
-        Args:
-            gt_mask: The gt mask.
-            step: The step.
-            return_prob: The return prob.
-        """
         self.decode_current_logits()
         loss = self.calculate_current_loss(gt_mask, step)
         if return_prob:
@@ -512,12 +403,6 @@ class AOTEngine(nn.Module):
             return loss, mask
 
     def keep_gt_mask(self, pred_mask, keep_prob=0.2):
-        """Keep gt mask.
-
-        Args:
-            pred_mask: The pred mask.
-            keep_prob: The keep prob.
-        """
         pred_mask = pred_mask.float()
         gt_mask = self.offline_masks[self.frame_step].float().squeeze(1)
 
@@ -531,13 +416,6 @@ class AOTEngine(nn.Module):
         return pred_mask
 
     def restart_engine(self, batch_size=1, enable_id_shuffle=False):
-        """Restart engine.
-
-        Args:
-            batch_size: The batch size.
-            enable_id_shuffle: The enable id shuffle.
-        """
-
         self.batch_size = batch_size
         self.frame_step = 0
         self.last_mem_step = -1
@@ -570,20 +448,12 @@ class AOTEngine(nn.Module):
             self.id_shuffle_matrix = None
 
     def update_size(self, input_size, enc_size):
-        """Update size.
-
-        Args:
-            input_size: The input size.
-            enc_size: The enc size.
-        """
         self.input_size_2d = input_size
         self.enc_size_2d = enc_size
         self.enc_hw = self.enc_size_2d[0] * self.enc_size_2d[1]
 
 
 class AOTInferEngine(nn.Module):
-    """Aot infer engine implementation."""
-
     def __init__(
         self,
         aot_model,
@@ -593,16 +463,6 @@ class AOTInferEngine(nn.Module):
         max_aot_obj_num=None,
         max_len_long_term=9999,
     ):
-        """Init.
-
-        Args:
-            aot_model: The aot model.
-            gpu_id: The gpu id.
-            long_term_mem_gap: The long term mem gap.
-            short_term_mem_skip: The short term mem skip.
-            max_aot_obj_num: The max aot obj num.
-            max_len_long_term: The max len long term.
-        """
         super().__init__()
 
         self.cfg = aot_model.cfg
@@ -622,18 +482,11 @@ class AOTInferEngine(nn.Module):
         self.restart_engine()
 
     def restart_engine(self):
-        """Restart engine."""
         del self.aot_engines
         self.aot_engines = []
         self.obj_nums = None
 
     def separate_mask(self, mask, obj_nums):
-        """Separate mask.
-
-        Args:
-            mask: The mask.
-            obj_nums: The obj nums.
-        """
         if mask is None:
             return [None] * len(self.aot_engines)
         if len(self.aot_engines) == 1:
@@ -664,11 +517,6 @@ class AOTInferEngine(nn.Module):
             return separated_probs, separated_obj_nums
 
     def min_logit_aggregation(self, all_logits):
-        """Min logit aggregation.
-
-        Args:
-            all_logits: The all logits.
-        """
         if len(all_logits) == 1:
             return all_logits[0]
 
@@ -685,11 +533,6 @@ class AOTInferEngine(nn.Module):
         return merged_logit
 
     def soft_logit_aggregation(self, all_logits):
-        """Soft logit aggregation.
-
-        Args:
-            all_logits: The all logits.
-        """
         if len(all_logits) == 1:
             return all_logits[0]
 
@@ -708,14 +551,6 @@ class AOTInferEngine(nn.Module):
         return merged_logit
 
     def add_reference_frame(self, img, mask, obj_nums, frame_step=-1):
-        """Add reference frame.
-
-        Args:
-            img: The img.
-            mask: The mask.
-            obj_nums: The obj nums.
-            frame_step: The frame step.
-        """
         if isinstance(obj_nums, list):
             obj_nums = obj_nums[0]
         self.obj_nums = obj_nums
@@ -746,11 +581,6 @@ class AOTInferEngine(nn.Module):
         self.update_size()
 
     def match_propogate_one_frame(self, img=None):
-        """Match propogate one frame.
-
-        Args:
-            img: The img.
-        """
         img_embs = None
         for aot_engine in self.aot_engines:
             aot_engine.match_propogate_one_frame(img, img_embs=img_embs)
@@ -758,11 +588,6 @@ class AOTInferEngine(nn.Module):
                 img_embs = aot_engine.curr_enc_embs
 
     def decode_current_logits(self, output_size=None):
-        """Decode current logits.
-
-        Args:
-            output_size: The output size.
-        """
         all_logits = []
         for aot_engine in self.aot_engines:
             all_logits.append(aot_engine.decode_current_logits(output_size))
@@ -770,19 +595,12 @@ class AOTInferEngine(nn.Module):
         return pred_id_logits
 
     def update_memory(self, curr_mask, skip_long_term_update=False):
-        """Update memory.
-
-        Args:
-            curr_mask: The curr mask.
-            skip_long_term_update: The skip long term update.
-        """
         _curr_mask = F.interpolate(curr_mask, self.input_size_2d)
         separated_masks, _ = self.separate_mask(_curr_mask, self.obj_nums)
         for aot_engine, separated_mask in zip(self.aot_engines, separated_masks, strict=False):
             aot_engine.update_short_term_memory(separated_mask, skip_long_term_update=skip_long_term_update)
 
     def update_size(self):
-        """Update size."""
         self.input_size_2d = self.aot_engines[0].input_size_2d
         self.enc_size_2d = self.aot_engines[0].enc_size_2d
         self.enc_hw = self.aot_engines[0].enc_hw

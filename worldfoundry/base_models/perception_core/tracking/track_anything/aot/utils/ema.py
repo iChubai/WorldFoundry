@@ -2,19 +2,10 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> utils -> ema.py functionality."""
-
 import torch
 
 
 def get_param_buffer_for_ema(model, update_buffer=False, required_buffers=["running_mean", "running_var"]):
-    """Get param buffer for ema.
-
-    Args:
-        model: The model.
-        update_buffer: The update buffer.
-        required_buffers: The required buffers.
-    """
     params = model.parameters()
     all_param_buffer = [p for p in params if p.requires_grad]
     if update_buffer:

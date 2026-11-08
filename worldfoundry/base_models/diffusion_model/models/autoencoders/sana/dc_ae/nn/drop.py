@@ -47,15 +47,6 @@ Scheduler = _InferenceSchedulerStub
 
 
 def apply_drop_func(network: nn.Module, drop_config: dict[str, Any] | None) -> None:
-    """Apply drop func.
-
-    Args:
-        network: The network.
-        drop_config: The drop config.
-
-    Returns:
-        The return value.
-    """
     if drop_config is None:
         return
 
@@ -76,18 +67,6 @@ def apply_droppath(
     scheduled=True,
     skip=0,
 ) -> None:
-    """Apply droppath.
-
-    Args:
-        network: The network.
-        drop_prob: The drop prob.
-        linear_decay: The linear decay.
-        scheduled: The scheduled.
-        skip: The skip.
-
-    Returns:
-        The return value.
-    """
     all_valid_blocks = []
     for m in network.modules():
         for name, sub_module in m.named_children():
@@ -108,8 +87,6 @@ def apply_droppath(
 
 
 class DropPathResidualBlock(ResidualBlock):
-    """Drop path residual block implementation."""
-
     def __init__(
         self,
         main: nn.Module,
@@ -120,30 +97,12 @@ class DropPathResidualBlock(ResidualBlock):
         drop_prob: float = 0,
         scheduled=True,
     ):
-        """Init.
-
-        Args:
-            main: The main.
-            shortcut: The shortcut.
-            post_act: The post act.
-            pre_norm: The pre norm.
-            drop_prob: The drop prob.
-            scheduled: The scheduled.
-        """
         super().__init__(main, shortcut, post_act, pre_norm)
 
         self.drop_prob = drop_prob
         self.scheduled = scheduled
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         if not self.training or self.drop_prob == 0 or not isinstance(self.shortcut, IdentityLayer):
             return ResidualBlock.forward(self, x)
         else:

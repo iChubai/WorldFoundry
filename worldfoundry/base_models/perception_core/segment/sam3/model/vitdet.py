@@ -54,18 +54,6 @@ class Mlp(nn.Module):
         drop=0.0,
         use_conv=False,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            bias: The bias.
-            drop: The drop.
-            use_conv: The use conv.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -82,11 +70,6 @@ class Mlp(nn.Module):
         self.drop2 = nn.Dropout(drop_probs[1])
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = addmm_act(type(self.act), self.fc1, x)
         x = self.drop1(x)
         x = self.norm(x)
@@ -96,17 +79,6 @@ class Mlp(nn.Module):
 
 
 def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0) -> tuple[torch.Tensor, torch.Tensor]:
-    """Init t xy.
-
-    Args:
-        end_x: The end x.
-        end_y: The end y.
-        scale: The scale.
-        offset: The offset.
-
-    Returns:
-        The return value.
-    """
     t = torch.arange(end_x * end_y, dtype=torch.float32)
     t_x = (t % end_x).float()
     t_y = torch.div(t, end_x, rounding_mode="floor").float()
@@ -121,19 +93,6 @@ def compute_axial_cis(
     scale_pos: float = 1.0,
     offset: int = 0,
 ) -> torch.Tensor:
-    """Compute axial cis.
-
-    Args:
-        dim: The dim.
-        end_x: The end x.
-        end_y: The end y.
-        theta: The theta.
-        scale_pos: The scale pos.
-        offset: The offset.
-
-    Returns:
-        The return value.
-    """
     freqs_x = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float() / dim))
     freqs_y = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float() / dim))
 
@@ -146,15 +105,6 @@ def compute_axial_cis(
 
 
 def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-    """Reshape for broadcast.
-
-    Args:
-        freqs_cis: The freqs cis.
-        x: The x.
-
-    Returns:
-        The return value.
-    """
     ndim = x.ndim
     assert 0 <= 1 < ndim
     assert freqs_cis.shape == (x.shape[-2], x.shape[-1])
@@ -168,17 +118,6 @@ def apply_rotary_enc(
     freqs_cis: torch.Tensor,
     repeat_freqs_k: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Apply rotary enc.
-
-    Args:
-        xq: The xq.
-        xk: The xk.
-        freqs_cis: The freqs cis.
-        repeat_freqs_k: The repeat freqs k.
-
-    Returns:
-        The return value.
-    """
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2)) if xk.shape[-2] != 0 else None
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
@@ -199,7 +138,6 @@ def window_partition(x: Tensor, window_size: int) -> tuple[Tensor, tuple[int, in
     Partition into non-overlapping windows with padding if needed.
     Args:
         x (tensor): input tokens with [B, H, W, C].
-        window_size (int): window size.
     Returns:
         windows: windows after partition with [B * num_windows, window_size, window_size, C].
         (Hp, Wp): padded height and width before partition
@@ -222,7 +160,6 @@ def window_unpartition(windows: Tensor, window_size: int, pad_hw: tuple[int, int
     Window unpartition into original sequences and removing padding.
     Args:
         x (tensor): input tokens with [B * num_windows, window_size, window_size, C].
-        window_size (int): window size.
         pad_hw (Tuple): padded height and width (Hp, Wp).
         hw (Tuple): original height and width (H, W) before padding.
     Returns:
@@ -428,14 +365,6 @@ class PatchEmbed(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.proj(x)
         # B C H W -> B H W C
         x = x.permute(0, 2, 3, 1)
@@ -510,14 +439,6 @@ class Attention(nn.Module):
         self._setup_rope_freqs()
 
     def _setup_rel_pos(self, rel_pos_zero_init: bool = True) -> None:
-        """Helper function to setup rel pos.
-
-        Args:
-            rel_pos_zero_init: The rel pos zero init.
-
-        Returns:
-            The return value.
-        """
         if not self.use_rel_pos:
             self.rel_pos_h = None
             self.rel_pos_w = None
@@ -541,11 +462,6 @@ class Attention(nn.Module):
         self.register_buffer("relative_coords", relative_coords.long())
 
     def _setup_rope_freqs(self) -> None:
-        """Helper function to setup rope freqs.
-
-        Returns:
-            The return value.
-        """
         if not self.use_rope:
             self.freqs_cis = None
             return
@@ -615,15 +531,6 @@ class Attention(nn.Module):
             self.register_buffer("freqs_cis_imag", freqs_cis.imag)
 
     def _apply_rope(self, q, k) -> tuple[Tensor, Tensor]:
-        """Helper function to apply rope.
-
-        Args:
-            q: The q.
-            k: The k.
-
-        Returns:
-            The return value.
-        """
         if not self.use_rope:
             return q, k
 
@@ -643,14 +550,6 @@ class Attention(nn.Module):
         return apply_rotary_enc(q, k, freqs_cis=self.freqs_cis)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         s = 1 if self.cls_token else 0  # used to exclude cls_token
         if x.ndim == 4:
             B, H, W, _ = x.shape
@@ -792,14 +691,6 @@ class Block(nn.Module):
         self.window_size = window_size
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         shortcut = x
         x = self.norm1(x)
         # Window partition
@@ -867,7 +758,6 @@ class ViT(nn.Module):
         """
         Args:
             img_size (int): Input image size. Only relevant for rel pos or rope.
-            patch_size (int): Patch size.
             in_chans (int): Number of input image channels.
             embed_dim (int): Patch embedding dimension.
             depth (int): Depth of ViT.
@@ -1003,14 +893,6 @@ class ViT(nn.Module):
                 torch._dynamo.config.optimize_ddp = False
 
     def _init_weights(self, m: nn.Module) -> None:
-        """Helper function to init weights.
-
-        Args:
-            m: The m.
-
-        Returns:
-            The return value.
-        """
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
@@ -1020,11 +902,6 @@ class ViT(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
     def forward(self, tensor_list):
-        """Forward.
-
-        Args:
-            tensor_list: The tensor list.
-        """
         if isinstance(tensor_list, NestedTensor):
             x = tensor_list.tensors
             mask = tensor_list.mask
@@ -1083,14 +960,6 @@ class ViT(nn.Module):
         return outputs
 
     def get_layer_id(self, layer_name: str) -> int:
-        """Get layer id.
-
-        Args:
-            layer_name: The layer name.
-
-        Returns:
-            The return value.
-        """
         # https://github.com/microsoft/unilm/blob/master/beit/optim_factory.py#L33
         num_layers = self.get_num_layers()
 
@@ -1109,9 +978,4 @@ class ViT(nn.Module):
             return num_layers + 1
 
     def get_num_layers(self) -> int:
-        """Get num layers.
-
-        Returns:
-            The return value.
-        """
         return len(self.blocks)

@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> distortion.py functionality."""
-
 from typing import Union
 
 import numpy as np
@@ -15,26 +13,10 @@ ArrayLike = Union[np.ndarray, torch.Tensor]
 
 
 def _is_numpy(x: ArrayLike) -> bool:
-    """Helper function to is numpy.
-
-    Args:
-        x: The x.
-
-    Returns:
-        The return value.
-    """
     return isinstance(x, np.ndarray)
 
 
 def _is_torch(x: ArrayLike) -> bool:
-    """Helper function to is torch.
-
-    Args:
-        x: The x.
-
-    Returns:
-        The return value.
-    """
     return isinstance(x, torch.Tensor)
 
 

@@ -148,12 +148,6 @@ def render_interpolated_video(
     h, w = hw
 
     def build_interpolated_traj(index, base_interp_per_pair: int):
-        """Build interpolated traj.
-
-        Args:
-            index: The index.
-            base_interp_per_pair: The base interp per pair.
-        """
         exts, ints = [], []
         tmp_camtoworlds = camtoworlds[:, index]
         tmp_intrinsics = intrinsics[:, index]
@@ -212,12 +206,6 @@ def render_interpolated_video(
         return exts, ints
 
     def build_wobble_traj(nums, delta):
-        """Build wobble traj.
-
-        Args:
-            nums: The nums.
-            delta: The delta.
-        """
         if s != 1:
             raise ValueError("Wobble trajectory requires exactly 1 input view")
         t = torch.linspace(0, 1, nums, dtype=torch.float32, device=camtoworlds.device)
@@ -298,12 +286,6 @@ def render_interpolated_video(
             rgb_frames.append(rgb.permute(2, 0, 1))
 
     def _make_video(frames, path):
-        """Helper function to make video.
-
-        Args:
-            frames: The frames.
-            path: The path.
-        """
         video = torch.stack([f.cpu() for f in frames]).clamp(0, 1)
         video = video.permute(0, 2, 3, 1)
         video = (video * 255).to(torch.uint8).numpy()

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> base_dataset.py functionality."""
-
 from abc import abstractmethod
 
 import torch
@@ -7,19 +5,12 @@ from torch.utils.data import Dataset, default_collate
 
 
 class BaseDataset(Dataset):
-    """Base dataset implementation."""
-
     @property
     @abstractmethod
     def num_frames(self) -> int: ...
 
     @property
     def keyframe_idcs(self) -> torch.Tensor:
-        """Keyframe idcs.
-
-        Returns:
-            The return value.
-        """
         return torch.arange(self.num_frames)
 
     @abstractmethod
@@ -65,11 +56,6 @@ class BaseDataset(Dataset):
 
     @staticmethod
     def train_collate_fn(batch):
-        """Train collate fn.
-
-        Args:
-            batch: The batch.
-        """
         collated = {}
         for k in batch[0]:
             if k not in [

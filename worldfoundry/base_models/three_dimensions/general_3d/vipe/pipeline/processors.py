@@ -14,8 +14,6 @@
 # limitations under the License.
 
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> pipeline -> processors.py functionality."""
-
 import logging
 from collections.abc import Iterable, Iterator
 from typing import Any, cast
@@ -61,15 +59,6 @@ class IntrinsicEstimationProcessor(StreamProcessor):
     """Override existing intrinsics with estimated intrinsics."""
 
     def __init__(self, video_stream: VideoStream, gap_sec: float = 1.0) -> None:
-        """Init.
-
-        Args:
-            video_stream: The video stream.
-            gap_sec: The gap sec.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         gap_frame = int(gap_sec * video_stream.fps())
         gap_frame = min(gap_frame, (len(video_stream) - 1) // 2)
@@ -79,26 +68,9 @@ class IntrinsicEstimationProcessor(StreamProcessor):
         self.distortion: list[float] = []
 
     def update_attributes(self, previous_attributes: set[FrameAttribute]) -> set[FrameAttribute]:
-        """Update attributes.
-
-        Args:
-            previous_attributes: The previous attributes.
-
-        Returns:
-            The return value.
-        """
         return previous_attributes | {FrameAttribute.INTRINSICS}
 
     def __call__(self, frame_idx: int, frame: VideoFrame) -> VideoFrame:
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-
-        Returns:
-            The return value.
-        """
         assert self.fov_y > 0, "FOV not set"
         frame_height, frame_width = frame.size()
         fx = fy = frame_height / (2 * np.tan(self.fov_y / 2))
@@ -110,8 +82,6 @@ class IntrinsicEstimationProcessor(StreamProcessor):
 
 
 class GeoCalibIntrinsicsProcessor(IntrinsicEstimationProcessor):
-    """Geo calib intrinsics processor implementation."""
-
     def __init__(
         self,
         video_stream: VideoStream,
@@ -119,16 +89,9 @@ class GeoCalibIntrinsicsProcessor(IntrinsicEstimationProcessor):
         camera_type: CameraType = CameraType.PINHOLE,
         model: GeoCalib | None = None,
     ) -> None:
-        """Init.
-
+        """
         Args:
-            video_stream: The video stream.
-            gap_sec: The gap sec.
-            camera_type: The camera type.
             model: An existing GeoCalib model to reuse across videos.
-
-        Returns:
-            The return value.
         """
         super().__init__(video_stream, gap_sec)
 
@@ -185,17 +148,6 @@ class TrackAnythingProcessor(StreamProcessor):
         sam_run_gap: int = 30,
         mask_expand: int = 5,
     ) -> None:
-        """Init.
-
-        Args:
-            mask_phrases: The mask phrases.
-            add_sky: The add sky.
-            sam_run_gap: The sam run gap.
-            mask_expand: The mask expand.
-
-        Returns:
-            The return value.
-        """
         self.mask_phrases = mask_phrases
         self.sam_run_gap = sam_run_gap
         self.add_sky = add_sky
@@ -207,26 +159,9 @@ class TrackAnythingProcessor(StreamProcessor):
         self.mask_expand = mask_expand
 
     def update_attributes(self, previous_attributes: set[FrameAttribute]) -> set[FrameAttribute]:
-        """Update attributes.
-
-        Args:
-            previous_attributes: The previous attributes.
-
-        Returns:
-            The return value.
-        """
         return previous_attributes | {FrameAttribute.INSTANCE, FrameAttribute.MASK}
 
     def __call__(self, frame_idx: int, frame: VideoFrame) -> VideoFrame:
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-
-        Returns:
-            The return value.
-        """
         frame.instance, frame.instance_phrases = self.tracker.track(frame)
         self.last_track_frame = frame.raw_frame_idx
 
@@ -255,13 +190,8 @@ class AdaptiveDepthProcessor(StreamProcessor):
         shared_models: AdaptiveDepthModels | None = None,
         metric_depth: Any | None = None,
     ):
-        """Init.
-
+        """
         Args:
-            slam_output: The slam output.
-            view_idx: The view idx.
-            model: The model.
-            share_depth_model: The share depth model.
             shared_models: Resident networks from a previous video.
             metric_depth: Optional already-loaded keyframe depth network.
         """
@@ -309,38 +239,12 @@ class AdaptiveDepthProcessor(StreamProcessor):
         )
 
     def __call__(self, frame_idx: int, frame: VideoFrame) -> VideoFrame:
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-
-        Returns:
-            The return value.
-        """
         raise NotImplementedError("AdaptiveDepthProcessor should not be called directly.")
 
     def update_attributes(self, previous_attributes: set[FrameAttribute]) -> set[FrameAttribute]:
-        """Update attributes.
-
-        Args:
-            previous_attributes: The previous attributes.
-
-        Returns:
-            The return value.
-        """
         return previous_attributes | {FrameAttribute.METRIC_DEPTH}
 
     def _compute_uv_score(self, depth: torch.Tensor, patch_count: int = 10) -> float:
-        """Helper function to compute uv score.
-
-        Args:
-            depth: The depth.
-            patch_count: The patch count.
-
-        Returns:
-            The return value.
-        """
         h_shape = depth.size(0) // patch_count
         w_shape = depth.size(1) // patch_count
         depth_crop = (depth > 0)[: h_shape * patch_count, : w_shape * patch_count]
@@ -349,14 +253,6 @@ class AdaptiveDepthProcessor(StreamProcessor):
         return depth_exist.float().mean().item()
 
     def _compute_video_da(self, frame_iterator: Iterator[VideoFrame]) -> tuple[torch.Tensor, list[VideoFrame]]:
-        """Helper function to compute video da.
-
-        Args:
-            frame_iterator: The frame iterator.
-
-        Returns:
-            The return value.
-        """
         frame_list: list[np.ndarray] = []
         frame_data_list: list[VideoFrame] = []
         for frame in frame_iterator:
@@ -370,15 +266,6 @@ class AdaptiveDepthProcessor(StreamProcessor):
         return video_depth_result, frame_data_list
 
     def update_iterator(self, previous_iterator: Iterator[VideoFrame], pass_idx: int) -> Iterator[VideoFrame]:
-        """Update iterator.
-
-        Args:
-            previous_iterator: The previous iterator.
-            pass_idx: The pass idx.
-
-        Returns:
-            The return value.
-        """
         # Determine the percentage score of the SLAM map.
 
         self.cache_scale_bias: tuple[torch.Tensor, torch.Tensor] | None = None
@@ -500,15 +387,6 @@ class MultiviewDepthProcessor(StreamProcessor):
         overlap_size: int = 3,
         secondary_keyframe: bool = False,  # This is found to cause jittering for some scenes due to abrupt context changes.
     ):
-        """Init.
-
-        Args:
-            slam_output: The slam output.
-            model: The model.
-            window_size: The window size.
-            overlap_size: The overlap size.
-            secondary_keyframe: The secondary keyframe.
-        """
         super().__init__()
         self.slam_output = slam_output
         self.model = model
@@ -534,37 +412,12 @@ class MultiviewDepthProcessor(StreamProcessor):
             self.dav3_api = self.dav3_api.cuda().eval()
 
     def update_attributes(self, previous_attributes: set[FrameAttribute]) -> set[FrameAttribute]:
-        """Update attributes.
-
-        Args:
-            previous_attributes: The previous attributes.
-
-        Returns:
-            The return value.
-        """
         return previous_attributes | {FrameAttribute.METRIC_DEPTH}
 
     def __call__(self, frame_idx: int, frame: VideoFrame) -> VideoFrame:
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-
-        Returns:
-            The return value.
-        """
         raise NotImplementedError("MultiviewDepthProcessor should not be called directly.")
 
     def _probe_keyframe_indices(self, frame_idx: int) -> list[int]:
-        """Helper function to probe keyframe indices.
-
-        Args:
-            frame_idx: The frame idx.
-
-        Returns:
-            The return value.
-        """
         inds: list[int] = []
         left_idx = np.searchsorted(self.keyframes_inds, frame_idx, side="right").item() - 1
         inds.append(left_idx)
@@ -580,14 +433,6 @@ class MultiviewDepthProcessor(StreamProcessor):
         return inds
 
     def record_keyframes(self, previous_iterator: Iterator[VideoFrame]) -> Iterator[VideoFrame]:
-        """Record keyframes.
-
-        Args:
-            previous_iterator: The previous iterator.
-
-        Returns:
-            The return value.
-        """
         for frame_idx, frame in enumerate(previous_iterator):
             self.n_frames += 1
             if frame_idx in self.keyframes_inds:
@@ -595,14 +440,6 @@ class MultiviewDepthProcessor(StreamProcessor):
             yield frame
 
     def estimate_depth_sliding_window(self, previous_iterator: Iterator[VideoFrame]) -> Iterator[VideoFrame]:
-        """Estimate depth sliding window.
-
-        Args:
-            previous_iterator: The previous iterator.
-
-        Returns:
-            The return value.
-        """
         current_sliding_window: list[VideoFrame] = []
         current_sliding_window_idx: list[int] = []
         trailing_depth: torch.Tensor | None = None
@@ -663,15 +500,6 @@ class MultiviewDepthProcessor(StreamProcessor):
         assert len(current_sliding_window) == 0, "Current sliding window should be empty"
 
     def update_iterator(self, previous_iterator: Iterator[VideoFrame], pass_idx: int) -> Iterator[VideoFrame]:
-        """Update iterator.
-
-        Args:
-            previous_iterator: The previous iterator.
-            pass_idx: The pass idx.
-
-        Returns:
-            The return value.
-        """
         if pass_idx == 0:
             yield from self.record_keyframes(previous_iterator)
         elif pass_idx == 1:
@@ -695,16 +523,6 @@ class EquirectProjectionProcessor(StreamProcessor):
     """
 
     def __init__(self, rotation: SO3, frame_size: tuple[int, int], intrinsics: torch.Tensor) -> None:
-        """Init.
-
-        Args:
-            rotation: The rotation.
-            frame_size: The frame size.
-            intrinsics: The intrinsics.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.rotation = rotation.cuda()
         self.intrinsics = intrinsics.cuda()
@@ -724,23 +542,9 @@ class EquirectProjectionProcessor(StreamProcessor):
         )
 
     def update_frame_size(self, previous_frame_size: tuple[int, int]):
-        """Update frame size.
-
-        Args:
-            previous_frame_size: The previous frame size.
-        """
         return self.frame_size
 
     def __call__(self, frame_idx: int, frame: VideoFrame) -> VideoFrame:
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-
-        Returns:
-            The return value.
-        """
         assert frame.metric_depth is None, "Metric depth is not supported for equirect projection"
 
         if (new_pose := frame.pose) is not None:

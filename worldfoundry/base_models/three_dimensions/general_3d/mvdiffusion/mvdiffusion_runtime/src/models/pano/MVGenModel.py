@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> src -> models -> pano -> MVGenModel.py functionality."""
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -9,15 +7,7 @@ from .utils import get_correspondences
 
 
 class MultiViewBaseModel(nn.Module):
-    """Multi view base model implementation."""
-
     def __init__(self, unet, config):
-        """Init.
-
-        Args:
-            unet: The unet.
-            config: The config.
-        """
         super().__init__()
 
         self.unet = unet
@@ -46,14 +36,6 @@ class MultiViewBaseModel(nn.Module):
             ]
 
     def forward(self, latents, timestep, prompt_embd, meta):
-        """Forward.
-
-        Args:
-            latents: The latents.
-            timestep: The timestep.
-            prompt_embd: The prompt embd.
-            meta: The meta.
-        """
         K = meta["K"]
         R = meta["R"]
 

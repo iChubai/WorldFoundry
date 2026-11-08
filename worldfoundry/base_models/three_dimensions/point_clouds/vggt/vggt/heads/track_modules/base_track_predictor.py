@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> track_modules -> base_track_predictor.py functionality."""
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -16,8 +14,6 @@ from .utils import get_2d_embedding, get_2d_sincos_pos_embed, sample_features4d
 
 
 class BaseTrackerPredictor(nn.Module):
-    """Base tracker predictor implementation."""
-
     def __init__(
         self,
         stride=1,
@@ -30,19 +26,6 @@ class BaseTrackerPredictor(nn.Module):
         max_scale=518,
         predict_conf=True,
     ):
-        """Init.
-
-        Args:
-            stride: The stride.
-            corr_levels: The corr levels.
-            corr_radius: The corr radius.
-            latent_dim: The latent dim.
-            hidden_size: The hidden size.
-            use_spaceatt: The use spaceatt.
-            depth: The depth.
-            max_scale: The max scale.
-            predict_conf: The predict conf.
-        """
         super().__init__()
         """
         The base template to create a track predictor

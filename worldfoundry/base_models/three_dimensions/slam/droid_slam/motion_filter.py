@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> motion_filter.py functionality."""
-
 from functools import partial
 
 import lietorch
@@ -15,15 +13,6 @@ class MotionFilter:
     """This class is used to filter incoming frames and extract features"""
 
     def __init__(self, net, video, thresh=2.5, device="cuda"):
-        """Init.
-
-        Args:
-            net: The net.
-            video: The video.
-            thresh: The thresh.
-            device: The device.
-        """
-
         # split net modules
         self.cnet = net.cnet
         self.fnet = net.fnet

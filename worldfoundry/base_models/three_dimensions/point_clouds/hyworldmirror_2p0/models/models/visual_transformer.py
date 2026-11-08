@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> models -> visual_transformer.py functionality."""
-
 import logging
 
 import torch
@@ -80,35 +78,6 @@ class VisualGeometryTransformer(nn.Module):
         condition_strategy=["token", "pow3r", "token"],
         intermediate_idxs: list[int] = [4, 11, 17, 23],
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            block_fn: The block fn.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            patch_embed: The patch embed.
-            qk_norm: The qk norm.
-            rope_base: The rope base.
-            normalized_rope: The normalized rope.
-            rope_normalize_coords: The rope normalize coords.
-            rope_shift_coords: The rope shift coords.
-            rope_jitter_coords: The rope jitter coords.
-            rope_rescale_coords: The rope rescale coords.
-            init_values: The init values.
-            enable_cond: The enable cond.
-            sampling_strategy: The sampling strategy.
-            fixed_patch_embed: The fixed patch embed.
-            condition_strategy: The condition strategy.
-            intermediate_idxs: The intermediate idxs.
-        """
         super().__init__()
         # Store config parameters
         self.enable_cond = enable_cond
@@ -252,17 +221,6 @@ class VisualGeometryTransformer(nn.Module):
         rope_jitter_coords,
         rope_rescale_coords,
     ):
-        """Helper function to init rotary position embedding.
-
-        Args:
-            rope_base: The rope base.
-            normalized_rope: The normalized rope.
-            head_dim: The head dim.
-            rope_normalize_coords: The rope normalize coords.
-            rope_shift_coords: The rope shift coords.
-            rope_jitter_coords: The rope jitter coords.
-            rope_rescale_coords: The rope rescale coords.
-        """
         if normalized_rope:
             print("[INFO] Using normalized RoPE!")
             from ..layers.norm_rope import NormalizedRotaryPositionEmbedding2D, PositionGetter
@@ -301,19 +259,6 @@ class VisualGeometryTransformer(nn.Module):
     def _init_transformer_blocks(
         self, block_fn, embed_dim, num_heads, mlp_ratio, qkv_bias, proj_bias, ffn_bias, init_values, qk_norm
     ):
-        """Helper function to init transformer blocks.
-
-        Args:
-            block_fn: The block fn.
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            init_values: The init values.
-            qk_norm: The qk norm.
-        """
         self.frame_blocks = nn.ModuleList(
             [
                 block_fn(

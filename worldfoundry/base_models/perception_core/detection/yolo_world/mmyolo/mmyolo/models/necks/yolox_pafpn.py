@@ -61,8 +61,7 @@ class YOLOXPAFPN(BaseYOLONeck):
         )
 
     def build_reduce_layer(self, idx: int) -> nn.Module:
-        """build reduce layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -79,12 +78,10 @@ class YOLOXPAFPN(BaseYOLONeck):
         return layer
 
     def build_upsample_layer(self, *args, **kwargs) -> nn.Module:
-        """build upsample layer."""
         return nn.Upsample(scale_factor=2, mode="nearest")
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -120,8 +117,7 @@ class YOLOXPAFPN(BaseYOLONeck):
             )
 
     def build_downsample_layer(self, idx: int) -> nn.Module:
-        """build downsample layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -140,8 +136,7 @@ class YOLOXPAFPN(BaseYOLONeck):
         )
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -158,8 +153,7 @@ class YOLOXPAFPN(BaseYOLONeck):
         )
 
     def build_out_layer(self, idx: int) -> nn.Module:
-        """build out layer.
-
+        """
         Args:
             idx (int): layer idx.
 

@@ -3,8 +3,6 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-"""Module for base_models -> perception_core -> general_perception -> dinov3 -> models -> __init__.py functionality."""
-
 import logging
 
 from . import convnext
@@ -14,14 +12,6 @@ logger = logging.getLogger("dinov3")
 
 
 def build_model(args, only_teacher=False, img_size=224, device=None):
-    """Build model.
-
-    Args:
-        args: The args.
-        only_teacher: The only teacher.
-        img_size: The img size.
-        device: The device.
-    """
     if "vit" in args.arch:
         vit_kwargs = {
             "img_size": img_size,
@@ -67,12 +57,6 @@ def build_model(args, only_teacher=False, img_size=224, device=None):
 
 
 def build_model_from_cfg(cfg, only_teacher: bool = False):
-    """Build model from cfg.
-
-    Args:
-        cfg: The cfg.
-        only_teacher: The only teacher.
-    """
     outputs = build_model(
         cfg.student,
         only_teacher=only_teacher,

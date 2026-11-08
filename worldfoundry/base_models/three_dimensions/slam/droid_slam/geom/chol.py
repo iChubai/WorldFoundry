@@ -1,20 +1,9 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> chol.py functionality."""
-
 import torch
 
 
 class CholeskySolver(torch.autograd.Function):
-    """Cholesky solver implementation."""
-
     @staticmethod
     def forward(ctx, H, b):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            H: The h.
-            b: The b.
-        """
         # don't crash training if cholesky decomp fails
         try:
             U = torch.linalg.cholesky(H)
@@ -30,12 +19,6 @@ class CholeskySolver(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_x):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            grad_x: The grad x.
-        """
         if ctx.failed:
             return None, None
 

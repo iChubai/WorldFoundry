@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> trajectory_filler.py functionality."""
-
 from functools import partial
 
 import lietorch
@@ -15,14 +13,6 @@ class PoseTrajectoryFiller:
     """This class is used to fill in non-keyframe poses"""
 
     def __init__(self, net, video, device="cuda"):
-        """Init.
-
-        Args:
-            net: The net.
-            video: The video.
-            device: The device.
-        """
-
         # split net modules
         self.cnet = net.cnet
         self.fnet = net.fnet

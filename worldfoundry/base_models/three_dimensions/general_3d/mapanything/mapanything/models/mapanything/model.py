@@ -685,7 +685,6 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         Args:
             views (List[dict]): List of dictionaries containing the input views' images and instance information.
             num_views (int): Number of views.
-            batch_size_per_view (int): Batch size per view.
             all_encoder_features_across_views (torch.Tensor): Tensor containing the encoded features for all N views.
             per_sample_ray_dirs_input_mask (torch.Tensor): Tensor containing the per sample ray direction input mask.
 
@@ -745,7 +744,6 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         Args:
             views (List[dict]): List of dictionaries containing the input views' images and instance information.
             num_views (int): Number of views.
-            batch_size_per_view (int): Batch size per view.
             all_encoder_features_across_views (torch.Tensor): Tensor containing the encoded features for all N views.
             per_sample_depth_input_mask (torch.Tensor): Tensor containing the per sample depth input mask.
 
@@ -898,7 +896,6 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         Args:
             views (List[dict]): List of dictionaries containing the input views' images and instance information.
             num_views (int): Number of views.
-            batch_size_per_view (int): Batch size per view.
             all_encoder_features_across_views (torch.Tensor): Tensor containing the encoded features for all N views.
             pose_quats_across_views (torch.Tensor): Tensor containing the pose quats for all the views in the frame of the reference view 0. (batch_size_per_view * view, 4)
             pose_trans_across_views (torch.Tensor): Tensor containing the pose trans for all the views in the frame of the reference view 0. (batch_size_per_view * view, 3)

@@ -37,27 +37,13 @@ from .tokenizer import LLaMaEmbedding, Wrapped_StepChatTokenizer
 
 
 def safediv(n, d):
-    """Safediv.
-
-    Args:
-        n: The n.
-        d: The d.
-    """
     q, r = divmod(n, d)
     assert r == 0
     return q
 
 
 class MultiQueryAttention(nn.Module):
-    """Multi query attention implementation."""
-
     def __init__(self, cfg, layer_id=None):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            layer_id: The layer id.
-        """
         super().__init__()
 
         self.head_dim = cfg.hidden_size // cfg.num_attention_heads
@@ -93,14 +79,6 @@ class MultiQueryAttention(nn.Module):
         cu_seqlens: torch.Tensor | None,
         max_seq_len: torch.Tensor | None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            cu_seqlens: The cu seqlens.
-            max_seq_len: The max seq len.
-        """
         seqlen, bsz, dim = x.shape
         xqkv = self.wqkv(x)
 
@@ -149,8 +127,6 @@ class MultiQueryAttention(nn.Module):
 
 
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
-
     def __init__(
         self,
         cfg,
@@ -159,25 +135,11 @@ class FeedForward(nn.Module):
         layer_id: int,
         multiple_of: int = 256,
     ):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            dim: The dim.
-            hidden_dim: The hidden dim.
-            layer_id: The layer id.
-            multiple_of: The multiple of.
-        """
         super().__init__()
 
         hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
 
         def swiglu(x):
-            """Swiglu.
-
-            Args:
-                x: The x.
-            """
             x = torch.chunk(x, 2, dim=-1)
             return F.silu(x[0]) * x[1]
 
@@ -195,26 +157,13 @@ class FeedForward(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.swiglu(self.w1(x))
         output = self.w2(x)
         return output
 
 
 class TransformerBlock(nn.Module):
-    """Transformer block implementation."""
-
     def __init__(self, cfg, layer_id: int):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            layer_id: The layer id.
-        """
         super().__init__()
 
         self.n_heads = cfg.num_attention_heads
@@ -248,14 +197,6 @@ class TransformerBlock(nn.Module):
         cu_seqlens: torch.Tensor | None,
         max_seq_len: torch.Tensor | None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-            cu_seqlens: The cu seqlens.
-            max_seq_len: The max seq len.
-        """
         residual = self.attention.forward(self.attention_norm(x), mask, cu_seqlens, max_seq_len)
         h = x + residual
         ffn_res = self.feed_forward.forward(self.ffn_norm(h))
@@ -264,29 +205,16 @@ class TransformerBlock(nn.Module):
 
 
 class Transformer(nn.Module):
-    """Transformer implementation."""
-
     def __init__(
         self,
         config,
         max_seq_size=8192,
     ):
-        """Init.
-
-        Args:
-            config: The config.
-            max_seq_size: The max seq size.
-        """
         super().__init__()
         self.num_layers = config.num_layers
         self.layers = self._build_layers(config)
 
     def _build_layers(self, config):
-        """Helper function to build layers.
-
-        Args:
-            config: The config.
-        """
         layers = torch.nn.ModuleList()
         for layer_id in range(self.num_layers):
             layers.append(
@@ -304,15 +232,6 @@ class Transformer(nn.Module):
         cu_seqlens=None,
         max_seq_len=None,
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            cu_seqlens: The cu seqlens.
-            max_seq_len: The max seq len.
-        """
-
         if max_seq_len is not None and not isinstance(max_seq_len, torch.Tensor):
             max_seq_len = torch.tensor(max_seq_len, dtype=torch.int32, device="cpu")
 
@@ -335,11 +254,6 @@ class Step1Model(PreTrainedModel):
         self,
         config,
     ):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.tok_embeddings = LLaMaEmbedding(config)
         self.transformer = Transformer(config)
@@ -353,13 +267,6 @@ class Step1Model(PreTrainedModel):
         input_ids=None,
         attention_mask=None,
     ):
-        """Forward.
-
-        Args:
-            input_ids: The input ids.
-            attention_mask: The attention mask.
-        """
-
         hidden_states = self.tok_embeddings(input_ids)
 
         hidden_states = self.transformer(
@@ -373,12 +280,6 @@ class STEP1TextEncoder(torch.nn.Module):
     """Text encoder implementation."""
 
     def __init__(self, model_dir, max_length=320):
-        """Init.
-
-        Args:
-            model_dir: The model dir.
-            max_length: The max length.
-        """
         super().__init__()
         self.max_length = max_length
         self.text_tokenizer = Wrapped_StepChatTokenizer(os.path.join(model_dir, "step1_chat_tokenizer.model"))
@@ -387,13 +288,6 @@ class STEP1TextEncoder(torch.nn.Module):
 
     @torch.no_grad
     def forward(self, prompts, with_mask=True, max_length=None):
-        """Forward.
-
-        Args:
-            prompts: The prompts.
-            with_mask: The with mask.
-            max_length: The max length.
-        """
         self.device = next(self.text_encoder.parameters()).device
         with torch.no_grad():
             if type(prompts) is str:

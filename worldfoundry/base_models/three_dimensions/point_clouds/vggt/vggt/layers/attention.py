@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> layers -> attention.py functionality."""
-
 from torch import Tensor, nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
@@ -17,8 +15,6 @@ XFORMERS_AVAILABLE = False
 
 
 class Attention(nn.Module):
-    """Attention implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -32,23 +28,6 @@ class Attention(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
         self.num_heads = num_heads
@@ -65,15 +44,6 @@ class Attention(nn.Module):
         self.rope = rope
 
     def forward(self, x: Tensor, pos=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
@@ -101,19 +71,7 @@ class Attention(nn.Module):
 
 
 class MemEffAttention(Attention):
-    """Mem eff attention implementation."""
-
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-            pos: The pos.
-
-        Returns:
-            The return value.
-        """
         assert pos is None
         if not XFORMERS_AVAILABLE:
             if attn_bias is not None:

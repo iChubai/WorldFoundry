@@ -215,8 +215,6 @@ class TextEncoder(nn.Module):
     @staticmethod
     def apply_text_to_template(text, template, prevent_empty_text=True):
         """
-        Apply text to template.
-
         Args:
             text (str): Input text.
             template (str or list): Template string or list of chat conversation.

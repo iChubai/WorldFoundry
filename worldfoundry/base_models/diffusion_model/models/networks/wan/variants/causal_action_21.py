@@ -39,14 +39,6 @@ from .causal_cache import commit_kv_cache_positions, read_kv_cache_positions
 
 
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
-    """Causal rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        start_frame: The start frame.
-    """
     n, c = x.size(2), x.size(3) // 2
 
     # split freqs
@@ -87,16 +79,6 @@ class CausalWanSelfAttention(nn.Module):
     supports_fused_qkv = True
 
     def __init__(self, dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -239,21 +221,6 @@ class CausalWanAttentionBlock(nn.Module):
         block_idx=0,
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            action_config: The action config.
-            block_idx: The block idx.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -342,23 +309,6 @@ class CausalWanAttentionBlock(nn.Module):
             use_rope_keyboard=False,
             num_frame_per_block=3,
         ):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                e: The e.
-                mouse_cond: The mouse cond.
-                keyboard_cond: The keyboard cond.
-                block_mask_mouse: The block mask mouse.
-                block_mask_keyboard: The block mask keyboard.
-                kv_cache_mouse: The kv cache mouse.
-                kv_cache_keyboard: The kv cache keyboard.
-                crossattn_cache: The crossattn cache.
-                start_frame: The start frame.
-                use_rope_keyboard: The use rope keyboard.
-                num_frame_per_block: The num frame per block.
-            """
             x = x + self.cross_attn(self.norm3(x.to(context.dtype)), context, crossattn_cache=crossattn_cache)
             if self.action_model is not None:
                 assert mouse_cond is not None or keyboard_cond is not None
@@ -409,14 +359,6 @@ class CausalHead(nn.Module):
     """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -583,12 +525,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         self.num_frame_per_block = 1
 
     def _set_gradient_checkpointing(self, module, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            module: The module.
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     @staticmethod
@@ -618,14 +554,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
-            """Attention mask.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             if local_attn_size == -1:
                 return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
             else:
@@ -679,14 +607,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             cnt += num_frame_per_block
 
         def attention_mask2(b, h, q_idx, kv_idx):
-            """Attention mask2.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             if local_attn_size == -1:
                 return (kv_idx < ends2[q_idx]) | (q_idx == kv_idx)
             else:
@@ -738,14 +658,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             cnt += num_frame_per_block
 
         def attention_mask2(b, h, q_idx, kv_idx):
-            """Attention mask2.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             if local_attn_size == -1:
                 return (kv_idx < ends2[q_idx]) | (q_idx == kv_idx)
             else:
@@ -846,14 +758,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -993,14 +898,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -1023,7 +921,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         return x
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         else:

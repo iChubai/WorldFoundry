@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> specs.py functionality."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,8 +34,6 @@ class Gaussians:
 
 @dataclass
 class Prediction:
-    """Prediction implementation."""
-
     depth: np.ndarray  # N, H, W
     is_metric: int
     sky: np.ndarray | None = None  # N, H, W

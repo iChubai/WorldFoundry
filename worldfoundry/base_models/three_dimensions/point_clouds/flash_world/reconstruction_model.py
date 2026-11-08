@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> flash_world -> reconstruction_model.py functionality."""
-
 import math
 
 import torch
@@ -11,11 +9,6 @@ from .utils import create_rays, quaternion_to_matrix
 
 
 def inverse_sigmoid(x):
-    """Inverse sigmoid.
-
-    Args:
-        x: The x.
-    """
     if type(x) is torch.Tensor:
         return torch.log(x / (1 - x))
     else:
@@ -23,12 +16,6 @@ def inverse_sigmoid(x):
 
 
 def inverse_softplus(x, beta=1):
-    """Inverse softplus.
-
-    Args:
-        x: The x.
-        beta: The beta.
-    """
     if type(x) is torch.Tensor:
         return (torch.exp(beta * x) - 1).log() / beta
     else:
@@ -52,14 +39,6 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
         use_network_checkpointing=True,
         use_render_checkpointing=True,
     ):
-        """Init.
-
-        Args:
-            vae_model: The vae model.
-            feat_dim: The feat dim.
-            use_network_checkpointing: The use network checkpointing.
-            use_render_checkpointing: The use render checkpointing.
-        """
         super().__init__()
 
         self.decoder = copy.deepcopy(vae_model.decoder).requires_grad_(True)
@@ -106,12 +85,6 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
         self.render_checkpointing = use_render_checkpointing
 
     def decode(self, feats, z):
-        """Decode.
-
-        Args:
-            feats: The feats.
-            z: The z.
-        """
         ## conv1
         x = self.decoder.conv_in(self.post_quant_conv(z)) + self.extra_conv_in(feats)
 
@@ -139,14 +112,6 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
         return x
 
     def forward(self, feats, z, cameras):
-        """Forward.
-
-        Args:
-            feats: The feats.
-            z: The z.
-            cameras: The cameras.
-        """
-
         x = self.decode(feats, z).squeeze(2)
 
         gaussian_params = self.gs_head(x, cameras.flatten(0, 1)).unflatten(0, (cameras.shape[0], cameras.shape[1]))
@@ -161,16 +126,6 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
 
     @torch.amp.autocast(device_type="cuda", enabled=False)
     def render(self, gaussian_params, camerass, height, width, bg_mode="random"):
-        """Render.
-
-        Args:
-            gaussian_params: The gaussian params.
-            camerass: The camerass.
-            height: The height.
-            width: The width.
-            bg_mode: The bg mode.
-        """
-
         camerass = camerass.to(torch.float32)
 
         test_c2ws = (
@@ -202,27 +157,13 @@ from torch.autograd import Function
 
 
 class _trunc_exp(Function):
-    """Trunc exp implementation."""
-
     @staticmethod
     def forward(ctx, x):
-        """Forward.
-
-        Args:
-            ctx: The ctx.
-            x: The x.
-        """
         ctx.save_for_backward(x)
         return torch.exp(x)
 
     @staticmethod
     def backward(ctx, g):
-        """Backward.
-
-        Args:
-            ctx: The ctx.
-            g: The g.
-        """
         x = ctx.saved_tensors[0]
         return g * torch.exp(x.clamp(-10, 10))
 
@@ -241,15 +182,6 @@ class PixelAligned3DGS(nn.Module):
         scale_range=(0, 16),  # related to pixel size
         num_points_per_pixel=1,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            sh_degree: The sh degree.
-            use_mask: The use mask.
-            scale_range: The scale range.
-            num_points_per_pixel: The num points per pixel.
-        """
         super().__init__()
 
         self.sh_degree = sh_degree
@@ -304,13 +236,6 @@ class PixelAligned3DGS(nn.Module):
 
     @torch.amp.autocast(device_type="cuda", enabled=False)
     def forward(self, x, cameras):
-        """Forward.
-
-        Args:
-            x: The x.
-            cameras: The cameras.
-        """
-
         BN, _, h, w = x.shape
 
         local_gaussian_params = F.conv2d(

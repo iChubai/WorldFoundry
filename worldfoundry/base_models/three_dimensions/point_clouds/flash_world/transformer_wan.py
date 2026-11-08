@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> flash_world -> transformer_wan.py functionality."""
-
 import math
 import os
 from typing import Any, ClassVar
@@ -61,14 +59,6 @@ class FP32LayerNorm(nn.LayerNorm):
     """Layer norm implementation."""
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            inputs: The inputs.
-
-        Returns:
-            The return value.
-        """
         return F.layer_norm(
             inputs,
             self.normalized_shape,
@@ -85,7 +75,6 @@ class WanAttnProcessor2_0:
     """Wan attn processor implementation."""
 
     def __init__(self):
-        """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("WanAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
@@ -97,18 +86,6 @@ class WanAttnProcessor2_0:
         attention_mask: torch.Tensor | None = None,
         rotary_emb: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            attn: The attn.
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            rotary_emb: The rotary emb.
-
-        Returns:
-            The return value.
-        """
         encoder_hidden_states_img = None
         if attn.add_k_proj is not None:
             # 512 is the context length of the text encoder, hardcoded for now
@@ -138,13 +115,6 @@ class WanAttnProcessor2_0:
                 freqs_cos: torch.Tensor,
                 freqs_sin: torch.Tensor,
             ):
-                """Apply rotary emb.
-
-                Args:
-                    hidden_states: The hidden states.
-                    freqs_cos: The freqs cos.
-                    freqs_sin: The freqs sin.
-                """
                 x = hidden_states.view(*hidden_states.shape[:-1], -1, 2)
                 x1, x2 = x[..., 0], x[..., 1]
                 cos = freqs_cos[..., 0::2]
@@ -209,16 +179,7 @@ class WanAttnProcessor2_0:
 
 
 class WanImageEmbedding(torch.nn.Module):
-    """Wan image embedding implementation."""
-
     def __init__(self, in_features: int, out_features: int, pos_embed_seq_len=None):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            out_features: The out features.
-            pos_embed_seq_len: The pos embed seq len.
-        """
         super().__init__()
 
         self.norm1 = FP32LayerNorm(in_features)
@@ -230,14 +191,6 @@ class WanImageEmbedding(torch.nn.Module):
             self.pos_embed = None
 
     def forward(self, encoder_hidden_states_image: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            encoder_hidden_states_image: The encoder hidden states image.
-
-        Returns:
-            The return value.
-        """
         if self.pos_embed is not None:
             batch_size, seq_len, embed_dim = encoder_hidden_states_image.shape
             encoder_hidden_states_image = encoder_hidden_states_image.view(-1, 2 * seq_len, embed_dim)
@@ -250,8 +203,6 @@ class WanImageEmbedding(torch.nn.Module):
 
 
 class WanTimeTextImageEmbedding(nn.Module):
-    """Wan time text image embedding implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -261,16 +212,6 @@ class WanTimeTextImageEmbedding(nn.Module):
         image_embed_dim: int | None = None,
         pos_embed_seq_len: int | None = None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            time_freq_dim: The time freq dim.
-            time_proj_dim: The time proj dim.
-            text_embed_dim: The text embed dim.
-            image_embed_dim: The image embed dim.
-            pos_embed_seq_len: The pos embed seq len.
-        """
         super().__init__()
 
         self.timesteps_proj = Timesteps(num_channels=time_freq_dim, flip_sin_to_cos=True, downscale_freq_shift=0)
@@ -290,14 +231,6 @@ class WanTimeTextImageEmbedding(nn.Module):
         encoder_hidden_states_image: torch.Tensor | None = None,
         timestep_seq_len: int | None = None,
     ):
-        """Forward.
-
-        Args:
-            timestep: The timestep.
-            encoder_hidden_states: The encoder hidden states.
-            encoder_hidden_states_image: The encoder hidden states image.
-            timestep_seq_len: The timestep seq len.
-        """
         timestep = self.timesteps_proj(timestep)
         if timestep_seq_len is not None:
             timestep = timestep.unflatten(0, (1, timestep_seq_len))
@@ -316,8 +249,6 @@ class WanTimeTextImageEmbedding(nn.Module):
 
 
 class WanRotaryPosEmbed(nn.Module):
-    """Wan rotary pos embed implementation."""
-
     def __init__(
         self,
         attention_head_dim: int,
@@ -325,14 +256,6 @@ class WanRotaryPosEmbed(nn.Module):
         max_seq_len: int,
         theta: float = 10000.0,
     ):
-        """Init.
-
-        Args:
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            max_seq_len: The max seq len.
-            theta: The theta.
-        """
         super().__init__()
 
         self.attention_head_dim = attention_head_dim
@@ -362,14 +285,6 @@ class WanRotaryPosEmbed(nn.Module):
         self.register_buffer("freqs_sin", torch.cat(freqs_sin, dim=1), persistent=False)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-
-        Returns:
-            The return value.
-        """
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         p_t, p_h, p_w = self.patch_size
         ppf, pph, ppw = num_frames // p_t, height // p_h, width // p_w
@@ -399,8 +314,6 @@ class WanRotaryPosEmbed(nn.Module):
 
 @maybe_allow_in_graph
 class WanTransformerBlock(nn.Module):
-    """Wan transformer block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -411,17 +324,6 @@ class WanTransformerBlock(nn.Module):
         eps: float = 1e-6,
         added_kv_proj_dim: int | None = None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-            added_kv_proj_dim: The added kv proj dim.
-        """
         super().__init__()
 
         # 1. Self-attention
@@ -469,17 +371,6 @@ class WanTransformerBlock(nn.Module):
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            temb: The temb.
-            rotary_emb: The rotary emb.
-
-        Returns:
-            The return value.
-        """
         if temb.ndim == 4:
             # temb: batch_size, seq_len, 6, inner_dim (wan2.2 ti2v)
             shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
@@ -588,29 +479,6 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
         rope_max_seq_len: int = 1024,
         pos_embed_seq_len: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            in_channels: The in channels.
-            out_channels: The out channels.
-            text_dim: The text dim.
-            freq_dim: The freq dim.
-            ffn_dim: The ffn dim.
-            num_layers: The num layers.
-            cross_attn_norm: The cross attn norm.
-            qk_norm: The qk norm.
-            eps: The eps.
-            image_dim: The image dim.
-            added_kv_proj_dim: The added kv proj dim.
-            rope_max_seq_len: The rope max seq len.
-            pos_embed_seq_len: The pos embed seq len.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         inner_dim = num_attention_heads * attention_head_dim
@@ -657,19 +525,6 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
         return_dict: bool = True,
         attention_kwargs: dict[str, Any] | None = None,
     ) -> torch.Tensor | dict[str, torch.Tensor]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            timestep: The timestep.
-            encoder_hidden_states: The encoder hidden states.
-            encoder_hidden_states_image: The encoder hidden states image.
-            return_dict: The return dict.
-            attention_kwargs: The attention kwargs.
-
-        Returns:
-            The return value.
-        """
         if attention_kwargs is not None:
             attention_kwargs = attention_kwargs.copy()
             lora_scale = attention_kwargs.pop("scale", 1.0)

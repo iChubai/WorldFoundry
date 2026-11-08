@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> decoder -> decoder.py functionality."""
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
@@ -20,8 +18,6 @@ DepthRenderingMode = Literal[
 
 @dataclass
 class DecoderOutput:
-    """Decoder output implementation."""
-
     color: Float[Tensor, "batch view 3 height width"]
     depth: Float[Tensor, "batch view height width"] | None
 
@@ -30,21 +26,10 @@ T = TypeVar("T")
 
 
 class Decoder(nn.Module, ABC, Generic[T]):
-    """Decoder implementation."""
-
     cfg: T
     dataset_cfg: DatasetCfg
 
     def __init__(self, cfg: T, dataset_cfg: DatasetCfg) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            dataset_cfg: The dataset cfg.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.cfg = cfg
         self.dataset_cfg = dataset_cfg
@@ -60,17 +45,4 @@ class Decoder(nn.Module, ABC, Generic[T]):
         image_shape: tuple[int, int],
         depth_mode: DepthRenderingMode | None = None,
     ) -> DecoderOutput:
-        """Forward.
-
-        Args:
-            gaussians: The gaussians.
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            near: The near.
-            far: The far.
-            image_shape: The image shape.
-            depth_mode: The depth mode.
-
-        Returns:
-            The return value.
-        """
+        pass

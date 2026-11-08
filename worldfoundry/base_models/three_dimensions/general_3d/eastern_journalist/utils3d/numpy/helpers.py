@@ -1,6 +1,4 @@
 # decorator
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> helpers.py functionality."""
-
 import inspect
 from functools import wraps
 from numbers import Number
@@ -29,21 +27,12 @@ def toarray(
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        """Decorator.
-
-        Args:
-            func: The func.
-
-        Returns:
-            The return value.
-        """
         argnames = list(inspect.signature(func).parameters.keys())
         dtypes_dict = {**dict(zip(argnames, args_dtypes, strict=False)), **kwargs_dtypes}
 
         @wraps(func)
         @suppress_traceback
         def wrapper(*args, **kwargs):
-            """Wrapper."""
             inputs = {**{argnames[i]: x for i, x in enumerate(args)}, **kwargs}
             args = tuple(
                 np.array(x, inputs[dtype].dtype if isinstance(dtype, str) else dtype)
@@ -72,21 +61,12 @@ def batched(
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        """Decorator.
-
-        Args:
-            func: The func.
-
-        Returns:
-            The return value.
-        """
         argnames = list(inspect.signature(func).parameters.keys())
         dims_dict = {**dict(zip(argnames, args_dims, strict=False)), **kwargs_dims}
 
         @wraps(func)
         @suppress_traceback
         def wrapper(*args, **kwargs):
-            """Wrapper."""
             args = list(args)
             # Get arguments non-batch dimensions
             args_dim = tuple(dims_dict.get(argname, _others) for argname in argnames[: len(args)])

@@ -11,7 +11,6 @@ try:
     from flash_attn import flash_attn_func  # noqa: F401 - Import checks optional dependency availability.
 
     def is_hopper_gpu():
-        """Is hopper gpu."""
         if not torch.cuda.is_available():
             return False
         device_name = torch.cuda.get_device_name(0).lower()
@@ -93,11 +92,6 @@ def flash_attention(
     b, lq, lk, out_dtype = q.size(0), q.size(1), k.size(1), q.dtype
 
     def half(x):
-        """Half.
-
-        Args:
-            x: The x.
-        """
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # preprocess query
@@ -185,23 +179,6 @@ def attention(
     fa_version=None,
     # og_dtype=torch.bfloat16,
 ):
-    """Attention.
-
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-        q_lens: The q lens.
-        k_lens: The k lens.
-        dropout_p: The dropout p.
-        softmax_scale: The softmax scale.
-        q_scale: The q scale.
-        causal: The causal.
-        window_size: The window size.
-        deterministic: The deterministic.
-        dtype: The dtype.
-        fa_version: The fa version.
-    """
     if SAGEATTN_AVAILABLE:
         # print("Using sageattention")
         attn_mask = None

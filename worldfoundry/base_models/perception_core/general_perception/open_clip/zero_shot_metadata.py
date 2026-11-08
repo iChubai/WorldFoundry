@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> zero_shot_metadata.py functionality."""
-
 OPENAI_IMAGENET_TEMPLATES = (
     lambda c: f"a bad photo of a {c}.",
     lambda c: f"a photo of many {c}.",

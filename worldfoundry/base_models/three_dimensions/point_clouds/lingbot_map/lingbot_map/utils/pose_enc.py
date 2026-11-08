@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> pose_enc.py functionality."""
-
 import numpy as np
 import torch
 
@@ -316,11 +314,6 @@ def colmap_to_opencv_intrinsics(K):
 
 
 def read_camera_parameters(filename):
-    """Read camera parameters.
-
-    Args:
-        filename: The filename.
-    """
     with open(filename) as f:
         lines = f.readlines()
         lines = [line.rstrip() for line in lines]

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> renderer.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -13,7 +11,7 @@ try:
 except ModuleNotFoundError:
 
     class CameraState:  # type: ignore[no-redef]
-        """Camera state implementation."""
+        pass
 
 
 try:
@@ -23,8 +21,6 @@ except ModuleNotFoundError:
 
 
 class Renderer:
-    """Renderer implementation."""
-
     def __init__(
         self,
         model: SceneModel,
@@ -33,14 +29,6 @@ class Renderer:
         work_dir: str,
         port: int | None = None,
     ):
-        """Init.
-
-        Args:
-            model: The model.
-            device: The device.
-            work_dir: The work dir.
-            port: The port.
-        """
         self.device = device
 
         self.model = model
@@ -67,16 +55,6 @@ class Renderer:
 
     @staticmethod
     def init_from_checkpoint(path: str, device: torch.device, use_2dgs, *args, **kwargs) -> "Renderer":
-        """Init from checkpoint.
-
-        Args:
-            path: The path.
-            device: The device.
-            use_2dgs: The use 2dgs.
-
-        Returns:
-            The return value.
-        """
         guru.info(f"Loading checkpoint from {path}")
         ckpt = torch.load(path)
         state_dict = ckpt["model"]
@@ -91,12 +69,6 @@ class Renderer:
 
     @torch.inference_mode()
     def render_fn(self, camera_state: CameraState, img_wh: tuple[int, int]):
-        """Render fn.
-
-        Args:
-            camera_state: The camera state.
-            img_wh: The img wh.
-        """
         if self.viewer is None:
             return np.full((img_wh[1], img_wh[0], 3), 255, dtype=np.uint8)
 

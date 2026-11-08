@@ -56,14 +56,6 @@ MULTISTEP_FNs = {
 
 
 def get_multi_step_fn(name: str) -> Callable:
-    """Get multi step fn.
-
-    Args:
-        name: The name.
-
-    Returns:
-        The return value.
-    """
     if name in MULTISTEP_FNs:
         return MULTISTEP_FNs[name]
     methods = "\n\t".join(MULTISTEP_FNs.keys())

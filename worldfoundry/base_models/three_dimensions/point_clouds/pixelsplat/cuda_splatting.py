@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> cuda_splatting.py functionality."""
-
 from math import isqrt
 from typing import Literal
 
@@ -69,22 +67,6 @@ def render_cuda(
     scale_invariant: bool = True,
     use_sh: bool = True,
 ):
-    """Render cuda.
-
-    Args:
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        near: The near.
-        far: The far.
-        image_shape: The image shape.
-        background_color: The background color.
-        gaussian_means: The gaussian means.
-        gaussian_covariances: The gaussian covariances.
-        gaussian_sh_coefficients: The gaussian sh coefficients.
-        gaussian_opacities: The gaussian opacities.
-        scale_invariant: The scale invariant.
-        use_sh: The use sh.
-    """
     assert use_sh or gaussian_sh_coefficients.shape[-1] == 1
 
     # Make sure everything is in a range where numerical issues don't appear.
@@ -169,24 +151,6 @@ def render_cuda_orthographic(
     use_sh: bool = True,
     dump: dict | None = None,
 ):
-    """Render cuda orthographic.
-
-    Args:
-        extrinsics: The extrinsics.
-        width: The width.
-        height: The height.
-        near: The near.
-        far: The far.
-        image_shape: The image shape.
-        background_color: The background color.
-        gaussian_means: The gaussian means.
-        gaussian_covariances: The gaussian covariances.
-        gaussian_sh_coefficients: The gaussian sh coefficients.
-        gaussian_opacities: The gaussian opacities.
-        fov_degrees: The fov degrees.
-        use_sh: The use sh.
-        dump: The dump.
-    """
     b, _, _ = extrinsics.shape
     h, w = image_shape
     assert use_sh or gaussian_sh_coefficients.shape[-1] == 1
@@ -276,20 +240,6 @@ def render_depth_cuda(
     scale_invariant: bool = True,
     mode: DepthRenderingMode = "depth",
 ):
-    """Render depth cuda.
-
-    Args:
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        near: The near.
-        far: The far.
-        image_shape: The image shape.
-        gaussian_means: The gaussian means.
-        gaussian_covariances: The gaussian covariances.
-        gaussian_opacities: The gaussian opacities.
-        scale_invariant: The scale invariant.
-        mode: The mode.
-    """
     # Specify colors according to Gaussian depths.
     camera_space_gaussians = einsum(extrinsics.inverse(), homogenize_points(gaussian_means), "b i j, b g j -> b g i")
     fake_color = camera_space_gaussians[..., 2]

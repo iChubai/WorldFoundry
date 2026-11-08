@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen3 -> qwen3_navit_base.py functionality."""
-
 import torch
 import torch.nn as nn
 from transformers.cache_utils import Cache
@@ -17,12 +15,6 @@ class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config, layer_idx: int):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = Qwen3Attention(config=config, layer_idx=layer_idx)
@@ -49,21 +41,6 @@ class Qwen3DecoderLayer(nn.Module):
         position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # necessary, but kept here for BC
         **kwargs: Unpack[FlashAttentionKwargs],
     ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-
-        Returns:
-            The return value.
-        """
         residual = hidden_states
 
         hidden_states = self.input_layernorm(hidden_states)

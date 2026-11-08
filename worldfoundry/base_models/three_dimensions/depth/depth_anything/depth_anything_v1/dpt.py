@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v1 -> dpt.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,14 +8,6 @@ from .blocks import FeatureFusionBlock, _make_scratch
 
 
 def _load_in_tree_dinov2(encoder: str) -> nn.Module:
-    """Helper function to load in tree dinov2.
-
-    Args:
-        encoder: The encoder.
-
-    Returns:
-        The return value.
-    """
     loaders = {
         "vits": dinov2_backbones.dinov2_vits14,
         "vitb": dinov2_backbones.dinov2_vitb14,
@@ -31,13 +21,6 @@ def _load_in_tree_dinov2(encoder: str) -> nn.Module:
 
 
 def _make_fusion_block(features, use_bn, size=None):
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        use_bn: The use bn.
-        size: The size.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(False),
@@ -50,21 +33,9 @@ def _make_fusion_block(features, use_bn, size=None):
 
 
 class DPTHead(nn.Module):
-    """Dpt head implementation."""
-
     def __init__(
         self, nclass, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False
     ):
-        """Init.
-
-        Args:
-            nclass: The nclass.
-            in_channels: The in channels.
-            features: The features.
-            use_bn: The use bn.
-            out_channels: The out channels.
-            use_clstoken: The use clstoken.
-        """
         super().__init__()
 
         self.nclass = nclass
@@ -140,13 +111,6 @@ class DPTHead(nn.Module):
             )
 
     def forward(self, out_features, patch_h, patch_w):
-        """Forward.
-
-        Args:
-            out_features: The out features.
-            patch_h: The patch h.
-            patch_w: The patch w.
-        """
         out = []
         for i, x in enumerate(out_features):
             if self.use_clstoken:
@@ -194,16 +158,6 @@ class DPT_DINOv2(nn.Module):
         use_clstoken=False,
         localhub=True,
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            features: The features.
-            out_channels: The out channels.
-            use_bn: The use bn.
-            use_clstoken: The use clstoken.
-            localhub: The localhub.
-        """
         super().__init__()
 
         assert encoder in ["vits", "vitb", "vitl"]
@@ -214,11 +168,6 @@ class DPT_DINOv2(nn.Module):
         self.depth_head = DPTHead(1, dim, features, use_bn, out_channels=out_channels, use_clstoken=use_clstoken)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         h, w = x.shape[-2:]
 
         features = self.pretrained.get_intermediate_layers(x, 4, return_class_token=True)
@@ -233,12 +182,5 @@ class DPT_DINOv2(nn.Module):
 
 
 class DepthAnything(DPT_DINOv2, PyTorchModelHubMixin):
-    """Depth anything implementation."""
-
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(**config)

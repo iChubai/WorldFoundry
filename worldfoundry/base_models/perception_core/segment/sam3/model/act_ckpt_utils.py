@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> act_ckpt_utils.py functionality."""
-
 import inspect
 from collections.abc import Callable
 from functools import wraps
@@ -50,7 +48,6 @@ def activation_ckpt_wrapper(module: nn.Module | Callable) -> Callable:
 
     @wraps(module)
     def act_ckpt_wrapper(*args, act_ckpt_enable: bool = True, use_reentrant: bool = False, **kwargs):
-        """Act ckpt wrapper."""
         if act_ckpt_enable:
             if len(args) > 0:
                 raise ValueError("This wrapper expects keyword arguments only when `act_ckpt_enable=True`")
@@ -102,7 +99,6 @@ def clone_output_wrapper(f: Callable[..., T]) -> Callable[..., T]:
 
     @wraps(f)
     def wrapped(*args, **kwargs):
-        """Wrapped."""
         outputs = f(*args, **kwargs)
         return tree_map_only(torch.Tensor, lambda t: t.clone() if t.is_cuda else t, outputs)
 

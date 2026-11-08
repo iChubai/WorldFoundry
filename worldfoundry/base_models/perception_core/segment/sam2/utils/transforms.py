@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> utils -> transforms.py functionality."""
-
 import warnings
 
 import torch
@@ -37,20 +35,10 @@ class SAM2Transforms(nn.Module):
         )
 
     def __call__(self, x):
-        """Call.
-
-        Args:
-            x: The x.
-        """
         x = self.to_tensor(x)
         return self.transforms(x)
 
     def forward_batch(self, img_list):
-        """Forward batch.
-
-        Args:
-            img_list: The img list.
-        """
         img_batch = [self.transforms(self.to_tensor(img)) for img in img_list]
         img_batch = torch.stack(img_batch, dim=0)
         return img_batch

@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 # Adapted from https://github.com/facebookresearch/segment-anything/blob/main/segment_anything/automatic_mask_generator.py
-"""Module for base_models -> perception_core -> segment -> sam2 -> automatic_mask_generator.py functionality."""
-
 from typing import Any
 
 import numpy as np
@@ -224,14 +222,6 @@ class SAM2AutomaticMaskGenerator:
         return curr_anns
 
     def _generate_masks(self, image: np.ndarray) -> MaskData:
-        """Helper function to generate masks.
-
-        Args:
-            image: The image.
-
-        Returns:
-            The return value.
-        """
         orig_size = image.shape[:2]
         crop_boxes, layer_idxs = generate_crop_boxes(orig_size, self.crop_n_layers, self.crop_overlap_ratio)
 
@@ -263,17 +253,6 @@ class SAM2AutomaticMaskGenerator:
         crop_layer_idx: int,
         orig_size: tuple[int, ...],
     ) -> MaskData:
-        """Helper function to process crop.
-
-        Args:
-            image: The image.
-            crop_box: The crop box.
-            crop_layer_idx: The crop layer idx.
-            orig_size: The orig size.
-
-        Returns:
-            The return value.
-        """
         # Crop the image and calculate embeddings
         x0, y0, x1, y1 = crop_box
         cropped_im = image[y0:y1, x0:x1, :]
@@ -316,18 +295,6 @@ class SAM2AutomaticMaskGenerator:
         orig_size: tuple[int, ...],
         normalize=False,
     ) -> MaskData:
-        """Helper function to process batch.
-
-        Args:
-            points: The points.
-            im_size: The im size.
-            crop_box: The crop box.
-            orig_size: The orig size.
-            normalize: The normalize.
-
-        Returns:
-            The return value.
-        """
         orig_h, orig_w = orig_size
 
         # Run model on this batch
@@ -450,14 +417,6 @@ class SAM2AutomaticMaskGenerator:
         return mask_data
 
     def refine_with_m2m(self, points, point_labels, low_res_masks, points_per_batch):
-        """Refine with m2m.
-
-        Args:
-            points: The points.
-            point_labels: The point labels.
-            low_res_masks: The low res masks.
-            points_per_batch: The points per batch.
-        """
         new_masks = []
         new_iou_preds = []
 

@@ -8,8 +8,6 @@
 # Inspired by https://github.com/DepthAnything/Depth-Anything-V2
 
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> heads -> dpt_head.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -57,24 +55,6 @@ class DPTHead(nn.Module):
         feature_only: bool = False,
         down_ratio: int = 1,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            output_dim: The output dim.
-            activation: The activation.
-            conf_activation: The conf activation.
-            features: The features.
-            out_channels: The out channels.
-            intermediate_layer_idx: The intermediate layer idx.
-            pos_embed: The pos embed.
-            feature_only: The feature only.
-            down_ratio: The down ratio.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.patch_size = patch_size
         self.activation = activation
@@ -319,17 +299,6 @@ class DPTHead(nn.Module):
 
 
 def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        size: The size.
-        has_residual: The has residual.
-        groups: The groups.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=True),
@@ -344,17 +313,6 @@ def _make_fusion_block(features: int, size: int | None = None, has_residual: boo
 
 
 def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     out_shape1 = out_shape
     out_shape2 = out_shape
@@ -389,8 +347,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn, groups=1):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -408,8 +365,7 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -431,8 +387,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,
@@ -445,8 +399,7 @@ class FeatureFusionBlock(nn.Module):
         has_residual=True,
         groups=1,
     ):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -474,8 +427,7 @@ class FeatureFusionBlock(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """
@@ -529,20 +481,9 @@ def custom_interpolate(
 
 
 class DPTHead_Update(nn.Module):
-    """Dpt head update implementation."""
-
     def __init__(
         self, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            features: The features.
-            use_bn: The use bn.
-            out_channels: The out channels.
-            use_clstoken: The use clstoken.
-        """
         super().__init__()
 
         self.use_clstoken = use_clstoken
@@ -607,14 +548,6 @@ class DPTHead_Update(nn.Module):
         )
 
     def forward(self, out_features, patch_h, patch_w, return_intermediate=True):
-        """Forward.
-
-        Args:
-            out_features: The out features.
-            patch_h: The patch h.
-            patch_w: The patch w.
-            return_intermediate: The return intermediate.
-        """
         out = []
         for i, x in enumerate(out_features):
             if self.use_clstoken:
@@ -650,13 +583,6 @@ class DPTHead_Update(nn.Module):
 
 
 def _make_fusion_block_slam(features, use_bn, size=None):
-    """Helper function to make fusion block slam.
-
-    Args:
-        features: The features.
-        use_bn: The use bn.
-        size: The size.
-    """
     return FeatureFusionBlock_slam(
         features,
         nn.ReLU(False),
@@ -672,8 +598,7 @@ class FeatureFusionBlock_slam(nn.Module):
     """Feature fusion block."""
 
     def __init__(self, features, activation, deconv=False, bn=False, expand=False, align_corners=True, size=None):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -699,8 +624,7 @@ class FeatureFusionBlock_slam(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """

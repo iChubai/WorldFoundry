@@ -39,8 +39,6 @@ _NULL_PROMPT_PHRASES = (
 
 @dataclass
 class Sam3VideoSegmenter:
-    """SAM3 video segmenter."""
-
     gpus_to_use: list[int] | None = None
     propagation_direction: str = "both"
     score_threshold_detection: float | None = None

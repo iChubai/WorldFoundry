@@ -64,14 +64,6 @@ class _CheckpointUri(pydantic.BaseModel):
 
 
 def is_s3_uri(uri: str) -> str:
-    """Is s3 uri.
-
-    Args:
-        uri: The uri.
-
-    Returns:
-        The return value.
-    """
     if not uri.startswith("s3://"):
         raise ValueError(f"Invalid S3 URI: {uri}. Must start with 's3://'")
     return uri.rstrip("/")
@@ -203,11 +195,6 @@ _CHECKPOINTS_BY_S3: dict[str, CheckpointConfig] = {}
 
 
 def _register_checkpoint(checkpoint_config: CheckpointConfig):
-    """Helper function to register checkpoint.
-
-    Args:
-        checkpoint_config: The checkpoint config.
-    """
     if checkpoint_config.uuid in _CHECKPOINTS_BY_UUID:
         raise ValueError(f"Checkpoint UUID {checkpoint_config.uuid} already registered.")
     _CHECKPOINTS_BY_UUID[checkpoint_config.uuid] = checkpoint_config

@@ -282,7 +282,7 @@ class InternVideo2_Stage2(nn.Module):
             )
 
     def encode_text(self, text):
-        """encode text.
+        """
         Args:
             text (dict): The output of huggingface's `PreTrainedTokenizer`. contains keys:
                 - input_ids (torch.Tensor): Token ids to be fed to a model. Shape: [B,L].
@@ -291,7 +291,6 @@ class InternVideo2_Stage2(nn.Module):
         Returns: tuple.
             - text_embeds (torch.Tensor): The features of all tokens. Shape: [B,L,C].
             - pooled_text_embeds (torch.Tensor): The pooled features. Shape: [B,C].
-
         """
         text_output = self.get_text_encoder()(
             text.input_ids,

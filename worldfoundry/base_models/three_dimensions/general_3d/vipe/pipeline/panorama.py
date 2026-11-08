@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> pipeline -> panorama.py functionality."""
-
 import logging
 import pickle
 from pathlib import Path
@@ -57,8 +55,6 @@ logger = logging.getLogger(__name__)
 
 
 class MergedPanoramaVideoStream(VideoStream):
-    """Merged panorama video stream implementation."""
-
     # Determines how much height of the panorama is kept for depth estimation.
     # This way we crop the top and bottom of the input to avoid distortion (where depth estimation is not reliable).
     DEPTH_KEEP_RATIO = 0.6
@@ -70,14 +66,6 @@ class MergedPanoramaVideoStream(VideoStream):
         slam_output: SLAMOutput,
         pano_depth_method: str | None,
     ):
-        """Init.
-
-        Args:
-            pano_stream: The pano stream.
-            projected_streams: The projected streams.
-            slam_output: The slam output.
-            pano_depth_method: The pano depth method.
-        """
         assert len(projected_streams) > 0
         self.pano_stream = pano_stream
         self.projected_streams = projected_streams
@@ -95,31 +83,15 @@ class MergedPanoramaVideoStream(VideoStream):
             raise ValueError(f"Unknown pano_depth_method: {self.pano_depth_method}")
 
     def frame_size(self) -> tuple[int, int]:
-        """Frame size.
-
-        Returns:
-            The return value.
-        """
         return self.pano_stream.frame_size()
 
     def fps(self) -> float:
-        """Fps.
-
-        Returns:
-            The return value.
-        """
         return self.pano_stream.fps()
 
     def __len__(self) -> int:
-        """Len.
-
-        Returns:
-            The return value.
-        """
         return len(self.pano_stream)
 
     def __iter__(self):
-        """Iter."""
         if self.pano_depth_method is not None:
             xyz_global, _ = self.slam_output.slam_map.get_dense_disp_full_pcd()
         else:
@@ -225,25 +197,13 @@ class MergedPanoramaVideoStream(VideoStream):
             yield pano_frame_data
 
     def attributes(self) -> set[FrameAttribute]:
-        """Attributes.
-
-        Returns:
-            The return value.
-        """
         return {FrameAttribute.POSE, FrameAttribute.INTRINSICS}
 
     def name(self) -> str:
-        """Name.
-
-        Returns:
-            The return value.
-        """
         return self.pano_stream.name()
 
 
 class PanoramaAnnotationPipeline(Pipeline):
-    """Panorama annotation pipeline implementation."""
-
     def __init__(
         self,
         init: DictConfig,
@@ -252,18 +212,6 @@ class PanoramaAnnotationPipeline(Pipeline):
         output: DictConfig,
         post: DictConfig,
     ) -> None:
-        """Init.
-
-        Args:
-            init: The init.
-            virtual: The virtual.
-            slam: The slam.
-            output: The output.
-            post: The post.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.init_cfg = init
         virtual_height = virtual.height
@@ -287,14 +235,6 @@ class PanoramaAnnotationPipeline(Pipeline):
         self.out_path.mkdir(exist_ok=True, parents=True)
 
     def run(self, video_stream: VideoStream | MultiviewVideoList) -> AnnotationPipelineOutput:
-        """Run.
-
-        Args:
-            video_stream: The video stream.
-
-        Returns:
-            The return value.
-        """
         assert isinstance(video_stream, VideoStream), "Panorama pipeline only supports single video stream"
         annotate_output = AnnotationPipelineOutput()
         artifact_path = io.ArtifactPath(self.out_path, video_stream.name())

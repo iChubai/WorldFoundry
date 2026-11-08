@@ -10,8 +10,7 @@ from mmyolo.registry import TASK_UTILS
 
 @TASK_UTILS.register_module()
 class DistancePointBBoxCoder(MMDET_DistancePointBBoxCoder):
-    """Distance Point BBox coder.
-
+    """
     This coder encodes gt bboxes (x1, y1, x2, y2) into (top, bottom, left,
     right) and decode it back to the original.
     """

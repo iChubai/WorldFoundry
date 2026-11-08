@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> sam -> mask_decoder.py functionality."""
-
 import torch
 from torch import nn
 
@@ -11,8 +9,6 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 
 
 class MaskDecoder(nn.Module):
-    """Mask decoder implementation."""
-
     def __init__(
         self,
         *,

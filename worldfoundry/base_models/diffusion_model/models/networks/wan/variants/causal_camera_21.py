@@ -29,14 +29,6 @@ class CausalWanSelfAttention(nn.Module):
     """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self, dim, num_heads, qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -110,17 +102,6 @@ class CausalWanAttentionBlock(nn.Module):
     """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self, cross_attn_type, dim, ffn_dim, num_heads, qk_norm=True, cross_attn_norm=False, eps=1e-6):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -181,14 +162,6 @@ class CausalHead(nn.Module):
     """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -318,15 +291,9 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
 
     def get_transformer_module(self):
-        """Get transformer module."""
         return {type(self.blocks[0])}
 
     def init_freqs(self, device):
-        """Init freqs.
-
-        Args:
-            device: The device.
-        """
         d = self.dim // self.num_heads
         self.freqs = torch.cat(
             [rope_params(1024, d - 4 * (d // 6)), rope_params(1024, 2 * (d // 6)), rope_params(1024, 2 * (d // 6))],
@@ -335,11 +302,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         self.freqs = self.freqs.to(device)
 
     def _set_gradient_checkpointing(self, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     def forward(
@@ -439,14 +401,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward

@@ -112,11 +112,6 @@ def ucm_unproject_grid(
     fx_, fy_, cx_, cy_, xi_ = fx, fy, cx, cy, xi
 
     def to_tensor_flatten(x):
-        """To tensor flatten.
-
-        Args:
-            x: The x.
-        """
         if torch.is_tensor(x):
             return x.to(device=device, dtype=dtype).reshape(-1)
         return torch.tensor([x], dtype=dtype, device=device)
@@ -165,11 +160,6 @@ def compute_fx_from_fov_xi(
     """Recover focal length ``fx`` from horizontal FoV (degrees) + UCM xi."""
 
     def to_tensor_flatten(x):
-        """To tensor flatten.
-
-        Args:
-            x: The x.
-        """
         if torch.is_tensor(x):
             return x.to(device=device, dtype=dtype).view(-1)
         return torch.tensor([x], dtype=dtype, device=device)
@@ -196,11 +186,6 @@ def compute_fov_from_fx_xi(
     """Inverse of :func:`compute_fx_from_fov_xi`."""
 
     def to_tensor_1d(x):
-        """To tensor 1d.
-
-        Args:
-            x: The x.
-        """
         if torch.is_tensor(x):
             return x.to(device=device, dtype=dtype)
         return torch.tensor([x], dtype=dtype, device=device)
@@ -256,12 +241,6 @@ def project_ucm_points(X, Y, Z, fx, fy, cx, cy, xi):
     r = torch.sqrt(X * X + Y * Y + Z * Z)
 
     def reshape_param(p, target):
-        """Reshape param.
-
-        Args:
-            p: The p.
-            target: The target.
-        """
         if torch.is_tensor(p):
             if p.numel() == 1:
                 return p

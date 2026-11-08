@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> misc -> heterogeneous_pairings.py functionality."""
-
 import torch
 from einops import repeat
 from jaxtyping import Int

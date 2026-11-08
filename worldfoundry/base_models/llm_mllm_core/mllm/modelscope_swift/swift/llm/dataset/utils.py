@@ -39,7 +39,6 @@ def sample_dataset(
         dataset: The dataset instance, iterable dataset is not supported
         dataset_sample: The sample number
         shuffle: Whether to perform random sampling on non-streaming datasets
-        random_state: The random state
     Returns:
         The sampled dataset
     """

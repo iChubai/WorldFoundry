@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> multiplex_mask_decoder.py functionality."""
-
 import torch
 from torch import nn
 
@@ -14,8 +12,6 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 
 
 class MultiplexMaskDecoder(nn.Module):
-    """Multiplex mask decoder implementation."""
-
     def __init__(
         self,
         *,

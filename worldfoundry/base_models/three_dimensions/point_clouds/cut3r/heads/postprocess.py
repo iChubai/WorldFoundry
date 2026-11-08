@@ -4,8 +4,6 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> heads -> postprocess.py functionality."""
-
 import torch
 import torch.nn.functional as F
 
@@ -23,12 +21,6 @@ def postprocess(out, depth_mode, conf_mode, pos_z=False):
 
 
 def postprocess_rgb(out, eps=1e-6):
-    """Postprocess rgb.
-
-    Args:
-        out: The out.
-        eps: The eps.
-    """
     fmap = out.permute(0, 2, 3, 1)  # B,H,W,3
     res = torch.sigmoid(fmap) * (1 - 2 * eps) + eps
     res = (res - 0.5) * 2
@@ -66,11 +58,6 @@ def postprocess_pose(out, mode, inverse=False):
 
 
 def postprocess_pose_conf(out):
-    """Postprocess pose conf.
-
-    Args:
-        out: The out.
-    """
     fmap = out.permute(0, 2, 3, 1)  # B,H,W,1
     return {"pose_conf": torch.sigmoid(fmap)}
 
@@ -102,12 +89,6 @@ def postprocess_desc(out, depth_mode, conf_mode, desc_dim, double_channel=False)
 
 
 def reg_desc(desc, mode="norm"):
-    """Reg desc.
-
-    Args:
-        desc: The desc.
-        mode: The mode.
-    """
     if "norm" in mode:
         desc = desc / desc.norm(dim=-1, keepdim=True)
     else:

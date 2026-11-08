@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> params.py functionality."""
-
 import math
 
 import torch
@@ -18,50 +16,26 @@ class CameraScales(nn.Module):
         self,
         camera_scales: torch.Tensor,
     ):
-        """Init.
-
-        Args:
-            camera_scales: The camera scales.
-        """
         super().__init__()
         self.params = nn.ParameterDict({"camera_scales": camera_scales})
 
     @staticmethod
     def init_from_state_dict(state_dict, prefix="params."):
-        """Init from state dict.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         param_keys = ["camera_scales"]
         assert all(f"{prefix}{k}" in state_dict for k in param_keys)
         args = {k: state_dict[f"{prefix}{k}"] for k in param_keys}
         return CameraScales(**args)
 
     def get_camera_scales(self) -> torch.Tensor:
-        """Get camera scales.
-
-        Returns:
-            The return value.
-        """
         return self.params["camera_scales"]
 
 
 class CameraPoses(nn.Module):
-    """Camera poses implementation."""
-
     def __init__(
         self,
         Rs: Tensor,
         ts: Tensor,
     ):
-        """Init.
-
-        Args:
-            Rs: The rs.
-            ts: The ts.
-        """
         super().__init__()
         self.params = nn.ParameterDict(
             {
@@ -75,12 +49,6 @@ class CameraPoses(nn.Module):
         state_dict: dict[str, Tensor],
         prefix: str,
     ):
-        """Init from state dict.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         param_keys = ["Rs", "ts"]
         # import pdb
         # pdb.set_trace()
@@ -130,8 +98,6 @@ class CameraPoses(nn.Module):
 
 
 class GaussianParams(nn.Module):
-    """Gaussian params implementation."""
-
     def __init__(
         self,
         means: torch.Tensor,
@@ -143,18 +109,6 @@ class GaussianParams(nn.Module):
         scene_center: torch.Tensor | None = None,
         scene_scale: torch.Tensor | float = 1.0,
     ):
-        """Init.
-
-        Args:
-            means: The means.
-            quats: The quats.
-            scales: The scales.
-            colors: The colors.
-            opacities: The opacities.
-            motion_coefs: The motion coefs.
-            scene_center: The scene center.
-            scene_scale: The scene scale.
-        """
         super().__init__()
         if not check_gaussian_sizes(means, quats, scales, colors, opacities, motion_coefs):
             import ipdb
@@ -183,12 +137,6 @@ class GaussianParams(nn.Module):
 
     @staticmethod
     def init_from_state_dict(state_dict, prefix="params."):
-        """Init from state dict.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         req_keys = ["means", "quats", "scales", "colors", "opacities"]
         assert all(f"{prefix}{k}" in state_dict for k in req_keys)
         args = {
@@ -203,51 +151,21 @@ class GaussianParams(nn.Module):
 
     @property
     def num_gaussians(self) -> int:
-        """Num gaussians.
-
-        Returns:
-            The return value.
-        """
         return self.params["means"].shape[0]
 
     def get_colors(self) -> torch.Tensor:
-        """Get colors.
-
-        Returns:
-            The return value.
-        """
         return self.color_activation(self.params["colors"])
 
     def get_scales(self) -> torch.Tensor:
-        """Get scales.
-
-        Returns:
-            The return value.
-        """
         return self.scale_activation(self.params["scales"])
 
     def get_opacities(self) -> torch.Tensor:
-        """Get opacities.
-
-        Returns:
-            The return value.
-        """
         return self.opacity_activation(self.params["opacities"])
 
     def get_quats(self) -> torch.Tensor:
-        """Get quats.
-
-        Returns:
-            The return value.
-        """
         return self.quat_activation(self.params["quats"])
 
     def get_coefs(self) -> torch.Tensor:
-        """Get coefs.
-
-        Returns:
-            The return value.
-        """
         assert "motion_coefs" in self.params
         return self.motion_coef_activation(self.params["motion_coefs"])
 
@@ -287,15 +205,7 @@ class GaussianParams(nn.Module):
 
 
 class MotionBases(nn.Module):
-    """Motion bases implementation."""
-
     def __init__(self, rots, transls):
-        """Init.
-
-        Args:
-            rots: The rots.
-            transls: The transls.
-        """
         super().__init__()
         self.num_frames = rots.shape[1]
         self.num_bases = rots.shape[0]
@@ -309,12 +219,6 @@ class MotionBases(nn.Module):
 
     @staticmethod
     def init_from_state_dict(state_dict, prefix="params."):
-        """Init from state dict.
-
-        Args:
-            state_dict: The state dict.
-            prefix: The prefix.
-        """
         param_keys = ["rots", "transls"]
         assert all(f"{prefix}{k}" in state_dict for k in param_keys)
         args = {k: state_dict[f"{prefix}{k}"] for k in param_keys}
@@ -342,19 +246,6 @@ def check_gaussian_sizes(
     opacities: torch.Tensor,
     motion_coefs: torch.Tensor | None = None,
 ) -> bool:
-    """Check gaussian sizes.
-
-    Args:
-        means: The means.
-        quats: The quats.
-        scales: The scales.
-        colors: The colors.
-        opacities: The opacities.
-        motion_coefs: The motion coefs.
-
-    Returns:
-        The return value.
-    """
     dims = means.shape[:-1]
     leading_dims_match = (
         quats.shape[:-1] == dims and scales.shape[:-1] == dims and colors.shape[:-1] == dims and opacities.shape == dims
@@ -368,15 +259,6 @@ def check_gaussian_sizes(
 
 
 def check_bases_sizes(motion_rots: torch.Tensor, motion_transls: torch.Tensor) -> bool:
-    """Check bases sizes.
-
-    Args:
-        motion_rots: The motion rots.
-        motion_transls: The motion transls.
-
-    Returns:
-        The return value.
-    """
     return (
         motion_rots.shape[-1] == 6
         and motion_transls.shape[-1] == 3

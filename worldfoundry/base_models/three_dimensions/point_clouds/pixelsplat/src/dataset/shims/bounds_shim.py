@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> dataset -> shims -> bounds_shim.py functionality."""
-
 import torch
 from einops import einsum, reduce, repeat
 from jaxtyping import Float

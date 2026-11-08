@@ -7,8 +7,6 @@
 # Build the TinyViT Model
 # --------------------------------------------------------
 
-"""Module for base_models -> perception_core -> segment -> mobile_sam -> modeling -> tiny_vit_sam.py functionality."""
-
 import itertools
 
 import torch
@@ -26,18 +24,6 @@ class Conv2d_BN(torch.nn.Sequential):
     """Conv d bn implementation."""
 
     def __init__(self, a, b, ks=1, stride=1, pad=0, dilation=1, groups=1, bn_weight_init=1):
-        """Init.
-
-        Args:
-            a: The a.
-            b: The b.
-            ks: The ks.
-            stride: The stride.
-            pad: The pad.
-            dilation: The dilation.
-            groups: The groups.
-            bn_weight_init: The bn weight init.
-        """
         super().__init__()
         self.add_module("c", torch.nn.Conv2d(a, b, ks, stride, pad, dilation, groups, bias=False))
         bn = torch.nn.BatchNorm2d(b)
@@ -47,7 +33,6 @@ class Conv2d_BN(torch.nn.Sequential):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         c, bn = self._modules.values()
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = c.weight * w[:, None, None, None]
@@ -67,36 +52,18 @@ class Conv2d_BN(torch.nn.Sequential):
 
 
 class DropPath(TimmDropPath):
-    """Drop path implementation."""
-
     def __init__(self, drop_prob=None):
-        """Init.
-
-        Args:
-            drop_prob: The drop prob.
-        """
         super().__init__(drop_prob=drop_prob)
         self.drop_prob = drop_prob
 
     def __repr__(self):
-        """Repr."""
         msg = super().__repr__()
         msg += f"(drop_prob={self.drop_prob})"
         return msg
 
 
 class PatchEmbed(nn.Module):
-    """Patch embed implementation."""
-
     def __init__(self, in_chans, embed_dim, resolution, activation):
-        """Init.
-
-        Args:
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            resolution: The resolution.
-            activation: The activation.
-        """
         super().__init__()
         img_size: tuple[int, int] = to_2tuple(resolution)
         self.patches_resolution = (img_size[0] // 4, img_size[1] // 4)
@@ -111,27 +78,11 @@ class PatchEmbed(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.seq(x)
 
 
 class MBConv(nn.Module):
-    """Mb conv implementation."""
-
     def __init__(self, in_chans, out_chans, expand_ratio, activation, drop_path):
-        """Init.
-
-        Args:
-            in_chans: The in chans.
-            out_chans: The out chans.
-            expand_ratio: The expand ratio.
-            activation: The activation.
-            drop_path: The drop path.
-        """
         super().__init__()
         self.in_chans = in_chans
         self.hidden_chans = int(in_chans * expand_ratio)
@@ -149,11 +100,6 @@ class MBConv(nn.Module):
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         shortcut = x
 
         x = self.conv1(x)
@@ -173,17 +119,7 @@ class MBConv(nn.Module):
 
 
 class PatchMerging(nn.Module):
-    """Patch merging implementation."""
-
     def __init__(self, input_resolution, dim, out_dim, activation):
-        """Init.
-
-        Args:
-            input_resolution: The input resolution.
-            dim: The dim.
-            out_dim: The out dim.
-            activation: The activation.
-        """
         super().__init__()
 
         self.input_resolution = input_resolution
@@ -198,11 +134,6 @@ class PatchMerging(nn.Module):
         self.conv3 = Conv2d_BN(out_dim, out_dim, 1, 1, 0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if x.ndim == 3:
             H, W = self.input_resolution
             B = len(x)
@@ -220,8 +151,6 @@ class PatchMerging(nn.Module):
 
 
 class ConvLayer(nn.Module):
-    """Conv layer implementation."""
-
     def __init__(
         self,
         dim,
@@ -234,20 +163,6 @@ class ConvLayer(nn.Module):
         out_dim=None,
         conv_expand_ratio=4.0,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            input_resolution: The input resolution.
-            depth: The depth.
-            activation: The activation.
-            drop_path: The drop path.
-            downsample: The downsample.
-            use_checkpoint: The use checkpoint.
-            out_dim: The out dim.
-            conv_expand_ratio: The conv expand ratio.
-        """
-
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -275,11 +190,6 @@ class ConvLayer(nn.Module):
             self.downsample = None
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for blk in self.blocks:
             x = checkpoint.checkpoint(blk, x) if self.use_checkpoint else blk(x)
         if self.downsample is not None:
@@ -288,18 +198,7 @@ class ConvLayer(nn.Module):
 
 
 class Mlp(nn.Module):
-    """Mlp implementation."""
-
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -310,11 +209,6 @@ class Mlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.norm(x)
 
         x = self.fc1(x)
@@ -326,8 +220,6 @@ class Mlp(nn.Module):
 
 
 class Attention(torch.nn.Module):
-    """Attention implementation."""
-
     def __init__(
         self,
         dim,
@@ -336,15 +228,6 @@ class Attention(torch.nn.Module):
         attn_ratio=4,
         resolution=(14, 14),
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            key_dim: The key dim.
-            num_heads: The num heads.
-            attn_ratio: The attn ratio.
-            resolution: The resolution.
-        """
         super().__init__()
         # (h, w)
         assert isinstance(resolution, tuple) and len(resolution) == 2
@@ -376,11 +259,6 @@ class Attention(torch.nn.Module):
 
     @torch.no_grad()
     def train(self, mode=True):
-        """Train.
-
-        Args:
-            mode: The mode.
-        """
         super().train(mode)
         if mode and hasattr(self, "ab"):
             del self.ab
@@ -388,11 +266,6 @@ class Attention(torch.nn.Module):
             self.register_buffer("ab", self.attention_biases[:, self.attention_bias_idxs], persistent=False)
 
     def forward(self, x):  # x (B,N,C)
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, N, _ = x.shape
 
         # Normalization
@@ -416,13 +289,10 @@ class Attention(torch.nn.Module):
 
 
 class TinyViTBlock(nn.Module):
-    r"""TinyViT Block.
-
+    r"""
     Args:
         dim (int): Number of input channels.
-        input_resolution (tuple[int, int]): Input resolution.
         num_heads (int): Number of attention heads.
-        window_size (int): Window size.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         drop (float, optional): Dropout rate. Default: 0.0
         drop_path (float, optional): Stochastic depth rate. Default: 0.0
@@ -443,19 +313,6 @@ class TinyViTBlock(nn.Module):
         local_conv_size=3,
         activation=nn.GELU,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            input_resolution: The input resolution.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            drop: The drop.
-            drop_path: The drop path.
-            local_conv_size: The local conv size.
-            activation: The activation.
-        """
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -480,11 +337,6 @@ class TinyViTBlock(nn.Module):
         self.local_conv = Conv2d_BN(dim, dim, ks=local_conv_size, stride=1, pad=pad, groups=dim)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         H, W = self.input_resolution
         B, L, C = x.shape
         assert L == H * W, "input feature has wrong size"
@@ -528,11 +380,6 @@ class TinyViTBlock(nn.Module):
         return x
 
     def extra_repr(self) -> str:
-        """Extra repr.
-
-        Returns:
-            The return value.
-        """
         return (
             f"dim={self.dim}, input_resolution={self.input_resolution}, num_heads={self.num_heads}, "
             f"window_size={self.window_size}, mlp_ratio={self.mlp_ratio}"
@@ -544,7 +391,6 @@ class BasicLayer(nn.Module):
 
     Args:
         dim (int): Number of input channels.
-        input_resolution (tuple[int]): Input resolution.
         depth (int): Number of blocks.
         num_heads (int): Number of attention heads.
         window_size (int): Local window size.
@@ -574,24 +420,6 @@ class BasicLayer(nn.Module):
         activation=nn.GELU,
         out_dim=None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            input_resolution: The input resolution.
-            depth: The depth.
-            num_heads: The num heads.
-            window_size: The window size.
-            mlp_ratio: The mlp ratio.
-            drop: The drop.
-            drop_path: The drop path.
-            downsample: The downsample.
-            use_checkpoint: The use checkpoint.
-            local_conv_size: The local conv size.
-            activation: The activation.
-            out_dim: The out dim.
-        """
-
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -623,11 +451,6 @@ class BasicLayer(nn.Module):
             self.downsample = None
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for blk in self.blocks:
             x = checkpoint.checkpoint(blk, x) if self.use_checkpoint else blk(x)
         if self.downsample is not None:
@@ -635,17 +458,10 @@ class BasicLayer(nn.Module):
         return x
 
     def extra_repr(self) -> str:
-        """Extra repr.
-
-        Returns:
-            The return value.
-        """
         return f"dim={self.dim}, input_resolution={self.input_resolution}, depth={self.depth}"
 
 
 class TinyViT(nn.Module):
-    """Tiny vi t implementation."""
-
     def __init__(
         self,
         img_size=224,
@@ -663,24 +479,6 @@ class TinyViT(nn.Module):
         local_conv_size=3,
         layer_lr_decay=1.0,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            in_chans: The in chans.
-            num_classes: The num classes.
-            embed_dims: The embed dims.
-            depths: The depths.
-            num_heads: The num heads.
-            window_sizes: The window sizes.
-            mlp_ratio: The mlp ratio.
-            drop_rate: The drop rate.
-            drop_path_rate: The drop path rate.
-            use_checkpoint: The use checkpoint.
-            mbconv_expand_ratio: The mbconv expand ratio.
-            local_conv_size: The local conv size.
-            layer_lr_decay: The layer lr decay.
-        """
         super().__init__()
         self.img_size = img_size
         self.num_classes = num_classes
@@ -760,11 +558,6 @@ class TinyViT(nn.Module):
         )
 
     def set_layer_lr_decay(self, layer_lr_decay):
-        """Set layer lr decay.
-
-        Args:
-            layer_lr_decay: The layer lr decay.
-        """
         decay_rate = layer_lr_decay
 
         # layers -> blocks (depth)
@@ -773,12 +566,6 @@ class TinyViT(nn.Module):
         # print("LR SCALES:", lr_scales)
 
         def _set_lr_scale(m, scale):
-            """Helper function to set lr scale.
-
-            Args:
-                m: The m.
-                scale: The scale.
-            """
             for p in m.parameters():
                 p.lr_scale = scale
 
@@ -798,22 +585,12 @@ class TinyViT(nn.Module):
             p.param_name = k
 
         def _check_lr_scale(m):
-            """Helper function to check lr scale.
-
-            Args:
-                m: The m.
-            """
             for p in m.parameters():
                 assert hasattr(p, "lr_scale"), p.param_name
 
         self.apply(_check_lr_scale)
 
     def _init_weights(self, m):
-        """Helper function to init weights.
-
-        Args:
-            m: The m.
-        """
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
@@ -824,15 +601,9 @@ class TinyViT(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay_keywords(self):
-        """No weight decay keywords."""
         return {"attention_biases"}
 
     def forward_features(self, x):
-        """Forward features.
-
-        Args:
-            x: The x.
-        """
         # x: (N, C, H, W)
         x = self.patch_embed(x)
 
@@ -849,11 +620,6 @@ class TinyViT(nn.Module):
         return x
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.forward_features(x)
         # x = self.norm_head(x)
         # x = self.head(x)
@@ -876,11 +642,6 @@ def register_tiny_vit_model(fn):
     """
 
     def fn_wrapper(pretrained=False, **kwargs):
-        """Fn wrapper.
-
-        Args:
-            pretrained: The pretrained.
-        """
         model = fn()
         if pretrained:
             model_name = fn.__name__
@@ -902,13 +663,6 @@ def register_tiny_vit_model(fn):
 
 @register_tiny_vit_model
 def tiny_vit_5m_224(pretrained=False, num_classes=1000, drop_path_rate=0.0):
-    """Tiny vit 5m 224.
-
-    Args:
-        pretrained: The pretrained.
-        num_classes: The num classes.
-        drop_path_rate: The drop path rate.
-    """
     return TinyViT(
         num_classes=num_classes,
         embed_dims=[64, 128, 160, 320],
@@ -921,13 +675,6 @@ def tiny_vit_5m_224(pretrained=False, num_classes=1000, drop_path_rate=0.0):
 
 @register_tiny_vit_model
 def tiny_vit_11m_224(pretrained=False, num_classes=1000, drop_path_rate=0.1):
-    """Tiny vit 11m 224.
-
-    Args:
-        pretrained: The pretrained.
-        num_classes: The num classes.
-        drop_path_rate: The drop path rate.
-    """
     return TinyViT(
         num_classes=num_classes,
         embed_dims=[64, 128, 256, 448],
@@ -940,13 +687,6 @@ def tiny_vit_11m_224(pretrained=False, num_classes=1000, drop_path_rate=0.1):
 
 @register_tiny_vit_model
 def tiny_vit_21m_224(pretrained=False, num_classes=1000, drop_path_rate=0.2):
-    """Tiny vit 21m 224.
-
-    Args:
-        pretrained: The pretrained.
-        num_classes: The num classes.
-        drop_path_rate: The drop path rate.
-    """
     return TinyViT(
         num_classes=num_classes,
         embed_dims=[96, 192, 384, 576],
@@ -959,13 +699,6 @@ def tiny_vit_21m_224(pretrained=False, num_classes=1000, drop_path_rate=0.2):
 
 @register_tiny_vit_model
 def tiny_vit_21m_384(pretrained=False, num_classes=1000, drop_path_rate=0.1):
-    """Tiny vit 21m 384.
-
-    Args:
-        pretrained: The pretrained.
-        num_classes: The num classes.
-        drop_path_rate: The drop path rate.
-    """
     return TinyViT(
         img_size=384,
         num_classes=num_classes,
@@ -979,13 +712,6 @@ def tiny_vit_21m_384(pretrained=False, num_classes=1000, drop_path_rate=0.1):
 
 @register_tiny_vit_model
 def tiny_vit_21m_512(pretrained=False, num_classes=1000, drop_path_rate=0.1):
-    """Tiny vit 21m 512.
-
-    Args:
-        pretrained: The pretrained.
-        num_classes: The num classes.
-        drop_path_rate: The drop path rate.
-    """
     return TinyViT(
         img_size=512,
         num_classes=num_classes,

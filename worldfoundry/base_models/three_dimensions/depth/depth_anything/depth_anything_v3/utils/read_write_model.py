@@ -31,8 +31,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> read_write_model.py functionality."""
-
 import argparse
 import collections
 import os
@@ -47,10 +45,7 @@ Point3D = collections.namedtuple("Point3D", ["id", "xyz", "rgb", "error", "image
 
 
 class Image(BaseImage):
-    """Image implementation."""
-
     def qvec2rotmat(self):
-        """Qvec2rotmat."""
         return qvec2rotmat(self.qvec)
 
 
@@ -451,12 +446,6 @@ def write_points3D_binary(points3D, path_to_model_file):
 
 
 def detect_model_format(path, ext):
-    """Detect model format.
-
-    Args:
-        path: The path.
-        ext: The ext.
-    """
     if (
         os.path.isfile(os.path.join(path, "cameras" + ext))
         and os.path.isfile(os.path.join(path, "images" + ext))
@@ -469,12 +458,6 @@ def detect_model_format(path, ext):
 
 
 def read_model(path, ext=""):
-    """Read model.
-
-    Args:
-        path: The path.
-        ext: The ext.
-    """
     # try to detect the extension automatically
     if ext == "":
         if detect_model_format(path, ".bin"):
@@ -497,15 +480,6 @@ def read_model(path, ext=""):
 
 
 def write_model(cameras, images, points3D, path, ext=".bin"):
-    """Write model.
-
-    Args:
-        cameras: The cameras.
-        images: The images.
-        points3D: The points3d.
-        path: The path.
-        ext: The ext.
-    """
     if ext == ".txt":
         write_cameras_text(cameras, os.path.join(path, "cameras" + ext))
         write_images_text(images, os.path.join(path, "images" + ext))
@@ -518,11 +492,6 @@ def write_model(cameras, images, points3D, path, ext=".bin"):
 
 
 def qvec2rotmat(qvec):
-    """Qvec2rotmat.
-
-    Args:
-        qvec: The qvec.
-    """
     return np.array(
         [
             [
@@ -545,11 +514,6 @@ def qvec2rotmat(qvec):
 
 
 def rotmat2qvec(R):
-    """Rotmat2qvec.
-
-    Args:
-        R: The r.
-    """
     Rxx, Ryx, Rzx, Rxy, Ryy, Rzy, Rxz, Ryz, Rzz = R.flat
     K = (
         np.array(
@@ -570,7 +534,6 @@ def rotmat2qvec(R):
 
 
 def main():
-    """Main."""
     parser = argparse.ArgumentParser(description="Read and write COLMAP binary and text models")
     parser.add_argument("--input_model", help="path to input model folder")
     parser.add_argument(

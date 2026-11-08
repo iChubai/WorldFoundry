@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> geometry_numpy.py functionality."""
-
 from functools import partial
 from typing import *
 
@@ -17,18 +15,6 @@ def weighted_mean_numpy(
     keepdims: bool = False,
     eps: float = 1e-7,
 ) -> np.ndarray:
-    """Weighted mean numpy.
-
-    Args:
-        x: The x.
-        w: The w.
-        axis: The axis.
-        keepdims: The keepdims.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     if w is None:
         return np.mean(x, axis=axis)
     else:
@@ -43,18 +29,6 @@ def harmonic_mean_numpy(
     keepdims: bool = False,
     eps: float = 1e-7,
 ) -> np.ndarray:
-    """Harmonic mean numpy.
-
-    Args:
-        x: The x.
-        w: The w.
-        axis: The axis.
-        keepdims: The keepdims.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     if w is None:
         return 1 / (1 / np.clip(x, eps, None)).mean(axis=axis)
     else:
@@ -80,43 +54,20 @@ def normalized_view_plane_uv_numpy(
 
 
 def focal_to_fov_numpy(focal: np.ndarray):
-    """Focal to fov numpy.
-
-    Args:
-        focal: The focal.
-    """
     return 2 * np.arctan(0.5 / focal)
 
 
 def fov_to_focal_numpy(fov: np.ndarray):
-    """Fov to focal numpy.
-
-    Args:
-        fov: The fov.
-    """
     return 0.5 / np.tan(fov / 2)
 
 
 def intrinsics_to_fov_numpy(intrinsics: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Intrinsics to fov numpy.
-
-    Args:
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     fov_x = focal_to_fov_numpy(intrinsics[..., 0, 0])
     fov_y = focal_to_fov_numpy(intrinsics[..., 1, 1])
     return fov_x, fov_y
 
 
 def point_map_to_depth_legacy_numpy(points: np.ndarray):
-    """Point map to depth legacy numpy.
-
-    Args:
-        points: The points.
-    """
     height, width = points.shape[-3:-1]
     diagonal = (height**2 + width**2) ** 0.5
     uv = normalized_view_plane_uv_numpy(width, height, dtype=points.dtype)  # (H, W, 2)
@@ -143,14 +94,6 @@ def solve_optimal_focal_shift(uv: np.ndarray, xyz: np.ndarray):
     uv, xy, z = uv.reshape(-1, 2), xyz[..., :2].reshape(-1, 2), xyz[..., 2].reshape(-1)
 
     def fn(uv: np.ndarray, xy: np.ndarray, z: np.ndarray, shift: np.ndarray):
-        """Fn.
-
-        Args:
-            uv: The uv.
-            xy: The xy.
-            z: The z.
-            shift: The shift.
-        """
         xy_proj = xy / (z + shift)[:, None]
         f = (xy_proj * uv).sum() / np.square(xy_proj).sum()
         err = (f * xy_proj - uv).ravel()
@@ -172,14 +115,6 @@ def solve_optimal_shift(uv: np.ndarray, xyz: np.ndarray, focal: float):
     uv, xy, z = uv.reshape(-1, 2), xyz[..., :2].reshape(-1, 2), xyz[..., 2].reshape(-1)
 
     def fn(uv: np.ndarray, xy: np.ndarray, z: np.ndarray, shift: np.ndarray):
-        """Fn.
-
-        Args:
-            uv: The uv.
-            xy: The xy.
-            z: The z.
-            shift: The shift.
-        """
         xy_proj = xy / (z + shift)[:, None]
         err = (focal * xy_proj - uv).ravel()
         return err
@@ -193,14 +128,6 @@ def solve_optimal_shift(uv: np.ndarray, xyz: np.ndarray, focal: float):
 def recover_focal_shift_numpy(
     points: np.ndarray, mask: np.ndarray = None, focal: float | None = None, downsample_size: Tuple[int, int] = (64, 64)
 ):
-    """Recover focal shift numpy.
-
-    Args:
-        points: The points.
-        mask: The mask.
-        focal: The focal.
-        downsample_size: The downsample size.
-    """
     import cv2
 
     assert points.shape[-1] == 3, "Points should (H, W, 3)"
@@ -233,14 +160,6 @@ def norm3d(x: np.ndarray) -> np.ndarray:
 
 
 def depth_occlusion_edge_numpy(depth: np.ndarray, mask: np.ndarray, thickness: int = 1, tol: float = 0.1):
-    """Depth occlusion edge numpy.
-
-    Args:
-        depth: The depth.
-        mask: The mask.
-        thickness: The thickness.
-        tol: The tol.
-    """
     disp = np.where(mask, 1 / depth, 0)
     disp_pad = np.pad(disp, (thickness, thickness), constant_values=0)
     mask_pad = np.pad(mask, (thickness, thickness), constant_values=False)

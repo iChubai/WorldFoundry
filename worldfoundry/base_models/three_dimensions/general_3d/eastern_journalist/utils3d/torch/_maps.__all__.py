@@ -1,6 +1,4 @@
 # Auto-generated for lazy_import_all_from
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> _maps.__all__.py functionality."""
-
 __all__ = [
     "bounding_rect_from_mask",
     "build_mesh_from_depth_map",

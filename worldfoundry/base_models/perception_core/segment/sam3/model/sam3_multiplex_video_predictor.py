@@ -37,15 +37,6 @@ class Sam3MultiplexVideoPredictor(Sam3BasePredictor):
         async_loading_frames=True,
         warm_up=False,
     ):
-        """Init.
-
-        Args:
-            model: The model.
-            session_expiration_sec: The session expiration sec.
-            default_output_prob_thresh: The default output prob thresh.
-            async_loading_frames: The async loading frames.
-            warm_up: The warm up.
-        """
         super().__init__()
         self.model = model
         self.session_expiration_sec = session_expiration_sec

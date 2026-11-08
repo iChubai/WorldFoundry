@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> init_utils.py functionality."""
-
 import os
 import time
 from typing import Literal
@@ -47,14 +45,6 @@ from flow3d.vis.utils import draw_keypoints_video, get_server, project_2d_tracks
 
 
 def init_trainable_poses(w2cs: Tensor) -> CameraPoses:
-    """Init trainable poses.
-
-    Args:
-        w2cs: The w2cs.
-
-    Returns:
-        The return value.
-    """
     N, _, _ = w2cs.shape
     Rs = w2cs[:, :3, :3]
     ts = w2cs[:, :3, 3:]
@@ -143,21 +133,6 @@ def init_motion_params_with_procrustes(
     vis: bool = False,
     port: int | None = None,
 ) -> tuple[MotionBases, torch.Tensor, TrackObservations]:
-    """Init motion params with procrustes.
-
-    Args:
-        tracks_3d: The tracks 3d.
-        num_bases: The num bases.
-        rot_type: The rot type.
-        cano_t: The cano t.
-        cluster_init_method: The cluster init method.
-        min_mean_weight: The min mean weight.
-        vis: The vis.
-        port: The port.
-
-    Returns:
-        The return value.
-    """
     device = tracks_3d.xyz.device
     num_frames = tracks_3d.xyz.shape[1]
     # sample centers and get initial se3 motion bases by solving procrustes
@@ -409,14 +384,6 @@ def run_initial_optim(
 
 
 def random_quats(N: int) -> torch.Tensor:
-    """Random quats.
-
-    Args:
-        N: The n.
-
-    Returns:
-        The return value.
-    """
     u = torch.rand(N, 1)
     v = torch.rand(N, 1)
     w = torch.rand(N, 1)
@@ -433,13 +400,6 @@ def random_quats(N: int) -> torch.Tensor:
 
 
 def compute_means(ts, fg: GaussianParams, bases: MotionBases):
-    """Compute means.
-
-    Args:
-        ts: The ts.
-        fg: The fg.
-        bases: The bases.
-    """
     transfms = bases.compute_transforms(ts, fg.get_coefs())
     means = torch.einsum(
         "pnij,pj->pni",
@@ -456,15 +416,6 @@ def vis_init_params(
     name="init_params",
     num_vis: int = 100,
 ):
-    """Vis init params.
-
-    Args:
-        server: The server.
-        fg: The fg.
-        bases: The bases.
-        name: The name.
-        num_vis: The num vis.
-    """
     idcs = np.random.choice(fg.num_gaussians, num_vis)
     labels = np.linspace(0, 1, num_vis)
     ts = torch.arange(bases.num_frames, device=bases.params["rots"].device)
@@ -509,17 +460,6 @@ def vis_tracks_2d_video(
     occs=None,
     radius: int = 3,
 ):
-    """Vis tracks 2d video.
-
-    Args:
-        path: The path.
-        imgs: The imgs.
-        tracks_3d: The tracks 3d.
-        Ks: The ks.
-        w2cs: The w2cs.
-        occs: The occs.
-        radius: The radius.
-    """
     num_tracks = tracks_3d.shape[0]
     labels = np.linspace(0, 1, num_tracks)
     cmap = get_cmap("gist_rainbow")
@@ -623,14 +563,6 @@ def sample_initial_bases_centers(mode: str, cano_t: int, tracks_3d: TrackObserva
 
 
 def _sample_initial_bases_centers_cpu(mode: str, cano_t: int, tracks_3d: TrackObservations, num_bases: int):
-    """Helper function to sample initial bases centers cpu.
-
-    Args:
-        mode: The mode.
-        cano_t: The cano t.
-        tracks_3d: The tracks 3d.
-        num_bases: The num bases.
-    """
     means_canonical = tracks_3d.xyz[:, cano_t].clone()
     xyz = tracks_3d.xyz.detach().cpu().numpy()
     visibles = tracks_3d.visibles.detach().cpu().numpy().astype(bool)
@@ -674,15 +606,6 @@ def _sample_initial_bases_centers_cpu(mode: str, cano_t: int, tracks_3d: TrackOb
 
 
 def _kmeans_or_bucket_labels(values: np.ndarray, num_bases: int) -> np.ndarray:
-    """Helper function to kmeans or bucket labels.
-
-    Args:
-        values: The values.
-        num_bases: The num bases.
-
-    Returns:
-        The return value.
-    """
     if os.getenv("WORLDFOUNDRY_SHAPE_OF_MOTION_USE_SKLEARN", "").strip().lower() in {"1", "true", "yes", "on"}:
         try:
             from sklearn.cluster import KMeans as SkKMeans
@@ -694,16 +617,6 @@ def _kmeans_or_bucket_labels(values: np.ndarray, num_bases: int) -> np.ndarray:
 
 
 def interp_masked_np(vals: np.ndarray, mask: np.ndarray, pad: int = 1) -> np.ndarray:
-    """Interp masked np.
-
-    Args:
-        vals: The vals.
-        mask: The mask.
-        pad: The pad.
-
-    Returns:
-        The return value.
-    """
     assert mask.ndim == 2
     assert vals.shape[:2] == mask.shape
     B, M = mask.shape
@@ -722,15 +635,6 @@ def interp_masked_np(vals: np.ndarray, mask: np.ndarray, pad: int = 1) -> np.nda
 
 
 def batched_interp_masked_np(vals: np.ndarray, mask: np.ndarray) -> np.ndarray:
-    """Batched interp masked np.
-
-    Args:
-        vals: The vals.
-        mask: The mask.
-
-    Returns:
-        The return value.
-    """
     return interp_masked_np(vals, mask)
 
 
@@ -782,14 +686,6 @@ def interp_masked(vals, mask, pad: int = 1):
 
 
 def batched_interp_masked(vals, mask, batch_num: int = 4096, batch_time: int = 64):
-    """Batched interp masked.
-
-    Args:
-        vals: The vals.
-        mask: The mask.
-        batch_num: The batch num.
-        batch_time: The batch time.
-    """
     assert mask.ndim == 2
     B, M = mask.shape
     out = cp.zeros_like(vals)

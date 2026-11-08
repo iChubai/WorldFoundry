@@ -9,21 +9,10 @@ from torch import einsum, nn
 
 
 def exists(val):
-    """Exists.
-
-    Args:
-        val: The val.
-    """
     return val is not None
 
 
 def FeedForward(dim, mult=4):
-    """Feedforward.
-
-    Args:
-        dim: The dim.
-        mult: The mult.
-    """
     inner_dim = int(dim * mult)
     return nn.Sequential(
         nn.LayerNorm(dim),
@@ -34,10 +23,7 @@ def FeedForward(dim, mult=4):
 
 
 class PerceiverAttention(nn.Module):
-    """Perceiver attention implementation."""
-
     def __init__(self, *, dim, dim_head=64, heads=8):
-        """Init."""
         super().__init__()
         self.scale = dim_head**-0.5
         self.heads = heads
@@ -80,8 +66,6 @@ class PerceiverAttention(nn.Module):
 
 
 class PerceiverResampler(nn.Module):
-    """Perceiver resampler implementation."""
-
     def __init__(
         self,
         *,
@@ -94,7 +78,6 @@ class PerceiverResampler(nn.Module):
         max_num_frames=None,
         ff_mult=4,
     ):
-        """Init."""
         super().__init__()
         self.latents = nn.Parameter(torch.randn(num_latents, dim))
         self.frame_embs = nn.Parameter(torch.randn(max_num_frames, dim)) if exists(max_num_frames) else None
@@ -141,8 +124,6 @@ class PerceiverResampler(nn.Module):
 
 # gated cross attention
 class MaskedCrossAttention(nn.Module):
-    """Masked cross attention implementation."""
-
     def __init__(
         self,
         *,
@@ -152,7 +133,6 @@ class MaskedCrossAttention(nn.Module):
         heads=8,
         only_attend_immediate_media=True,
     ):
-        """Init."""
         super().__init__()
         self.scale = dim_head**-0.5
         self.heads = heads
@@ -242,8 +222,6 @@ class MaskedCrossAttention(nn.Module):
 
 
 class GatedCrossAttentionBlock(nn.Module):
-    """Gated cross attention block implementation."""
-
     def __init__(
         self,
         *,
@@ -254,7 +232,6 @@ class GatedCrossAttentionBlock(nn.Module):
         ff_mult=4,
         only_attend_immediate_media=True,
     ):
-        """Init."""
         super().__init__()
         self.attn = MaskedCrossAttention(
             dim=dim,
@@ -275,14 +252,6 @@ class GatedCrossAttentionBlock(nn.Module):
         media_locations=None,
         use_cached_media=False,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            media: The media.
-            media_locations: The media locations.
-            use_cached_media: The use cached media.
-        """
         x = (
             self.attn(
                 x,

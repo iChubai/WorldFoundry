@@ -1,7 +1,5 @@
 # LaCT
 
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> ttt.py functionality."""
-
 import collections
 import math
 
@@ -14,11 +12,6 @@ TTTOperator = collections.namedtuple("TTTOperator", ["start", "end", "update", "
 
 
 def inv_softplus(x):
-    """Inv softplus.
-
-    Args:
-        x: The x.
-    """
     y = x + math.log(-math.expm1(-x))
     return y
 
@@ -204,19 +197,6 @@ class FastWeightGluMLPMultihead(nn.Module):
         ttt_update_steps: int = 1,
         ttt_pre_norm: bool = False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            head_dim: The head dim.
-            inter_multi: The inter multi.
-            bias: The bias.
-            base_lr: The base lr.
-            muon_update_steps: The muon update steps.
-            use_momentum: The use momentum.
-            ttt_update_steps: The ttt update steps.
-            ttt_pre_norm: The ttt pre norm.
-        """
         super().__init__()
         self.dim = dim
         assert dim % head_dim == 0
@@ -334,11 +314,6 @@ class FastWeightGluMLPMultihead(nn.Module):
         }
 
     def extra_repr(self) -> str:
-        """Extra repr.
-
-        Returns:
-            The return value.
-        """
         return (
             f"w0 shape: {self.w0.shape}, w1 shape: {self.w1.shape}, w2 shape: {self.w2.shape}, "
             f"Muon update steps: {self.muon_update_steps}, "

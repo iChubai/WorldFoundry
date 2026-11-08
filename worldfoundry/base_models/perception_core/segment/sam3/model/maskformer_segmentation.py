@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> maskformer_segmentation.py functionality."""
-
 import math
 
 import torch
@@ -15,48 +13,20 @@ from .model_misc import MLP
 
 
 class LinearPresenceHead(nn.Sequential):
-    """Linear presence head implementation."""
-
     def __init__(self, d_model):
-        """Init.
-
-        Args:
-            d_model: The d model.
-        """
         # a hack to make `LinearPresenceHead` compatible with old checkpoints
         super().__init__(nn.Identity(), nn.Identity(), nn.Linear(d_model, 1))
 
     def forward(self, hs, prompt, prompt_mask):
-        """Forward.
-
-        Args:
-            hs: The hs.
-            prompt: The prompt.
-            prompt_mask: The prompt mask.
-        """
         return super().forward(hs)
 
 
 class MaskPredictor(nn.Module):
-    """Mask predictor implementation."""
-
     def __init__(self, hidden_dim, mask_dim):
-        """Init.
-
-        Args:
-            hidden_dim: The hidden dim.
-            mask_dim: The mask dim.
-        """
         super().__init__()
         self.mask_embed = MLP(hidden_dim, hidden_dim, mask_dim, 3)
 
     def forward(self, obj_queries, pixel_embed):
-        """Forward.
-
-        Args:
-            obj_queries: The obj queries.
-            pixel_embed: The pixel embed.
-        """
         if len(obj_queries.shape) == 3:
             if pixel_embed.ndim == 3:
                 # batch size was omitted
@@ -75,8 +45,6 @@ class MaskPredictor(nn.Module):
 
 
 class SegmentationHead(nn.Module):
-    """Segmentation head implementation."""
-
     def __init__(
         self,
         hidden_dim,
@@ -89,19 +57,6 @@ class SegmentationHead(nn.Module):
         shared_conv=False,
         compile_mode_pixel_decoder=None,
     ):
-        """Init.
-
-        Args:
-            hidden_dim: The hidden dim.
-            upsampling_stages: The upsampling stages.
-            use_encoder_inputs: The use encoder inputs.
-            aux_masks: The aux masks.
-            no_dec: The no dec.
-            pixel_decoder: The pixel decoder.
-            act_ckpt: The act ckpt.
-            shared_conv: The shared conv.
-            compile_mode_pixel_decoder: The compile mode pixel decoder.
-        """
         super().__init__()
         self.use_encoder_inputs = use_encoder_inputs
         self.aux_masks = aux_masks
@@ -127,12 +82,10 @@ class SegmentationHead(nn.Module):
 
     @property
     def device(self):
-        """Device."""
         self._device = getattr(self, "_device", None) or next(self.parameters()).device
         return self._device
 
     def to(self, *args, **kwargs):
-        """To."""
         # clear cached _device in case the model is moved to a different device
         self._device = None
         return super().to(*args, **kwargs)
@@ -143,25 +96,10 @@ class SegmentationHead(nn.Module):
         image_ids,
         encoder_hidden_states,
     ) -> torch.Tensor:
-        """Helper function to embed pixels.
-
-        Args:
-            backbone_feats: The backbone feats.
-            image_ids: The image ids.
-            encoder_hidden_states: The encoder hidden states.
-
-        Returns:
-            The return value.
-        """
         # Unwrap NestedTensors to plain tensors if needed (multiplex path)
         from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
 
         def _unwrap(x):
-            """Helper function to unwrap.
-
-            Args:
-                x: The x.
-            """
             return x.tensors if isinstance(x, NestedTensor) else x
 
         feature_device = backbone_feats[0].device  # features could be on CPU
@@ -205,17 +143,6 @@ class SegmentationHead(nn.Module):
         encoder_hidden_states: torch.Tensor | None = None,
         **kwargs,
     ) -> dict[str, torch.Tensor]:
-        """Forward.
-
-        Args:
-            backbone_feats: The backbone feats.
-            obj_queries: The obj queries.
-            image_ids: The image ids.
-            encoder_hidden_states: The encoder hidden states.
-
-        Returns:
-            The return value.
-        """
         if self.use_encoder_inputs:
             assert encoder_hidden_states is not None
 
@@ -236,8 +163,6 @@ class SegmentationHead(nn.Module):
 
 
 class PixelDecoder(nn.Module):
-    """Pixel decoder implementation."""
-
     def __init__(
         self,
         hidden_dim,
@@ -246,15 +171,6 @@ class PixelDecoder(nn.Module):
         shared_conv=False,
         compile_mode=None,
     ):
-        """Init.
-
-        Args:
-            hidden_dim: The hidden dim.
-            num_upsampling_stages: The num upsampling stages.
-            interpolation_mode: The interpolation mode.
-            shared_conv: The shared conv.
-            compile_mode: The compile mode.
-        """
         super().__init__()
         self.hidden_dim = hidden_dim
         self.num_upsampling_stages = num_upsampling_stages
@@ -276,11 +192,6 @@ class PixelDecoder(nn.Module):
             torch._dynamo.config.optimize_ddp = False
 
     def forward(self, backbone_feats: list[torch.Tensor]):
-        """Forward.
-
-        Args:
-            backbone_feats: The backbone feats.
-        """
         # Assumes backbone features are already projected (C == hidden dim)
 
         prev_fpn = backbone_feats[-1]
@@ -312,19 +223,6 @@ class UniversalSegmentationHead(SegmentationHead):
         dot_product_scorer=None,
         cross_attend_prompt=None,
     ):
-        """Init.
-
-        Args:
-            hidden_dim: The hidden dim.
-            upsampling_stages: The upsampling stages.
-            pixel_decoder: The pixel decoder.
-            aux_masks: The aux masks.
-            no_dec: The no dec.
-            act_ckpt: The act ckpt.
-            presence_head: The presence head.
-            dot_product_scorer: The dot product scorer.
-            cross_attend_prompt: The cross attend prompt.
-        """
         super().__init__(
             hidden_dim=hidden_dim,
             upsampling_stages=upsampling_stages,
@@ -362,19 +260,6 @@ class UniversalSegmentationHead(SegmentationHead):
         prompt_mask: torch.Tensor | None = None,
         **kwargs,
     ) -> dict[str, torch.Tensor | None]:
-        """Forward.
-
-        Args:
-            backbone_feats: The backbone feats.
-            obj_queries: The obj queries.
-            image_ids: The image ids.
-            encoder_hidden_states: The encoder hidden states.
-            prompt: The prompt.
-            prompt_mask: The prompt mask.
-
-        Returns:
-            The return value.
-        """
         assert encoder_hidden_states is not None
         bs = encoder_hidden_states.shape[1]
 

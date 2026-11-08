@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> comm -> padding.py functionality."""
-
 import torch
 import torch.nn.functional as F
 
@@ -112,18 +110,6 @@ def depad_by_length(padded_tensor: torch.Tensor, depadding_len: int, dim: int = 
 
 
 def pad_by_length(padded_tensor: torch.Tensor, padding_len: int, dim: int = 1, pad_value: float = 0.0) -> torch.Tensor:
-    """Pad by length.
-
-    Args:
-        padded_tensor: The padded tensor.
-        padding_len: The padding len.
-        dim: The dim.
-        pad_value: The pad value.
-
-    Returns:
-        The return value.
-    """
-
     if padding_len < 0:
         raise ValueError("padding_len 必须是非负数。")
 

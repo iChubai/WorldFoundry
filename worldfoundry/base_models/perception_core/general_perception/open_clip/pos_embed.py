@@ -7,8 +7,6 @@
 # Position embedding utils
 # --------------------------------------------------------
 
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> pos_embed.py functionality."""
-
 import numpy as np
 import torch
 
@@ -38,12 +36,6 @@ def get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
 
 
 def get_2d_sincos_pos_embed_from_grid(embed_dim, grid):
-    """Get 2d sincos pos embed from grid.
-
-    Args:
-        embed_dim: The embed dim.
-        grid: The grid.
-    """
     assert embed_dim % 2 == 0
 
     # use half of dimensions to encode grid_h
@@ -81,12 +73,6 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 # DeiT: https://github.com/facebookresearch/deit
 # --------------------------------------------------------
 def interpolate_pos_embed(model, checkpoint_model):
-    """Interpolate pos embed.
-
-    Args:
-        model: The model.
-        checkpoint_model: The checkpoint model.
-    """
     if "pos_embed" in checkpoint_model:
         pos_embed_checkpoint = checkpoint_model["pos_embed"]
         embedding_size = pos_embed_checkpoint.shape[-1]

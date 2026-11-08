@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> __init__.py functionality."""
-
 from .track_modules.base_track_predictor import BaseTrackerPredictor as BaseTrackerPredictor
 from .track_modules.blocks import BasicEncoder as BasicEncoder
 from .track_modules.blocks import ShallowEncoder as ShallowEncoder

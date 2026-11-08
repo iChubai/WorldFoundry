@@ -21,11 +21,6 @@ class KVCacheManager:
     """
 
     def __init__(self, verbose: bool = False):
-        """Init.
-
-        Args:
-            verbose: The verbose.
-        """
         self.cache: dict[str, dict[int, dict[str, torch.Tensor]]] = {}
         self.verbose = verbose
         self.stats = {"hits": 0, "misses": 0, "stores": 0}

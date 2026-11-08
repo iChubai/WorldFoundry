@@ -40,7 +40,6 @@ def inverse_sigmoid(x, eps=1e-3):
 
 
 def get_sdpa_settings():
-    """Get sdpa settings."""
     if torch.cuda.is_available():
         old_gpu = torch.cuda.get_device_properties(0).major < 7
         # only use Flash Attention on Ampere (8.0) or newer GPUs
@@ -120,42 +119,6 @@ def multi_head_attention_forward(
     attn_bias: Tensor | None = None,
     use_fa3: bool = False,
 ) -> tuple[Tensor, Tensor | None]:
-    """Multi head attention forward.
-
-    Args:
-        query: The query.
-        key: The key.
-        value: The value.
-        embed_dim_to_check: The embed dim to check.
-        num_heads: The num heads.
-        in_proj_weight: The in proj weight.
-        in_proj_bias: The in proj bias.
-        bias_k: The bias k.
-        bias_v: The bias v.
-        add_zero_attn: The add zero attn.
-        dropout_p: The dropout p.
-        out_proj_weight: The out proj weight.
-        out_proj_bias: The out proj bias.
-        training: The training.
-        key_padding_mask: The key padding mask.
-        need_weights: The need weights.
-        attn_mask: The attn mask.
-        use_separate_proj_weight: The use separate proj weight.
-        q_proj_weight: The q proj weight.
-        k_proj_weight: The k proj weight.
-        v_proj_weight: The v proj weight.
-        static_k: The static k.
-        static_v: The static v.
-        average_attn_weights: The average attn weights.
-        is_causal: The is causal.
-        attn_type: The attn type.
-        attn_sparsity: The attn sparsity.
-        attn_bias: The attn bias.
-        use_fa3: The use fa3.
-
-    Returns:
-        The return value.
-    """
     tens_ops = (
         query,
         key,
@@ -441,8 +404,6 @@ def multi_head_attention_forward(
 
 
 class MultiheadAttention(nn.Module):
-    """Multihead attention implementation."""
-
     __constants__: ClassVar[list] = ["batch_first"]
     bias_k: torch.Tensor | None
     bias_v: torch.Tensor | None
@@ -465,28 +426,6 @@ class MultiheadAttention(nn.Module):
         use_act_checkpoint: bool = False,
         use_fa3: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            dropout: The dropout.
-            bias: The bias.
-            add_bias_kv: The add bias kv.
-            add_zero_attn: The add zero attn.
-            kdim: The kdim.
-            vdim: The vdim.
-            batch_first: The batch first.
-            device: The device.
-            dtype: The dtype.
-            attn_type: The attn type.
-            sparsity: The sparsity.
-            use_act_checkpoint: The use act checkpoint.
-            use_fa3: The use fa3.
-
-        Returns:
-            The return value.
-        """
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.embed_dim = embed_dim
@@ -537,7 +476,6 @@ class MultiheadAttention(nn.Module):
         self._reset_parameters()
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         if self._qkv_same_embed_dim:
             nn.init.xavier_uniform_(self.in_proj_weight)
         else:
@@ -554,11 +492,6 @@ class MultiheadAttention(nn.Module):
             nn.init.xavier_normal_(self.bias_v)
 
     def __setstate__(self, state):
-        """Setstate.
-
-        Args:
-            state: The state.
-        """
         if "_qkv_same_embed_dim" not in state:
             state["_qkv_same_embed_dim"] = True
 
@@ -575,21 +508,6 @@ class MultiheadAttention(nn.Module):
         average_attn_weights: bool = True,
         attn_bias: Tensor | None = None,
     ) -> tuple[Tensor, Tensor | None]:
-        """Forward.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            key_padding_mask: The key padding mask.
-            need_weights: The need weights.
-            attn_mask: The attn mask.
-            average_attn_weights: The average attn weights.
-            attn_bias: The attn bias.
-
-        Returns:
-            The return value.
-        """
         is_batched = query.dim() == 3
         if key_padding_mask is not None:
             _kpm_dtype = key_padding_mask.dtype
@@ -729,8 +647,6 @@ MultiheadAttentionWrapper = MultiheadAttention
 
 
 class DotProductScoring(torch.nn.Module):
-    """Dot product scoring implementation."""
-
     def __init__(
         self,
         d_model,
@@ -739,15 +655,6 @@ class DotProductScoring(torch.nn.Module):
         clamp_logits=True,
         clamp_max_val=12.0,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            d_proj: The d proj.
-            prompt_mlp: The prompt mlp.
-            clamp_logits: The clamp logits.
-            clamp_max_val: The clamp max val.
-        """
         super().__init__()
         self.d_proj = d_proj
         assert isinstance(prompt_mlp, torch.nn.Module) or prompt_mlp is None
@@ -760,12 +667,6 @@ class DotProductScoring(torch.nn.Module):
             self.clamp_max_val = clamp_max_val
 
     def mean_pool_text(self, prompt, prompt_mask):
-        """Mean pool text.
-
-        Args:
-            prompt: The prompt.
-            prompt_mask: The prompt mask.
-        """
         # is_valid has shape (seq, bs, 1), where 1 is valid and 0 is padding
         is_valid = (~prompt_mask).float().permute(1, 0)[..., None]
         # num_valid has shape (bs, 1)
@@ -775,13 +676,6 @@ class DotProductScoring(torch.nn.Module):
         return pooled_prompt
 
     def forward(self, hs, prompt, prompt_mask):
-        """Forward.
-
-        Args:
-            hs: The hs.
-            prompt: The prompt.
-            prompt_mask: The prompt mask.
-        """
         # hs has shape (num_layer, bs, num_query, d_model)
         # prompt has shape (seq, bs, d_model)
         # prompt_mask has shape (bs, seq), where 1 is valid and 0 is padding
@@ -810,43 +704,21 @@ class DotProductScoring(torch.nn.Module):
 
 
 class LayerScale(nn.Module):
-    """Layer scale implementation."""
-
     def __init__(
         self,
         dim: int,
         init_values: float | Tensor = 1e-5,
         inplace: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            init_values: The init values.
-            inplace: The inplace.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.inplace = inplace
         self.gamma = nn.Parameter(init_values * torch.ones(dim))
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class TransformerWrapper(nn.Module):
-    """Transformer wrapper implementation."""
-
     def __init__(
         self,
         encoder,
@@ -855,15 +727,6 @@ class TransformerWrapper(nn.Module):
         two_stage_type="none",  # ["none"] only for now
         pos_enc_at_input_dec=True,
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            decoder: The decoder.
-            d_model: The d model.
-            two_stage_type: The two stage type.
-            pos_enc_at_input_dec: The pos enc at input dec.
-        """
         super().__init__()
 
         self.encoder = encoder
@@ -879,7 +742,6 @@ class TransformerWrapper(nn.Module):
         self.d_model = d_model
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         for n, p in self.named_parameters():
             if p.dim() > 1:
                 if "box_embed" not in n and "query_embed" not in n and "reference_points" not in n:
@@ -899,17 +761,6 @@ class MLP(nn.Module):
         residual: bool = False,
         out_norm: nn.Module | None = None,
     ):
-        """Init.
-
-        Args:
-            input_dim: The input dim.
-            hidden_dim: The hidden dim.
-            output_dim: The output dim.
-            num_layers: The num layers.
-            dropout: The dropout.
-            residual: The residual.
-            out_norm: The out norm.
-        """
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
@@ -924,11 +775,6 @@ class MLP(nn.Module):
         self.out_norm = out_norm or nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         orig_x = x
         for i, layer in enumerate(self.layers):
             x = self.drop(F.relu(layer(x))) if i < self.num_layers - 1 else layer(x)
@@ -939,22 +785,10 @@ class MLP(nn.Module):
 
 
 def get_clones(module, N):
-    """Get clones.
-
-    Args:
-        module: The module.
-        N: The n.
-    """
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
 def get_clones_seq(module, N):
-    """Get clones seq.
-
-    Args:
-        module: The module.
-        N: The n.
-    """
     return nn.Sequential(*[copy.deepcopy(module) for i in range(N)])
 
 
@@ -981,11 +815,6 @@ def get_activation_module(activation):
 
 
 def get_valid_ratio(mask):
-    """Get valid ratio.
-
-    Args:
-        mask: The mask.
-    """
     _, H, W = mask.shape
     valid_H = torch.sum(~mask[:, :, 0], 1)
     valid_W = torch.sum(~mask[:, 0, :], 1)
@@ -996,12 +825,6 @@ def get_valid_ratio(mask):
 
 
 def gen_sineembed_for_position(pos_tensor, num_feats=256):
-    """Gen sineembed for position.
-
-    Args:
-        pos_tensor: The pos tensor.
-        num_feats: The num feats.
-    """
     assert num_feats % 2 == 0
     num_feats = num_feats // 2
     # n_query, bs, _ = pos_tensor.size()
@@ -1066,8 +889,6 @@ class SAM3Output(list):
     """
 
     class IterMode(Enum):
-        """Iter mode implementation."""
-
         # Defines the type of iterator over ouptuts.
         ALL_STEPS_PER_STAGE = auto()
         LAST_STEP_PER_STAGE = auto()
@@ -1081,13 +902,6 @@ class SAM3Output(list):
         iter_mode: IterMode = IterMode.ALL_STEPS_PER_STAGE,
         loss_stages: list[int] | None = None,
     ):
-        """Init.
-
-        Args:
-            output: The output.
-            iter_mode: The iter mode.
-            loss_stages: The loss stages.
-        """
         if output is not None:
             assert isinstance(output, list) and len(output) > 0 and isinstance(output[0], list), (
                 "Expected output to be a list of lists"
@@ -1114,11 +928,6 @@ class SAM3Output(list):
 
     @override
     def __iter__(self) -> Iterator:
-        """Iter.
-
-        Returns:
-            The return value.
-        """
         return self._mode2iter[self.iter_mode]()
 
     def __getitem__(self, index):
@@ -1148,35 +957,17 @@ class SAM3Output(list):
         """
 
         def __init__(self, model_output: "SAM3Output", iter_mode: "SAM3Output.IterMode"):
-            """Init.
-
-            Args:
-                model_output: The model output.
-                iter_mode: The iter mode.
-            """
             self._model_output = model_output
             self._orig_iter_mode = model_output.iter_mode
             self._new_iter_mode = iter_mode
 
         @override
         def __enter__(self) -> "SAM3Output":
-            """Enter.
-
-            Returns:
-                The return value.
-            """
             self._model_output.iter_mode = self._new_iter_mode
             return self._model_output
 
         @override
         def __exit__(self, exc_type, exc_value, traceback):
-            """Exit.
-
-            Args:
-                exc_type: The exc type.
-                exc_value: The exc value.
-                traceback: The traceback.
-            """
             self._model_output.iter_mode = self._orig_iter_mode
             return super().__exit__(exc_type, exc_value, traceback)
 
@@ -1193,20 +984,13 @@ class SAM3Output(list):
         return SAM3Output._IterationMode(model_output=model_output, iter_mode=iter_mode)
 
     def append(self, item: list):
-        """Append.
-
-        Args:
-            item: The item.
-        """
         assert isinstance(item, list), f"Only list items are supported. Got {type(item)}"
         self.output.append(item)
 
     def __repr__(self):
-        """Repr."""
         return self.output.__repr__()
 
     def __len__(self):
-        """Len."""
         if self.iter_mode in [
             SAM3Output.IterMode.ALL_STEPS_PER_STAGE,
             SAM3Output.IterMode.LAST_STEP_PER_STAGE,

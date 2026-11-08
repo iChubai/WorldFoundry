@@ -142,16 +142,6 @@ class DDPM(pl.LightningModule):
         linear_end=2e-2,
         cosine_s=8e-3,
     ):
-        """Register schedule.
-
-        Args:
-            given_betas: The given betas.
-            beta_schedule: The beta schedule.
-            timesteps: The timesteps.
-            linear_start: The linear start.
-            linear_end: The linear end.
-            cosine_s: The cosine s.
-        """
         if exists(given_betas):
             betas = given_betas
         else:
@@ -221,11 +211,6 @@ class DDPM(pl.LightningModule):
 
     @contextmanager
     def ema_scope(self, context=None):
-        """Ema scope.
-
-        Args:
-            context: The context.
-        """
         if self.use_ema:
             self.model_ema.store(self.model.parameters())
             self.model_ema.copy_to(self.model)
@@ -240,13 +225,6 @@ class DDPM(pl.LightningModule):
                     mainlogger.info(f"{context}: Restored training weights")
 
     def init_from_ckpt(self, path, ignore_keys=[], only_model=False):
-        """Init from ckpt.
-
-        Args:
-            path: The path.
-            ignore_keys: The ignore keys.
-            only_model: The only model.
-        """
         sd = torch.load(path, map_location="cpu")
         if "state_dict" in list(sd.keys()):
             sd = sd["state_dict"]
@@ -278,26 +256,12 @@ class DDPM(pl.LightningModule):
         return mean, variance, log_variance
 
     def predict_start_from_noise(self, x_t, t, noise):
-        """Predict start from noise.
-
-        Args:
-            x_t: The x t.
-            t: The t.
-            noise: The noise.
-        """
         return (
             extract_into_tensor_2d(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
             - extract_into_tensor_2d(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
     def predict_start_from_z_and_v(self, x_t, t, v):
-        """Predict start from z and v.
-
-        Args:
-            x_t: The x t.
-            t: The t.
-            v: The v.
-        """
         # self.register_buffer('sqrt_alphas_cumprod', to_torch(np.sqrt(alphas_cumprod)))
         # self.register_buffer('sqrt_one_minus_alphas_cumprod', to_torch(np.sqrt(1. - alphas_cumprod)))
         return (
@@ -306,26 +270,12 @@ class DDPM(pl.LightningModule):
         )
 
     def predict_eps_from_z_and_v(self, x_t, t, v):
-        """Predict eps from z and v.
-
-        Args:
-            x_t: The x t.
-            t: The t.
-            v: The v.
-        """
         return (
             extract_into_tensor_2d(self.sqrt_alphas_cumprod, t, x_t.shape) * v
             + extract_into_tensor_2d(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape) * x_t
         )
 
     def q_posterior(self, x_start, x_t, t):
-        """Q posterior.
-
-        Args:
-            x_start: The x start.
-            x_t: The x t.
-            t: The t.
-        """
         posterior_mean = (
             extract_into_tensor(self.posterior_mean_coef1, t, x_t.shape) * x_start
             + extract_into_tensor(self.posterior_mean_coef2, t, x_t.shape) * x_t
@@ -359,12 +309,6 @@ class DDPM(pl.LightningModule):
 
     @torch.no_grad()
     def p_sample_loop(self, shape, return_intermediates=False):
-        """P sample loop.
-
-        Args:
-            shape: The shape.
-            return_intermediates: The return intermediates.
-        """
         device = self.betas.device
         b = shape[0]
         img = torch.randn(shape, device=device)
@@ -381,12 +325,6 @@ class DDPM(pl.LightningModule):
 
     @torch.no_grad()
     def sample(self, batch_size=16, return_intermediates=False):
-        """Sample.
-
-        Args:
-            batch_size: The batch size.
-            return_intermediates: The return intermediates.
-        """
         image_size = self.image_size
         channels = self.channels
         return self.p_sample_loop(
@@ -394,13 +332,6 @@ class DDPM(pl.LightningModule):
         )
 
     def q_sample(self, x_start, t, noise=None):
-        """Q sample.
-
-        Args:
-            x_start: The x start.
-            t: The t.
-            noise: The noise.
-        """
         noise = default(noise, lambda: torch.randn_like(x_start))
         return (
             extract_into_tensor_2d(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start
@@ -415,13 +346,6 @@ class DDPM(pl.LightningModule):
         )
 
     def get_loss(self, pred, target, mean=True):
-        """Get loss.
-
-        Args:
-            pred: The pred.
-            target: The target.
-            mean: The mean.
-        """
         if self.loss_type == "l1":
             loss = (target - pred).abs()
             if mean:
@@ -437,13 +361,6 @@ class DDPM(pl.LightningModule):
         return loss
 
     def p_losses(self, x_start, t, noise=None):
-        """P losses.
-
-        Args:
-            x_start: The x start.
-            t: The t.
-            noise: The noise.
-        """
         noise = default(noise, lambda: torch.randn_like(x_start))
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
         model_out = self.model(x_noisy, t)
@@ -482,12 +399,6 @@ class DDPM(pl.LightningModule):
         return self.p_losses(x, t, *args, **kwargs)
 
     def get_input(self, batch, k):
-        """Get input.
-
-        Args:
-            batch: The batch.
-            k: The k.
-        """
         x = batch[k]
         """
         if len(x.shape) == 3:
@@ -591,7 +502,6 @@ class LatentDiffusion(DDPM):
     def make_cond_schedule(
         self,
     ):
-        """Make cond schedule."""
         self.cond_ids = torch.full(size=(self.num_timesteps,), fill_value=self.num_timesteps - 1, dtype=torch.long)
         ids = torch.round(torch.linspace(0, self.num_timesteps - 1, self.num_timesteps_cond)).long()
         self.cond_ids[: self.num_timesteps_cond] = ids
@@ -605,16 +515,6 @@ class LatentDiffusion(DDPM):
         linear_end=2e-2,
         cosine_s=8e-3,
     ):
-        """Register schedule.
-
-        Args:
-            given_betas: The given betas.
-            beta_schedule: The beta schedule.
-            timesteps: The timesteps.
-            linear_start: The linear start.
-            linear_end: The linear end.
-            cosine_s: The cosine s.
-        """
         super().register_schedule(given_betas, beta_schedule, timesteps, linear_start, linear_end, cosine_s)
 
         self.shorten_cond_schedule = self.num_timesteps_cond > 1
@@ -622,11 +522,6 @@ class LatentDiffusion(DDPM):
             self.make_cond_schedule()
 
     def instantiate_first_stage(self, config):
-        """Instantiate first stage.
-
-        Args:
-            config: The config.
-        """
         model = instantiate_from_config(config)
         self.first_stage_model = model.eval()
         self.first_stage_model.train = disabled_train
@@ -634,11 +529,6 @@ class LatentDiffusion(DDPM):
             param.requires_grad = False
 
     def instantiate_cond_stage(self, config):
-        """Instantiate cond stage.
-
-        Args:
-            config: The config.
-        """
         if not self.cond_stage_trainable:
             model = instantiate_from_config(config)
             self.cond_stage_model = model.eval()
@@ -650,11 +540,6 @@ class LatentDiffusion(DDPM):
             self.cond_stage_model = model
 
     def get_learned_conditioning(self, c):
-        """Get learned conditioning.
-
-        Args:
-            c: The c.
-        """
         if self.cond_stage_forward is None:
             if hasattr(self.cond_stage_model, "encode") and callable(self.cond_stage_model.encode):
                 c = self.cond_stage_model.encode(c)
@@ -668,12 +553,6 @@ class LatentDiffusion(DDPM):
         return c
 
     def get_first_stage_encoding(self, encoder_posterior, noise=None):
-        """Get first stage encoding.
-
-        Args:
-            encoder_posterior: The encoder posterior.
-            noise: The noise.
-        """
         if isinstance(encoder_posterior, DiagonalGaussianDistribution):
             z = encoder_posterior.sample(noise=noise)
         elif isinstance(encoder_posterior, torch.Tensor):
@@ -710,11 +589,6 @@ class LatentDiffusion(DDPM):
         return results
 
     def decode_core(self, z, **kwargs):
-        """Decode core.
-
-        Args:
-            z: The z.
-        """
         if self.encoder_type == "2d" and z.dim() == 5:
             b, _, t, _, _ = z.shape
             z = rearrange(z, "b c t h w -> (b t) c h w")
@@ -739,32 +613,14 @@ class LatentDiffusion(DDPM):
 
     @torch.no_grad()
     def decode_first_stage(self, z, **kwargs):
-        """Decode first stage.
-
-        Args:
-            z: The z.
-        """
         return self.decode_core(z, **kwargs)
 
     # same as above but without decorator
     def differentiable_decode_first_stage(self, z, **kwargs):
-        """Differentiable decode first stage.
-
-        Args:
-            z: The z.
-        """
         return self.decode_core(z, **kwargs)
 
     @torch.no_grad()
     def get_batch_input(self, batch, random_uncond, return_first_stage_outputs=False, return_original_cond=False):
-        """Get batch input.
-
-        Args:
-            batch: The batch.
-            random_uncond: The random uncond.
-            return_first_stage_outputs: The return first stage outputs.
-            return_original_cond: The return original cond.
-        """
         ## video shape: b, c, t, h, w
         x = super().get_input(batch, self.first_stage_key)
 
@@ -815,13 +671,6 @@ class LatentDiffusion(DDPM):
         return self.p_losses(x, c, t, **kwargs)
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
-        """Apply model.
-
-        Args:
-            x_noisy: The x noisy.
-            t: The t.
-            cond: The cond.
-        """
         if isinstance(cond, dict):
             # hybrid case, cond is exptected to be a dict
             pass
@@ -840,14 +689,6 @@ class LatentDiffusion(DDPM):
             return x_recon
 
     def p_losses(self, x_start, cond, t, noise=None, **kwargs):
-        """P losses.
-
-        Args:
-            x_start: The x start.
-            cond: The cond.
-            t: The t.
-            noise: The noise.
-        """
         if self.noise_strength > 0:
             b, c, f, _, _ = x_start.shape
             offset_noise = torch.randn(b, c, f, 1, 1, device=x_start.device)
@@ -986,23 +827,6 @@ class LatentDiffusion(DDPM):
         log_every_t=None,
         **kwargs,
     ):
-        """P sample loop.
-
-        Args:
-            cond: The cond.
-            shape: The shape.
-            return_intermediates: The return intermediates.
-            x_T: The x t.
-            verbose: The verbose.
-            callback: The callback.
-            timesteps: The timesteps.
-            mask: The mask.
-            x0: The x0.
-            img_callback: The img callback.
-            start_T: The start t.
-            log_every_t: The log every t.
-        """
-
         if not log_every_t:
             log_every_t = self.log_every_t
         device = self.betas.device
@@ -1063,19 +887,6 @@ class LatentDiffusion(DDPM):
         shape=None,
         **kwargs,
     ):
-        """Sample.
-
-        Args:
-            cond: The cond.
-            batch_size: The batch size.
-            return_intermediates: The return intermediates.
-            x_T: The x t.
-            verbose: The verbose.
-            timesteps: The timesteps.
-            mask: The mask.
-            x0: The x0.
-            shape: The shape.
-        """
         if shape is None:
             shape = (batch_size, self.channels, self.temporal_length, *self.image_size)
         if cond is not None:
@@ -1104,18 +915,6 @@ class LatentDiffusion(DDPM):
     def sample_log(
         self, cond, batch_size, ddim, ddim_steps, ar=None, ar_noise_schedule=None, cond_frame=None, z=None, **kwargs
     ):
-        """Sample log.
-
-        Args:
-            cond: The cond.
-            batch_size: The batch size.
-            ddim: The ddim.
-            ddim_steps: The ddim steps.
-            ar: The ar.
-            ar_noise_schedule: The ar noise schedule.
-            cond_frame: The cond frame.
-            z: The z.
-        """
         if ddim:
             ddim_sampler = DDIMSampler(self)
             shape = (self.channels, self.temporal_length, *self.image_size)
@@ -1167,12 +966,6 @@ class LatentVisualDiffusion(LatentDiffusion):
         self.action_random_drop_btw_timestep = action_random_drop_btw_timestep
 
     def _init_img_ctx_projector(self, config, trainable):
-        """Helper function to init img ctx projector.
-
-        Args:
-            config: The config.
-            trainable: The trainable.
-        """
         self.image_proj_model = instantiate_from_config(config)
         if not trainable:
             self.image_proj_model.eval()
@@ -1181,12 +974,6 @@ class LatentVisualDiffusion(LatentDiffusion):
                 param.requires_grad = False
 
     def _init_embedder(self, config, freeze=True):
-        """Helper function to init embedder.
-
-        Args:
-            config: The config.
-            freeze: The freeze.
-        """
         self.embedder = instantiate_from_config(config)
         if freeze:
             self.embedder.eval()
@@ -1206,18 +993,6 @@ class LatentVisualDiffusion(LatentDiffusion):
         action_random_drop_btw_timestep=False,
         **kwargs,
     ):
-        """Get batch input.
-
-        Args:
-            batch: The batch.
-            random_uncond: The random uncond.
-            return_first_stage_outputs: The return first stage outputs.
-            return_original_cond: The return original cond.
-            return_fs: The return fs.
-            return_cond_frame: The return cond frame.
-            return_original_input: The return original input.
-            action_random_drop_btw_timestep: The action random drop btw timestep.
-        """
         ## x: b c t h w
         x = super().get_input(batch, self.first_stage_key)
         ## encode video frames x to z via a 2D encoder

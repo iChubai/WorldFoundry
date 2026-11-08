@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> tools.py functionality."""
-
 import importlib
 import importlib.util
 import json
@@ -12,15 +10,8 @@ from typing import *
 
 
 def catch_exception(fn):
-    """Catch exception.
-
-    Args:
-        fn: The fn.
-    """
-
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        """Wrapper."""
         try:
             return fn(*args, **kwargs)
         except Exception:
@@ -36,30 +27,14 @@ def catch_exception(fn):
 
 
 class CallbackOnException:
-    """Callback on exception implementation."""
-
     def __init__(self, callback: Callable, exception: type):
-        """Init.
-
-        Args:
-            callback: The callback.
-            exception: The exception.
-        """
         self.exception = exception
         self.callback = callback
 
     def __enter__(self):
-        """Enter."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit.
-
-        Args:
-            exc_type: The exc type.
-            exc_val: The exc val.
-            exc_tb: The exc tb.
-        """
         if isinstance(exc_val, self.exception):
             self.callback()
             return True
@@ -67,14 +42,6 @@ class CallbackOnException:
 
 
 def traverse_nested_dict_keys(d: Dict[str, Dict]) -> Generator[Tuple[str, ...], None, None]:
-    """Traverse nested dict keys.
-
-    Args:
-        d: The d.
-
-    Returns:
-        The return value.
-    """
     for k, v in d.items():
         if isinstance(v, dict):
             for sub_key in traverse_nested_dict_keys(v):
@@ -84,13 +51,6 @@ def traverse_nested_dict_keys(d: Dict[str, Dict]) -> Generator[Tuple[str, ...], 
 
 
 def get_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], default: Any = None):
-    """Get nested dict.
-
-    Args:
-        d: The d.
-        keys: The keys.
-        default: The default.
-    """
     for k in keys:
         d = d.get(k, default)
         if d is None:
@@ -99,13 +59,6 @@ def get_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], default: Any = No
 
 
 def set_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], value: Any):
-    """Set nested dict.
-
-    Args:
-        d: The d.
-        keys: The keys.
-        value: The value.
-    """
     for k in keys[:-1]:
         d = d.setdefault(k, {})
     d[keys[-1]] = value
@@ -163,36 +116,18 @@ def unflatten_nested_dict(d: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def read_jsonl(file):
-    """Read jsonl.
-
-    Args:
-        file: The file.
-    """
-
     with open(file) as f:
         data = f.readlines()
     return [json.loads(line) for line in data]
 
 
 def write_jsonl(data: List[dict], file):
-    """Write jsonl.
-
-    Args:
-        data: The data.
-        file: The file.
-    """
-
     with open(file, "w") as f:
         for item in data:
             f.write(json.dumps(item) + "\n")
 
 
 def to_hierachical_dataframe(data: List[Dict[Tuple[str, ...], Any]]):
-    """To hierachical dataframe.
-
-    Args:
-        data: The data.
-    """
     import pandas as pd
 
     data = [flatten_nested_dict(d) for d in data]
@@ -203,12 +138,6 @@ def to_hierachical_dataframe(data: List[Dict[Tuple[str, ...], Any]]):
 
 
 def recursive_replace(d: Union[List, Dict, str], mapping: Dict[str, str]):
-    """Recursive replace.
-
-    Args:
-        d: The d.
-        mapping: The mapping.
-    """
     if isinstance(d, str):
         for old, new in mapping.items():
             d = d.replace(old, new)
@@ -222,18 +151,9 @@ def recursive_replace(d: Union[List, Dict, str], mapping: Dict[str, str]):
 
 
 class timeit:
-    """Timeit implementation."""
-
     _history: Dict[str, List["timeit"]] = {}
 
     def __init__(self, name: str | None = None, verbose: bool = True, average: bool = False):
-        """Init.
-
-        Args:
-            name: The name.
-            verbose: The verbose.
-            average: The average.
-        """
         self.name = name
         self.verbose = verbose
         self.start = None
@@ -243,17 +163,11 @@ class timeit:
             timeit._history[name] = []
 
     def __call__(self, func: Callable):
-        """Call.
-
-        Args:
-            func: The func.
-        """
         import inspect
 
         if inspect.iscoroutinefunction(func):
 
             async def wrapper(*args, **kwargs):
-                """Wrapper."""
                 with timeit(self.name or func.__qualname__):
                     ret = await func(*args, **kwargs)
                 return ret
@@ -262,7 +176,6 @@ class timeit:
         else:
 
             def wrapper(*args, **kwargs):
-                """Wrapper."""
                 with timeit(self.name or func.__qualname__):
                     ret = func(*args, **kwargs)
                 return ret
@@ -270,48 +183,25 @@ class timeit:
             return wrapper
 
     def __enter__(self):
-        """Enter."""
         self.start = time.time()
         return self
 
     @property
     def time(self) -> float:
-        """Time.
-
-        Returns:
-            The return value.
-        """
         assert self.start is not None, "Time not yet started."
         assert self.end is not None, "Time not yet ended."
         return self.end - self.start
 
     @property
     def average_time(self) -> float:
-        """Average time.
-
-        Returns:
-            The return value.
-        """
         assert self.average, "Average time not available."
         return sum(t.time for t in timeit._history[self.name]) / len(timeit._history[self.name])
 
     @property
     def history(self) -> List["timeit"]:
-        """History.
-
-        Returns:
-            The return value.
-        """
         return timeit._history.get(self.name, [])
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit.
-
-        Args:
-            exc_type: The exc type.
-            exc_val: The exc val.
-            exc_tb: The exc tb.
-        """
         self.end = time.time()
         if self.average:
             timeit._history[self.name].append(self)
@@ -324,14 +214,6 @@ class timeit:
 
 
 def strip_common_prefix_suffix(strings: List[str]) -> List[str]:
-    """Strip common prefix suffix.
-
-    Args:
-        strings: The strings.
-
-    Returns:
-        The return value.
-    """
     first = strings[0]
 
     for start in range(len(first)):
@@ -346,13 +228,6 @@ def strip_common_prefix_suffix(strings: List[str]) -> List[str]:
 
 
 def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
-    """Multithead execute.
-
-    Args:
-        inputs: The inputs.
-        num_workers: The num workers.
-        pbar: The pbar.
-    """
     from concurrent.futures import ThreadPoolExecutor
 
     from tqdm import tqdm
@@ -363,22 +238,12 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
         pbar = tqdm(total=len(inputs) if hasattr(inputs, "__len__") else None)
 
     def decorator(fn: Callable):
-        """Decorator.
-
-        Args:
-            fn: The fn.
-        """
         with ThreadPoolExecutor(max_workers=num_workers) as executor, pbar:
             pbar.refresh()
 
             @catch_exception
             @suppress_traceback
             def _fn(input):
-                """Helper function to fn.
-
-                Args:
-                    input: The input.
-                """
                 ret = fn(input)
                 pbar.update()
                 return ret
@@ -390,15 +255,8 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
 
 
 def suppress_traceback(fn):
-    """Suppress traceback.
-
-    Args:
-        fn: The fn.
-    """
-
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        """Wrapper."""
         try:
             return fn(*args, **kwargs)
         except Exception as e:
@@ -409,27 +267,13 @@ def suppress_traceback(fn):
 
 
 class no_warnings:
-    """No warnings implementation."""
-
     def __init__(self, action: str = "ignore", **kwargs):
-        """Init.
-
-        Args:
-            action: The action.
-        """
         self.action = action
         self.filter_kwargs = kwargs
 
     def __call__(self, fn):
-        """Call.
-
-        Args:
-            fn: The fn.
-        """
-
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            """Wrapper."""
             with warnings.catch_warnings():
                 warnings.simplefilter(self.action, **self.filter_kwargs)
                 return fn(*args, **kwargs)
@@ -437,29 +281,15 @@ class no_warnings:
         return wrapper
 
     def __enter__(self):
-        """Enter."""
         self.warnings_manager = warnings.catch_warnings()
         self.warnings_manager.__enter__()
         warnings.simplefilter(self.action, **self.filter_kwargs)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit.
-
-        Args:
-            exc_type: The exc type.
-            exc_val: The exc val.
-            exc_tb: The exc tb.
-        """
         self.warnings_manager.__exit__(exc_type, exc_val, exc_tb)
 
 
 def import_file_as_module(file_path: Union[str, os.PathLike], module_name: str):
-    """Import file as module.
-
-    Args:
-        file_path: The file path.
-        module_name: The module name.
-    """
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

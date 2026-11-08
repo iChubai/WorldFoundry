@@ -70,7 +70,6 @@ class DinoVisionTransformer(nn.Module):
         """
         Args:
             img_size (int, tuple): input image size
-            patch_size (int, tuple): patch size
             in_chans (int): number of input channels
             embed_dim (int): embedding dimension
             depth (int): depth of transformer

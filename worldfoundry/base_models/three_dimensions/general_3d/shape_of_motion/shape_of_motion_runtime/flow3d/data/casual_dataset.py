@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> casual_dataset.py functionality."""
-
 import os
 from dataclasses import dataclass
 from functools import partial
@@ -30,8 +28,6 @@ from flow3d.transforms import rt_to_mat4
 
 @dataclass
 class DavisDataConfig:
-    """Davis data config implementation."""
-
     data_dir: str
     start: int = 0
     end: int = -1
@@ -55,8 +51,6 @@ class DavisDataConfig:
 
 @dataclass
 class CustomDataConfig:
-    """Custom data config implementation."""
-
     data_dir: str
     start: int = 0
     end: int = -1
@@ -79,8 +73,6 @@ class CustomDataConfig:
 
 
 class CasualDataset(BaseDataset):
-    """Casual dataset implementation."""
-
     def __init__(
         self,
         data_dir: str,
@@ -104,23 +96,6 @@ class CasualDataset(BaseDataset):
         load_from_cache: bool = False,
         **_,
     ):
-        """Init.
-
-        Args:
-            data_dir: The data dir.
-            start: The start.
-            end: The end.
-            res: The res.
-            image_type: The image type.
-            mask_type: The mask type.
-            depth_type: The depth type.
-            camera_type: The camera type.
-            track_2d_type: The track 2d type.
-            mask_erosion_radius: The mask erosion radius.
-            scene_norm_dict: The scene norm dict.
-            num_targets_per_frame: The num targets per frame.
-            load_from_cache: The load from cache.
-        """
         super().__init__()
 
         self.data_dir = data_dir
@@ -203,87 +178,37 @@ class CasualDataset(BaseDataset):
 
     @property
     def num_frames(self) -> int:
-        """Num frames.
-
-        Returns:
-            The return value.
-        """
         return len(self.frame_names)
 
     @property
     def keyframe_idcs(self) -> torch.Tensor:
-        """Keyframe idcs.
-
-        Returns:
-            The return value.
-        """
         return self._keyframe_idcs
 
     def __len__(self):
-        """Len."""
         return len(self.frame_names)
 
     def get_w2cs(self) -> torch.Tensor:
-        """Get w2cs.
-
-        Returns:
-            The return value.
-        """
         return self.w2cs
 
     def get_Ks(self) -> torch.Tensor:
-        """Get ks.
-
-        Returns:
-            The return value.
-        """
         return self.Ks
 
     def get_img_wh(self) -> tuple[int, int]:
-        """Get img wh.
-
-        Returns:
-            The return value.
-        """
         return self.get_image(0).shape[1::-1]
 
     def get_image(self, index) -> torch.Tensor:
-        """Get image.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         if self.imgs[index] is None:
             self.imgs[index] = self.load_image(index)
         img = cast(torch.Tensor, self.imgs[index])
         return img
 
     def get_mask(self, index) -> torch.Tensor:
-        """Get mask.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         if self.masks[index] is None:
             self.masks[index] = self.load_mask(index)
         mask = cast(torch.Tensor, self.masks[index])
         return mask
 
     def get_depth(self, index) -> torch.Tensor:
-        """Get depth.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         if self.depths[index] is None:
             if self.camera_type == "droid_recon":
                 self.depths[index] = self.load_depth(index)
@@ -296,26 +221,10 @@ class CasualDataset(BaseDataset):
         return self.depths[index] / self.scale
 
     def load_image(self, index) -> torch.Tensor:
-        """Load image.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         path = f"{self.img_dir}/{self.frame_names[index]}{self.img_ext}"
         return torch.from_numpy(imageio.imread(path)).float() / 255.0
 
     def load_mask(self, index) -> torch.Tensor:
-        """Load mask.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         path = f"{self.mask_dir}/{self.frame_names[index]}.png"
         r = self.mask_erosion_radius
         try:
@@ -333,14 +242,6 @@ class CasualDataset(BaseDataset):
         return torch.from_numpy(out_mask).float()
 
     def load_depth(self, index) -> torch.Tensor:
-        """Load depth.
-
-        Args:
-            index: The index.
-
-        Returns:
-            The return value.
-        """
         path = f"{self.depth_dir}/{self.frame_names[index]}.npy"
         disp = np.load(path)
         depth = 1.0 / np.clip(disp, a_min=1e-6, a_max=1e6)
@@ -366,17 +267,6 @@ class CasualDataset(BaseDataset):
     def get_tracks_3d(
         self, num_samples: int, start: int = 0, end: int = -1, step: int = 1, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Get tracks 3d.
-
-        Args:
-            num_samples: The num samples.
-            start: The start.
-            end: The end.
-            step: The step.
-
-        Returns:
-            The return value.
-        """
         num_frames = self.num_frames
         if end < 0:
             end = num_frames + 1 + end
@@ -421,18 +311,6 @@ class CasualDataset(BaseDataset):
         min_per_frame: int = 64,
         **kwargs,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Get bkgd points.
-
-        Args:
-            num_samples: The num samples.
-            use_kf_tstamps: The use kf tstamps.
-            stride: The stride.
-            down_rate: The down rate.
-            min_per_frame: The min per frame.
-
-        Returns:
-            The return value.
-        """
         start = 0
         end = self.num_frames
         H, W = self.get_image(0).shape[:2]
@@ -525,11 +403,6 @@ class CasualDataset(BaseDataset):
         return bg_points, bg_normals, bg_colors
 
     def __getitem__(self, index: int):
-        """Getitem.
-
-        Args:
-            index: The index.
-        """
         index = np.random.randint(0, self.num_frames)
         # index = 0
         data = {
@@ -581,16 +454,6 @@ class CasualDataset(BaseDataset):
 
 
 def load_cameras(path: str, H: int, W: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Load cameras.
-
-    Args:
-        path: The path.
-        H: The h.
-        W: The w.
-
-    Returns:
-        The return value.
-    """
     assert os.path.exists(path), f"Camera file {path} does not exist."
     recon = np.load(path, allow_pickle=True).item()
     guru.debug(f"{recon.keys()=}")

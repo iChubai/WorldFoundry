@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> utils.py functionality."""
-
 from numbers import Integral, Number
 from typing import *
 
@@ -209,15 +207,6 @@ def max_pool_2d(
     padding: Union[int, Tuple[int, int]],
     axis: Tuple[int, int] = (-2, -1),
 ):
-    """Max pool 2d.
-
-    Args:
-        x: The x.
-        kernel_size: The kernel size.
-        stride: The stride.
-        padding: The padding.
-        axis: The axis.
-    """
     if isinstance(kernel_size, Number):
         kernel_size = (kernel_size, kernel_size)
     if isinstance(stride, Number):

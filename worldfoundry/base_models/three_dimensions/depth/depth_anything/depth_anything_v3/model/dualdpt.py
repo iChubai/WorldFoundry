@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> dualdpt.py functionality."""
-
 from typing import List, Sequence, Tuple
 import torch
 import torch.nn as nn
@@ -62,14 +60,6 @@ class DualDPT(nn.Module):
         aux_out1_conv_num: int = 5,
         head_names: Tuple[str, str] = ("depth", "ray"),
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         # -------------------- configuration --------------------
@@ -210,17 +200,6 @@ class DualDPT(nn.Module):
         W: int,
         patch_start_idx: int,
     ) -> Dict[str, torch.Tensor]:
-        """Helper function to forward impl.
-
-        Args:
-            feats: The feats.
-            H: The h.
-            W: The w.
-            patch_start_idx: The patch start idx.
-
-        Returns:
-            The return value.
-        """
         B, _, C = feats[0].shape
         ph, pw = H // self.patch_size, W // self.patch_size
         resized_feats = []

@@ -1,19 +1,9 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> generate_video_tool -> lib -> Equirec2Perspec.py functionality."""
-
 import cv2
 import numpy as np
 
 
 class Equirectangular:
-    """Equirectangular implementation."""
-
     def __init__(self, img_name, text2light=False):
-        """Init.
-
-        Args:
-            img_name: The img name.
-            text2light: The text2light.
-        """
         if isinstance(img_name, str):
             self._img = cv2.imread(img_name, cv2.IMREAD_COLOR)
         else:
@@ -24,15 +14,6 @@ class Equirectangular:
         [self._height, self._width, _] = self._img.shape
 
     def GetPerspective(self, FOV, THETA, PHI, height, width):
-        """Getperspective.
-
-        Args:
-            FOV: The fov.
-            THETA: The theta.
-            PHI: The phi.
-            height: The height.
-            width: The width.
-        """
         #
         # THETA is left/right angle, PHI is up/down angle, both in degree
         #

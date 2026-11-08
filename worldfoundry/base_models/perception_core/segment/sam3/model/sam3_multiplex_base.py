@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_multiplex_base.py functionality."""
-
 import logging
 import math
 import os
@@ -184,11 +182,6 @@ class Sam3MultiplexTrackerPredictor(nn.Module):
         self.bf16_context.__enter__()  # keep using for the entire model process
 
     def __getattr__(self, name):
-        """Getattr.
-
-        Args:
-            name: The name.
-        """
         # Expose all attributes of the underlying model
         model = super().__getattr__("model")
         if name == "model":
@@ -196,11 +189,9 @@ class Sam3MultiplexTrackerPredictor(nn.Module):
         return getattr(model, name)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         raise NotImplementedError("Use the sam2 predictor APIs instead. Check Sam3TrackerPredictor for details.")
 
     def add_output_per_object(self, *args, **kwargs):
-        """Add output per object."""
         if self.per_obj_inference:
             # nothing needs to be done as each object is already stored separately
             return
@@ -277,50 +268,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         batched_grounding_batch_size=1,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            tracker: The tracker.
-            detector: The detector.
-            ckpt_path: The ckpt path.
-            sam3_ckpt_path: The sam3 ckpt path.
-            score_threshold_detection: The score threshold detection.
-            image_only_det_thresh: The image only det thresh.
-            det_nms_thresh: The det nms thresh.
-            det_nms_use_iom: The det nms use iom.
-            assoc_iou_thresh: The assoc iou thresh.
-            trk_assoc_iou_thresh: The trk assoc iou thresh.
-            new_det_thresh: The new det thresh.
-            hotstart_delay: The hotstart delay.
-            hotstart_unmatch_thresh: The hotstart unmatch thresh.
-            hotstart_dup_thresh: The hotstart dup thresh.
-            suppress_unmatched_only_within_hotstart: The suppress unmatched only within hotstart.
-            init_trk_keep_alive: The init trk keep alive.
-            max_trk_keep_alive: The max trk keep alive.
-            min_trk_keep_alive: The min trk keep alive.
-            suppress_overlapping_based_on_recent_occlusion_threshold: The suppress overlapping based on recent occlusion threshold.
-            allow_unoccluded_to_suppress: The allow unoccluded to suppress.
-            decrease_trk_keep_alive_for_empty_masklets: The decrease trk keep alive for empty masklets.
-            o2o_matching_masklets_enable: The o2o matching masklets enable.
-            suppress_det_close_to_boundary: The suppress det close to boundary.
-            fill_hole_area: The fill hole area.
-            sprinkle_removal_area: The sprinkle removal area.
-            max_num_objects: The max num objects.
-            max_num_kboxes: The max num kboxes.
-            recondition_every_nth_frame: The recondition every nth frame.
-            use_iom_recondition: The use iom recondition.
-            iom_thresh_recondition: The iom thresh recondition.
-            iou_thresh_recondition: The iou thresh recondition.
-            is_multiplex: The is multiplex.
-            masklet_confirmation_enable: The masklet confirmation enable.
-            masklet_confirmation_consecutive_det_thresh: The masklet confirmation consecutive det thresh.
-            reconstruction_bbox_iou_thresh: The reconstruction bbox iou thresh.
-            reconstruction_bbox_det_score: The reconstruction bbox det score.
-            reapply_no_object_pointer: The reapply no object pointer.
-            running_in_prod: The running in prod.
-            use_batched_grounding: The use batched grounding.
-            batched_grounding_batch_size: The batched grounding batch size.
-        """
         nn.Module.__init__(self)
         assert isinstance(tracker, Sam3MultiplexTrackerPredictor)
         self.tracker = tracker
@@ -409,44 +356,21 @@ class Sam3MultiplexBase(Sam3VideoBase):
             self.bucket_capacity: int = self.tracker.multiplex_controller.allowed_bucket_capacity
 
     def all_gather_cpu(self, tensor_list, tensor):
-        """All gather cpu.
-
-        Args:
-            tensor_list: The tensor list.
-            tensor: The tensor.
-        """
         if self._dist_pg_cpu is None:
             self._init_dist_pg_cpu()
         dist.broadcast(tensor_list, tensor, group=self._dist_pg_cpu)
 
     def all_gather_python_obj_cpu(self, object_list, python_obj):
-        """All gather python obj cpu.
-
-        Args:
-            object_list: The object list.
-            python_obj: The python obj.
-        """
         if self._dist_pg_cpu is None:
             self._init_dist_pg_cpu()
         dist.all_gather_object(object_list, python_obj, group=self._dist_pg_cpu)
 
     def broadcast_cpu(self, x, src):
-        """Broadcast cpu.
-
-        Args:
-            x: The x.
-            src: The src.
-        """
         if self._dist_pg_cpu is None:
             self._init_dist_pg_cpu()
         dist.broadcast(x, src=src, group=self._dist_pg_cpu)
 
     def _start_profiling(self, frame_idx):
-        """Helper function to start profiling.
-
-        Args:
-            frame_idx: The frame idx.
-        """
         self._profiling_enabled = os.getenv("ENABLE_PROFILING", "0").lower() == "1"
         self._profile_end_frame = int(os.getenv("PROFILE_END_FRAME", "-1"))
         """Start profiling for _det_track_one_frame if conditions are met."""
@@ -501,21 +425,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         orig_vid_width: int,
         is_image_only: bool = False,
     ):
-        """Helper function to det track one frame.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            input_batch: The input batch.
-            geometric_prompt: The geometric prompt.
-            tracker_states_local: The tracker states local.
-            tracker_metadata_prev: The tracker metadata prev.
-            feature_cache: The feature cache.
-            orig_vid_height: The orig vid height.
-            orig_vid_width: The orig vid width.
-            is_image_only: The is image only.
-        """
         profiling_enabled = self._start_profiling(frame_idx)
 
         try:
@@ -711,18 +620,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         use_batched_grounding: bool = False,
         batched_grounding_batch_size: int = 16,
     ):
-        """Run backbone and detection.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            input_batch: The input batch.
-            geometric_prompt: The geometric prompt.
-            feature_cache: The feature cache.
-            reverse: The reverse.
-            use_batched_grounding: The use batched grounding.
-            batched_grounding_batch_size: The batched grounding batch size.
-        """
         # Step 1: if text feature is not cached in `feature_cache`, compute and cache it
         text_batch_key = tuple(input_batch.find_text_batch)
         if "text" not in feature_cache or text_batch_key not in feature_cache["text"]:
@@ -863,15 +760,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         tracker_states_local: list[Any],
         tracker_metadata_prev: dict[str, np.ndarray],
     ):
-        """Run tracker propagation.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            tracker_states_local: The tracker states local.
-            tracker_metadata_prev: The tracker metadata prev.
-        """
         # Step 1: propagate the local SAM2 states to get the current frame's prediction
         # `low_res_masks_local` of the existing masklets on this GPU
         # - obj_ids_local: List[int] -- list of object IDs
@@ -923,17 +811,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         tracker_obj_scores_global: Tensor,
         tracker_low_res_masks_global: Tensor,
     ):
-        """Helper function to recondition masklets.
-
-        Args:
-            frame_idx: The frame idx.
-            det_out: The det out.
-            trk_id_to_max_iou_high_conf_det: The trk id to max iou high conf det.
-            tracker_states_local: The tracker states local.
-            tracker_metadata: The tracker metadata.
-            tracker_obj_scores_global: The tracker obj scores global.
-            tracker_low_res_masks_global: The tracker low res masks global.
-        """
         reconditioned_obj_ids = set()
         HIGH_CONF_THRESH = 0.8
         input_mask_res = self.tracker.input_mask_size
@@ -1045,11 +922,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         return tracker_states_local, reconditioned_obj_ids
 
     def _deepcopy(self, x):
-        """Helper function to deepcopy.
-
-        Args:
-            x: The x.
-        """
         # If running in prod, dont need to do a deepcopy as we only traverse in 1 direction
         if True:
             return x
@@ -1068,20 +940,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         tracker_states_local: list[Any],
         is_image_only: bool = False,
     ):
-        """Run tracker update planning phase.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            det_out: The det out.
-            det_keep: The det keep.
-            tracker_low_res_masks_global: The tracker low res masks global.
-            tracker_obj_scores_global: The tracker obj scores global.
-            tracker_metadata_prev: The tracker metadata prev.
-            tracker_states_local: The tracker states local.
-            is_image_only: The is image only.
-        """
         # initialize new metadata from previous metadata (its values will be updated later)
         with torch.profiler.record_function("initialize_tracker_metadata_new"):
             tracker_metadata_new = self._create_planning_metadata(tracker_metadata_prev)
@@ -1522,22 +1380,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         reconditioned_obj_ids: set | None = None,
         det_to_matched_trk_obj_ids: dict | None = None,
     ):
-        """Build outputs.
-
-        Args:
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            reverse: The reverse.
-            det_out: The det out.
-            tracker_low_res_masks_global: The tracker low res masks global.
-            tracker_obj_scores_global: The tracker obj scores global.
-            tracker_metadata_prev: The tracker metadata prev.
-            sam2_update_plan: The sam2 update plan.
-            orig_vid_height: The orig vid height.
-            orig_vid_width: The orig vid width.
-            reconditioned_obj_ids: The reconditioned obj ids.
-            det_to_matched_trk_obj_ids: The det to matched trk obj ids.
-        """
         new_det_fa_inds: np.ndarray = sam2_update_plan["new_det_fa_inds"]
         new_det_obj_ids: np.ndarray = sam2_update_plan["new_det_obj_ids"]
         obj_id_to_mask = {}  # obj_id --> output mask tensor
@@ -1603,15 +1445,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         frame_idx: int | None = None,
         reverse: bool = False,
     ):
-        """Helper function to get objects to suppress based on most recently occluded.
-
-        Args:
-            binary_low_res_masks: The binary low res masks.
-            last_occluded: The last occluded.
-            obj_ids: The obj ids.
-            frame_idx: The frame idx.
-            reverse: The reverse.
-        """
         # Suppress overlapping masks for objects that were most recently occluded
         assert binary_low_res_masks.dtype == torch.bool, f"Expected boolean tensor, got {binary_low_res_masks.dtype}"
         to_suppress = torch.zeros(
@@ -2626,9 +2459,6 @@ class Sam3MultiplexBase(Sam3VideoBase):
         det_to_matched_trk_obj_ids: dict[int, np.ndarray],
         new_det_obj_ids: np.ndarray,
     ):
-        """
-        Update masklet confirmation status.
-        """
         confirmation_data = rank0_metadata["masklet_confirmation"]
         status_prev = confirmation_data["status"]
         consecutive_det_num_prev = confirmation_data["consecutive_det_num"]
@@ -2718,15 +2548,6 @@ class Sam3MultiplexPredictorWrapper(Sam3MultiplexTrackerPredictor):
         is_multiplex=True,
         is_multiplex_dynamic=True,
     ):
-        """Init.
-
-        Args:
-            model: The model.
-            per_obj_inference: The per obj inference.
-            fill_hole_area: The fill hole area.
-            is_multiplex: The is multiplex.
-            is_multiplex_dynamic: The is multiplex dynamic.
-        """
         # Skip Sam3MultiplexTrackerPredictor.__init__ (requires Hydra) — call nn.Module.__init__ directly
         nn.Module.__init__(self)
         self.model = model

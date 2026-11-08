@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> gs_adapter.py functionality."""
-
 import torch
 from einops import einsum, rearrange, repeat
 from torch import nn
@@ -34,8 +32,6 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 
 
 class GaussianAdapter(nn.Module):
-    """Gaussian adapter implementation."""
-
     def __init__(
         self,
         sh_degree: int = 0,
@@ -45,16 +41,6 @@ class GaussianAdapter(nn.Module):
         gaussian_scale_min: float = 1e-5,
         gaussian_scale_max: float = 30.0,
     ):
-        """Init.
-
-        Args:
-            sh_degree: The sh degree.
-            pred_color: The pred color.
-            pred_offset_depth: The pred offset depth.
-            pred_offset_xy: The pred offset xy.
-            gaussian_scale_min: The gaussian scale min.
-            gaussian_scale_max: The gaussian scale max.
-        """
         super().__init__()
         self.sh_degree = sh_degree
         self.pred_color = pred_color
@@ -87,21 +73,6 @@ class GaussianAdapter(nn.Module):
         gt_extrinsics: torch.Tensor | None = None,  # "*#batch 4 4"
         **kwargs,
     ) -> Gaussians:
-        """Forward.
-
-        Args:
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            depths: The depths.
-            opacities: The opacities.
-            raw_gaussians: The raw gaussians.
-            image_shape: The image shape.
-            eps: The eps.
-            gt_extrinsics: The gt extrinsics.
-
-        Returns:
-            The return value.
-        """
         device = extrinsics.device
         dtype = raw_gaussians.dtype
         H, W = image_shape
@@ -207,16 +178,6 @@ class GaussianAdapter(nn.Module):
         pixel_size: torch.Tensor,  # "*#batch 2"
         multiplier: float = 0.1,
     ) -> torch.Tensor:  # " *batch"
-        """Get scale multiplier.
-
-        Args:
-            intrinsics: The intrinsics.
-            pixel_size: The pixel size.
-            multiplier: The multiplier.
-
-        Returns:
-            The return value.
-        """
         xy_multipliers = multiplier * einsum(
             intrinsics[..., :2, :2].float().inverse().to(intrinsics),
             pixel_size,
@@ -226,20 +187,10 @@ class GaussianAdapter(nn.Module):
 
     @property
     def d_sh(self) -> int:
-        """D sh.
-
-        Returns:
-            The return value.
-        """
         return 1 if self.pred_color else (self.sh_degree + 1) ** 2
 
     @property
     def d_in(self) -> int:
-        """D in.
-
-        Returns:
-            The return value.
-        """
         # provided as reference to the gs_dpt output dim
         raw_gs_dim = 0
         if self.pred_offset_xy:

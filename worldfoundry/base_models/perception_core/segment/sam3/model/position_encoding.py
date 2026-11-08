@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> position_encoding.py functionality."""
-
 import math
 
 import torch
@@ -24,15 +22,6 @@ class PositionEmbeddingSine(nn.Module):
         scale: float | None = None,
         precompute_resolution: int | None = None,
     ):
-        """Init.
-
-        Args:
-            num_pos_feats: The num pos feats.
-            temperature: The temperature.
-            normalize: The normalize.
-            scale: The scale.
-            precompute_resolution: The precompute resolution.
-        """
         super().__init__()
         assert num_pos_feats % 2 == 0, "Expecting even model width"
         self.num_pos_feats = num_pos_feats // 2
@@ -68,12 +57,6 @@ class PositionEmbeddingSine(nn.Module):
                 self.cache[size] = self.cache[size].clone().detach()
 
     def _encode_xy(self, x, y):
-        """Helper function to encode xy.
-
-        Args:
-            x: The x.
-            y: The y.
-        """
         # The positions are expected to be normalized
         assert len(x) == len(y) and x.ndim == y.ndim == 1
         x_embed = x * self.scale
@@ -90,14 +73,6 @@ class PositionEmbeddingSine(nn.Module):
 
     @torch.no_grad()
     def encode_boxes(self, x, y, w, h):
-        """Encode boxes.
-
-        Args:
-            x: The x.
-            y: The y.
-            w: The w.
-            h: The h.
-        """
         pos_x, pos_y = self._encode_xy(x, y)
         pos = torch.cat((pos_y, pos_x, h[:, None], w[:, None]), dim=1)
         return pos
@@ -106,13 +81,6 @@ class PositionEmbeddingSine(nn.Module):
 
     @torch.no_grad()
     def encode_points(self, x, y, labels):
-        """Encode points.
-
-        Args:
-            x: The x.
-            y: The y.
-            labels: The labels.
-        """
         (bx, nx), (by, ny), (bl, nl) = x.shape, y.shape, labels.shape
         assert bx == by and nx == ny and bx == bl and nx == nl
         pos_x, pos_y = self._encode_xy(x.flatten(), y.flatten())
@@ -122,11 +90,6 @@ class PositionEmbeddingSine(nn.Module):
 
     @torch.no_grad()
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         cache_key = None
         cache_key = (x.shape[-2], x.shape[-1])
         if cache_key in self.cache:

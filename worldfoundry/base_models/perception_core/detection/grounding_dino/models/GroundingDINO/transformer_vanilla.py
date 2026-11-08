@@ -25,18 +25,7 @@ from .utils import (
 
 
 class TextTransformer(nn.Module):
-    """Text transformer implementation."""
-
     def __init__(self, num_layers, d_model=256, nheads=8, dim_feedforward=2048, dropout=0.1):
-        """Init.
-
-        Args:
-            num_layers: The num layers.
-            d_model: The d model.
-            nheads: The nheads.
-            dim_feedforward: The dim feedforward.
-            dropout: The dropout.
-        """
         super().__init__()
         self.num_layers = num_layers
         self.d_model = d_model
@@ -75,8 +64,6 @@ class TextTransformer(nn.Module):
 
 
 class TransformerEncoderLayer(nn.Module):
-    """Transformer encoder layer implementation."""
-
     def __init__(
         self,
         d_model,
@@ -86,16 +73,6 @@ class TransformerEncoderLayer(nn.Module):
         activation="relu",
         normalize_before=False,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            nhead: The nhead.
-            dim_feedforward: The dim feedforward.
-            dropout: The dropout.
-            activation: The activation.
-            normalize_before: The normalize before.
-        """
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         # Implementation of Feedforward model
@@ -113,12 +90,6 @@ class TransformerEncoderLayer(nn.Module):
         self.nhead = nhead
 
     def with_pos_embed(self, tensor, pos: Tensor | None):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         return tensor if pos is None else tensor + pos
 
     def forward(
@@ -128,14 +99,6 @@ class TransformerEncoderLayer(nn.Module):
         src_key_padding_mask: Tensor | None = None,
         pos: Tensor | None = None,
     ):
-        """Forward.
-
-        Args:
-            src: The src.
-            src_mask: The src mask.
-            src_key_padding_mask: The src key padding mask.
-            pos: The pos.
-        """
         # repeat attn mask
         if src_mask.dim() == 3 and src_mask.shape[0] == src.shape[1]:
             # bs, num_q, num_k

@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> utils.py functionality."""
-
 import collections.abc
 from itertools import repeat
 
@@ -50,18 +48,7 @@ def freeze_batch_norm_2d(module, module_match={}, name=""):
 
 # From PyTorch internals
 def _ntuple(n):
-    """Helper function to ntuple.
-
-    Args:
-        n: The n.
-    """
-
     def parse(x):
-        """Parse.
-
-        Args:
-            x: The x.
-        """
         if isinstance(x, collections.abc.Iterable):
             return x
         return tuple(repeat(x, n))
@@ -82,14 +69,6 @@ def to_ntuple(n, x):
 # Replaces all linear layers with linear_replacement
 # TODO: add int8 support for other linear layers including attn and convnets
 def replace_linear(model, linear_replacement, include_modules=["c_fc", "c_proj"], copy_weights=True):
-    """Replace linear.
-
-    Args:
-        model: The model.
-        linear_replacement: The linear replacement.
-        include_modules: The include modules.
-        copy_weights: The copy weights.
-    """
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             replace_linear(module, linear_replacement, include_modules, copy_weights)
@@ -110,11 +89,6 @@ def replace_linear(model, linear_replacement, include_modules=["c_fc", "c_proj"]
 
 
 def convert_int8_model_to_inference_mode(model):
-    """Convert int8 model to inference mode.
-
-    Args:
-        model: The model.
-    """
     for m in model.modules():
         if hasattr(m, "prepare_for_eval"):
             int8_original_dtype = m.weight.dtype
@@ -161,14 +135,6 @@ def feature_take_indices(
 
 
 def _out_indices_as_tuple(x: int | tuple[int, ...]) -> tuple[int, ...]:
-    """Helper function to out indices as tuple.
-
-    Args:
-        x: The x.
-
-    Returns:
-        The return value.
-    """
     if isinstance(x, int):
         # if indices is an int, take last N features
         return tuple(range(-x, 0))

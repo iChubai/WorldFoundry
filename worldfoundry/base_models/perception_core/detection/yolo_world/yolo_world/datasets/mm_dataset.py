@@ -11,8 +11,6 @@ from mmyolo.registry import DATASETS
 
 @DATASETS.register_module()
 class MultiModalDataset:
-    """Multi-modal dataset."""
-
     def __init__(
         self,
         dataset: BaseDataset | dict,

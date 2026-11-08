@@ -115,7 +115,7 @@ class ResidualConvUnit_custom(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn):
-        """Init.
+        """
         Args:
             features (int): number of features
         """
@@ -154,7 +154,7 @@ class ResidualConvUnit_custom(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
+        """
         Args:
             x (tensor): input
         Returns:
@@ -190,7 +190,7 @@ class FeatureFusionBlock_custom(nn.Module):
         align_corners=True,
         width_ratio=1,
     ):
-        """Init.
+        """
         Args:
             features (int): number of features
         """
@@ -223,7 +223,7 @@ class FeatureFusionBlock_custom(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, *xs):
-        """Forward pass.
+        """
         Returns:
             tensor: output
         """
@@ -292,7 +292,7 @@ class Interpolate(nn.Module):
     """Interpolation module."""
 
     def __init__(self, scale_factor, mode, align_corners=False):
-        """Init.
+        """
         Args:
             scale_factor (float): scaling
             mode (str): interpolation mode
@@ -305,7 +305,7 @@ class Interpolate(nn.Module):
         self.align_corners = align_corners
 
     def forward(self, x):
-        """Forward pass.
+        """
         Args:
             x (tensor): input
         Returns:
@@ -323,8 +323,7 @@ class Interpolate(nn.Module):
 
 
 class DPTOutputAdapter(nn.Module):
-    """DPT output adapter.
-
+    """
     :param num_cahnnels: Number of output channels
     :param stride_level: tride level compared to the full-sized image.
         E.g. 4 for 1/4th the size of the image.

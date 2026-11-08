@@ -1,8 +1,6 @@
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen2_navit.py functionality."""
-
 import glob
 import re
 from dataclasses import dataclass
@@ -166,33 +164,6 @@ class Qwen2Config(_Qwen2Config):
         freeze_und=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            vocab_size: The vocab size.
-            hidden_size: The hidden size.
-            intermediate_size: The intermediate size.
-            num_hidden_layers: The num hidden layers.
-            num_attention_heads: The num attention heads.
-            num_key_value_heads: The num key value heads.
-            hidden_act: The hidden act.
-            max_position_embeddings: The max position embeddings.
-            initializer_range: The initializer range.
-            rms_norm_eps: The rms norm eps.
-            use_cache: The use cache.
-            tie_word_embeddings: The tie word embeddings.
-            rope_theta: The rope theta.
-            rope_scaling: The rope scaling.
-            use_sliding_window: The use sliding window.
-            sliding_window: The sliding window.
-            max_window_layers: The max window layers.
-            attention_dropout: The attention dropout.
-            is_causal: The is causal.
-            _attn_implementation: The attn implementation.
-            qk_norm: The qk norm.
-            layer_module: The layer module.
-            freeze_und: The freeze und.
-        """
         super().__init__(
             vocab_size=vocab_size,
             hidden_size=hidden_size,
@@ -222,25 +193,16 @@ class Qwen2Config(_Qwen2Config):
 
 
 class NaiveCache:
-    """Naive cache implementation."""
-
     def __init__(self, num_layers):
-        """Init.
-
-        Args:
-            num_layers: The num layers.
-        """
         self.key_cache = dict.fromkeys(range(num_layers))
         self.value_cache = dict.fromkeys(range(num_layers))
 
     @property
     def num_layers(self):
-        """Num layers."""
         return len(self.key_cache)
 
     @property
     def seq_lens(self):
-        """Seq lens."""
         if self.key_cache[0] is not None:
             return self.key_cache[0].shape[0]
         else:
@@ -249,34 +211,18 @@ class NaiveCache:
 
 @dataclass
 class BaseNavitOutputWithPast(ModelOutput):
-    """Base navit output with past implementation."""
-
     packed_query_sequence: torch.FloatTensor = None
     past_key_values: NaiveCache | None = None
 
 
 def pad_sequence(tensor, pad_size):
-    """Pad sequence.
-
-    Args:
-        tensor: The tensor.
-        pad_size: The pad size.
-    """
     H, L, D = tensor.shape
     pad_tensor = tensor.new_zeros((H, pad_size, D))
     return torch.cat([tensor, pad_tensor], dim=1)
 
 
 class PackedAttention(Qwen2Attention):
-    """Packed attention implementation."""
-
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__(config, layer_idx)
         if self.config.qk_norm:
             self.q_norm = Qwen2RMSNorm(self.head_dim, eps=config.rms_norm_eps)
@@ -286,7 +232,6 @@ class PackedAttention(Qwen2Attention):
             self.k_norm = nn.Identity()
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -300,15 +245,6 @@ class PackedAttention(Qwen2Attention):
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ):
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-        """
         total_seq_len = packed_sequence.shape[0]
         dtype, device = packed_sequence.dtype, packed_sequence.device
         packed_query_states = torch.zeros((total_seq_len, self.num_heads * self.head_dim), dtype=dtype, device=device)
@@ -392,19 +328,6 @@ class PackedAttention(Qwen2Attention):
         update_past_key_values=True,
         is_causal=True,
     ):
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-        """
         packed_query_states = self.q_proj(packed_query_sequence).view(-1, self.num_heads, self.head_dim)
         packed_key_states = self.k_proj(packed_query_sequence).view(-1, self.num_key_value_heads, self.head_dim)
         packed_value_states = self.v_proj(packed_query_sequence).view(-1, self.num_key_value_heads, self.head_dim)
@@ -462,15 +385,7 @@ class PackedAttention(Qwen2Attention):
 
 
 class PackedAttentionMoT(Qwen2Attention):
-    """Packed attention mo t implementation."""
-
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__(config, layer_idx)
         if self.config.qk_norm:
             self.q_norm = Qwen2RMSNorm(self.head_dim, eps=config.rms_norm_eps)
@@ -490,7 +405,6 @@ class PackedAttentionMoT(Qwen2Attention):
         self.o_proj_moe_gen = nn.Linear(self.num_heads * self.head_dim, moe_gen_hidden_size, bias=False)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
         # if self.training:
         #     return self.forward_train(*args, **kwargs)
@@ -507,17 +421,6 @@ class PackedAttentionMoT(Qwen2Attention):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ):
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-        """
         total_seq_len = packed_sequence_und.shape[0] + packed_sequence_gen.shape[0]
         dtype, device = packed_sequence_und.dtype, packed_sequence_und.device
         packed_query_states = torch.zeros((total_seq_len, self.num_heads * self.head_dim), dtype=dtype, device=device)
@@ -626,22 +529,6 @@ class PackedAttentionMoT(Qwen2Attention):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ):
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-        """
         if mode == "und":
             packed_query_states = self.q_proj(packed_query_sequence).view(-1, self.num_heads, self.head_dim)
             packed_key_states = self.k_proj(packed_query_sequence).view(-1, self.num_key_value_heads, self.head_dim)
@@ -747,12 +634,6 @@ class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = PackedAttention(config, layer_idx)
@@ -761,7 +642,6 @@ class Qwen2DecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -776,20 +656,6 @@ class Qwen2DecoderLayer(nn.Module):
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
         packed_und_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_sequence_und
         packed_sequence = self.input_layernorm(packed_sequence_und)
 
@@ -824,23 +690,6 @@ class Qwen2DecoderLayer(nn.Module):
         update_past_key_values=True,
         is_causal=True,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_query_sequence
         packed_query_sequence = self.input_layernorm(packed_query_sequence)
 
@@ -876,13 +725,6 @@ class Qwen2MoTDecoderLayer(nn.Module):
         layer_idx: int | None = None,
         attn_module: Qwen2Attention | None = PackedAttentionMoT,
     ):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-            attn_module: The attn module.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.freeze_und = config.freeze_und
@@ -897,7 +739,6 @@ class Qwen2MoTDecoderLayer(nn.Module):
         self.post_attention_layernorm_moe_gen = Qwen2RMSNorm(config.expert_config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
         # if self.training:
         #     return self.forward_train(*args, **kwargs)
@@ -914,21 +755,6 @@ class Qwen2MoTDecoderLayer(nn.Module):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual_und = packed_sequence_und
         packed_sequence_und_ = self.input_layernorm(packed_sequence_und)
 
@@ -984,26 +810,6 @@ class Qwen2MoTDecoderLayer(nn.Module):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         enable_taylorseer = getattr(self, "enable_taylorseer", False)
 
         if enable_taylorseer:
@@ -1084,12 +890,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
     """Qwen mo e decoder layer implementation."""
 
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -1101,7 +901,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -1116,20 +915,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_sequence
         packed_sequence = self.input_layernorm(packed_sequence)
 
@@ -1171,26 +956,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_query_sequence
         packed_query_sequence = self.input_layernorm(packed_query_sequence)
 
@@ -1236,11 +1001,6 @@ class Qwen2Model(Qwen2PreTrainedModel):
     """Qwen model implementation."""
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
@@ -1261,7 +1021,6 @@ class Qwen2Model(Qwen2PreTrainedModel):
         self.post_init()
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
         # if self.training:
         #     return self.forward_train(*args, **kwargs)
@@ -1278,21 +1037,6 @@ class Qwen2Model(Qwen2PreTrainedModel):
         packed_und_token_indexes: torch.LongTensor | None = None,
         packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_ids: The packed position ids.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         if self.config.freeze_und:
             # packed_sequence[packed_und_token_indexes] = packed_sequence[packed_und_token_indexes].detach()
             packed_sequence_und = packed_sequence_und.detach()
@@ -1360,26 +1104,6 @@ class Qwen2Model(Qwen2PreTrainedModel):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_ids: The packed query position ids.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         enable_taylorseer = getattr(self, "enable_taylorseer", False)
         if enable_taylorseer:
             from BeingH.model.cache_utils.taylorseer import cal_type
@@ -1511,11 +1235,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
     _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.model = Qwen2Model(config)
 
@@ -1529,12 +1248,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
         self.post_init()
 
     def custom_init_pretrained(self, mllm_state_dict, logger):
-        """Custom init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-            logger: The logger.
-        """
         print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "moe_gen" in name:
@@ -1550,11 +1263,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
         return mllm_state_dict
 
     def init_pretrained(self, mllm_state_dict):
-        """Init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-        """
         print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "moe_gen" in name:
@@ -1621,50 +1329,30 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
                         param.data.copy_(expert_state_dict[original_name].data)
 
     def init_moe(self):
-        """Init moe."""
         for name, param in self.named_parameters():
             if "moe_gen" in name:
                 original_name = name.replace("_moe_gen", "")
                 param.data.copy_(self.state_dict()[original_name].data)
 
     def get_input_embeddings(self):
-        """Get input embeddings."""
         return self.model.embed_tokens
 
     def set_input_embeddings(self, value):
-        """Set input embeddings.
-
-        Args:
-            value: The value.
-        """
         self.model.embed_tokens = value
 
     def get_output_embeddings(self):
-        """Get output embeddings."""
         return self.lm_head
 
     def set_output_embeddings(self, new_embeddings):
-        """Set output embeddings.
-
-        Args:
-            new_embeddings: The new embeddings.
-        """
         self.lm_head = new_embeddings
 
     def set_decoder(self, decoder):
-        """Set decoder.
-
-        Args:
-            decoder: The decoder.
-        """
         self.model = decoder
 
     def get_decoder(self):
-        """Get decoder."""
         return self.model
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self.forward_train(*args, **kwargs)
         # if self.training:
         #     return self.forward_train(*args, **kwargs)
@@ -1681,21 +1369,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
         packed_und_token_indexes: torch.LongTensor | None = None,
         packed_gen_token_indexes: torch.LongTensor | None = None,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence_und: The packed sequence und.
-            packed_sequence_gen: The packed sequence gen.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_ids: The packed position ids.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         outputs = self.model(
             packed_sequence_und=packed_sequence_und,
             packed_sequence_gen=packed_sequence_gen,
@@ -1722,26 +1395,6 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_ids: The packed query position ids.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         outputs = self.model(
             packed_query_sequence=packed_query_sequence,
             query_lens=query_lens,

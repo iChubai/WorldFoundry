@@ -180,7 +180,6 @@ class LoRA(SwiftAdapter):
         Args:
             model(`torch.nn.Module`): The model called with `tune` function.
             config(`LoRAConfig`): The `LoRAConfig` to use. Deprecated
-            adapter_name(`str`): The adapter name
         """
         if not config.use_merged_linear:
             if version.parse(peft.__version__) < version.parse("0.6.3"):

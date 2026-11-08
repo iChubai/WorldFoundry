@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> dpt_temporal.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,8 +21,6 @@ from .motion_module.motion_module import TemporalModule
 
 
 class DPTHeadTemporal(DPTHead):
-    """Dpt head temporal implementation."""
-
     def __init__(
         self,
         in_channels,
@@ -35,17 +31,6 @@ class DPTHeadTemporal(DPTHead):
         num_frames=32,
         pe="ape",
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            features: The features.
-            use_bn: The use bn.
-            out_channels: The out channels.
-            use_clstoken: The use clstoken.
-            num_frames: The num frames.
-            pe: The pe.
-        """
         super().__init__(in_channels, features, use_bn, out_channels, use_clstoken)
 
         assert num_frames > 0
@@ -68,14 +53,6 @@ class DPTHeadTemporal(DPTHead):
         )
 
     def forward(self, out_features, patch_h, patch_w, frame_length):
-        """Forward.
-
-        Args:
-            out_features: The out features.
-            patch_h: The patch h.
-            patch_w: The patch w.
-            frame_length: The frame length.
-        """
         out = []
         for i, x in enumerate(out_features):
             if self.use_clstoken:

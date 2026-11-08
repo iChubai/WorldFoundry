@@ -41,15 +41,6 @@ class LinearLayer(nn.Module):
         norm=None,
         act=None,
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-        """
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -60,14 +51,6 @@ class LinearLayer(nn.Module):
         self.act = build_act(act)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.linear(x)
         if self.norm:
             x = self.norm(x)
@@ -94,22 +77,6 @@ class ConvLayer(nn.Module):
         norm="bn2d",
         act="relu",
     ):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            kernel_size: The kernel size.
-            stride: The stride.
-            dilation: The dilation.
-            groups: The groups.
-            padding: The padding.
-            use_bias: The use bias.
-            dropout: The dropout.
-            conv_type: The conv type.
-            norm: The norm.
-            act: The act.
-        """
         super().__init__()
         if padding is None:
             padding = get_same_padding(kernel_size)
@@ -154,14 +121,6 @@ class ConvLayer(nn.Module):
         self.act = build_act(act)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         if self.dropout is not None:
             x = self.dropout(x)
         x = self.conv(x)
@@ -200,20 +159,6 @@ class GLUMBConvLinear(nn.Module):
         act=("silu", "silu", None),
         dilation=1,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_feature: The out feature.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-            dilation: The dilation.
-        """
         out_feature = out_feature or in_features
         super().__init__()
         use_bias = val2tuple(use_bias, 3)
@@ -258,15 +203,6 @@ class GLUMBConvLinear(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, HW=None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         if HW is None:
             H = W = int(N**0.5)
@@ -321,20 +257,6 @@ class GLUMBConvLinearTemp(GLUMBConvLinear):
         act=("silu", "silu", None),
         t_kernel_size=3,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_feature: The out feature.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-            use_bias: The use bias.
-            norm: The norm.
-            act: The act.
-            t_kernel_size: The t kernel size.
-        """
         super().__init__(
             in_features=in_features,
             hidden_features=hidden_features,
@@ -361,15 +283,6 @@ class GLUMBConvLinearTemp(GLUMBConvLinear):
         nn.init.zeros_(self.t_conv.weight)
 
     def forward(self, x: torch.Tensor, HW=None, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            HW: The hw.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
 
         assert len(HW) == 3, "HW must be a tuple of (T, H, W)"

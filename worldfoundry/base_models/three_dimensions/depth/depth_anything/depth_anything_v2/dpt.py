@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v2 -> dpt.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,13 +8,6 @@ from .util.blocks import FeatureFusionBlock, _make_scratch
 
 
 def _make_fusion_block(features, use_bn, size=None):
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        use_bn: The use bn.
-        size: The size.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(False),
@@ -29,15 +20,7 @@ def _make_fusion_block(features, use_bn, size=None):
 
 
 class ConvBlock(nn.Module):
-    """Conv block implementation."""
-
     def __init__(self, in_feature, out_feature):
-        """Init.
-
-        Args:
-            in_feature: The in feature.
-            out_feature: The out feature.
-        """
         super().__init__()
 
         self.conv_block = nn.Sequential(
@@ -47,17 +30,10 @@ class ConvBlock(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.conv_block(x)
 
 
 class DPTHead(nn.Module):
-    """Dpt head implementation."""
-
     def __init__(
         self,
         in_channels,
@@ -67,16 +43,6 @@ class DPTHead(nn.Module):
         use_clstoken=False,
         is_metric=False,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            features: The features.
-            use_bn: The use bn.
-            out_channels: The out channels.
-            use_clstoken: The use clstoken.
-            is_metric: The is metric.
-        """
         super().__init__()
 
         self.use_clstoken = use_clstoken
@@ -149,13 +115,6 @@ class DPTHead(nn.Module):
             )
 
     def forward(self, out_features, patch_h, patch_w, patch_size=14):
-        """Forward.
-
-        Args:
-            out_features: The out features.
-            patch_h: The patch h.
-            patch_w: The patch w.
-        """
         out = []
         for i, x in enumerate(out_features):
             if self.use_clstoken:
@@ -209,16 +168,6 @@ class DepthAnythingV2(nn.Module):
         use_clstoken=False,
         max_depth: float | None = None,
     ):
-        """Init.
-
-        Args:
-            encoder: The encoder.
-            features: The features.
-            out_channels: The out channels.
-            use_bn: The use bn.
-            use_clstoken: The use clstoken.
-            max_depth: The max depth.
-        """
         super().__init__()
 
         self.intermediate_layer_idx = {
@@ -242,11 +191,6 @@ class DepthAnythingV2(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         patch_h, patch_w = x.shape[-2] // 14, x.shape[-1] // 14
 
         features = self.pretrained.get_intermediate_layers(
@@ -260,12 +204,6 @@ class DepthAnythingV2(nn.Module):
 
     @torch.no_grad()
     def infer_image(self, raw_image, input_size=518):
-        """Infer image.
-
-        Args:
-            raw_image: The raw image.
-            input_size: The input size.
-        """
         image, (h, w) = self.image2tensor(raw_image, input_size)
 
         depth = self.forward(image)
@@ -275,12 +213,6 @@ class DepthAnythingV2(nn.Module):
         return depth.cpu().numpy()
 
     def image2tensor(self, raw_image, input_size=518):
-        """Image2tensor.
-
-        Args:
-            raw_image: The raw image.
-            input_size: The input size.
-        """
         import cv2
         from torchvision.transforms import Compose
 

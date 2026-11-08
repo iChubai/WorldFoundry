@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 # pyre-unsafe
-"""Module for base_models -> perception_core -> segment -> sam3 -> perflib -> triton -> connected_components.py functionality."""
-
 import torch
 import triton
 import triton.language as tl
@@ -10,23 +8,11 @@ import triton.language as tl
 
 @triton.jit
 def _any_combine(a, b):
-    """Helper function to any combine.
-
-    Args:
-        a: The a.
-        b: The b.
-    """
     return a | b
 
 
 @triton.jit
 def tl_any(a, dim=0):
-    """Tl any.
-
-    Args:
-        a: The a.
-        dim: The dim.
-    """
     return tl.reduce(a, dim, _any_combine)
 
 
@@ -41,14 +27,6 @@ def tl_any(a, dim=0):
 
 @triton.jit
 def _init_labels_kernel(input_ptr, labels_ptr, numel: tl.constexpr, BLOCK_SIZE: tl.constexpr):
-    """Helper function to init labels kernel.
-
-    Args:
-        input_ptr: The input ptr.
-        labels_ptr: The labels ptr.
-        numel: The numel.
-        BLOCK_SIZE: The block size.
-    """
     pid = tl.program_id(0)
     offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
     mask = offsets < numel
@@ -67,13 +45,6 @@ def _init_labels_kernel(input_ptr, labels_ptr, numel: tl.constexpr, BLOCK_SIZE: 
 
 @triton.jit
 def find(labels_ptr, indices, mask):
-    """Find.
-
-    Args:
-        labels_ptr: The labels ptr.
-        indices: The indices.
-        mask: The mask.
-    """
     current_pids = indices
 
     # 'is_done' tracks lanes that have finished their work.
@@ -100,14 +71,6 @@ def find(labels_ptr, indices, mask):
 
 @triton.jit
 def union(labels_ptr, a, b, process_mask):
-    """Union.
-
-    Args:
-        labels_ptr: The labels ptr.
-        a: The a.
-        b: The b.
-        process_mask: The process mask.
-    """
     # This function implements a disjoint-set union
     # As an invariant, we use the fact that the roots have the lower id. That helps parallelization
     # However, that is not sufficient by itself. Suppose two threads want to do union(0,2) and union(1,2) at the same time
@@ -187,23 +150,6 @@ def _merge_helper(
     dx: tl.constexpr,
     dy: tl.constexpr,
 ):
-    """Helper function to merge helper.
-
-    Args:
-        input_ptr: The input ptr.
-        labels_ptr: The labels ptr.
-        base_offset: The base offset.
-        offsets_h: The offsets h.
-        offsets_w: The offsets w.
-        mask_2d: The mask 2d.
-        valid_current: The valid current.
-        current_values: The current values.
-        current_labels: The current labels.
-        H: The h.
-        W: The w.
-        dx: The dx.
-        dy: The dy.
-    """
     # Helper functions to compute merge with a specific neighbor offset (dx, dy)
 
     neighbor_h = offsets_h + dy
@@ -251,16 +197,6 @@ def _local_prop_kernel(
     BLOCK_SIZE_H: tl.constexpr,
     BLOCK_SIZE_W: tl.constexpr,
 ):
-    """Helper function to local prop kernel.
-
-    Args:
-        labels_ptr: The labels ptr.
-        input_ptr: The input ptr.
-        H: The h.
-        W: The w.
-        BLOCK_SIZE_H: The block size h.
-        BLOCK_SIZE_W: The block size w.
-    """
     # This is the meat of the Phase 2 to do local merging
     # It will be launched with a 2D grid:
     # - dim 0: batch index
@@ -397,14 +333,6 @@ def _pointer_jump_kernel(labels_in_ptr, labels_out_ptr, numel: tl.constexpr, BLO
 # Step 4.1: Count occurrences of each root label using atomic adds.
 @triton.jit
 def _count_labels_kernel(labels_ptr, sizes_ptr, numel, BLOCK_SIZE: tl.constexpr):
-    """Helper function to count labels kernel.
-
-    Args:
-        labels_ptr: The labels ptr.
-        sizes_ptr: The sizes ptr.
-        numel: The numel.
-        BLOCK_SIZE: The block size.
-    """
     pid = tl.program_id(0)
     offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
     mask = offsets < numel
@@ -420,15 +348,6 @@ def _count_labels_kernel(labels_ptr, sizes_ptr, numel, BLOCK_SIZE: tl.constexpr)
 # Step 4.2: Broadcast the computed sizes back to the output tensor.
 @triton.jit
 def _broadcast_sizes_kernel(labels_ptr, sizes_ptr, out_ptr, numel, BLOCK_SIZE: tl.constexpr):
-    """Helper function to broadcast sizes kernel.
-
-    Args:
-        labels_ptr: The labels ptr.
-        sizes_ptr: The sizes ptr.
-        out_ptr: The out ptr.
-        numel: The numel.
-        BLOCK_SIZE: The block size.
-    """
     pid = tl.program_id(0)
     offsets = pid * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
     mask = offsets < numel

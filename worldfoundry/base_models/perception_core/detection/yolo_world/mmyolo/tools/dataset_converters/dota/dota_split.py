@@ -341,7 +341,6 @@ def crop_and_save_img(info, windows, window_anns, padding, padding_value, save_d
         windows (np.array): information of sliding windows.
         window_anns (list[dict]): List of bbox annotations of every window.
         padding (bool): If True, with padding.
-        padding_value (tuple[int|float]): Padding value.
         save_dir (str): Save filename.
         anno_dir (str): Annotation filename.
         img_ext (str): Picture suffix.
@@ -429,7 +428,6 @@ def single_split(
         min_img_ratio (float): Threshold of window area divided by image area.
         iof_thr (float): Threshold of overlaps between bbox and window.
         padding (bool): If True, with padding.
-        padding_value (tuple[int|float]): Padding value.
         save_dir (str): Save filename.
         anno_dir (str): Annotation filename.
         img_ext (str): Picture suffix.

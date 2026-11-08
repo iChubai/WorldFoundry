@@ -2,18 +2,10 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> perflib -> masks_ops.py functionality."""
-
 import torch
 
 
 def masks_to_boxes(masks: torch.Tensor, obj_ids: list[int]):
-    """Masks to boxes.
-
-    Args:
-        masks: The masks.
-        obj_ids: The obj ids.
-    """
     with torch.autograd.profiler.record_function("perflib: masks_to_boxes"):
         # Sanity check based on callsite for replacement
         assert masks.shape[0] == len(obj_ids)

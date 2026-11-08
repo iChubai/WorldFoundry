@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> metrics.py functionality."""
-
 from __future__ import annotations
 
 import math
@@ -9,16 +7,6 @@ import torch.nn.functional as F
 
 
 def _masked_mse(preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
-    """Helper function to masked mse.
-
-    Args:
-        preds: The preds.
-        targets: The targets.
-        masks: The masks.
-
-    Returns:
-        The return value.
-    """
     diff = (preds - targets).float().pow(2)
     if masks is None:
         return diff.mean()
@@ -29,61 +17,24 @@ def _masked_mse(preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor 
 
 
 class _MeanMetric(torch.nn.Module):
-    """Mean metric implementation."""
-
     def __init__(self) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.reset()
 
     def reset(self) -> None:
-        """Reset.
-
-        Returns:
-            The return value.
-        """
         self._values: list[torch.Tensor] = []
 
     def update(self, value: torch.Tensor) -> None:
-        """Update.
-
-        Args:
-            value: The value.
-
-        Returns:
-            The return value.
-        """
         self._values.append(value.detach())
 
     def compute(self) -> torch.Tensor:
-        """Compute.
-
-        Returns:
-            The return value.
-        """
         if not self._values:
             return torch.tensor(0.0)
         return torch.stack([item.float().mean().cpu() for item in self._values]).mean()
 
 
 class mPSNR(_MeanMetric):
-    """M psnr implementation."""
-
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         mse = _masked_mse(preds, targets, masks).clamp(min=1e-8)
         value = -10.0 * torch.log10(mse)
         self.update(value)
@@ -92,16 +43,6 @@ class mPSNR(_MeanMetric):
     def update(
         self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
     ) -> None:  # type: ignore[override]
-        """Update.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         if targets is None:
             super().update(preds)
             return
@@ -110,19 +51,7 @@ class mPSNR(_MeanMetric):
 
 
 class mSSIM(_MeanMetric):
-    """M ssim implementation."""
-
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         mse = _masked_mse(preds, targets, masks)
         value = torch.clamp(1.0 - mse, min=0.0, max=1.0)
         self.update(value)
@@ -131,16 +60,6 @@ class mSSIM(_MeanMetric):
     def update(
         self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
     ) -> None:  # type: ignore[override]
-        """Update.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         if targets is None:
             super().update(preds)
             return
@@ -149,19 +68,7 @@ class mSSIM(_MeanMetric):
 
 
 class mLPIPS(_MeanMetric):
-    """M lpips implementation."""
-
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         value = F.l1_loss(preds, targets, reduction="none")
         if masks is not None:
             while masks.ndim < value.ndim:
@@ -175,16 +82,6 @@ class mLPIPS(_MeanMetric):
     def update(
         self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
     ) -> None:  # type: ignore[override]
-        """Update.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            masks: The masks.
-
-        Returns:
-            The return value.
-        """
         if targets is None:
             super().update(preds)
             return
@@ -192,21 +89,9 @@ class mLPIPS(_MeanMetric):
 
 
 class PCK(_MeanMetric):
-    """Pck implementation."""
-
     def update(
         self, preds: torch.Tensor, targets: torch.Tensor | None = None, threshold: float | torch.Tensor = 1.0
     ) -> None:  # type: ignore[override]
-        """Update.
-
-        Args:
-            preds: The preds.
-            targets: The targets.
-            threshold: The threshold.
-
-        Returns:
-            The return value.
-        """
         if targets is None:
             super().update(preds)
             return
@@ -216,30 +101,11 @@ class PCK(_MeanMetric):
 
 
 def compute_psnr(preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> float:
-    """Compute psnr.
-
-    Args:
-        preds: The preds.
-        targets: The targets.
-        masks: The masks.
-
-    Returns:
-        The return value.
-    """
     mse = _masked_mse(preds, targets, masks).clamp(min=1e-8)
     return float((-10.0 * torch.log10(mse)).item())
 
 
 def compute_pose_errors(preds: torch.Tensor, targets: torch.Tensor) -> tuple[float, float, float]:
-    """Compute pose errors.
-
-    Args:
-        preds: The preds.
-        targets: The targets.
-
-    Returns:
-        The return value.
-    """
     ate = torch.linalg.norm(preds[:, :3, -1] - targets[:, :3, -1], dim=-1).mean().item()
     pred_rels = torch.linalg.inv(preds[:-1]) @ preds[1:]
     target_rels = torch.linalg.inv(targets[:-1]) @ targets[1:]

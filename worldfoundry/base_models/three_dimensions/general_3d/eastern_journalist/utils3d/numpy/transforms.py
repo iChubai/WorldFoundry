@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> transforms.py functionality."""
-
 import itertools
 from numbers import Number
 from typing import *
@@ -71,14 +69,6 @@ __all__ = [
 
 
 def _matrix_transpose(matrix: ndarray) -> ndarray:
-    """Helper function to matrix transpose.
-
-    Args:
-        matrix: The matrix.
-
-    Returns:
-        The return value.
-    """
     return np.swapaxes(matrix, -1, -2)
 
 
@@ -222,32 +212,14 @@ def intrinsics_from_fov(
 
 
 def focal_to_fov(focal: ndarray):
-    """Focal to fov.
-
-    Args:
-        focal: The focal.
-    """
     return 2 * np.arctan(0.5 / focal)
 
 
 def fov_to_focal(fov: ndarray):
-    """Fov to focal.
-
-    Args:
-        fov: The fov.
-    """
     return 0.5 / np.tan(fov / 2)
 
 
 def intrinsics_to_fov(intrinsics: ndarray) -> Tuple[ndarray, ndarray]:
-    """Intrinsics to fov.
-
-    Args:
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     fov_x = focal_to_fov(intrinsics[..., 0, 0])
     fov_y = focal_to_fov(intrinsics[..., 1, 1])
     return fov_x, fov_y
@@ -1514,15 +1486,6 @@ def angle_between(v1: ndarray, v2: ndarray):
 
 
 def vector_outer(x: ndarray, y: Optional[ndarray] = None) -> ndarray:
-    """Vector outer.
-
-    Args:
-        x: The x.
-        y: The y.
-
-    Returns:
-        The return value.
-    """
     if y is None:
         return x[..., :, None] * x[..., None, :]
     return x[..., :, None] * y[..., None, :]

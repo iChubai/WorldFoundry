@@ -240,7 +240,6 @@ class BatchATSSAssigner(nn.Module):
             overlaps (Tensor): Overlaps area,
                 shape(batch_size, num_gt, num_priors).
             num_priors (int): Number of priors.
-            batch_size (int): Batch size.
             num_gt (int): Number of ground truth.
 
         Return:
@@ -289,7 +288,6 @@ class BatchATSSAssigner(nn.Module):
             fg_mask_pre_prior (Tensor): Force ground truth matching mask,
                 shape(batch_size, num_priors)
             num_priors (int): Number of priors.
-            batch_size (int): Batch size.
             num_gt (int): Number of ground truth.
 
         Return:

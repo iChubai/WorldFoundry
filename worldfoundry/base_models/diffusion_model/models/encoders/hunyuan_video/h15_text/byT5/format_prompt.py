@@ -31,11 +31,6 @@ import json
 
 
 def closest_color(requested_color):
-    """Closest color.
-
-    Args:
-        requested_color: The requested color.
-    """
     import webcolors
 
     min_colors = {}
@@ -49,11 +44,6 @@ def closest_color(requested_color):
 
 
 def convert_rgb_to_names(rgb_tuple):
-    """Convert rgb to names.
-
-    Args:
-        rgb_tuple: The rgb tuple.
-    """
     try:
         import webcolors
 
@@ -64,19 +54,11 @@ def convert_rgb_to_names(rgb_tuple):
 
 
 class MultilingualPromptFormat:
-    """Multilingual prompt format implementation."""
-
     def __init__(
         self,
         font_path: str = "assets/glyph_sdxl_assets/multilingual_10-lang_idx.json",
         color_path: str = "assets/glyph_sdxl_assets/color_idx.json",
     ):
-        """Init.
-
-        Args:
-            font_path: The font path.
-            color_path: The color path.
-        """
         with open(font_path) as f:
             self.font_dict = json.load(f)
         with open(color_path) as f:

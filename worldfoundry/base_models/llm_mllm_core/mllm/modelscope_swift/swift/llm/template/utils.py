@@ -134,7 +134,6 @@ def split_str_parts_by(text: str, delimiters: list[str], regex_mode: bool = Fals
 
     Args:
         text: A text to be split.
-        delimiters: The delimiters.
 
     Returns:
         The split text in list of dicts.

@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> transform.py functionality."""
-
 import numbers
 import random
 import warnings
@@ -28,8 +26,6 @@ from .utils import to_2tuple
 
 @dataclass
 class PreprocessCfg:
-    """Preprocess cfg implementation."""
-
     size: int | tuple[int, int] = 224
     mode: str = "RGB"
     mean: tuple[float, ...] = OPENAI_DATASET_MEAN
@@ -39,17 +35,14 @@ class PreprocessCfg:
     fill_color: int = 0
 
     def __post_init__(self):
-        """Post init."""
         assert self.mode in ("RGB",)
 
     @property
     def num_channels(self):
-        """Num channels."""
         return 3
 
     @property
     def input_size(self):
-        """Input size."""
         return (self.num_channels,) + to_2tuple(self.size)
 
 
@@ -74,18 +67,11 @@ def merge_preprocess_dict(
 
 
 def merge_preprocess_kwargs(base: PreprocessCfg, **kwargs):
-    """Merge preprocess kwargs.
-
-    Args:
-        base: The base.
-    """
     return merge_preprocess_dict(base, kwargs)
 
 
 @dataclass
 class AugmentationCfg:
-    """Augmentation cfg implementation."""
-
     scale: tuple[float, float] = (0.9, 1.0)
     ratio: tuple[float, float] | None = None
     color_jitter: float | tuple[float, float, float] | tuple[float, float, float, float] | None = None
@@ -100,25 +86,12 @@ class AugmentationCfg:
 
 
 class NaFlexTransformFactory:
-    """Na flex transform factory implementation."""
-
     is_naflex_transform_factory = True
 
     def __init__(self, **transform_kwargs) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         self.transform_kwargs = transform_kwargs
 
     def __call__(self, max_seq_len, patch_size):
-        """Call.
-
-        Args:
-            max_seq_len: The max seq len.
-            patch_size: The patch size.
-        """
         from timm.data import create_transform  # timm can still be optional
 
         return create_transform(
@@ -130,25 +103,12 @@ class NaFlexTransformFactory:
 
 
 class NaFlexEvalTransformFactory:
-    """Na flex eval transform factory implementation."""
-
     is_naflex_eval_transform_factory = True
 
     def __init__(self, **transform_kwargs) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         self.transform_kwargs = transform_kwargs
 
     def __call__(self, max_seq_len, patch_size):
-        """Call.
-
-        Args:
-            max_seq_len: The max seq len.
-            patch_size: The patch size.
-        """
         from timm.data import create_transform  # timm can still be optional
 
         return create_transform(
@@ -162,14 +122,6 @@ class NaFlexEvalTransformFactory:
 
 
 def is_naflex_aug_cfg(aug_cfg: dict[str, Any] | AugmentationCfg | None) -> bool:
-    """Is naflex aug cfg.
-
-    Args:
-        aug_cfg: The aug cfg.
-
-    Returns:
-        The return value.
-    """
     if isinstance(aug_cfg, dict):
         return bool(aug_cfg.get("naflex", False))
     if isinstance(aug_cfg, AugmentationCfg):
@@ -178,12 +130,6 @@ def is_naflex_aug_cfg(aug_cfg: dict[str, Any] | AugmentationCfg | None) -> bool:
 
 
 def _setup_size(size, error_msg):
-    """Helper function to setup size.
-
-    Args:
-        size: The size.
-        error_msg: The error msg.
-    """
     if isinstance(size, numbers.Number):
         return int(size), int(size)
 
@@ -212,17 +158,6 @@ class ResizeKeepRatio:
         random_aspect_prob=0.0,
         random_aspect_range=(0.9, 1.11),
     ):
-        """Init.
-
-        Args:
-            size: The size.
-            longest: The longest.
-            interpolation: The interpolation.
-            random_scale_prob: The random scale prob.
-            random_scale_range: The random scale range.
-            random_aspect_prob: The random aspect prob.
-            random_aspect_range: The random aspect range.
-        """
         if isinstance(size, (list, tuple)):
             self.size = tuple(size)
         else:
@@ -283,7 +218,6 @@ class ResizeKeepRatio:
         return img
 
     def __repr__(self):
-        """Repr."""
         format_string = self.__class__.__name__ + f"(size={self.size}"
         format_string += f", interpolation={self.interpolation})"
         format_string += f", longest={self.longest:.3f})"
@@ -343,12 +277,6 @@ class CenterCropOrPad(torch.nn.Module):
     """
 
     def __init__(self, size, fill=0):
-        """Init.
-
-        Args:
-            size: The size.
-            fill: The fill.
-        """
         super().__init__()
         self.size = _setup_size(size, error_msg="Please provide only two dimensions (h, w) for size.")
         self.fill = fill
@@ -364,11 +292,6 @@ class CenterCropOrPad(torch.nn.Module):
         return center_crop_or_pad(img, self.size, fill=self.fill)
 
     def __repr__(self) -> str:
-        """Repr.
-
-        Returns:
-            The return value.
-        """
         return f"{self.__class__.__name__}(size={self.size})"
 
 
@@ -376,14 +299,6 @@ class MaybeConvertMode:
     """Perform PIL convert("RGB") iff PIL image."""
 
     def __init__(self, mode="RGB") -> None:
-        """Init.
-
-        Args:
-            mode: The mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.mode = mode
 
@@ -402,20 +317,10 @@ class MaybeConvertMode:
         return pic.convert(self.mode)
 
     def __repr__(self) -> str:
-        """Repr.
-
-        Returns:
-            The return value.
-        """
         return f"{self.__class__.__name__}()"
 
 
 def _convert_to_rgb(image):
-    """Helper function to convert to rgb.
-
-    Args:
-        image: The image.
-    """
     return image.convert("RGB")
 
 
@@ -423,11 +328,6 @@ class MaybeToTensor(ToTensor):
     """Convert a PIL Image or ndarray to tensor if it's not already one."""
 
     def __init__(self) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
     def __call__(self, pic) -> torch.Tensor:
@@ -443,11 +343,6 @@ class MaybeToTensor(ToTensor):
         return F.to_tensor(pic)
 
     def __repr__(self) -> str:
-        """Repr.
-
-        Returns:
-            The return value.
-        """
         return f"{self.__class__.__name__}()"
 
 
@@ -457,25 +352,11 @@ class color_jitter:
     """
 
     def __init__(self, brightness=0.0, contrast=0.0, saturation=0.0, hue=0.0, p=0.8):
-        """Init.
-
-        Args:
-            brightness: The brightness.
-            contrast: The contrast.
-            saturation: The saturation.
-            hue: The hue.
-            p: The p.
-        """
         assert 0.0 <= p <= 1.0
         self.p = p
         self.transf = ColorJitter(brightness=brightness, contrast=contrast, saturation=saturation, hue=hue)
 
     def __call__(self, img):
-        """Call.
-
-        Args:
-            img: The img.
-        """
         if random.random() < self.p:
             return self.transf(img)
         else:
@@ -488,21 +369,11 @@ class gray_scale:
     """
 
     def __init__(self, p=0.2):
-        """Init.
-
-        Args:
-            p: The p.
-        """
         assert 0.0 <= p <= 1.0
         self.p = p
         self.transf = Grayscale(num_output_channels=3)
 
     def __call__(self, img):
-        """Call.
-
-        Args:
-            img: The img.
-        """
         if random.random() < self.p:
             return self.transf(img)
         else:
@@ -519,18 +390,6 @@ def image_transform(
     fill_color: int = 0,
     aug_cfg: dict[str, Any] | AugmentationCfg | None = None,
 ):
-    """Image transform.
-
-    Args:
-        image_size: The image size.
-        is_train: The is train.
-        mean: The mean.
-        std: The std.
-        resize_mode: The resize mode.
-        interpolation: The interpolation.
-        fill_color: The fill color.
-        aug_cfg: The aug cfg.
-    """
     mean = mean or OPENAI_DATASET_MEAN
     if not isinstance(mean, (list, tuple)):
         mean = (mean,) * 3
@@ -651,13 +510,6 @@ def image_transform_v2(
     is_train: bool,
     aug_cfg: dict[str, Any] | AugmentationCfg | None = None,
 ):
-    """Image transform v2.
-
-    Args:
-        cfg: The cfg.
-        is_train: The is train.
-        aug_cfg: The aug cfg.
-    """
     return image_transform(
         image_size=cfg.size,
         is_train=is_train,
@@ -671,11 +523,6 @@ def image_transform_v2(
 
 
 def naflex_eval_transform_v2(cfg: PreprocessCfg):
-    """Naflex eval transform v2.
-
-    Args:
-        cfg: The cfg.
-    """
     return NaFlexEvalTransformFactory(
         input_size=cfg.input_size,
         mean=cfg.mean,

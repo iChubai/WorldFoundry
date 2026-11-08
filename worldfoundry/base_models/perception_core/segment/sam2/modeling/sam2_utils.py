@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam2_utils.py functionality."""
-
 import copy
 
 import numpy as np
@@ -85,12 +83,6 @@ def get_activation_fn(activation):
 
 
 def get_clones(module, N):
-    """Get clones.
-
-    Args:
-        module: The module.
-        N: The n.
-    """
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
@@ -252,13 +244,6 @@ def sample_one_point_from_error_center(gt_masks, pred_masks, padding=True):
 
 
 def get_next_point(gt_masks, pred_masks, method):
-    """Get next point.
-
-    Args:
-        gt_masks: The gt masks.
-        pred_masks: The pred masks.
-        method: The method.
-    """
     if method == "uniform":
         return sample_random_points_from_errors(gt_masks, pred_masks)
     elif method == "center":

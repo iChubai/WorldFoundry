@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> repvit_sam -> build_sam.py functionality."""
-
 from functools import partial
 
 import torch
@@ -14,11 +12,6 @@ from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TinyViT,
 
 
 def build_sam_vit_h(checkpoint=None):
-    """Build sam vit h.
-
-    Args:
-        checkpoint: The checkpoint.
-    """
     return _build_sam(
         encoder_embed_dim=1280,
         encoder_depth=32,
@@ -32,11 +25,6 @@ build_sam = build_sam_vit_h
 
 
 def build_sam_vit_l(checkpoint=None):
-    """Build sam vit l.
-
-    Args:
-        checkpoint: The checkpoint.
-    """
     return _build_sam(
         encoder_embed_dim=1024,
         encoder_depth=24,
@@ -47,11 +35,6 @@ def build_sam_vit_l(checkpoint=None):
 
 
 def build_sam_vit_b(checkpoint=None):
-    """Build sam vit b.
-
-    Args:
-        checkpoint: The checkpoint.
-    """
     return _build_sam(
         encoder_embed_dim=768,
         encoder_depth=12,
@@ -65,11 +48,6 @@ from timm.models import create_model
 
 
 def build_sam_repvit(checkpoint=None):
-    """Build sam repvit.
-
-    Args:
-        checkpoint: The checkpoint.
-    """
     prompt_embed_dim = 256
     image_size = 1024
     vit_patch_size = 16
@@ -107,11 +85,6 @@ def build_sam_repvit(checkpoint=None):
 
 
 def build_sam_vit_t(checkpoint=None):
-    """Build sam vit t.
-
-    Args:
-        checkpoint: The checkpoint.
-    """
     prompt_embed_dim = 256
     image_size = 1024
     vit_patch_size = 16
@@ -180,15 +153,6 @@ def _build_sam(
     encoder_global_attn_indexes,
     checkpoint=None,
 ):
-    """Helper function to build sam.
-
-    Args:
-        encoder_embed_dim: The encoder embed dim.
-        encoder_depth: The encoder depth.
-        encoder_num_heads: The encoder num heads.
-        encoder_global_attn_indexes: The encoder global attn indexes.
-        checkpoint: The checkpoint.
-    """
     prompt_embed_dim = 256
     image_size = 1024
     vit_patch_size = 16

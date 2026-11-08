@@ -1,6 +1,4 @@
 # Adapted from the official Splatt3R utility module.
-"""Module for base_models -> three_dimensions -> general_3d -> splatt3r -> splatt3r_runtime -> utils -> sh_utils.py functionality."""
-
 C0 = 0.28209479177387814
 C1 = 0.4886025119029199
 C2 = [
@@ -33,13 +31,6 @@ C4 = [
 
 
 def eval_sh(deg, sh, dirs):
-    """Eval sh.
-
-    Args:
-        deg: The deg.
-        sh: The sh.
-        dirs: The dirs.
-    """
     assert 0 <= deg <= 4
     coeff = (deg + 1) ** 2
     assert sh.shape[-1] >= coeff
@@ -90,20 +81,10 @@ def eval_sh(deg, sh, dirs):
 
 
 def RGB2SH(rgb):
-    """Rgb2sh.
-
-    Args:
-        rgb: The rgb.
-    """
     return (rgb - 0.5) / C0
 
 
 def SH2RGB(sh):
-    """Sh2rgb.
-
-    Args:
-        sh: The sh.
-    """
     return sh * C0 + 0.5
 
 

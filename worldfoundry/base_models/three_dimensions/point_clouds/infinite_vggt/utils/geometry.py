@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> utils -> geometry.py functionality."""
-
 import os
 from dataclasses import dataclass
 
@@ -17,33 +15,14 @@ from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose
 
 @dataclass
 class FrameDiskCache:
-    """Frame disk cache implementation."""
-
     root_dir: str
     compress: bool = False
 
     def __post_init__(self):
-        """Post init."""
         os.makedirs(self.root_dir, exist_ok=True)
 
     def __call__(self, frame_idx: int, frame: dict, pred_cpu: dict):
-        """Call.
-
-        Args:
-            frame_idx: The frame idx.
-            frame: The frame.
-            pred_cpu: The pred cpu.
-        """
-
         def clone_tensor_map(src: dict) -> dict:
-            """Clone tensor map.
-
-            Args:
-                src: The src.
-
-            Returns:
-                The return value.
-            """
             cloned = {}
             for key, value in src.items():
                 if isinstance(value, torch.Tensor):

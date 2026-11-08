@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> optical_flow -> sea_raft -> core -> utils -> frame_utils.py functionality."""
-
 import re
 from os.path import *
 
@@ -37,11 +35,6 @@ def readFlow(fn):
 
 
 def readPFM(file):
-    """Readpfm.
-
-    Args:
-        file: The file.
-    """
     file = open(file, "rb")
 
     color = None
@@ -112,11 +105,6 @@ def writeFlow(filename, uv, v=None):
 
 
 def readFlowKITTI(filename):
-    """Readflowkitti.
-
-    Args:
-        filename: The filename.
-    """
     flow = cv2.imread(filename, cv2.IMREAD_ANYDEPTH | cv2.IMREAD_COLOR)
     flow = flow[:, :, ::-1].astype(np.float32)
     flow, valid = flow[:, :, :2], flow[:, :, 2]
@@ -125,11 +113,6 @@ def readFlowKITTI(filename):
 
 
 def readDispKITTI(filename):
-    """Readdispkitti.
-
-    Args:
-        filename: The filename.
-    """
     disp = cv2.imread(filename, cv2.IMREAD_ANYDEPTH) / 256.0
     valid = disp > 0.0
     flow = np.stack([-disp, np.zeros_like(disp)], -1)
@@ -137,12 +120,6 @@ def readDispKITTI(filename):
 
 
 def writeFlowKITTI(filename, uv):
-    """Writeflowkitti.
-
-    Args:
-        filename: The filename.
-        uv: The uv.
-    """
     uv = 64.0 * uv + 2**15
     valid = np.ones([uv.shape[0], uv.shape[1], 1])
     uv = np.concatenate([uv, valid], axis=-1).astype(np.uint16)
@@ -150,11 +127,6 @@ def writeFlowKITTI(filename, uv):
 
 
 def readFlo5Flow(filename):
-    """Readflo5flow.
-
-    Args:
-        filename: The filename.
-    """
     with h5py.File(filename, "r") as f:
         if "flow" not in f.keys():
             raise OSError(f"File {filename} does not have a 'flow' key. Is this a valid flo5 file?")
@@ -162,23 +134,11 @@ def readFlo5Flow(filename):
 
 
 def writeFlo5File(flow, filename):
-    """Writeflo5file.
-
-    Args:
-        flow: The flow.
-        filename: The filename.
-    """
     with h5py.File(filename, "w") as f:
         f.create_dataset("flow", data=flow, compression="gzip", compression_opts=5)
 
 
 def read_gen(file_name, pil=False):
-    """Read gen.
-
-    Args:
-        file_name: The file name.
-        pil: The pil.
-    """
     ext = splitext(file_name)[-1]
     if ext == ".png" or ext == ".jpeg" or ext == ".ppm" or ext == ".jpg":
         return Image.open(file_name)

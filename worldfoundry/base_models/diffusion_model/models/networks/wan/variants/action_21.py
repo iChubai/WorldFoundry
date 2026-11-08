@@ -86,12 +86,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -113,13 +107,6 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
     def forward(self, x):
@@ -134,15 +121,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -301,24 +279,10 @@ WAN_CROSSATTENTION_CLASSES = {
 
 
 def mul_add(x, y, z):
-    """Mul add.
-
-    Args:
-        x: The x.
-        y: The y.
-        z: The z.
-    """
     return x.float() + y.float() * z.float()
 
 
 def mul_add_add(x, y, z):
-    """Mul add add.
-
-    Args:
-        x: The x.
-        y: The y.
-        z: The z.
-    """
     return x.float() * (1 + y) + z
 
 
@@ -337,19 +301,6 @@ class WanAttentionBlock(nn.Module):
         action_config={},
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            action_config: The action config.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -412,15 +363,6 @@ class WanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, e, mouse_cond, keyboard_cond):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                e: The e.
-                mouse_cond: The mouse cond.
-                keyboard_cond: The keyboard cond.
-            """
             dtype = context.dtype
             x = x + self.cross_attn(self.norm3(x.to(dtype)), context)
             if self.action_model is not None:
@@ -441,14 +383,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -486,12 +420,6 @@ class MLPProj(torch.nn.Module):
     """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-        """
         super().__init__()
 
         self.proj = torch.nn.Sequential(
@@ -503,11 +431,6 @@ class MLPProj(torch.nn.Module):
         )
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         clip_extra_context_tokens = self.proj(image_embeds)
         return clip_extra_context_tokens
 
@@ -659,16 +582,9 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
 
     def _set_gradient_checkpointing(self, module, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            module: The module.
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         # if kwargs.get('classify_mode', False) is True:
         # kwargs.pop('classify_mode')
         # return self._forward_classify(*args, **kwargs)
@@ -774,14 +690,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward

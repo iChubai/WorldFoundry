@@ -31,7 +31,6 @@ _CACHED_TRITON_KERNELS = None
 
 
 def _get_triton_kernels():
-    """Helper function to get triton kernels."""
     global _CACHED_TRITON_KERNELS
     if _CACHED_TRITON_KERNELS is not None:
         return _CACHED_TRITON_KERNELS
@@ -48,15 +47,6 @@ class Int8Linear(nn.Module):
     """INT8-weight linear used for optional quantized Q projections."""
 
     def __init__(self, in_features, out_features, bias=True, device=None, dtype=None):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            out_features: The out features.
-            bias: The bias.
-            device: The device.
-            dtype: The dtype.
-        """
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -71,11 +61,6 @@ class Int8Linear(nn.Module):
             self.register_parameter("bias", None)
 
     def from_float(self, weight_fp):
-        """From float.
-
-        Args:
-            weight_fp: The weight fp.
-        """
         with torch.no_grad():
             w = weight_fp.float()
             scales = w.abs().max(dim=1)[0] / 127.0
@@ -87,27 +72,15 @@ class Int8Linear(nn.Module):
 
     @property
     def weight(self):
-        """Weight."""
-
         class DummyWeight:
             """Placeholder parameter holder for INT8 scale / zero-point metadata."""
 
             def __init__(self, dtype):
-                """Init.
-
-                Args:
-                    dtype: The dtype.
-                """
                 self.dtype = dtype
 
         return DummyWeight(self.weight_dtype)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         triton_kernels = _get_triton_kernels()
         orig_dtype = x.dtype
         verify_mode = getattr(self, "verify_mode", False)
@@ -221,13 +194,6 @@ class Int8Linear(nn.Module):
 
 
 def convert_model_to_int8(model, target_layers=["q"]):
-    """Convert model to int8.
-
-    Args:
-        model: The model.
-        target_layers: The target layers.
-    """
-
     rank = 0
     if torch.distributed.is_initialized():
         rank = torch.distributed.get_rank()
@@ -238,12 +204,6 @@ def convert_model_to_int8(model, target_layers=["q"]):
     quantized_types = set()
 
     def _recursive_convert(module, prefix=""):
-        """Helper function to recursive convert.
-
-        Args:
-            module: The module.
-            prefix: The prefix.
-        """
         for name, child in module.named_children():
             full_name = f"{prefix}.{name}" if prefix else name
 
@@ -407,12 +367,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -434,13 +388,6 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
     def forward(self, x):
@@ -461,16 +408,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, use_memory=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-            use_memory: The use memory.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -622,20 +559,6 @@ class WanAttentionBlock(nn.Module):
         block_idx=0,
         use_memory=False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-            action_config: The action config.
-            block_idx: The block idx.
-            use_memory: The use memory.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -734,19 +657,6 @@ class WanAttentionBlock(nn.Module):
             keyboard_cond_memory=None,
             fa_version=None,
         ):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-                mouse_cond: The mouse cond.
-                keyboard_cond: The keyboard cond.
-                mouse_cond_memory: The mouse cond memory.
-                keyboard_cond_memory: The keyboard cond memory.
-                fa_version: The fa version.
-            """
             if mouse_cond is not None or self.use_memory:
                 x = self.norm3(x)
                 x = x + self.cross_attn(x, context, context_lens, fa_version=fa_version)
@@ -872,14 +782,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -1048,12 +950,6 @@ class WanModel(nn.Module, NativeConfigMixin):
                 theta_hat = theta_base * (1 + sigma_theta * rope_epsilon)
 
                 def build_freqs(seq_len, c_part):
-                    """Build freqs.
-
-                    Args:
-                        seq_len: The seq len.
-                        c_part: The c part.
-                    """
                     exp = torch.arange(c_part, dtype=torch.float64) / c_part
                     omega = 1.0 / torch.pow(theta_hat.unsqueeze(1), exp.unsqueeze(0))
                     pos = torch.arange(seq_len, dtype=torch.float64)

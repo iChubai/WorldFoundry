@@ -40,15 +40,6 @@ def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
 
 
 def make_beta_schedule(schedule, n_timestep, linear_start=1e-4, linear_end=2e-2, cosine_s=8e-3):
-    """Make beta schedule.
-
-    Args:
-        schedule: The schedule.
-        n_timestep: The n timestep.
-        linear_start: The linear start.
-        linear_end: The linear end.
-        cosine_s: The cosine s.
-    """
     if schedule == "linear":
         betas = torch.linspace(linear_start**0.5, linear_end**0.5, n_timestep, dtype=torch.float64) ** 2
 
@@ -70,14 +61,6 @@ def make_beta_schedule(schedule, n_timestep, linear_start=1e-4, linear_end=2e-2,
 
 
 def make_ddim_timesteps(ddim_discr_method, num_ddim_timesteps, num_ddpm_timesteps, verbose=True):
-    """Make ddim timesteps.
-
-    Args:
-        ddim_discr_method: The ddim discr method.
-        num_ddim_timesteps: The num ddim timesteps.
-        num_ddpm_timesteps: The num ddpm timesteps.
-        verbose: The verbose.
-    """
     if ddim_discr_method == "uniform":
         c = num_ddpm_timesteps // num_ddim_timesteps
         ddim_timesteps = np.asarray(list(range(0, num_ddpm_timesteps, c)))
@@ -101,14 +84,6 @@ def make_ddim_timesteps(ddim_discr_method, num_ddim_timesteps, num_ddpm_timestep
 
 
 def make_ddim_sampling_parameters(alphacums, ddim_timesteps, eta, verbose=True):
-    """Make ddim sampling parameters.
-
-    Args:
-        alphacums: The alphacums.
-        ddim_timesteps: The ddim timesteps.
-        eta: The eta.
-        verbose: The verbose.
-    """
     # select alphas for computing the variance schedule
     # print(f'ddim_timesteps={ddim_timesteps}, len_alphacums={len(alphacums)}')
     alphas = alphacums[ddim_timesteps]

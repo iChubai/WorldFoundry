@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_tracker_base.py functionality."""
-
 import logging
 
 import torch
@@ -83,32 +81,6 @@ class Sam3TrackerBase(torch.nn.Module):
         # when using memory selection, the threshold to determine if the frame is good
         mf_threshold=0.01,
     ):
-        """Init.
-
-        Args:
-            backbone: The backbone.
-            transformer: The transformer.
-            maskmem_backbone: The maskmem backbone.
-            num_maskmem: The num maskmem.
-            image_size: The image size.
-            backbone_stride: The backbone stride.
-            max_cond_frames_in_attn: The max cond frames in attn.
-            keep_first_cond_frame: The keep first cond frame.
-            multimask_output_in_sam: The multimask output in sam.
-            multimask_min_pt_num: The multimask min pt num.
-            multimask_max_pt_num: The multimask max pt num.
-            multimask_output_for_tracking: The multimask output for tracking.
-            forward_backbone_per_frame_for_eval: The forward backbone per frame for eval.
-            memory_temporal_stride_for_eval: The memory temporal stride for eval.
-            offload_output_to_cpu_for_eval: The offload output to cpu for eval.
-            trim_past_non_cond_mem_for_eval: The trim past non cond mem for eval.
-            non_overlap_masks_for_mem_enc: The non overlap masks for mem enc.
-            max_obj_ptrs_in_encoder: The max obj ptrs in encoder.
-            sam_mask_decoder_extra_args: The sam mask decoder extra args.
-            compile_all_components: The compile all components.
-            use_memory_selection: The use memory selection.
-            mf_threshold: The mf threshold.
-        """
         super().__init__()
 
         # Part 1: the image backbone
@@ -189,18 +161,9 @@ class Sam3TrackerBase(torch.nn.Module):
 
     @property
     def device(self):
-        """Device."""
         return next(self.parameters()).device
 
     def _get_tpos_enc(self, rel_pos_list, device, max_abs_pos=None, dummy=False):
-        """Helper function to get tpos enc.
-
-        Args:
-            rel_pos_list: The rel pos list.
-            device: The device.
-            max_abs_pos: The max abs pos.
-            dummy: The dummy.
-        """
         if dummy:
             return torch.zeros(len(rel_pos_list), self.mem_dim, device=device)
 
@@ -473,12 +436,6 @@ class Sam3TrackerBase(torch.nn.Module):
         )
 
     def forward(self, input: BatchedDatapoint, is_inference=False):
-        """Forward.
-
-        Args:
-            input: The input.
-            is_inference: The is inference.
-        """
         raise NotImplementedError(
             "Please use the corresponding methods in SAM3VideoPredictor for inference."
             "See examples/sam3_dense_video_tracking.ipynb for an inference example."
@@ -543,12 +500,6 @@ class Sam3TrackerBase(torch.nn.Module):
         return image, vision_feats, vision_pos_embeds, feat_sizes
 
     def cal_mem_score(self, object_score_logits, iou_score):
-        """Cal mem score.
-
-        Args:
-            object_score_logits: The object score logits.
-            iou_score: The iou score.
-        """
         object_score_norm = torch.where(
             object_score_logits > 0,
             object_score_logits.sigmoid() * 2 - 1,  ## rescale to [0, 1]
@@ -558,15 +509,6 @@ class Sam3TrackerBase(torch.nn.Module):
         return score_per_frame
 
     def frame_filter(self, output_dict, track_in_reverse, frame_idx, num_frames, r):
-        """Frame filter.
-
-        Args:
-            output_dict: The output dict.
-            track_in_reverse: The track in reverse.
-            frame_idx: The frame idx.
-            num_frames: The num frames.
-            r: The r.
-        """
         if (frame_idx == 0 and not track_in_reverse) or (frame_idx == num_frames - 1 and track_in_reverse):
             return []
 
@@ -972,24 +914,6 @@ class Sam3TrackerBase(torch.nn.Module):
         prev_sam_mask_logits=None,
         use_prev_mem_frame=True,
     ):
-        """Track step.
-
-        Args:
-            frame_idx: The frame idx.
-            is_init_cond_frame: The is init cond frame.
-            current_vision_feats: The current vision feats.
-            current_vision_pos_embeds: The current vision pos embeds.
-            feat_sizes: The feat sizes.
-            image: The image.
-            point_inputs: The point inputs.
-            mask_inputs: The mask inputs.
-            output_dict: The output dict.
-            num_frames: The num frames.
-            track_in_reverse: The track in reverse.
-            run_mem_encoder: The run mem encoder.
-            prev_sam_mask_logits: The prev sam mask logits.
-            use_prev_mem_frame: The use prev mem frame.
-        """
         current_out = {"point_inputs": point_inputs, "mask_inputs": mask_inputs}
         # High-resolution feature maps for the SAM head, reshape (HW)BC => BCHW
         if len(current_vision_feats) > 1:
@@ -1102,12 +1026,6 @@ class Sam3TrackerBase(torch.nn.Module):
         # before the current frame) during evaluation. This is intended to save GPU or CPU
         # memory for semi-supervised VOS eval, where only the first frame receives prompts.
         def _trim_past_out(past_out, current_out):
-            """Helper function to trim past out.
-
-            Args:
-                past_out: The past out.
-                current_out: The current out.
-            """
             if past_out is None:
                 return None
             return {

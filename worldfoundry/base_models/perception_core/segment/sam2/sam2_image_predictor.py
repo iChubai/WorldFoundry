@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> sam2_image_predictor.py functionality."""
-
 import logging
 
 import numpy as np
@@ -292,17 +290,6 @@ class SAM2ImagePredictor:
         return masks_np, iou_predictions_np, low_res_masks_np
 
     def _prep_prompts(self, point_coords, point_labels, box, mask_logits, normalize_coords, img_idx=-1):
-        """Helper function to prep prompts.
-
-        Args:
-            point_coords: The point coords.
-            point_labels: The point labels.
-            box: The box.
-            mask_logits: The mask logits.
-            normalize_coords: The normalize coords.
-            img_idx: The img idx.
-        """
-
         unnorm_coords, labels, unnorm_box, mask_input = None, None, None, None
         if point_coords is not None:
             assert point_labels is not None, "point_labels must be supplied if point_coords is supplied."
@@ -429,11 +416,6 @@ class SAM2ImagePredictor:
 
     @property
     def device(self) -> torch.device:
-        """Device.
-
-        Returns:
-            The return value.
-        """
         return self.model.device
 
     def reset_predictor(self) -> None:

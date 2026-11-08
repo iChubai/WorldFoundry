@@ -62,26 +62,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         # Gradient checkpointing
         use_gradient_checkpoint: bool = True,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            patch_embed: The patch embed.
-            disable_global_rope: The disable global rope.
-            enable_camera: The enable camera.
-            enable_point: The enable point.
-            enable_local_point: The enable local point.
-            enable_depth: The enable depth.
-            enable_track: The enable track.
-            enable_camera_sliding_window: The enable camera sliding window.
-            enable_3d_rope: The enable 3d rope.
-            enable_normalize: The enable normalize.
-            pred_normalization: The pred normalization.
-            pred_normalization_detach_scale: The pred normalization detach scale.
-            use_gradient_checkpoint: The use gradient checkpoint.
-        """
         super().__init__()
 
         # Store configuration
@@ -116,26 +96,13 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
 
     @abstractmethod
     def _build_aggregator(self) -> nn.Module:
-        """Helper function to build aggregator.
-
-        Returns:
-            The return value.
-        """
+        pass
 
     @abstractmethod
     def _build_camera_head(self) -> nn.Module:
-        """Helper function to build camera head.
-
-        Returns:
-            The return value.
-        """
+        pass
 
     def _build_depth_head(self) -> nn.Module:
-        """Helper function to build depth head.
-
-        Returns:
-            The return value.
-        """
         return DPTHead(
             dim_in=2 * self.embed_dim,
             patch_size=self.patch_size,
@@ -145,11 +112,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         )
 
     def _build_point_head(self) -> nn.Module:
-        """Helper function to build point head.
-
-        Returns:
-            The return value.
-        """
         return DPTHead(
             dim_in=2 * self.embed_dim,
             patch_size=self.patch_size,
@@ -159,11 +121,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         )
 
     def _build_local_point_head(self) -> nn.Module:
-        """Helper function to build local point head.
-
-        Returns:
-            The return value.
-        """
         return DPTHead(
             dim_in=2 * self.embed_dim,
             patch_size=self.patch_size,
@@ -173,12 +130,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         )
 
     def _normalize_input(self, images: torch.Tensor, query_points=None):
-        """Helper function to normalize input.
-
-        Args:
-            images: The images.
-            query_points: The query points.
-        """
         if len(images.shape) == 4:
             images = images.unsqueeze(0)
         if query_points is not None and len(query_points.shape) == 2:
@@ -196,20 +147,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         causal_graphs: torch.Tensor | list[np.ndarray] | None = None,
         ordered_video: torch.Tensor | None = None,
     ) -> tuple:
-        """Helper function to aggregate features.
-
-        Args:
-            images: The images.
-            num_frame_for_scale: The num frame for scale.
-            sliding_window_size: The sliding window size.
-            num_frame_per_block: The num frame per block.
-            view_graphs: The view graphs.
-            causal_graphs: The causal graphs.
-            ordered_video: The ordered video.
-
-        Returns:
-            The return value.
-        """
+        pass
 
     def _predict_camera(
         self,
@@ -221,20 +159,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         num_frame_per_block: int = 1,
         gather_outputs: bool = True,
     ) -> dict[str, torch.Tensor]:
-        """Helper function to predict camera.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            mask: The mask.
-            causal_inference: The causal inference.
-            num_frame_for_scale: The num frame for scale.
-            sliding_window_size: The sliding window size.
-            num_frame_per_block: The num frame per block.
-            gather_outputs: The gather outputs.
-
-        Returns:
-            The return value.
-        """
         if self.camera_head is None:
             return {}
 
@@ -264,17 +188,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         patch_start_idx: int,
         gather_outputs: bool = True,
     ) -> dict[str, torch.Tensor]:
-        """Helper function to predict depth.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            gather_outputs: The gather outputs.
-
-        Returns:
-            The return value.
-        """
         if self.depth_head is None:
             return {}
 
@@ -295,17 +208,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         patch_start_idx: int,
         gather_outputs: bool = True,
     ) -> dict[str, torch.Tensor]:
-        """Helper function to predict points.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            gather_outputs: The gather outputs.
-
-        Returns:
-            The return value.
-        """
         if self.point_head is None:
             return {}
 
@@ -326,17 +228,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         patch_start_idx: int,
         gather_outputs: bool = True,
     ) -> dict[str, torch.Tensor]:
-        """Helper function to predict local points.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            gather_outputs: The gather outputs.
-
-        Returns:
-            The return value.
-        """
         if self.local_point_head is None:
             return {}
 
@@ -355,15 +246,6 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         depth: torch.Tensor,
         pose_enc: torch.Tensor,
     ) -> torch.Tensor:
-        """Helper function to unproject depth to world.
-
-        Args:
-            depth: The depth.
-            pose_enc: The pose enc.
-
-        Returns:
-            The return value.
-        """
         B, S, H, W, _ = depth.shape
         device = depth.device
         dtype = depth.dtype

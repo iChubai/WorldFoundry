@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> geometry_torch.py functionality."""
-
 from typing import *
 
 import torch
@@ -19,18 +17,6 @@ def weighted_mean(
     keepdim: bool = False,
     eps: float = 1e-7,
 ) -> torch.Tensor:
-    """Weighted mean.
-
-    Args:
-        x: The x.
-        w: The w.
-        dim: The dim.
-        keepdim: The keepdim.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     if w is None:
         return x.mean(dim=dim, keepdim=keepdim)
     else:
@@ -45,18 +31,6 @@ def harmonic_mean(
     keepdim: bool = False,
     eps: float = 1e-7,
 ) -> torch.Tensor:
-    """Harmonic mean.
-
-    Args:
-        x: The x.
-        w: The w.
-        dim: The dim.
-        keepdim: The keepdim.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     if w is None:
         return x.add(eps).reciprocal().mean(dim=dim, keepdim=keepdim).reciprocal()
     else:
@@ -71,18 +45,6 @@ def geometric_mean(
     keepdim: bool = False,
     eps: float = 1e-7,
 ) -> torch.Tensor:
-    """Geometric mean.
-
-    Args:
-        x: The x.
-        w: The w.
-        dim: The dim.
-        keepdim: The keepdim.
-        eps: The eps.
-
-    Returns:
-        The return value.
-    """
     if w is None:
         return x.add(eps).log().mean(dim=dim).exp()
     else:
@@ -110,16 +72,6 @@ def normalized_view_plane_uv(
 
 
 def gaussian_blur_2d(input: torch.Tensor, kernel_size: int, sigma: float) -> torch.Tensor:
-    """Gaussian blur 2d.
-
-    Args:
-        input: The input.
-        kernel_size: The kernel size.
-        sigma: The sigma.
-
-    Returns:
-        The return value.
-    """
     kernel = torch.exp(
         -(torch.arange(-kernel_size // 2 + 1, kernel_size // 2 + 1, dtype=input.dtype, device=input.device) ** 2)
         / (2 * sigma**2)
@@ -132,31 +84,14 @@ def gaussian_blur_2d(input: torch.Tensor, kernel_size: int, sigma: float) -> tor
 
 
 def focal_to_fov(focal: torch.Tensor):
-    """Focal to fov.
-
-    Args:
-        focal: The focal.
-    """
     return 2 * torch.atan(0.5 / focal)
 
 
 def fov_to_focal(fov: torch.Tensor):
-    """Fov to focal.
-
-    Args:
-        fov: The fov.
-    """
     return 0.5 / torch.tan(fov / 2)
 
 
 def angle_diff_vec3(v1: torch.Tensor, v2: torch.Tensor, eps: float = 1e-12):
-    """Angle diff vec3.
-
-    Args:
-        v1: The v1.
-        v2: The v2.
-        eps: The eps.
-    """
     return torch.atan2(torch.cross(v1, v2, dim=-1).norm(dim=-1) + eps, (v1 * v2).sum(dim=-1))
 
 
@@ -176,11 +111,6 @@ def intrinsics_to_fov(intrinsics: torch.Tensor):
 
 
 def point_map_to_depth_legacy(points: torch.Tensor):
-    """Point map to depth legacy.
-
-    Args:
-        points: The points.
-    """
     height, width = points.shape[-3:-1]
     diagonal = (height**2 + width**2) ** 0.5
     uv = normalized_view_plane_uv(width, height, dtype=points.dtype, device=points.device)  # (H, W, 2)
@@ -200,11 +130,6 @@ def point_map_to_depth_legacy(points: torch.Tensor):
 
 
 def view_plane_uv_to_focal(uv: torch.Tensor):
-    """View plane uv to focal.
-
-    Args:
-        uv: The uv.
-    """
     normed_uv = normalized_view_plane_uv(width=uv.shape[-2], height=uv.shape[-3], device=uv.device, dtype=uv.dtype)
     focal = (uv * normed_uv).sum() / uv.square().sum().add(1e-12)
     return focal
@@ -282,15 +207,6 @@ def recover_focal_shift(
 def theshold_depth_change(
     depth: torch.Tensor, mask: torch.Tensor, pooler: Literal["min", "max"], rtol: float = 0.2, kernel_size: int = 3
 ):
-    """Theshold depth change.
-
-    Args:
-        depth: The depth.
-        mask: The mask.
-        pooler: The pooler.
-        rtol: The rtol.
-        kernel_size: The kernel size.
-    """
     *batch_shape, height, width = depth.shape
     depth = depth.reshape(-1, 1, height, width)
     mask = mask.reshape(-1, 1, height, width)
@@ -316,17 +232,6 @@ def dilate_with_mask(
     filter: Literal["min", "max", "mean", "median"] = "mean",
     iterations: int = 1,
 ) -> torch.Tensor:
-    """Dilate with mask.
-
-    Args:
-        input: The input.
-        mask: The mask.
-        filter: The filter.
-        iterations: The iterations.
-
-    Returns:
-        The return value.
-    """
     kernel = torch.tensor(
         [[False, True, False], [True, True, True], [False, True, False]], device=input.device, dtype=torch.bool
     )
@@ -362,20 +267,6 @@ def refine_depth_with_normal(
     eps: float = 1e-12,
     kernel_size: int = 5,
 ) -> torch.Tensor:
-    """Refine depth with normal.
-
-    Args:
-        depth: The depth.
-        normal: The normal.
-        intrinsics: The intrinsics.
-        iterations: The iterations.
-        damp: The damp.
-        eps: The eps.
-        kernel_size: The kernel size.
-
-    Returns:
-        The return value.
-    """
     device, dtype = depth.device, depth.dtype
     height, width = depth.shape[-2:]
     radius = kernel_size // 2

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> conversions.py functionality."""
-
 from jaxtyping import Float
 from torch import Tensor
 

@@ -40,7 +40,6 @@ class Sam3BasePredictor:
     """
 
     def __init__(self):
-        """Init."""
         # Subclasses must populate these
         self.model = None
         self._all_inference_states: dict[str, dict] = {}
@@ -454,11 +453,6 @@ class Sam3BasePredictor:
         }
 
     def _get_session(self, session_id):
-        """Helper function to get session.
-
-        Args:
-            session_id: The session id.
-        """
         session = self._all_inference_states.get(session_id, None)
         if session is None:
             raise RuntimeError(f"Cannot find session {session_id}; it might have expired")

@@ -4,8 +4,6 @@
 # found in the LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> perception_core -> general_perception -> dinov2 -> utils -> dtype.py functionality."""
-
 from typing import Union
 
 import numpy as np
@@ -30,14 +28,6 @@ _NUMPY_TO_TORCH_DTYPE: dict[np.dtype, torch.dtype] = {
 
 
 def as_torch_dtype(dtype: TypeSpec) -> torch.dtype:
-    """As torch dtype.
-
-    Args:
-        dtype: The dtype.
-
-    Returns:
-        The return value.
-    """
     if isinstance(dtype, torch.dtype):
         return dtype
     if isinstance(dtype, str):

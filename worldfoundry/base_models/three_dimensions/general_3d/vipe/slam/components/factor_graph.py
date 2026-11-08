@@ -18,8 +18,6 @@
 # Licensed under the MIT License.
 # -------------------------------------------------------------------------------------------------
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> slam -> components -> factor_graph.py functionality."""
-
 import warnings
 
 import numpy as np
@@ -37,16 +35,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 class FactorGraph:
-    """Factor graph implementation."""
-
     @staticmethod
     def coords_grid(ht, wd, **kwargs):
-        """Coords grid.
-
-        Args:
-            ht: The ht.
-            wd: The wd.
-        """
         y, x = torch.meshgrid(
             torch.arange(ht).to(**kwargs).float(),
             torch.arange(wd).to(**kwargs).float(),
@@ -63,16 +53,6 @@ class FactorGraph:
         incremental: bool,
         cross_view: bool,
     ):
-        """Init.
-
-        Args:
-            net: The net.
-            buffer: The buffer.
-            device: The device.
-            max_factors: The max factors.
-            incremental: The incremental.
-            cross_view: The cross view.
-        """
         self.net = net
         self.buffer = buffer
         self.device = device
@@ -126,11 +106,6 @@ class FactorGraph:
         return ii[keep], jj[keep]
 
     def get_edges_np(self) -> tuple[np.ndarray, np.ndarray]:
-        """Get edges np.
-
-        Returns:
-            The return value.
-        """
         ii = self.ii.cpu().numpy()
         jj = self.jj.cpu().numpy()
         w = torch.mean(self.weight, dim=[0, 2, 3, 4]).cpu().numpy()
@@ -464,22 +439,10 @@ class FactorGraph:
         d = d.mean(-1)
 
         def _suppress(i: int, j: int):
-            """Helper function to suppress.
-
-            Args:
-                i: The i.
-                j: The j.
-            """
             if (t0 <= i < t) and (t1 <= j < t):
                 d[(i - t0) * (t - t1) + (j - t1)] = np.inf
 
         def _suppress_nms(i: int, j: int):
-            """Helper function to suppress nms.
-
-            Args:
-                i: The i.
-                j: The j.
-            """
             for di in range(-nms, nms + 1):
                 for dj in range(-nms, nms + 1):
                     if abs(di) + abs(dj) <= max(min(abs(i - j) - 2, nms), 0):
@@ -523,7 +486,6 @@ class FactorGraph:
         self.add_factors(ii, jj, remove)
 
     def log(self):
-        """Log."""
         center_pos = SE3(self.buffer.poses).inv().translation()[:, :3]
         active_edges = torch.stack([center_pos[self.ii], center_pos[self.jj]], dim=1)
         inactive_edges = torch.stack([center_pos[self.ii_inac], center_pos[self.jj_inac]], dim=1)

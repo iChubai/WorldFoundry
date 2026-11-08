@@ -3,16 +3,7 @@
 # Licensed under the BSD-3 License.
 
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> lietorch -> broadcasting.py functionality."""
-
-
 def check_broadcastable(x, y):
-    """Check broadcastable.
-
-    Args:
-        x: The x.
-        y: The y.
-    """
     assert len(x.shape) == len(y.shape)
     for n, m in zip(x.shape[:-1], y.shape[:-1], strict=False):
         assert n == m or n == 1 or m == 1

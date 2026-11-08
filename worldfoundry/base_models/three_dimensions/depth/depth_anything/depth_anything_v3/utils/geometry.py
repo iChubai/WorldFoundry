@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> geometry.py functionality."""
-
 from types import SimpleNamespace
 
 import numpy as np
@@ -53,11 +51,6 @@ def as_homogeneous(ext):
 
 @torch.jit.script
 def affine_inverse(A: torch.Tensor):
-    """Affine inverse.
-
-    Args:
-        A: The a.
-    """
     R = A[..., :3, :3]  # ..., 3, 3
     T = A[..., :3, 3:]  # ..., 3, 1
     P = A[..., 3:, :]  # ..., 1, 4
@@ -77,11 +70,6 @@ def transpose_last_two_axes(arr):
 
 
 def affine_inverse_np(A: np.ndarray):
-    """Affine inverse np.
-
-    Args:
-        A: The a.
-    """
     R = A[..., :3, :3]
     T = A[..., :3, 3:]
     P = A[..., 3:, :]
@@ -174,16 +162,6 @@ def get_world_rays(
     torch.Tensor,  # origins, "*batch dim+1"
     torch.Tensor,  # directions, "*batch dim+1"
 ]:
-    """Get world rays.
-
-    Args:
-        coordinates: The coordinates.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     # Get camera-space ray directions.
     directions = unproject(
         coordinates,
@@ -203,22 +181,9 @@ def get_world_rays(
 
 
 def get_fov(intrinsics: torch.Tensor) -> torch.Tensor:  # "batch 3 3" -> "batch 2"
-    """Get fov.
-
-    Args:
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     intrinsics_inv = intrinsics.float().inverse().to(intrinsics)
 
     def process_vector(vector):
-        """Process vector.
-
-        Args:
-            vector: The vector.
-        """
         vector = torch.tensor(vector, dtype=intrinsics.dtype, device=intrinsics.device)
         vector = einsum(intrinsics_inv, vector, "b i j, j -> b i")
         return vector / vector.norm(dim=-1, keepdim=True)
@@ -237,16 +202,6 @@ def map_pdf_to_opacity(
     global_step: int = 0,
     opacity_mapping: dict | None = None,
 ) -> torch.Tensor:  # " *batch"
-    """Map pdf to opacity.
-
-    Args:
-        pdf: The pdf.
-        global_step: The global step.
-        opacity_mapping: The opacity mapping.
-
-    Returns:
-        The return value.
-    """
     # https://www.desmos.com/calculator/opvwti3ba9
 
     # Figure out the exponent.

@@ -1,16 +1,7 @@
-"""Module for base_models -> perception_core -> segment -> sam3 -> perflib -> iou.py functionality."""
-
 import torch
 
 
 def pairwise_iou(pred_masks, gt_masks, eps=1e-6):
-    """Pairwise iou.
-
-    Args:
-        pred_masks: The pred masks.
-        gt_masks: The gt masks.
-        eps: The eps.
-    """
     N, H, W = pred_masks.shape
     M = gt_masks.shape[0]
     # Flatten and convert to float for matmul
@@ -28,13 +19,6 @@ def pairwise_iou(pred_masks, gt_masks, eps=1e-6):
 
 
 def pairwise_iom(pred_masks, gt_masks, eps=1e-8):
-    """Pairwise iom.
-
-    Args:
-        pred_masks: The pred masks.
-        gt_masks: The gt masks.
-        eps: The eps.
-    """
     N, H, W = pred_masks.shape
     M = gt_masks.shape[0]
     # Flatten and convert to float for matmul

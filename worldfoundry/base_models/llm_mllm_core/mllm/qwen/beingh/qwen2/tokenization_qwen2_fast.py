@@ -80,17 +80,6 @@ class Qwen2TokenizerFast(PreTrainedTokenizerFast):
         pad_token="<|endoftext|>",
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            vocab_file: The vocab file.
-            merges_file: The merges file.
-            tokenizer_file: The tokenizer file.
-            unk_token: The unk token.
-            bos_token: The bos token.
-            eos_token: The eos token.
-            pad_token: The pad token.
-        """
         # We need to at least pass vocab_file and merges_file to base class
         # in case a slow tokenizer needs to be initialized; other can be
         # configured through files.
@@ -130,14 +119,5 @@ class Qwen2TokenizerFast(PreTrainedTokenizerFast):
 
     # Copied from transformers.models.gpt2.tokenization_gpt2_fast.GPT2TokenizerFast.save_vocabulary
     def save_vocabulary(self, save_directory: str, filename_prefix: str | None = None) -> tuple[str]:
-        """Save vocabulary.
-
-        Args:
-            save_directory: The save directory.
-            filename_prefix: The filename prefix.
-
-        Returns:
-            The return value.
-        """
         files = self._tokenizer.model.save(save_directory, name=filename_prefix)
         return tuple(files)

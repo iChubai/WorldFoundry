@@ -25,24 +25,10 @@ class DownsampleCausal3D(nn.Module):
     """Downsample causal d implementation."""
 
     def __init__(self, channels, out_channels, kernel_size=3, bias=True, stride=2):
-        """Init.
-
-        Args:
-            channels: The channels.
-            out_channels: The out channels.
-            kernel_size: The kernel size.
-            bias: The bias.
-            stride: The stride.
-        """
         super().__init__()
         self.conv = CausalConv3d(channels, out_channels, kernel_size, stride=stride, bias=bias)
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         hidden_states = self.conv(hidden_states)
         return hidden_states
 
@@ -61,19 +47,6 @@ class DownEncoderBlockCausal3D(nn.Module):
         add_downsample=True,
         downsample_stride=2,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            dropout: The dropout.
-            num_layers: The num layers.
-            eps: The eps.
-            num_groups: The num groups.
-            add_downsample: The add downsample.
-            downsample_stride: The downsample stride.
-        """
-
         super().__init__()
         resnets = []
         for i in range(num_layers):
@@ -102,11 +75,6 @@ class DownEncoderBlockCausal3D(nn.Module):
             )
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         for resnet in self.resnets:
             hidden_states = resnet(hidden_states)
 
@@ -133,20 +101,6 @@ class EncoderCausal3D(nn.Module):
         spatial_compression_ratio: int = 8,
         gradient_checkpointing=False,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            eps: The eps.
-            dropout: The dropout.
-            block_out_channels: The block out channels.
-            layers_per_block: The layers per block.
-            num_groups: The num groups.
-            time_compression_ratio: The time compression ratio.
-            spatial_compression_ratio: The spatial compression ratio.
-            gradient_checkpointing: The gradient checkpointing.
-        """
         super().__init__()
         self.conv_in = CausalConv3d(in_channels, block_out_channels[0], kernel_size=3, stride=1)
         self.down_blocks = nn.ModuleList([])
@@ -196,23 +150,11 @@ class EncoderCausal3D(nn.Module):
         self.gradient_checkpointing = gradient_checkpointing
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         hidden_states = self.conv_in(hidden_states)
         if self.training and self.gradient_checkpointing:
 
             def create_custom_forward(module):
-                """Create custom forward.
-
-                Args:
-                    module: The module.
-                """
-
                 def custom_forward(*inputs):
-                    """Custom forward."""
                     return module(*inputs)
 
                 return custom_forward
@@ -245,8 +187,6 @@ class EncoderCausal3D(nn.Module):
 
 
 class HunyuanVideoVAEEncoder(nn.Module):
-    """Hunyuan video vae encoder implementation."""
-
     def __init__(
         self,
         in_channels=3,
@@ -260,20 +200,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         spatial_compression_ratio=8,
         gradient_checkpointing=False,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            eps: The eps.
-            dropout: The dropout.
-            block_out_channels: The block out channels.
-            layers_per_block: The layers per block.
-            num_groups: The num groups.
-            time_compression_ratio: The time compression ratio.
-            spatial_compression_ratio: The spatial compression ratio.
-            gradient_checkpointing: The gradient checkpointing.
-        """
         super().__init__()
         self.encoder = EncoderCausal3D(
             in_channels=in_channels,
@@ -291,11 +217,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         self.scaling_factor = 0.476986
 
     def forward(self, images):
-        """Forward.
-
-        Args:
-            images: The images.
-        """
         latents = self.encoder(images)
         latents = self.quant_conv(latents)
         latents = latents[:, :16]
@@ -303,14 +224,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         return latents
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
-        """Build 1d mask.
-
-        Args:
-            length: The length.
-            left_bound: The left bound.
-            right_bound: The right bound.
-            border_width: The border width.
-        """
         x = torch.ones((length,))
         if not left_bound:
             x[:border_width] = (torch.arange(border_width) + 1) / border_width
@@ -319,13 +232,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         return x
 
     def build_mask(self, data, is_bound, border_width):
-        """Build mask.
-
-        Args:
-            data: The data.
-            is_bound: The is bound.
-            border_width: The border width.
-        """
         _, _, T, H, W = data.shape
         t = self.build_1d_mask(T, is_bound[0], is_bound[1], border_width[0])
         h = self.build_1d_mask(H, is_bound[2], is_bound[3], border_width[1])
@@ -340,13 +246,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         return mask
 
     def tile_forward(self, hidden_states, tile_size, tile_stride):
-        """Tile forward.
-
-        Args:
-            hidden_states: The hidden states.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         B, C, T, H, W = hidden_states.shape
         size_t, size_h, size_w = tile_size
         stride_t, stride_h, stride_w = tile_stride
@@ -405,34 +304,19 @@ class HunyuanVideoVAEEncoder(nn.Module):
         return values / weight
 
     def encode_video(self, latents, tile_size=(65, 256, 256), tile_stride=(48, 192, 192)):
-        """Encode video.
-
-        Args:
-            latents: The latents.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
         latents = latents.to(self.quant_conv.weight.dtype)
         return self.tile_forward(latents, tile_size=tile_size, tile_stride=tile_stride)
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
         return HunyuanVideoVAEEncoderStateDictConverter()
 
 
 class HunyuanVideoVAEEncoderStateDictConverter:
-    """Hunyuan video vae encoder state dict converter implementation."""
-
     def __init__(self):
-        """Init."""
+        pass
 
     def from_diffusers(self, state_dict):
-        """From diffusers.
-
-        Args:
-            state_dict: The state dict.
-        """
         state_dict_ = {}
         for name in state_dict:
             if name.startswith(("encoder.", "quant_conv.")):

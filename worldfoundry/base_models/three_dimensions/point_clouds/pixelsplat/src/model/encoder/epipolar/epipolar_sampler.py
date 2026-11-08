@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> epipolar_sampler.py functionality."""
-
 from dataclasses import dataclass
 
 import torch
@@ -19,8 +17,6 @@ from ....misc.heterogeneous_pairings import (
 
 @dataclass
 class EpipolarSampling:
-    """Epipolar sampling implementation."""
-
     features: Float[Tensor, "batch view other_view ray sample channel"]
     valid: Bool[Tensor, "batch view other_view ray"]
     xy_ray: Float[Tensor, "batch view ray 2"]
@@ -32,8 +28,6 @@ class EpipolarSampling:
 
 
 class EpipolarSampler(nn.Module):
-    """Epipolar sampler implementation."""
-
     num_samples: int
     index_v: Index
     transpose_v: Index
@@ -44,15 +38,6 @@ class EpipolarSampler(nn.Module):
         num_views: int,
         num_samples: int,
     ) -> None:
-        """Init.
-
-        Args:
-            num_views: The num views.
-            num_samples: The num samples.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.num_samples = num_samples
 
@@ -71,18 +56,6 @@ class EpipolarSampler(nn.Module):
         near: Float[Tensor, "batch view"],
         far: Float[Tensor, "batch view"],
     ) -> EpipolarSampling:
-        """Forward.
-
-        Args:
-            images: The images.
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            near: The near.
-            far: The far.
-
-        Returns:
-            The return value.
-        """
         device = images.device
         b, v, _, _, _ = images.shape
 
@@ -171,14 +144,6 @@ class EpipolarSampler(nn.Module):
         self,
         x: Shaped[Tensor, "batch view other_view *rest"],
     ) -> Shaped[Tensor, "batch view other_view *rest"]:
-        """Transpose.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         b, v, ov, *_ = x.shape
         t_b = torch.arange(b, device=x.device)
         t_b = repeat(t_b, "b -> b v ov", v=v, ov=ov)
@@ -190,14 +155,6 @@ class EpipolarSampler(nn.Module):
         self,
         target: Shaped[Tensor, "batch view ..."],
     ) -> Shaped[Tensor, "batch view view-1 ..."]:
-        """Collect.
-
-        Args:
-            target: The target.
-
-        Returns:
-            The return value.
-        """
         b, v, *_ = target.shape
         index_b = torch.arange(b, device=target.device)
         index_b = repeat(index_b, "b -> b v ov", v=v, ov=v - 1)

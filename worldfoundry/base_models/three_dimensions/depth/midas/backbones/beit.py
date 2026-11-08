@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> midas -> backbones -> beit.py functionality."""
-
 import types
 
 import numpy as np
@@ -13,12 +11,6 @@ from .utils import forward_adapted_unflatten, make_backbone_default
 
 
 def forward_beit(pretrained, x):
-    """Forward beit.
-
-    Args:
-        pretrained: The pretrained.
-        x: The x.
-    """
     return forward_adapted_unflatten(pretrained, x, "forward_features")
 
 
@@ -150,18 +142,6 @@ def _make_beit_backbone(
     start_index=1,
     start_index_readout=1,
 ):
-    """Helper function to make beit backbone.
-
-    Args:
-        model: The model.
-        features: The features.
-        size: The size.
-        hooks: The hooks.
-        vit_features: The vit features.
-        use_readout: The use readout.
-        start_index: The start index.
-        start_index_readout: The start index readout.
-    """
     backbone = make_backbone_default(
         model, features, size, hooks, vit_features, use_readout, start_index, start_index_readout
     )
@@ -181,13 +161,6 @@ def _make_beit_backbone(
 
 
 def _make_pretrained_beitl16_512(pretrained, use_readout="ignore", hooks=None):
-    """Helper function to make pretrained beitl16 512.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-    """
     model = timm.create_model("beit_large_patch16_512", pretrained=pretrained)
 
     hooks = [5, 11, 17, 23] if hooks is None else hooks
@@ -205,13 +178,6 @@ def _make_pretrained_beitl16_512(pretrained, use_readout="ignore", hooks=None):
 
 
 def _make_pretrained_beitl16_384(pretrained, use_readout="ignore", hooks=None):
-    """Helper function to make pretrained beitl16 384.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-    """
     model = timm.create_model("beit_large_patch16_384", pretrained=pretrained)
 
     hooks = [5, 11, 17, 23] if hooks is None else hooks
@@ -225,13 +191,6 @@ def _make_pretrained_beitl16_384(pretrained, use_readout="ignore", hooks=None):
 
 
 def _make_pretrained_beitb16_384(pretrained, use_readout="ignore", hooks=None):
-    """Helper function to make pretrained beitb16 384.
-
-    Args:
-        pretrained: The pretrained.
-        use_readout: The use readout.
-        hooks: The hooks.
-    """
     model = timm.create_model("beit_base_patch16_384", pretrained=pretrained)
 
     hooks = [2, 5, 8, 11] if hooks is None else hooks

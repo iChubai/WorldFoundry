@@ -1,8 +1,6 @@
 # Copyright Alibaba Inc. All Rights Reserved.
 # Inspired by https://github.com/DepthAnything/Depth-Anything-V2
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> heads -> dpt_head.py functionality."""
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -52,25 +50,6 @@ class DPTHead_3D_Causal(nn.Module):
         down_ratio: int = 1,
         temporal_scale: int = 4,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            output_dim: The output dim.
-            activation: The activation.
-            conf_activation: The conf activation.
-            features: The features.
-            out_channels: The out channels.
-            intermediate_layer_idx: The intermediate layer idx.
-            pos_embed: The pos embed.
-            feature_only: The feature only.
-            down_ratio: The down ratio.
-            temporal_scale: The temporal scale.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.patch_size = patch_size
         self.activation = activation
@@ -146,18 +125,6 @@ class DPTHead_3D_Causal(nn.Module):
         frames_chunk_size_first: int = 4,
         frames_chunk_size_second: int = 16,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            frames_chunk_size_first: The frames chunk size first.
-            frames_chunk_size_second: The frames chunk size second.
-
-        Returns:
-            The return value.
-        """
         B, S, _, H, W = images.shape
         all_preds = []
         all_conf = []
@@ -211,18 +178,6 @@ class DPTHead_3D_Causal(nn.Module):
         frames_start_idx: int | None = None,
         frames_end_idx: int | None = None,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        """Helper function to forward impl first part.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            frames_start_idx: The frames start idx.
-            frames_end_idx: The frames end idx.
-
-        Returns:
-            The return value.
-        """
         if frames_start_idx is not None and frames_end_idx is not None:
             images = images[:, frames_start_idx:frames_end_idx].contiguous()
 
@@ -253,15 +208,6 @@ class DPTHead_3D_Causal(nn.Module):
         out: list[torch.Tensor],
         images: torch.Tensor,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        """Helper function to forward impl second part.
-
-        Args:
-            out: The out.
-            images: The images.
-
-        Returns:
-            The return value.
-        """
         B, S, spatial_H, spatial_W, C = images.shape
         H = spatial_H * self.patch_size
         W = spatial_W * self.patch_size
@@ -328,17 +274,6 @@ class DPTHead_3D_Causal(nn.Module):
 
 
 def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        size: The size.
-        has_residual: The has residual.
-        groups: The groups.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=True),
@@ -353,17 +288,6 @@ def _make_fusion_block(features: int, size: int | None = None, has_residual: boo
 
 
 def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     out_shape1 = out_shape
     out_shape2 = out_shape
@@ -398,8 +322,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn, groups=1):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -417,8 +340,7 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -440,8 +362,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,
@@ -454,8 +374,7 @@ class FeatureFusionBlock(nn.Module):
         has_residual=True,
         groups=1,
     ):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -483,8 +402,7 @@ class FeatureFusionBlock(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """

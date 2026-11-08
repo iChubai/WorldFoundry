@@ -1,6 +1,4 @@
 # inspired by https://github.com/facebookresearch/vggt/blob/main/src/models/heads/camera_head.py
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> heads -> camera_head.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,19 +26,6 @@ class CameraHead(nn.Module):
         fl_act: str = "relu",
         block_fn: nn.Module = Block,
     ):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            trunk_depth: The trunk depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            init_values: The init values.
-            trans_act: The trans act.
-            quat_act: The quat act.
-            fl_act: The fl act.
-            block_fn: The block fn.
-        """
         super().__init__()
 
         self.out_dim = 9
@@ -76,7 +61,6 @@ class CameraHead(nn.Module):
         )
 
     def to(self, *args, **kwargs):
-        """To."""
         self.refine_net = self.refine_net.to(*args, **kwargs)
         self.token_norm = self.token_norm.to(*args, **kwargs)
         self.out_norm = self.out_norm.to(*args, **kwargs)

@@ -8,8 +8,7 @@ from mmyolo.registry import TASK_UTILS
 
 @TASK_UTILS.register_module()
 class YOLOv5BBoxCoder(BaseBBoxCoder):
-    """YOLOv5 BBox coder.
-
+    """
     This decoder decodes pred bboxes (delta_x, delta_x, w, h) to bboxes (tl_x,
     tl_y, br_x, br_y).
     """

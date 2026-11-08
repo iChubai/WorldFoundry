@@ -16,8 +16,6 @@ from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistributi
 
 
 class AutoencoderKL(nn.Module):
-    """Autoencoder kl implementation."""
-
     def __init__(
         self,
         ddconfig,
@@ -33,22 +31,6 @@ class AutoencoderKL(nn.Module):
         input_dim=4,
         test_args=None,
     ):
-        """Init.
-
-        Args:
-            ddconfig: The ddconfig.
-            lossconfig: The lossconfig.
-            embed_dim: The embed dim.
-            ckpt_path: The ckpt path.
-            ignore_keys: The ignore keys.
-            image_key: The image key.
-            colorize_nlabels: The colorize nlabels.
-            monitor: The monitor.
-            test: The test.
-            logdir: The logdir.
-            input_dim: The input dim.
-            test_args: The test args.
-        """
         super().__init__()
         self.image_key = image_key
         self.encoder = Encoder(**ddconfig)
@@ -75,7 +57,6 @@ class AutoencoderKL(nn.Module):
     def init_test(
         self,
     ):
-        """Init test."""
         self.test = True
         save_dir = os.path.join(self.logdir, "test")
         if "ckpt" in self.test_args:
@@ -105,12 +86,6 @@ class AutoencoderKL(nn.Module):
         self.save_decode_samples = 2048
 
     def init_from_ckpt(self, path, ignore_keys=[]):
-        """Init from ckpt.
-
-        Args:
-            path: The path.
-            ignore_keys: The ignore keys.
-        """
         sd = torch.load(path, map_location="cpu")
         if "epoch" in sd and "state_dict" in sd:
             self._cur_epoch = sd["epoch"]
@@ -128,46 +103,23 @@ class AutoencoderKL(nn.Module):
         print(f"Restored from {path}")
 
     def encode(self, x, **kwargs):
-        """Encode.
-
-        Args:
-            x: The x.
-        """
-
         h = self.encoder(x)
         moments = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(moments)
         return posterior
 
     def decode(self, z, **kwargs):
-        """Decode.
-
-        Args:
-            z: The z.
-        """
         z = self.post_quant_conv(z)
         dec = self.decoder(z)
         return dec
 
     def forward(self, input, sample_posterior=True):
-        """Forward.
-
-        Args:
-            input: The input.
-            sample_posterior: The sample posterior.
-        """
         posterior = self.encode(input)
         z = posterior.sample() if sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior
 
     def get_input(self, batch, k):
-        """Get input.
-
-        Args:
-            batch: The batch.
-            k: The k.
-        """
         x = batch[k]
         if x.dim() == 5 and self.input_dim == 4:
             b, c, t, h, w = x.shape
@@ -178,13 +130,6 @@ class AutoencoderKL(nn.Module):
         return x
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        """Training step.
-
-        Args:
-            batch: The batch.
-            batch_idx: The batch idx.
-            optimizer_idx: The optimizer idx.
-        """
         inputs = self.get_input(batch, self.image_key)
         reconstructions, posterior = self(inputs)
 
@@ -220,12 +165,6 @@ class AutoencoderKL(nn.Module):
             return discloss
 
     def validation_step(self, batch, batch_idx):
-        """Validation step.
-
-        Args:
-            batch: The batch.
-            batch_idx: The batch idx.
-        """
         inputs = self.get_input(batch, self.image_key)
         reconstructions, posterior = self(inputs)
         aeloss, log_dict_ae = self.loss(
@@ -242,7 +181,6 @@ class AutoencoderKL(nn.Module):
         return self.log_dict
 
     def configure_optimizers(self):
-        """Configure optimizers."""
         lr = self.learning_rate
         opt_ae = torch.optim.Adam(
             list(self.encoder.parameters())
@@ -256,17 +194,10 @@ class AutoencoderKL(nn.Module):
         return [opt_ae, opt_disc], []
 
     def get_last_layer(self):
-        """Get last layer."""
         return self.decoder.conv_out.weight
 
     @torch.no_grad()
     def log_images(self, batch, only_inputs=False, **kwargs):
-        """Log images.
-
-        Args:
-            batch: The batch.
-            only_inputs: The only inputs.
-        """
         log = {}
         x = self.get_input(batch, self.image_key)
         x = x.to(self.device)
@@ -283,11 +214,6 @@ class AutoencoderKL(nn.Module):
         return log
 
     def to_rgb(self, x):
-        """To rgb.
-
-        Args:
-            x: The x.
-        """
         assert self.image_key == "segmentation"
         if not hasattr(self, "colorize"):
             self.register_buffer("colorize", torch.randn(3, x.shape[1], 1, 1).to(x))
@@ -297,43 +223,20 @@ class AutoencoderKL(nn.Module):
 
 
 class IdentityFirstStage(torch.nn.Module):
-    """Identity first stage implementation."""
-
     def __init__(self, *args, vq_interface=False, **kwargs):
-        """Init."""
         self.vq_interface = vq_interface  # TODO: Should be true by default but check to not break older stuff
         super().__init__()
 
     def encode(self, x, *args, **kwargs):
-        """Encode.
-
-        Args:
-            x: The x.
-        """
         return x
 
     def decode(self, x, *args, **kwargs):
-        """Decode.
-
-        Args:
-            x: The x.
-        """
         return x
 
     def quantize(self, x, *args, **kwargs):
-        """Quantize.
-
-        Args:
-            x: The x.
-        """
         if self.vq_interface:
             return x, None, [None, None, None]
         return x
 
     def forward(self, x, *args, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return x

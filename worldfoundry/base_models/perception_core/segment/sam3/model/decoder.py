@@ -35,8 +35,6 @@ from .model_misc import (
 
 
 class TransformerDecoderLayer(nn.Module):
-    """Transformer decoder layer implementation."""
-
     def __init__(
         self,
         activation: str,
@@ -47,17 +45,6 @@ class TransformerDecoderLayer(nn.Module):
         n_heads: int,
         use_text_cross_attention: bool = False,
     ):
-        """Init.
-
-        Args:
-            activation: The activation.
-            d_model: The d model.
-            dim_feedforward: The dim feedforward.
-            dropout: The dropout.
-            cross_attention: The cross attention.
-            n_heads: The n heads.
-            use_text_cross_attention: The use text cross attention.
-        """
         super().__init__()
 
         # cross attention
@@ -87,20 +74,9 @@ class TransformerDecoderLayer(nn.Module):
 
     @staticmethod
     def with_pos_embed(tensor, pos):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         return tensor if pos is None else tensor + pos
 
     def forward_ffn(self, tgt):
-        """Forward ffn.
-
-        Args:
-            tgt: The tgt.
-        """
         with torch.amp.autocast(device_type="cuda", enabled=False):
             tgt2 = self.linear2(self.dropout3(self.activation(self.linear1(tgt))))
         tgt = tgt + self.dropout4(tgt2)
@@ -208,8 +184,6 @@ class TransformerDecoderLayer(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
-    """Transformer decoder implementation."""
-
     def __init__(
         self,
         d_model: int,
@@ -240,34 +214,6 @@ class TransformerDecoder(nn.Module):
         resolution: int | None = None,
         stride: int | None = None,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            frozen: The frozen.
-            interaction_layer: The interaction layer.
-            layer: The layer.
-            num_layers: The num layers.
-            num_queries: The num queries.
-            return_intermediate: The return intermediate.
-            box_refine: The box refine.
-            num_o2m_queries: The num o2m queries.
-            dac: The dac.
-            boxRPB: The boxrpb.
-            instance_query: The instance query.
-            num_instances: The num instances.
-            dac_use_selfatt_ln: The dac use selfatt ln.
-            use_act_checkpoint: The use act checkpoint.
-            compile_mode: The compile mode.
-            presence_token: The presence token.
-            clamp_presence_logits: The clamp presence logits.
-            clamp_presence_logit_max_val: The clamp presence logit max val.
-            use_normed_output_consistently: The use normed output consistently.
-            separate_box_head_instance: The separate box head instance.
-            separate_norm_instance: The separate norm instance.
-            resolution: The resolution.
-            stride: The stride.
-        """
         super().__init__()
         self.d_model = d_model
         self.layers = get_clones(layer, num_layers)
@@ -370,24 +316,11 @@ class TransformerDecoder(nn.Module):
 
     @staticmethod
     def _get_coords(H, W, device):
-        """Helper function to get coords.
-
-        Args:
-            H: The h.
-            W: The w.
-            device: The device.
-        """
         coords_h = torch.arange(0, H, device=device, dtype=torch.float32) / H
         coords_w = torch.arange(0, W, device=device, dtype=torch.float32) / W
         return coords_h, coords_w
 
     def _get_rpb_matrix(self, reference_boxes, feat_size):
-        """Helper function to get rpb matrix.
-
-        Args:
-            reference_boxes: The reference boxes.
-            feat_size: The feat size.
-        """
         H, W = feat_size
         boxes_xyxy = box_cxcywh_to_xyxy(reference_boxes).transpose(0, 1)
         bs, num_queries, _ = boxes_xyxy.shape
@@ -643,8 +576,6 @@ class TransformerDecoder(nn.Module):
 
 
 class TransformerEncoderCrossAttention(nn.Module):
-    """Transformer encoder cross attention implementation."""
-
     def __init__(
         self,
         d_model: int,
@@ -658,18 +589,6 @@ class TransformerEncoderCrossAttention(nn.Module):
         # layers use cross attention
         remove_cross_attention_layers: list | None = None,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            frozen: The frozen.
-            pos_enc_at_input: The pos enc at input.
-            layer: The layer.
-            num_layers: The num layers.
-            use_act_checkpoint: The use act checkpoint.
-            batch_first: The batch first.
-            remove_cross_attention_layers: The remove cross attention layers.
-        """
         super().__init__()
         self.d_model = d_model
         self.layers = get_clones(layer, num_layers)
@@ -710,20 +629,6 @@ class TransformerEncoderCrossAttention(nn.Module):
         feat_sizes: list | None = None,
         num_obj_ptr_tokens: int = 0,  # number of object pointer *tokens*
     ):
-        """Forward.
-
-        Args:
-            src: The src.
-            prompt: The prompt.
-            src_mask: The src mask.
-            prompt_mask: The prompt mask.
-            src_key_padding_mask: The src key padding mask.
-            prompt_key_padding_mask: The prompt key padding mask.
-            src_pos: The src pos.
-            prompt_pos: The prompt pos.
-            feat_sizes: The feat sizes.
-            num_obj_ptr_tokens: The num obj ptr tokens.
-        """
         if isinstance(src, list):
             assert isinstance(src_key_padding_mask, list) and isinstance(src_pos, list)
             assert len(src) == len(src_key_padding_mask) == len(src_pos) == 1
@@ -796,20 +701,6 @@ class TransformerDecoderLayerv1(nn.Module):
         pre_norm: bool,
         self_attention: nn.Module,
     ):
-        """Init.
-
-        Args:
-            activation: The activation.
-            cross_attention: The cross attention.
-            d_model: The d model.
-            dim_feedforward: The dim feedforward.
-            dropout: The dropout.
-            pos_enc_at_attn: The pos enc at attn.
-            pos_enc_at_cross_attn_keys: The pos enc at cross attn keys.
-            pos_enc_at_cross_attn_queries: The pos enc at cross attn queries.
-            pre_norm: The pre norm.
-            self_attention: The self attention.
-        """
         super().__init__()
         self.d_model = d_model
         self.dim_feedforward = dim_feedforward
@@ -849,18 +740,6 @@ class TransformerDecoderLayerv1(nn.Module):
         query_pos: Tensor | None = None,
         **kwargs,
     ):
-        """Forward post.
-
-        Args:
-            tgt: The tgt.
-            memory: The memory.
-            tgt_mask: The tgt mask.
-            memory_mask: The memory mask.
-            tgt_key_padding_mask: The tgt key padding mask.
-            memory_key_padding_mask: The memory key padding mask.
-            pos: The pos.
-            query_pos: The query pos.
-        """
         q = k = tgt + query_pos if self.pos_enc_at_attn else tgt
 
         # Self attention
@@ -905,20 +784,6 @@ class TransformerDecoderLayerv1(nn.Module):
         attn_bias: Tensor | None = None,
         **kwargs,
     ):
-        """Forward pre.
-
-        Args:
-            tgt: The tgt.
-            memory: The memory.
-            dac: The dac.
-            tgt_mask: The tgt mask.
-            memory_mask: The memory mask.
-            tgt_key_padding_mask: The tgt key padding mask.
-            memory_key_padding_mask: The memory key padding mask.
-            pos: The pos.
-            query_pos: The query pos.
-            attn_bias: The attn bias.
-        """
         if dac:
             # we only apply self attention to the first half of the queries
             assert tgt.shape[0] % 2 == 0
@@ -966,23 +831,6 @@ class TransformerDecoderLayerv1(nn.Module):
         attn_bias: Tensor | None = None,
         **kwds: Any,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            memory: The memory.
-            dac: The dac.
-            tgt_mask: The tgt mask.
-            memory_mask: The memory mask.
-            tgt_key_padding_mask: The tgt key padding mask.
-            memory_key_padding_mask: The memory key padding mask.
-            pos: The pos.
-            query_pos: The query pos.
-            attn_bias: The attn bias.
-
-        Returns:
-            The return value.
-        """
         fwd_fn = self.forward_pre if self.pre_norm else self.forward_post
         return fwd_fn(
             tgt,
@@ -1003,21 +851,10 @@ class TransformerDecoderLayerv2(TransformerDecoderLayerv1):
     """Transformer decoder layerv implementation."""
 
     def __init__(self, cross_attention_first=False, *args: Any, **kwds: Any):
-        """Init.
-
-        Args:
-            cross_attention_first: The cross attention first.
-        """
         super().__init__(*args, **kwds)
         self.cross_attention_first = cross_attention_first
 
     def _forward_sa(self, tgt, query_pos):
-        """Helper function to forward sa.
-
-        Args:
-            tgt: The tgt.
-            query_pos: The query pos.
-        """
         # Self-Attention
         tgt2 = self.norm1(tgt)
         q = k = tgt2 + query_pos if self.pos_enc_at_attn else tgt2
@@ -1026,15 +863,6 @@ class TransformerDecoderLayerv2(TransformerDecoderLayerv1):
         return tgt
 
     def _forward_ca(self, tgt, memory, query_pos, pos, num_k_exclude_rope=0):
-        """Helper function to forward ca.
-
-        Args:
-            tgt: The tgt.
-            memory: The memory.
-            query_pos: The query pos.
-            pos: The pos.
-            num_k_exclude_rope: The num k exclude rope.
-        """
         if self.cross_attn_image is None:
             return tgt
 
@@ -1068,21 +896,6 @@ class TransformerDecoderLayerv2(TransformerDecoderLayerv1):
         attn_bias: Tensor | None = None,
         num_k_exclude_rope: int = 0,
     ):
-        """Forward pre.
-
-        Args:
-            tgt: The tgt.
-            memory: The memory.
-            dac: The dac.
-            tgt_mask: The tgt mask.
-            memory_mask: The memory mask.
-            tgt_key_padding_mask: The tgt key padding mask.
-            memory_key_padding_mask: The memory key padding mask.
-            pos: The pos.
-            query_pos: The query pos.
-            attn_bias: The attn bias.
-            num_k_exclude_rope: The num k exclude rope.
-        """
         assert dac is False
         assert tgt_mask is None
         assert memory_mask is None
@@ -1104,11 +917,6 @@ class TransformerDecoderLayerv2(TransformerDecoderLayerv1):
         return tgt
 
     def forward(self, *args: Any, **kwds: Any) -> torch.Tensor:
-        """Forward.
-
-        Returns:
-            The return value.
-        """
         if self.pre_norm:
             return self.forward_pre(*args, **kwds)
         raise NotImplementedError
@@ -1129,16 +937,6 @@ def functional_attention(
     use_rope_real: bool = False,
     rope_k_repeat: bool,
 ) -> Tensor | tuple[Tensor, Tensor]:
-    """Functional attention.
-
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-
-    Returns:
-        The return value.
-    """
     b, n, cq = q.shape
     _, m, ck = k.shape
     _, _, cv = v.shape
@@ -1203,18 +1001,6 @@ class SimpleRoPEAttention(nn.Module):
         use_fa3: bool = False,
         use_rope_real: bool = False,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            num_heads: The num heads.
-            dropout_p: The dropout p.
-            rope_theta: The rope theta.
-            rope_k_repeat: The rope k repeat.
-            feat_sizes: The feat sizes.
-            use_fa3: The use fa3.
-            use_rope_real: The use rope real.
-        """
         super().__init__()
 
         self.num_heads = num_heads
@@ -1237,17 +1023,6 @@ class SimpleRoPEAttention(nn.Module):
         v: Tensor,
         num_k_exclude_rope: int = 0,
     ) -> Tensor | tuple[Tensor, Tensor]:
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            num_k_exclude_rope: The num k exclude rope.
-
-        Returns:
-            The return value.
-        """
         # Apply rotary position encoding
         w = h = math.sqrt(q.shape[-2])
         self.freqs_cis = self.freqs_cis.to(q.device)
@@ -1297,7 +1072,6 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         self_attention_rope: SimpleRoPEAttention,
         cross_attention_rope: SimpleRoPEAttention,
     ):
-        """Init."""
         super().__init__()
         self.d_model = d_model
         self.num_heads = num_heads
@@ -1343,12 +1117,6 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         self.cross_attention_first = cross_attention_first
 
     def _forward_sa(self, tgt, query_pos):
-        """Helper function to forward sa.
-
-        Args:
-            tgt: The tgt.
-            query_pos: The query pos.
-        """
         # Self-Attention
         tgt2 = self.norm1(tgt)
 
@@ -1374,7 +1142,6 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         memory_image_pos,
         num_k_exclude_rope=0,
     ):
-        """Helper function to forward ca."""
         kwds = {}
         if num_k_exclude_rope > 0:
             assert isinstance(self.cross_attention_rope, SimpleRoPEAttention)
@@ -1410,7 +1177,6 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         memory_pos: Tensor | None = None,
         num_k_exclude_rope: int = 0,
     ):
-        """Forward pre."""
         if self.cross_attention_first:
             tgt = self._forward_ca(
                 image=image,
@@ -1442,19 +1208,12 @@ class DecoupledTransformerDecoderLayerv2(nn.Module):
         return image, tgt
 
     def forward(self, *args: Any, **kwds: Any) -> torch.Tensor:
-        """Forward.
-
-        Returns:
-            The return value.
-        """
         if self.pre_norm:
             return self.forward_pre(*args, **kwds)
         raise NotImplementedError
 
 
 class TransformerEncoderDecoupledCrossAttention(nn.Module):
-    """Transformer encoder decoupled cross attention implementation."""
-
     def __init__(
         self,
         d_model: int,
@@ -1466,18 +1225,6 @@ class TransformerEncoderDecoupledCrossAttention(nn.Module):
         batch_first: bool = False,  # Do layers expect batch first input?
         use_image_in_output: bool = True,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            frozen: The frozen.
-            pos_enc_at_input: The pos enc at input.
-            layer: The layer.
-            num_layers: The num layers.
-            use_act_checkpoint: The use act checkpoint.
-            batch_first: The batch first.
-            use_image_in_output: The use image in output.
-        """
         super().__init__()
         self.d_model = d_model
         self.layers = get_clones(layer, num_layers)
@@ -1505,19 +1252,6 @@ class TransformerEncoderDecoupledCrossAttention(nn.Module):
         memory_pos: Tensor | None = None,  # pos_enc for cross-attention inputs
         num_obj_ptr_tokens: int = 0,  # number of object pointer *tokens*
     ):
-        """Forward.
-
-        Args:
-            image: The image.
-            src: The src.
-            memory_image: The memory image.
-            memory: The memory.
-            image_pos: The image pos.
-            src_pos: The src pos.
-            memory_image_pos: The memory image pos.
-            memory_pos: The memory pos.
-            num_obj_ptr_tokens: The num obj ptr tokens.
-        """
         assert src.shape[1] == memory.shape[1], "Batch size must be the same for src and memory"
         assert image.shape[1] == memory_image.shape[1], "Batch size must be the same for image and memory_image"
 

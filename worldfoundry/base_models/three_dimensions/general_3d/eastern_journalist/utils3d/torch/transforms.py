@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> transforms.py functionality."""
-
 import itertools
 from numbers import Number
 from typing import *
@@ -239,20 +237,10 @@ def intrinsics_from_fov(
 
 
 def focal_to_fov(focal: Tensor):
-    """Focal to fov.
-
-    Args:
-        focal: The focal.
-    """
     return 2 * torch.atan(0.5 / focal)
 
 
 def fov_to_focal(fov: Tensor):
-    """Fov to focal.
-
-    Args:
-        fov: The fov.
-    """
     return 0.5 / torch.tan(fov / 2)
 
 

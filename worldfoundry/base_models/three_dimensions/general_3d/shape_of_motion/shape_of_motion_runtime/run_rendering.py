@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> run_rendering.py functionality."""
-
 import os
 import time
 from dataclasses import dataclass
@@ -15,18 +13,11 @@ torch.set_float32_matmul_precision("high")
 
 @dataclass
 class RenderConfig:
-    """Render config implementation."""
-
     work_dir: str
     port: int = 8890
 
 
 def main(cfg: RenderConfig):
-    """Main.
-
-    Args:
-        cfg: The cfg.
-    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     ckpt_path = f"{cfg.work_dir}/checkpoints/last.ckpt"

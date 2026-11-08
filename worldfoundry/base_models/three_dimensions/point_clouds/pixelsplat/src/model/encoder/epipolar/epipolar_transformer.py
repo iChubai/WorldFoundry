@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> model -> encoder -> epipolar -> epipolar_transformer.py functionality."""
-
 from dataclasses import dataclass
 from functools import partial
 
@@ -19,8 +17,6 @@ from .image_self_attention import ImageSelfAttention, ImageSelfAttentionCfg
 
 @dataclass
 class EpipolarTransformerCfg:
-    """Epipolar transformer cfg implementation."""
-
     self_attention: ImageSelfAttentionCfg
     num_octaves: int
     num_layers: int
@@ -32,8 +28,6 @@ class EpipolarTransformerCfg:
 
 
 class EpipolarTransformer(nn.Module):
-    """Epipolar transformer implementation."""
-
     cfg: EpipolarTransformerCfg
     epipolar_sampler: EpipolarSampler
     depth_encoding: nn.Sequential
@@ -47,15 +41,6 @@ class EpipolarTransformer(nn.Module):
         cfg: EpipolarTransformerCfg,
         d_in: int,
     ) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            d_in: The d in.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         num_context_views = get_cfg().dataset.view_sampler.num_context_views
 
@@ -98,18 +83,6 @@ class EpipolarTransformer(nn.Module):
         near: Float[Tensor, "batch view"],
         far: Float[Tensor, "batch view"],
     ) -> tuple[Float[Tensor, "batch view channel height width"], EpipolarSampling]:
-        """Forward.
-
-        Args:
-            features: The features.
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            near: The near.
-            far: The far.
-
-        Returns:
-            The return value.
-        """
         b, v, _, h, w = features.shape
 
         # If needed, apply downscaling.
@@ -182,8 +155,6 @@ class EpipolarTransformer(nn.Module):
 
 
 class ImageSelfAttentionWrapper(nn.Module):
-    """Image self attention wrapper implementation."""
-
     def __init__(
         self,
         self_attention_cfg: ImageSelfAttentionCfg,
@@ -191,17 +162,6 @@ class ImageSelfAttentionWrapper(nn.Module):
         d_hidden: int,
         dropout: float,
     ) -> None:
-        """Init.
-
-        Args:
-            self_attention_cfg: The self attention cfg.
-            d_in: The d in.
-            d_hidden: The d hidden.
-            dropout: The dropout.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.layers = nn.Sequential(
             nn.Conv2d(d_in, d_hidden, 7, 1, 3),
@@ -219,18 +179,6 @@ class ImageSelfAttentionWrapper(nn.Module):
         h: int,
         w: int,
     ) -> Float[Tensor, "batch token dim"]:
-        """Forward.
-
-        Args:
-            x: The x.
-            b: The b.
-            v: The v.
-            h: The h.
-            w: The w.
-
-        Returns:
-            The return value.
-        """
         x = rearrange(x, "(b v h w) () c -> (b v) c h w", b=b, v=v, h=h, w=w)
         # The published convolutional checkpoints apply attention before the MLP.
         x = self.layers(self.self_attention(x) + x)

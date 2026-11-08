@@ -1,20 +1,8 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> modules -> extractor.py functionality."""
-
 import torch.nn as nn
 
 
 class ResidualBlock(nn.Module):
-    """Residual block implementation."""
-
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        """Init.
-
-        Args:
-            in_planes: The in planes.
-            planes: The planes.
-            norm_fn: The norm fn.
-            stride: The stride.
-        """
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
@@ -54,11 +42,6 @@ class ResidualBlock(nn.Module):
             self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         y = x
         y = self.relu(self.norm1(self.conv1(y)))
         y = self.relu(self.norm2(self.conv2(y)))
@@ -70,17 +53,7 @@ class ResidualBlock(nn.Module):
 
 
 class BottleneckBlock(nn.Module):
-    """Bottleneck block implementation."""
-
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        """Init.
-
-        Args:
-            in_planes: The in planes.
-            planes: The planes.
-            norm_fn: The norm fn.
-            stride: The stride.
-        """
         super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
@@ -125,11 +98,6 @@ class BottleneckBlock(nn.Module):
             self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm4)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         y = x
         y = self.relu(self.norm1(self.conv1(y)))
         y = self.relu(self.norm2(self.conv2(y)))
@@ -145,17 +113,7 @@ DIM = 32
 
 
 class BasicEncoder(nn.Module):
-    """Basic encoder implementation."""
-
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0, multidim=False):
-        """Init.
-
-        Args:
-            output_dim: The output dim.
-            norm_fn: The norm fn.
-            dropout: The dropout.
-            multidim: The multidim.
-        """
         super().__init__()
         self.norm_fn = norm_fn
         self.multidim = multidim
@@ -212,12 +170,6 @@ class BasicEncoder(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, dim, stride=1):
-        """Helper function to make layer.
-
-        Args:
-            dim: The dim.
-            stride: The stride.
-        """
         layer1 = ResidualBlock(self.in_planes, dim, self.norm_fn, stride=stride)
         layer2 = ResidualBlock(dim, dim, self.norm_fn, stride=1)
         layers = (layer1, layer2)
@@ -226,11 +178,6 @@ class BasicEncoder(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         b, n, c1, h1, w1 = x.shape
         x = x.view(b * n, c1, h1, w1)
 

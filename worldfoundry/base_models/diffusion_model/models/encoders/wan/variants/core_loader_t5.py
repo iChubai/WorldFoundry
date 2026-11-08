@@ -33,7 +33,6 @@ class T5EncoderModel(_shared_t5.T5EncoderModel):
     """Encoder model implementation."""
 
     def __init__(self, *args, **kwargs):
-        """Init."""
         kwargs.setdefault("load_with_core_loader", True)
         super().__init__(*args, **kwargs)
 

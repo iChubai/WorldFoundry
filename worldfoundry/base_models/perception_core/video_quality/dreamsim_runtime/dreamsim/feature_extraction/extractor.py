@@ -201,9 +201,6 @@ class ViTExtractor(nn.Module):
         return dt_pre_hook
 
     def fix_random_seeds(suffix):
-        """
-        Fix random seeds.
-        """
         seed = hash(suffix) % (2**31 - 1)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)

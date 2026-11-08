@@ -29,14 +29,6 @@ _KV_DEBUG = os.environ.get("LINGBOT_DEBUG_KV", "")
 
 
 def _parse_kv_debug_interval(val: str) -> int:
-    """Helper function to parse kv debug interval.
-
-    Args:
-        val: The val.
-
-    Returns:
-        The return value.
-    """
     if not val:
         return 0
     try:
@@ -409,14 +401,6 @@ class GCTStream(GCTBase):
 
         # Helper to move tensor to output device
         def _to_out(t: torch.Tensor) -> torch.Tensor:
-            """Helper function to to out.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             if output_device is not None:
                 return t.to(output_device)
             return t

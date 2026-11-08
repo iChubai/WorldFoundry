@@ -24,13 +24,6 @@ class ImageProjModel(nn.Module):
     """Projection Model"""
 
     def __init__(self, cross_attention_dim=1024, clip_embeddings_dim=1024, clip_extra_context_tokens=4):
-        """Init.
-
-        Args:
-            cross_attention_dim: The cross attention dim.
-            clip_embeddings_dim: The clip embeddings dim.
-            clip_extra_context_tokens: The clip extra context tokens.
-        """
         super().__init__()
         self.cross_attention_dim = cross_attention_dim
         self.clip_extra_context_tokens = clip_extra_context_tokens
@@ -38,11 +31,6 @@ class ImageProjModel(nn.Module):
         self.norm = nn.LayerNorm(cross_attention_dim)
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         # embeds = image_embeds
         embeds = image_embeds.type(list(self.proj.parameters())[0].dtype)
         clip_extra_context_tokens = self.proj(embeds).reshape(
@@ -54,12 +42,6 @@ class ImageProjModel(nn.Module):
 
 # FFN
 def FeedForward(dim, mult=4):
-    """Feedforward.
-
-    Args:
-        dim: The dim.
-        mult: The mult.
-    """
     inner_dim = int(dim * mult)
     return nn.Sequential(
         nn.LayerNorm(dim),
@@ -70,12 +52,6 @@ def FeedForward(dim, mult=4):
 
 
 def reshape_tensor(x, heads):
-    """Reshape tensor.
-
-    Args:
-        x: The x.
-        heads: The heads.
-    """
     bs, length, width = x.shape
     # (bs, length, width) --> (bs, length, n_heads, dim_per_head)
     x = x.view(bs, length, heads, -1)
@@ -87,10 +63,7 @@ def reshape_tensor(x, heads):
 
 
 class PerceiverAttention(nn.Module):
-    """Perceiver attention implementation."""
-
     def __init__(self, *, dim, dim_head=64, heads=8):
-        """Init."""
         super().__init__()
         self.scale = dim_head**-0.5
         self.dim_head = dim_head
@@ -137,8 +110,6 @@ class PerceiverAttention(nn.Module):
 
 
 class Resampler(nn.Module):
-    """Resampler implementation."""
-
     def __init__(
         self,
         dim=1024,
@@ -151,19 +122,6 @@ class Resampler(nn.Module):
         ff_mult=4,
         video_length=None,  # using frame-wise version or not
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            depth: The depth.
-            dim_head: The dim head.
-            heads: The heads.
-            num_queries: The num queries.
-            embedding_dim: The embedding dim.
-            output_dim: The output dim.
-            ff_mult: The ff mult.
-            video_length: The video length.
-        """
         super().__init__()
         ## queries for a single frame / image
         self.num_queries = num_queries
@@ -190,11 +148,6 @@ class Resampler(nn.Module):
             )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         latents = self.latents.repeat(x.size(0), 1, 1)  ## B (T L) C
         x = self.proj_in(x)
 

@@ -1,21 +1,10 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_backend.py functionality."""
-
 import torch
 
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
 
 
 class DroidBackend:
-    """Droid backend implementation."""
-
     def __init__(self, net, video, args):
-        """Init.
-
-        Args:
-            net: The net.
-            video: The video.
-            args: The args.
-        """
         self.video = video
         self.update_op = net.update
 
@@ -49,17 +38,7 @@ class DroidBackend:
 
 
 class DroidAsyncBackend:
-    """Droid async backend implementation."""
-
     def __init__(self, net, video, args, max_age=7):
-        """Init.
-
-        Args:
-            net: The net.
-            video: The video.
-            args: The args.
-            max_age: The max age.
-        """
         self.video = video
         self.update_op = net.update
         self.max_age = max_age

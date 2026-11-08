@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> automatic_mask_generator.py functionality."""
-
 from typing import Any
 
 import numpy as np
@@ -36,8 +34,6 @@ from .utils.amg import (
 
 
 class SamAutomaticMaskGenerator:
-    """Sam automatic mask generator implementation."""
-
     def __init__(
         self,
         model: Sam,
@@ -200,14 +196,6 @@ class SamAutomaticMaskGenerator:
         return curr_anns
 
     def _generate_masks(self, image: np.ndarray) -> MaskData:
-        """Helper function to generate masks.
-
-        Args:
-            image: The image.
-
-        Returns:
-            The return value.
-        """
         orig_size = image.shape[:2]
         crop_boxes, layer_idxs = generate_crop_boxes(orig_size, self.crop_n_layers, self.crop_overlap_ratio)
 
@@ -240,17 +228,6 @@ class SamAutomaticMaskGenerator:
         crop_layer_idx: int,
         orig_size: tuple[int, ...],
     ) -> MaskData:
-        """Helper function to process crop.
-
-        Args:
-            image: The image.
-            crop_box: The crop box.
-            crop_layer_idx: The crop layer idx.
-            orig_size: The orig size.
-
-        Returns:
-            The return value.
-        """
         # Crop the image and calculate embeddings
         x0, y0, x1, y1 = crop_box
         cropped_im = image[y0:y1, x0:x1, :]
@@ -292,17 +269,6 @@ class SamAutomaticMaskGenerator:
         crop_box: list[int],
         orig_size: tuple[int, ...],
     ) -> MaskData:
-        """Helper function to process batch.
-
-        Args:
-            points: The points.
-            im_size: The im size.
-            crop_box: The crop box.
-            orig_size: The orig size.
-
-        Returns:
-            The return value.
-        """
         orig_h, orig_w = orig_size
 
         # Run model on this batch

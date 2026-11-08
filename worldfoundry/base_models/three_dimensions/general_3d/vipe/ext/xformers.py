@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> ext -> xformers.py functionality."""
-
 from collections.abc import Sequence
 
 import torch
@@ -28,17 +26,6 @@ def memory_efficient_attention(
     value: torch.Tensor,
     attn_bias: torch.Tensor | None = None,
 ) -> torch.Tensor:
-    """Memory efficient attention.
-
-    Args:
-        query: The query.
-        key: The key.
-        value: The value.
-        attn_bias: The attn bias.
-
-    Returns:
-        The return value.
-    """
     # (B, S, H, D) -> (B, H, S, D)
     query = query.transpose(1, 2)
     key = key.transpose(1, 2)
@@ -56,31 +43,10 @@ def scaled_index_add(
     scaling: torch.Tensor | None = None,  # [D]
     alpha: float = 1.0,
 ) -> torch.Tensor:
-    """Scaled index add.
-
-    Args:
-        input: The input.
-        index: The index.
-        source: The source.
-        scaling: The scaling.
-        alpha: The alpha.
-
-    Returns:
-        The return value.
-    """
     if scaling is not None:
         source = scaling * source
     return torch.index_add(input, dim=0, source=source, index=index, alpha=alpha)
 
 
 def index_select_cat(sources: Sequence[torch.Tensor], indices: Sequence[torch.Tensor]) -> torch.Tensor:
-    """Index select cat.
-
-    Args:
-        sources: The sources.
-        indices: The indices.
-
-    Returns:
-        The return value.
-    """
     return torch.cat([s[i.long()].flatten() for s, i in zip(sources, indices, strict=False)], dim=0)

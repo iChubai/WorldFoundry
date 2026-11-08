@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam2_base.py functionality."""
-
 import torch
 import torch.distributed
 import torch.nn.functional as F
@@ -101,45 +99,6 @@ class SAM2Base(torch.nn.Module):
         sam_mask_decoder_extra_args=None,
         compile_image_encoder: bool = False,
     ):
-        """Init.
-
-        Args:
-            image_encoder: The image encoder.
-            memory_attention: The memory attention.
-            memory_encoder: The memory encoder.
-            num_maskmem: The num maskmem.
-            image_size: The image size.
-            backbone_stride: The backbone stride.
-            sigmoid_scale_for_mem_enc: The sigmoid scale for mem enc.
-            sigmoid_bias_for_mem_enc: The sigmoid bias for mem enc.
-            binarize_mask_from_pts_for_mem_enc: The binarize mask from pts for mem enc.
-            use_mask_input_as_output_without_sam: The use mask input as output without sam.
-            max_cond_frames_in_attn: The max cond frames in attn.
-            directly_add_no_mem_embed: The directly add no mem embed.
-            use_high_res_features_in_sam: The use high res features in sam.
-            multimask_output_in_sam: The multimask output in sam.
-            multimask_min_pt_num: The multimask min pt num.
-            multimask_max_pt_num: The multimask max pt num.
-            multimask_output_for_tracking: The multimask output for tracking.
-            use_multimask_token_for_obj_ptr: The use multimask token for obj ptr.
-            iou_prediction_use_sigmoid: The iou prediction use sigmoid.
-            memory_temporal_stride_for_eval: The memory temporal stride for eval.
-            non_overlap_masks_for_mem_enc: The non overlap masks for mem enc.
-            use_obj_ptrs_in_encoder: The use obj ptrs in encoder.
-            max_obj_ptrs_in_encoder: The max obj ptrs in encoder.
-            add_tpos_enc_to_obj_ptrs: The add tpos enc to obj ptrs.
-            proj_tpos_enc_in_obj_ptrs: The proj tpos enc in obj ptrs.
-            use_signed_tpos_enc_to_obj_ptrs: The use signed tpos enc to obj ptrs.
-            only_obj_ptrs_in_the_past_for_eval: The only obj ptrs in the past for eval.
-            pred_obj_scores: The pred obj scores.
-            pred_obj_scores_mlp: The pred obj scores mlp.
-            fixed_no_obj_ptr: The fixed no obj ptr.
-            soft_no_obj_ptr: The soft no obj ptr.
-            use_mlp_for_obj_ptr_proj: The use mlp for obj ptr proj.
-            no_obj_embed_spatial: The no obj embed spatial.
-            sam_mask_decoder_extra_args: The sam mask decoder extra args.
-            compile_image_encoder: The compile image encoder.
-        """
         super().__init__()
 
         # Part 1: the image backbone
@@ -236,11 +195,9 @@ class SAM2Base(torch.nn.Module):
 
     @property
     def device(self):
-        """Device."""
         return next(self.parameters()).device
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         raise NotImplementedError(
             "Please use the corresponding methods in SAM2VideoPredictor for inference or SAM2Train for training/fine-tuning"
             "See notebooks/video_predictor_example.ipynb for an inference example."
@@ -763,21 +720,6 @@ class SAM2Base(torch.nn.Module):
         track_in_reverse,
         prev_sam_mask_logits,
     ):
-        """Helper function to track step.
-
-        Args:
-            frame_idx: The frame idx.
-            is_init_cond_frame: The is init cond frame.
-            current_vision_feats: The current vision feats.
-            current_vision_pos_embeds: The current vision pos embeds.
-            feat_sizes: The feat sizes.
-            point_inputs: The point inputs.
-            mask_inputs: The mask inputs.
-            output_dict: The output dict.
-            num_frames: The num frames.
-            track_in_reverse: The track in reverse.
-            prev_sam_mask_logits: The prev sam mask logits.
-        """
         current_out = {"point_inputs": point_inputs, "mask_inputs": mask_inputs}
         # High-resolution feature maps for the SAM head, reshape (HW)BC => BCHW
         if len(current_vision_feats) > 1:
@@ -833,17 +775,6 @@ class SAM2Base(torch.nn.Module):
         object_score_logits,
         current_out,
     ):
-        """Helper function to encode memory in output.
-
-        Args:
-            current_vision_feats: The current vision feats.
-            feat_sizes: The feat sizes.
-            point_inputs: The point inputs.
-            run_mem_encoder: The run mem encoder.
-            high_res_masks: The high res masks.
-            object_score_logits: The object score logits.
-            current_out: The current out.
-        """
         if run_mem_encoder and self.num_maskmem > 0:
             high_res_masks_for_mem_enc = high_res_masks
             maskmem_features, maskmem_pos_enc = self._encode_new_memory(
@@ -880,22 +811,6 @@ class SAM2Base(torch.nn.Module):
         # The previously predicted SAM mask logits (which can be fed together with new clicks in demo).
         prev_sam_mask_logits=None,
     ):
-        """Track step.
-
-        Args:
-            frame_idx: The frame idx.
-            is_init_cond_frame: The is init cond frame.
-            current_vision_feats: The current vision feats.
-            current_vision_pos_embeds: The current vision pos embeds.
-            feat_sizes: The feat sizes.
-            point_inputs: The point inputs.
-            mask_inputs: The mask inputs.
-            output_dict: The output dict.
-            num_frames: The num frames.
-            track_in_reverse: The track in reverse.
-            run_mem_encoder: The run mem encoder.
-            prev_sam_mask_logits: The prev sam mask logits.
-        """
         current_out, sam_outputs, _, _ = self._track_step(
             frame_idx,
             is_init_cond_frame,

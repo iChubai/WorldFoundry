@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> vis -> utils.py functionality."""
-
 import colorsys
 from typing import ClassVar, cast
 
@@ -18,32 +16,19 @@ except ModuleNotFoundError:
 
 
 class Singleton(type):
-    """Singleton implementation."""
-
     _instances: ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs):
-        """Call."""
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
 class VisManager(metaclass=Singleton):
-    """Vis manager implementation."""
-
     _servers: ClassVar[dict] = {}
 
 
 def get_server(port: int | None = None) -> ViserServer:
-    """Get server.
-
-    Args:
-        port: The port.
-
-    Returns:
-        The return value.
-    """
     try:
         from viser import ViserServer as _ViserServer
     except ModuleNotFoundError as exc:
@@ -120,15 +105,6 @@ def draw_tracks_2d(
     track_line_width: int = 1,
     cmap_name: str = "gist_rainbow",
 ):
-    """Draw tracks 2d.
-
-    Args:
-        img: The img.
-        tracks_2d: The tracks 2d.
-        track_point_size: The track point size.
-        track_line_width: The track line width.
-        cmap_name: The cmap name.
-    """
     cmap = colormaps.get_cmap(cmap_name)
     # (H, W, 3).
     img_np = (img.cpu().numpy() * 255.0).astype(np.uint8)
@@ -246,14 +222,6 @@ def generate_point_verts_faces(points, point_size, num_segments=10):
 
 
 def pixel_to_verts_clip(pixels, img_wh, z: float | torch.Tensor = 0.0, w=1.0):
-    """Pixel to verts clip.
-
-    Args:
-        pixels: The pixels.
-        img_wh: The img wh.
-        z: The z.
-        w: The w.
-    """
     verts_clip = pixels / pixels.new_tensor(img_wh) * 2.0 - 1.0
     w = torch.full_like(verts_clip[..., :1], w)
     verts_clip = torch.cat([verts_clip, z * w, w], dim=-1)
@@ -268,16 +236,6 @@ def draw_tracks_2d_th(
     track_line_width: int = 2,
     cmap_name: str = "gist_rainbow",
 ):
-    """Draw tracks 2d th.
-
-    Args:
-        img: The img.
-        tracks_2d: The tracks 2d.
-        track_point_size: The track point size.
-        track_point_segments: The track point segments.
-        track_line_width: The track line width.
-        cmap_name: The cmap name.
-    """
     cmap = colormaps.get_cmap(cmap_name)
     CTX = dr.RasterizeCudaContext()
 
@@ -371,15 +329,6 @@ def draw_tracks_2d_th(
 
 
 def make_video_divisble(video: torch.Tensor | np.ndarray, block_size=16) -> torch.Tensor | np.ndarray:
-    """Make video divisble.
-
-    Args:
-        video: The video.
-        block_size: The block size.
-
-    Returns:
-        The return value.
-    """
     H, W = video.shape[1:3]
     H_new = H - H % block_size
     W_new = W - W % block_size
@@ -438,20 +387,10 @@ def apply_depth_colormap(
 
 
 def float2uint8(x):
-    """Float2uint8.
-
-    Args:
-        x: The x.
-    """
     return (255.0 * x).astype(np.uint8)
 
 
 def uint82float(img):
-    """Uint82float.
-
-    Args:
-        img: The img.
-    """
     return np.ascontiguousarray(img) / 255.0
 
 
@@ -467,20 +406,6 @@ def drawMatches(
     seed=1234,
     mask=None,
 ):
-    """Drawmatches.
-
-    Args:
-        img1: The img1.
-        img2: The img2.
-        kp1: The kp1.
-        kp2: The kp2.
-        num_vis: The num vis.
-        center: The center.
-        idx_vis: The idx vis.
-        radius: The radius.
-        seed: The seed.
-        mask: The mask.
-    """
     num_pts = len(kp1)
     if idx_vis is None:
         if num_vis < num_pts:
@@ -539,17 +464,6 @@ def drawMatches(
 
 
 def plot_correspondences(rgbs, kpts, query_id=0, masks=None, num_vis=1000000, radius=3, seed=1234):
-    """Plot correspondences.
-
-    Args:
-        rgbs: The rgbs.
-        kpts: The kpts.
-        query_id: The query id.
-        masks: The masks.
-        num_vis: The num vis.
-        radius: The radius.
-        seed: The seed.
-    """
     num_rgbs = len(rgbs)
     rng = np.random.RandomState(seed)
     permutation = rng.permutation(kpts.shape[1])

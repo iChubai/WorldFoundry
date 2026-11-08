@@ -88,23 +88,6 @@ class FlashInferKVCacheManager:
         force_fp32: bool = False,
         fa3: bool = False,
     ):
-        """Init.
-
-        Args:
-            num_blocks: The num blocks.
-            max_num_frames: The max num frames.
-            tokens_per_frame: The tokens per frame.
-            num_heads: The num heads.
-            head_dim: The head dim.
-            dtype: The dtype.
-            device: The device.
-            num_special_tokens: The num special tokens.
-            scale_frames: The scale frames.
-            sliding_window: The sliding window.
-            max_total_frames: The max total frames.
-            force_fp32: The force fp32.
-            fa3: The fa3.
-        """
         if not FLASHINFER_AVAILABLE:
             raise RuntimeError("FlashInfer is not available. Please install flashinfer.")
 
@@ -601,13 +584,11 @@ def _sanity_check():
     )
 
     def make_kv():
-        """Make kv."""
         k = torch.randn(tokens_per_frame, 16, 64, dtype=torch.bfloat16, device=device)
         v = torch.randn(tokens_per_frame, 16, 64, dtype=torch.bfloat16, device=device)
         return k, v
 
     def make_q():
-        """Make q."""
         return torch.randn(tokens_per_frame, 16, 64, dtype=torch.bfloat16, device=device)
 
     for block in range(2):

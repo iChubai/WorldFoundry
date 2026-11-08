@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> dataset -> view_sampler -> view_sampler.py functionality."""
-
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
@@ -13,8 +11,6 @@ T = TypeVar("T")
 
 
 class ViewSampler(ABC, Generic[T]):
-    """View sampler implementation."""
-
     cfg: T
     stage: Stage
     is_overfitting: bool
@@ -27,17 +23,6 @@ class ViewSampler(ABC, Generic[T]):
         is_overfitting: bool,
         cameras_are_circular: bool,
     ) -> None:
-        """Init.
-
-        Args:
-            cfg: The cfg.
-            stage: The stage.
-            is_overfitting: The is overfitting.
-            cameras_are_circular: The cameras are circular.
-
-        Returns:
-            The return value.
-        """
         self.cfg = cfg
         self.stage = stage
         self.is_overfitting = is_overfitting
@@ -54,32 +39,14 @@ class ViewSampler(ABC, Generic[T]):
         Int64[Tensor, " context_view"],  # indices for context views
         Int64[Tensor, " target_view"],  # indices for target views
     ]:
-        """Sample.
-
-        Args:
-            scene: The scene.
-            extrinsics: The extrinsics.
-            intrinsics: The intrinsics.
-            device: The device.
-
-        Returns:
-            The return value.
-        """
+        pass
 
     @property
     @abstractmethod
     def num_target_views(self) -> int:
-        """Num target views.
-
-        Returns:
-            The return value.
-        """
+        pass
 
     @property
     @abstractmethod
     def num_context_views(self) -> int:
-        """Num context views.
-
-        Returns:
-            The return value.
-        """
+        pass

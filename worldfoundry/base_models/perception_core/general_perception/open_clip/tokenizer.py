@@ -27,7 +27,6 @@ DEFAULT_CONTEXT_LENGTH = 77  # default context length for OpenAI CLIP
 
 @lru_cache
 def default_bpe():
-    """Default bpe."""
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "bpe_simple_vocab_16e6.txt.gz")
 
 
@@ -67,63 +66,33 @@ def get_pairs(word):
 
 
 def basic_clean(text):
-    """Basic clean.
-
-    Args:
-        text: The text.
-    """
     text = ftfy.fix_text(text)
     text = html.unescape(html.unescape(text))
     return text.strip()
 
 
 def whitespace_clean(text):
-    """Whitespace clean.
-
-    Args:
-        text: The text.
-    """
     text = " ".join(text.split())
     text = text.strip()
     return text
 
 
 def _clean_canonicalize(x):
-    """Helper function to clean canonicalize.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace, remove punctuation, lower case
     return canonicalize_text(basic_clean(x))
 
 
 def _clean_lower(x):
-    """Helper function to clean lower.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace, lower case
     return whitespace_clean(basic_clean(x)).lower()
 
 
 def _clean_whitespace(x):
-    """Helper function to clean whitespace.
-
-    Args:
-        x: The x.
-    """
     # basic, remove whitespace
     return whitespace_clean(basic_clean(x))
 
 
 def get_clean_fn(type: str):
-    """Get clean fn.
-
-    Args:
-        type: The type.
-    """
     if type == "canonicalize":
         return _clean_canonicalize
     elif type == "lower":
@@ -163,8 +132,6 @@ def canonicalize_text(
 
 
 class SimpleTokenizer:
-    """Simple tokenizer implementation."""
-
     def __init__(
         self,
         bpe_path: str = default_bpe(),
@@ -173,15 +140,6 @@ class SimpleTokenizer:
         clean: str = "lower",
         reduction_mask: str = "",
     ):
-        """Init.
-
-        Args:
-            bpe_path: The bpe path.
-            additional_special_tokens: The additional special tokens.
-            context_length: The context length.
-            clean: The clean.
-            reduction_mask: The reduction mask.
-        """
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
         merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
@@ -213,11 +171,6 @@ class SimpleTokenizer:
         self.reduction_fn = get_reduction_mask_fn(reduction_mask) if reduction_mask else None
 
     def bpe(self, token):
-        """Bpe.
-
-        Args:
-            token: The token.
-        """
         if token in self.cache:
             return self.cache[token]
         word = tuple(token[:-1]) + (token[-1] + "</w>",)
@@ -259,11 +212,6 @@ class SimpleTokenizer:
         return word
 
     def encode(self, text):
-        """Encode.
-
-        Args:
-            text: The text.
-        """
         bpe_tokens = []
         text = self.clean_fn(text)
         for token in re.findall(self.pat, text):
@@ -272,11 +220,6 @@ class SimpleTokenizer:
         return bpe_tokens
 
     def decode(self, tokens):
-        """Decode.
-
-        Args:
-            tokens: The tokens.
-        """
         text = "".join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
         return text
@@ -327,11 +270,6 @@ _tokenizer: SimpleTokenizer | None = None
 
 
 def _default_tokenizer() -> SimpleTokenizer:
-    """Helper function to default tokenizer.
-
-    Returns:
-        The return value.
-    """
     global _tokenizer
     if _tokenizer is None:
         _tokenizer = SimpleTokenizer()
@@ -339,25 +277,11 @@ def _default_tokenizer() -> SimpleTokenizer:
 
 
 def decode(output_ids: torch.Tensor):
-    """Decode.
-
-    Args:
-        output_ids: The output ids.
-    """
     output_ids = output_ids.cpu().numpy()
     return _default_tokenizer().decode(output_ids)
 
 
 def tokenize(texts: str | list[str], context_length: int = DEFAULT_CONTEXT_LENGTH) -> torch.LongTensor:
-    """Tokenize.
-
-    Args:
-        texts: The texts.
-        context_length: The context length.
-
-    Returns:
-        The return value.
-    """
     return _default_tokenizer()(texts, context_length=context_length)
 
 
@@ -369,16 +293,6 @@ def random_mask_tokenize(
     encode_fn: Callable,
     shuffle: bool = False,
 ):
-    """Random mask tokenize.
-
-    Args:
-        texts: The texts.
-        context_length: The context length.
-        sot_token_id: The sot token id.
-        eot_token_id: The eot token id.
-        encode_fn: The encode fn.
-        shuffle: The shuffle.
-    """
     all_tokens = [encode_fn(text) for text in texts]
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
@@ -407,15 +321,6 @@ def simple_mask_tokenize(
     eot_token_id: int,
     encode_fn: Callable,
 ):
-    """Simple mask tokenize.
-
-    Args:
-        texts: The texts.
-        context_length: The context length.
-        sot_token_id: The sot token id.
-        eot_token_id: The eot token id.
-        encode_fn: The encode fn.
-    """
     all_tokens = [encode_fn(text) for text in texts]
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
@@ -451,11 +356,6 @@ def syntax_mask_tokenize(
         _nltk_init = True
 
     def get_order(x):
-        """Get order.
-
-        Args:
-            x: The x.
-        """
         if x.startswith("NN"):
             return 1
         elif x.startswith("JJ"):
@@ -525,17 +425,6 @@ class HFTokenizer:
         tokenizer_mode: str | None = None,  # None, 'clips'
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            tokenizer_name: The tokenizer name.
-            context_length: The context length.
-            clean: The clean.
-            strip_sep_token: The strip sep token.
-            language: The language.
-            cache_dir: The cache dir.
-            tokenizer_mode: The tokenizer mode.
-        """
         self.tokenizer_mode = tokenizer_mode or ""
         self.context_length = context_length
         self.clean_fn = get_clean_fn(clean)
@@ -580,23 +469,9 @@ class HFTokenizer:
             self.set_language(language)
 
     def save_pretrained(self, dest):
-        """Save pretrained.
-
-        Args:
-            dest: The dest.
-        """
         self.tokenizer.save_pretrained(dest)
 
     def __call__(self, texts: str | list[str], context_length: int | None = None) -> torch.Tensor:
-        """Call.
-
-        Args:
-            texts: The texts.
-            context_length: The context length.
-
-        Returns:
-            The return value.
-        """
         # same cleaning as for default tokenizer, except lowercasing
         # adding lower (for case-sensitive tokenizers) will make it more robust but less sensitive to nuance
         if isinstance(texts, str):
@@ -630,11 +505,6 @@ class HFTokenizer:
             return input_ids
 
     def set_language(self, src_lang):
-        """Set language.
-
-        Args:
-            src_lang: The src lang.
-        """
         if hasattr(self, "set_lang_fn"):
             self.set_lang_fn(src_lang)
         else:
@@ -707,12 +577,6 @@ class SigLipTokenizer:
         tokenizer_name: str,
         context_length: int | None = 64,
     ):
-        """Init.
-
-        Args:
-            tokenizer_name: The tokenizer name.
-            context_length: The context length.
-        """
         if "gemma" in tokenizer_name:
             from transformers import GemmaTokenizerFast
 
@@ -741,23 +605,9 @@ class SigLipTokenizer:
         self.context_length = context_length
 
     def save_pretrained(self, dest):
-        """Save pretrained.
-
-        Args:
-            dest: The dest.
-        """
         self.tokenizer.save_pretrained(dest)
 
     def __call__(self, texts: str | list[str], context_length: int | None = None) -> torch.Tensor:
-        """Call.
-
-        Args:
-            texts: The texts.
-            context_length: The context length.
-
-        Returns:
-            The return value.
-        """
         # same cleaning as for default tokenizer, except lowercasing
         # adding lower (for case-sensitive tokenizers) will make it more robust but less sensitive to nuance
         if isinstance(texts, str):

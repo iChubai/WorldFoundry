@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> sam3_tracker_utils.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -253,13 +251,6 @@ def sample_one_point_from_error_center_slow(gt_masks, pred_masks, padding=True):
 
 
 def get_next_point(gt_masks, pred_masks, method):
-    """Get next point.
-
-    Args:
-        gt_masks: The gt masks.
-        pred_masks: The pred masks.
-        method: The method.
-    """
     if method == "uniform":
         return sample_random_points_from_errors(gt_masks, pred_masks)
     elif method == "center":
@@ -367,16 +358,6 @@ def fill_holes_in_mask_scores(
     fill_hole_area=None,
     sprinkle_removal_area=None,
 ):
-    """Fill holes in mask scores.
-
-    Args:
-        mask: The mask.
-        max_area: The max area.
-        fill_holes: The fill holes.
-        remove_sprinkles: The remove sprinkles.
-        fill_hole_area: The fill hole area.
-        sprinkle_removal_area: The sprinkle removal area.
-    """
     # Support onevision-style keyword args
     if fill_hole_area is not None and max_area is None:
         max_area = fill_hole_area

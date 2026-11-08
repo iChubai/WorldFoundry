@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> data -> utils.py functionality."""
-
 from typing import TypedDict
 
 import numpy as np
@@ -11,19 +9,11 @@ UINT16_MAX = 65535
 
 
 class SceneNormDict(TypedDict):
-    """Scene norm dict implementation."""
-
     scale: float
     transfm: torch.Tensor
 
 
 def to_device(batch, device):
-    """To device.
-
-    Args:
-        batch: The batch.
-        device: The device.
-    """
     if isinstance(batch, dict):
         return {k: to_device(v, device) for k, v in batch.items()}
     if isinstance(batch, (list, tuple)):
@@ -34,13 +24,6 @@ def to_device(batch, device):
 
 
 def normalize_coords(coords, h, w):
-    """Normalize coords.
-
-    Args:
-        coords: The coords.
-        h: The h.
-        w: The w.
-    """
     assert coords.shape[-1] == 2
     return coords / torch.tensor([w - 1.0, h - 1.0], device=coords.device) * 2 - 1.0
 
@@ -57,11 +40,6 @@ def postprocess_occlusions(occlusions, expected_dist):
     """
 
     def sigmoid(x):
-        """Sigmoid.
-
-        Args:
-            x: The x.
-        """
         if x.dtype == np.ndarray:
             return 1 / (1 + np.exp(-x))
         else:
@@ -183,15 +161,6 @@ def get_tracks_3d_for_query_frame(
 
 
 def _get_padding(x, k, stride, padding, same: bool):
-    """Helper function to get padding.
-
-    Args:
-        x: The x.
-        k: The k.
-        stride: The stride.
-        padding: The padding.
-        same: The same.
-    """
     if same:
         ih, iw = x.size()[2:]
         ph = max(k[0] - stride[0], 0) if ih % stride[0] == 0 else max(k[0] - ih % stride[0], 0)
@@ -285,14 +254,6 @@ def get_binary_kernel2d(
 
 
 def _unpack_2d_ks(kernel_size: tuple[int, int] | int) -> tuple[int, int]:
-    """Helper function to unpack 2d ks.
-
-    Args:
-        kernel_size: The kernel size.
-
-    Returns:
-        The return value.
-    """
     if isinstance(kernel_size, int):
         ky = kx = kernel_size
     else:
@@ -307,14 +268,6 @@ def _unpack_2d_ks(kernel_size: tuple[int, int] | int) -> tuple[int, int]:
 
 ## Functions from GaussianShader.
 def ndc_2_cam(ndc_xyz, intrinsic, W, H):
-    """Ndc 2 cam.
-
-    Args:
-        ndc_xyz: The ndc xyz.
-        intrinsic: The intrinsic.
-        W: The w.
-        H: The h.
-    """
     inv_scale = torch.tensor([[W - 1, H - 1]], device=ndc_xyz.device)
     cam_z = ndc_xyz[..., 2:3]
     cam_xy = ndc_xyz[..., :2] * inv_scale * cam_z
@@ -324,12 +277,6 @@ def ndc_2_cam(ndc_xyz, intrinsic, W, H):
 
 
 def depth2point_cam(sampled_depth, ref_intrinsic):
-    """Depth2point cam.
-
-    Args:
-        sampled_depth: The sampled depth.
-        ref_intrinsic: The ref intrinsic.
-    """
     B, N, C, H, W = sampled_depth.shape
     valid_z = sampled_depth
     valid_x = torch.arange(W, dtype=torch.float32, device=sampled_depth.device) / (W - 1)
@@ -344,13 +291,6 @@ def depth2point_cam(sampled_depth, ref_intrinsic):
 
 
 def depth2point_world(depth_image, intrinsic_matrix, extrinsic_matrix):
-    """Depth2point world.
-
-    Args:
-        depth_image: The depth image.
-        intrinsic_matrix: The intrinsic matrix.
-        extrinsic_matrix: The extrinsic matrix.
-    """
     # depth_image: (H, W), intrinsic_matrix: (3, 3), extrinsic_matrix: (4, 4)
     _, xyz_cam = depth2point_cam(depth_image[None, None, None, ...], intrinsic_matrix[None, ...])
     xyz_cam = xyz_cam.reshape(-1, 3)
@@ -363,11 +303,6 @@ def depth2point_world(depth_image, intrinsic_matrix, extrinsic_matrix):
 
 
 def depth_pcd2normal(xyz):
-    """Depth pcd2normal.
-
-    Args:
-        xyz: The xyz.
-    """
     hd, wd, _ = xyz.shape
     bottom_point = xyz[..., 2:hd, 1 : wd - 1, :]
     top_point = xyz[..., 0 : hd - 2, 1 : wd - 1, :]
@@ -382,13 +317,6 @@ def depth_pcd2normal(xyz):
 
 
 def normal_from_depth_image(depth, intrinsic_matrix, extrinsic_matrix):
-    """Normal from depth image.
-
-    Args:
-        depth: The depth.
-        intrinsic_matrix: The intrinsic matrix.
-        extrinsic_matrix: The extrinsic matrix.
-    """
     # depth: (H, W), intrinsic_matrix: (3, 3), extrinsic_matrix: (4, 4)
     # xyz_normal: (H, W, 3)
     xyz_world = depth2point_world(depth, intrinsic_matrix, extrinsic_matrix)  # (HxW, 3)

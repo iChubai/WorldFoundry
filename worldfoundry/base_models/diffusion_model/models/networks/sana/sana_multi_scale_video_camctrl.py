@@ -102,13 +102,6 @@ class DeltaActionEmbedder(nn.Module):
     """MLP that embeds per-step action deltas into the adaLN timestep stream."""
 
     def __init__(self, input_dim, hidden_size, act_layer=nn.GELU):
-        """Init.
-
-        Args:
-            input_dim: The input dim.
-            hidden_size: The hidden size.
-            act_layer: The act layer.
-        """
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(input_dim, hidden_size),
@@ -117,11 +110,6 @@ class DeltaActionEmbedder(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.mlp(x)
 
 
@@ -129,11 +117,6 @@ class FP32LayerNorm(nn.LayerNorm):
     """Layer norm implementation."""
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return super().forward(x.float()).type_as(x)
 
 
@@ -141,20 +124,10 @@ class FP32NormProxy(nn.Module):
     """Norm proxy implementation."""
 
     def __init__(self, norm_module):
-        """Init.
-
-        Args:
-            norm_module: The norm module.
-        """
         super().__init__()
         self.norm = norm_module
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.norm(x.float()).type_as(x)
 
 
@@ -189,32 +162,6 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         use_chunk_plucker_post_attn=False,
         **block_kwargs,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            drop_path: The drop path.
-            qk_norm: The qk norm.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_image_embeds: The cross attn image embeds.
-            t_kernel_size: The t kernel size.
-            additional_flash_attn: The additional flash attn.
-            flash_attn_window_count: The flash attn window count.
-            camctrl_type: The camctrl type.
-            patch_size: The patch size.
-            cam_attn_compress: The cam attn compress.
-            fp32_norm: The fp32 norm.
-            chunk_size: The chunk size.
-            chunk_split_strategy: The chunk split strategy.
-            use_delta_pose_additive: The use delta pose additive.
-            use_chunk_plucker_post_attn: The use chunk plucker post attn.
-        """
         super().__init__()
         self.hidden_size = hidden_size
         self.chunk_size = chunk_size
@@ -401,18 +348,6 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
     def forward_frame_aware(
         self, x, y, t, mask=None, THW=None, rotary_emb=None, block_mask=None, chunk_index=None, **kwargs
     ):
-        """Forward frame aware.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            chunk_index: The chunk index.
-        """
         B, N, C = x.shape
         num_frames = t.shape[2]
         frame_valid_mask = kwargs.get("frame_valid_mask")
@@ -522,18 +457,6 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
         return x
 
     def forward(self, x, y, t, mask=None, THW=None, rotary_emb=None, block_mask=None, chunk_index=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            block_mask: The block mask.
-            chunk_index: The chunk index.
-        """
         if len(t.shape) > 2:
             return self.forward_frame_aware(
                 x,
@@ -754,66 +677,6 @@ class SanaMSVideoCamCtrl(Sana):
         use_autograd_kernel: bool = False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            input_size: The input size.
-            patch_size: The patch size.
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            class_dropout_prob: The class dropout prob.
-            learn_sigma: The learn sigma.
-            pred_sigma: The pred sigma.
-            drop_path: The drop path.
-            caption_channels: The caption channels.
-            pe_interpolation: The pe interpolation.
-            config: The config.
-            model_max_length: The model max length.
-            qk_norm: The qk norm.
-            y_norm: The y norm.
-            norm_eps: The norm eps.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            use_pe: The use pe.
-            y_norm_scale_factor: The y norm scale factor.
-            patch_embed_kernel: The patch embed kernel.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_type: The cross attn type.
-            cross_attn_image_embeds: The cross attn image embeds.
-            image_embed_channels: The image embed channels.
-            pos_embed_type: The pos embed type.
-            rope_fhw_dim: The rope fhw dim.
-            t_kernel_size: The t kernel size.
-            flash_attn_layer_idx: The flash attn layer idx.
-            flash_attn_layer_type: The flash attn layer type.
-            flash_attn_window_count: The flash attn window count.
-            pack_latents: The pack latents.
-            camctrl_type: The camctrl type.
-            camctrl_layers_num: The camctrl layers num.
-            cam_attn_compress: The cam attn compress.
-            init_cam_from_base: The init cam from base.
-            use_delta_actions: The use delta actions.
-            delta_action_dim: The delta action dim.
-            use_delta_translation: The use delta translation.
-            fp32_norm: The fp32 norm.
-            chunk_size: The chunk size.
-            chunk_split_strategy: The chunk split strategy.
-            conv_kernel_size: The conv kernel size.
-            k_conv_only: The k conv only.
-            softmax_every_n: The softmax every n.
-            use_delta_pose_additive: The use delta pose additive.
-            delta_pose_additive_dim: The delta pose additive dim.
-            use_chunk_plucker_input: The use chunk plucker input.
-            use_chunk_plucker_post_attn: The use chunk plucker post attn.
-            chunk_plucker_channels: The chunk plucker channels.
-            chunk_plucker_post_attn_blocks: The chunk plucker post attn blocks.
-            use_autograd_kernel: The use autograd kernel.
-        """
         super().__init__(
             input_size=input_size,
             patch_size=patch_size,
@@ -1036,16 +899,6 @@ class SanaMSVideoCamCtrl(Sana):
 
     @staticmethod
     def _pack_latents(latents, batch_size, num_channels_latents, height, width, frame):
-        """Helper function to pack latents.
-
-        Args:
-            latents: The latents.
-            batch_size: The batch size.
-            num_channels_latents: The num channels latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         latents = latents.view(batch_size, num_channels_latents, frame, height // 2, 2, width // 2, 2)
         latents = latents.permute(0, 1, 4, 6, 2, 3, 5)
         latents = latents.reshape(batch_size, num_channels_latents * 4, frame, height // 2, width // 2)
@@ -1054,14 +907,6 @@ class SanaMSVideoCamCtrl(Sana):
 
     @staticmethod
     def _unpack_latents(latents, height, width, frame):
-        """Helper function to unpack latents.
-
-        Args:
-            latents: The latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         batch_size, channels, frame, H, W = latents.shape
 
         assert height % 2 == 0 and width % 2 == 0
@@ -1266,14 +1111,6 @@ class SanaMSVideoCamCtrl(Sana):
             # self.diagonal_mask = torch.ones_like(self.diagonal_mask).bool().to(x.device)
 
             def mask_mod(b, h, q_idx, kv_idx):
-                """Mask mod.
-
-                Args:
-                    b: The b.
-                    h: The h.
-                    q_idx: The q idx.
-                    kv_idx: The kv idx.
-                """
                 return self.diagonal_mask[q_idx, kv_idx].bool()
 
             block_mask = create_block_mask_cached(
@@ -1399,7 +1236,6 @@ class SanaMSVideoCamCtrl(Sana):
         )
 
     def __call__(self, *args, **kwargs):
-        """Call."""
         return self.forward(*args, **kwargs)
 
     def forward_with_dpmsolver(self, x, timestep, y, data_info, **kwargs):
@@ -1427,15 +1263,6 @@ class SanaMSVideoCamCtrl(Sana):
         return imgs
 
     def create_diagonal_mask(self, N_pad, N, num_frames, block_size=1, mask_type="nlogn"):
-        """Create diagonal mask.
-
-        Args:
-            N_pad: The n pad.
-            N: The n.
-            num_frames: The num frames.
-            block_size: The block size.
-            mask_type: The mask type.
-        """
         from tools.attn_mask.gen_nlogn_mask import (
             gen_linear_mask_shrinked,
             gen_log_mask_shrinked,
@@ -1469,21 +1296,6 @@ class SanaMSVideoCamCtrl(Sana):
         diag_width=1,
         multiplier=2,
     ):
-        """Prepare flexattention.
-
-        Args:
-            cfg_size: The cfg size.
-            num_head: The num head.
-            head_dim: The head dim.
-            dtype: The dtype.
-            device: The device.
-            context_length: The context length.
-            prompt_length: The prompt length.
-            num_frame: The num frame.
-            frame_size: The frame size.
-            diag_width: The diag width.
-            multiplier: The multiplier.
-        """
         from torch.nn.attention.flex_attention import flex_attention
 
         assert diag_width == multiplier, f"{diag_width} is not equivalent to {multiplier}"
@@ -1501,7 +1313,6 @@ class SanaMSVideoCamCtrl(Sana):
         return block_mask
 
     def load_diagonal_mask(self, *args, **kwargs):
-        """Load diagonal mask."""
         path = kwargs.get("path")
         if path is None:
             self.diagonal_mask = self.prepare_flexattention(*args, **kwargs)
@@ -1512,16 +1323,10 @@ class SanaMSVideoCamCtrl(Sana):
             )
 
     def initialize(self):
-        """Initialize."""
         super().initialize_weights()
 
         # Initialize transformer layers:
         def _basic_init(module):
-            """Helper function to basic init.
-
-            Args:
-                module: The module.
-            """
             if isinstance(module, nn.Linear):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -1761,20 +1566,11 @@ class SanaMSVideoCamCtrl(Sana):
         return result
 
     def register_block_hook(self, layers=None, device="cpu", detach=True, score_only=True):
-        """Register block hook.
-
-        Args:
-            layers: The layers.
-            device: The device.
-            detach: The detach.
-            score_only: The score only.
-        """
         for i, block in enumerate(self.blocks):
             if layers is None or i in layers:
                 block.block_hook = BlockHook(device, detach, score_only)
 
     def get_block_output(self):
-        """Get block output."""
         block_outputs = {}
         for i, block in enumerate(self.blocks):
             if block.block_hook is not None:
@@ -1783,7 +1579,6 @@ class SanaMSVideoCamCtrl(Sana):
         return block_outputs
 
     def init_cam_branch_from_base(self):
-        """Init cam branch from base."""
         for _i, block in enumerate(self.blocks):
             if hasattr(block.attn, "init_cam_branch_weights"):
                 block.attn.init_cam_branch_weights()
@@ -1795,6 +1590,5 @@ class SanaMSVideoCamCtrl(Sana):
 
 
 def SanaMSVideoCamCtrl_1600M_P1_D20(**kwargs):
-    """Sanamsvideocamctrl 1600m p1 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideoCamCtrl(depth=20, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, **kwargs)

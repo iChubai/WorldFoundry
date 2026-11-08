@@ -14,8 +14,6 @@
 # limitations under the License.
 
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> pipeline -> default.py functionality."""
-
 import logging
 import pickle
 from pathlib import Path
@@ -52,20 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 class DefaultAnnotationPipeline(Pipeline):
-    """Default annotation pipeline implementation."""
-
     def __init__(self, init: DictConfig, slam: DictConfig, post: DictConfig, output: DictConfig) -> None:
-        """Init.
-
-        Args:
-            init: The init.
-            slam: The slam.
-            post: The post.
-            output: The output.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.init_cfg = init
         self.slam_cfg = slam
@@ -84,14 +69,6 @@ class DefaultAnnotationPipeline(Pipeline):
         self.out_path.mkdir(exist_ok=True, parents=True)
 
     def _add_init_processors(self, video_stream: VideoStream) -> ProcessedVideoStream:
-        """Helper function to add init processors.
-
-        Args:
-            video_stream: The video stream.
-
-        Returns:
-            The return value.
-        """
         init_processors: list[StreamProcessor] = []
 
         # The assertions make sure that the attributes are not estimated previously.
@@ -121,16 +98,6 @@ class DefaultAnnotationPipeline(Pipeline):
     def _add_post_processors(
         self, view_idx: int, video_stream: VideoStream, slam_output: SLAMOutput
     ) -> ProcessedVideoStream:
-        """Helper function to add post processors.
-
-        Args:
-            view_idx: The view idx.
-            video_stream: The video stream.
-            slam_output: The slam output.
-
-        Returns:
-            The return value.
-        """
         post_processors: list[StreamProcessor] = [
             AssignAttributesProcessor(
                 {
@@ -155,14 +122,6 @@ class DefaultAnnotationPipeline(Pipeline):
         return ProcessedVideoStream(video_stream, post_processors)
 
     def run(self, video_data: VideoStream | MultiviewVideoList) -> AnnotationPipelineOutput:
-        """Run.
-
-        Args:
-            video_data: The video data.
-
-        Returns:
-            The return value.
-        """
         if isinstance(video_data, MultiviewVideoList):
             video_streams = [video_data[view_idx] for view_idx in range(len(video_data))]
             artifact_paths = [io.ArtifactPath(self.out_path, video_stream.name()) for video_stream in video_streams]

@@ -2,8 +2,6 @@
 #   https://github.com/facebookresearch/dino/blob/main/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> layers -> vision_transformer.py functionality."""
-
 import logging
 import math
 from collections.abc import Sequence
@@ -24,22 +22,13 @@ log = logging.getLogger(__name__)
 
 
 class BlockChunk(nn.ModuleList):
-    """Block chunk implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         for b in self:
             x = b(x)
         return x
 
 
 class DinoVisionTransformer(nn.Module):
-    """Dino vision transformer implementation."""
-
     def __init__(
         self,
         img_size=224,
@@ -68,7 +57,6 @@ class DinoVisionTransformer(nn.Module):
         """
         Args:
             img_size (int, tuple): input image size
-            patch_size (int, tuple): patch size
             in_chans (int): number of input channels
             embed_dim (int): embedding dimension
             depth (int): depth of transformer
@@ -128,7 +116,6 @@ class DinoVisionTransformer(nn.Module):
             log.info("using Identity layer as FFN")
 
             def f(*args, **kwargs):
-                """F."""
                 return nn.Identity()
 
             ffn_layer = f
@@ -172,7 +159,6 @@ class DinoVisionTransformer(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        """Init weights."""
         trunc_normal_(self.pos_embed, std=0.02)
         nn.init.normal_(self.cls_token, std=1e-6)
         if self.register_tokens is not None:
@@ -180,13 +166,6 @@ class DinoVisionTransformer(nn.Module):
         named_apply(init_weights_vit_timm, self)
 
     def interpolate_pos_encoding(self, x, w, h):
-        """Interpolate pos encoding.
-
-        Args:
-            x: The x.
-            w: The w.
-            h: The h.
-        """
         previous_dtype = x.dtype
         npatch = x.shape[1] - 1
         N = self.pos_embed.shape[1] - 1
@@ -221,12 +200,6 @@ class DinoVisionTransformer(nn.Module):
         return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1).to(previous_dtype)
 
     def prepare_tokens_with_masks(self, x, masks=None):
-        """Prepare tokens with masks.
-
-        Args:
-            x: The x.
-            masks: The masks.
-        """
         B, nc, w, h = x.shape
         x = self.patch_embed(x)
         if masks is not None:
@@ -241,12 +214,6 @@ class DinoVisionTransformer(nn.Module):
         return x
 
     def forward_features_list(self, x_list, masks_list):
-        """Forward features list.
-
-        Args:
-            x_list: The x list.
-            masks_list: The masks list.
-        """
         x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list, strict=False)]
 
         for blk in self.blocks:
@@ -272,12 +239,6 @@ class DinoVisionTransformer(nn.Module):
         return output
 
     def forward_features(self, x, masks=None):
-        """Forward features.
-
-        Args:
-            x: The x.
-            masks: The masks.
-        """
         if isinstance(x, list):
             return self.forward_features_list(x, masks)
 
@@ -300,12 +261,6 @@ class DinoVisionTransformer(nn.Module):
         }
 
     def _get_intermediate_layers_not_chunked(self, x, n=1):
-        """Helper function to get intermediate layers not chunked.
-
-        Args:
-            x: The x.
-            n: The n.
-        """
         x = self.prepare_tokens_with_masks(x)
         # If n is an int, take the n last blocks. If it's a list, take them
         output, total_block_len = [], len(self.blocks)
@@ -318,12 +273,6 @@ class DinoVisionTransformer(nn.Module):
         return output
 
     def _get_intermediate_layers_chunked(self, x, n=1):
-        """Helper function to get intermediate layers chunked.
-
-        Args:
-            x: The x.
-            n: The n.
-        """
         x = self.prepare_tokens_with_masks(x)
         output, i, total_block_len = [], 0, len(self.blocks[-1])
         # If n is an int, take the n last blocks. If it's a list, take them
@@ -345,18 +294,6 @@ class DinoVisionTransformer(nn.Module):
         return_class_token: bool = False,
         norm=True,
     ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
-        """Get intermediate layers.
-
-        Args:
-            x: The x.
-            n: The n.
-            reshape: The reshape.
-            return_class_token: The return class token.
-            norm: The norm.
-
-        Returns:
-            The return value.
-        """
         if self.chunked_blocks:
             outputs = self._get_intermediate_layers_chunked(x, n)
         else:
@@ -376,7 +313,6 @@ class DinoVisionTransformer(nn.Module):
         return tuple(outputs)
 
     def forward(self, *args, is_training=True, **kwargs):
-        """Forward."""
         ret = self.forward_features(*args, **kwargs)
         if is_training:
             return ret
@@ -393,12 +329,6 @@ def init_weights_vit_timm(module: nn.Module, name: str = ""):
 
 
 def vit_small(patch_size=16, num_register_tokens=0, **kwargs):
-    """Vit small.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
@@ -413,12 +343,6 @@ def vit_small(patch_size=16, num_register_tokens=0, **kwargs):
 
 
 def vit_base(patch_size=16, num_register_tokens=0, **kwargs):
-    """Vit base.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
@@ -433,12 +357,6 @@ def vit_base(patch_size=16, num_register_tokens=0, **kwargs):
 
 
 def vit_large(patch_size=16, num_register_tokens=0, **kwargs):
-    """Vit large.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=1024,

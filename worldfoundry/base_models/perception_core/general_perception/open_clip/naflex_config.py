@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> naflex_config.py functionality."""
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Union
@@ -8,14 +6,6 @@ PatchSize = Union[int, tuple[int, int]]
 
 
 def to_2tuple(value: PatchSize) -> tuple[int, int]:
-    """To 2tuple.
-
-    Args:
-        value: The value.
-
-    Returns:
-        The return value.
-    """
     if isinstance(value, tuple):
         if len(value) != 2:
             raise ValueError("Patch size tuples must have exactly two values.")
@@ -25,8 +15,6 @@ def to_2tuple(value: PatchSize) -> tuple[int, int]:
 
 @dataclass(frozen=True)
 class NaFlexDataConfig:
-    """Na flex data config implementation."""
-
     train_patch_sizes: tuple[tuple[int, int], ...] = ((16, 16),)
     train_patch_size_probs: tuple[float, ...] | None = None
     train_seq_lens: tuple[int, ...] = (128, 256, 576, 784, 1024)
@@ -48,21 +36,6 @@ class NaFlexDataConfig:
         eval_patch_size: PatchSize | None = None,
         eval_seq_len: int | None = None,
     ) -> "NaFlexDataConfig":
-        """Resolve.
-
-        Args:
-            patch_sizes: The patch sizes.
-            patch_size_probs: The patch size probs.
-            seq_lens: The seq lens.
-            train_num_image_tokens: The train num image tokens.
-            max_tokens_per_batch: The max tokens per batch.
-            batch_divisor: The batch divisor.
-            eval_patch_size: The eval patch size.
-            eval_seq_len: The eval seq len.
-
-        Returns:
-            The return value.
-        """
         patch_sizes = (16,) if patch_sizes is None else patch_sizes
         train_patch_sizes = tuple(to_2tuple(size) for size in patch_sizes)
         if not train_patch_sizes:
@@ -121,18 +94,8 @@ class NaFlexDataConfig:
 
     @property
     def variable_patch_size(self) -> bool:
-        """Variable patch size.
-
-        Returns:
-            The return value.
-        """
         return len(self.train_patch_sizes) > 1
 
     @property
     def eval_config(self) -> tuple[tuple[int, int], int]:
-        """Eval config.
-
-        Returns:
-            The return value.
-        """
         return self.eval_patch_size, self.eval_seq_len

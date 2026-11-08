@@ -1,15 +1,7 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> misc -> nn_module_tools.py functionality."""
-
 from torch import nn
 
 
 def convert_to_buffer(module: nn.Module, persistent: bool = True):
-    """Convert to buffer.
-
-    Args:
-        module: The module.
-        persistent: The persistent.
-    """
     # Recurse over child modules.
     for name, child in list(module.named_children()):
         convert_to_buffer(child, persistent)

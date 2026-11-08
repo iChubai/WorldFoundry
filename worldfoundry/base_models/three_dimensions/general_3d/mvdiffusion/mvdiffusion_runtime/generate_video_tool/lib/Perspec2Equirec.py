@@ -1,21 +1,9 @@
-"""Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> generate_video_tool -> lib -> Perspec2Equirec.py functionality."""
-
 import cv2
 import numpy as np
 
 
 class Perspective:
-    """Perspective implementation."""
-
     def __init__(self, img_name, FOV, THETA, PHI):
-        """Init.
-
-        Args:
-            img_name: The img name.
-            FOV: The fov.
-            THETA: The theta.
-            PHI: The phi.
-        """
         if isinstance(img_name, str):
             self._img = cv2.imread(img_name, cv2.IMREAD_COLOR)
         else:
@@ -30,12 +18,6 @@ class Perspective:
         self.h_len = np.tan(np.radians(self.hFOV / 2.0))
 
     def GetEquirec(self, height, width):
-        """Getequirec.
-
-        Args:
-            height: The height.
-            width: The width.
-        """
         #
         # THETA is left/right angle, PHI is up/down angle, both in degree
         #

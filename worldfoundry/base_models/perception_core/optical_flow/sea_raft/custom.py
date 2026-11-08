@@ -50,13 +50,6 @@ def add_color_bar_to_image(image, color_bar, orientation="vertical"):
 
 
 def vis_heatmap(name, image, heatmap):
-    """Vis heatmap.
-
-    Args:
-        name: The name.
-        image: The image.
-        heatmap: The heatmap.
-    """
     # theta = 0.01
     # print(heatmap.max(), heatmap.min(), heatmap.mean())
     heatmap = heatmap[:, :, 0]
@@ -75,12 +68,6 @@ def vis_heatmap(name, image, heatmap):
 
 
 def get_heatmap(info, args):
-    """Get heatmap.
-
-    Args:
-        info: The info.
-        args: The args.
-    """
     raw_b = info[:, 2:]
     log_b = torch.zeros_like(raw_b)
     weight = info[:, :2].softmax(dim=1)
@@ -91,14 +78,6 @@ def get_heatmap(info, args):
 
 
 def forward_flow(args, model, image1, image2):
-    """Forward flow.
-
-    Args:
-        args: The args.
-        model: The model.
-        image1: The image1.
-        image2: The image2.
-    """
     output = model(image1, image2, iters=args.iters, test_mode=True)
     flow_final = output["flow"][-1]
     info_final = output["info"][-1]
@@ -106,14 +85,6 @@ def forward_flow(args, model, image1, image2):
 
 
 def calc_flow(args, model, image1, image2):
-    """Calc flow.
-
-    Args:
-        args: The args.
-        model: The model.
-        image1: The image1.
-        image2: The image2.
-    """
     img1 = F.interpolate(image1, scale_factor=2**args.scale, mode="bilinear", align_corners=False)
     img2 = F.interpolate(image2, scale_factor=2**args.scale, mode="bilinear", align_corners=False)
     H, W = img1.shape[2:]
@@ -127,15 +98,6 @@ def calc_flow(args, model, image1, image2):
 
 @torch.no_grad()
 def demo_data(path, args, model, image1, image2):
-    """Demo data.
-
-    Args:
-        path: The path.
-        args: The args.
-        model: The model.
-        image1: The image1.
-        image2: The image2.
-    """
     os.system(f"mkdir -p {path}")
     H, W = image1.shape[2:]
     flow, info = calc_flow(args, model, image1, image2)
@@ -149,13 +111,6 @@ def demo_data(path, args, model, image1, image2):
 
 @torch.no_grad()
 def demo_custom(model, args, device=torch.device("cuda")):
-    """Demo custom.
-
-    Args:
-        model: The model.
-        args: The args.
-        device: The device.
-    """
     image1 = cv2.imread("./custom/image1.jpg")
     image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
     image2 = cv2.imread("./custom/image2.jpg")
@@ -169,7 +124,6 @@ def demo_custom(model, args, device=torch.device("cuda")):
 
 
 def main():
-    """Main."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg", help="experiment configure file name", required=True, type=str)
     parser.add_argument("--path", help="checkpoint path", type=str, default=None)

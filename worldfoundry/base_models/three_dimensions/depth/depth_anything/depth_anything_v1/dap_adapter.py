@@ -60,16 +60,6 @@ class DAPModel(DepthEstimationModel):
         input_size: int = 518,
         weights_path: str | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            midas_model_type: The midas model type.
-            input_size: The input size.
-            weights_path: The weights path.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         if weights_path is None:
             try:
@@ -104,31 +94,13 @@ class DAPModel(DepthEstimationModel):
 
     @property
     def depth_type(self) -> DepthType:
-        """Depth type.
-
-        Returns:
-            The return value.
-        """
         return DepthType.MODEL_METRIC_DISTANCE
 
     @property
     def supported_camera_types(self) -> list[CameraType]:
-        """Supported camera types.
-
-        Returns:
-            The return value.
-        """
         return [CameraType.PANORAMA]
 
     def estimate(self, src: DepthEstimationInput) -> DepthEstimationResult:
-        """Estimate.
-
-        Args:
-            src: The src.
-
-        Returns:
-            The return value.
-        """
         rgb: torch.Tensor = unpack_optional(src.rgb)
         assert rgb.dtype == torch.float32, "Input image should be float32"
         assert src.intrinsics is None, "This is only intended for 360 panoramas"

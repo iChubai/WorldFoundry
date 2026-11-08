@@ -62,21 +62,10 @@ class FixedPositionalEmbedding(nn.Module):
 
 
 def exists(val):
-    """Exists.
-
-    Args:
-        val: The val.
-    """
     return val is not None
 
 
 def default(val, d):
-    """Default.
-
-    Args:
-        val: The val.
-        d: The d.
-    """
     if exists(val):
         return val
     return d() if isfunction(d) else d

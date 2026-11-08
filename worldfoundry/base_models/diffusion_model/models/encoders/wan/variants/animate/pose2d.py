@@ -21,12 +21,6 @@ from PIL import Image
 
 
 def box_convert_simple(box, convert_type="xyxy2xywh"):
-    """Box convert simple.
-
-    Args:
-        box: The box.
-        convert_type: The convert type.
-    """
     if convert_type == "xyxy2xywh":
         return [box[0], box[1], box[2] - box[0], box[3] - box[1]]
     elif convert_type == "xywh2xyxy":
@@ -43,13 +37,6 @@ def box_convert_simple(box, convert_type="xyxy2xywh"):
 
 
 def read_img(image, convert="RGB", check_exist=False):
-    """Read img.
-
-    Args:
-        image: The image.
-        convert: The convert.
-        check_exist: The check exist.
-    """
     if isinstance(image, str):
         if check_exist and not osp.exists(image):
             return None
@@ -71,15 +58,7 @@ def read_img(image, convert="RGB", check_exist=False):
 
 
 class AAPoseMeta:
-    """Aa pose meta implementation."""
-
     def __init__(self, meta=None, kp2ds=None):
-        """Init.
-
-        Args:
-            meta: The meta.
-            kp2ds: The kp2ds.
-        """
         self.image_id = ""
         self.height = 0
         self.width = 0
@@ -99,24 +78,10 @@ class AAPoseMeta:
             self.load_from_kp2ds(kp2ds)
 
     def is_valid(self, kp, p, threshold):
-        """Is valid.
-
-        Args:
-            kp: The kp.
-            p: The p.
-            threshold: The threshold.
-        """
         x, y = kp
         return not (x < 0 or y < 0 or x > self.width or y > self.height or p < threshold)
 
     def get_bbox(self, kp, kp_p, threshold=0.5):
-        """Get bbox.
-
-        Args:
-            kp: The kp.
-            kp_p: The kp p.
-            threshold: The threshold.
-        """
         kps = kp[kp_p > threshold]
         if kps.size == 0:
             return 0, 0, 0, 0
@@ -125,14 +90,6 @@ class AAPoseMeta:
         return x0, y0, x1, y1
 
     def crop(self, x0, y0, x1, y1):
-        """Crop.
-
-        Args:
-            x0: The x0.
-            y0: The y0.
-            x1: The x1.
-            y1: The y1.
-        """
         all_kps = [self.kps_body, self.kps_lhand, self.kps_rhand, self.kps_face]
         for kps in all_kps:
             if kps is not None:
@@ -143,12 +100,6 @@ class AAPoseMeta:
         return self
 
     def resize(self, width, height):
-        """Resize.
-
-        Args:
-            width: The width.
-            height: The height.
-        """
         scale_x = width / self.width
         scale_y = height / self.height
         all_kps = [self.kps_body, self.kps_lhand, self.kps_rhand, self.kps_face]
@@ -161,11 +112,6 @@ class AAPoseMeta:
         return self
 
     def get_kps_body_with_p(self, normalize=False):
-        """Get kps body with p.
-
-        Args:
-            normalize: The normalize.
-        """
         kps_body = self.kps_body.copy()
         if normalize:
             kps_body = kps_body / np.array([self.width, self.height])
@@ -174,14 +120,6 @@ class AAPoseMeta:
 
     @staticmethod
     def from_kps_face(kps_face: np.ndarray, height: int, width: int):
-        """From kps face.
-
-        Args:
-            kps_face: The kps face.
-            height: The height.
-            width: The width.
-        """
-
         pose_meta = AAPoseMeta()
         pose_meta.kps_face = kps_face[:, :2]
         if kps_face.shape[1] == 3:
@@ -194,14 +132,6 @@ class AAPoseMeta:
 
     @staticmethod
     def from_kps_body(kps_body: np.ndarray, height: int, width: int):
-        """From kps body.
-
-        Args:
-            kps_body: The kps body.
-            height: The height.
-            width: The width.
-        """
-
         pose_meta = AAPoseMeta()
         pose_meta.kps_body = kps_body[:, :2]
         pose_meta.kps_body_p = kps_body[:, 2]
@@ -211,11 +141,6 @@ class AAPoseMeta:
 
     @staticmethod
     def from_humanapi_meta(meta):
-        """From humanapi meta.
-
-        Args:
-            meta: The meta.
-        """
         pose_meta = AAPoseMeta()
         width, height = meta["width"], meta["height"]
         pose_meta.width = width
@@ -232,14 +157,6 @@ class AAPoseMeta:
         return pose_meta
 
     def load_from_meta(self, meta, norm_body=True, norm_hand=False):
-        """Load from meta.
-
-        Args:
-            meta: The meta.
-            norm_body: The norm body.
-            norm_hand: The norm hand.
-        """
-
         self.image_id = meta.get("image_id", "00000.png")
         self.height = meta["height"]
         self.width = meta["width"]
@@ -297,13 +214,6 @@ class AAPoseMeta:
 
     @staticmethod
     def from_dwpose(dwpose_det_res, height, width):
-        """From dwpose.
-
-        Args:
-            dwpose_det_res: The dwpose det res.
-            height: The height.
-            width: The width.
-        """
         pose_meta = AAPoseMeta()
         pose_meta.kps_body = dwpose_det_res["bodies"]["candidate"]
         pose_meta.kps_body_p = dwpose_det_res["bodies"]["score"]
@@ -324,18 +234,9 @@ class AAPoseMeta:
         return pose_meta
 
     def save_json(self):
-        """Save json."""
+        pass
 
     def draw_aapose(self, img, threshold=0.5, stick_width_norm=200, draw_hand=True, draw_head=True):
-        """Draw aapose.
-
-        Args:
-            img: The img.
-            threshold: The threshold.
-            stick_width_norm: The stick width norm.
-            draw_hand: The draw hand.
-            draw_head: The draw head.
-        """
         from .render import (
             draw_aapose_by_meta,
         )
@@ -343,12 +244,6 @@ class AAPoseMeta:
         return draw_aapose_by_meta(img, self, threshold, stick_width_norm, draw_hand, draw_head)
 
     def translate(self, x0, y0):
-        """Translate.
-
-        Args:
-            x0: The x0.
-            y0: The y0.
-        """
         all_kps = [self.kps_body, self.kps_lhand, self.kps_rhand, self.kps_face]
         for kps in all_kps:
             if kps is not None:
@@ -356,12 +251,6 @@ class AAPoseMeta:
                 kps[:, 1] -= y0
 
     def scale(self, sx, sy):
-        """Scale.
-
-        Args:
-            sx: The sx.
-            sy: The sy.
-        """
         all_kps = [self.kps_body, self.kps_lhand, self.kps_rhand, self.kps_face]
         for kps in all_kps:
             if kps is not None:
@@ -784,7 +673,6 @@ def post_dark_udp(coords, batch_heatmaps, kernel=3):
 
     Args:
         coords (np.ndarray[N, K, 2]): Initial coordinates of human pose.
-        batch_heatmaps (np.ndarray[B, K, H, W]): batch_heatmaps
         kernel (int): Gaussian kernel size (K) for modulation.
 
     Returns:
@@ -1215,12 +1103,6 @@ def crop(img, center, scale, res):
 
 
 def split_kp2ds_for_aa(kp2ds, ret_face=False):
-    """Split kp2ds for aa.
-
-    Args:
-        kp2ds: The kp2ds.
-        ret_face: The ret face.
-    """
     kp2ds_body = (
         kp2ds[[0, 6, 6, 8, 10, 5, 7, 9, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 17, 20]]
         + kp2ds[[0, 5, 6, 8, 10, 5, 7, 9, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 18, 21]]
@@ -1234,13 +1116,6 @@ def split_kp2ds_for_aa(kp2ds, ret_face=False):
 
 
 def load_pose_metas_from_kp2ds_seq_list(kp2ds_seq, width, height):
-    """Load pose metas from kp2ds seq list.
-
-    Args:
-        kp2ds_seq: The kp2ds seq.
-        width: The width.
-        height: The height.
-    """
     metas = []
     for kps in kp2ds_seq:
         if len(kps) != 1:
@@ -1267,13 +1142,6 @@ def load_pose_metas_from_kp2ds_seq_list(kp2ds_seq, width, height):
 
 
 def load_pose_metas_from_kp2ds_seq(kp2ds_seq, width, height):
-    """Load pose metas from kp2ds seq.
-
-    Args:
-        kp2ds_seq: The kp2ds seq.
-        width: The width.
-        height: The height.
-    """
     metas = []
     for kps in kp2ds_seq:
         kps = kps.copy()

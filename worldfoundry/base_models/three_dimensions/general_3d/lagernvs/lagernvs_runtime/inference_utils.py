@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> general_3d -> lagernvs -> lagernvs_runtime -> inference_utils.py functionality."""
-
 import io
 import math
 import os
@@ -34,21 +32,10 @@ from vggt.utils.pose_enc import pose_encoding_to_extri_intri
 
 
 def _round_to_multiple(value, multiple):
-    """Helper function to round to multiple.
-
-    Args:
-        value: The value.
-        multiple: The multiple.
-    """
     return max(multiple, int(round(value / multiple) * multiple))
 
 
 def _load_lagernvs_images(image_names, *, mode="resize", target_size=512, patch_size=8):
-    """Helper function to load lagernvs images.
-
-    Args:
-        image_names: The image names.
-    """
     if len(image_names) == 0:
         raise ValueError("At least 1 image is required")
 
@@ -104,11 +91,6 @@ def _load_lagernvs_images(image_names, *, mode="resize", target_size=512, patch_
 
 
 def load_and_preprocess_images_compat(image_names, *, mode="resize", target_size=512, patch_size=8):
-    """Load and preprocess images compat.
-
-    Args:
-        image_names: The image names.
-    """
     try:
         return _vggt_load_and_preprocess_images(
             image_names,
@@ -131,13 +113,6 @@ def load_and_preprocess_images_compat(image_names, *, mode="resize", target_size
 
 
 def save_video(video_tensor, output_path, fps=25):
-    """Save video.
-
-    Args:
-        video_tensor: The video tensor.
-        output_path: The output path.
-        fps: The fps.
-    """
     video = einops.rearrange(video_tensor, "v c h w -> v h w c")
     video = video.detach().cpu().numpy()
     video = np.clip(video, 0, 1)

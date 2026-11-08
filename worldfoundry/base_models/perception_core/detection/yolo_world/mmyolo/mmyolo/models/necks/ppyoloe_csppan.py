@@ -79,8 +79,7 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         )
 
     def build_reduce_layer(self, idx: int):
-        """build reduce layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -115,7 +114,6 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         return layer
 
     def build_upsample_layer(self, idx: int) -> nn.Module:
-        """build upsample layer."""
         # fpn_route
         in_channels = self.out_channels[idx]
         return nn.Sequential(
@@ -132,8 +130,7 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -164,8 +161,7 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         return nn.Sequential(*layer)
 
     def build_downsample_layer(self, idx: int) -> nn.Module:
-        """build downsample layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -184,8 +180,7 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         )
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -216,5 +211,4 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
         return nn.Sequential(*layer)
 
     def build_out_layer(self, *args, **kwargs) -> nn.Module:
-        """build out layer."""
         return nn.Identity()

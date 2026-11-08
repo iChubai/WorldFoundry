@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> rgbd_utils.py functionality."""
-
 import os.path as osp
 
 import numpy as np

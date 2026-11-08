@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> variants -> fantasy_world -> models -> aggregator.py functionality."""
-
 import logging
 
 import torch
@@ -83,29 +81,6 @@ class Aggregator(nn.Module):
         cross_num_heads=16,
         spatial_time=21,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            block_fn: The block fn.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            aa_order: The aa order.
-            aa_block_size: The aa block size.
-            qk_norm: The qk norm.
-            rope_freq: The rope freq.
-            init_values: The init values.
-            cross_hidden_dim: The cross hidden dim.
-            cross_num_heads: The cross num heads.
-            spatial_time: The spatial time.
-        """
         super().__init__()
 
         self.spatial_time = spatial_time
@@ -306,15 +281,6 @@ class Aggregator(nn.Module):
     def _process_aggregator_input(
         self, patch_tokens: torch.Tensor, camera_token: torch.Tensor = None
     ) -> tuple[list[torch.Tensor], int]:
-        """Helper function to process aggregator input.
-
-        Args:
-            patch_tokens: The patch tokens.
-            camera_token: The camera token.
-
-        Returns:
-            The return value.
-        """
         B, T, spatial_H, spatial_W, C = patch_tokens.shape
         patch_tokens = patch_tokens.reshape(B * T, -1, 1024)
         S = T

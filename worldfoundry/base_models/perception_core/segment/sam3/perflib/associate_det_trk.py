@@ -2,8 +2,6 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> perflib -> associate_det_trk.py functionality."""
-
 from collections import defaultdict
 
 import torch
@@ -89,16 +87,6 @@ def associate_det_trk(
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
 
         def branchy_hungarian_better_uses_the_cpu(cost_matrix, row_ind, col_ind, iou_list, det_masks, track_masks):
-            """Branchy hungarian better uses the cpu.
-
-            Args:
-                cost_matrix: The cost matrix.
-                row_ind: The row ind.
-                col_ind: The col ind.
-                iou_list: The iou list.
-                det_masks: The det masks.
-                track_masks: The track masks.
-            """
             matched_trk = set()
             matched_det = set()
             matched_det_scores = {}  # track index -> [det_score, det_score * iou] det score of matched detection mask

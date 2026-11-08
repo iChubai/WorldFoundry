@@ -32,7 +32,6 @@ def gt_instances_preprocess(batch_gt_instances: Tensor | Sequence, batch_size: i
     Args:
         batch_gt_instances (Sequence[Tensor]): Ground truth
             instances for whole batch, shape [all_gt_bboxes, box_dim+2]
-        batch_size (int): Batch size.
 
     Returns:
         Tensor: batch gt instances data, shape

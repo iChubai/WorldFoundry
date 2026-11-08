@@ -167,8 +167,7 @@ class DistributedAttention(torch.nn.Module):
         self.stream = None
 
     def forward(self, query: Tensor, key: Tensor, value: Tensor, *args: Any, **kwargs) -> Tensor:
-        """forward
-
+        """
         Arguments:
             query (Tensor): query input to the layer
             key (Tensor): key input to the layer

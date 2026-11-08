@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> models -> visual_transformer.py functionality."""
-
 import logging
 
 import torch
@@ -72,30 +70,6 @@ class VisualGeometryTransformer(nn.Module):
         condition_strategy=["token", "pow3r", "token"],
         intermediate_idxs: list[int] = [4, 11, 17, 23],
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            num_register_tokens: The num register tokens.
-            block_fn: The block fn.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            patch_embed: The patch embed.
-            qk_norm: The qk norm.
-            rope_freq: The rope freq.
-            init_values: The init values.
-            enable_cond: The enable cond.
-            sampling_strategy: The sampling strategy.
-            fixed_patch_embed: The fixed patch embed.
-            condition_strategy: The condition strategy.
-            intermediate_idxs: The intermediate idxs.
-        """
         super().__init__()
         # Store config parameters
         self.enable_cond = enable_cond
@@ -222,11 +196,6 @@ class VisualGeometryTransformer(nn.Module):
             raise NotImplementedError
 
     def _init_rotary_position_embedding(self, rope_freq):
-        """Helper function to init rotary position embedding.
-
-        Args:
-            rope_freq: The rope freq.
-        """
         self.rope = (
             RotaryPositionEmbedding2D(
                 frequency=rope_freq,
@@ -239,19 +208,6 @@ class VisualGeometryTransformer(nn.Module):
     def _init_transformer_blocks(
         self, block_fn, embed_dim, num_heads, mlp_ratio, qkv_bias, proj_bias, ffn_bias, init_values, qk_norm
     ):
-        """Helper function to init transformer blocks.
-
-        Args:
-            block_fn: The block fn.
-            embed_dim: The embed dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            init_values: The init values.
-            qk_norm: The qk norm.
-        """
         self.frame_blocks = nn.ModuleList(
             [
                 block_fn(

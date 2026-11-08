@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> pretrained.py functionality."""
-
 import copy
 import hashlib
 import os
@@ -41,12 +39,6 @@ except ImportError:
 
 
 def _pcfg(url="", hf_hub="", **kwargs):
-    """Helper function to pcfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # OpenAI / OpenCLIP defaults
     return {
         "url": url,
@@ -60,12 +52,6 @@ def _pcfg(url="", hf_hub="", **kwargs):
 
 
 def _slpcfg(url="", hf_hub="", **kwargs):
-    """Helper function to slpcfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # SiGLIP defaults
     return {
         "url": url,
@@ -79,12 +65,6 @@ def _slpcfg(url="", hf_hub="", **kwargs):
 
 
 def _apcfg(url="", hf_hub="", **kwargs):
-    """Helper function to apcfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # CLIPA defaults
     return {
         "url": url,
@@ -98,12 +78,6 @@ def _apcfg(url="", hf_hub="", **kwargs):
 
 
 def _mccfg(url="", hf_hub="", **kwargs):
-    """Helper function to mccfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # MobileCLIP
     return {
         "url": url,
@@ -117,12 +91,6 @@ def _mccfg(url="", hf_hub="", **kwargs):
 
 
 def _clapcfg(url="", hf_hub="", **kwargs):
-    """Helper function to clapcfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     return {
         "url": url,
         "hf_hub": hf_hub,
@@ -131,12 +99,6 @@ def _clapcfg(url="", hf_hub="", **kwargs):
 
 
 def _mc2cfg(url="", hf_hub="", **kwargs):
-    """Helper function to mc2cfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # MobileCLIP-2
     return {
         "url": url,
@@ -150,12 +112,6 @@ def _mc2cfg(url="", hf_hub="", **kwargs):
 
 
 def _pecfg(url="", hf_hub="", **kwargs):
-    """Helper function to pecfg.
-
-    Args:
-        url: The url.
-        hf_hub: The hf hub.
-    """
     # PE
     return {
         "url": url,
@@ -780,11 +736,6 @@ _PRETRAINED.update(_PRETRAINED_quickgelu)
 
 
 def _clean_tag(tag: str):
-    """Helper function to clean tag.
-
-    Args:
-        tag: The tag.
-    """
     # normalize pretrained tags
     return tag.lower().replace("-", "_")
 
@@ -815,24 +766,12 @@ def list_pretrained_tags_by_model(model: str):
 
 
 def is_pretrained_cfg(model: str, tag: str):
-    """Is pretrained cfg.
-
-    Args:
-        model: The model.
-        tag: The tag.
-    """
     if model not in _PRETRAINED:
         return False
     return _clean_tag(tag) in _PRETRAINED[model]
 
 
 def get_pretrained_cfg(model: str, tag: str):
-    """Get pretrained cfg.
-
-    Args:
-        model: The model.
-        tag: The tag.
-    """
     if model not in _PRETRAINED:
         return {}
     model_pretrained = _PRETRAINED[model]
@@ -840,12 +779,6 @@ def get_pretrained_cfg(model: str, tag: str):
 
 
 def get_pretrained_url(model: str, tag: str):
-    """Get pretrained url.
-
-    Args:
-        model: The model.
-        tag: The tag.
-    """
     cfg = get_pretrained_cfg(model, _clean_tag(tag))
     return cfg.get("url", "")
 
@@ -854,12 +787,6 @@ def download_pretrained_from_url(
     url: str,
     cache_dir: str | None = None,
 ):
-    """Download pretrained from url.
-
-    Args:
-        url: The url.
-        cache_dir: The cache dir.
-    """
     if not cache_dir:
         cache_dir = os.path.expanduser("~/.cache/clip")
     os.makedirs(cache_dir, exist_ok=True)
@@ -908,11 +835,6 @@ def download_pretrained_from_url(
 
 
 def has_hf_hub(necessary=False):
-    """Has hf hub.
-
-    Args:
-        necessary: The necessary.
-    """
     if not _has_hf_hub and necessary:
         # if no HF Hub module installed, and it is necessary to continue, raise error
         raise RuntimeError(
@@ -940,14 +862,6 @@ def download_pretrained_from_hf(
     revision: str | None = None,
     cache_dir: str | None = None,
 ):
-    """Download pretrained from hf.
-
-    Args:
-        model_id: The model id.
-        filename: The filename.
-        revision: The revision.
-        cache_dir: The cache dir.
-    """
     has_hf_hub(True)
 
     filename = filename or HF_WEIGHTS_NAME
@@ -984,13 +898,6 @@ def download_pretrained(
     prefer_hf_hub: bool = True,
     cache_dir: str | None = None,
 ):
-    """Download pretrained.
-
-    Args:
-        cfg: The cfg.
-        prefer_hf_hub: The prefer hf hub.
-        cache_dir: The cache dir.
-    """
     target = ""
     if not cfg:
         return target

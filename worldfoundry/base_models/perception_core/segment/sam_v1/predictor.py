@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam_v1 -> predictor.py functionality."""
-
 import numpy as np
 import torch
 
@@ -15,8 +13,6 @@ from .utils.transforms import ResizeLongestSide
 
 
 class SamPredictor:
-    """Sam predictor implementation."""
-
     def __init__(
         self,
         sam_model: Sam,
@@ -252,11 +248,6 @@ class SamPredictor:
 
     @property
     def device(self) -> torch.device:
-        """Device.
-
-        Returns:
-            The return value.
-        """
         return self.model.device
 
     def reset_image(self) -> None:

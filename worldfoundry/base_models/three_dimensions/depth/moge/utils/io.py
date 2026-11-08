@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> depth -> moge -> utils -> io.py functionality."""
-
 import os
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
@@ -22,16 +20,6 @@ def save_glb(
     texture: np.ndarray,
     vertex_normals: Optional[np.ndarray] = None,
 ):
-    """Save glb.
-
-    Args:
-        save_path: The save path.
-        vertices: The vertices.
-        faces: The faces.
-        vertex_uvs: The vertex uvs.
-        texture: The texture.
-        vertex_normals: The vertex normals.
-    """
     import trimesh
     import trimesh.visual
     from PIL import Image
@@ -57,15 +45,6 @@ def save_ply(
     vertex_colors: np.ndarray,
     vertex_normals: Optional[np.ndarray] = None,
 ):
-    """Save ply.
-
-    Args:
-        save_path: The save path.
-        vertices: The vertices.
-        faces: The faces.
-        vertex_colors: The vertex colors.
-        vertex_normals: The vertex normals.
-    """
     import trimesh
     import trimesh.visual
 
@@ -261,25 +240,11 @@ JSON_TYPE = Union[str, int, float, bool, None, Dict[str, "JSON"], List["JSON"]]
 
 
 def read_json(path: Union[str, os.PathLike, IO[str]]) -> JSON_TYPE:
-    """Read json.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     text = Path(path).read_text() if isinstance(path, (str, os.PathLike)) else path.read()
     return json.loads(text)
 
 
 def write_json(path: Union[str, os.PathLike, IO[str]], content: JSON_TYPE):
-    """Write json.
-
-    Args:
-        path: The path.
-        content: The content.
-    """
     text = json.dumps(content)
     if isinstance(path, (str, os.PathLike)):
         Path(path).write_text(text)

@@ -2,8 +2,6 @@
 # https://github.com/SpatialVision/Prior-Depth-Anything
 # Licensed under the Apache-2.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> three_dimensions -> depth -> priorda -> sparse_sampler.py functionality."""
-
 import re
 import warnings
 
@@ -20,14 +18,7 @@ except ImportError:
 
 
 class SparseSampler:
-    """Sparse sampler implementation."""
-
     def __init__(self, device="cuda:0"):
-        """Init.
-
-        Args:
-            device: The device.
-        """
         self.device = device
         self.min_depth = 0.0001  # We always filter out depth <= 0.
 
@@ -149,13 +140,6 @@ class SparseSampler:
         return data
 
     def get_sparse_depth(self, image, prior, pattern=None):
-        """Get sparse depth.
-
-        Args:
-            image: The image.
-            prior: The prior.
-            pattern: The pattern.
-        """
         height, width, c = image.shape[-3:]
         low_height, low_width = prior.shape[-2:]
 
@@ -348,13 +332,6 @@ class SparseSampler:
         return sparse_depth, sparse_mask, cover_mask
 
     def interpolate_depths(self, sparse_depths, sparse_masks, complete_masks):
-        """Interpolate depths.
-
-        Args:
-            sparse_depths: The sparse depths.
-            sparse_masks: The sparse masks.
-            complete_masks: The complete masks.
-        """
         if torch_cluster is None:
             raise ImportError("torch_cluster is required for SparseSampler.interpolate_depths")
 

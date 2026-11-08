@@ -28,7 +28,6 @@ from worldfoundry.core.kernels.triton_autotune import custom_autotune
 
 
 def get_cuda_autotune_config():
-    """Get cuda autotune config."""
     return [
         triton.Config({"BLOCK_SIZE_N": 256, "BLOCK_SIZE_D": 64}, num_stages=3, num_warps=8),
         triton.Config({"BLOCK_SIZE_N": 256, "BLOCK_SIZE_D": 32}, num_stages=4, num_warps=4),
@@ -51,7 +50,6 @@ def get_cuda_autotune_config():
 
 
 def get_autotune_config():
-    """Get autotune config."""
     return get_cuda_autotune_config()
 
 
@@ -101,38 +99,6 @@ def vk_q_mm_divide_fwd_kernel_fp32(
     BLOCK_SIZE_N: tl.constexpr,
     BLOCK_SIZE_D: tl.constexpr,  #
 ):
-    """Vk q mm divide fwd kernel fp32.
-
-    Args:
-        a_ptr: The a ptr.
-        b_ptr: The b ptr.
-        c_ptr: The c ptr.
-        c_mid_ptr: The c mid ptr.
-        B: The b.
-        N: The n.
-        H: The h.
-        D: The d.
-        stride_ab: The stride ab.
-        stride_ah: The stride ah.
-        stride_ac1: The stride ac1.
-        stride_ad: The stride ad.
-        stride_bb: The stride bb.
-        stride_bn: The stride bn.
-        stride_bh: The stride bh.
-        stride_bd: The stride bd.
-        stride_cb: The stride cb.
-        stride_cn: The stride cn.
-        stride_ch: The stride ch.
-        stride_cc: The stride cc.
-        stride_cmidb: The stride cmidb.
-        stride_cmidn: The stride cmidn.
-        stride_cmidh: The stride cmidh.
-        stride_cmidc: The stride cmidc.
-        eps: The eps.
-        BLOCK_SIZE_C1: The block size c1.
-        BLOCK_SIZE_N: The block size n.
-        BLOCK_SIZE_D: The block size d.
-    """
     # -----------------------------------------------------------
     # Map program ids `pid` to the block of C it should compute.
     # This is done in a grouped ordering to promote L2 data reuse.

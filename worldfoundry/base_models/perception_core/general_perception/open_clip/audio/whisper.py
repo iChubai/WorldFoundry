@@ -32,12 +32,6 @@ N_FRAMES = N_SAMPLES // HOP_LENGTH  # 3000 frames in a mel spectrogram input
 
 
 def _exact_div(x, y):
-    """Helper function to exact div.
-
-    Args:
-        x: The x.
-        y: The y.
-    """
     assert x % y == 0
     return x // y
 
@@ -116,32 +110,12 @@ def log_mel_spectrogram(
 
 
 class LayerNorm(nn.LayerNorm):
-    """Layer norm implementation."""
-
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return super().forward(x).type(x.dtype)
 
 
 class Linear(nn.Linear):
-    """Linear implementation."""
-
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return F.linear(
             x,
             self.weight.to(x.dtype),
@@ -153,16 +127,6 @@ class Conv1d(nn.Conv1d):
     """Conv d implementation."""
 
     def _conv_forward(self, x: Tensor, weight: Tensor, bias: Tensor | None) -> Tensor:
-        """Helper function to conv forward.
-
-        Args:
-            x: The x.
-            weight: The weight.
-            bias: The bias.
-
-        Returns:
-            The return value.
-        """
         return super()._conv_forward(
             x,
             weight.to(x.dtype),
@@ -185,17 +149,9 @@ def sinusoids(length, channels, max_timescale=10000):
 
 
 class MultiHeadAttention(nn.Module):
-    """Multi head attention implementation."""
-
     use_sdpa = True
 
     def __init__(self, n_state: int, n_head: int):
-        """Init.
-
-        Args:
-            n_state: The n state.
-            n_head: The n head.
-        """
         super().__init__()
         self.n_head = n_head
         self.query = Linear(n_state, n_state)
@@ -210,14 +166,6 @@ class MultiHeadAttention(nn.Module):
         mask: Tensor | None = None,
         kv_cache: dict | None = None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            xa: The xa.
-            mask: The mask.
-            kv_cache: The kv cache.
-        """
         q = self.query(x)
         if kv_cache is None or xa is None or self.key not in kv_cache:
             k = self.key(x if xa is None else xa)
@@ -235,17 +183,6 @@ class MultiHeadAttention(nn.Module):
         v: Tensor,
         mask: Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        """Qkv attention.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            mask: The mask.
-
-        Returns:
-            The return value.
-        """
         n_batch, n_ctx, n_state = q.shape
         scale = (n_state // self.n_head) ** -0.25
         q = q.view(*q.shape[:2], self.n_head, -1).permute(0, 2, 1, 3)
@@ -274,16 +211,7 @@ class MultiHeadAttention(nn.Module):
 
 
 class ResidualAttentionBlock(nn.Module):
-    """Residual attention block implementation."""
-
     def __init__(self, n_state: int, n_head: int, cross_attention: bool = False):
-        """Init.
-
-        Args:
-            n_state: The n state.
-            n_head: The n head.
-            cross_attention: The cross attention.
-        """
         super().__init__()
         self.attn = MultiHeadAttention(n_state, n_head)
         self.attn_ln = LayerNorm(n_state)
@@ -302,14 +230,6 @@ class ResidualAttentionBlock(nn.Module):
         mask: Tensor | None = None,
         kv_cache: dict | None = None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            xa: The xa.
-            mask: The mask.
-            kv_cache: The kv cache.
-        """
         x = x + self.attn(self.attn_ln(x), mask=mask, kv_cache=kv_cache)[0]
         if self.cross_attn:
             x = x + self.cross_attn(self.cross_attn_ln(x), xa, kv_cache=kv_cache)[0]
@@ -341,18 +261,6 @@ class WhisperEncoder(nn.Module):
         add_audio_bos_eos_token: bool = True,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            n_mels: The n mels.
-            n_ctx: The n ctx.
-            n_state: The n state.
-            n_head: The n head.
-            n_layer: The n layer.
-            output_dim: The output dim.
-            avg_pool: The avg pool.
-            add_audio_bos_eos_token: The add audio bos eos token.
-        """
         super().__init__()
         self.conv1 = Conv1d(n_mels, n_state, kernel_size=3, padding=1)
         self.conv2 = Conv1d(n_state, n_state, kernel_size=3, stride=2, padding=1)
@@ -377,17 +285,10 @@ class WhisperEncoder(nn.Module):
         self.grad_checkpointing = False
 
     def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
-        """Set grad checkpointing.
-
-        Args:
-            enable: The enable.
-            impl: The impl.
-        """
         self.grad_checkpointing = enable
 
     def forward(self, x, padding_mask=None, audio_lengths=None):
-        """Forward pass.
-
+        """
         Parameters
         ----------
         x : dict

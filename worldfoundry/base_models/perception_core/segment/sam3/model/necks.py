@@ -109,14 +109,6 @@ class Sam3DualViTDetNeck(nn.Module):
         list[torch.Tensor] | None,
         list[torch.Tensor] | None,
     ]:
-        """Forward.
-
-        Args:
-            tensor_list: The tensor list.
-
-        Returns:
-            The return value.
-        """
         xs = self.trunk(tensor_list)
         sam3_out, sam3_pos = [], []
         sam2_out, sam2_pos = None, None
@@ -227,11 +219,6 @@ class Sam3TriViTDetNeck(nn.Module):
         need_interactive_out: bool = True,
         need_propagation_out: bool = True,
     ):
-        """Forward.
-
-        Args:
-            tensor_list: The tensor list.
-        """
         xs = self.trunk(tensor_list)
         sam3_out = []
         interactive_out = []

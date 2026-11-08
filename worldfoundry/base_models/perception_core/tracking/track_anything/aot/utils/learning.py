@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> utils -> learning.py functionality."""
-
 import math
 
 
@@ -20,21 +18,6 @@ def adjust_learning_rate(
     encoder_lr_ratio=1.0,
     freeze_params=[],
 ):
-    """Adjust learning rate.
-
-    Args:
-        optimizer: The optimizer.
-        base_lr: The base lr.
-        p: The p.
-        itr: The itr.
-        max_itr: The max itr.
-        restart: The restart.
-        warm_up_steps: The warm up steps.
-        is_cosine_decay: The is cosine decay.
-        min_lr: The min lr.
-        encoder_lr_ratio: The encoder lr ratio.
-        freeze_params: The freeze params.
-    """
     if restart > 1:
         each_max_itr = int(math.ceil(float(max_itr) / restart))
         itr = itr % each_max_itr
@@ -74,16 +57,6 @@ def get_trainable_params(
     exclusive_wd_dict={},
     no_wd_keys=[],
 ):
-    """Get trainable params.
-
-    Args:
-        model: The model.
-        base_lr: The base lr.
-        weight_decay: The weight decay.
-        use_frozen_bn: The use frozen bn.
-        exclusive_wd_dict: The exclusive wd dict.
-        no_wd_keys: The no wd keys.
-    """
     params = []
     memo = set()
     total_param = 0
@@ -117,21 +90,11 @@ def get_trainable_params(
 
 
 def freeze_params(module):
-    """Freeze params.
-
-    Args:
-        module: The module.
-    """
     for p in module.parameters():
         p.requires_grad = False
 
 
 def calculate_params(state_dict):
-    """Calculate params.
-
-    Args:
-        state_dict: The state dict.
-    """
     memo = set()
     total_param = 0
     for _key, value in state_dict.items():

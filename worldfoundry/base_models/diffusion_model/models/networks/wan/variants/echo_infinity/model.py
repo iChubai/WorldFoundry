@@ -64,23 +64,12 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-05):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
@@ -92,21 +81,9 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-06, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return super().forward(x).type_as(x)
 
 
@@ -114,15 +91,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-06):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -139,14 +107,6 @@ class WanSelfAttention(nn.Module):
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
 
     def forward(self, x, seq_lens, grid_sizes, freqs):
-        """Forward.
-
-        Args:
-            x: The x.
-            seq_lens: The seq lens.
-            grid_sizes: The grid sizes.
-            freqs: The freqs.
-        """
         b, s, n, d = (*x.shape[:2], self.num_heads, self.head_dim)
 
         def qkv_fn(x):
@@ -173,14 +133,6 @@ class WanT2VCrossAttention(WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def forward(self, x, context, context_lens, crossattn_cache=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            context_lens: The context lens.
-            crossattn_cache: The crossattn cache.
-        """
         b, n, d = (x.size(0), self.num_heads, self.head_dim)
         q = self.norm_q(self.q(x)).view(b, -1, n, d)
         if crossattn_cache is not None:
@@ -206,13 +158,6 @@ class WanGanCrossAttention(WanSelfAttention):
     """GAN-style cross-attention used by some Wan discriminator / aux heads."""
 
     def forward(self, x, context, crossattn_cache=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            crossattn_cache: The crossattn cache.
-        """
         b, n, d = (x.size(0), self.num_heads, self.head_dim)
         qq = self.norm_q(self.q(context)).view(b, 1, -1, d)
         kk = self.norm_k(self.k(x)).view(b, -1, n, d)
@@ -227,28 +172,12 @@ class WanI2VCrossAttention(WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-06):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps)
         self.k_img = nn.Linear(dim, dim)
         self.v_img = nn.Linear(dim, dim)
         self.norm_k_img = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
 
     def forward(self, x, context, context_lens):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            context_lens: The context lens.
-        """
         context_img = context[:, :257]
         context = context[:, 257:]
         b, n, d = (x.size(0), self.num_heads, self.head_dim)
@@ -283,18 +212,6 @@ class WanAttentionBlock(nn.Module):
         cross_attn_norm=False,
         eps=1e-06,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -312,17 +229,6 @@ class WanAttentionBlock(nn.Module):
         self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
 
     def forward(self, x, e, seq_lens, grid_sizes, freqs, context, context_lens):
-        """Forward.
-
-        Args:
-            x: The x.
-            e: The e.
-            seq_lens: The seq lens.
-            grid_sizes: The grid sizes.
-            freqs: The freqs.
-            context: The context.
-            context_lens: The context lens.
-        """
         e = (self.modulation + e).chunk(6, dim=1)
         y = self.self_attn(self.norm1(x) * (1 + e[1]) + e[0], seq_lens, grid_sizes, freqs)
         x = x + y * e[2]
@@ -344,17 +250,6 @@ class GanAttentionBlock(nn.Module):
     def __init__(
         self, dim=1536, ffn_dim=8192, num_heads=12, window_size=(-1, -1), qk_norm=True, cross_attn_norm=True, eps=1e-06
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -369,20 +264,7 @@ class GanAttentionBlock(nn.Module):
         self.cross_attn = WanGanCrossAttention(dim, num_heads, (-1, -1), qk_norm, eps)
 
     def forward(self, x, context):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-        """
-
         def cross_attn_ffn(x, context):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-            """
             token = context + self.cross_attn(self.norm3(x), context)
             y = self.ffn(self.norm2(token)) + token
             return y
@@ -395,14 +277,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-06):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -414,12 +288,6 @@ class Head(nn.Module):
         self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
 
     def forward(self, x, e):
-        """Forward.
-
-        Args:
-            x: The x.
-            e: The e.
-        """
         e = (self.modulation + e.unsqueeze(1)).chunk(2, dim=1)
         x = self.head(self.norm(x) * (1 + e[1]) + e[0])
         return x
@@ -429,12 +297,6 @@ class MLPProj(torch.nn.Module):
     """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-        """
         super().__init__()
         self.proj = torch.nn.Sequential(
             torch.nn.LayerNorm(in_dim),
@@ -445,11 +307,6 @@ class MLPProj(torch.nn.Module):
         )
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         clip_extra_context_tokens = self.proj(image_embeds)
         return clip_extra_context_tokens
 
@@ -458,22 +315,14 @@ class RegisterTokens(nn.Module):
     """Learned register / prefix tokens prepended to the packed sequence."""
 
     def __init__(self, num_registers: int, dim: int):
-        """Init.
-
-        Args:
-            num_registers: The num registers.
-            dim: The dim.
-        """
         super().__init__()
         self.register_tokens = nn.Parameter(torch.randn(num_registers, dim) * 0.02)
         self.rms_norm = WanRMSNorm(dim, eps=1e-06)
 
     def forward(self):
-        """Forward."""
         return self.rms_norm(self.register_tokens)
 
     def reset_parameters(self):
-        """Reset parameters."""
         nn.init.normal_(self.register_tokens, std=0.02)
 
 
@@ -503,25 +352,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         cross_attn_norm=True,
         eps=1e-06,
     ):
-        """Init.
-
-        Args:
-            model_type: The model type.
-            patch_size: The patch size.
-            text_len: The text len.
-            in_dim: The in dim.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            freq_dim: The freq dim.
-            text_dim: The text dim.
-            out_dim: The out dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         assert model_type in ["t2v", "i2v"]
         self.model_type = model_type
@@ -564,16 +394,9 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.gradient_checkpointing = False
 
     def _set_gradient_checkpointing(self, module, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            module: The module.
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         return self._forward(*args, **kwargs)
 
     def _forward(
@@ -591,22 +414,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         y=None,
         sink_recache_after_switch=False,
     ):
-        """Helper function to forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-            seq_len: The seq len.
-            classify_mode: The classify mode.
-            concat_time_embeddings: The concat time embeddings.
-            register_tokens: The register tokens.
-            cls_pred_branch: The cls pred branch.
-            gan_ca_blocks: The gan ca blocks.
-            clip_fea: The clip fea.
-            y: The y.
-            sink_recache_after_switch: The sink recache after switch.
-        """
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
         device = self.patch_embedding.weight.device
@@ -639,14 +446,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -681,18 +481,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def _forward_classify(self, x, t, context, seq_len, register_tokens, cls_pred_branch, clip_fea=None, y=None):
-        """Helper function to forward classify.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-            seq_len: The seq len.
-            register_tokens: The register tokens.
-            cls_pred_branch: The cls pred branch.
-            clip_fea: The clip fea.
-            y: The y.
-        """
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
         device = self.patch_embedding.weight.device
@@ -725,14 +513,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -746,13 +527,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def unpatchify(self, x, grid_sizes, c=None):
-        """Unpatchify.
-
-        Args:
-            x: The x.
-            grid_sizes: The grid sizes.
-            c: The c.
-        """
         c = self.out_dim if c is None else c
         out = []
         for u, v in zip(x, grid_sizes.tolist(), strict=False):
@@ -763,7 +537,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         return out
 
     def init_weights(self):
-        """Init weights."""
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)

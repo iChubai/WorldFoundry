@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> utils -> pose_align.py functionality."""
-
 from __future__ import annotations
 
 import numpy as np
@@ -28,25 +26,10 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 def batch_apply_alignment_to_enc(
     rots: torch.Tensor, trans: torch.Tensor, scales: torch.Tensor, enc_list: list[torch.Tensor]
 ):
-    """Batch apply alignment to enc.
-
-    Args:
-        rots: The rots.
-        trans: The trans.
-        scales: The scales.
-        enc_list: The enc list.
-    """
+    pass
 
 
 def batch_apply_alignment_to_ext(rots: torch.Tensor, trans: torch.Tensor, scales: torch.Tensor, ext: torch.Tensor):
-    """Batch apply alignment to ext.
-
-    Args:
-        rots: The rots.
-        trans: The trans.
-        scales: The scales.
-        ext: The ext.
-    """
     device, _ = ext.device, ext.dtype
     if ext.shape[-2:] == (3, 4):
         pad = torch.zeros((*ext.shape[:-2], 4, 4), dtype=ext.dtype, device=device)
@@ -64,12 +47,6 @@ def batch_apply_alignment_to_ext(rots: torch.Tensor, trans: torch.Tensor, scales
 
 
 def batch_align_poses_umeyama(ext_ref: torch.Tensor, ext_est: torch.Tensor):
-    """Batch align poses umeyama.
-
-    Args:
-        ext_ref: The ext ref.
-        ext_est: The ext est.
-    """
     device, dtype = ext_ref.device, ext_ref.dtype
     assert ext_ref.dtype in [torch.float32, torch.float64]
     assert ext_est.dtype in [torch.float32, torch.float64]
@@ -88,11 +65,6 @@ def batch_align_poses_umeyama(ext_ref: torch.Tensor, ext_est: torch.Tensor):
 
 
 def _to44(ext):
-    """Helper function to to44.
-
-    Args:
-        ext: The ext.
-    """
     if ext.shape[1] == 3:
         out = np.eye(4)[None].repeat(len(ext), 0)
         out[:, :3, :4] = ext
@@ -101,12 +73,6 @@ def _to44(ext):
 
 
 def _poses_from_ext(ext_ref, ext_est):
-    """Helper function to poses from ext.
-
-    Args:
-        ext_ref: The ext ref.
-        ext_est: The ext est.
-    """
     ext_ref = _to44(ext_ref)
     ext_est = _to44(ext_est)
     pose_ref = affine_inverse_np(ext_ref)
@@ -115,12 +81,6 @@ def _poses_from_ext(ext_ref, ext_est):
 
 
 def _umeyama_sim3_from_paths(pose_ref, pose_est):
-    """Helper function to umeyama sim3 from paths.
-
-    Args:
-        pose_ref: The pose ref.
-        pose_est: The pose est.
-    """
     p_ref = pose_ref[:, :3, 3]
     p_est = pose_est[:, :3, 3]
     r, t, s = _umeyama_alignment(p_est, p_ref)
@@ -159,14 +119,6 @@ def _umeyama_alignment(src: np.ndarray, dst: np.ndarray):
 
 
 def _apply_sim3_to_poses(poses, r, t, s):
-    """Helper function to apply sim3 to poses.
-
-    Args:
-        poses: The poses.
-        r: The r.
-        t: The t.
-        s: The s.
-    """
     out = poses.copy()
     Ri = poses[:, :3, :3]
     ti = poses[:, :3, 3]
@@ -176,12 +128,6 @@ def _apply_sim3_to_poses(poses, r, t, s):
 
 
 def _median_nn_thresh(pose_ref, pose_est_aligned):
-    """Helper function to median nn thresh.
-
-    Args:
-        pose_ref: The pose ref.
-        pose_est_aligned: The pose est aligned.
-    """
     P_ref = pose_ref[:, :3, 3]
     P_est = pose_est_aligned[:, :3, 3]
     dists = []
@@ -192,16 +138,6 @@ def _median_nn_thresh(pose_ref, pose_est_aligned):
 
 
 def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_iters=10, random_state=None):
-    """Helper function to ransac align sim3.
-
-    Args:
-        pose_ref: The pose ref.
-        pose_est: The pose est.
-        sub_n: The sub n.
-        inlier_thresh: The inlier thresh.
-        max_iters: The max iters.
-        random_state: The random state.
-    """
     rng = np.random.default_rng(random_state)
     N = pose_ref.shape[0]
     idx_all = np.arange(N)
@@ -368,7 +304,6 @@ def transform_points_sim3(points, rot, trans, scale, inverse=False):
 
 
 def _rand_rot():
-    """Helper function to rand rot."""
     u1, u2, u3 = np.random.rand(3)
     q = np.array(
         [
@@ -389,7 +324,6 @@ def _rand_rot():
 
 
 def _rand_pose():
-    """Helper function to rand pose."""
     R, t = _rand_rot(), np.random.randn(3)
     P = np.eye(4)
     P[:3, :3] = R

@@ -34,12 +34,6 @@ __all__ = [
 
 
 def pos_interpolate(pos, seq_len):
-    """Pos interpolate.
-
-    Args:
-        pos: The pos.
-        seq_len: The seq len.
-    """
     if pos.size(1) == seq_len:
         return pos
     else:
@@ -63,29 +57,12 @@ def pos_interpolate(pos, seq_len):
 
 
 class QuickGELU(nn.Module):
-    """Quick gelu implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return x * torch.sigmoid(1.702 * x)
 
 
 class LayerNorm(nn.LayerNorm):
-    """Layer norm implementation."""
-
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            inputs: The inputs.
-
-        Returns:
-            The return value.
-        """
         origin_dtype = inputs.dtype
         return F.layer_norm(
             inputs.float(),
@@ -97,18 +74,7 @@ class LayerNorm(nn.LayerNorm):
 
 
 class SelfAttention(nn.Module):
-    """Self attention implementation."""
-
     def __init__(self, dim, num_heads, causal=False, attn_dropout=0.0, proj_dropout=0.0):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            causal: The causal.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -143,15 +109,7 @@ class SelfAttention(nn.Module):
 
 
 class SwiGLU(nn.Module):
-    """Swi glu implementation."""
-
     def __init__(self, dim, mid_dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mid_dim: The mid dim.
-        """
         super().__init__()
         self.dim = dim
         self.mid_dim = mid_dim
@@ -162,19 +120,12 @@ class SwiGLU(nn.Module):
         self.fc3 = nn.Linear(mid_dim, dim)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = F.silu(self.fc1(x)) * self.fc2(x)
         x = self.fc3(x)
         return x
 
 
 class AttentionBlock(nn.Module):
-    """Attention block implementation."""
-
     def __init__(
         self,
         dim,
@@ -187,19 +138,6 @@ class AttentionBlock(nn.Module):
         proj_dropout=0.0,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            num_heads: The num heads.
-            post_norm: The post norm.
-            causal: The causal.
-            activation: The activation.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            norm_eps: The norm eps.
-        """
         assert activation in ["quick_gelu", "gelu", "swi_glu"]
         super().__init__()
         self.dim = dim
@@ -224,11 +162,6 @@ class AttentionBlock(nn.Module):
             )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.post_norm:
             x = x + self.norm1(self.attn(x))
             x = x + self.norm2(self.mlp(x))
@@ -239,19 +172,7 @@ class AttentionBlock(nn.Module):
 
 
 class AttentionPool(nn.Module):
-    """Attention pool implementation."""
-
     def __init__(self, dim, mlp_ratio, num_heads, activation="gelu", proj_dropout=0.0, norm_eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            num_heads: The num heads.
-            activation: The activation.
-            proj_dropout: The proj dropout.
-            norm_eps: The norm eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -299,8 +220,6 @@ class AttentionPool(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    """Vision transformer implementation."""
-
     def __init__(
         self,
         image_size=224,
@@ -319,25 +238,6 @@ class VisionTransformer(nn.Module):
         embedding_dropout=0.0,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            image_size: The image size.
-            patch_size: The patch size.
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            out_dim: The out dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            pool_type: The pool type.
-            pre_norm: The pre norm.
-            post_norm: The post norm.
-            activation: The activation.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            embedding_dropout: The embedding dropout.
-            norm_eps: The norm eps.
-        """
         if image_size % patch_size != 0:
             print("[WARNING] image_size is not divisible by patch_size", flush=True)
         assert pool_type in ("token", "token_fc", "attn_pool")
@@ -386,13 +286,6 @@ class VisionTransformer(nn.Module):
             self.head = AttentionPool(dim, mlp_ratio, num_heads, activation, proj_dropout, norm_eps)
 
     def forward(self, x, interpolation=False, use_31_block=False):
-        """Forward.
-
-        Args:
-            x: The x.
-            interpolation: The interpolation.
-            use_31_block: The use 31 block.
-        """
         b = x.size(0)
 
         # embeddings
@@ -414,10 +307,7 @@ class VisionTransformer(nn.Module):
 
 
 class XLMRobertaWithHead(XLMRoberta):
-    """Xlm roberta with head implementation."""
-
     def __init__(self, **kwargs):
-        """Init."""
         self.out_dim = kwargs.pop("out_dim")
         super().__init__(**kwargs)
 
@@ -428,11 +318,6 @@ class XLMRobertaWithHead(XLMRoberta):
         )
 
     def forward(self, ids):
-        """Forward.
-
-        Args:
-            ids: The ids.
-        """
         # xlm-roberta
         x = super().forward(ids)
 
@@ -446,8 +331,6 @@ class XLMRobertaWithHead(XLMRoberta):
 
 
 class XLMRobertaCLIP(nn.Module):
-    """Xlm roberta clip implementation."""
-
     def __init__(
         self,
         embed_dim=1024,
@@ -475,34 +358,6 @@ class XLMRobertaCLIP(nn.Module):
         embedding_dropout=0.0,
         norm_eps=1e-5,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            image_size: The image size.
-            patch_size: The patch size.
-            vision_dim: The vision dim.
-            vision_mlp_ratio: The vision mlp ratio.
-            vision_heads: The vision heads.
-            vision_layers: The vision layers.
-            vision_pool: The vision pool.
-            vision_pre_norm: The vision pre norm.
-            vision_post_norm: The vision post norm.
-            activation: The activation.
-            vocab_size: The vocab size.
-            max_text_len: The max text len.
-            type_size: The type size.
-            pad_id: The pad id.
-            text_dim: The text dim.
-            text_heads: The text heads.
-            text_layers: The text layers.
-            text_post_norm: The text post norm.
-            text_dropout: The text dropout.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            embedding_dropout: The embedding dropout.
-            norm_eps: The norm eps.
-        """
         super().__init__()
         self.embed_dim = embed_dim
         self.image_size = image_size
@@ -569,7 +424,6 @@ class XLMRobertaCLIP(nn.Module):
         return xi, xt
 
     def param_groups(self):
-        """Param groups."""
         groups = [
             {
                 "params": [p for n, p in self.named_parameters() if "norm" in n or n.endswith("bias")],
@@ -591,18 +445,6 @@ def _clip(
     device="cpu",
     **kwargs,
 ):
-    """Helper function to clip.
-
-    Args:
-        pretrained: The pretrained.
-        pretrained_name: The pretrained name.
-        model_cls: The model cls.
-        return_transforms: The return transforms.
-        return_tokenizer: The return tokenizer.
-        tokenizer_padding: The tokenizer padding.
-        dtype: The dtype.
-        device: The device.
-    """
     # init a model on device
     with torch.device(device):
         model = model_cls(**kwargs)
@@ -633,12 +475,6 @@ def _clip(
 
 
 def clip_xlm_roberta_vit_h_14(pretrained=False, pretrained_name="open-clip-xlm-roberta-large-vit-huge-14", **kwargs):
-    """Clip xlm roberta vit h 14.
-
-    Args:
-        pretrained: The pretrained.
-        pretrained_name: The pretrained name.
-    """
     cfg = {
         "embed_dim": 1024,
         "image_size": 224,
@@ -667,15 +503,7 @@ def clip_xlm_roberta_vit_h_14(pretrained=False, pretrained_name="open-clip-xlm-r
 
 
 class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
-    """Clip model implementation."""
-
     def __init__(self, checkpoint_path, tokenizer_path):
-        """Init.
-
-        Args:
-            checkpoint_path: The checkpoint path.
-            tokenizer_path: The tokenizer path.
-        """
         super().__init__()
         self.checkpoint_path = checkpoint_path
         self.tokenizer_path = tokenizer_path
@@ -696,11 +524,6 @@ class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
         )
 
     def encode_video(self, video):
-        """Encode video.
-
-        Args:
-            video: The video.
-        """
         # preprocess
         b, c, t, h, w = video.shape
         video = video.transpose(1, 2)
@@ -717,11 +540,6 @@ class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
         )
 
     def forward(self, videos):
-        """Forward.
-
-        Args:
-            videos: The videos.
-        """
         # preprocess
         size = (self.model.image_size,) * 2
         videos = torch.cat(

@@ -46,14 +46,6 @@ REGISTERED_ACT_DICT: dict[str, type] = {
 
 
 def build_act(name: str, **kwargs) -> nn.Module | None:
-    """Build act.
-
-    Args:
-        name: The name.
-
-    Returns:
-        The return value.
-    """
     if name in REGISTERED_ACT_DICT:
         act_cls = REGISTERED_ACT_DICT[name]
         args = build_kwargs_from_config(kwargs, act_cls)

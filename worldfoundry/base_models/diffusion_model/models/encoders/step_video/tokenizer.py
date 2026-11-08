@@ -30,7 +30,6 @@ class LLaMaEmbedding(nn.Module):
     """Language model embeddings.
 
     Arguments:
-        hidden_size: hidden size
         vocab_size: vocabulary size
         max_sequence_length: maximum size of sequence. This
                              is used for positional embedding
@@ -44,11 +43,6 @@ class LLaMaEmbedding(nn.Module):
         self,
         cfg,
     ):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-        """
         super().__init__()
         self.hidden_size = cfg.hidden_size
         self.params_dtype = cfg.params_dtype
@@ -61,11 +55,6 @@ class LLaMaEmbedding(nn.Module):
         self.embedding_dropout = torch.nn.Dropout(cfg.hidden_dropout)
 
     def forward(self, input_ids):
-        """Forward.
-
-        Args:
-            input_ids: The input ids.
-        """
         # Embeddings.
         if self.embedding_weights_in_fp32:
             self.word_embeddings = self.word_embeddings.to(torch.float32)
@@ -88,8 +77,6 @@ class LLaMaEmbedding(nn.Module):
 
 
 class StepChatTokenizer:
-    """Step Chat Tokenizer"""
-
     def __init__(
         self,
         model_file,
@@ -103,20 +90,6 @@ class StepChatTokenizer:
         mask_start_token="<|MASK_1e69f|>",  # Mask start
         mask_end_token="<|UNMASK_1e69f|>",  # Mask end
     ):
-        """Init.
-
-        Args:
-            model_file: The model file.
-            name: The name.
-            bot_token: The bot token.
-            eot_token: The eot token.
-            call_start_token: The call start token.
-            call_end_token: The call end token.
-            think_start_token: The think start token.
-            think_end_token: The think end token.
-            mask_start_token: The mask start token.
-            mask_end_token: The mask end token.
-        """
         import sentencepiece
 
         self._tokenizer = sentencepiece.SentencePieceProcessor(model_file=model_file)
@@ -162,58 +135,25 @@ class StepChatTokenizer:
 
     @property
     def vocab(self):
-        """Vocab."""
         return self._vocab
 
     @property
     def inv_vocab(self):
-        """Inv vocab."""
         return self._inv_vocab
 
     @property
     def vocab_size(self):
-        """Vocab size."""
         return self._tokenizer.vocab_size()
 
     def tokenize(self, text: str) -> list[int]:
-        """Tokenize.
-
-        Args:
-            text: The text.
-
-        Returns:
-            The return value.
-        """
         return self._tokenizer.encode_as_ids(text)
 
     def detokenize(self, token_ids: list[int]) -> str:
-        """Detokenize.
-
-        Args:
-            token_ids: The token ids.
-
-        Returns:
-            The return value.
-        """
         return self._tokenizer.decode_ids(token_ids)
 
 
 class Tokens:
-    """Tokens implementation."""
-
     def __init__(self, input_ids, cu_input_ids, attention_mask, cu_seqlens, max_seq_len) -> None:
-        """Init.
-
-        Args:
-            input_ids: The input ids.
-            cu_input_ids: The cu input ids.
-            attention_mask: The attention mask.
-            cu_seqlens: The cu seqlens.
-            max_seq_len: The max seq len.
-
-        Returns:
-            The return value.
-        """
         self.input_ids = input_ids
         self.attention_mask = attention_mask
         self.cu_input_ids = cu_input_ids
@@ -221,11 +161,6 @@ class Tokens:
         self.max_seq_len = max_seq_len
 
     def to(self, device):
-        """To.
-
-        Args:
-            device: The device.
-        """
         self.input_ids = self.input_ids.to(device)
         self.attention_mask = self.attention_mask.to(device)
         self.cu_input_ids = self.cu_input_ids.to(device)
@@ -234,18 +169,7 @@ class Tokens:
 
 
 class Wrapped_StepChatTokenizer(StepChatTokenizer):
-    """Wrapped step chat tokenizer implementation."""
-
     def __call__(self, text, max_length=320, padding="max_length", truncation=True, return_tensors="pt"):
-        """Call.
-
-        Args:
-            text: The text.
-            max_length: The max length.
-            padding: The padding.
-            truncation: The truncation.
-            return_tensors: The return tensors.
-        """
         # [bos, ..., eos, pad, pad, ..., pad]
         self.BOS = 1
         self.EOS = 2

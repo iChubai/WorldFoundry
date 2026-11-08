@@ -31,14 +31,6 @@ flex_attention = torch.compile(flex_attention, dynamic=False, mode="max-autotune
 
 
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
-    """Causal rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-        start_frame: The start frame.
-    """
     n, c = (x.size(2), x.size(3) // 2)
     freqs = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
     output = []
@@ -66,16 +58,6 @@ class CausalWanSelfAttention(nn.Module):
     """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self, dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, eps=1e-06):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -108,17 +90,6 @@ class CausalWanSelfAttention(nn.Module):
 
     @staticmethod
     def _compute_relative_positions(current_start_frame, B, R, N_Q, N_S, pmax, num_frame_per_block):
-        """Helper function to compute relative positions.
-
-        Args:
-            current_start_frame: The current start frame.
-            B: The b.
-            R: The r.
-            N_Q: The n q.
-            N_S: The n s.
-            pmax: The pmax.
-            num_frame_per_block: The num frame per block.
-        """
         is_bulk_forward = num_frame_per_block < B
         q_last_pos = min(current_start_frame + B - 1, pmax - 1)
         q_start_pos = q_last_pos - B + 1
@@ -158,21 +129,6 @@ class CausalWanSelfAttention(nn.Module):
         memory_kv=None,
         capture_sink_qkv=False,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            seq_lens: The seq lens.
-            grid_sizes: The grid sizes.
-            freqs: The freqs.
-            block_mask: The block mask.
-            kv_cache: The kv cache.
-            current_start: The current start.
-            cache_start: The cache start.
-            sink_recache_after_switch: The sink recache after switch.
-            memory_kv: The memory kv.
-            capture_sink_qkv: The capture sink qkv.
-        """
         b, s, n, d = (*x.shape[:2], self.num_heads, self.head_dim)
         if cache_start is None:
             cache_start = current_start
@@ -720,19 +676,6 @@ class CausalWanAttentionBlock(nn.Module):
         cross_attn_norm=False,
         eps=1e-06,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -767,25 +710,6 @@ class CausalWanAttentionBlock(nn.Module):
         memory_kv=None,
         capture_sink_qkv=False,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            e: The e.
-            seq_lens: The seq lens.
-            grid_sizes: The grid sizes.
-            freqs: The freqs.
-            context: The context.
-            context_lens: The context lens.
-            block_mask: The block mask.
-            kv_cache: The kv cache.
-            crossattn_cache: The crossattn cache.
-            current_start: The current start.
-            cache_start: The cache start.
-            sink_recache_after_switch: The sink recache after switch.
-            memory_kv: The memory kv.
-            capture_sink_qkv: The capture sink qkv.
-        """
         num_frames, frame_seqlen = (e.shape[1], x.shape[1] // e.shape[1])
         e = (self.modulation.unsqueeze(1) + e).chunk(6, dim=2)
         self_attn_result = self.self_attn(
@@ -813,15 +737,6 @@ class CausalWanAttentionBlock(nn.Module):
         x = x + (y.unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * e[2]).flatten(1, 2)
 
         def cross_attn_ffn(x, context, context_lens, e, crossattn_cache=None):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-                crossattn_cache: The crossattn cache.
-            """
             x = x + self.cross_attn(self.norm3(x), context, context_lens, crossattn_cache=crossattn_cache)
             y = self.ffn(
                 (self.norm2(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[4]) + e[3]).flatten(1, 2)
@@ -842,14 +757,6 @@ class CausalHead(nn.Module):
     """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-06):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -861,12 +768,6 @@ class CausalHead(nn.Module):
         self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
 
     def forward(self, x, e):
-        """Forward.
-
-        Args:
-            x: The x.
-            e: The e.
-        """
         num_frames, frame_seqlen = (e.shape[1], x.shape[1] // e.shape[1])
         e = (self.modulation.unsqueeze(1) + e).chunk(2, dim=2)
         x = self.head(self.norm(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0])
@@ -905,31 +806,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         relative_rope=False,
         relative_rope_pmax=21,
     ):
-        """Init.
-
-        Args:
-            model_type: The model type.
-            patch_size: The patch size.
-            text_len: The text len.
-            in_dim: The in dim.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            freq_dim: The freq dim.
-            text_dim: The text dim.
-            out_dim: The out dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            local_attn_size: The local attn size.
-            sink_size: The sink size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-            dr_rope: The dr rope.
-            tri_rope_cont: The tri rope cont.
-            tri_rope_pmax: The tri rope pmax.
-            relative_rope: The relative rope.
-            relative_rope_pmax: The relative rope pmax.
-        """
         super().__init__()
         assert model_type in ["t2v", "i2v"]
         self.model_type = model_type
@@ -1009,26 +885,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
     @property
     def num_frame_per_block(self):
-        """Num frame per block."""
         return self._num_frame_per_block
 
     @num_frame_per_block.setter
     def num_frame_per_block(self, value):
-        """Num frame per block.
-
-        Args:
-            value: The value.
-        """
         self._num_frame_per_block = int(value)
         for blk in self.blocks:
             blk.self_attn.num_frame_per_block_attr = int(value)
 
     def setup_memory_encoder(self, memory_kwargs):
-        """Setup memory encoder.
-
-        Args:
-            memory_kwargs: The memory kwargs.
-        """
         from types import SimpleNamespace
 
         from .query_memory import QueryMemoryEncoder
@@ -1038,11 +903,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         self.query_memory_encoder = QueryMemoryEncoder(memory_kwargs)
 
     def setup_sink_memory(self, memory_kwargs):
-        """Setup sink memory.
-
-        Args:
-            memory_kwargs: The memory kwargs.
-        """
         from .sink_memory import SinkMemory
 
         if isinstance(memory_kwargs, dict):
@@ -1059,12 +919,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         object.__setattr__(self, "sink_memory", sm)
 
     def _set_gradient_checkpointing(self, module, value=False):
-        """Helper function to set gradient checkpointing.
-
-        Args:
-            module: The module.
-            value: The value.
-        """
         self.gradient_checkpointing = value
 
     @staticmethod
@@ -1075,18 +929,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         num_frame_per_block=1,
         local_attn_size=-1,
     ) -> BlockMask:
-        """Helper function to prepare blockwise causal attn mask.
-
-        Args:
-            device: The device.
-            num_frames: The num frames.
-            frame_seqlen: The frame seqlen.
-            num_frame_per_block: The num frame per block.
-            local_attn_size: The local attn size.
-
-        Returns:
-            The return value.
-        """
         total_length = num_frames * frame_seqlen
         padded_length = math.ceil(total_length / 128) * 128 - total_length
         ends = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
@@ -1095,14 +937,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
-            """Attention mask.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             if local_attn_size == -1:
                 return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
             else:
@@ -1126,17 +960,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
     def _prepare_teacher_forcing_mask(
         device: torch.device | str, num_frames: int = 21, frame_seqlen: int = 1560, num_frame_per_block=1
     ) -> BlockMask:
-        """Helper function to prepare teacher forcing mask.
-
-        Args:
-            device: The device.
-            num_frames: The num frames.
-            frame_seqlen: The frame seqlen.
-            num_frame_per_block: The num frame per block.
-
-        Returns:
-            The return value.
-        """
         total_length = num_frames * frame_seqlen * 2
         padded_length = math.ceil(total_length / 128) * 128 - total_length
         clean_ends = num_frames * frame_seqlen
@@ -1161,14 +984,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             noise_context_ends[start:end] = block_index * attention_block_size
 
         def attention_mask(b, h, q_idx, kv_idx):
-            """Attention mask.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             clean_mask = (q_idx < clean_ends) & (kv_idx < context_ends[q_idx])
             C1 = (kv_idx < noise_noise_ends[q_idx]) & (kv_idx >= noise_noise_starts[q_idx])
             C2 = (kv_idx < noise_context_ends[q_idx]) & (kv_idx >= noise_context_starts[q_idx])
@@ -1195,18 +1010,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         num_frame_per_block=4,
         local_attn_size=-1,
     ) -> BlockMask:
-        """Helper function to prepare blockwise causal attn mask i2v.
-
-        Args:
-            device: The device.
-            num_frames: The num frames.
-            frame_seqlen: The frame seqlen.
-            num_frame_per_block: The num frame per block.
-            local_attn_size: The local attn size.
-
-        Returns:
-            The return value.
-        """
         total_length = num_frames * frame_seqlen
         padded_length = math.ceil(total_length / 128) * 128 - total_length
         ends = torch.zeros(total_length + padded_length, device=device, dtype=torch.long)
@@ -1218,14 +1021,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
-            """Attention mask.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             if local_attn_size == -1:
                 return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
             else:
@@ -1245,12 +1040,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         return block_mask
 
     def _apply_cache_updates(self, kv_cache, cache_update_infos):
-        """Helper function to apply cache updates.
-
-        Args:
-            kv_cache: The kv cache.
-            cache_update_infos: The cache update infos.
-        """
         for block_index, (current_end, local_end_index, update_info) in cache_update_infos:
             if update_info is not None:
                 cache = kv_cache[block_index]
@@ -1302,21 +1091,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         cache_start: int = 0,
         sink_recache_after_switch=False,
     ):
-        """Helper function to forward inference.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-            seq_len: The seq len.
-            clip_fea: The clip fea.
-            y: The y.
-            kv_cache: The kv cache.
-            crossattn_cache: The crossattn cache.
-            current_start: The current start.
-            cache_start: The cache start.
-            sink_recache_after_switch: The sink recache after switch.
-        """
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
         device = self.patch_embedding.weight.device
@@ -1389,14 +1163,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -1517,18 +1284,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def _forward_train(self, x, t, context, seq_len, clean_x=None, aug_t=None, clip_fea=None, y=None):
-        """Helper function to forward train.
-
-        Args:
-            x: The x.
-            t: The t.
-            context: The context.
-            seq_len: The seq len.
-            clean_x: The clean x.
-            aug_t: The aug t.
-            clip_fea: The clip fea.
-            y: The y.
-        """
         raise NotImplementedError()
         if self.model_type == "i2v":
             assert clip_fea is not None and y is not None
@@ -1604,14 +1359,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         }
 
         def create_custom_forward(module):
-            """Create custom forward.
-
-            Args:
-                module: The module.
-            """
-
             def custom_forward(*inputs, **kwargs):
-                """Custom forward."""
                 return module(*inputs, **kwargs)
 
             return custom_forward
@@ -1628,19 +1376,12 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         return torch.stack(x)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if kwargs.get("kv_cache") is not None:
             return self._forward_inference(*args, **kwargs)
         else:
             return self._forward_train(*args, **kwargs)
 
     def unpatchify(self, x, grid_sizes):
-        """Unpatchify.
-
-        Args:
-            x: The x.
-            grid_sizes: The grid sizes.
-        """
         c = self.out_dim
         out = []
         for u, v in zip(x, grid_sizes.tolist(), strict=False):
@@ -1651,7 +1392,6 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         return out
 
     def init_weights(self):
-        """Init weights."""
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)

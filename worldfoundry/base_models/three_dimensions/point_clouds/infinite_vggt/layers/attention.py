@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> infinite_vggt -> layers -> attention.py functionality."""
-
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
@@ -10,8 +8,6 @@ XFORMERS_AVAILABLE = False
 
 
 class Attention(nn.Module):
-    """Attention implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -25,23 +21,6 @@ class Attention(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            norm_layer: The norm layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         assert dim % num_heads == 0, "dim should be divisible by num_heads"
         self.num_heads = num_heads
@@ -59,7 +38,6 @@ class Attention(nn.Module):
         self.num_anchor_tokens = 0
 
     def _reset_cache_state(self):
-        """Helper function to reset cache state."""
         self.num_anchor_tokens = 0
 
     def eviction(
@@ -108,19 +86,6 @@ class Attention(nn.Module):
     def forward(
         self, x: torch.Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
     ) -> torch.Tensor | tuple[torch.Tensor, tuple]:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            attn_mask: The attn mask.
-            past_key_values: The past key values.
-            use_cache: The use cache.
-            cache_budget: The cache budget.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
@@ -175,19 +140,7 @@ class Attention(nn.Module):
 
 
 class MemEffAttention(Attention):
-    """Mem eff attention implementation."""
-
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-            pos: The pos.
-
-        Returns:
-            The return value.
-        """
         assert pos is None
         if not XFORMERS_AVAILABLE:
             if attn_bias is not None:

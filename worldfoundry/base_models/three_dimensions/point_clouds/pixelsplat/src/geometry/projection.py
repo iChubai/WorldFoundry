@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> src -> geometry -> projection.py functionality."""
-
 from math import prod
 
 import torch
@@ -52,17 +50,6 @@ def project_camera_space(
     epsilon: float = torch.finfo(torch.float32).eps,
     infinity: float = 1e8,
 ) -> Float[Tensor, "*batch dim-1"]:
-    """Project camera space.
-
-    Args:
-        points: The points.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-        infinity: The infinity.
-
-    Returns:
-        The return value.
-    """
     points = points / (points[..., -1:] + epsilon)
     points = points.nan_to_num(posinf=infinity, neginf=-infinity)
     points = einsum(intrinsics, points, "... i j, ... j -> ... i")
@@ -78,17 +65,6 @@ def project(
     Float[Tensor, "*batch dim-1"],  # xy coordinates
     Bool[Tensor, " *batch"],  # whether points are in front of the camera
 ]:
-    """Project.
-
-    Args:
-        points: The points.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-
-    Returns:
-        The return value.
-    """
     points = homogenize_points(points)
     points = transform_world2cam(points, extrinsics)[..., :-1]
     in_front_of_camera = points[..., -1] >= 0
@@ -118,16 +94,6 @@ def get_world_rays(
     Float[Tensor, "*batch dim+1"],  # origins
     Float[Tensor, "*batch dim+1"],  # directions
 ]:
-    """Get world rays.
-
-    Args:
-        coordinates: The coordinates.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     # Get camera-space ray directions.
     directions = unproject(
         coordinates,
@@ -179,17 +145,6 @@ def sample_training_rays(
     Float[Tensor, "batch ray dim"],  # directions
     Float[Tensor, "batch ray 3"],  # sampled color
 ]:
-    """Sample training rays.
-
-    Args:
-        image: The image.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-        num_rays: The num rays.
-
-    Returns:
-        The return value.
-    """
     device = extrinsics.device
     b, v, _, *grid_shape = image.shape
 
@@ -274,22 +229,9 @@ def intersect_rays(
 
 
 def get_fov(intrinsics: Float[Tensor, "batch 3 3"]) -> Float[Tensor, "batch 2"]:
-    """Get fov.
-
-    Args:
-        intrinsics: The intrinsics.
-
-    Returns:
-        The return value.
-    """
     intrinsics_inv = intrinsics.inverse()
 
     def process_vector(vector):
-        """Process vector.
-
-        Args:
-            vector: The vector.
-        """
         vector = torch.tensor(vector, dtype=torch.float32, device=intrinsics.device)
         vector = einsum(intrinsics_inv, vector, "b i j, j -> b i")
         return vector / vector.norm(dim=-1, keepdim=True)

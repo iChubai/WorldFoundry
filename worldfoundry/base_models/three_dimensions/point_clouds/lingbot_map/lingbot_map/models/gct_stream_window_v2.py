@@ -578,14 +578,6 @@ class GCTStream(GCTBase):
 
         # Helper to move tensor to output device
         def _to_out(t: torch.Tensor) -> torch.Tensor:
-            """Helper function to to out.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             if output_device is not None:
                 return t.to(output_device)
             return t
@@ -1121,23 +1113,9 @@ class GCTStream(GCTBase):
         eff_overlap = min(eff_overlap, S - 1) if S > 1 else 0
 
         def _to_out(t: torch.Tensor) -> torch.Tensor:
-            """Helper function to to out.
-
-            Args:
-                t: The t.
-
-            Returns:
-                The return value.
-            """
             return t.to(output_device) if output_device is not None else t
 
         def _collect_frame(out, w_lists):
-            """Helper function to collect frame.
-
-            Args:
-                out: The out.
-                w_lists: The w lists.
-            """
             w_lists["pose_enc"].append(_to_out(out["pose_enc"]))
             if "depth" in out:
                 w_lists["depth"].append(_to_out(out["depth"]))
@@ -1149,11 +1127,6 @@ class GCTStream(GCTBase):
                 w_lists["world_pts_conf"].append(_to_out(out["world_points_conf"]))
 
         def _make_window_pred(w_lists):
-            """Helper function to make window pred.
-
-            Args:
-                w_lists: The w lists.
-            """
             pred: dict = {"pose_enc": torch.cat(w_lists["pose_enc"], dim=1)}
             if w_lists["depth"]:
                 pred["depth"] = torch.cat(w_lists["depth"], dim=1)
@@ -1170,7 +1143,6 @@ class GCTStream(GCTBase):
             return pred
 
         def _new_lists():
-            """Helper function to new lists."""
             return {
                 "pose_enc": [],
                 "depth": [],

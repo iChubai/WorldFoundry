@@ -49,8 +49,7 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         )
 
     def build_top_down_layer(self, idx: int) -> nn.Module:
-        """build top down layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -74,8 +73,7 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         return MODELS.build(block_cfg)
 
     def build_bottom_up_layer(self, idx: int) -> nn.Module:
-        """build bottom up layer.
-
+        """
         Args:
             idx (int): layer idx.
 
@@ -191,7 +189,6 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         self.text_enhancer = MODELS.build(text_enhancder)
 
     def forward(self, img_feats: list[Tensor], txt_feats: Tensor) -> tuple:
-        """Forward function."""
         assert len(img_feats) == len(self.in_channels)
         # reduce layers
         reduce_outs = []

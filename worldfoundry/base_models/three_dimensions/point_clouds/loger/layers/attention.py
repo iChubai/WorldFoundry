@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> layers -> attention.py functionality."""
-
 import os
 
 import torch
@@ -106,14 +104,6 @@ def get_causal_block_mask(P, B, H, M, N, device="cuda", _compile=True):
     # Tokens within the same frame can see each other
     # Tokens from frame i can see all tokens from frames 0 to i
     def causal_mask(b, h, q_idx, kv_idx):
-        """Causal mask.
-
-        Args:
-            b: The b.
-            h: The h.
-            q_idx: The q idx.
-            kv_idx: The kv idx.
-        """
         q_frame = q_idx // P
         kv_frame = kv_idx // P
         return q_frame >= kv_frame
@@ -128,20 +118,7 @@ def get_causal_block_mask(P, B, H, M, N, device="cuda", _compile=True):
 
 
 class MemEffAttentionRope(AttentionRope):
-    """Mem eff attention rope implementation."""
-
     def forward(self, x: Tensor, attn_bias=None, xpos=None, attn_mask=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-            xpos: The xpos.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
         # If attn_mask is provided and flex_attention is available, use flex_attention
         if attn_mask is not None and FLEX_ATTENTION_AVAILABLE:
             B, N, C = x.shape
@@ -201,8 +178,6 @@ class MemEffAttentionRope(AttentionRope):
 
 
 class FlashAttentionRope(AttentionRope):
-    """Flash attention rope implementation."""
-
     def compute_kv(self, x: Tensor, xpos=None) -> tuple[Tensor, Tensor]:
         """Compute K, V for caching. Returns (K, V) after norm and RoPE."""
         B, N, C = x.shape
@@ -273,17 +248,6 @@ class FlashAttentionRope(AttentionRope):
         return x
 
     def forward(self, x: Tensor, attn_bias=None, xpos=None, attn_mask=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-            xpos: The xpos.
-            attn_mask: The attn mask.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).transpose(1, 3)
 

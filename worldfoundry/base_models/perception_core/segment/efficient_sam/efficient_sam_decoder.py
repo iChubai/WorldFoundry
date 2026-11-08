@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> efficient_sam -> efficient_sam_decoder.py functionality."""
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -14,8 +12,6 @@ from .mlp import MLPBlock
 
 
 class PromptEncoder(nn.Module):
-    """Prompt encoder implementation."""
-
     def __init__(
         self,
         embed_dim: int,
@@ -98,14 +94,6 @@ class PositionEmbeddingRandom(nn.Module):
     """
 
     def __init__(self, num_pos_feats: int) -> None:
-        """Init.
-
-        Args:
-            num_pos_feats: The num pos feats.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.register_buffer("positional_encoding_gaussian_matrix", torch.randn((2, num_pos_feats)))
 
@@ -140,8 +128,6 @@ class PositionEmbeddingRandom(nn.Module):
 
 
 class MaskDecoder(nn.Module):
-    """Mask decoder implementation."""
-
     def __init__(
         self,
         *,

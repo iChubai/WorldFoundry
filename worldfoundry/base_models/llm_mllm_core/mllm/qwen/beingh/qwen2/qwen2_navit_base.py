@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen2 -> qwen2_navit_base.py functionality."""
-
 from dataclasses import dataclass
 
 import torch
@@ -18,25 +16,16 @@ from .modeling_qwen2 import (
 
 
 class NaiveCache:
-    """Naive cache implementation."""
-
     def __init__(self, num_layers):
-        """Init.
-
-        Args:
-            num_layers: The num layers.
-        """
         self.key_cache = dict.fromkeys(range(num_layers))
         self.value_cache = dict.fromkeys(range(num_layers))
 
     @property
     def num_layers(self):
-        """Num layers."""
         return len(self.key_cache)
 
     @property
     def seq_lens(self):
-        """Seq lens."""
         if self.key_cache[0] is not None:
             return self.key_cache[0].shape[0]
         else:
@@ -45,22 +34,12 @@ class NaiveCache:
 
 @dataclass
 class BaseNavitOutputWithPast(ModelOutput):
-    """Base navit output with past implementation."""
-
     packed_query_sequence: torch.FloatTensor = None
     past_key_values: NaiveCache | None = None
 
 
 class PackedAttention(Qwen2Attention):
-    """Packed attention implementation."""
-
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__(config, layer_idx)
         if self.config.qk_norm:
             self.q_norm = Qwen2RMSNorm(self.head_dim, eps=config.rms_norm_eps)
@@ -70,7 +49,6 @@ class PackedAttention(Qwen2Attention):
             self.k_norm = nn.Identity()
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -83,14 +61,6 @@ class PackedAttention(Qwen2Attention):
         attention_mask: list[torch.Tensor],
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
     ):
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-        """
         packed_query_states = self.q_proj(packed_sequence).view(-1, self.num_heads, self.head_dim)
         packed_key_states = self.k_proj(packed_sequence).view(-1, self.num_key_value_heads, self.head_dim)
         packed_value_states = self.v_proj(packed_sequence).view(-1, self.num_key_value_heads, self.head_dim)
@@ -157,19 +127,6 @@ class PackedAttention(Qwen2Attention):
         update_past_key_values=True,
         is_causal=True,
     ):
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-        """
         packed_query_states = self.q_proj(packed_query_sequence).view(-1, self.num_heads, self.head_dim)
         packed_key_states = self.k_proj(packed_query_sequence).view(-1, self.num_key_value_heads, self.head_dim)
         packed_value_states = self.v_proj(packed_query_sequence).view(-1, self.num_key_value_heads, self.head_dim)
@@ -230,12 +187,6 @@ class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -246,7 +197,6 @@ class Qwen2DecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -259,18 +209,6 @@ class Qwen2DecoderLayer(nn.Module):
         attention_mask,
         packed_position_embeddings: tuple[torch.Tensor, torch.Tensor],
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_sequence
         packed_sequence = self.input_layernorm(packed_sequence)
 
@@ -303,23 +241,6 @@ class Qwen2DecoderLayer(nn.Module):
         update_past_key_values=True,
         is_causal=True,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_query_sequence
         packed_query_sequence = self.input_layernorm(packed_query_sequence)
 
@@ -350,12 +271,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
     """Qwen mo e decoder layer implementation."""
 
     def __init__(self, config, layer_idx: int | None = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -367,7 +282,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, *args, **kwargs):
-        """Forward."""
         if self.training:
             return self.forward_train(*args, **kwargs)
         else:
@@ -382,20 +296,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         packed_und_token_indexes: torch.LongTensor,
         packed_gen_token_indexes: torch.LongTensor,
     ) -> torch.Tensor:
-        """Forward train.
-
-        Args:
-            packed_sequence: The packed sequence.
-            sample_lens: The sample lens.
-            attention_mask: The attention mask.
-            packed_position_embeddings: The packed position embeddings.
-            packed_und_token_indexes: The packed und token indexes.
-            packed_gen_token_indexes: The packed gen token indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_sequence
         packed_sequence = self.input_layernorm(packed_sequence)
 
@@ -437,26 +337,6 @@ class Qwen2MoEDecoderLayer(nn.Module):
         packed_vae_token_indexes=None,
         packed_text_indexes=None,
     ) -> BaseNavitOutputWithPast:
-        """Forward inference.
-
-        Args:
-            packed_query_sequence: The packed query sequence.
-            query_lens: The query lens.
-            packed_query_position_embeddings: The packed query position embeddings.
-            packed_query_indexes: The packed query indexes.
-            past_key_values: The past key values.
-            key_values_lens: The key values lens.
-            packed_key_value_indexes: The packed key value indexes.
-            update_past_key_values: The update past key values.
-            is_causal: The is causal.
-            mode: The mode.
-            packed_vae_token_indexes: The packed vae token indexes.
-            packed_text_indexes: The packed text indexes.
-
-        Returns:
-            The return value.
-        """
-
         residual = packed_query_sequence
         packed_query_sequence = self.input_layernorm(packed_query_sequence)
 

@@ -14,8 +14,6 @@
 # Modified from Deformable DETR (https://github.com/fundamentalvision/Deformable-DETR)
 # Copyright (c) 2020 SenseTime. All Rights Reserved.
 # ------------------------------------------------------------------------
-"""Module for base_models -> perception_core -> detection -> grounding_dino -> models -> GroundingDINO -> groundingdino.py functionality."""
-
 import copy
 
 import torch
@@ -188,45 +186,27 @@ class GroundingDINO(nn.Module):
         self._reset_parameters()
 
     def _reset_parameters(self):
-        """Helper function to reset parameters."""
         # init input_proj
         for proj in self.input_proj:
             nn.init.xavier_uniform_(proj[0].weight, gain=1)
             nn.init.constant_(proj[0].bias, 0)
 
     def set_image_tensor(self, samples: NestedTensor):
-        """Set image tensor.
-
-        Args:
-            samples: The samples.
-        """
         if isinstance(samples, (list, torch.Tensor)):
             samples = nested_tensor_from_tensor_list(samples)
         self.features, self.poss = self.backbone(samples)
 
     def unset_image_tensor(self):
-        """Unset image tensor."""
         if hasattr(self, "features"):
             del self.features
         if hasattr(self, "poss"):
             del self.poss
 
     def set_image_features(self, features, poss):
-        """Set image features.
-
-        Args:
-            features: The features.
-            poss: The poss.
-        """
         self.features = features
         self.poss = poss
 
     def init_ref_points(self, use_num_queries):
-        """Init ref points.
-
-        Args:
-            use_num_queries: The use num queries.
-        """
         self.refpoint_embed = nn.Embedding(use_num_queries, self.query_dim)
 
     def forward(self, samples: NestedTensor, targets: list | None = None, **kw):
@@ -357,12 +337,6 @@ class GroundingDINO(nn.Module):
 
     @torch.jit.unused
     def _set_aux_loss(self, outputs_class, outputs_coord):
-        """Helper function to set aux loss.
-
-        Args:
-            outputs_class: The outputs class.
-            outputs_coord: The outputs coord.
-        """
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
@@ -373,12 +347,6 @@ class GroundingDINO(nn.Module):
 
 @MODULE_BUILD_FUNCS.registe_with_name(module_name="groundingdino")
 def build_groundingdino(args):
-    """Build groundingdino.
-
-    Args:
-        args: The args.
-    """
-
     backbone = build_backbone(args)
     transformer = build_transformer(args)
 

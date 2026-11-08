@@ -30,35 +30,17 @@ class AttentionHook:
     output = None
 
     def __init__(self, device):
-        """Init.
-
-        Args:
-            device: The device.
-        """
         self.device = device
 
     def __call__(self, attn_output):
-        """Call.
-
-        Args:
-            attn_output: The attn output.
-        """
         self.output = attn_output
         self.output.to(self.device)
 
     def clear(self):
-        """Clear."""
         self.output = None
 
 
 def cosine_similarity(x, y, dim=1):
-    """Cosine similarity.
-
-    Args:
-        x: The x.
-        y: The y.
-        dim: The dim.
-    """
     x_norm = F.normalize(x, p=2, dim=dim)
     y_norm = F.normalize(y, p=2, dim=dim)
     return torch.sum(x_norm * y_norm, dim=dim)
@@ -73,26 +55,11 @@ class BlockHook:
     x_ffn = None
 
     def __init__(self, device, detach=True, score_only="cos"):
-        """Init.
-
-        Args:
-            device: The device.
-            detach: The detach.
-            score_only: The score only.
-        """
         self.device = device
         self.detach = detach if not score_only else True  # if score_only, always detach
         self.score_only = score_only
 
     def __call__(self, x_in, x_self_attn, x_cross_attn, x_ffn):
-        """Call.
-
-        Args:
-            x_in: The x in.
-            x_self_attn: The x self attn.
-            x_cross_attn: The x cross attn.
-            x_ffn: The x ffn.
-        """
         # input shape is B,L,C
         if self.score_only == "cos":
             # make sure all feats are not none
@@ -139,14 +106,12 @@ class BlockHook:
                 self.x_ffn = self.x_ffn.detach() if self.x_ffn is not None else None
 
     def clear(self):
-        """Clear."""
         self.x_in = None
         self.x_self_attn = None
         self.x_cross_attn = None
         self.x_ffn = None
 
     def get_output(self):
-        """Get output."""
         return {
             "x_in": self.x_in,
             "x_self_attn": self.x_self_attn,
@@ -216,12 +181,6 @@ class WanRMSNorm(nn.Module):
     """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -243,13 +202,6 @@ class WanLayerNorm(nn.LayerNorm):
     """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
-        """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
     def forward(self, x):
@@ -264,15 +216,6 @@ class WanSelfAttention(nn.Module):
     """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -339,15 +282,6 @@ class WanLinearAttention(WanSelfAttention):
     PAD_VAL = 1
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps, **kwargs)
         self.kernel_func = nn.ReLU(inplace=False)
         self.fp32_attention = True
@@ -357,16 +291,6 @@ class WanLinearAttention(WanSelfAttention):
 
     @torch.autocast(device_type="cuda", enabled=False)
     def attn_matmul(self, q, k, v: torch.Tensor) -> torch.Tensor:
-        """Attn matmul.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-
-        Returns:
-            The return value.
-        """
         v = F.pad(v.float(), (0, 0, 0, 1), mode="constant", value=self.PAD_VAL)
         vk = torch.matmul(v, k)
         out = torch.matmul(vk, q)  # b, h, h_d, n
@@ -466,25 +390,11 @@ class STConv(nn.Module):
     """Space-time depthwise conv used by MLLA linear attention."""
 
     def __init__(self, in_dim, out_dim, kernel_size=3, stride=1, padding=1):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-        """
         super().__init__()
         self.spatial_conv = nn.Conv2d(in_dim, out_dim, kernel_size, stride, padding, groups=in_dim)
         self.temporal_conv = nn.Conv1d(in_dim, out_dim, kernel_size, stride, padding, groups=in_dim)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         B, C, T, H, W = x.shape
         x = x.permute(0, 2, 1, 3, 4).reshape(B * T, C, H, W)
         x = self.spatial_conv(x)
@@ -498,15 +408,6 @@ class MLLALinearAttention(WanLinearAttention):
     """MLLA linear attention (ReLU kernel + optional conv)."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps, **kwargs)
         self.kernel_func = nn.ReLU(inplace=False)
         self.fp32_attention = True
@@ -562,15 +463,6 @@ class MLLALePEAttention(WanLinearAttention):
     """MLLA linear attention with locally-enhanced positional encoding."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps, **kwargs)
         self.kernel_func = nn.ELU(inplace=False)
         self.fp32_attention = True
@@ -659,15 +551,6 @@ class WanI2VCrossAttention(WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
         super().__init__(dim, num_heads, window_size, qk_norm, eps)
 
         self.k_img = nn.Linear(dim, dim)
@@ -737,23 +620,6 @@ class WanAttentionBlock(nn.Module):
         ffn_type="mlp",
         mlp_acts=("silu", "silu", None),
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-            self_attn_type: The self attn type.
-            rope_after: The rope after.
-            power: The power.
-            ffn_type: The ffn type.
-            mlp_acts: The mlp acts.
-        """
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -873,14 +739,6 @@ class Head(nn.Module):
     """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
-        """
         super().__init__()
         self.dim = dim
         self.out_dim = out_dim
@@ -913,12 +771,6 @@ class MLPProj(torch.nn.Module):
     """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-        """
         super().__init__()
 
         self.proj = torch.nn.Sequential(
@@ -930,11 +782,6 @@ class MLPProj(torch.nn.Module):
         )
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
         clip_extra_context_tokens = self.proj(image_embeds)
         return clip_extra_context_tokens
 
@@ -1193,18 +1040,11 @@ class WanModel(nn.Module, NativeConfigMixin):
                 nn.init.zeros_(block.cross_attn.v_img.bias)
 
     def register_attn_hook(self, layers=None, device="cpu"):
-        """Register attn hook.
-
-        Args:
-            layers: The layers.
-            device: The device.
-        """
         for i, block in enumerate(self.blocks):
             if layers is None or i in layers:
                 block.attn_hook = AttentionHook(device)
 
     def get_attn_output(self):
-        """Get attn output."""
         attn_outputs = {}
         for i, block in enumerate(self.blocks):
             if block.attn_hook is not None:
@@ -1213,20 +1053,11 @@ class WanModel(nn.Module, NativeConfigMixin):
         return attn_outputs
 
     def register_block_hook(self, layers=None, device="cpu", detach=True, score_only=False):
-        """Register block hook.
-
-        Args:
-            layers: The layers.
-            device: The device.
-            detach: The detach.
-            score_only: The score only.
-        """
         for i, block in enumerate(self.blocks):
             if layers is None or i in layers:
                 block.block_hook = BlockHook(device, detach, score_only)
 
     def get_block_output(self):
-        """Get block output."""
         block_outputs = {}
         for i, block in enumerate(self.blocks):
             if block.block_hook is not None:
@@ -1265,31 +1096,6 @@ class WanLinearAttentionModel(WanModel):
         rope_after=False,
         power=1.0,
     ):
-        """Init.
-
-        Args:
-            model_type: The model type.
-            patch_size: The patch size.
-            text_len: The text len.
-            in_dim: The in dim.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            freq_dim: The freq dim.
-            image_dim: The image dim.
-            text_dim: The text dim.
-            out_dim: The out dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
-            linear_attn_idx: The linear attn idx.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            rope_after: The rope after.
-            power: The power.
-        """
         super().__init__(
             model_type=model_type,
             patch_size=patch_size,
@@ -1433,12 +1239,6 @@ class WanLinearAttentionModel(WanModel):
 
 
 def init_model_configs(model_cfg, vae_cfg):
-    """Init model configs.
-
-    Args:
-        model_cfg: The model cfg.
-        vae_cfg: The vae cfg.
-    """
     # 1.3B T2V
     model_name = model_cfg.model
     if "1300M" in model_name or "1.3B" in model_name:

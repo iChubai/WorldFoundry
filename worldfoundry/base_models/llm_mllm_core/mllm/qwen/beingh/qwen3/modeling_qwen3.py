@@ -1,5 +1,3 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> beingh -> qwen3 -> modeling_qwen3.py functionality."""
-
 from collections.abc import Callable
 from functools import partial
 from typing import ClassVar
@@ -48,11 +46,6 @@ class Qwen3RMSNorm(nn.Module):
         self.variance_epsilon = eps
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         input_dtype = hidden_states.dtype
         hidden_states = hidden_states.to(torch.float32)
         variance = hidden_states.pow(2).mean(-1, keepdim=True)
@@ -60,7 +53,6 @@ class Qwen3RMSNorm(nn.Module):
         return self.weight * hidden_states.to(input_dtype)
 
     def extra_repr(self):
-        """Extra repr."""
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
@@ -68,11 +60,6 @@ class Qwen3MLP(nn.Module):
     """Qwen mlp implementation."""
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
@@ -83,11 +70,6 @@ class Qwen3MLP(nn.Module):
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
         return down_proj
 
@@ -148,17 +130,6 @@ def eager_attention_forward(
     dropout: float = 0.0,
     **kwargs,
 ):
-    """Eager attention forward.
-
-    Args:
-        module: The module.
-        query: The query.
-        key: The key.
-        value: The value.
-        attention_mask: The attention mask.
-        scaling: The scaling.
-        dropout: The dropout.
-    """
     key_states = repeat_kv(key, module.num_key_value_groups)
     value_states = repeat_kv(value, module.num_key_value_groups)
 
@@ -179,12 +150,6 @@ class Qwen3Attention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
     def __init__(self, config: Qwen3Config, layer_idx: int):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -229,18 +194,6 @@ class Qwen3Attention(nn.Module):
         cache_position: torch.LongTensor | None = None,
         **kwargs: Unpack[FlashAttentionKwargs],
     ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            position_embeddings: The position embeddings.
-            attention_mask: The attention mask.
-            past_key_value: The past key value.
-            cache_position: The cache position.
-
-        Returns:
-            The return value.
-        """
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -287,12 +240,6 @@ class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
 
     def __init__(self, config: Qwen3Config, layer_idx: int):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = Qwen3Attention(config=config, layer_idx=layer_idx)
@@ -319,21 +266,6 @@ class Qwen3DecoderLayer(nn.Module):
         position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # necessary, but kept here for BC
         **kwargs: Unpack[FlashAttentionKwargs],
     ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-
-        Returns:
-            The return value.
-        """
         residual = hidden_states
 
         hidden_states = self.input_layernorm(hidden_states)
@@ -369,12 +301,6 @@ class Qwen3RotaryEmbedding(nn.Module):
     """Qwen rotary embedding implementation."""
 
     def __init__(self, config: Qwen3Config, device=None):
-        """Init.
-
-        Args:
-            config: The config.
-            device: The device.
-        """
         super().__init__()
         # BC: "rope_type" was originally "type"
         if hasattr(config, "rope_scaling") and config.rope_scaling is not None:
@@ -394,12 +320,6 @@ class Qwen3RotaryEmbedding(nn.Module):
     @torch.no_grad()
     @dynamic_rope_update  # power user: used with advanced RoPE types (e.g. dynamic rope)
     def forward(self, x, position_ids):
-        """Forward.
-
-        Args:
-            x: The x.
-            position_ids: The position ids.
-        """
         inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)
         position_ids_expanded = position_ids[:, None, :].float()
 
@@ -874,11 +794,6 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
     _pp_plan: ClassVar[dict] = {"lm_head": (["hidden_states"], ["logits"])}
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.model = Qwen3Model(config)
         self.vocab_size = config.vocab_size
@@ -888,39 +803,21 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
         self.post_init()
 
     def get_input_embeddings(self):
-        """Get input embeddings."""
         return self.model.embed_tokens
 
     def set_input_embeddings(self, value):
-        """Set input embeddings.
-
-        Args:
-            value: The value.
-        """
         self.model.embed_tokens = value
 
     def get_output_embeddings(self):
-        """Get output embeddings."""
         return self.lm_head
 
     def set_output_embeddings(self, new_embeddings):
-        """Set output embeddings.
-
-        Args:
-            new_embeddings: The new embeddings.
-        """
         self.lm_head = new_embeddings
 
     def set_decoder(self, decoder):
-        """Set decoder.
-
-        Args:
-            decoder: The decoder.
-        """
         self.model = decoder
 
     def get_decoder(self):
-        """Get decoder."""
         return self.model
 
     @can_return_tuple

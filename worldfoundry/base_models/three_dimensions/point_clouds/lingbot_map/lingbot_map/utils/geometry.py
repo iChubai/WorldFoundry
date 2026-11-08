@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> geometry.py functionality."""
-
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation
@@ -348,11 +346,6 @@ MIN_DEPTH = 0.2
 
 
 def extract_intrinsics(intrinsics):
-    """Extract intrinsics.
-
-    Args:
-        intrinsics: The intrinsics.
-    """
     return intrinsics[..., None, None, :].unbind(dim=-1)
 
 
@@ -511,12 +504,6 @@ def compute_distance_matrix_flow2(poses, disps, intrinsics, beta=0.4):
 
 
 def coords_grid(ht, wd, **kwargs):
-    """Coords grid.
-
-    Args:
-        ht: The ht.
-        wd: The wd.
-    """
     y, x = torch.meshgrid(
         torch.arange(ht, dtype=torch.float, **kwargs),
         torch.arange(wd, dtype=torch.float, **kwargs),

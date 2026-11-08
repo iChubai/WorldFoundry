@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> heads -> gs_head.py functionality."""
-
 import torch
 import torch.nn as nn
 
@@ -24,20 +22,6 @@ class GSFeatHead(_BaseDPTHead):
         down_ratio: int = 1,
         gradient_checkpoint: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            features: The features.
-            out_channels: The out channels.
-            pos_embed: The pos embed.
-            down_ratio: The down ratio.
-            gradient_checkpoint: The gradient checkpoint.
-
-        Returns:
-            The return value.
-        """
         super().__init__(
             dim_in=dim_in,
             patch_size=patch_size,
@@ -61,17 +45,6 @@ class GSFeatHead(_BaseDPTHead):
         patch_start_idx: int,
         frames_chunk_size: int = 8,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            token_list: The token list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            frames_chunk_size: The frames chunk size.
-
-        Returns:
-            The return value.
-        """
         B, S, _, H, W = images.shape
 
         if frames_chunk_size is None or frames_chunk_size >= S:
@@ -94,18 +67,6 @@ class GSFeatHead(_BaseDPTHead):
         frame_start: int | None = None,
         frame_end: int | None = None,
     ) -> torch.Tensor:
-        """Helper function to forward impl.
-
-        Args:
-            token_list: The token list.
-            images: The images.
-            patch_start_idx: The patch start idx.
-            frame_start: The frame start.
-            frame_end: The frame end.
-
-        Returns:
-            The return value.
-        """
         if frame_start is not None and frame_end is not None:
             images = images[:, frame_start:frame_end].contiguous()
 

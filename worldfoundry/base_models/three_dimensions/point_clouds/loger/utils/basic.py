@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> loger -> utils -> basic.py functionality."""
-
 import math
 import os
 import os.path as osp

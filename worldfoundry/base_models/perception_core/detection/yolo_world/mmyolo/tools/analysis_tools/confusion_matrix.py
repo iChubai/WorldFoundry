@@ -130,7 +130,6 @@ def plot_confusion_matrix(
     """Draw confusion matrix with matplotlib.
 
     Args:
-        confusion_matrix (ndarray): The confusion matrix.
         labels (list[str]): List of class names.
         save_dir (str|optional): If set, save the confusion matrix plot to the
             given path. Default: None.

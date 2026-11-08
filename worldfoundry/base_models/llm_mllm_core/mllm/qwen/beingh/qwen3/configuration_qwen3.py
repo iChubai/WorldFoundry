@@ -158,31 +158,6 @@ class Qwen3Config(PretrainedConfig):
         _attn_implementation="flash_attention_2",
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            vocab_size: The vocab size.
-            hidden_size: The hidden size.
-            intermediate_size: The intermediate size.
-            num_hidden_layers: The num hidden layers.
-            num_attention_heads: The num attention heads.
-            num_key_value_heads: The num key value heads.
-            hidden_act: The hidden act.
-            max_position_embeddings: The max position embeddings.
-            initializer_range: The initializer range.
-            rms_norm_eps: The rms norm eps.
-            use_cache: The use cache.
-            tie_word_embeddings: The tie word embeddings.
-            rope_theta: The rope theta.
-            rope_scaling: The rope scaling.
-            attention_bias: The attention bias.
-            use_sliding_window: The use sliding window.
-            sliding_window: The sliding window.
-            max_window_layers: The max window layers.
-            attention_dropout: The attention dropout.
-            is_causal: The is causal.
-            _attn_implementation: The attn implementation.
-        """
         self.vocab_size = vocab_size
         self.max_position_embeddings = max_position_embeddings
         self.hidden_size = hidden_size

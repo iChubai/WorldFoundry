@@ -54,17 +54,6 @@ Overall, despite being quite naive, this implementation is roughly 5.5x faster t
 
 @triton.jit
 def edt_kernel(inputs_ptr, outputs_ptr, v, z, height, width, horizontal: tl.constexpr):
-    """Edt kernel.
-
-    Args:
-        inputs_ptr: The inputs ptr.
-        outputs_ptr: The outputs ptr.
-        v: The v.
-        z: The z.
-        height: The height.
-        width: The width.
-        horizontal: The horizontal.
-    """
     # This is a somewhat verbatim implementation of the efficient 1D EDT algorithm described above
     # It can be applied horizontally or vertically depending if we're doing the first or second stage.
     # It's parallelized across batch+row (or batch+col if horizontal=False)

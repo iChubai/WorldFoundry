@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> da3.py functionality."""
-
 from __future__ import annotations
 
 import torch
@@ -48,11 +46,6 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 
 
 def _wrap_cfg(cfg_obj):
-    """Helper function to wrap cfg.
-
-    Args:
-        cfg_obj: The cfg obj.
-    """
     return OmegaConf.create(cfg_obj)
 
 
@@ -162,7 +155,6 @@ class DepthAnything3Net(nn.Module):
         return output
 
     def _process_mono_sky_estimation(self, output: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        """Process mono sky estimation."""
         if "sky" not in output:
             return output
         non_sky_mask = compute_sky_mask(output.sky, threshold=0.3)

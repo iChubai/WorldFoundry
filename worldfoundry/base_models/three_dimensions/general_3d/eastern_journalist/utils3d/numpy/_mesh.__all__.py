@@ -1,6 +1,4 @@
 # Auto-generated for lazy_import_all_from
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> _mesh.__all__.py functionality."""
-
 __all__ = [
     "compute_face_corner_angles",
     "compute_face_corner_normals",

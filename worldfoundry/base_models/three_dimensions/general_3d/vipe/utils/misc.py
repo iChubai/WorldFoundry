@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> general_3d -> vipe -> utils -> misc.py functionality."""
-
 from typing import TypeVar
 
 T = TypeVar("T")

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> torch -> maps.py functionality."""
-
 import math
 from typing import *
 
@@ -89,11 +87,6 @@ def image_uv(
     height: Optional[int] = None,
     **kwargs,
 ) -> Tensor:
-    """Image uv.
-
-    Returns:
-        The return value.
-    """
     if width is not None or height is not None:
         if width is None or height is None:
             raise ValueError("Both width and height must be provided.")
@@ -413,13 +406,6 @@ def depth_map_to_normal_map(depth: Tensor, intrinsics: Tensor, mask: Tensor = No
 
 
 def depth_map_to_point_map(depth: Tensor, intrinsics: Tensor, extrinsics: Tensor = None):
-    """Depth map to point map.
-
-    Args:
-        depth: The depth.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-    """
     height, width = depth.shape[-2:]
     uv = uv_map(height, width, dtype=depth.dtype, device=depth.device)
     pts = unproject_cv(
@@ -432,13 +418,6 @@ def depth_map_to_point_map(depth: Tensor, intrinsics: Tensor, extrinsics: Tensor
 
 
 def depth_to_points(depth: Tensor, intrinsics: Tensor, extrinsics: Tensor = None):
-    """Depth to points.
-
-    Args:
-        depth: The depth.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-    """
     return depth_map_to_point_map(depth, intrinsics, extrinsics)
 
 

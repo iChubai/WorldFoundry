@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> ba.py functionality."""
-
 import torch
 from torch_scatter import scatter_sum
 
@@ -10,53 +8,23 @@ from .chol import block_solve, schur_solve
 
 # utility functions for scattering ops
 def safe_scatter_add_mat(A, ii, jj, n, m):
-    """Safe scatter add mat.
-
-    Args:
-        A: The a.
-        ii: The ii.
-        jj: The jj.
-        n: The n.
-        m: The m.
-    """
     v = (ii >= 0) & (jj >= 0) & (ii < n) & (jj < m)
     return scatter_sum(A[:, v], ii[v] * m + jj[v], dim=1, dim_size=n * m)
 
 
 def safe_scatter_add_vec(b, ii, n):
-    """Safe scatter add vec.
-
-    Args:
-        b: The b.
-        ii: The ii.
-        n: The n.
-    """
     v = (ii >= 0) & (ii < n)
     return scatter_sum(b[:, v], ii[v], dim=1, dim_size=n)
 
 
 # apply retraction operator to inv-depth maps
 def disp_retr(disps, dz, ii):
-    """Disp retr.
-
-    Args:
-        disps: The disps.
-        dz: The dz.
-        ii: The ii.
-    """
     ii = ii.to(device=dz.device)
     return disps + scatter_sum(dz, ii, dim=1, dim_size=disps.shape[1])
 
 
 # apply retraction operator to poses
 def pose_retr(poses, dx, ii):
-    """Pose retr.
-
-    Args:
-        poses: The poses.
-        dx: The dx.
-        ii: The ii.
-    """
     ii = ii.to(device=dx.device)
     return poses.retr(scatter_sum(dx, ii, dim=1, dim_size=poses.shape[1]))
 

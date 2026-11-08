@@ -30,11 +30,6 @@ class ImageList:
     """
 
     def __init__(self, images):
-        """Init.
-
-        Args:
-            images: The images.
-        """
         if not isinstance(images, (tuple, list, set)):
             images = [images]
         self.images = []

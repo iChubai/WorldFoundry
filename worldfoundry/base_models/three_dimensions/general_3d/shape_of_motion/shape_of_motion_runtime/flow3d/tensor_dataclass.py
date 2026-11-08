@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> tensor_dataclass.py functionality."""
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TypeVar
@@ -16,14 +14,6 @@ class TensorDataclass:
     """
 
     def __getitem__(self, key) -> Self:
-        """Getitem.
-
-        Args:
-            key: The key.
-
-        Returns:
-            The return value.
-        """
         return self.map(lambda x: x[key])
 
     def to(self, device: torch.device | str) -> Self:
@@ -55,15 +45,6 @@ class TensorDataclass:
             fn: Callable[[torch.Tensor], torch.Tensor],
             val: MapT,
         ) -> MapT:
-            """Helper function to map impl.
-
-            Args:
-                fn: The fn.
-                val: The val.
-
-            Returns:
-                The return value.
-            """
             if isinstance(val, torch.Tensor):
                 return fn(val)
             elif isinstance(val, TensorDataclass):
@@ -81,8 +62,6 @@ class TensorDataclass:
 
 @dataclass
 class TrackObservations(TensorDataclass):
-    """Track observations implementation."""
-
     xyz: torch.Tensor
     visibles: torch.Tensor
     invisibles: torch.Tensor
@@ -90,11 +69,6 @@ class TrackObservations(TensorDataclass):
     colors: torch.Tensor
 
     def check_sizes(self) -> bool:
-        """Check sizes.
-
-        Returns:
-            The return value.
-        """
         dims = self.xyz.shape[:-1]
         return (
             self.visibles.shape == dims
@@ -106,41 +80,18 @@ class TrackObservations(TensorDataclass):
         )
 
     def filter_valid(self, valid_mask: torch.Tensor) -> Self:
-        """Filter valid.
-
-        Args:
-            valid_mask: The valid mask.
-
-        Returns:
-            The return value.
-        """
         return self.map(lambda x: x[valid_mask])
 
 
 @dataclass
 class StaticObservations(TensorDataclass):
-    """Static observations implementation."""
-
     xyz: torch.Tensor
     normals: torch.Tensor
     colors: torch.Tensor
 
     def check_sizes(self) -> bool:
-        """Check sizes.
-
-        Returns:
-            The return value.
-        """
         dims = self.xyz.shape
         return self.normals.shape == dims and self.colors.shape == dims
 
     def filter_valid(self, valid_mask: torch.Tensor) -> Self:
-        """Filter valid.
-
-        Args:
-            valid_mask: The valid mask.
-
-        Returns:
-            The return value.
-        """
         return self.map(lambda x: x[valid_mask])

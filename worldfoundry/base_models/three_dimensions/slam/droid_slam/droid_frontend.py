@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> droid_frontend.py functionality."""
-
 import torch
 from lietorch import SE3
 
@@ -9,16 +7,7 @@ ENABLE_TIMING = False
 
 
 class DroidFrontend:
-    """Droid frontend implementation."""
-
     def __init__(self, net, video, args):
-        """Init.
-
-        Args:
-            net: The net.
-            video: The video.
-            args: The args.
-        """
         self.video = video
         self.update_op = net.update
         self.graph = FactorGraph(video, net.update, max_factors=48, upsample=args.upsample)
@@ -52,7 +41,6 @@ class DroidFrontend:
             self.motion_damping = args.motion_damping
 
     def _init_next_state(self):
-        """Helper function to init next state."""
         # set pose / depth for next iteration
         self.video.poses[self.t1] = self.video.poses[self.t1 - 1]
 

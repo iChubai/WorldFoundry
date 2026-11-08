@@ -4,8 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> models -> vggt.py functionality."""
-
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin  # used for model hub
@@ -17,8 +15,6 @@ from .aggregator import Aggregator
 
 
 class VGGT(nn.Module, PyTorchModelHubMixin):
-    """Vggt implementation."""
-
     def __init__(
         self,
         img_size=518,
@@ -33,21 +29,6 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
         pred_cameras=None,
         return_aggregated_tokens=False,
     ):
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            embed_dim: The embed dim.
-            enable_camera: The enable camera.
-            enable_point: The enable point.
-            enable_depth: The enable depth.
-            enable_track: The enable track.
-            patch_embed: The patch embed.
-            pretrained_patch_embed: The pretrained patch embed.
-            pred_cameras: The pred cameras.
-            return_aggregated_tokens: The return aggregated tokens.
-        """
         super().__init__()
 
         self.return_pose_only = bool(pred_cameras)

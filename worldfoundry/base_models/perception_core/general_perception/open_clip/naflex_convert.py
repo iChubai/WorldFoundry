@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> general_perception -> open_clip -> naflex_convert.py functionality."""
-
 from copy import deepcopy
 from typing import Any
 
@@ -11,38 +9,16 @@ _NAFLEX_NATIVE_TIMM_MODEL_NAME = "vit_base_patch16_clip_224"
 
 
 def _to_2tuple(value):
-    """Helper function to to 2tuple.
-
-    Args:
-        value: The value.
-    """
     if isinstance(value, (tuple, list)):
         return tuple(value)
     return value, value
 
 
 def _is_naflex_timm_model_name(model_name: str) -> bool:
-    """Helper function to is naflex timm model name.
-
-    Args:
-        model_name: The model name.
-
-    Returns:
-        The return value.
-    """
     return model_name.startswith("naflexvit")
 
 
 def _is_timm_model_in_modules(model_name: str, module_names: tuple[str, ...]) -> bool:
-    """Helper function to is timm model in modules.
-
-    Args:
-        model_name: The model name.
-        module_names: The module names.
-
-    Returns:
-        The return value.
-    """
     try:
         from timm.models import is_model_in_modules
     except ImportError:
@@ -51,26 +27,10 @@ def _is_timm_model_in_modules(model_name: str, module_names: tuple[str, ...]) ->
 
 
 def _can_convert_timm_model_to_naflex(model_name: str) -> bool:
-    """Helper function to can convert timm model to naflex.
-
-    Args:
-        model_name: The model name.
-
-    Returns:
-        The return value.
-    """
     return _is_naflex_timm_model_name(model_name) or _is_timm_model_in_modules(model_name, _NAFLEX_TIMM_CONVERT_MODULES)
 
 
 def _is_standard_native_vit_cfg(vision_cfg: dict[str, Any]) -> bool:
-    """Helper function to is standard native vit cfg.
-
-    Args:
-        vision_cfg: The vision cfg.
-
-    Returns:
-        The return value.
-    """
     if vision_cfg.get("timm_model_name") or isinstance(vision_cfg.get("layers"), (tuple, list)):
         return False
     if vision_cfg.get("attentional_pool", False):
@@ -98,15 +58,6 @@ def _is_standard_native_vit_cfg(vision_cfg: dict[str, Any]) -> bool:
 
 
 def _force_naflex_native_vit_vision(vision_cfg: dict[str, Any], quick_gelu: bool = False) -> None:
-    """Helper function to force naflex native vit vision.
-
-    Args:
-        vision_cfg: The vision cfg.
-        quick_gelu: The quick gelu.
-
-    Returns:
-        The return value.
-    """
     if not _is_standard_native_vit_cfg(vision_cfg):
         raise RuntimeError(
             "NaFlex vision mode can only convert standard native OpenCLIP/OpenAI ViT towers "
@@ -170,14 +121,6 @@ def _force_naflex_native_vit_vision(vision_cfg: dict[str, Any], quick_gelu: bool
 
 
 def _force_naflex_timm_vision(vision_cfg: dict[str, Any]) -> None:
-    """Helper function to force naflex timm vision.
-
-    Args:
-        vision_cfg: The vision cfg.
-
-    Returns:
-        The return value.
-    """
     timm_model_name = vision_cfg.get("timm_model_name")
     if not timm_model_name:
         raise RuntimeError("NaFlex vision mode requires a compatible timm or native ViT vision tower.")
@@ -196,14 +139,6 @@ def _force_naflex_timm_vision(vision_cfg: dict[str, Any]) -> None:
 
 
 def apply_naflex_vision_config(model_cfg: dict[str, Any]) -> None:
-    """Apply naflex vision config.
-
-    Args:
-        model_cfg: The model cfg.
-
-    Returns:
-        The return value.
-    """
     vision_cfg = model_cfg["vision_cfg"]
     if vision_cfg.get("timm_model_name"):
         _force_naflex_timm_vision(vision_cfg)
@@ -212,14 +147,6 @@ def apply_naflex_vision_config(model_cfg: dict[str, Any]) -> None:
 
 
 def _reshape_native_pos_embed_for_naflex(pos_embed: torch.Tensor) -> torch.Tensor:
-    """Helper function to reshape native pos embed for naflex.
-
-    Args:
-        pos_embed: The pos embed.
-
-    Returns:
-        The return value.
-    """
     num_patches = pos_embed.shape[0]
     grid_size = int(num_patches**0.5)
     if grid_size * grid_size != num_patches:
@@ -230,14 +157,6 @@ def _reshape_native_pos_embed_for_naflex(pos_embed: torch.Tensor) -> torch.Tenso
 def _convert_naflex_native_vit_state_dict(
     state_dict: dict[str, torch.Tensor],
 ) -> dict[str, torch.Tensor]:
-    """Helper function to convert naflex native vit state dict.
-
-    Args:
-        state_dict: The state dict.
-
-    Returns:
-        The return value.
-    """
     pos_embed = state_dict.get("visual.positional_embedding")
     cls_embed = state_dict.get("visual.class_embedding")
     if pos_embed is None or cls_embed is None:
@@ -295,15 +214,6 @@ def _convert_naflex_timm_state_dict(
     model: nn.Module,
     state_dict: dict[str, torch.Tensor],
 ) -> dict[str, torch.Tensor]:
-    """Helper function to convert naflex timm state dict.
-
-    Args:
-        model: The model.
-        state_dict: The state dict.
-
-    Returns:
-        The return value.
-    """
     visual = getattr(model, "visual", None)
     trunk = getattr(visual, "trunk", None)
     if trunk is None or trunk.__class__.__name__ != "NaFlexVit":
@@ -332,13 +242,4 @@ def convert_naflex_state_dict(
     model: nn.Module,
     state_dict: dict[str, torch.Tensor],
 ) -> dict[str, torch.Tensor]:
-    """Convert naflex state dict.
-
-    Args:
-        model: The model.
-        state_dict: The state dict.
-
-    Returns:
-        The return value.
-    """
     return _convert_naflex_timm_state_dict(model, state_dict)

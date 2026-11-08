@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> slam -> droid_slam -> geom -> graph_utils.py functionality."""
-
 from collections import OrderedDict
 
 import numpy as np
@@ -12,11 +10,6 @@ from worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.rgbd_utils i
 
 
 def graph_to_edge_list(graph):
-    """Graph to edge list.
-
-    Args:
-        graph: The graph.
-    """
     ii, jj, kk = [], [], []
     for s, u in enumerate(graph):
         for v in graph[u]:
@@ -31,33 +24,15 @@ def graph_to_edge_list(graph):
 
 
 def keyframe_indicies(graph):
-    """Keyframe indicies.
-
-    Args:
-        graph: The graph.
-    """
     return torch.as_tensor(list(graph))
 
 
 def meshgrid(m, n, device="cuda"):
-    """Meshgrid.
-
-    Args:
-        m: The m.
-        n: The n.
-        device: The device.
-    """
     ii, jj = torch.meshgrid(torch.arange(m), torch.arange(n), indexing="ij")
     return ii.reshape(-1).to(device), jj.reshape(-1).to(device)
 
 
 def neighbourhood_graph(n, r):
-    """Neighbourhood graph.
-
-    Args:
-        n: The n.
-        r: The r.
-    """
     ii, jj = meshgrid(n, n)
     d = (ii - jj).abs()
     keep = (d >= 1) & (d <= r)

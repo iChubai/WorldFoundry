@@ -6,8 +6,6 @@
 
 # Inspired by https://github.com/DepthAnything/Depth-Anything-V2
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt_omega -> vggt_omega -> models -> heads -> dense_head.py functionality."""
-
 import math
 
 import torch
@@ -28,18 +26,6 @@ class DenseHead(nn.Module):
         out_channels: list[int] = [256, 512, 1024, 1024],
         intermediate_layer_idx: list[int] = [4, 11, 17, 23],
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            features: The features.
-            out_channels: The out channels.
-            intermediate_layer_idx: The intermediate layer idx.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         if patch_size % 4 != 0:
@@ -89,17 +75,6 @@ class DenseHead(nn.Module):
         patch_token_start: int,
         frames_chunk_size: int | None = 8,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_token_start: The patch token start.
-            frames_chunk_size: The frames chunk size.
-
-        Returns:
-            The return value.
-        """
         if patch_token_start is None:
             raise ValueError("patch_token_start is required for DenseHead")
 
@@ -134,18 +109,6 @@ class DenseHead(nn.Module):
         frames_start_idx: int | None = None,
         frames_end_idx: int | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Helper function to forward impl.
-
-        Args:
-            aggregated_tokens_list: The aggregated tokens list.
-            images: The images.
-            patch_token_start: The patch token start.
-            frames_start_idx: The frames start idx.
-            frames_end_idx: The frames end idx.
-
-        Returns:
-            The return value.
-        """
         if frames_start_idx is not None and frames_end_idx is not None:
             images = images[:, frames_start_idx:frames_end_idx].contiguous()
 
@@ -194,17 +157,6 @@ class DenseHead(nn.Module):
         return depth, depth_conf
 
     def _apply_pos_embed(self, x: torch.Tensor, width: int, height: int, ratio: float = 0.1) -> torch.Tensor:
-        """Helper function to apply pos embed.
-
-        Args:
-            x: The x.
-            width: The width.
-            height: The height.
-            ratio: The ratio.
-
-        Returns:
-            The return value.
-        """
         patch_w = x.shape[-1]
         patch_h = x.shape[-2]
         pos_embed = create_uv_grid(patch_w, patch_h, aspect_ratio=width / height, dtype=x.dtype, device=x.device)
@@ -214,14 +166,6 @@ class DenseHead(nn.Module):
         return x + pos_embed
 
     def scratch_forward(self, features: list[torch.Tensor]) -> torch.Tensor:
-        """Scratch forward.
-
-        Args:
-            features: The features.
-
-        Returns:
-            The return value.
-        """
         layer_1, layer_2, layer_3, layer_4 = features
 
         layer_1_rn = self.scratch.layer1_rn(layer_1)
@@ -236,15 +180,6 @@ class DenseHead(nn.Module):
 
 
 def _make_dense_resize_layer(channels: int, resize_scale: float) -> nn.Module:
-    """Helper function to make dense resize layer.
-
-    Args:
-        channels: The channels.
-        resize_scale: The resize scale.
-
-    Returns:
-        The return value.
-    """
     if resize_scale == 1.0:
         return nn.Identity()
 
@@ -268,27 +203,10 @@ def _make_dense_resize_layer(channels: int, resize_scale: float) -> nn.Module:
 
 
 def _make_prediction_head(in_channels: int, out_channels: int) -> nn.Module:
-    """Helper function to make prediction head.
-
-    Args:
-        in_channels: The in channels.
-        out_channels: The out channels.
-
-    Returns:
-        The return value.
-    """
     return nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=True)
 
 
 def _init_small_conf_prediction_head(proj: nn.Module) -> None:
-    """Helper function to init small conf prediction head.
-
-    Args:
-        proj: The proj.
-
-    Returns:
-        The return value.
-    """
     if not isinstance(proj, nn.Conv2d):
         raise TypeError(f"Unsupported confidence projection layer: {type(proj)}")
 
@@ -301,15 +219,6 @@ def _init_small_conf_prediction_head(proj: nn.Module) -> None:
 
 
 def _make_fusion_block(features: int, has_residual: bool = True) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        has_residual: The has residual.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=False),
@@ -318,15 +227,6 @@ def _make_fusion_block(features: int, has_residual: bool = True) -> nn.Module:
 
 
 def _make_scratch(in_shape: list[int], out_shape: int) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     scratch.layer1_rn = nn.Conv2d(in_shape[0], out_shape, kernel_size=3, stride=1, padding=1, bias=False)
     scratch.layer2_rn = nn.Conv2d(in_shape[1], out_shape, kernel_size=3, stride=1, padding=1, bias=False)
@@ -336,32 +236,13 @@ def _make_scratch(in_shape: list[int], out_shape: int) -> nn.Module:
 
 
 class ResidualConvUnit(nn.Module):
-    """Residual conv unit implementation."""
-
     def __init__(self, features: int, activation: nn.Module) -> None:
-        """Init.
-
-        Args:
-            features: The features.
-            activation: The activation.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.conv1 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True)
         self.conv2 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True)
         self.activation = activation
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         out = self.activation(x)
         out = self.conv1(out)
         out = self.activation(out)
@@ -370,19 +251,7 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block implementation."""
-
     def __init__(self, features: int, activation: nn.Module, has_residual: bool = True) -> None:
-        """Init.
-
-        Args:
-            features: The features.
-            activation: The activation.
-            has_residual: The has residual.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.out_conv = nn.Conv2d(features, features, kernel_size=1, stride=1, padding=0, bias=True)
         self.has_residual = has_residual
@@ -393,16 +262,6 @@ class FeatureFusionBlock(nn.Module):
     def forward(
         self, x: torch.Tensor, residual: torch.Tensor | None = None, size: tuple[int, int] | None = None
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-            size: The size.
-
-        Returns:
-            The return value.
-        """
         output = x
         if self.has_residual:
             if residual is None:
@@ -421,18 +280,6 @@ def custom_interpolate(
     mode: str = "bilinear",
     align_corners: bool = True,
 ) -> torch.Tensor:
-    """Custom interpolate.
-
-    Args:
-        x: The x.
-        size: The size.
-        scale_factor: The scale factor.
-        mode: The mode.
-        align_corners: The align corners.
-
-    Returns:
-        The return value.
-    """
     if size is None:
         if scale_factor is None:
             raise ValueError("custom_interpolate requires either size or scale_factor")

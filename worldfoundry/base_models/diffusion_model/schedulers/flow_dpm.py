@@ -26,12 +26,6 @@ from ._solver_support import (
 
 
 def get_sampling_sigmas(sampling_steps, shift):
-    """Get sampling sigmas.
-
-    Args:
-        sampling_steps: The sampling steps.
-        shift: The shift.
-    """
     sigma = np.linspace(1, 0, sampling_steps + 1)[:sampling_steps]
     sigma = shift * sigma / (1 + (shift - 1) * sigma)
 
@@ -46,15 +40,6 @@ def retrieve_timesteps(
     sigmas=None,
     **kwargs,
 ):
-    """Retrieve timesteps.
-
-    Args:
-        scheduler: The scheduler.
-        num_inference_steps: The num inference steps.
-        device: The device.
-        timesteps: The timesteps.
-        sigmas: The sigmas.
-    """
     if timesteps is not None and sigmas is not None:
         raise ValueError("Only one of `timesteps` or `sigmas` can be passed. Please choose one to set custom values")
     if timesteps is not None:
@@ -161,26 +146,6 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
         variance_type: str | None = None,
         invert_sigmas: bool = False,
     ):
-        """Init.
-
-        Args:
-            num_train_timesteps: The num train timesteps.
-            solver_order: The solver order.
-            prediction_type: The prediction type.
-            shift: The shift.
-            use_dynamic_shifting: The use dynamic shifting.
-            thresholding: The thresholding.
-            dynamic_thresholding_ratio: The dynamic thresholding ratio.
-            sample_max_value: The sample max value.
-            algorithm_type: The algorithm type.
-            solver_type: The solver type.
-            lower_order_final: The lower order final.
-            euler_at_final: The euler at final.
-            final_sigmas_type: The final sigmas type.
-            lambda_min_clipped: The lambda min clipped.
-            variance_type: The variance type.
-            invert_sigmas: The invert sigmas.
-        """
         if algorithm_type in ["dpmsolver", "sde-dpmsolver"]:
             deprecation_message = f"algorithm_type {algorithm_type} is deprecated and will be removed in a future version. Choose from `dpmsolver++` or `sde-dpmsolver++` instead"
             deprecate("algorithm_types dpmsolver and sde-dpmsolver", "1.0.0", deprecation_message)
@@ -343,30 +308,13 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
 
     # Copied from diffusers.schedulers.scheduling_flow_match_euler_discrete.FlowMatchEulerDiscreteScheduler._sigma_to_t
     def _sigma_to_t(self, sigma):
-        """Helper function to sigma to t.
-
-        Args:
-            sigma: The sigma.
-        """
         return sigma * self.config.num_train_timesteps
 
     def _sigma_to_alpha_sigma_t(self, sigma):
-        """Helper function to sigma to alpha sigma t.
-
-        Args:
-            sigma: The sigma.
-        """
         return 1 - sigma, sigma
 
     # Copied from diffusers.schedulers.scheduling_flow_match_euler_discrete.set_timesteps
     def time_shift(self, mu: float, sigma: float, t: torch.Tensor):
-        """Time shift.
-
-        Args:
-            mu: The mu.
-            sigma: The sigma.
-            t: The t.
-        """
         return math.exp(mu) / (math.exp(mu) + (1 / t - 1) ** sigma)
 
     # Copied from diffusers.schedulers.scheduling_dpmsolver_multistep.DPMSolverMultistepScheduler.convert_model_output
@@ -717,12 +665,6 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
         return x_t  # pyright: ignore
 
     def index_for_timestep(self, timestep, schedule_timesteps=None):
-        """Index for timestep.
-
-        Args:
-            timestep: The timestep.
-            schedule_timesteps: The schedule timesteps.
-        """
         if schedule_timesteps is None:
             schedule_timesteps = self.timesteps
 
@@ -856,16 +798,6 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
         noise: torch.Tensor,
         timesteps: torch.IntTensor,
     ) -> torch.Tensor:
-        """Add noise.
-
-        Args:
-            original_samples: The original samples.
-            noise: The noise.
-            timesteps: The timesteps.
-
-        Returns:
-            The return value.
-        """
         # Make sure sigmas and timesteps have the same device and dtype as original_samples
         sigmas = self.sigmas.to(device=original_samples.device, dtype=original_samples.dtype)
         if original_samples.device.type == "mps" and torch.is_floating_point(timesteps):
@@ -895,5 +827,4 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
         return noisy_samples
 
     def __len__(self):
-        """Len."""
         return self.config.num_train_timesteps

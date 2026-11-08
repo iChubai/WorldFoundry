@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> dpt.py functionality."""
-
 from typing import Dict as TyDict
 from typing import List, Sequence, Tuple
 import torch
@@ -62,14 +60,6 @@ class DPT(nn.Module):
         norm_type: str = "idt",  # use to match legacy GS-DPT head, "idt" / "layer"
         fusion_block_inplace: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         # -------------------- configuration --------------------
@@ -207,17 +197,6 @@ class DPT(nn.Module):
         W: int,
         patch_start_idx: int,
     ) -> TyDict[str, torch.Tensor]:
-        """Helper function to forward impl.
-
-        Args:
-            feats: The feats.
-            H: The h.
-            W: The w.
-            patch_start_idx: The patch start idx.
-
-        Returns:
-            The return value.
-        """
         B, _, C = feats[0].shape
         ph, pw = H // self.patch_size, W // self.patch_size
         resized_feats = []
@@ -345,18 +324,6 @@ def _make_fusion_block(
     groups: int = 1,
     inplace: bool = False,
 ) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        size: The size.
-        has_residual: The has residual.
-        groups: The groups.
-        inplace: The inplace.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features=features,
         activation=nn.ReLU(inplace=inplace),
@@ -371,17 +338,6 @@ def _make_fusion_block(
 
 
 def _make_scratch(in_shape: List[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     # Optional expansion by stage
     c1 = out_shape
@@ -400,17 +356,6 @@ class ResidualConvUnit(nn.Module):
     """Lightweight residual convolution block for fusion"""
 
     def __init__(self, features: int, activation: nn.Module, bn: bool, groups: int = 1) -> None:
-        """Init.
-
-        Args:
-            features: The features.
-            activation: The activation.
-            bn: The bn.
-            groups: The groups.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.bn = bn
         self.groups = groups
@@ -422,14 +367,6 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore[override]
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         out = self.activation(x)
         out = self.conv1(out)
         if self.norm1 is not None:
@@ -458,22 +395,6 @@ class FeatureFusionBlock(nn.Module):
         has_residual: bool = True,
         groups: int = 1,
     ) -> None:
-        """Init.
-
-        Args:
-            features: The features.
-            activation: The activation.
-            deconv: The deconv.
-            bn: The bn.
-            expand: The expand.
-            align_corners: The align corners.
-            size: The size.
-            has_residual: The has residual.
-            groups: The groups.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.align_corners = align_corners
         self.size = size

@@ -43,14 +43,7 @@ def forward_with_checkpointing(module, *inputs, use_checkpointing=False):
     """Forward with optional gradient checkpointing."""
 
     def create_custom_forward(module):
-        """Create custom forward.
-
-        Args:
-            module: The module.
-        """
-
         def custom_forward(*inputs):
-            """Custom forward."""
             return module(*inputs)
 
         return custom_forward
@@ -67,12 +60,6 @@ class PatchCausalConv3d(nn.Conv3d):
     r"""Causal Conv3d with efficient patch processing for large tensors."""
 
     def find_split_indices(self, seq_len, part_num):
-        """Find split indices.
-
-        Args:
-            seq_len: The seq len.
-            part_num: The part num.
-        """
         ideal_interval = seq_len / part_num
         possible_indices = list(range(0, seq_len, self.stride[0]))
         selected_indices = []
@@ -92,11 +79,6 @@ class PatchCausalConv3d(nn.Conv3d):
         return merged_indices
 
     def forward(self, input):
-        """Forward.
-
-        Args:
-            input: The input.
-        """
         T = input.shape[2]  # input: NCTHW
         memory_count = torch.prod(torch.tensor(input.shape)).item() * 2 / 1024**3
         if self.kernel_size[0] < T and memory_count > 0.6:
@@ -122,14 +104,6 @@ class RMS_norm(nn.Module):
     """Root Mean Square Layer Normalization for Channel-First or Last"""
 
     def __init__(self, dim, channel_first=True, images=True, bias=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            channel_first: The channel first.
-            images: The images.
-            bias: The bias.
-        """
         super().__init__()
         broadcastable_dims = (1, 1, 1) if not images else (1, 1)
         shape = (dim, *broadcastable_dims) if channel_first else (dim,)
@@ -140,11 +114,6 @@ class RMS_norm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
 
 
@@ -163,18 +132,6 @@ class CausalConv3d(nn.Module):
         enable_patch_conv=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            chan_in: The chan in.
-            chan_out: The chan out.
-            kernel_size: The kernel size.
-            stride: The stride.
-            dilation: The dilation.
-            pad_mode: The pad mode.
-            disable_causal: The disable causal.
-            enable_patch_conv: The enable patch conv.
-        """
         super().__init__()
 
         self.pad_mode = pad_mode
@@ -204,11 +161,6 @@ class CausalConv3d(nn.Module):
             self.conv = nn.Conv3d(chan_in, chan_out, kernel_size, stride=stride, dilation=dilation, **kwargs)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = F.pad(x, self.time_causal_padding, mode=self.pad_mode)
         return self.conv(x)
 
@@ -240,11 +192,6 @@ class AttnBlock(nn.Module):
     """Self-attention block for 3D video tensors."""
 
     def __init__(self, in_channels: int):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-        """
         super().__init__()
         self.in_channels = in_channels
 
@@ -256,14 +203,6 @@ class AttnBlock(nn.Module):
         self.proj_out = Conv3d(in_channels, in_channels, kernel_size=1)
 
     def attention(self, h_: Tensor) -> Tensor:
-        """Attention.
-
-        Args:
-            h_: The h.
-
-        Returns:
-            The return value.
-        """
         h_ = self.norm(h_)
         q = self.q(h_)
         k = self.k(h_)
@@ -279,14 +218,6 @@ class AttnBlock(nn.Module):
         return rearrange(h_, "b 1 (f h w) c -> b c f h w", f=f, h=h, w=w, c=c, b=b)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x + self.proj_out(self.attention(x))
 
 
@@ -294,12 +225,6 @@ class ResnetBlock(nn.Module):
     """ResNet-style block for 3D video tensors."""
 
     def __init__(self, in_channels: int, out_channels: int):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
         super().__init__()
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
@@ -314,11 +239,6 @@ class ResnetBlock(nn.Module):
             self.nin_shortcut = Conv3d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         h = x
         h = self.norm1(h)
         h = swish(h, inplace=True)
@@ -334,16 +254,7 @@ class ResnetBlock(nn.Module):
 
 
 class Downsample(nn.Module):
-    """Downsample implementation."""
-
     def __init__(self, in_channels: int, out_channels: int, add_temporal_downsample: bool = True):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            add_temporal_downsample: The add temporal downsample.
-        """
         super().__init__()
         factor = 2 * 2 * 2 if add_temporal_downsample else 1 * 2 * 2
         assert out_channels % factor == 0
@@ -352,11 +263,6 @@ class Downsample(nn.Module):
         self.group_size = factor * in_channels // out_channels
 
     def forward(self, x: Tensor):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         r1 = 2 if self.add_temporal_downsample else 1
         h = self.conv(x)
         if self.add_temporal_downsample:
@@ -390,13 +296,6 @@ class Upsample(nn.Module):
     """Hierarchical upsampling with temporal/ spatial support."""
 
     def __init__(self, in_channels: int, out_channels: int, add_temporal_upsample: bool = True):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            add_temporal_upsample: The add temporal upsample.
-        """
         super().__init__()
         factor = 2 * 2 * 2 if add_temporal_upsample else 1 * 2 * 2
         self.conv = CausalConv3d(in_channels, out_channels * factor, kernel_size=3)
@@ -404,11 +303,6 @@ class Upsample(nn.Module):
         self.repeats = factor * out_channels // in_channels
 
     def forward(self, x: Tensor):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         r1 = 2 if self.add_temporal_upsample else 1
         h = self.conv(x)
         if self.add_temporal_upsample:
@@ -449,17 +343,6 @@ class Encoder(nn.Module):
         ffactor_temporal: int,
         downsample_match_channel: bool = True,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            z_channels: The z channels.
-            block_out_channels: The block out channels.
-            num_res_blocks: The num res blocks.
-            ffactor_spatial: The ffactor spatial.
-            ffactor_temporal: The ffactor temporal.
-            downsample_match_channel: The downsample match channel.
-        """
         super().__init__()
         assert block_out_channels[-1] % (2 * z_channels) == 0
 
@@ -546,17 +429,6 @@ class Decoder(nn.Module):
         ffactor_temporal: int,
         upsample_match_channel: bool = True,
     ):
-        """Init.
-
-        Args:
-            z_channels: The z channels.
-            out_channels: The out channels.
-            block_out_channels: The block out channels.
-            num_res_blocks: The num res blocks.
-            ffactor_spatial: The ffactor spatial.
-            ffactor_temporal: The ffactor temporal.
-            upsample_match_channel: The upsample match channel.
-        """
         super().__init__()
         assert block_out_channels[0] % z_channels == 0
 
@@ -648,23 +520,6 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         downsample_match_channel: bool = True,
         upsample_match_channel: bool = True,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            latent_channels: The latent channels.
-            block_out_channels: The block out channels.
-            layers_per_block: The layers per block.
-            ffactor_spatial: The ffactor spatial.
-            ffactor_temporal: The ffactor temporal.
-            sample_size: The sample size.
-            sample_tsize: The sample tsize.
-            scaling_factor: The scaling factor.
-            shift_factor: The shift factor.
-            downsample_match_channel: The downsample match channel.
-            upsample_match_channel: The upsample match channel.
-        """
         super().__init__()
         self.ffactor_spatial = ffactor_spatial
         self.ffactor_temporal = ffactor_temporal
@@ -704,12 +559,6 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         self._tile_parallelism_enabled = False
 
     def set_tile_sample_min_size(self, sample_size: int, tile_overlap_factor: float = 0.2):
-        """Set tile sample min size.
-
-        Args:
-            sample_size: The sample size.
-            tile_overlap_factor: The tile overlap factor.
-        """
         self.tile_sample_min_size = sample_size
         self.tile_latent_min_size = sample_size // self.ffactor_spatial
         self.tile_overlap_factor = tile_overlap_factor
@@ -724,48 +573,28 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
             module.gradient_checkpointing = value
 
     def enable_temporal_tiling(self, use_tiling: bool = True):
-        """Enable temporal tiling.
-
-        Args:
-            use_tiling: The use tiling.
-        """
         raise RuntimeError("Temporal tiling is not supported for this VAE.")
         self.use_temporal_tiling = use_tiling
 
     def disable_temporal_tiling(self):
-        """Disable temporal tiling."""
         self.enable_temporal_tiling(False)
 
     def enable_spatial_tiling(self, use_tiling: bool = True):
-        """Enable spatial tiling.
-
-        Args:
-            use_tiling: The use tiling.
-        """
         self.use_spatial_tiling = use_tiling
 
     def disable_spatial_tiling(self):
-        """Disable spatial tiling."""
         self.enable_spatial_tiling(False)
 
     def enable_tiling(self, use_tiling: bool = True):
-        """Enable tiling.
-
-        Args:
-            use_tiling: The use tiling.
-        """
         self.enable_spatial_tiling(use_tiling)
 
     def disable_tiling(self):
-        """Disable tiling."""
         self.disable_spatial_tiling()
 
     def enable_slicing(self):
-        """Enable slicing."""
         self.use_slicing = True
 
     def disable_slicing(self):
-        """Disable slicing."""
         self.use_slicing = False
 
     def blend_h(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int):
@@ -854,19 +683,12 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         return moments
 
     def enable_tile_parallelism(self):
-        """Enable tile parallelism."""
         self._tile_parallelism_enabled = True
 
     def disable_tile_parallelism(self):
-        """Disable tile parallelism."""
         self._tile_parallelism_enabled = False
 
     def tile_parallel_spatial_tiled_decode(self, z: torch.Tensor):
-        """Tile parallel spatial tiled decode.
-
-        Args:
-            z: The z.
-        """
         B, C, T, H, W = z.shape
         overlap_size = int(self.tile_latent_min_size * (1 - self.tile_overlap_factor))
         blend_extent = int(self.tile_sample_min_size * self.tile_overlap_factor)
@@ -958,11 +780,6 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         return dec
 
     def spatial_tiled_decode(self, z: torch.Tensor):
-        """Spatial tiled decode.
-
-        Args:
-            z: The z.
-        """
         if self._tile_parallelism_enabled:
             return self.tile_parallel_spatial_tiled_decode(z)
 
@@ -1026,19 +843,7 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         return dec
 
     def encode(self, x: Tensor, return_dict: bool = True):
-        """Encode.
-
-        Args:
-            x: The x.
-            return_dict: The return dict.
-        """
-
         def _encode(x):
-            """Helper function to encode.
-
-            Args:
-                x: The x.
-            """
             if self.use_temporal_tiling and x.shape[-3] > self.tile_sample_min_tsize:
                 return self.temporal_tiled_encode(x)
             if self.use_spatial_tiling and (
@@ -1062,20 +867,7 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
         return AutoencoderKLOutput(latent_dist=posterior)
 
     def decode(self, z: Tensor, return_dict: bool = True, generator=None):
-        """Decode.
-
-        Args:
-            z: The z.
-            return_dict: The return dict.
-            generator: The generator.
-        """
-
         def _decode(z):
-            """Helper function to decode.
-
-            Args:
-                z: The z.
-            """
             if self.use_temporal_tiling and z.shape[-3] > self.tile_latent_min_tsize:
                 return self.temporal_tiled_decode(z)
             if self.use_spatial_tiling and (
@@ -1110,7 +902,6 @@ class AutoencoderKLConv3D(nn.Module, NativeConfigMixin):
 
     @contextmanager
     def memory_efficient_context(self):
-        """Memory efficient context."""
         original_use_slicing = self.use_slicing
         original_use_spatial_tiling = self.use_spatial_tiling
 

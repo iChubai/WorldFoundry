@@ -1,6 +1,4 @@
 # inspired by https://github.com/DepthAnything/Depth-Anything-V2
-"""Module for base_models -> three_dimensions -> point_clouds -> hunyuan_mirror -> models -> heads -> dense_head.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -43,22 +41,6 @@ class DPTHead(nn.Module):
         down_ratio: int = 1,
         is_gsdpt: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            patch_size: The patch size.
-            output_dim: The output dim.
-            activation: The activation.
-            features: The features.
-            out_channels: The out channels.
-            pos_embed: The pos embed.
-            down_ratio: The down ratio.
-            is_gsdpt: The is gsdpt.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.patch_size = patch_size
         self.activation = activation
@@ -363,9 +345,6 @@ class DPTHead(nn.Module):
         """
         Apply inverse logarithm transform: sign(y) * (exp(|y|) - 1)
 
-        Args:
-            input_tensor: Input tensor
-
         Returns:
             Transformed tensor
         """
@@ -378,17 +357,6 @@ class DPTHead(nn.Module):
 
 
 def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        size: The size.
-        has_residual: The has residual.
-        groups: The groups.
-
-    Returns:
-        The return value.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=True),
@@ -403,17 +371,6 @@ def _make_fusion_block(features: int, size: int | None = None, has_residual: boo
 
 
 def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-
-    Returns:
-        The return value.
-    """
     scratch = nn.Module()
     out_shape1 = out_shape
     out_shape2 = out_shape
@@ -493,8 +450,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,

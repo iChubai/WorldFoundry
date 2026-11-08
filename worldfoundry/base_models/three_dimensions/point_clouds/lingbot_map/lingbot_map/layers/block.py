@@ -7,8 +7,6 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> layers -> block.py functionality."""
-
 import math
 from collections.abc import Callable
 
@@ -22,8 +20,6 @@ from .attention import Attention, CausalAttention, FlashInferAttention, SDPAAtte
 
 
 class Block(nn.Module):
-    """Block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -44,30 +40,6 @@ class Block(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.norm1 = norm_layer(dim)
@@ -100,30 +72,7 @@ class Block(nn.Module):
     def forward(
         self, x: Tensor, pos=None, num_patches=None, num_special=None, num_frames=None, enable_3d_rope=False
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            num_patches: The num patches.
-            num_special: The num special.
-            num_frames: The num frames.
-            enable_3d_rope: The enable 3d rope.
-
-        Returns:
-            The return value.
-        """
-
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                pos: The pos.
-
-            Returns:
-                The return value.
-            """
             return self.ls1(
                 self.attn(
                     self.norm1(x),
@@ -136,14 +85,6 @@ class Block(nn.Module):
             )
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
@@ -166,17 +107,6 @@ class Block(nn.Module):
 def drop_add_residual_stochastic_depth(
     x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
 ) -> Tensor:
-    """Drop add residual stochastic depth.
-
-    Args:
-        x: The x.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        pos: The pos.
-
-    Returns:
-        The return value.
-    """
     # 1) extract subset using permutation
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
@@ -202,12 +132,6 @@ def drop_add_residual_stochastic_depth(
 
 
 def get_branges_scales(x, sample_drop_ratio=0.0):
-    """Get branges scales.
-
-    Args:
-        x: The x.
-        sample_drop_ratio: The sample drop ratio.
-    """
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
     brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
@@ -216,15 +140,6 @@ def get_branges_scales(x, sample_drop_ratio=0.0):
 
 
 def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    """Add residual.
-
-    Args:
-        x: The x.
-        brange: The brange.
-        residual: The residual.
-        residual_scale_factor: The residual scale factor.
-        scaling_vector: The scaling vector.
-    """
     if scaling_vector is None:
         x_flat = x.flatten(1)
         residual = residual.flatten(1)
@@ -266,33 +181,6 @@ class FlashInferBlock(nn.Module):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            rope: The rope.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.norm1 = norm_layer(dim)
@@ -351,24 +239,6 @@ class FlashInferBlock(nn.Module):
         num_frame_for_scale=-1,
         num_register_tokens=4,
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            num_patches: The num patches.
-            num_special: The num special.
-            num_frames: The num frames.
-            enable_3d_rope: The enable 3d rope.
-            kv_cache: The kv cache.
-            global_idx: The global idx.
-            num_frame_per_block: The num frame per block.
-            num_frame_for_scale: The num frame for scale.
-            num_register_tokens: The num register tokens.
-
-        Returns:
-            The return value.
-        """
         # Phase 2 (streaming): single-frame FlashInfer paged attention.
         # Handle inline so attn_pre (norm1+prepare_qkv) can be compiled as one CUDA graph.
         is_streaming = kv_cache is not None and (num_frames is None or num_frames <= 1)
@@ -441,8 +311,6 @@ class FlashInferBlock(nn.Module):
 
 
 class CameraBlock(nn.Module):
-    """Camera block implementation."""
-
     def __init__(
         self,
         dim: int,
@@ -473,39 +341,6 @@ class CameraBlock(nn.Module):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-            elementwise_attn_output_gate: The elementwise attn output gate.
-            sliding_window_size: The sliding window size.
-            attend_to_scale_frames: The attend to scale frames.
-            num_random_frames: The num random frames.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.norm1 = norm_layer(dim)
@@ -564,14 +399,6 @@ class CameraBlock(nn.Module):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
-            """Attention mask.
-
-            Args:
-                b: The b.
-                h: The h.
-                q_idx: The q idx.
-                kv_idx: The kv idx.
-            """
             return (kv_idx < ends[q_idx]) | (q_idx == kv_idx)
             # return ((kv_idx < total_length) & (q_idx < total_length))  | (q_idx == kv_idx) # bidirectional mask
 
@@ -604,28 +431,6 @@ class CameraBlock(nn.Module):
         enable_3d_rope=False,
         is_scale_frames=False,
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            video_mask: The video mask.
-            num_frames: The num frames.
-            frame_seqlen: The frame seqlen.
-            kv_cache: The kv cache.
-            current_start: The current start.
-            current_end: The current end.
-            global_idx: The global idx.
-            num_frame_per_block: The num frame per block.
-            num_frame_for_scale: The num frame for scale.
-            sliding_window_size: The sliding window size.
-            full_attention: The full attention.
-            enable_3d_rope: The enable 3d rope.
-            is_scale_frames: The is scale frames.
-
-        Returns:
-            The return value.
-        """
         # Use passed sliding_window_size if provided, otherwise use self.sliding_window_size
         effective_sliding_window_size = (
             sliding_window_size if sliding_window_size is not None else self.sliding_window_size
@@ -635,26 +440,9 @@ class CameraBlock(nn.Module):
         if full_attention:
 
             def attn_residual_func(x: Tensor, pos=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    pos: The pos.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls1(self.attn(self.norm1(x), pos=pos, full_attention=True, enable_3d_rope=enable_3d_rope))
 
             def ffn_residual_func(x: Tensor) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls2(self.mlp(self.norm2(x)))
 
             if self.training and self.sample_drop_ratio > 0.0:
@@ -677,15 +465,6 @@ class CameraBlock(nn.Module):
             )
 
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                pos: The pos.
-
-            Returns:
-                The return value.
-            """
             return self.ls1(
                 self.attn(
                     self.norm1(x),
@@ -708,14 +487,6 @@ class CameraBlock(nn.Module):
             )
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.0:
@@ -756,33 +527,6 @@ class SDPABlock(nn.Module):
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            rope: The rope.
-            kv_cache_sliding_window: The kv cache sliding window.
-            kv_cache_scale_frames: The kv cache scale frames.
-            kv_cache_cross_frame_special: The kv cache cross frame special.
-            kv_cache_include_scale_frames: The kv cache include scale frames.
-            kv_cache_camera_only: The kv cache camera only.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = SDPAAttention(
@@ -824,32 +568,7 @@ class SDPABlock(nn.Module):
         num_frame_for_scale=-1,
         num_register_tokens=4,
     ) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            num_patches: The num patches.
-            num_special: The num special.
-            num_frames: The num frames.
-            enable_3d_rope: The enable 3d rope.
-            kv_cache: The kv cache.
-            global_idx: The global idx.
-            num_frame_per_block: The num frame per block.
-            num_frame_for_scale: The num frame for scale.
-            num_register_tokens: The num register tokens.
-
-        Returns:
-            The return value.
-        """
-
         def attn_residual_func(x, pos=None):
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                pos: The pos.
-            """
             return self.ls1(
                 self.attn(
                     self.norm1(x),
@@ -867,11 +586,6 @@ class SDPABlock(nn.Module):
             )
 
         def ffn_residual_func(x):
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.0:

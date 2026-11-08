@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> dpt.py functionality."""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,13 +19,6 @@ from .util.blocks import FeatureFusionBlock, _make_scratch
 
 
 def _make_fusion_block(features, use_bn, size=None):
-    """Helper function to make fusion block.
-
-    Args:
-        features: The features.
-        use_bn: The use bn.
-        size: The size.
-    """
     return FeatureFusionBlock(
         features,
         nn.ReLU(False),
@@ -40,15 +31,7 @@ def _make_fusion_block(features, use_bn, size=None):
 
 
 class ConvBlock(nn.Module):
-    """Conv block implementation."""
-
     def __init__(self, in_feature, out_feature):
-        """Init.
-
-        Args:
-            in_feature: The in feature.
-            out_feature: The out feature.
-        """
         super().__init__()
 
         self.conv_block = nn.Sequential(
@@ -58,29 +41,13 @@ class ConvBlock(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.conv_block(x)
 
 
 class DPTHead(nn.Module):
-    """Dpt head implementation."""
-
     def __init__(
         self, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            features: The features.
-            use_bn: The use bn.
-            out_channels: The out channels.
-            use_clstoken: The use clstoken.
-        """
         super().__init__()
 
         self.use_clstoken = use_clstoken
@@ -145,13 +112,6 @@ class DPTHead(nn.Module):
         )
 
     def forward(self, out_features, patch_h, patch_w):
-        """Forward.
-
-        Args:
-            out_features: The out features.
-            patch_h: The patch h.
-            patch_w: The patch w.
-        """
         out = []
         for i, x in enumerate(out_features):
             if self.use_clstoken:

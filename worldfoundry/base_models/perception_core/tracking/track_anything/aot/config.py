@@ -1,13 +1,8 @@
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> config.py functionality."""
-
 import os
 
 
 class DefaultModelConfig:
-    """Default model config implementation."""
-
     def __init__(self):
-        """Init."""
         self.MODEL_NAME = "AOTDefault"
 
         self.MODEL_VOS = "aot"
@@ -36,10 +31,7 @@ class DefaultModelConfig:
 
 
 class DeAOTModelConfig(DefaultModelConfig):
-    """De aot model config implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         self.MODEL_NAME = "DeAOTDefault"
 
@@ -55,10 +47,7 @@ class DeAOTModelConfig(DefaultModelConfig):
 
 
 class MyModelConfig(DeAOTModelConfig):
-    """My model config implementation."""
-
     def __init__(self):
-        """Init."""
         super().__init__()
         self.MODEL_NAME = "R50_DeAOTL"
 
@@ -73,15 +62,7 @@ class MyModelConfig(DeAOTModelConfig):
 
 
 class DefaultEngineConfig:
-    """Default engine config implementation."""
-
     def __init__(self, exp_name="default"):
-        """Init.
-
-        Args:
-            exp_name: The exp name.
-        """
-
         model_cfg = MyModelConfig()
 
         self.__dict__.update(model_cfg.__dict__)  # add model config
@@ -185,7 +166,6 @@ class DefaultEngineConfig:
         self.DIST_START_GPU = 0
 
     def init_dir(self):
-        """Init dir."""
         self.DIR_DATA = "../VOS02/datasets"  #'./datasets'
         self.DIR_DAVIS = os.path.join(self.DIR_DATA, "DAVIS")
         self.DIR_YTB = os.path.join(self.DIR_DATA, "YTB")
@@ -203,14 +183,7 @@ class DefaultEngineConfig:
 
 
 class EngineConfig(DefaultEngineConfig):
-    """Engine config implementation."""
-
     def __init__(self, exp_name):
-        """Init.
-
-        Args:
-            exp_name: The exp name.
-        """
         super().__init__(exp_name)
         self.STAGE_NAME = "PRE_YTB_DAV"
 

@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> general_3d -> shape_of_motion -> shape_of_motion_runtime -> flow3d -> normal_utils.py functionality."""
-
 import math
 
 import torch
@@ -36,15 +34,6 @@ def normalized_quat_to_rotmat(quat: Tensor) -> Tensor:
 
 # ref: https://github.com/hbb1/2d-gaussian-splatting/blob/61c7b417393d5e0c58b742ad5e2e5f9e9f240cc6/utils/point_utils.py#L26
 def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, fy):
-    """Helper function to depths to points.
-
-    Args:
-        depthmap: The depthmap.
-        world_view_transform: The world view transform.
-        full_proj_transform: The full proj transform.
-        fx: The fx.
-        fy: The fy.
-    """
     c2w = (world_view_transform.T).inverse()
     H, W = depthmap.shape[:2]
     intrins = torch.tensor([[fx, 0.0, W / 2.0], [0.0, fy, H / 2.0], [0.0, 0.0, 1.0]]).float().cuda()
@@ -64,15 +53,6 @@ def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, f
 
 
 def _depth_to_normal(depth, world_view_transform, full_proj_transform, fx, fy):
-    """Helper function to depth to normal.
-
-    Args:
-        depth: The depth.
-        world_view_transform: The world view transform.
-        full_proj_transform: The full proj transform.
-        fx: The fx.
-        fy: The fy.
-    """
     points = _depths_to_points(
         depth,
         world_view_transform,
@@ -89,16 +69,6 @@ def _depth_to_normal(depth, world_view_transform, full_proj_transform, fx, fy):
 
 
 def depth_to_normal(depths, camtoworlds, Ks, near_plane, far_plane):
-    """Depth to normal.
-
-    Args:
-        depths: The depths.
-        camtoworlds: The camtoworlds.
-        Ks: The ks.
-        near_plane: The near plane.
-        far_plane: The far plane.
-    """
-
     # pdb.set_trace()
     height, width = depths.shape[1:3]
     viewmats = torch.linalg.inv(camtoworlds)  # [C, 4, 4]
@@ -119,15 +89,6 @@ def depth_to_normal(depths, camtoworlds, Ks, near_plane, far_plane):
 
 
 def _getProjectionMatrix(znear, zfar, fovX, fovY, device="cuda"):
-    """Helper function to getprojectionmatrix.
-
-    Args:
-        znear: The znear.
-        zfar: The zfar.
-        fovX: The fovx.
-        fovY: The fovy.
-        device: The device.
-    """
     tanHalfFovY = math.tan(fovY / 2)
     tanHalfFovX = math.tan(fovX / 2)
 

@@ -1,5 +1,3 @@
-"""Module for base_models -> perception_core -> segment -> repvit_sam -> modeling -> repvit.py functionality."""
-
 import torch.nn as nn
 
 __all__ = ["repvit_m1"]
@@ -35,19 +33,6 @@ class Conv2d_BN(torch.nn.Sequential):
     """Conv d bn implementation."""
 
     def __init__(self, a, b, ks=1, stride=1, pad=0, dilation=1, groups=1, bn_weight_init=1, resolution=-10000):
-        """Init.
-
-        Args:
-            a: The a.
-            b: The b.
-            ks: The ks.
-            stride: The stride.
-            pad: The pad.
-            dilation: The dilation.
-            groups: The groups.
-            bn_weight_init: The bn weight init.
-            resolution: The resolution.
-        """
         super().__init__()
         self.add_module("c", torch.nn.Conv2d(a, b, ks, stride, pad, dilation, groups, bias=False))
         self.add_module("bn", torch.nn.BatchNorm2d(b))
@@ -56,7 +41,6 @@ class Conv2d_BN(torch.nn.Sequential):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         c, bn = self._modules.values()
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = c.weight * w[:, None, None, None]
@@ -77,25 +61,12 @@ class Conv2d_BN(torch.nn.Sequential):
 
 
 class Residual(torch.nn.Module):
-    """Residual implementation."""
-
     def __init__(self, m, drop=0.0):
-        """Init.
-
-        Args:
-            m: The m.
-            drop: The drop.
-        """
         super().__init__()
         self.m = m
         self.drop = drop
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.training and self.drop > 0:
             return (
                 x
@@ -106,7 +77,6 @@ class Residual(torch.nn.Module):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         if isinstance(self.m, Conv2d_BN):
             m = self.m.fuse()
             assert m.groups == m.in_channels
@@ -126,17 +96,7 @@ class Residual(torch.nn.Module):
 
 
 class RepVGGDW(torch.nn.Module):
-    """Rep vggdw implementation."""
-
     def __init__(self, ed) -> None:
-        """Init.
-
-        Args:
-            ed: The ed.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.conv = Conv2d_BN(ed, ed, 3, 1, 1, groups=ed)
         self.conv1 = torch.nn.Conv2d(ed, ed, 1, 1, 0, groups=ed)
@@ -144,16 +104,10 @@ class RepVGGDW(torch.nn.Module):
         self.bn = torch.nn.BatchNorm2d(ed)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.bn((self.conv(x) + self.conv1(x)) + x)
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         conv = self.conv.fuse()
         conv1 = self.conv1
 
@@ -184,20 +138,7 @@ class RepVGGDW(torch.nn.Module):
 
 
 class RepViTBlock(nn.Module):
-    """Rep vi t block implementation."""
-
     def __init__(self, inp, hidden_dim, oup, kernel_size, stride, use_se, use_hs):
-        """Init.
-
-        Args:
-            inp: The inp.
-            hidden_dim: The hidden dim.
-            oup: The oup.
-            kernel_size: The kernel size.
-            stride: The stride.
-            use_se: The use se.
-            use_hs: The use hs.
-        """
         super().__init__()
         assert stride in [1, 2]
 
@@ -245,11 +186,6 @@ class RepViTBlock(nn.Module):
                 )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return self.channel_mixer(self.token_mixer(x))
 
 
@@ -260,14 +196,6 @@ class BN_Linear(torch.nn.Sequential):
     """Linear implementation."""
 
     def __init__(self, a, b, bias=True, std=0.02):
-        """Init.
-
-        Args:
-            a: The a.
-            b: The b.
-            bias: The bias.
-            std: The std.
-        """
         super().__init__()
         self.add_module("bn", torch.nn.BatchNorm1d(a))
         self.add_module("l", torch.nn.Linear(a, b, bias=bias))
@@ -277,7 +205,6 @@ class BN_Linear(torch.nn.Sequential):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         bn, l = self._modules.values()
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         b = bn.bias - self.bn.running_mean * self.bn.weight / (bn.running_var + bn.eps) ** 0.5
@@ -290,16 +217,7 @@ class BN_Linear(torch.nn.Sequential):
 
 
 class Classfier(nn.Module):
-    """Classfier implementation."""
-
     def __init__(self, dim, num_classes, distillation=True):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_classes: The num classes.
-            distillation: The distillation.
-        """
         super().__init__()
         self.classifier = BN_Linear(dim, num_classes) if num_classes > 0 else torch.nn.Identity()
         self.distillation = distillation
@@ -307,11 +225,6 @@ class Classfier(nn.Module):
             self.classifier_dist = BN_Linear(dim, num_classes) if num_classes > 0 else torch.nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.distillation:
             x = self.classifier(x), self.classifier_dist(x)
             if not self.training:
@@ -322,7 +235,6 @@ class Classfier(nn.Module):
 
     @torch.no_grad()
     def fuse(self):
-        """Fuse."""
         classifier = self.classifier.fuse()
         if self.distillation:
             classifier_dist = self.classifier_dist.fuse()
@@ -336,17 +248,7 @@ class Classfier(nn.Module):
 
 
 class RepViT(nn.Module):
-    """Rep vi t implementation."""
-
     def __init__(self, cfgs, num_classes=1000, distillation=False, img_size=1024):
-        """Init.
-
-        Args:
-            cfgs: The cfgs.
-            num_classes: The num classes.
-            distillation: The distillation.
-            img_size: The img size.
-        """
         super().__init__()
         # setting of inverted residual blocks
         self.cfgs = cfgs
@@ -390,11 +292,6 @@ class RepViT(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # x = self.features(x)
         for f in self.features:
             x = f(x)

@@ -30853,7 +30853,7 @@
         "pipelineTarget": "worldfoundry.pipelines.alayaworld_v11.pipeline_alayaworld_v11:AlayaWorldV11Pipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
+        "backendStage": "official_in_tree_runtime",
         "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
         "environmentId": "alayaworld-v1.1",
         "environmentName": "alayaworld-v1.1",
@@ -30902,7 +30902,7 @@
           "worldfoundry.synthesis.visual_generation.alayaworld_v11"
         ],
         "notes": [
-          "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
+          "Uses the vendored inference-only rollout, configuration schema and LTX-2.3 transformer; no trainer or optimizer is instantiated.",
           "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
           "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.",
           "CUDA inference dependencies are optional and separate from the CPU catalog installation."
@@ -31181,7 +31181,8 @@
         "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
         "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
         "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.",
-        "GPU/checkpoint-backed artifact parity has not been run in this workspace."
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
+        "Uses the vendored inference-only rollout, configuration schema and LTX-2.3 transformer; no trainer or optimizer is instantiated."
       ],
       "docs": {
         "curated": true,
@@ -31197,10 +31198,10 @@
           "AlayaWorld v1.1 独立提供带 ViGeo 空间记忆的 AR 和四步 DMD 推理。"
         ],
         "architecture": [
-          "The inference-only rollout methods and three small configuration adapters are extracted from the pinned upstream and paired with WorldFoundry checkpoint/LoRA loaders, LTX VAE, Gemma encoding and the existing Alaya history encoder. An inference-only entry skips trainer setup, optimizers, critics and training data."
+          "The inference-only rollout methods and three small configuration adapters are extracted from the pinned upstream and paired with WorldFoundry checkpoint/LoRA loaders, LTX VAE, Gemma encoding and the existing Alaya history encoder. An inference-only entry skips trainer setup, optimizers, critics and training data. The Alaya LTX-2.3 transformer is vendored from the same revision, and ViGeo uses the shared WorldFoundry implementation."
         ],
         "architectureZh": [
-          "从固定版本的上游提取纯推理 rollout 和少量配置适配代码，复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya Transformer 扩展和 ViGeo 几何仍使用外部源码。"
+          "从固定版本的上游提取纯推理 rollout 和少量配置适配代码，复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya LTX-2.3 Transformer 同样 vendor 自该版本，ViGeo 使用 WorldFoundry 的共享实现。"
         ],
         "usageNotes": [
           "Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs stage3 LoRA. This is separate from the original merged DA3 checkpoint route."

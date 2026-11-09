@@ -51,7 +51,7 @@ def _variant(name, repo, *, aliases=(), **load):
 _PROMPT = _field("prompt", target="prompt", required=True)
 _IMAGE = _field("input_path", "path", target="input_path", description="Reference image path.")
 _REQUIRED_IMAGE = _field("input_path", "path", target="input_path", required=True, description="Reference image path.")
-_EXTERNAL = (_asset("source_root"), _asset("python_executable"))
+_EXTERNAL = (_asset("python_executable"),)
 _OUTPUTS = (InferenceArtifactSpec("video", "video", required=True, preview=True),)
 
 
@@ -138,6 +138,7 @@ ASTRONEX = _spec(
         _field("embodiment_id", "integer"),
         _field("vram_limit_gb", "number"),
         _field("consumer", "boolean", target="load_kwargs", description="Causal mode only."),
+        _asset("source_root"),
     ),
     aliases=("astronex",),
     task="interactive-world-model",
@@ -172,6 +173,7 @@ SOLAR = _spec(
             "json",
             description='Indexed inference overrides, e.g. {"inference.sample_count": 1}. Images, prompts and cameras come from the index.',
         ),
+        _asset("source_root"),
     ),
     task="indexed-inference",
 )
@@ -183,7 +185,6 @@ ALAYA_V11 = _spec(
             name,
             "AlayaLab/AlayaWorld-v1.1-stage2b",
             variant=name,
-            source_root=str(official_runtime_repo_path("AlayaLab--AlayaWorld")),
             student_dir=str(hfd_root_path("AlayaLab--AlayaWorld-v1.1-stage3")),
         )
         for name in ("dmd", "ar")
@@ -195,7 +196,6 @@ ALAYA_V11 = _spec(
         _asset("base_checkpoint", required=True),
         _asset("gemma_path", required=True),
         _asset("vigeo_checkpoint", required=True),
-        _asset("vigeo_source_root"),
         _asset("student_dir", description="Stage 3 LoRA required for DMD; AR uses stage 2b."),
         _field("rounds", "integer", 5),
         _field("seed", "integer", 42),
@@ -254,6 +254,7 @@ ECHO = _spec(
                 ("timesteps", "json"),
             )
         ),
+        _asset("source_root"),
     ),
     aliases=("echo-wm",),
 )

@@ -11,7 +11,7 @@ These routes generate video using local weights. Catalog browsing and configurat
 | `astronex-world` | Official causal or bidirectional sampler | Astronex-World checkout |
 | `solarwm` | Official `solarwm infer`, indexed image/caption/camera cases | SolarWM checkout and matching backend environment |
 | `alayaworld` | Existing native LTX-2.3 + DA3 merged checkpoint route | None |
-| `alayaworld-v1.1` | Extracted inference-only ViGeo rollout, shared loaders/VAE/history/text and external Alaya transformer extension | AlayaWorld and ViGeo1.1 source |
+| `alayaworld-v1.1` | Inference-only ViGeo rollout and Alaya LTX-2.3 transformer vendored in WorldFoundry, with shared loaders/VAE/history/text/ViGeo | None |
 | `joyai-echo-wm` | Official Base or Flash audio/video inference | JoyAI-Echo checkout |
 
 Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. External checkouts stay outside the WorldFoundry source tree. SolarWM refers to upstream inference recipes without copying their mixed training/inference configuration trees.
@@ -124,20 +124,18 @@ SolarWM code is Apache-2.0. LTX and H3 checkpoints retain their respective commu
 
 ## AlayaWorld v1.1
 
-Keep the original `alayaworld` merged checkpoint separate. Version 1.1 requires the stage2b transformer/history, LTX-2.3 base checkpoint, unquantized Gemma and ViGeo1.1. DMD additionally loads the stage3 LoRA. Use AlayaWorld source revision `ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79` and the matching ViGeo release.
+Keep the original `alayaworld` merged checkpoint separate. Version 1.1 requires the stage2b transformer/history, LTX-2.3 base checkpoint, unquantized Gemma and ViGeo1.1. DMD additionally loads the stage3 LoRA. The rollout, configuration schema and LTX-2.3 transformer are vendored from AlayaWorld revision `ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79`; ViGeo uses the shared WorldFoundry implementation.
 
 ```python
 from worldfoundry.pipelines.alayaworld_v11 import AlayaWorldV11Pipeline
 
 pipe = AlayaWorldV11Pipeline.from_pretrained(
-    source_root="/path/to/AlayaWorld",
     python_executable="/path/to/alaya-env/bin/python",
     checkpoint_dir="/path/to/AlayaWorld-v1.1-stage2b",
     student_dir="/path/to/AlayaWorld-v1.1-stage3",
     base_checkpoint="/path/to/ltx-2.3-22b-dev.safetensors",
     gemma_path="/path/to/gemma-3-12b-it-qat-q4_0-unquantized",
     vigeo_checkpoint="/path/to/ViGeo1.1",
-    vigeo_source_root="/path/to/ViGeo",
     variant="dmd",  # "ar" uses 30 steps and no student adapter
 )
 result = pipe(
@@ -151,7 +149,7 @@ result = pipe(
 )
 ```
 
-Omit `camera_path` to synthesize the released forward trajectory; optional `forward`, `yaw`, `pitch` and normalized `intrinsic=[fx, fy, cx, cy]` control it. A supplied camera path must be long enough for the requested rollout. The inference session includes no trainer class or setup/optimization lifecycle. It reuses the shared LTX VAE, text encoding, history encoder and checkpoint/LoRA loaders. The Alaya transformer extension and ViGeo geometry remain external dependencies. GPU memory and artifact parity are unvalidated; full-window VAE encoding may have higher peak memory than the upstream streaming encoder.
+Omit `camera_path` to synthesize the released forward trajectory; optional `forward`, `yaw`, `pitch` and normalized `intrinsic=[fx, fy, cx, cy]` control it. A supplied camera path must be long enough for the requested rollout. The inference session includes no trainer class or setup/optimization lifecycle. It reuses the shared LTX VAE, text encoding, history encoder and checkpoint/LoRA loaders. GPU memory and artifact parity are unvalidated; full-window VAE encoding may have higher peak memory than the upstream streaming encoder.
 
 ## Echo-WM
 

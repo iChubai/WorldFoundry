@@ -21,10 +21,13 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
-from alaya.config.schema import ValidationModeConfig
-from alaya.control.action import build_action_vectors, build_action_vectors_from_pixel_indices
-from alaya.memory.da3_depth import DA3DepthEstimator
-from alaya.memory.spatial_cache import (
+
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import VideoLatentPatchifier
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+
+from .alayaworld_v11_runtime.alaya.config.schema import ValidationModeConfig
+from .alayaworld_v11_runtime.alaya.control.action import build_action_vectors, build_action_vectors_from_pixel_indices
+from .alayaworld_v11_runtime.alaya.memory.spatial_cache import (
     Sparse3DCache,
     build_retrieved_latent_context,
     forward_warp_indexed_pixel_sources_to_pixel_targets,
@@ -33,15 +36,17 @@ from alaya.memory.spatial_cache import (
     pixel_intrinsics,
     render_colored_pointmaps_to_camera_targets,
 )
-from alaya.memory.vigeo_geometry import ViGeoGeometryEstimator
-from alaya.utils.distributed import init_distributed, rank0_print
-from alaya.utils.dtype import resolve_dtype
-from alaya.utils.seed import seed_everything
-from ltx2.modules.perturbations import BatchedPerturbationConfig, Perturbation, PerturbationConfig, PerturbationType
-from ltx2.modules.scheduler import LinearQuadraticScheduler, LTX2Scheduler
-
-from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import VideoLatentPatchifier
-from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from .alayaworld_v11_runtime.alaya.memory.vigeo_geometry import ViGeoGeometryEstimator
+from .alayaworld_v11_runtime.alaya.utils.distributed import init_distributed, rank0_print
+from .alayaworld_v11_runtime.alaya.utils.dtype import resolve_dtype
+from .alayaworld_v11_runtime.alaya.utils.seed import seed_everything
+from .alayaworld_v11_runtime.ltx2.modules.perturbations import (
+    BatchedPerturbationConfig,
+    Perturbation,
+    PerturbationConfig,
+    PerturbationType,
+)
+from .alayaworld_v11_runtime.ltx2.modules.scheduler import LinearQuadraticScheduler, LTX2Scheduler
 
 
 @dataclass
@@ -127,11 +132,9 @@ class AlayaV11Rollout:
         self.dtype = resolve_dtype(cfg.runtime.dtype)
         self.components = None
         self.history_encoder = None
-        self.da3_depth = None
         self.vigeo_geometry = None
         self._text_cache = OrderedDict()
         self._text_cache_hits = self._text_cache_misses = 0
-        self._vae_cache_hits = self._vae_cache_misses = 0
         self._perf_text_s = self._perf_vae_s = self._perf_calls = 0
 
     def _wbench_subject_foreground_layers(
@@ -1607,25 +1610,7 @@ class AlayaV11Rollout:
                 for (local_idx, frame_idx) in enumerate(frame_indices)
                 if int(frame_idx) in selected
             }
-        if backend != "da3":
-            raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
-        cam_c2w = metadata.get("cam_c2w")
-        intrinsic = metadata.get("intrinsic")
-        if cam_c2w is None or intrinsic is None:
-            return {}
-        local_frame_indices = list(range(int(pixels.shape[2])))
-        cam_subset = self._select_camera_frames(cam_c2w, frame_indices)
-        intrinsic_subset = self._select_intrinsic_frames(intrinsic, frame_indices)
-        return (
-            self._build_spatial_depths_for_pixel_frames(
-                video_pixels=pixels,
-                metadata={},
-                cam_c2w=cam_subset,
-                intrinsic=intrinsic_subset,
-                frame_indices=local_frame_indices,
-            )
-            or {}
-        )
+        raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
 
     def _select_video_pixel_frames(self, video_pixels: torch.Tensor, frame_indices: list[int]) -> torch.Tensor:
         video = self._video_pixels_to_bcfhw(video_pixels).to(device=self.dist.device, dtype=self.dtype)
@@ -1825,62 +1810,15 @@ class AlayaV11Rollout:
         use_pixels = 1 + self.cfg.sample.temporal_stride * ((use_pixels - 1) // self.cfg.sample.temporal_stride)
         video_pixels = video_pixels[:, :use_pixels]
         _t0 = time.time()
-        latent = self._encode_video_via_latent_cache(video_pixels, metadata)
-        if latent is None:
-            with torch.no_grad():
-                latent = self.components.vae_encoder.encode(
-                    video_pixels.unsqueeze(0), chunk_size=self.cfg.runtime.vae_chunk_size, verbose=False
-                )
+        with torch.no_grad():
+            latent = self.components.vae_encoder.encode(
+                video_pixels.unsqueeze(0), chunk_size=self.cfg.runtime.vae_chunk_size, verbose=False
+            )
         latent = latent.to(device=self.dist.device, dtype=self.dtype)
         if torch.cuda.is_available():
             torch.cuda.synchronize(self.dist.device)
         self._perf_vae_s += time.time() - _t0
         return latent
-
-    def _encode_video_via_latent_cache(
-        self, video_pixels: torch.Tensor, metadata: dict[str, Any] | None
-    ) -> torch.Tensor | None:
-        """Whole-clip latent cache path: the first FRESH_HEAD_LAT latents are encoded fresh and the tail
-
-        is sliced from the cache, which is bit-identical to a fresh full-window encode (a causal VAE
-        carries about 16 latents of memory). A miss, a misaligned start or a too-short window returns None.
-        """
-        cache_dir = getattr(self.cfg.runtime, "vae_latent_cache_dir", None)
-        if not cache_dir or metadata is None:
-            return None
-        from alaya.data.vae_latent_cache import FRESH_HEAD_LAT, aligned_m_start, load_meta, load_slice
-
-        T_pix = int(video_pixels.shape[1])
-        n_lat = (T_pix - 1) // self.cfg.sample.temporal_stride + 1
-        if n_lat <= FRESH_HEAD_LAT:
-            return None
-        source = str(metadata.get("source", ""))
-        video_id = str(metadata.get("video_id", ""))
-        frame_start = int(metadata.get("frame_start", -1))
-        if not source or not video_id or frame_start < 0:
-            return None
-        (H, W) = (int(self.cfg.sample.height), int(self.cfg.sample.width))
-        fps = float(self.cfg.sample.fps)
-        meta = load_meta(cache_dir, source, video_id, H, W, fps)
-        if meta is None:
-            self._vae_cache_misses += 1
-            return None
-        m = aligned_m_start(frame_start, float(meta["ratio"]))
-        if m is None:
-            self._vae_cache_misses += 1
-            return None
-        tail = load_slice(cache_dir, source, video_id, H, W, fps, m + FRESH_HEAD_LAT, n_lat - FRESH_HEAD_LAT)
-        if tail is None:
-            self._vae_cache_misses += 1
-            return None
-        head_pixels = video_pixels[:, : (FRESH_HEAD_LAT - 1) * self.cfg.sample.temporal_stride + 1]
-        with torch.no_grad():
-            head = self.components.vae_encoder.encode(
-                head_pixels.unsqueeze(0), chunk_size=self.cfg.runtime.vae_chunk_size, verbose=False
-            )
-        self._vae_cache_hits += 1
-        tail = tail.unsqueeze(0).to(device=head.device, dtype=head.dtype)
-        return torch.cat([head, tail], dim=2)
 
     def _encode_caption(self, caption: str, *, sync: bool) -> torch.Tensor:
         if sync and dist.is_initialized():
@@ -1888,7 +1826,6 @@ class AlayaV11Rollout:
             dist.broadcast_object_list(captions, src=0)
             caption = captions[0]
         cache_cap = int(getattr(self.cfg.runtime, "text_embed_cache_entries", 0) or 0)
-        cache_dir = getattr(self.cfg.runtime, "text_embed_cache_dir", None)
         t0 = time.time()
         if cache_cap > 0:
             cached = self._text_cache.get(caption)
@@ -1897,27 +1834,11 @@ class AlayaV11Rollout:
                 self._text_cache_hits += 1
                 self._perf_text_s += time.time() - t0
                 return cached.to(device=self.dist.device, dtype=self.dtype)
-        if cache_dir:
-            from alaya.data.text_embed_cache import disk_get
-
-            hit = disk_get(cache_dir, caption)
-            if hit is not None:
-                self._text_cache_hits += 1
-                if cache_cap > 0:
-                    self._text_cache[caption] = hit
-                    while len(self._text_cache) > cache_cap:
-                        self._text_cache.popitem(last=False)
-                self._perf_text_s += time.time() - t0
-                return hit.to(device=self.dist.device, dtype=self.dtype)
         with torch.no_grad():
             output = self.components.encode_text(self.components.text_encoder, [caption])
         context = output[0][0] if isinstance(output, list) and output[0].dim() == 3 else output[0]
         context = context.to(device=self.dist.device, dtype=self.dtype)
         self._text_cache_misses += 1
-        if cache_dir:
-            from alaya.data.text_embed_cache import disk_put
-
-            disk_put(cache_dir, caption, context)
         if cache_cap > 0:
             self._text_cache[caption] = context.detach().to("cpu")
             while len(self._text_cache) > cache_cap:
@@ -2215,7 +2136,6 @@ class AlayaV11Rollout:
             cfg = self.cfg.spatial_memory
             device = self.dist.device if str(cfg.vigeo_device) == "auto" else torch.device(str(cfg.vigeo_device))
             self.vigeo_geometry = ViGeoGeometryEstimator(
-                repo_path=cfg.vigeo_repo_path,
                 checkpoint=str(cfg.vigeo_checkpoint),
                 device=device,
                 num_tokens=int(cfg.vigeo_num_tokens),
@@ -2223,7 +2143,7 @@ class AlayaV11Rollout:
             rank0_print(
                 self.dist,
                 "[SpatialMemory]",
-                f"loading ViGeo checkpoint={cfg.vigeo_checkpoint} repo={cfg.vigeo_repo_path}",
+                f"loading ViGeo checkpoint={cfg.vigeo_checkpoint}",
             )
         return self.vigeo_geometry
 
@@ -2355,34 +2275,7 @@ class AlayaV11Rollout:
             if depth is None:
                 return None
             return _select_depth_by_latent_index(depth, allowed, int(self.cfg.sample.temporal_stride))
-        if backend != "da3":
-            raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
-        if self.da3_depth is None:
-            device = self.dist.device if str(cfg.da3_device) == "auto" else torch.device(str(cfg.da3_device))
-            self.da3_depth = DA3DepthEstimator(
-                repo_path=cfg.da3_repo_path,
-                model_name=str(cfg.da3_model_name),
-                cache_dir=cfg.da3_cache_dir,
-                device=device,
-                process_res=int(cfg.da3_process_res),
-                process_res_method=str(cfg.da3_process_res_method),
-                align_to_input_scale=bool(cfg.da3_align_to_input_scale),
-            )
-            rank0_print(
-                self.dist,
-                "[SpatialMemory]",
-                f"loading DA3 depth backend model={cfg.da3_model_name} repo={cfg.da3_repo_path}",
-            )
-        (pixel_height, pixel_width) = self._pixel_hw_from_video(video_pixels)
-        return self.da3_depth.infer_latent_depths(
-            video_pixels=video_pixels,
-            latent_indices=allowed,
-            cam_c2w=cam_c2w,
-            intrinsic=intrinsic,
-            height=pixel_height,
-            width=pixel_width,
-            temporal_stride=int(self.cfg.sample.temporal_stride),
-        )
+        raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
 
     def _build_spatial_depths_for_pixel_frames(
         self,
@@ -2402,33 +2295,7 @@ class AlayaV11Rollout:
             if depth is None:
                 return None
             return _select_depth_by_frame_index(depth, frame_indices)
-        if backend != "da3":
-            raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
-        if self.da3_depth is None:
-            device = self.dist.device if str(cfg.da3_device) == "auto" else torch.device(str(cfg.da3_device))
-            self.da3_depth = DA3DepthEstimator(
-                repo_path=cfg.da3_repo_path,
-                model_name=str(cfg.da3_model_name),
-                cache_dir=cfg.da3_cache_dir,
-                device=device,
-                process_res=int(cfg.da3_process_res),
-                process_res_method=str(cfg.da3_process_res_method),
-                align_to_input_scale=bool(cfg.da3_align_to_input_scale),
-            )
-            rank0_print(
-                self.dist,
-                "[SpatialMemory]",
-                f"loading DA3 depth backend model={cfg.da3_model_name} repo={cfg.da3_repo_path}",
-            )
-        (pixel_height, pixel_width) = self._pixel_hw_from_video(video_pixels)
-        return self.da3_depth.infer_frame_depths(
-            video_pixels=video_pixels,
-            frame_indices=frame_indices,
-            cam_c2w=cam_c2w,
-            intrinsic=intrinsic,
-            height=pixel_height,
-            width=pixel_width,
-        )
+        raise ValueError(f"unsupported spatial_memory.depth_backend={backend!r}")
 
     def _required_latents_for_max_K(self) -> int:
         max_gap = int(self.cfg.layout.max_gap_sec * self.cfg.sample.fps / self.cfg.sample.temporal_stride)

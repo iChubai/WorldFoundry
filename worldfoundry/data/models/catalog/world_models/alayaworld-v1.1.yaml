@@ -58,9 +58,12 @@ docs:
   architecture: The inference-only rollout methods and three small configuration adapters
     are extracted from the pinned upstream and paired with WorldFoundry checkpoint/LoRA
     loaders, LTX VAE, Gemma encoding and the existing Alaya history encoder. An inference-only
-    entry skips trainer setup, optimizers, critics and training data.
+    entry skips trainer setup, optimizers, critics and training data. The Alaya LTX-2.3
+    transformer is vendored from the same revision, and ViGeo uses the shared WorldFoundry
+    implementation.
   architecture_zh: 从固定版本的上游提取纯推理 rollout 和少量配置适配代码，复用 WorldFoundry checkpoint/LoRA
-    加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya Transformer 扩展和 ViGeo 几何仍使用外部源码。
+    加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya LTX-2.3 Transformer 同样 vendor
+    自该版本，ViGeo 使用 WorldFoundry 的共享实现。
   usage_notes: Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history
     weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs
     stage3 LoRA. This is separate from the original merged DA3 checkpoint route.

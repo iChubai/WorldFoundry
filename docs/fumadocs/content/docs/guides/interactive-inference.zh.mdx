@@ -11,7 +11,7 @@ description: Zing、Astronex-World、SolarWM、AlayaWorld v1.1 和 Echo-WM 的�
 | `astronex-world` | 官方 causal / bidirectional 采样入口 | Astronex-World 源码与环境 |
 | `solarwm` | 官方 `solarwm infer`，读取索引中的图像、描述和相机轨迹 | SolarWM 源码及对应后端环境 |
 | `alayaworld` | 保留已有原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
-| `alayaworld-v1.1` | 提取纯推理 ViGeo rollout，复用共享加载器、VAE、历史和文本编码器 | Alaya Transformer 扩展及 ViGeo1.1 |
+| `alayaworld-v1.1` | 仓库内 vendor 的纯推理 ViGeo rollout 与 Alaya LTX-2.3 Transformer，复用共享加载器、VAE、历史、文本编码器和 ViGeo | 无 |
 | `joyai-echo-wm` | 官方 Base / Flash 音视频推理 | JoyAI-Echo 源码与环境 |
 
 配置统一位于 `worldfoundry/data/models/runtime/configs/`。本次集成不包含训练循环、优化器、损失函数或训练数据准备流程。外部源码放在 WorldFoundry 仓库外；SolarWM 仅引用上游推理 recipe，不复制其混合训练配置目录。
@@ -124,20 +124,18 @@ SolarWM 代码为 Apache-2.0；LTX/H3 权重分别遵守其社区许可，H3 还
 
 ## AlayaWorld v1.1
 
-原版 `alayaworld` 的合并权重入口保持独立。v1.1 需要 stage2b Transformer/历史编码器、LTX-2.3 基座、未量化 Gemma 和 ViGeo1.1；DMD 额外需要 stage3 LoRA。AlayaWorld 源码版本为 `ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79`。
+原版 `alayaworld` 的合并权重入口保持独立。v1.1 需要 stage2b Transformer/历史编码器、LTX-2.3 基座、未量化 Gemma 和 ViGeo1.1；DMD 额外需要 stage3 LoRA。rollout、配置 schema 和 LTX-2.3 Transformer vendor 自 AlayaWorld 版本 `ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79`；ViGeo 使用 WorldFoundry 的共享实现。
 
 ```python
 from worldfoundry.pipelines.alayaworld_v11 import AlayaWorldV11Pipeline
 
 pipe = AlayaWorldV11Pipeline.from_pretrained(
-    source_root="/path/to/AlayaWorld",
     python_executable="/path/to/alaya-env/bin/python",
     checkpoint_dir="/path/to/AlayaWorld-v1.1-stage2b",
     student_dir="/path/to/AlayaWorld-v1.1-stage3",
     base_checkpoint="/path/to/ltx-2.3-22b-dev.safetensors",
     gemma_path="/path/to/gemma-3-12b-it-qat-q4_0-unquantized",
     vigeo_checkpoint="/path/to/ViGeo1.1",
-    vigeo_source_root="/path/to/ViGeo",
     variant="dmd",
 )
 result = pipe(
@@ -152,7 +150,7 @@ result = pipe(
 
 `variant="ar"` 为 30 步采样，不需要 student LoRA。可传 `camera_path`（C2W `[F,4,4]`，`.npy`、`.npz` 或 `.txt`）；不传则生成默认前进轨迹，支持 `forward`、`yaw`、`pitch` 及归一化 `intrinsic=[fx, fy, cx, cy]`。提供的相机轨迹须足够长。
 
-该入口不实例化 trainer 或训练配置，不运行优化流程。复用 WorldFoundry 的 LTX VAE、文本和历史编码器、checkpoint/LoRA 加载器。Alaya Transformer 扩展及 ViGeo 几何实现仍依赖外部源码。原生 VAE 整窗编码的峰值显存可能高于上游流式编码，需 GPU 验证。
+该入口不实例化 trainer 或训练配置，不运行优化流程。复用 WorldFoundry 的 LTX VAE、文本和历史编码器、checkpoint/LoRA 加载器。原生 VAE 整窗编码的峰值显存可能高于上游流式编码，需 GPU 验证。
 
 ## Echo-WM
 

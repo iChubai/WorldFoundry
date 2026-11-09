@@ -41,7 +41,7 @@ DEFAULT_VMEM_RUNTIME_ROOT = Path(__file__).resolve().parent / "vmem_runtime"
 
 # A tuple of top-level module names that are considered part of the VMem runtime.
 # Used for identifying and purging conflicting modules from sys.modules.
-_RUNTIME_TOP_LEVEL_MODULES = ("modeling", "utils", "add_ckpt_path", "models", "dust3r")
+_RUNTIME_TOP_LEVEL_MODULES = ("modeling", "utils", "add_ckpt_path", "models")
 
 
 def _runtime_root_candidates() -> list[Path]:
@@ -132,16 +132,6 @@ def canonical_cut3r_root() -> Path:
     return canonical_cut3r_parent() / "cut3r"
 
 
-def canonical_dust3r_parent() -> Path:
-    """
-    Returns the in-tree DUSt3R package parent used by VMem's optional camera preprocessor.
-
-    The packaged DUSt3R code still imports itself as top-level ``dust3r`` internally, so this
-    parent directory is prepended to ``sys.path`` when VMem is initialized.
-    """
-    return project_root() / "worldfoundry" / "base_models" / "three_dimensions" / "general_3d" / "dust3r"
-
-
 def _iter_runtime_module_names() -> Iterable[str]:
     """
     Iterates through currently loaded modules in `sys.modules` and yields the names
@@ -184,22 +174,6 @@ def _purge_conflicting_runtime_modules(root: Path) -> None:
             sys.modules.pop(module_name, None)
 
 
-def _purge_module_tree(prefix: str) -> None:
-    """
-    Removes a module and all its submodules (e.g., 'dust3r' and 'dust3r.foo', 'dust3r.bar')
-    from `sys.modules`.
-
-    This is useful for ensuring a clean slate when reloading or patching modules.
-
-    Args:
-        prefix (str): The top-level module name or package prefix to purge.
-    """
-    # Iterate over a copy of sys.modules keys to allow modification during iteration.
-    for module_name in list(sys.modules):
-        if module_name == prefix or module_name.startswith(f"{prefix}."):
-            sys.modules.pop(module_name, None)
-
-
 def _prepend_sys_path(path: Path) -> None:
     """
     Adds a given path to the beginning of `sys.path`.
@@ -223,14 +197,7 @@ def _prefer_vmem_import_paths(root: Path) -> None:
     Args:
         root (Path): The VMem runtime root directory.
     """
-    ordered_paths = [root]
-    dust3r_parent = canonical_dust3r_parent()
-    if dust3r_parent.is_dir():
-        ordered_paths.append(dust3r_parent)
-
-    # Prepend paths in reverse order so earlier entries keep highest import priority.
-    for path in reversed(ordered_paths):
-        _prepend_sys_path(path)
+    _prepend_sys_path(root)
 
 
 def ensure_vmem_runtime(runtime_override: str | Path | None = None) -> Path:
@@ -276,7 +243,6 @@ __all__ = [
     "DEFAULT_VMEM_RUNTIME_ROOT",
     "canonical_cut3r_parent",
     "canonical_cut3r_root",
-    "canonical_dust3r_parent",
     "default_config_path",
     "ensure_vmem_runtime",
     "project_root",

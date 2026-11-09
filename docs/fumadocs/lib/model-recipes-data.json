@@ -23334,12 +23334,6 @@
           "revision": "1c2b8495b28150b8a4922ee1c8edee224c284c0c",
           "role": "image_conditioner",
           "status": "checkpoint_manifest_validated"
-        },
-        {
-          "id": "naver/DUSt3R_ViTLarge_BaseDecoder_512_dpt",
-          "revision": "61c57447d7b0adc8a1a30b2b0adec7a8935aa2a3",
-          "role": "camera_preprocessor",
-          "status": "checkpoint_manifest_validated"
         }
       ],
       "variants": [],

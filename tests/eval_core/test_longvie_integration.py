@@ -5,11 +5,10 @@ from pathlib import Path
 import pytest
 
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
-from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie1Pipeline
-from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie2Pipeline
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie1Pipeline, LongVie2Pipeline
 from worldfoundry.runtime.conda import load_runtime_conda_env_spec
 from worldfoundry.synthesis.visual_generation.longvie.runtime_env import (
     WAN21_I2V_REQUIRED_FILES,
@@ -18,7 +17,6 @@ from worldfoundry.synthesis.visual_generation.longvie.runtime_env import (
 from worldfoundry.synthesis.visual_generation.longvie.worldfoundry_runtime import (
     LongVieOfficialRuntime,
 )
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
@@ -209,7 +207,7 @@ def test_longvie_runtime_logic_lives_under_base_models() -> None:
     assert not (runtime_root / "download_wan2.1.py").exists()
     assert not (runtime_root / "sample_longvideo.sh").exists()
     assert not (runtime_root / "utils").exists()
-    assert (runtime_root / "inference.py").is_file()
+    assert not (runtime_root / "inference.py").exists()
     assert not (runtime_root / "requirements.txt").exists()
     assert not (REPO_ROOT / "requirements" / "worldfoundry-vendor-longvie.txt").exists()
 

@@ -9,8 +9,8 @@ No file in this directory is a personal GitHub avatar.
 | `adelaide.png` | The University of Adelaide (AIML) | https://commons.wikimedia.org/wiki/File:Arms_of_the_University_of_Adelaide.svg | CC BY-SA 4.0 | model:liveworld |
 | `adobe.svg` | Adobe | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF0000 | CC0-1.0 | benchmark:phyeduvideo, model:self-forcing |
 | `agibot.jpg` | AgiBot | GitHub organization brand avatar (github.com/AgibotTech), pre-existing repo asset | Organization brand mark | benchmark:ewmbench, model:genie-envisioner, model:go1 |
-| `ai2.svg` | Allen Institute for AI (Ai2) | https://commons.wikimedia.org/wiki/File:Allen_Institute_for_Artificial_Intelligence.svg | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot, model:wilddet3d |
-| `ai2-mark.svg` | Allen Institute for AI (Ai2) | Symbol cropped from `ai2.svg` for compact catalog marks | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot, model:wilddet3d |
+| `ai2.svg` | Allen Institute for AI (Ai2) | https://commons.wikimedia.org/wiki/File:Allen_Institute_for_Artificial_Intelligence.svg | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot |
+| `ai2-mark.svg` | Allen Institute for AI (Ai2) | Symbol cropped from `ai2.svg` for compact catalog marks | Public domain (text logo) | benchmark:ai2thor, benchmark:molmospaces, model:molmoact2, model:molmobot |
 | `airi.svg` | AIRI (Artificial Intelligence Research Institute) | Original simple wordmark rendition for the identity mark | Public domain (text logo) | benchmark:mikasa |
 | `alayalab.svg` | AlayaLab | Original simple A monogram for the identity mark | Public domain (simple geometry) | model:alayaworld, model:evoke |
 | `alibaba.svg` | Alibaba | https://commons.wikimedia.org/wiki/File:Alibaba_en_logo.svg | Public domain (text logo) | benchmark:worldolympiad, model:easyanimate, model:i2vgen-xl, model:modelscope-t2v, model:moverse, model:qwen2.5-omni, model:uni3c, model:unianimate-dit |

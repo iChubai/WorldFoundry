@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 213,
+  "modelsTotal": 212,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 91,
+      "count": 90,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -535,10 +535,6 @@
         {
           "name": "Warp-as-History",
           "url": "https://github.com/yyfz/Warp-as-History"
-        },
-        {
-          "name": "WildDet3D",
-          "url": "https://github.com/allenai/WildDet3D"
         },
         {
           "name": "WildWorld",

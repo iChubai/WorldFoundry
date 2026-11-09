@@ -24,6 +24,7 @@ _RETIRED_VARIANTS = (
     "open-dreamer@open-dreamer",
     "pandora@pandora",
     "shotstream@shotstream",
+    "wilddet3d@wilddet3d",
 )
 
 

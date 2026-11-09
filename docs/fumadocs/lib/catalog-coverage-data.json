@@ -1,5 +1,5 @@
 {
-  "modelsListed": 256,
+  "modelsListed": 255,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -524,7 +524,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 102,
+      "count": 101,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -1250,14 +1250,6 @@
           "status": "integrated",
           "aliases": [
             "warp-as-history"
-          ]
-        },
-        {
-          "id": "wilddet3d",
-          "name": "WildDet 3D",
-          "status": "runtime_ported",
-          "aliases": [
-            "wilddet3d"
           ]
         },
         {

@@ -2269,19 +2269,6 @@
       "caption": "Method overview: Transforming video diffusion models into interactive world models involves two key challenges : (1) Causal generation: converting full-sequence diffusion models into causal diffusion models; (2) Action conditioning:.",
       "captionZh": "论文方法总览：Vid2World 的交互世界模型架构。"
     },
-    "wilddet3d": {
-      "modelId": "wilddet3d",
-      "teaserSrc": "/models/wilddet3d/teaser.webp",
-      "teaserAlt": "Official paper teaser: WildDet3D does open-vocabulary 3D detection from any image, device, and prompt.",
-      "teaserAltZh": "论文官方 Teaser：WildDet3D 从任意图像、设备与提示做开放词汇三维检测。",
-      "teaserCaption": "Official paper teaser: WildDet3D does open-vocabulary 3D detection from any image, device, and prompt.",
-      "teaserCaptionZh": "论文官方 Teaser：WildDet3D 从任意图像、设备与提示做开放词汇三维检测。",
-      "src": "/models/wilddet3d/overview.webp",
-      "alt": "Method overview: an image encoder and RGBD encoder fuse depth latents into a promptable detector with 2D and 3D heads.",
-      "altZh": "论文方法总览：图像编码器与 RGBD 编码器融合深度潜变量，再进入带 2D/3D 头的可提示检测器。",
-      "caption": "Method overview: an image encoder and RGBD encoder fuse depth latents into a promptable detector with 2D and 3D heads.",
-      "captionZh": "论文方法总览：图像编码器与 RGBD 编码器融合深度潜变量，再进入带 2D/3D 头的可提示检测器。"
-    },
     "wildworld": {
       "modelId": "wildworld",
       "teaserSrc": "/models/wildworld/teaser.png",

@@ -1557,16 +1557,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：DINO token 与相机 token 交替做全局与帧内注意力，再接到相机、深度、点图与轨迹头。",
         ),
     },
-    "wilddet3d": {
-        "teaser": (
-            "Official paper teaser: WildDet3D does open-vocabulary 3D detection from any image, device, and prompt.",
-            "论文官方 Teaser：WildDet3D 从任意图像、设备与提示做开放词汇三维检测。",
-        ),
-        "overview": (
-            "Method overview: an image encoder and RGBD encoder fuse depth latents into a promptable detector with 2D and 3D heads.",
-            "论文方法总览：图像编码器与 RGBD 编码器融合深度潜变量，再进入带 2D/3D 头的可提示检测器。",
-        ),
-    },
 }
 
 

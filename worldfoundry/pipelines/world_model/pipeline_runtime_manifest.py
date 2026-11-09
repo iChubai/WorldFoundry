@@ -549,22 +549,6 @@ class Vid2WorldPipeline(WorldModelRuntimePipeline):
     MODEL_ID = "vid2world"
 
 
-class WildDet3DPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for WildDet3D visual generation."""
-
-    MODEL_ID = "wilddet3d"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "image_path",
-        "input_image",
-        "checkpoint_path",
-        "lingbot_config_path",
-        "intrinsics_path",
-        "score_threshold",
-        "score_3d_threshold",
-        "python_executable",
-    )
-
-
 class WildWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WildWorld visual generation."""
 
@@ -612,7 +596,6 @@ __all__ = [
     "UWMPipeline",
     "VGGTWorldPipeline",
     "Vid2WorldPipeline",
-    "WildDet3DPipeline",
     "WildWorldPipeline",
     "WorldGrowPipeline",
     "WorldMemPipeline",

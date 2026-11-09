@@ -104,7 +104,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "uwm",
     "vggt-world",
     "vid2world",
-    "wilddet3d",
     "wildworld",
     "worldgrow",
     "worldmem",

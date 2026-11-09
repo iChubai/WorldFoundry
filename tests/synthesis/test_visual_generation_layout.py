@@ -31,7 +31,6 @@ MODELS = (
     ("solarwm", "solarwm"),
     ("starwm", "starwm"),
     ("vid2world", "vid2world"),
-    ("wilddet3d", "wilddet3d"),
 )
 
 

@@ -1346,7 +1346,6 @@ MODEL_ORGS: dict[str, str] = {
     "wan22-fun-5b-cam": "wan",
     "wan22-fun-a14b-cam": "wan",
     "warp-as-history": "sjtu",
-    "wilddet3d": "ai2",
     "wildworld": "shanda",
     "wonderjourney": "stanford",
     "wonderworld": "stanford",

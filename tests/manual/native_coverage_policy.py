@@ -29,6 +29,7 @@ _RETIRED_NATIVE_VARIANTS = frozenset(
         "open-dreamer@open-dreamer",
         "pandora@pandora",
         "shotstream@shotstream",
+        "wilddet3d@wilddet3d",
     }
 )
 

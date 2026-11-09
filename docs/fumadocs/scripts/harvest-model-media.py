@@ -685,10 +685,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2503.11651v1/comparison_vggt_dust3r.png",
         "overview": "https://arxiv.org/html/2503.11651v1/architecture_v4.png",
     },
-    "wilddet3d": {
-        "teaser": "https://arxiv.org/html/2604.08626v2/teaser_5_flat.png",
-        "overview": "https://arxiv.org/html/2604.08626v2/model_arch_new.png",
-    },
 }
 
 AR5IV_FALLBACK = {

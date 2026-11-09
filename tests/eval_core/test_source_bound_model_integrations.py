@@ -16,7 +16,6 @@ SOURCE_BOUND_RUNTIME_PLAN_MODEL_IDS = (
     "omniforcing",
     "pointworld",
     "vid2world",
-    "wilddet3d",
     "wildworld",
     "worldgrow",
     "motionbricks",

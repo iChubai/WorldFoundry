@@ -132,7 +132,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "uwm",
         "vggt-world",
         "vid2world",
-        "wilddet3d",
         "wildworld",
         "worldgrow",
         "worldmem",

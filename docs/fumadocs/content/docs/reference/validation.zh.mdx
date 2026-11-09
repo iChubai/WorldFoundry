@@ -245,9 +245,9 @@ Pandora（`pandora@pandora`）移出支持范围。冻结基线中的历史记�
 `tests/manual/native_coverage_policy.py` 显式列出这些完整身份，允许其按计划移除，
 并通过 `retired_native_variants` 报告，不计为回放覆盖或 GPU 成功。
 EgoWM（`egowm@egowm`）、HunyuanWorld-Voyager（`hunyuanworld-voyager@hunyuanworld-voyager`）、HY-World 2.0
-世界生成（`hyworld-worldgen@hyworld-worldgen`）、Open Dreamer（`open-dreamer@open-dreamer`）
-与 ShotStream（`shotstream@shotstream`）以同样方式下线：它们的运行时依赖 license-gated 本地检出或无法 vendor 的外部源码检出，
-而所有模型运行时都必须在仓库内运行。
+世界生成（`hyworld-worldgen@hyworld-worldgen`）、Open Dreamer（`open-dreamer@open-dreamer`）、
+ShotStream（`shotstream@shotstream`）与 WildDet3D（`wilddet3d@wilddet3d`）以同样方式下线：它们的运行时依赖
+license-gated 本地检出、无法 vendor 的外部源码检出或仅能从外部源码构建的依赖，而所有模型运行时都必须在仓库内运行。
 删除其他冻结变体仍会失败。重新引入已下线身份时，需要像新增变体一样提供独立的 checkpoint 回放配方，
 不能沿用历史未覆盖缺口的豁免。
 

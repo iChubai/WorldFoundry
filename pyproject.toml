@@ -778,6 +778,9 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.hma" = [
     "hma_runtime/**/*",
 ]
+"worldfoundry.synthesis.visual_generation.emu35" = [
+    "emu35_runtime/**/*",
+]
 
 "worldfoundry.synthesis.visual_generation.allegro" = [
     "allegro_runtime/**/*.py",

@@ -48268,7 +48268,7 @@
       "categoryLabel": "Multimodal",
       "categoryLabelZh": "多模态",
       "provider": "Beijing Academy of Artificial Intelligence (BAAI)",
-      "summary": "Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry uses the pinned official implementation and emits its protobuf response. Checkpoint-backed GPU inference has produced text and decoded images; no video…",
+      "summary": "Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry runs the vendored official implementation and emits its protobuf response. Checkpoint-backed GPU inference has produced text and decoded images; no vide…",
       "aliases": [
         "emu3p5",
         "emu3_5",
@@ -48293,7 +48293,7 @@
         "pipelineTarget": "worldfoundry.pipelines.emu35.pipeline_emu35:Emu35Pipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_checkout_eager_runtime",
+        "backendStage": "official_in_tree_runtime",
         "runtimeStatus": "verified_interleaved_inference",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
@@ -48331,7 +48331,7 @@
           "worldfoundry"
         ],
         "notes": [
-          "The pinned official checkout and both checkpoints are required; no weights are downloaded at runtime.",
+          "Both checkpoints are required; no weights are downloaded at runtime. The tokenizer vocabulary is read from the BAAI/Emu3.5 checkpoint.",
           "Official Emu3.5 generates interleaved text and images. This route emits the official protobuf response, not video.",
           "The checkpoint-backed GPU howto response was parsed with text and two decoded 384x384 PNG images.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
@@ -48617,10 +48617,10 @@
         }
       ],
       "notes": [
-        "The official model class and generation path are invoked from a pinned checkout with eager attention.",
+        "The vendored Emu3 model class and generation path run with eager attention.",
         "Checkpoint-backed GPU inference produced an official protobuf with text and two decoded images. Official CLI byte-for-byte parity remains untested.",
         "The WorldFoundry pipeline produced a checkpoint-backed protobuf with text and two decoded PNG images; a separate official CLI comparison has not been run.",
-        "The pinned official checkout and both checkpoints are required; no weights are downloaded at runtime.",
+        "Both checkpoints are required; no weights are downloaded at runtime. The tokenizer vocabulary is read from the BAAI/Emu3.5 checkpoint.",
         "Official Emu3.5 generates interleaved text and images. This route emits the official protobuf response, not video.",
         "The checkpoint-backed GPU howto response was parsed with text and two decoded 384x384 PNG images."
       ],
@@ -48632,10 +48632,10 @@
           "kind": "lab"
         },
         "overview": [
-          "Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry uses the pinned official implementation and emits its protobuf response. Checkpoint-backed GPU inference has produced text and decoded images; no video output is claimed."
+          "Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry runs the vendored official implementation and emits its protobuf response. Checkpoint-backed GPU inference has produced text and decoded images; no video output is claimed."
         ],
         "overviewZh": [
-          "Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态模型。WorldFoundry 调用固定版本的官方实现并输出其 protobuf 响应。权重支持的 GPU 推理已生成文本和可解码图像；不宣称视频输出。"
+          "Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态模型。WorldFoundry 运行 vendor 进仓库的官方实现并输出其 protobuf 响应。权重支持的 GPU 推理已生成文本和可解码图像；不宣称视频输出。"
         ],
         "architecture": [
           "Emu3.5 predicts a unified text/image token stream and generates visual tokens with discrete diffusion, then decodes visual tokens through its separate vision tokenizer."
@@ -48644,10 +48644,10 @@
           "Emu3.5 预测统一的图文 token 序列，并以离散扩散生成视觉 token，再通过独立的视觉 tokenizer 解码。"
         ],
         "usageNotes": [
-          "Stage the BAAI/Emu3.5 and BAAI/Emu3.5-VisionTokenizer weights plus the pinned official source checkout. The default story and howto tasks return an official protobuf response."
+          "Stage the BAAI/Emu3.5 and BAAI/Emu3.5-VisionTokenizer weights. The default story and howto tasks return an official protobuf response."
         ],
         "usageNotesZh": [
-          "就位 BAAI/Emu3.5、BAAI/Emu3.5-VisionTokenizer 权重和固定版本的官方源码。默认 story 和 howto 任务返回官方 protobuf 响应。"
+          "就位 BAAI/Emu3.5 与 BAAI/Emu3.5-VisionTokenizer 权重。默认 story 和 howto 任务返回官方 protobuf 响应。"
         ],
         "highlights": [
           "Multimodal Generation",

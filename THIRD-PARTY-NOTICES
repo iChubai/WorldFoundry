@@ -1266,6 +1266,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+Emu3.5 inference runtime
+------------------------
+Source: https://github.com/baaivision/Emu3.5/tree/8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745
+Vision tokenizer source: https://huggingface.co/BAAI/Emu3.5-VisionTokenizer
+Copyright: 2025 BAAI, the Emu team and The HuggingFace Inc. team.
+License: Apache License 2.0; the complete license text is retained in this bundle.
+Files: worldfoundry/synthesis/visual_generation/emu35/emu35_runtime/**
+The Emu3 model (adapted from https://github.com/baaivision/Emu3), tokenizer, CFG logits
+processor, generation and image utilities, protobuf writer, example task configurations and
+the Emu3.5 vision tokenizer model are kept for interleaved text/image inference. The model
+derives from GenerationMixin and reads cache lengths through module helpers for current
+Transformers releases.
+
 HMA inference runtime
 ---------------------
 Source: https://github.com/liruiw/HMA/tree/e3c89088fa82f2c208af6796485b4ec65ab318c5

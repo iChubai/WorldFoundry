@@ -5,7 +5,7 @@ modelId: "emu3.5"
 pageSource: generated
 ---
 
-Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态模型。WorldFoundry 调用固定版本的官方实现并输出其 protobuf 响应。权重支持的 GPU 推理已生成文本和可解码图像；不宣称视频输出。
+Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态模型。WorldFoundry 运行 vendor 进仓库的官方实现并输出其 protobuf 响应。权重支持的 GPU 推理已生成文本和可解码图像；不宣称视频输出。
 
 <ModelPaperFigures modelId="emu3.5" locale="zh" />
 
@@ -29,7 +29,7 @@ CLI task profile：`multimodal-generation`、`image-generation`。绑定的 pipe
 
 系列状态：**Runner 一致性待确认**。
 
-就位 BAAI/Emu3.5、BAAI/Emu3.5-VisionTokenizer 权重和固定版本的官方源码。 默认 story 和 howto 任务返回官方 protobuf 响应。
+就位 BAAI/Emu3.5 与 BAAI/Emu3.5-VisionTokenizer 权重。 默认 story 和 howto 任务返回官方 protobuf 响应。
 
 本工作区尚未验证与官方 CLI 的逐字节一致性或更大尺寸图像。
 

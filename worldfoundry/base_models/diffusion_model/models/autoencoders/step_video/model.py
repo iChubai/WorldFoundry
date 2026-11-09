@@ -951,7 +951,7 @@ class AutoencoderKL(nn.Module):
     def naive_encode(self, x, is_init_image=True):
         b, l, c, h, w = x.size()  # noqa: E741 - Ambiguous upstream name kept as written.
         x = rearrange(x, "b l c h w -> b c l h w").contiguous()
-        z = self.encoder(x, l, True)  # 下采样[1, 4, 8, 16, 16]
+        z = self.encoder(x, l, True)
         return z
 
     @torch.inference_mode()

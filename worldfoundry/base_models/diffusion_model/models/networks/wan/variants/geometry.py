@@ -467,7 +467,7 @@ class WanCrossAttentionBlock(nn.Module):
         if e.shape[1] >= 3:
             e = e[:, :3]  # only shift / scale / gate are used here
         else:
-            raise ValueError("e 必须至少含 3 个通道 (shift, scale, gate)")
+            raise ValueError("e must have at least 3 entries along dimension 1 (shift, scale, gate)")
 
         shift, scale, gate = (self.modulation + e).chunk(3, dim=1)
 

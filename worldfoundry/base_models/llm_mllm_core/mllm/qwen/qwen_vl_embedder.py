@@ -30,8 +30,7 @@ class QwenVLEmbedder:
 
         # self.tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-        # --- 核心改动: 使用 AutoProcessor 替换 AutoTokenizer ---
-        # AutoProcessor 包含了 Tokenizer，并且还能处理图像，因此对两个功能都适用。
+        # AutoProcessor handles both tokenization and image preprocessing.
         self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
         self.text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_id,

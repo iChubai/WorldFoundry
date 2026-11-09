@@ -708,7 +708,7 @@ class PretrainInternVideo2(nn.Module):
         for idx, blk in enumerate(self.blocks):
             if isinstance(x, tuple) and len(x) == 2:
                 x, residual = x
-            # print(f"\033[31m这是{idx}, {x.shape}\033[0m")
+            # print(f"\033[31mLayer {idx}, {x.shape}\033[0m")
             x = blk(x, residual=residual)
             # return intermediate features
             if idx in self.return_index:

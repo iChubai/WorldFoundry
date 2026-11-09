@@ -83,20 +83,6 @@ class _BaseForcingOperator(BaseOperator):
         }
 
 
-class SelfForcingOperator(_BaseForcingOperator):
-    """Operator contract for Self-Forcing text/image-to-video inference."""
-
-    MODEL_ID = "self-forcing"
-    DISPLAY_NAME = "Self-Forcing"
-
-
-class CausalForcingOperator(_BaseForcingOperator):
-    """Operator contract for Causal-Forcing text/image-to-video inference."""
-
-    MODEL_ID = "causal-forcing"
-    DISPLAY_NAME = "Causal-Forcing"
-
-
 class RollingForcingOperator(_BaseForcingOperator):
     """Operator contract for RollingForcing text-to-video inference."""
 
@@ -121,4 +107,4 @@ class RollingForcingOperator(_BaseForcingOperator):
         return {"images": None, "video": None, "extra_inputs": dict(kwargs)}
 
 
-__all__ = ["CausalForcingOperator", "RollingForcingOperator", "SelfForcingOperator"]
+__all__ = ["RollingForcingOperator"]

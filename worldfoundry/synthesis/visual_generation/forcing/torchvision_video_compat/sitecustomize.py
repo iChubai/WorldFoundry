@@ -1,6 +1,6 @@
 """Compatibility patch for official forcing runtimes on new torchvision.
 
-Self-Forcing and Causal-Forcing official scripts still import
+Official forcing-family scripts launched by the shared runtime bridge may import
 ``torchvision.io.write_video``. Recent torchvision builds removed that helper,
 so this sitecustomize module reinstates the narrow video-only behavior required
 by those scripts before their module graph imports torchvision.io.

@@ -1209,14 +1209,12 @@ EOF
       cat <<EOF
 
 Self-Forcing checkpoint layout:
-  Runtime: in-tree infer-only runtime under
-    worldfoundry/synthesis/visual_generation/forcing/self_forcing_runtime
+  Runtime: native diffusion recipe (NativeSelfForcingPipeline).
   Native Hugging Face cache is supported for gdhe17/Self-Forcing.
-  Wan2.1 base weights are resolved from native HF cache or local aliases under:
-    ${WORLDFOUNDRY_CKPT_DIR}/Wan2.1-T2V-1.3B
-    ${WORLDFOUNDRY_CKPT_DIR}/Wan2.1-T2V-14B
-  Local official checkpoint alias:
-    ${WORLDFOUNDRY_CKPT_DIR}/Self-Forcing/checkpoints/self_forcing_dmd.pt
+  Generator checkpoint under:
+    ${WORLDFOUNDRY_CKPT_DIR}/gdhe17--Self-Forcing/checkpoints/self_forcing_dmd.pt
+  Wan2.1 text encoder, tokenizer and VAE under:
+    ${WORLDFOUNDRY_CKPT_DIR}/Wan-AI--Wan2.1-T2V-1.3B
 
 EOF
       ;;
@@ -1228,14 +1226,15 @@ EOF
       cat <<EOF
 
 Causal-Forcing checkpoint layout:
-  Runtime: in-tree infer-only runtime under
-    worldfoundry/synthesis/visual_generation/forcing/causal_forcing_runtime
+  Runtime: native diffusion recipes (NativeCausalForcingPipeline).
   Native Hugging Face cache is supported for zhuhz22/Causal-Forcing.
-  Wan2.1 base weights are resolved from native HF cache or local aliases under:
-    ${WORLDFOUNDRY_CKPT_DIR}/Wan2.1-T2V-1.3B
-    ${WORLDFOUNDRY_CKPT_DIR}/Wan2.1-T2V-14B
-  Local chunk-wise checkpoint alias:
-    ${WORLDFOUNDRY_CKPT_DIR}/Causal-Forcing/chunkwise/causal_forcing.pt
+  Generator checkpoints under ${WORLDFOUNDRY_CKPT_DIR}/zhuhz22--Causal-Forcing:
+    chunkwise/causal_forcing.pt (default)
+    framewise/causal_forcing.pt
+    causal-forcing++/framewise-1step.pt
+    causal-forcing++/framewise-2step.pt
+  Wan2.1 text encoder, tokenizer and VAE under:
+    ${WORLDFOUNDRY_CKPT_DIR}/Wan-AI--Wan2.1-T2V-1.3B
 
 EOF
       ;;

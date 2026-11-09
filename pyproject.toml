@@ -592,25 +592,20 @@ allowed-unresolved-imports = [
 [tool.ruff]
 target-version = "py310"
 line-length = 120
+# Root-level artifact and vendor directories. The ./ prefix anchors each name to the repository
+# root, so same-named source packages such as worldfoundry/core/attention/cache stay linted.
 extend-exclude = [
-    "thirdparty",
-    "cache",
-    "tmp",
-    "outputs",
-    "runs",
-    "benchmark_results",
-    "inspatio_world_output",
+    "./thirdparty",
+    "./cache",
+    "./tmp",
+    "./outputs",
+    "./runs",
+    "./benchmark_results",
+    "./inspatio_world_output",
     "docs/fumadocs/.next",
     "docs/fumadocs/node_modules",
     "docs/fumadocs/out",
-    "apps",
-    "worldfoundry/base_models",
-    "worldfoundry/synthesis",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
-    "worldfoundry/evaluation/tasks/execution/runners/*/official",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor",
+    "./apps",
 ]
 
 [tool.ruff.lint]
@@ -620,10 +615,30 @@ select = [
     "E9",
     "F",
     "I",
+    "UP",
+    "B",
+    "SIM",
+    "C4",
+    "PIE",
+    "RUF",
 ]
 ignore = [
+    # Line length is left to the formatter.
     "E501",
+    # Deprecated in Ruff.
+    "UP038",
+    # Full-width CJK punctuation in strings, docstrings and comments is intentional.
+    "RUF001",
+    "RUF002",
+    "RUF003",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests, scripts, benchmarks and documentation tooling keep the E4/E7/E9/F/I rule set.
+"tests/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"scripts/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"benchmarks/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"docs/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
 
 [tool.setuptools]
 # Package discovery deliberately uses setuptools namespace semantics: every

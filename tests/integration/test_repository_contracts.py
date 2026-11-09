@@ -189,11 +189,13 @@ def test_artifact_timestamps_are_utc_and_elapsed_time_is_monotonic() -> None:
     assert "datetime.now()" not in shards
 
 
-def test_ruff_excludes_evaluation_vendored_trees() -> None:
-    pyproject = _load_pyproject()
-    excludes = pyproject["tool"]["ruff"]["extend-exclude"]
-    assert "worldfoundry/evaluation/tasks/execution/runners/*/runtime" in excludes
-    assert "worldfoundry/evaluation/tasks/metrics/*/vendor" in excludes
+def test_ruff_lints_vendored_trees_with_the_strict_rule_set() -> None:
+    ruff = _load_pyproject()["tool"]["ruff"]
+    assert not [pattern for pattern in ruff["extend-exclude"] if pattern.removeprefix("./").startswith("worldfoundry")]
+    assert set(ruff["lint"]["select"]) == {"E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RUF"}
+    legacy_only = {"UP", "B", "SIM", "C4", "PIE", "RUF"}
+    for pattern in ("tests/**", "scripts/**", "benchmarks/**"):
+        assert set(ruff["lint"]["per-file-ignores"][pattern]) == legacy_only
 
 
 def _comprehension_targets(node: ast.AST) -> list[ast.expr]:

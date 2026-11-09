@@ -401,15 +401,11 @@ CANONICAL_DIFFUSION_SOURCES ?= \
 	worldfoundry/base_models/diffusion_model/recipes \
 	worldfoundry/base_models/diffusion_model/runners \
 	worldfoundry/base_models/diffusion_model/schedulers
-RUFF_SOURCES ?= \
-	worldfoundry/cli \
-	worldfoundry/evaluation/api \
-	worldfoundry/evaluation/models/runtime \
-	worldfoundry/evaluation/tasks/catalog \
-	worldfoundry/evaluation/tasks/execution/orchestration \
-	worldfoundry/mcp \
-	worldfoundry/runtime \
-	scripts/model_zoo
+# Ruff reads tracked Python sources from Git's index: a directory walk would also visit local
+# license-gated runtimes and skip tracked sources below ignored names such as checkpoints/.
+RUFF_SOURCES ?= worldfoundry scripts/model_zoo
+RUFF_FORMAT_SOURCES ?= worldfoundry
+ruff_tracked_files = git ls-files -z -- $(foreach path,$(1),'$(path)/*.py' '$(path)/*.pyi' '$(path)/*.ipynb')
 
 help:
 	@printf '%s\n' \
@@ -572,9 +568,10 @@ cli-entrypoint-check:
 lint: ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check
 
 ruff-check:
-	$(PYTHON) -m ruff check $(RUFF_SOURCES)
+	$(call ruff_tracked_files,$(RUFF_SOURCES)) | xargs -0 -r $(PYTHON) -m ruff check --force-exclude
 
 format-check:
+	$(call ruff_tracked_files,$(RUFF_FORMAT_SOURCES)) | xargs -0 -r $(PYTHON) -m ruff format --check --force-exclude
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q $(CANONICAL_DIFFUSION_SOURCES) worldfoundry/evaluation scripts
 
 # BeeGFS: enumerate the bounded tracked paths from Git's index, not a recursive filesystem walk.

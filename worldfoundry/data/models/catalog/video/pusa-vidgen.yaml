@@ -19,6 +19,7 @@ official_sources:
   project_page: https://pusav1.org/
   github:
     url: https://github.com/Yaofang-Liu/Pusa-VidGen
+    revision: 8a8c4f523a0cadb94ab7c9f1e0620a4847b92991
   huggingface:
   - repo_id: RaphaelLiu/Pusa-Wan2.2-V1
     status: confirmed

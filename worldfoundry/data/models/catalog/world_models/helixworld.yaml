@@ -12,6 +12,7 @@ official_sources:
   project_page: https://helixworld.org/
   github:
     url: https://github.com/NoizAI/HelixWorld
+    revision: 3fa5f166834b08ea20ddc925c01f85d936ac03b5
     head_sha: 3fa5f166834b08ea20ddc925c01f85d936ac03b5
   huggingface:
   - repo_id: NoizAI/HelixWorld-preview

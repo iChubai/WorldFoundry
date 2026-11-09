@@ -17,6 +17,7 @@ official_sources:
   project_page: https://inspatio.github.io/inspatio-world/
   github:
     url: https://github.com/inspatio/inspatio-world
+    revision: fef970664e33f519a31f0ee19d58689e41752c0e
     head_sha: fef970664e33f519a31f0ee19d58689e41752c0e
   huggingface:
   - repo_id: inspatio/world

@@ -13,6 +13,7 @@ official_sources:
   paper: https://arxiv.org/abs/2504.08388
   github:
     url: https://github.com/microsoft/mineworld
+    revision: 9f49efbcc68a5f0cf60e78f0abc566eac409282f
 integration:
   status: runtime_ported
   blocked_reasons:

@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/pdf/2603.12655
   github:
     url: https://github.com/SimonSun0810/VGGT-World
+    revision: c90f5ee289036277fe75a69aa96418c04ccd5cc7
     head_sha: c90f5ee289036277fe75a69aa96418c04ccd5cc7
 runtime_profile: runtime-profile:vggt-world
 integration:

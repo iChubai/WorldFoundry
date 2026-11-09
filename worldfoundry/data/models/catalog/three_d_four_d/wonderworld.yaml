@@ -22,6 +22,7 @@ official_sources:
   paper: https://arxiv.org/abs/2406.09394
   github:
     url: https://github.com/KovenYu/WonderWorld
+    revision: 5cf11467ad21a9d7bca269f961855a235c7d352e
     confirmed_ref: 5cf11467ad21a9d7bca269f961855a235c7d352e
 availability:
   status: source_available

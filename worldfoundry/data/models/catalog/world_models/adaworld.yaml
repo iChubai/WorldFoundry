@@ -13,6 +13,7 @@ official_sources:
   project_page: https://adaptable-world-model.github.io/
   github:
     url: https://github.com/Little-Podi/AdaWorld
+    revision: fe3701e607d025376b54aad28d04121f592ddbb3
 integration:
   status: runtime_ported
   notes:

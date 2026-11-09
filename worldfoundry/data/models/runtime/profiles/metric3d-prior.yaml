@@ -7,6 +7,7 @@ groups:
 - prior
 source_repos:
 - url: https://github.com/YvanYin/Metric3D
+  revision: eb5b6fac0dc155e4e52f576e304fbf11655ff339
 checkpoints:
 - repo_id: JUGGHM/Metric3D
   filename: metric_depth_vit_giant2_800k.pth

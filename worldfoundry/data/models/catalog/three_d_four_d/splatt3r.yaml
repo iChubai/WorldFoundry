@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2408.13912
   github:
     url: https://github.com/btsmart/splatt3r
+    revision: bda1dd07cf84b9189baabb1b8beac243959cfe5d
   huggingface:
   - repo_id: brandonsmart/splatt3r_v1.0
     status: confirmed

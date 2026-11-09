@@ -49,6 +49,7 @@ official_sources:
   paper_plus_plus: https://arxiv.org/abs/2605.15141
   github:
     url: https://github.com/thu-ml/Causal-Forcing
+    revision: a67b81351d6dd50c1a1215f5958ee5a7c95eb135
   huggingface:
   - repo_id: zhuhz22/Causal-Forcing
     type: model

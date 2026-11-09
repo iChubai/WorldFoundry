@@ -9,6 +9,7 @@ official_sources:
   project_page: https://opengalaxea.github.io/G05/
   github:
     url: https://github.com/OpenGalaxea/GalaxeaVLA
+    revision: 13a16a9049aee8f1d799b56fccc0c5832a75fc2f
     head_sha: 13a16a9049aee8f1d799b56fccc0c5832a75fc2f
   huggingface:
   - repo_id: OpenGalaxea/G0-VLA

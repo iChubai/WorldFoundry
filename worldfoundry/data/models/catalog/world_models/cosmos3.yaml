@@ -45,6 +45,7 @@ official_sources:
     confirmed_by: official NVIDIA Cosmos repository
     confirmed_ref: aefdf852c16237039785d84ab3327167cb0ec07f
     url: https://github.com/NVIDIA/cosmos
+    revision: aefdf852c16237039785d84ab3327167cb0ec07f
   huggingface:
   - confirmed_by: official model repository verified 2026-07-15
     repo_id: nvidia/Cosmos3-Nano

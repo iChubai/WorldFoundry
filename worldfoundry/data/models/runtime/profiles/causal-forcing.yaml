@@ -7,6 +7,7 @@ groups:
 - autoregressive_video
 source_repos:
 - url: https://github.com/thu-ml/Causal-Forcing
+  revision: a67b81351d6dd50c1a1215f5958ee5a7c95eb135
 checkpoints:
 - role: causal_forcing_chunkwise
   local_dir: ${WORLDFOUNDRY_CKPT_DIR}/Causal-Forcing/chunkwise/causal_forcing.pt

@@ -10,6 +10,7 @@ official_sources:
   paper: https://arxiv.org/abs/2602.11075
   github:
     url: https://github.com/OpenDriveLab/RISE
+    revision: 5fac1e6ab9d50d4cc1ba4daeadf14023c8415955
     head_sha: 5fac1e6ab9d50d4cc1ba4daeadf14023c8415955
   huggingface:
   - repo_id: OpenDriveLab-org/RISE_Assets

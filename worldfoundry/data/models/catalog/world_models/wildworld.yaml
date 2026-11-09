@@ -16,6 +16,7 @@ official_sources:
   project_page: https://alaya-studio.github.io/wildworld-project/
   github:
     url: https://github.com/ShandaAI/WildWorld
+    revision: 23971043ae34d802b83661a964fe291f14d277f7
     head_sha: 23971043ae34d802b83661a964fe291f14d277f7
 runtime_profile: runtime-profile:wildworld
 integration:

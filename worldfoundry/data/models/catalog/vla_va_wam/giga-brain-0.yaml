@@ -25,6 +25,7 @@ official_sources:
   github:
     head_sha: 61a919407dbc2bb945a926cc002749097cc9ebdf
     url: https://github.com/open-gigaai/giga-brain-0
+    revision: 61a919407dbc2bb945a926cc002749097cc9ebdf
   huggingface:
   - license: apache-2.0
     repo_id: open-gigaai/GigaBrain-0-3.5B-Base

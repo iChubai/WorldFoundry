@@ -34,6 +34,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/nvidia-cosmos/cosmos-transfer2.5
+    revision: 2ff49d0717af02057ae79bc75c00fbff9da1b4e7
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/nvidia/Cosmos-Transfer2.5-2B
     repo_id: nvidia/Cosmos-Transfer2.5-2B

@@ -17,6 +17,7 @@ official_sources:
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/wow-world-model/wow-world-model
+    revision: 08b010597b69b5e1fde5f69ba44da85aff05bf62
     head_sha: 08b010597b69b5e1fde5f69ba44da85aff05bf62
     verified_by: official GitHub repository selected from WorldArena open-source result names
   huggingface:

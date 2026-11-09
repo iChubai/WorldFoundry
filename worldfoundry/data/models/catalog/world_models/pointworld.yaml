@@ -16,6 +16,7 @@ official_sources:
   paper: https://arxiv.org/abs/2601.03782
   github:
     url: https://github.com/NVlabs/PointWorld
+    revision: 05484826dfef74cbe278a3974179a5a16705d35d
     head_sha: 05484826dfef74cbe278a3974179a5a16705d35d
   huggingface:
   - repo_id: nvidia/PointWorld_models

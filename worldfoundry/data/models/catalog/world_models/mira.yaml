@@ -18,6 +18,7 @@ official_sources:
   project_page: https://mira-wm.com
   github:
     url: https://github.com/mira-wm/mira
+    revision: db25448391d42547161673a77950a1154d8b5f1f
   paper: https://arxiv.org/abs/2607.05352
 variants:
 - id: local-checkpoint

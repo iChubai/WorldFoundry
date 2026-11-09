@@ -8,6 +8,7 @@ groups:
 - official_repo
 source_repos:
 - url: https://github.com/Junyi42/monst3r
+  revision: 574cc77ad278bad582f470e5382624e01f8769a7
 input_schema:
   prompt: false
   image: true

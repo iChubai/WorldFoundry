@@ -14,6 +14,7 @@ source:
 official_sources:
   github:
     url: https://github.com/solaris-wm/solaris
+    revision: 68e0ed3b07f579c248c9b3b6337367d137e84c51
   huggingface:
   - repo_id: nyu-visionx/solaris
     type: model

@@ -16,6 +16,7 @@ official_sources:
   paper: https://arxiv.org/abs/2408.12528
   github:
     url: https://github.com/showlab/Show-o
+    revision: 45a5a2de01d1ebd10cd5864d29310a76476cdf23
 checkpoint_refs:
 - repo_id: showlab/show-o
   revision: c2c6f548c00444432a97bc8fbbce7b2fd73fc9b5

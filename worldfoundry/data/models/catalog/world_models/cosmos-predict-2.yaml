@@ -82,6 +82,7 @@ official_sources:
   project_page: https://research.nvidia.com/labs/dir/cosmos-predict2/
   github:
     url: https://github.com/nvidia-cosmos/cosmos-predict2
+    revision: 661da4774b0ca41d082a0ecbeb47550bcf07e03f
   huggingface:
   - repo_id: nvidia/Cosmos-Predict2-2B-Video2World
     type: model

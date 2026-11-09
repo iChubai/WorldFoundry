@@ -17,6 +17,7 @@ official_sources:
   paper: https://arxiv.org/abs/2502.04296
   github:
     url: https://github.com/liruiw/HMA
+    revision: e3c89088fa82f2c208af6796485b4ec65ab318c5
     head_sha: e3c89088fa82f2c208af6796485b4ec65ab318c5
   huggingface:
   - repo_id: liruiw/hma-base-cont

@@ -25,6 +25,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/MeiGen-AI/Infinite-World
+    revision: 1e8fc49ba7dc0f928c966c49c31fda9394c045d3
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/MeiGen-AI/Infinite-World
     repo_id: MeiGen-AI/Infinite-World

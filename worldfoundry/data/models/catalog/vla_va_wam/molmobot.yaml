@@ -22,6 +22,7 @@ official_sources:
   github:
     head_sha: 33c0ca77bf60
     url: https://github.com/allenai/MolmoBot
+    revision: 33c0ca77bf6062a23d60ffd4a6859334c4a46d30
   huggingface:
   - repo_id: allenai/MolmoBot-DROID
     role: franka_droid_checkpoint

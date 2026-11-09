@@ -5,6 +5,7 @@ task_family: three_dimension
 groups: [3d, gaussian_splatting, reconstruction]
 source_repos:
 - url: https://github.com/btsmart/splatt3r
+  revision: bda1dd07cf84b9189baabb1b8beac243959cfe5d
 checkpoints:
 - repo_id: brandonsmart/splatt3r_v1.0
   role: reconstruction_checkpoint

@@ -15,6 +15,7 @@ official_sources:
   github:
     head_sha: 1475a07d043a62bb07ab11abfc71115bb72e2a16
     url: https://github.com/RoboFlamingo/RoboFlamingo
+    revision: 1475a07d043a62bb07ab11abfc71115bb72e2a16
 output_artifacts:
 - action_trace
 pipeline_binding: roboflamingo

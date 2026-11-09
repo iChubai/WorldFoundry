@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2609.35560
   github:
     url: https://github.com/WorldPlay2/WorldPlay2
+    revision: c5d83e32099116ff3a1437a8a05c764d579f704b
     head_sha: c5d83e32099116ff3a1437a8a05c764d579f704b
   huggingface:
   - repo_id: aejion/WorldPlay2-Fast

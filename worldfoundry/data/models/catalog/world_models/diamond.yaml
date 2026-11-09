@@ -18,6 +18,7 @@ official_sources:
   project_page: https://diamond-wm.github.io/
   github:
     url: https://github.com/eloialonso/diamond
+    revision: 851cefb497733d27f1b85c804104638765860fca
 variants:
 - id: diamond-atari
   task: atari-world-model

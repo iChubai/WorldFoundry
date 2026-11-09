@@ -21,6 +21,7 @@ official_sources:
   github:
     head_sha: f4162397af20
     url: https://github.com/DravenALG/VLANeXt
+    revision: f4162397af201bddbdb2ec17e836bde4743c1913
   huggingface:
   - repo_id: DravenALG/VLANeXt
     role: libero_checkpoint_collection

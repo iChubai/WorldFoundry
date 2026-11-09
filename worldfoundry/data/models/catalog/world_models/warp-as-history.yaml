@@ -17,6 +17,7 @@ official_sources:
   project_page: https://yyfz.github.io/warp-as-history
   github:
     url: https://github.com/yyfz/Warp-as-History
+    revision: a22c4ed499cda4af4fea4f1b3d8bd20687216ab4
   huggingface:
   - repo_id: BestWishYsh/Helios-Distilled
     status: confirmed

@@ -15,6 +15,7 @@ official_sources:
   project_page: https://t2v-turbo.github.io/
   github:
     url: https://github.com/Ji4chenLi/t2v-turbo
+    revision: eaae323f10d136796a33e8f5304ed50e40def570
   huggingface:
   - repo_id: jiachenli-ucsb/T2V-Turbo-VC2
     type: model

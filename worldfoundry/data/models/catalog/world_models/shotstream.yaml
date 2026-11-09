@@ -19,6 +19,7 @@ official_sources:
   project_page: https://luo0207.github.io/ShotStream/
   github:
     url: https://github.com/KlingAIResearch/ShotStream
+    revision: 917a0478fe47d71ddcf3269d052cbe3be2ae10e8
     head_sha: 917a0478fe47d71ddcf3269d052cbe3be2ae10e8
   huggingface:
   - repo_id: KlingTeam/ShotStream

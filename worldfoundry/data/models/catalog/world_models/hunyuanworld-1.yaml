@@ -22,6 +22,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0
+    revision: 57fa9f3a79eae1079c279968cdb9d82c75fa7c86
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/tencent/HunyuanWorld-1
     repo_id: tencent/HunyuanWorld-1

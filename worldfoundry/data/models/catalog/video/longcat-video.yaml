@@ -18,6 +18,7 @@ official_sources:
   project_page: https://meituan-longcat.github.io/LongCat-Video/
   github:
     url: https://github.com/meituan-longcat/LongCat-Video
+    revision: 6b3f4b8582a8bc3f20f795735f5383716c4ba794
   huggingface:
   - repo_id: meituan-longcat/LongCat-Video
     status: confirmed

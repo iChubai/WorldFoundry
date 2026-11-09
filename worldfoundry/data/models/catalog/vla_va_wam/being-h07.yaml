@@ -12,6 +12,7 @@ official_sources:
   project_page: https://research.beingbeyond.com/ptr
   github:
     url: https://github.com/BeingBeyond/Being-H
+    revision: 66b959e05db225fd816f8a517d94a9c0585cfc3e
     subdir: Being-H07
 integration:
   status: runtime_ported

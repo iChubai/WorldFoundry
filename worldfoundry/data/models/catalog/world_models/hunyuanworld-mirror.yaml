@@ -30,6 +30,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror
+    revision: ed1e7639feb46ffcf8bc913a6957b244af2eb3ad
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/tencent/HunyuanWorld-Mirror
     repo_id: tencent/HunyuanWorld-Mirror

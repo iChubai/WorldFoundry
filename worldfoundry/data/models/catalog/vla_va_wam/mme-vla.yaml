@@ -22,6 +22,7 @@ official_sources:
   github:
     head_sha: ecf086c3be7c
     url: https://github.com/RoboMME/robomme_policy_learning
+    revision: ecf086c3be7c2223167d9bb2f6ef1f0a6e24353b
   huggingface:
   - repo_id: Yinpei/perceptual-framesamp-modul
     role: best_framesamp_modul_checkpoint

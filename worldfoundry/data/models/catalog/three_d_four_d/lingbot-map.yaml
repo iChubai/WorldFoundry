@@ -18,6 +18,7 @@ official_sources:
   paper: https://arxiv.org/abs/2604.14141
   github:
     url: https://github.com/Robbyant/lingbot-map
+    revision: c9a1de590cb64972f414da8d94f672d2127c33f9
   huggingface:
   - repo_id: robbyant/lingbot-map
     status: confirmed

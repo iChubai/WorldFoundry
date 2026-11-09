@@ -26,6 +26,7 @@ official_sources:
     confirmed_by: local checkout from official repository
     confirmed_ref: f4f064f39c84b0e9597e99979ec56361570d8bef
     url: https://github.com/EnVision-Research/DualCamCtrl
+    revision: f4f064f39c84b0e9597e99979ec56361570d8bef
   huggingface:
   - repo_id: FayeHongfeiZhang/DualCamCtrl
     type: model

@@ -21,6 +21,7 @@ official_sources:
   github:
     head_sha: 0f5ae6382bf0
     url: https://github.com/Dexmal/dexbotic
+    revision: 0f5ae6382bf0bc6196120f0930ce342ae54e7354
   huggingface:
   - repo_id: Dexmal/Dexbotic-CogACT-SArm
     role: single_arm_foundation_checkpoint

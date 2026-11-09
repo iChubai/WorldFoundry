@@ -18,6 +18,7 @@ official_sources:
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/AgibotTech/Genie-Envisioner
+    revision: 65ab2fa2191f74d213a3447013f5ff90b55dcc3d
     head_sha: 65ab2fa2191f74d213a3447013f5ff90b55dcc3d
     verified_by: official GitHub repository selected from WorldArena open-source result names
   huggingface:

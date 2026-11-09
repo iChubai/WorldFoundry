@@ -19,6 +19,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/cvlab-kaist/WorldCam
+    revision: 8e31bf7d5ea2e51e0ba7e4da29f9d9fff8af6dbb
   project_page: https://cvlab-kaist.github.io/WorldCam/
 pipeline_binding: worldcam
 release_type: code_only

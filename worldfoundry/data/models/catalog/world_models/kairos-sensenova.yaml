@@ -44,6 +44,7 @@ official_sources:
   paper: https://arxiv.org/abs/2606.16533
   github:
     url: https://github.com/kairos-agi/kairos-sensenova
+    revision: 40d3fcb518c3ff894501bf4b080ccaa589363adc
   huggingface:
   - repo_id: kairos-agi/kairos-sensenova-4B-480P-pretrained
     type: model

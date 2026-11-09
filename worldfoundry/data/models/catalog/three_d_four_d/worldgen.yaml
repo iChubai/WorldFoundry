@@ -16,6 +16,7 @@ official_sources:
   paper: https://arxiv.org/abs/2511.16825
   github:
     url: https://github.com/ZiYang-xie/WorldGen
+    revision: 7ce7b2767fdf31e2727b69a2e61e2e950e3a017f
 integration:
   kind: pipeline_runner
   status: integrated

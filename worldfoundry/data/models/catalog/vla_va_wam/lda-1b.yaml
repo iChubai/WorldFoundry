@@ -11,6 +11,7 @@ official_sources:
   paper: https://arxiv.org/abs/2505.03233
   github:
     url: https://github.com/jiangranlv/LDA-1B
+    revision: 06e6a274a9086cc26635a9fe663866335eb30fc5
     head_sha: 06e6a274a9086cc26635a9fe663866335eb30fc5
   huggingface:
   - repo_id: Wayer2/LDA-robocasa

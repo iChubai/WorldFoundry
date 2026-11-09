@@ -14,6 +14,7 @@ official_sources:
   paper: https://arxiv.org/abs/2607.06403
   github:
     url: https://github.com/Robbyant/lingbot-vla-v2
+    revision: 69729b4ef24c63ec25e750915491635f4753be1d
     head_sha: 69729b4ef24c
   huggingface:
   - repo_id: robbyant/lingbot-vla-v2-6b

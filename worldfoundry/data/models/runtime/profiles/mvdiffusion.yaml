@@ -8,6 +8,7 @@ groups:
 - official_repo
 source_repos:
 - url: https://github.com/Tangshitao/MVDiffusion
+  revision: 4cd4e513e259be07a6c5e6a813258f77374afa59
 input_schema:
   prompt: true
   image: true

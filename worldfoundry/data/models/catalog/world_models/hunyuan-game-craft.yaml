@@ -17,6 +17,7 @@ official_sources:
   paper: https://arxiv.org/abs/2506.17201
   github:
     url: https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0
+    revision: 9a35ecf495a1b97b4929524fff442481069ecdc2
   huggingface:
   - repo_id: tencent/Hunyuan-GameCraft-1.0
     type: model

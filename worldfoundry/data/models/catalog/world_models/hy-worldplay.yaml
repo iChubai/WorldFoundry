@@ -41,6 +41,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/Tencent-Hunyuan/HY-WorldPlay
+    revision: ad424f57cf1054521a24b609dc0832afd7cd1a50
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/tencent/HY-WorldPlay
     repo_id: tencent/HY-WorldPlay

@@ -23,6 +23,7 @@ official_sources:
   github:
     head_sha: e4287e94541f
     url: https://github.com/moojink/openvla-oft
+    revision: e4287e94541f459edc4feabc4e181f537cd569a8
   huggingface:
   - repo_id: moojink/openvla-7b-oft-finetuned-libero-spatial
     role: libero_spatial_oft_checkpoint

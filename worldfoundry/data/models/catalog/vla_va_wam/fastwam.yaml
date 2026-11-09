@@ -22,6 +22,7 @@ official_sources:
   github:
     head_sha: 7faa71108368fbb3b6885649f112af607427a2d4
     url: https://github.com/yuantianyuan01/FastWAM
+    revision: 7faa71108368fbb3b6885649f112af607427a2d4
   huggingface:
   - repo_id: yuanty/fastwam
     status: confirmed

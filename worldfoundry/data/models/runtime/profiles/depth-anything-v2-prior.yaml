@@ -7,6 +7,7 @@ groups:
 - prior
 source_repos:
 - url: https://github.com/DepthAnything/Depth-Anything-V2
+  revision: a561b849ebae10a6f5ef49e26c83cbbcd36c71bf
 checkpoints:
 - repo_id: depth-anything/Depth-Anything-V2-Large
   filename: depth_anything_v2_vitl.pth

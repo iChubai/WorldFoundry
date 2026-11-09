@@ -15,6 +15,7 @@ official_sources:
   project_page: https://knightnemo.github.io/vid2world/
   github:
     url: https://github.com/thuml/Vid2World
+    revision: ae24077adbd0783bc6e1b79f705d9b8fad5888ce
     head_sha: ae24077adbd0783bc6e1b79f705d9b8fad5888ce
 integration:
   status: runtime_ported

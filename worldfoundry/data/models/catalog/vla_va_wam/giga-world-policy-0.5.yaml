@@ -12,6 +12,7 @@ official_sources:
   project_page: https://open-gigaai.github.io/giga-world-policy/
   github:
     url: https://github.com/open-gigaai/giga-world-policy
+    revision: 5d55073a6508de7354c83679d9028f4010ff6cb2
     head_sha: 3c36880111d3dd422c9d4ac1a26c3154f8922538
   huggingface:
   - repo_id: open-gigaai/Giga-World-Policy-0.5

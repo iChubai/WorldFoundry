@@ -17,6 +17,7 @@ official_sources:
   project_page: https://depth-anything-3.github.io/
   github:
     url: https://github.com/ByteDance-Seed/Depth-Anything-3
+    revision: 3fe327a6abe2e5db95b54444ea95463dbfef5610
   huggingface:
   - repo_id: depth-anything/DA3-LARGE
     type: model

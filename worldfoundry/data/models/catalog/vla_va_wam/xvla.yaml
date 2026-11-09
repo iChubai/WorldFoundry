@@ -11,6 +11,7 @@ official_sources:
   github:
     head_sha: 6bc2513f5f1cbec715cc668b414392a6cae5c671
     url: https://github.com/2toinf/X-VLA
+    revision: 6bc2513f5f1cbec715cc668b414392a6cae5c671
   huggingface:
   - repo_id: 2toINF/X-VLA-WidowX
     revision: 8d7ea1aaa948665d44129a3ff488629b955fc0f9

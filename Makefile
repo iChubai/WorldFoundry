@@ -71,6 +71,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/core/utils/python/test_pattern_filters.py \
 	tests/core/utils/python/test_tree_utils.py
 VIDEO_TENSOR_CONTRACTS = \
+	tests/base_models/three_dimensions/point_clouds/hyworldmirror_2p0/comm/test_padding.py \
 	tests/core/test_video_tensor_regression.py \
 	tests/core/test_video_codec_contracts.py \
 	tests/core/test_causal_video_cache.py \

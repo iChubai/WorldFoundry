@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import io
-import json
 import re
 import tarfile
 import zipfile
@@ -309,19 +308,17 @@ def test_distribution_requires_exact_license_text(
 
 @pytest.mark.parametrize("format_name", ["wheel", "sdist"])
 @pytest.mark.parametrize("damage", ["none", "missing", "changed"])
-def test_model_runtime_resource_gate_detects_missing_or_changed_statistics(
+def test_model_runtime_resource_gate_detects_missing_or_changed_resources(
     tmp_path: Path,
     format_name: str,
     damage: str,
 ) -> None:
     payloads = {name: (REPO_ROOT / name).read_bytes() for name in REQUIRED_RUNTIME_RESOURCES}
-    statistics = next(name for name in payloads if name.endswith("nav_25dof_stats.json"))
+    split = next(name for name in payloads if name.endswith("csgo_utils/test_split.txt"))
     if damage == "missing":
-        payloads.pop(statistics)
+        payloads.pop(split)
     elif damage == "changed":
-        changed = json.loads(payloads[statistics])
-        changed["state_stats"]["min"][0] += 0.01
-        payloads[statistics] = json.dumps(changed).encode()
+        payloads[split] += b"extra_episode\n"
     artifact = tmp_path / ("worldfoundry.whl" if format_name == "wheel" else "worldfoundry.tar.gz")
     if format_name == "wheel":
         with zipfile.ZipFile(artifact, "w") as archive:

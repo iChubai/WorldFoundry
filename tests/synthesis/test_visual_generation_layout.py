@@ -22,7 +22,6 @@ MODELS = (
     ("adaworld", "adaworld"),
     ("diamond", "diamond"),
     ("dino-wm", "dino_wm"),
-    ("egowm", "egowm"),
     ("hma", "hma"),
     ("leworldmodel", "le_wm"),
     ("mineworld", "mineworld"),
@@ -128,15 +127,6 @@ def test_solarwm_keeps_both_registered_runtime_routes():
 
     assert Path(sys.modules[SolarWMRuntime.__module__].__file__).parent == VISUAL_ROOT / "solarwm"
     assert worldfoundry_runtime.OFFICIAL_ENTRYPOINT == VISUAL_ROOT / "solarwm/infer.py"
-
-
-def test_egowm_has_usable_released_action_normalization_statistics():
-    from worldfoundry.synthesis.visual_generation.egowm.infer import _load_25dof_stats, _normalize
-
-    for stats in _load_25dof_stats().values():
-        assert len(stats["min"]) == len(stats["max"]) == 25
-        assert _normalize(stats["min"], stats) == [-1.0] * 25
-        assert _normalize(stats["max"], stats) == [1.0] * 25
 
 
 def test_vid2world_default_config_can_find_its_bundled_split_and_indices():

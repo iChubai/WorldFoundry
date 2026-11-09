@@ -26,7 +26,7 @@ No file in this directory is a personal GitHub avatar.
 | `caltech.svg` | California Institute of Technology (Caltech) | Original simple circular-seal rendition of the Caltech seal (torch) | Public domain (simple seal rendition) | benchmark:stevo-bench |
 | `cas.png` | Chinese Academy of Sciences | Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped and restored to CAS navy #004B87 | Organization brand mark | benchmark:devil-dynamics, benchmark:t2v-safety-bench, model:starwm |
 | `cityu.svg` | City University of Hong Kong | Original simple circular-seal rendition of the CityU emblem | Public domain (simple seal rendition) | model:pusa-vidgen |
-| `cmu.svg` | Carnegie Mellon University | https://commons.wikimedia.org/wiki/File:Carnegie_Mellon_wordmark.svg | Public domain (text logo) | benchmark:camerabench, model:egowm |
+| `cmu.svg` | Carnegie Mellon University | https://commons.wikimedia.org/wiki/File:Carnegie_Mellon_wordmark.svg | Public domain (text logo) | benchmark:camerabench |
 | `createai.png` | CreateAI | GitHub organization brand avatar (github.com/IamCreateAI), pre-existing repo asset | Organization brand mark | model:neoverse |
 | `csu.png` | Central South University | Official university brand mark (www.csu.edu.cn), crest cropped for the identity mark | Organization brand mark | benchmark:mind |
 | `cuhk.png` | The Chinese University of Hong Kong | Official university emblem cropped from the CUHK site header mark (https://www.cuhk.edu.hk/english/images/cuhk_logo_2x.png) | Organization brand mark | model:animatediff, model:cameractrl, model:last-r1, model:solarwm |

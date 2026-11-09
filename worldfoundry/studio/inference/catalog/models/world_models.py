@@ -750,14 +750,6 @@ def _leworldmodel_default_load_kwargs() -> dict[str, Any]:
     }
 
 
-def _egowm_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "model_id": "egowm",
-        "checkpoint_path": str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
-        "base_model_dir": str(checkpoint_root_path("stabilityai--stable-video-diffusion-img2vid")),
-    }
-
-
 def _hma_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "hma",
@@ -1007,77 +999,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": (
             "The default demo uses a locally staged PushT trajectory and the official random policy; "
             "learned-policy evaluation requires a compatible policy checkpoint."
-        ),
-    },
-    "egowm": {
-        "display_name": "EgoWM",
-        "category": "Video Generation",
-        "summary": "Official action/state-conditioned SVD egocentric navigation video generation.",
-        "default_model_ref": lambda: str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
-        "default_task_type": "navigation-video",
-        "default_load_kwargs": _egowm_default_load_kwargs,
-        "default_call_kwargs": {
-            "variant": "25dof",
-            "num_frames": 8,
-            "num_inference_steps": 25,
-            "fps": 7,
-            "seed": 42,
-            "height": 512,
-            "width": 512,
-            "motion_bucket_id": 180,
-            "plan_only": False,
-            "timeout_seconds": 21600,
-        },
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "image_path",
-            "input_image",
-            "num_frames",
-            "num_inference_steps",
-            "seed",
-            "height",
-            "width",
-            "motion_bucket_id",
-            "action_scale",
-            "conditions_path",
-            "egowm_conditions_path",
-            "actions_path",
-            "egowm_actions_path",
-            "smoke_synthetic",
-            "variant",
-            "egowm_variant",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_path",
-            "egowm_checkpoint_path",
-            "base_model_dir",
-            "svd_base_model_dir",
-            "image_path",
-            "input_image",
-            "seed",
-            "lazy",
-        ),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "aliases": ("ego-wm", "egowm-svd-25dof"),
-        "tags": ("world-model", "navigation-video", "action-conditioned", "official-runtime"),
-        "notes": (
-            "Runs the official 25-DoF or 3-DoF navigation checkpoint with an explicit local SVD base model. "
-            "Use paired conditions_path for 25-DoF, or paired normalized actions_path for 3-DoF. "
-            "A constant 3-DoF action_scale is a smoke control, not a paired motion test."
         ),
     },
     "hma": {

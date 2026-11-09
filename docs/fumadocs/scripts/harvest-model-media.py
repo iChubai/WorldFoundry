@@ -637,10 +637,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2505.22944v3/figures/example1.jpg",
         "overview": "https://arxiv.org/html/2505.22944v3/figures/Pipeline.jpg",
     },
-    "egowm": {
-        "teaser": "https://arxiv.org/html/2601.15284v2/teaser.png",
-        "overview": "https://arxiv.org/html/2601.15284v2/method.png",
-    },
     "emu3.5": {
         "overview": "https://raw.githubusercontent.com/baaivision/Emu3.5/main/assets/arch.png",
     },

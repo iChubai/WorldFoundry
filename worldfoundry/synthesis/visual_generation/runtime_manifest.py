@@ -245,26 +245,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         ),
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_navigation", "world_action"]},
     ),
-    "egowm": WorldModelRuntimeSpec(
-        model_id="egowm",
-        display_name="EgoWM",
-        runtime_module="worldfoundry.synthesis.visual_generation.egowm.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        official_repo_url="https://github.com/miccooper9/egowm",
-        blocked_reason="",
-        required_assets=(
-            "anuragba/egowm 25-DoF navigation checkpoint",
-            "Stable Video Diffusion img2vid base model",
-            "official EgoWM source checkout",
-        ),
-        input_schema={
-            "prompt": True,
-            "image": True,
-            "video": True,
-            "actions": ["navigation_action", "egocentric_action"],
-        },
-    ),
     "happyoyster": WorldModelRuntimeSpec(
         model_id="happyoyster",
         display_name="HappyOyster",

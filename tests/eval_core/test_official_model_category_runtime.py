@@ -733,7 +733,6 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         "lingbot-va": "worldfoundry.pipelines.component_pipelines:LingBotVAPipeline",
         "octo": "worldfoundry.pipelines.component_pipelines:OctoPipeline",
         "diffusion-policy": "worldfoundry.pipelines.component_pipelines:DiffusionPolicyPipeline",
-        "egowm": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline",
     }
 
     for model_id, target in expected_targets.items():
@@ -742,7 +741,7 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         assert entry.pipeline_target == target
 
     resolved = resolve_model_zoo_runner(
-        "egowm",
+        "openvla",
         manifest_dir=REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog",
         runtime={"device": "cpu"},
     )
@@ -768,9 +767,6 @@ def test_pipeline_runner_targets_are_generic_and_independent() -> None:
         assert entry.runner_target == PIPELINE_RUNNER_TARGET
         assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
-    egowm = registry.get("egowm")
-    assert egowm.runner_target == PIPELINE_RUNNER_TARGET
-    assert egowm.pipeline_target == "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline"
 
 
 def test_model_zoo_entries_are_in_category_manifests_and_resolve_runner(tmp_path: Path) -> None:
@@ -783,17 +779,9 @@ def test_model_zoo_entries_are_in_category_manifests_and_resolve_runner(tmp_path
     assert entry.runner_target == PIPELINE_RUNNER_TARGET
     assert entry.pipeline_target == "worldfoundry.pipelines.component_pipelines:OpenMAGVIT2Pipeline"
     assert entry.runtime_profile == "runtime-profile:open-magvit2"
-    assert registry.get("egowm").runtime_profile == "runtime-profile:egowm"
     assert registry.get("dreamdojo").runtime_profile == "runtime-profile:dreamdojo"
     assert registry.get("giga-brain-0").runtime_profile == "runtime-profile:giga-brain-0"
     assert registry.get("dreamzero").runtime_profile == "runtime-profile:dreamzero"
-
-    egowm_resolved = resolve_model_zoo_runner(
-        "egowm",
-        manifest_dir=REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog",
-        runtime={"device": "cpu", "output_dir": str(tmp_path / "egowm")},
-    )
-    assert _is_worldfoundry_pipeline_runner(egowm_resolved.runner)
 
     openvla_resolved = resolve_model_zoo_runner(
         "openvla",

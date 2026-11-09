@@ -17,6 +17,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 _RETIRED_VARIANTS = (
     "biwm-wan21@biwm-wan21",
     "biwm-wan22@biwm-wan22",
+    "egowm@egowm",
     "hunyuanworld-voyager@hunyuanworld-voyager",
     "hyworld-worldgen@hyworld-worldgen",
     "irasim@irasim",

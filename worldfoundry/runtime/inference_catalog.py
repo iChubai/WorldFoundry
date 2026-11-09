@@ -49,7 +49,6 @@ from worldfoundry.runtime.inference_specs.depth_anything3 import DEPTH_ANYTHING3
 from worldfoundry.runtime.inference_specs.diamond import DIAMOND_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.dino_wm import DINO_WM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.dreamdojo import DREAMDOJO_STUDENT_INFERENCE_SPEC
-from worldfoundry.runtime.inference_specs.egowm import EGOWM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.fantasyworld import (
     FANTASYWORLD_INFERENCE_SPEC,
     FANTASYWORLD_WAN21_INFERENCE_SPEC,
@@ -114,7 +113,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "ctrl-world",
         "diamond",
         "dino-wm",
-        "egowm",
         "genie-envisioner",
         "giga-world-0",
         "happyoyster",
@@ -231,7 +229,6 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     CTRL_WORLD_INFERENCE_SPEC.model_family_id: CTRL_WORLD_INFERENCE_SPEC,
     DIAMOND_INFERENCE_SPEC.model_family_id: DIAMOND_INFERENCE_SPEC,
     DINO_WM_INFERENCE_SPEC.model_family_id: DINO_WM_INFERENCE_SPEC,
-    EGOWM_INFERENCE_SPEC.model_family_id: EGOWM_INFERENCE_SPEC,
     HMA_INFERENCE_SPEC.model_family_id: HMA_INFERENCE_SPEC,
     TESSERACT_INFERENCE_SPEC.model_family_id: TESSERACT_INFERENCE_SPEC,
     LEWORLD_MODEL_INFERENCE_SPEC.model_family_id: LEWORLD_MODEL_INFERENCE_SPEC,

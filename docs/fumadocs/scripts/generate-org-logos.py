@@ -1161,7 +1161,6 @@ MODEL_ORGS: dict[str, str] = {
     "echo-memory-ssm-ctx5-every1-hint21": "jd",
     "echo-memory-ssm-ctx5-every4-hint81": "jd",
     "echo-memory-videossm-hybrid": "jd",
-    "egowm": "cmu",
     "emu3.5": "baai",
     "eventvla": "shanghai-ai-lab",
     "evoke": "alayalab",

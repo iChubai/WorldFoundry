@@ -85,7 +85,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "ctrl-world",
     "diamond",
     "dino-wm",
-    "egowm",
     "genie-envisioner",
     "giga-world-0",
     "happyoyster",

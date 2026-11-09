@@ -696,7 +696,6 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 "worldfoundry.synthesis.visual_generation.dino_wm.datasets" = ["UPSTREAM.md"]
-"worldfoundry.synthesis.visual_generation.egowm" = ["nav_25dof_stats.json"]
 "worldfoundry.synthesis.visual_generation.vid2world.csgo_utils" = ["test_split.txt"]
 "worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6" = ["mmaudio/ext/bigvgan_v2/config.json"]
 "*" = ["*.npy", "*.npz"]

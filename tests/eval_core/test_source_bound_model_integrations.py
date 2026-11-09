@@ -23,8 +23,6 @@ SOURCE_BOUND_RUNTIME_PLAN_MODEL_IDS = (
     "vggt-world",
 )
 
-SOURCE_BOUND_RUNNABLE_MODEL_IDS = ("egowm",)
-
 SOURCE_BOUND_PORTED_MODEL_IDS = (
     "hy-embodied",
     "last-r1",
@@ -62,44 +60,6 @@ def test_source_bound_models_use_in_tree_pipeline_or_plan_routes() -> None:
         assert entry.integration_status == "integrated"
         assert profile.backend_stage == "official_in_tree_runtime"
         assert profile.integration_status == "runtime_ported"
-
-    for model_id in SOURCE_BOUND_RUNNABLE_MODEL_IDS:
-        entry = registry.get(model_id)
-        profile = load_runtime_profile(model_id)
-
-        assert entry.runner_target == PIPELINE_RUNNER_TARGET
-        assert entry.pipeline_target is not None
-        assert entry.pipeline_target.startswith("worldfoundry.pipelines.world_model.pipeline_runtime_manifest:")
-        assert entry.runtime_profile == f"runtime-profile:{model_id}"
-        assert entry.integration_status == "integrated"
-        assert profile.backend_stage == "in_tree_runtime_manifest"
-        assert profile.runtime_status == "official_runtime_checkpoint_bound"
-        assert profile.integration_status == "runtime_ported"
-
-
-def test_world_model_manifest_uses_explicit_source_root_not_legacy_github_checkout(tmp_path, monkeypatch) -> None:
-    from worldfoundry.synthesis.visual_generation.runtime_manifest import (
-        resolve_runtime_manifest,
-        runtime_spec,
-    )
-
-    workspace = tmp_path / "workspace"
-    external_repo = tmp_path / "github_repos" / "egowm"
-    external_repo.mkdir(parents=True)
-    (external_repo / "inference.py").write_text("raise SystemExit('external checkout')\n", encoding="utf-8")
-    workspace.mkdir()
-    monkeypatch.chdir(workspace)
-    monkeypatch.setenv("WORLDFOUNDRY_MODEL_SOURCE_DIR", str(tmp_path / "model_sources"))
-    monkeypatch.setenv("WORLDFOUNDRY_GITHUB_REPOS_DIR", str(tmp_path / "github_repos"))
-
-    root, entrypoint, _ = resolve_runtime_manifest(runtime_spec("egowm"))
-
-    assert root != external_repo.resolve()
-    assert entrypoint != (external_repo / "inference.py").resolve()
-    assert root == (tmp_path / "model_sources" / "egowm").resolve()
-    assert entrypoint is not None
-    assert entrypoint.name == "infer.py"
-    assert "worldfoundry/synthesis/visual_generation/egowm" in entrypoint.as_posix()
 
 
 def test_mosaicmem_memory_store_is_integrated_without_fake_pipeline() -> None:

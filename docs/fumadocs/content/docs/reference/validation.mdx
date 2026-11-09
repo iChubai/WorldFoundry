@@ -382,10 +382,10 @@ IRASim (`irasim@irasim`) and Pandora (`pandora@pandora`) from active support.
 Their frozen baseline records remain unchanged. The exact identity set in
 `tests/manual/native_coverage_policy.py` permits these planned removals and
 reports them as `retired_native_variants`, not replay coverage or GPU success.
-HunyuanWorld-Voyager (`hunyuanworld-voyager@hunyuanworld-voyager`), HY-World 2.0
-world generation (`hyworld-worldgen@hyworld-worldgen`), Open Dreamer
-(`open-dreamer@open-dreamer`) and ShotStream (`shotstream@shotstream`) are
-retired the same way: their runtimes depended
+EgoWM (`egowm@egowm`), HunyuanWorld-Voyager
+(`hunyuanworld-voyager@hunyuanworld-voyager`), HY-World 2.0 world generation
+(`hyworld-worldgen@hyworld-worldgen`), Open Dreamer (`open-dreamer@open-dreamer`)
+and ShotStream (`shotstream@shotstream`) are retired the same way: their runtimes depended
 on license-gated local checkouts or external source checkouts whose code cannot
 be vendored, and every model runtime must run from the repository.
 Other frozen variant removals still fail. Reintroducing a retired identity

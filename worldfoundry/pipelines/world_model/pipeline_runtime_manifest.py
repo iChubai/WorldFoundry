@@ -434,42 +434,6 @@ class TesserActPipeline(WorldModelRuntimePipeline):
         return kwargs
 
 
-class EgoWMPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for EgoWM visual generation."""
-
-    MODEL_ID = "egowm"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "checkpoint_path",
-        "egowm_checkpoint_path",
-        "base_model_dir",
-        "svd_base_model_dir",
-        "image_path",
-        "input_image",
-        "seed",
-        "num_frames",
-        "num_inference_steps",
-        "fps",
-        "height",
-        "width",
-        "motion_bucket_id",
-        "action_scale",
-        "conditions_path",
-        "egowm_conditions_path",
-        "actions_path",
-        "egowm_actions_path",
-        "smoke_synthetic",
-        "variant",
-        "egowm_variant",
-    )
-
-    def _promote_call_options(self, kwargs: dict) -> dict:
-        if not kwargs.get("image_path"):
-            candidate = kwargs.get("images")
-            if isinstance(candidate, (str, os.PathLike)):
-                kwargs["image_path"] = os.fspath(candidate)
-        return kwargs
-
-
 class HappyOysterPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for HappyOyster visual generation."""
 
@@ -626,7 +590,6 @@ __all__ = [
     "DIAMONDCsgoPipeline",
     "DIAMONDPipeline",
     "DinoWMPipeline",
-    "EgoWMPipeline",
     "GenieEnvisionerPipeline",
     "GigaWorld0Pipeline",
     "HMAPipeline",

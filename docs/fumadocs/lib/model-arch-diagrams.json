@@ -1790,20 +1790,6 @@
       "caption": "Method overview: The overall architecture of Dexbotic. It introduces the Dexdata format to unify different embodiments. In Model Layer, Dexbotic integrates the open-source vision encoder, LLM and action expert through a unified.",
       "captionZh": "论文方法总览：DM0 的机器人操作架构。"
     },
-    "egowm": {
-      "modelId": "egowm",
-      "paperSrc": "/models/egowm/paper.png",
-      "teaserSrc": "/models/egowm/teaser.webp",
-      "teaserAlt": "Official paper teaser: EgoWM predicts future frames that follow robot actions for quadruped navigation and humanoid interaction.",
-      "teaserAltZh": "论文官方 Teaser：EgoWM 按机器人动作预测未来帧，覆盖四足导航与人形交互。",
-      "teaserCaption": "Official paper teaser: EgoWM predicts future frames that follow robot actions for quadruped navigation and humanoid interaction.",
-      "teaserCaptionZh": "论文官方 Teaser：EgoWM 按机器人动作预测未来帧，覆盖四足导航与人形交互。",
-      "src": "/models/egowm/overview.png",
-      "alt": "Method overview: an action-projection module conditions a trainable U-Net or DiT on a frozen VAE latent of the first frame.",
-      "altZh": "论文方法总览：动作投影模块在冻结 VAE 的首帧潜变量上条件化可训练的 U-Net 或 DiT。",
-      "caption": "Method overview: an action-projection module conditions a trainable U-Net or DiT on a frozen VAE latent of the first frame.",
-      "captionZh": "论文方法总览：动作投影模块在冻结 VAE 的首帧潜变量上条件化可训练的 U-Net 或 DiT。"
-    },
     "eventvla": {
       "modelId": "eventvla",
       "paperSrc": "/models/eventvla/paper.png",

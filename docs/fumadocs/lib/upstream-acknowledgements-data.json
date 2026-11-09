@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 214,
+  "modelsTotal": 213,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 92,
+      "count": 91,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -311,10 +311,6 @@
         {
           "name": "Echo-WM",
           "url": "https://github.com/jd-opensource/JoyAI-Echo"
-        },
-        {
-          "name": "EgoWM",
-          "url": "https://github.com/miccooper9/egowm"
         },
         {
           "name": "Evoke",

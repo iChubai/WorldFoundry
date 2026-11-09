@@ -1437,16 +1437,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：轨迹指令模块把点路径注入 Wan DiT 潜变量，做可控图生视频。",
         ),
     },
-    "egowm": {
-        "teaser": (
-            "Official paper teaser: EgoWM predicts future frames that follow robot actions for quadruped navigation and humanoid interaction.",
-            "论文官方 Teaser：EgoWM 按机器人动作预测未来帧，覆盖四足导航与人形交互。",
-        ),
-        "overview": (
-            "Method overview: an action-projection module conditions a trainable U-Net or DiT on a frozen VAE latent of the first frame.",
-            "论文方法总览：动作投影模块在冻结 VAE 的首帧潜变量上条件化可训练的 U-Net 或 DiT。",
-        ),
-    },
     "emu3.5": {
         "overview": (
             "Method overview: Emu3.5 trains with next-token prediction and infers visual tokens in parallel via discrete diffusion.",

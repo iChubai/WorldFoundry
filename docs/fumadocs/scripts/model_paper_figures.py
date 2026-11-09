@@ -1079,16 +1079,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：Self-Forcing 的视频生成架构。",
         ),
     },
-    "shotstream": {
-        "teaser": (
-            "Official paper teaser: Overview of the ShotStream workflow, which enables real-time, long, multi-shot video generation from streaming prompts.",
-            "论文官方 Teaser：ShotStream 的视频生成论文配图。",
-        ),
-        "overview": (
-            "Method overview: Architecture of the Bidirectional Next-Shot Teacher Model. To realize ShotStream, we first fine-tune a text-to-video model into a bidirectional next-shot model, which generates subsequent shots conditioned on sparse.",
-            "论文方法总览：ShotStream 的视频生成架构。",
-        ),
-    },
     "show-o": {
         "overview": (
             "Method overview: Show-o unifies autoregressive language with diffusion vision in one LLM block.",

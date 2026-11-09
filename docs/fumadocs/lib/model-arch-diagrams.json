@@ -2182,19 +2182,6 @@
       "caption": "Method overview: Sana’s linear DiT pipeline for deep-compression latent image generation.",
       "captionZh": "论文方法总览：Sana 用线性 DiT 在深压缩潜空间生成图像。"
     },
-    "shotstream": {
-      "modelId": "shotstream",
-      "teaserSrc": "/models/shotstream/teaser.png",
-      "teaserAlt": "Official paper teaser: Overview of the ShotStream workflow, which enables real-time, long, multi-shot video generation from streaming prompts.",
-      "teaserAltZh": "论文官方 Teaser：ShotStream 的视频生成论文配图。",
-      "teaserCaption": "Official paper teaser: Overview of the ShotStream workflow, which enables real-time, long, multi-shot video generation from streaming prompts.",
-      "teaserCaptionZh": "论文官方 Teaser：ShotStream 的视频生成论文配图。",
-      "src": "/models/shotstream/overview.png",
-      "alt": "Method overview: Architecture of the Bidirectional Next-Shot Teacher Model. To realize ShotStream, we first fine-tune a text-to-video model into a bidirectional next-shot model, which generates subsequent shots conditioned on sparse.",
-      "altZh": "论文方法总览：ShotStream 的视频生成架构。",
-      "caption": "Method overview: Architecture of the Bidirectional Next-Shot Teacher Model. To realize ShotStream, we first fine-tune a text-to-video model into a bidirectional next-shot model, which generates subsequent shots conditioned on sparse.",
-      "captionZh": "论文方法总览：ShotStream 的视频生成架构。"
-    },
     "simworld": {
       "modelId": "simworld",
       "teaserSrc": "/models/simworld/teaser.webp",

@@ -86,7 +86,6 @@ from worldfoundry.runtime.inference_specs.sana_streaming import (
     SANA_STREAMING_BIDIRECTIONAL_INFERENCE_SPEC,
     SANA_STREAMING_INFERENCE_SPEC,
 )
-from worldfoundry.runtime.inference_specs.shotstream import SHOTSTREAM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.stable_video_infinity import STABLE_VIDEO_INFINITY_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.starwm import STARWM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.tesseract import TESSERACT_INFERENCE_SPEC
@@ -129,7 +128,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "oasis-500m",
         "pointworld",
         "sana-wm",
-        "shotstream",
         "simworld",
         "starwm",
         "tesseract",
@@ -237,7 +235,6 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     HMA_INFERENCE_SPEC.model_family_id: HMA_INFERENCE_SPEC,
     TESSERACT_INFERENCE_SPEC.model_family_id: TESSERACT_INFERENCE_SPEC,
     LEWORLD_MODEL_INFERENCE_SPEC.model_family_id: LEWORLD_MODEL_INFERENCE_SPEC,
-    SHOTSTREAM_INFERENCE_SPEC.model_family_id: SHOTSTREAM_INFERENCE_SPEC,
     LINGBOT_WORLD_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_INFERENCE_SPEC,
     LINGBOT_WORLD_V2_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_INFERENCE_SPEC,
     LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC,

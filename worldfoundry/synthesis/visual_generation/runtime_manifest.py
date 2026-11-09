@@ -357,21 +357,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
             "actions": ["robot_action", "point_cloud_condition"],
         },
     ),
-    "shotstream": WorldModelRuntimeSpec(
-        model_id="shotstream",
-        display_name="ShotStream",
-        runtime_module="worldfoundry.synthesis.visual_generation.shotstream.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        official_repo_url="https://github.com/KlingAIResearch/ShotStream",
-        blocked_reason="",
-        required_assets=(
-            "KlingTeam/ShotStream causal checkpoint bundle",
-            "Wan-AI/Wan2.1-T2V-1.3B base model",
-            "official ShotStream source checkout",
-        ),
-        input_schema={"prompt": True, "image": True, "video": True, "actions": ["stream_control", "edit"]},
-    ),
     "solarwm": WorldModelRuntimeSpec(
         model_id="solarwm",
         display_name="SolarWM",

@@ -99,7 +99,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "omniforcing",
     "pointworld",
     "sana-wm",
-    "shotstream",
     "simworld",
     "starwm",
     "tesseract",

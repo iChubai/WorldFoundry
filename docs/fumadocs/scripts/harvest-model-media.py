@@ -484,10 +484,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "self-forcing": {
         "overview": "https://arxiv.org/html/2506.08009v2/overview.png",
     },
-    "shotstream": {
-        "teaser": "https://arxiv.org/html/2603.25746v1/overflow.png",
-        "overview": "https://arxiv.org/html/2603.25746v1/method_teacher.png",
-    },
     "show-o": {
         "overview": "https://arxiv.org/html/2408.12528v7/method_comparisons.png",
     },

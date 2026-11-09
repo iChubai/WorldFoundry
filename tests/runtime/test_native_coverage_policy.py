@@ -22,6 +22,7 @@ _RETIRED_VARIANTS = (
     "irasim@irasim",
     "open-dreamer@open-dreamer",
     "pandora@pandora",
+    "shotstream@shotstream",
 )
 
 

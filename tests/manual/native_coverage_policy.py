@@ -27,6 +27,7 @@ _RETIRED_NATIVE_VARIANTS = frozenset(
         "irasim@irasim",
         "open-dreamer@open-dreamer",
         "pandora@pandora",
+        "shotstream@shotstream",
     }
 )
 

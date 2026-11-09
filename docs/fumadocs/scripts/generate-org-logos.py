@@ -1298,7 +1298,6 @@ MODEL_ORGS: dict[str, str] = {
     "simworld": "simworld",
     "spatial-forcing": "openhelix",
     "shape-of-motion": "berkeley",
-    "shotstream": "kuaishou",
     "show-o": "nus",
     "skyreels-v2": "skywork",
     "skyreels-v3": "skywork",

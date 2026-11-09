@@ -64,7 +64,7 @@ No file in this directory is a personal GitHub avatar.
 | `koc.svg` | Koç University | https://commons.wikimedia.org/wiki/File:Koç_University_logo.svg | Public domain | benchmark:physvidbench |
 | `koc-mark.svg` | Koç University | Symbol cropped from `koc.svg` for compact catalog marks | Public domain | benchmark:physvidbench |
 | `krea.png` | Krea AI | GitHub organization brand avatar (github.com/krea-ai), pre-existing repo asset | Organization brand mark | model:krea-realtime-video |
-| `kuaishou.svg` | Kuaishou | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF4906 | CC0-1.0 | model:kling-api, model:recammaster, model:shotstream |
+| `kuaishou.svg` | Kuaishou | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF4906 | CC0-1.0 | model:kling-api, model:recammaster |
 | `lightricks.jpg` | Lightricks | GitHub organization brand avatar (github.com/Lightricks), pre-existing repo asset | Organization brand mark | model:ltx-2.5, model:ltx-2.x, model:ltx-video |
 | `luma.png` | Luma AI | GitHub organization brand avatar (github.com/lumalabs-ai), pre-existing repo asset | Organization brand mark | model:luma-ray2 |
 | `map-org.png` | MAP (multimodal-art-projection) | GitHub organization brand avatar (github.com/multimodal-art-projection) | Organization brand mark | model:multiworld |

@@ -23,10 +23,7 @@ SOURCE_BOUND_RUNTIME_PLAN_MODEL_IDS = (
     "vggt-world",
 )
 
-SOURCE_BOUND_RUNNABLE_MODEL_IDS = (
-    "egowm",
-    "shotstream",
-)
+SOURCE_BOUND_RUNNABLE_MODEL_IDS = ("egowm",)
 
 SOURCE_BOUND_PORTED_MODEL_IDS = (
     "hy-embodied",

@@ -750,14 +750,6 @@ def _leworldmodel_default_load_kwargs() -> dict[str, Any]:
     }
 
 
-def _shotstream_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "model_id": "shotstream",
-        "checkpoint_dir": str(checkpoint_root_path("KlingTeam--ShotStream")),
-        "wan_model_dir": str(checkpoint_root_path("Wan-AI--Wan2.1-T2V-1.3B")),
-    }
-
-
 def _egowm_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "egowm",
@@ -1490,56 +1482,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": (
             "The default synthetic-gradient geometry is a deterministic checkpoint smoke aid, not an official depth/normal estimate. "
             "Supply depth_path and normal_path with geometry_mode=files for released-model input parity."
-        ),
-    },
-    "shotstream": {
-        "display_name": "ShotStream",
-        "category": "Video Generation",
-        "summary": "Official 4-step causal multi-shot video generation through a staged ShotStream checkout.",
-        "default_model_ref": lambda: str(checkpoint_root_path("KlingTeam--ShotStream")),
-        "default_prompt": (
-            "A cinematic science-fiction scene in a bioluminescent forest at night. An astronaut in a white "
-            "exploration suit walks between glowing blue plants while soft mist drifts through the trees."
-        ),
-        "default_task_type": "causal-multi-shot-video",
-        "default_load_kwargs": _shotstream_default_load_kwargs,
-        "default_call_kwargs": {"fps": 16, "seed": 42, "plan_only": False, "timeout_seconds": 21600},
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "data_path",
-            "input_csv",
-            "seed",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_dir",
-            "shotstream_checkpoint_dir",
-            "wan_model_dir",
-            "base_model_dir",
-            "data_path",
-            "input_csv",
-            "seed",
-            "lazy",
-        ),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "aliases": ("shot-stream", "interactive-video-generation"),
-        "tags": ("world-model", "causal-video", "multi-shot", "official-runtime"),
-        "notes": (
-            "Runs the official ShotStream checkpoint on Wan2.1-T2V-1.3B. A plain prompt produces one 81-frame "
-            "shot; pass an official CSV through data_path/input_csv for multi-shot generation."
         ),
     },
     "diamond": {

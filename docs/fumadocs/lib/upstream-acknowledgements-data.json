@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 215,
+  "modelsTotal": 214,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 93,
+      "count": 92,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -483,10 +483,6 @@
         {
           "name": "Self-Forcing",
           "url": "https://github.com/guandeh17/Self-Forcing"
-        },
-        {
-          "name": "ShotStream",
-          "url": "https://github.com/KlingAIResearch/ShotStream"
         },
         {
           "name": "SimWorld",

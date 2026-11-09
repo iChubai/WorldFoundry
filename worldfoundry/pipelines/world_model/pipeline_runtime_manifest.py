@@ -538,23 +538,6 @@ class PointWorldPipeline(WorldModelRuntimePipeline):
     MODEL_ID = "pointworld"
 
 
-class ShotStreamPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for ShotStream visual generation."""
-
-    MODEL_ID = "shotstream"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "checkpoint_dir",
-        "checkpoint_path",
-        "shotstream_checkpoint_dir",
-        "wan_model_dir",
-        "base_model_dir",
-        "data_path",
-        "input_csv",
-        "dataset_path",
-        "seed",
-    )
-
-
 class SolarWMPipeline(WorldModelRuntimePipeline):
     """Inference-only pipeline for SolarWM Wan2.2-5B Stage2."""
 
@@ -659,7 +642,6 @@ __all__ = [
     "OmniForcingPipeline",
     "PointWorldPipeline",
     "SanaWMPipeline",
-    "ShotStreamPipeline",
     "SimWorldPipeline",
     "SolarWMPipeline",
     "StarWMPipeline",

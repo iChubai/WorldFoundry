@@ -29,7 +29,6 @@ MODELS = (
     ("mira", "mira_wm"),
     ("nwm", "nwm"),
     ("oasis-500m", "open_oasis"),
-    ("shotstream", "shotstream"),
     ("solarwm", "solarwm"),
     ("starwm", "starwm"),
     ("vid2world", "vid2world"),

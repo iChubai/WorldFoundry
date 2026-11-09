@@ -181,25 +181,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         runtime_module="worldfoundry.synthesis.visual_generation.open_oasis.worldfoundry_runtime",
         input_schema=_MINECRAFT_INPUTS,
     ),
-    "open-dreamer": WorldModelRuntimeSpec(
-        model_id="open-dreamer",
-        display_name="Open Dreamer",
-        runtime_module="worldfoundry.synthesis.visual_generation.open_dreamer.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="inference.py",
-        # Gating lives in the adapter's missing_requirements so a fully staged
-        # checkout, JAX environment, and checkpoint can actually execute.
-        blocked_reason="",
-        official_repo_url="https://github.com/next-state/open-dreamer",
-        required_assets=(
-            "reactor-team/open-dreamer checkout staged under ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/open-dreamer-inference",
-            "Open Dreamer Orbax checkpoint containing tokenizer and dynamics weights",
-            "Minecraft/VPT context clip at 368x640 (or 360x640)",
-        ),
-        input_schema=_MINECRAFT_INPUTS,
-    ),
     "sana-wm": WorldModelRuntimeSpec(
         model_id="sana-wm",
         display_name="SANA-WM",

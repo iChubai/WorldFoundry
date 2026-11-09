@@ -694,23 +694,6 @@
       }
     ]
   },
-  "open-dreamer": {
-    "paper": {
-      "title": "Training Agents Inside of Scalable World Models",
-      "year": 2025,
-      "venue": null,
-      "arxivId": "2509.24527",
-      "abstract": "World models learn general knowledge from videos and simulate experience for training behaviors in imagination, offering a path towards intelligent agents. However, previous world models have been unable to accurately predict object interactions in complex environments. We introduce Dreamer 4, a scalable agent that learns to solve control tasks by reinforcement learning inside of a fast and accurate world model. In the complex video game Minecraft, the world model accurately predicts object interactions and game mechanics, outperforming previous world models by a large margin. The world model achieves real-time interactive inference on a single GPU through a shortcut forcing objective and an efficient transformer architecture. Moreover, the world model learns general action conditioning from only a small amount of data, allowing it to extract the majority of its knowledge from diverse un"
-    },
-    "figures": [
-      {
-        "kind": "image",
-        "src": "/models/open-dreamer/paper.png",
-        "caption": "Training Agents Inside of Scalable World Models",
-        "captionZh": "Training Agents Inside of Scalable World Models"
-      }
-    ]
-  },
   "pi3": {
     "paper": {
       "title": "$π^3$: Permutation-Equivariant Visual Geometry Learning",

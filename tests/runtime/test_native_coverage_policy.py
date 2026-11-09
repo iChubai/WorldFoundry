@@ -20,6 +20,7 @@ _RETIRED_VARIANTS = (
     "hunyuanworld-voyager@hunyuanworld-voyager",
     "hyworld-worldgen@hyworld-worldgen",
     "irasim@irasim",
+    "open-dreamer@open-dreamer",
     "pandora@pandora",
 )
 

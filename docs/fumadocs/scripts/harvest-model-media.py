@@ -413,9 +413,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "omniforcing": {
         "overview": "https://arxiv.org/html/2603.11647v2/teaser_2.png",
     },
-    "open-dreamer": {
-        "teaser": "https://arxiv.org/html/2509.24527v1/imag.png",
-    },
     "open-magvit2": {
         "overview": "https://arxiv.org/html/2409.04410v3/framework.png",
     },

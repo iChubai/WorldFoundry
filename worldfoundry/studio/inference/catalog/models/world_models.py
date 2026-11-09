@@ -269,33 +269,6 @@ def _causal_rcm_default_call_kwargs() -> dict[str, Any]:
     }
 
 
-def _open_dreamer_default_load_kwargs() -> dict[str, Any]:
-    load_kwargs: dict[str, Any] = {"checkpoint_path": str(checkpoint_root_path("open-dreamer"))}
-    # Only pin an interpreter once the checkout's uv venv exists. Otherwise leave
-    # the key unset so the runtime adapter re-probes at call time.
-    venv_python = official_runtime_repo_path("open-dreamer-inference") / ".venv" / "bin" / "python"
-    if venv_python.is_file():
-        load_kwargs["python_executable"] = str(venv_python)
-    return load_kwargs
-
-
-def _open_dreamer_default_call_kwargs() -> dict[str, Any]:
-    return {
-        # Matches the official larger-rollout example in the upstream inference README.
-        "context_frames": 16,
-        "horizon": 64,
-        "num_steps": 4,
-        "decode_chunk_size": 16,
-        "seed": 0,
-        "use_ema": True,
-        "camera_step_degrees": 5.0,
-        # Upstream publishes no downloadable weights, so Studio plans by default and
-        # only executes once a checkout plus checkpoint are staged.
-        "plan_only": True,
-        "timeout_seconds": 21600,
-    }
-
-
 def _lingbot_world_v2_default_ref() -> str:
     return resolve._checkpoint_model_ref(
         "lingbot-world-v2-14b-causal-fast",
@@ -1754,59 +1727,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "Vendored NVlabs Causal-rCM streaming runtime (Apache-2.0). Block-causal Wan2.1 distilled to "
             "1-4 steps per chunk; chunk_t selects the streaming schedule. Requires a distilled DiT "
             "checkpoint plus the Wan2.1 VAE and umT5 text encoder."
-        ),
-    },
-    "open-dreamer": {
-        "display_name": "Open Dreamer",
-        "default_model_ref": lambda: str(checkpoint_root_path("open-dreamer")),
-        "default_load_kwargs": _open_dreamer_default_load_kwargs,
-        "default_call_kwargs": _open_dreamer_default_call_kwargs,
-        "default_prompt": "",
-        "default_interactions": ("forward", "forward_camera_l", "forward", "forward_camera_r"),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_task_type": "minecraft-world-rollout",
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "input_mp4",
-            "actions_path",
-            "checkpoint_path",
-            "context_frames",
-            "horizon",
-            "num_steps",
-            "decode_chunk_size",
-            "seed",
-            "parallel_strategy",
-            "use_ema",
-            "no_kv_cache",
-            "camera_step_degrees",
-            "python_executable",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_path",
-            "input_mp4",
-            "actions_path",
-            "python_executable",
-        ),
-        "aliases": ("open_dreamer", "opendreamer", "dreamer-4", "dreamer4"),
-        "tags": ("interactive-world", "minecraft", "action-conditioned", "world-model", "jax"),
-        "notes": (
-            "Dreamer 4 rollout route bound to a user-staged official checkout; upstream is all-rights-reserved, "
-            "so no source is vendored. Requires the checkout, its CUDA-12 JAX environment, and a trained Orbax "
-            "checkpoint. WorldFoundry interactions are rendered into Minecraft/VPT action JSONL."
         ),
     },
     "matrix-game-1": {

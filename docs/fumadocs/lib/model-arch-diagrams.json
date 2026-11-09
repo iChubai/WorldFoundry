@@ -2077,19 +2077,6 @@
       "caption": "Method overview: OmniForcing breaks the latency barrier for joint audio-visual generation. Top: Our framework achieves real-time streaming at ∼ 25 FPS with an ultra-low Time-To-First-Chunk (TTFC) of ∼ 0.7s. Bottom: The bidirectional.",
       "captionZh": "论文方法总览：OmniForcing 的方法架构。"
     },
-    "open-dreamer": {
-      "modelId": "open-dreamer",
-      "paperSrc": "/models/open-dreamer/paper.png",
-      "teaserSrc": "/models/open-dreamer/teaser.png",
-      "teaserAlt": "Official paper teaser: Dreamer 4 learns to solve complex control tasks by reinforcement learning inside of its world model. We decode the imagined training sequences for visualization, showing that the world model has learned to simulate a.",
-      "teaserAltZh": "论文官方 Teaser：Open Dreamer 的交互世界模型论文配图。",
-      "teaserCaption": "Official paper teaser: Dreamer 4 learns to solve complex control tasks by reinforcement learning inside of its world model. We decode the imagined training sequences for visualization, showing that the world model has learned to simulate a.",
-      "teaserCaptionZh": "论文官方 Teaser：Open Dreamer 的交互世界模型论文配图。",
-      "alt": "Training Agents Inside of Scalable World Models",
-      "altZh": "Training Agents Inside of Scalable World Models",
-      "caption": "Training Agents Inside of Scalable World Models",
-      "captionZh": "Training Agents Inside of Scalable World Models"
-    },
     "pi0": {
       "modelId": "pi0",
       "teaserSrc": "/models/pi0/teaser.jpg",

@@ -28,7 +28,6 @@ MODELS = (
     ("mineworld", "mineworld"),
     ("mira", "mira_wm"),
     ("nwm", "nwm"),
-    ("open-dreamer", "open_dreamer"),
     ("oasis-500m", "open_oasis"),
     ("shotstream", "shotstream"),
     ("solarwm", "solarwm"),

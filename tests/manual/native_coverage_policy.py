@@ -25,6 +25,7 @@ _RETIRED_NATIVE_VARIANTS = frozenset(
         "hunyuanworld-voyager@hunyuanworld-voyager",
         "hyworld-worldgen@hyworld-worldgen",
         "irasim@irasim",
+        "open-dreamer@open-dreamer",
         "pandora@pandora",
     }
 )

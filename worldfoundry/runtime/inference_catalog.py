@@ -127,7 +127,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "motionbricks",
         "omniforcing",
         "oasis-500m",
-        "open-dreamer",
         "pointworld",
         "sana-wm",
         "shotstream",

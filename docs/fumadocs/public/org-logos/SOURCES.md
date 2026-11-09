@@ -90,7 +90,6 @@ No file in this directory is a personal GitHub avatar.
 | `oxford.svg` | University of Oxford | https://commons.wikimedia.org/wiki/File:Oxford-University-Circlet.svg | Public domain | benchmark:kinetix, benchmark:likephys, model:vmem |
 | `physical-intelligence.png` | Physical Intelligence | GitHub organization brand avatar (github.com/Physical-Intelligence), pre-existing repo asset | Organization brand mark | model:openpi, model:pi0, model:pi0-fast, model:pi0-worldfoundry, model:pi05, model:real-time-chunking |
 | `pku.svg` | Peking University | https://commons.wikimedia.org/wiki/File:Peking_University_seal.svg | Public domain | benchmark:chronomagic-bench, benchmark:fetv, benchmark:rbench, model:helios, model:open-sora-plan |
-| `reactor.jpg` | Reactor | GitHub organization brand avatar (github.com/reactor-team) | Organization brand mark | model:open-dreamer |
 | `rhymes.png` | Rhymes AI | GitHub organization brand avatar (github.com/rhymes-ai), pre-existing repo asset | Organization brand mark | model:allegro |
 | `riemann-dynamics.png` | Riemann Dynamics | GitHub organization brand avatar (github.com/riemann-dynamics) | Organization brand mark | model:matrix-game-3.5-first-person, model:matrix-game-3.5-third-person |
 | `runway.png` | Runway | GitHub organization brand avatar (github.com/runwayml), pre-existing repo asset | Organization brand mark | model:runway-gen4p5 |

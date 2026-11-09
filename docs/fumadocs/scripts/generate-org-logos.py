@@ -243,13 +243,6 @@ ORGS: dict[str, dict] = {
         "source": "GitHub organization brand avatar (github.com/GalaxyGeneralRobotics)",
         "license": "Organization brand mark",
     },
-    "reactor": {
-        "name": "Reactor",
-        "abbr": "RC",
-        "logo": "reactor.jpg",
-        "source": "GitHub organization brand avatar (github.com/reactor-team)",
-        "license": "Organization brand mark",
-    },
     "dexora": {
         "name": "Dexora",
         "abbr": "DX",
@@ -1272,7 +1265,6 @@ MODEL_ORGS: dict[str, str] = {
     "octo": "berkeley",
     "omnivinci": "nvidia",
     "omniforcing": "omniforcing",
-    "open-dreamer": "reactor",
     "open-magvit2": "tencent",
     "open-sora": "hpcaitech",
     "open-sora-plan": "pku",

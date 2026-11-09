@@ -879,12 +879,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：OmniForcing 的方法架构。",
         ),
     },
-    "open-dreamer": {
-        "teaser": (
-            "Official paper teaser: Dreamer 4 learns to solve complex control tasks by reinforcement learning inside of its world model. We decode the imagined training sequences for visualization, showing that the world model has learned to simulate a.",
-            "论文官方 Teaser：Open Dreamer 的交互世界模型论文配图。",
-        ),
-    },
     "open-magvit2": {
         "overview": (
             "Method overview: Overview of Open-MAGVIT2. There are two crucial stages in Open-MAGVIT2. In Stage I {I} : the image is first encoded by MAGVIT-v2 Encoder and subsequently transformed into bits format by Lookup-Free Quantizer (LFQ)..",

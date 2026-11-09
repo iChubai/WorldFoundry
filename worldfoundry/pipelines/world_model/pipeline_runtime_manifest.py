@@ -385,28 +385,6 @@ class Oasis500MPipeline(WorldModelRuntimePipeline):
         return kwargs
 
 
-class OpenDreamerPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for Open Dreamer (Dreamer 4) visual generation."""
-
-    MODEL_ID = "open-dreamer"
-    RUNTIME_GATED_OPTION_KEYS = ("input_mp4", "actions_path", "checkpoint_path", "python_executable")
-
-    def _promote_call_options(self, kwargs: dict) -> dict:
-        """Derive ``input_mp4`` from a filesystem context clip.
-
-        The runtime plan records only whether a video was supplied, not its path,
-        so a clip passed as ``video=``/``images=`` has to become an explicit
-        option. Decoded frames and PIL images stay untouched.
-        """
-        if not kwargs.get("input_mp4"):
-            for key in ("video", "images"):
-                candidate = kwargs.get(key)
-                if isinstance(candidate, (str, os.PathLike)):
-                    kwargs["input_mp4"] = os.fspath(candidate)
-                    break
-        return kwargs
-
-
 class SanaWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for SanaWM visual generation."""
 
@@ -679,7 +657,6 @@ __all__ = [
     "NWMPipeline",
     "Oasis500MPipeline",
     "OmniForcingPipeline",
-    "OpenDreamerPipeline",
     "PointWorldPipeline",
     "SanaWMPipeline",
     "ShotStreamPipeline",

@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 217,
+  "modelsTotal": 215,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 95,
+      "count": 93,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -463,14 +463,6 @@
         {
           "name": "OmniForcing",
           "url": "https://github.com/OmniForcing/OmniForcing"
-        },
-        {
-          "name": "Open Dreamer",
-          "url": "https://github.com/next-state/open-dreamer"
-        },
-        {
-          "name": "Open Dreamer",
-          "url": "https://github.com/reactor-team/open-dreamer"
         },
         {
           "name": "PointWorld",

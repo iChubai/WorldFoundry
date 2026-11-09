@@ -1,9 +1,16 @@
 # Auto-generated interface file
+# ruff: noqa: B018 - Expression bodies link overloads to their NumPy and Torch implementations.
+import _io
 import numbers
+import os
+import pathlib
+from collections.abc import Iterator
+from math import inf
 from typing import Literal, overload
 
 import numpy as numpy_
 import nvdiffrast.torch
+import scipy
 import torch as torch_
 from typing_extensions import Unpack
 
@@ -156,9 +163,9 @@ __all__ = [
 def sliding_window(
     x: numpy_.ndarray,
     window_size: int | tuple[int, ...],
-    stride: int | tuple[int, ...] | NoneType = None,
-    dilation: int | tuple[int, ...] | NoneType = None,
-    pad_size: int | tuple[int, int] | tuple[tuple[int, int]] | NoneType = None,
+    stride: int | tuple[int, ...] | None = None,
+    dilation: int | tuple[int, ...] | None = None,
+    pad_size: int | tuple[int, int] | tuple[tuple[int, int]] | None = None,
     pad_mode: str = "constant",
     pad_value: numbers.Number = 0,
     axis: tuple[int, ...] | None = None,
@@ -196,9 +203,9 @@ def sliding_window(
 def pooling(
     x: numpy_.ndarray,
     kernel_size: int | tuple[int, ...],
-    stride: int | tuple[int, ...] | NoneType = None,
-    padding: int | tuple[int, int] | tuple[tuple[int, int]] | NoneType = None,
-    axis: int | tuple[int, ...] | NoneType = None,
+    stride: int | tuple[int, ...] | None = None,
+    padding: int | tuple[int, int] | tuple[tuple[int, int]] | None = None,
+    axis: int | tuple[int, ...] | None = None,
     mode: Literal["min", "max", "sum", "mean"] = "max",
 ) -> numpy_.ndarray:
     """Compute the pooling of the input array.
@@ -378,13 +385,13 @@ def group_as_segments(
 @overload
 def perspective_from_fov(
     *,
-    fov_x: float | numpy_.ndarray | NoneType = None,
-    fov_y: float | numpy_.ndarray | NoneType = None,
-    fov_min: float | numpy_.ndarray | NoneType = None,
-    fov_max: float | numpy_.ndarray | NoneType = None,
-    aspect_ratio: float | numpy_.ndarray | NoneType = None,
-    near: float | numpy_.ndarray | NoneType,
-    far: float | numpy_.ndarray | NoneType,
+    fov_x: float | numpy_.ndarray | None = None,
+    fov_y: float | numpy_.ndarray | None = None,
+    fov_min: float | numpy_.ndarray | None = None,
+    fov_max: float | numpy_.ndarray | None = None,
+    aspect_ratio: float | numpy_.ndarray | None = None,
+    near: float | numpy_.ndarray | None,
+    far: float | numpy_.ndarray | None,
 ) -> numpy_.ndarray:
     """Get OpenGL perspective matrix from field of view
 
@@ -409,11 +416,11 @@ def perspective_from_window(
 
 @overload
 def intrinsics_from_fov(
-    fov_x: float | numpy_.ndarray | NoneType = None,
-    fov_y: float | numpy_.ndarray | NoneType = None,
-    fov_max: float | numpy_.ndarray | NoneType = None,
-    fov_min: float | numpy_.ndarray | NoneType = None,
-    aspect_ratio: float | numpy_.ndarray | NoneType = None,
+    fov_x: float | numpy_.ndarray | None = None,
+    fov_y: float | numpy_.ndarray | None = None,
+    fov_max: float | numpy_.ndarray | None = None,
+    fov_min: float | numpy_.ndarray | None = None,
+    aspect_ratio: float | numpy_.ndarray | None = None,
 ) -> numpy_.ndarray:
     """Get normalized OpenCV intrinsics matrix from given field of view.
     You can provide either fov_x, fov_y, fov_max or fov_min and aspect_ratio
@@ -1602,7 +1609,7 @@ def mesh_adjacency_graph(
         "face2edge2face",
         "face2vertex2face",
     ],
-    faces: numpy_.ndarray | scipy.sparse._csr.csr_array | NoneType = None,
+    faces: numpy_.ndarray | scipy.sparse._csr.csr_array | None = None,
     edges: numpy_.ndarray | None = None,
     num_vertices: int | None = None,
     self_loop: bool = False,
@@ -1844,7 +1851,11 @@ def depth_map_edge(
 
 @overload
 def depth_map_aliasing(
-    depth: numpy_.ndarray, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: numpy_.ndarray = None
+    depth: numpy_.ndarray,
+    atol: float | None = None,
+    rtol: float | None = None,
+    kernel_size: int = 3,
+    mask: numpy_.ndarray = None,
 ) -> numpy_.ndarray:
     """Compute the map that indicates the aliasing of x depth map, identifying pixels which neither close to the maximum nor the minimum of its neighbors.
     ## Parameters
@@ -1872,7 +1883,7 @@ def normal_map_edge(
 
 @overload
 def point_map_to_normal_map(
-    point: numpy_.ndarray, mask: numpy_.ndarray = None, edge_threshold: float = None
+    point: numpy_.ndarray, mask: numpy_.ndarray = None, edge_threshold: float | None = None
 ) -> numpy_.ndarray:
     """Calculate normal map from point map. Value range is [-1, 1].
 
@@ -1902,7 +1913,7 @@ def depth_map_to_point_map(
 
 @overload
 def depth_map_to_normal_map(
-    depth: numpy_.ndarray, intrinsics: numpy_.ndarray, mask: numpy_.ndarray = None, edge_threshold: float = None
+    depth: numpy_.ndarray, intrinsics: numpy_.ndarray, mask: numpy_.ndarray = None, edge_threshold: float | None = None
 ) -> numpy_.ndarray:
     """Calculate normal map from depth map. Value range is [-1, 1]. Normal direction in OpenCV identity camera's coordinate system.
 
@@ -2368,7 +2379,7 @@ def write_extrinsics_as_colmap(
     file: str | pathlib._local.Path,
     extrinsics: numpy_.ndarray,
     image_names: str | list[str] = "image_{i:04d}.png",
-    camera_ids: list[int] = None,
+    camera_ids: list[int] | None = None,
 ):
     """Write extrinsics to colmap `images.txt` file.
     ## Parameters
@@ -2457,12 +2468,12 @@ def write_obj(
 def sliding_window(
     x: torch_.Tensor,
     window_size: int | tuple[int, ...],
-    stride: int | tuple[int, ...] | NoneType = None,
-    dilation: int | tuple[int, ...] | NoneType = None,
-    pad_size: int | tuple[int, int] | tuple[tuple[int, int]] | NoneType = None,
+    stride: int | tuple[int, ...] | None = None,
+    dilation: int | tuple[int, ...] | None = None,
+    pad_size: int | tuple[int, int] | tuple[tuple[int, int]] | None = None,
     pad_mode: str = "constant",
     pad_value: numbers.Number = 0,
-    dim: tuple[int, ...] = None,
+    dim: tuple[int, ...] | None = None,
 ) -> torch_.Tensor:
     """Get a sliding window of the input array.
     This function is a wrapper of `torch.nn.functional.unfold` with additional support for padding and stride.
@@ -2495,14 +2506,14 @@ def sliding_window(
 
 @overload
 def masked_min(
-    input: torch_.Tensor, mask: torch_.BoolTensor, dim: int = None, keepdim: bool = False
+    input: torch_.Tensor, mask: torch_.BoolTensor, dim: int | None = None, keepdim: bool = False
 ) -> torch_.Tensor | tuple[torch_.Tensor, torch_.Tensor]:
     """Similar to torch.min, but with mask"""
     utils3d.torch.utils.masked_min
 
 @overload
 def masked_max(
-    input: torch_.Tensor, mask: torch_.BoolTensor, dim: int = None, keepdim: bool = False
+    input: torch_.Tensor, mask: torch_.BoolTensor, dim: int | None = None, keepdim: bool = False
 ) -> torch_.Tensor | tuple[torch_.Tensor, torch_.Tensor]:
     """Similar to torch.max, but with mask"""
     utils3d.torch.utils.masked_max
@@ -2636,13 +2647,13 @@ def group_as_segments(
 @overload
 def perspective_from_fov(
     *,
-    fov_x: float | torch_.Tensor | NoneType = None,
-    fov_y: float | torch_.Tensor | NoneType = None,
-    fov_min: float | torch_.Tensor | NoneType = None,
-    fov_max: float | torch_.Tensor | NoneType = None,
-    aspect_ratio: float | torch_.Tensor | NoneType = None,
-    near: float | torch_.Tensor | NoneType,
-    far: float | torch_.Tensor | NoneType,
+    fov_x: float | torch_.Tensor | None = None,
+    fov_y: float | torch_.Tensor | None = None,
+    fov_min: float | torch_.Tensor | None = None,
+    fov_max: float | torch_.Tensor | None = None,
+    aspect_ratio: float | torch_.Tensor | None = None,
+    near: float | torch_.Tensor | None,
+    far: float | torch_.Tensor | None,
 ) -> torch_.Tensor:
     """Get OpenGL perspective matrix from field of view
 
@@ -2667,11 +2678,11 @@ def perspective_from_window(
 
 @overload
 def intrinsics_from_fov(
-    fov_x: float | torch_.Tensor | NoneType = None,
-    fov_y: float | torch_.Tensor | NoneType = None,
-    fov_max: float | torch_.Tensor | NoneType = None,
-    fov_min: float | torch_.Tensor | NoneType = None,
-    aspect_ratio: float | torch_.Tensor | NoneType = None,
+    fov_x: float | torch_.Tensor | None = None,
+    fov_y: float | torch_.Tensor | None = None,
+    fov_max: float | torch_.Tensor | None = None,
+    fov_min: float | torch_.Tensor | None = None,
+    aspect_ratio: float | torch_.Tensor | None = None,
 ) -> torch_.Tensor:
     """Get normalized OpenCV intrinsics matrix from given field of view.
     You can provide either fov_x, fov_y, fov_max or fov_min and aspect_ratio
@@ -3652,10 +3663,10 @@ def remove_corrupted_faces(faces: torch_.Tensor) -> torch_.Tensor:
 def remove_isolated_pieces(
     vertices: torch_.Tensor,
     faces: torch_.Tensor,
-    connected_components: list[torch_.Tensor] = None,
-    thresh_num_faces: int = None,
-    thresh_radius: float = None,
-    thresh_boundary_ratio: float = None,
+    connected_components: list[torch_.Tensor] | None = None,
+    thresh_num_faces: int | None = None,
+    thresh_radius: float | None = None,
+    thresh_boundary_ratio: float | None = None,
     remove_unreferenced: bool = True,
 ) -> tuple[torch_.Tensor, torch_.Tensor]:
     """Remove isolated pieces of a mesh.
@@ -3925,7 +3936,11 @@ def build_mesh_from_depth_map(
 
 @overload
 def depth_map_edge(
-    depth: torch_.Tensor, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: torch_.Tensor = None
+    depth: torch_.Tensor,
+    atol: float | None = None,
+    rtol: float | None = None,
+    kernel_size: int = 3,
+    mask: torch_.Tensor = None,
 ) -> torch_.BoolTensor:
     """Compute the edge mask of a depth map. The edge is defined as the pixels whose neighbors have a large difference in depth.
 
@@ -3940,7 +3955,11 @@ def depth_map_edge(
 
 @overload
 def depth_map_aliasing(
-    depth: torch_.Tensor, atol: float = None, rtol: float = None, kernel_size: int = 3, mask: torch_.Tensor = None
+    depth: torch_.Tensor,
+    atol: float | None = None,
+    rtol: float | None = None,
+    kernel_size: int = 3,
+    mask: torch_.Tensor = None,
 ) -> torch_.BoolTensor:
     """Compute the map that indicates the aliasing of a depth map. The aliasing is defined as the pixels which neither close to the maximum nor the minimum of its neighbors.
     ## Parameters

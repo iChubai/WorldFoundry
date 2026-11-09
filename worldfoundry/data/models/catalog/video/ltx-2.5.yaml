@@ -44,8 +44,8 @@ checkpoints:
 integration:
   status: integrated
   notes:
-  - WorldFoundry launches the version-pinned official ltx_pipelines.distilled entrypoint
-    in a dedicated environment.
+  - WorldFoundry runs the vendored ltx_pipelines.distilled entrypoint of the pinned
+    revision as a package module in a dedicated environment.
   - Split checkpoint mapping, T2V/I2V conditioning, audio-video output, offload, and
     quantization command contracts are CPU-tested.
   - Local required split components now pass CPU preflight; the two previously incomplete
@@ -76,17 +76,17 @@ docs:
   architecture: The official distilled path encodes prompts with the bundled Gemma
     4 12B text encoder, jointly denoises video and audio at half resolution, applies
     the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement,
-    and decodes through separate video and audio VAEs. WorldFoundry calls that source
-    directly instead of adapting the incompatible LTX-2.3 monolithic loader.
+    and decodes through separate video and audio VAEs. WorldFoundry vendors that source
+    from Lightricks/LTX-2 at a95ab856 instead of adapting the incompatible LTX-2.3 monolithic
+    loader.
   architecture_zh: 官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频
-    VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。
+    VAE 解码。WorldFoundry vendor 了该官方源码（Lightricks/LTX-2，a95ab856），不复用不兼容的 LTX-2.3 单体权重加载器。
   usage_notes: Accept the Hugging Face model terms, download the five required split
-    components while preserving their repository folders, clone the recorded source
-    revision, install its ltx-core and ltx-pipelines dependencies in the dedicated
+    components while preserving their repository folders, create the dedicated ltx-2.5
     environment, and pass execute=True. The optional duration head enables prompt-based
     automatic duration.
-  usage_notes_zh: 请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装
-    ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
+  usage_notes_zh: 请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，并创建独立的 ltx-2.5 环境；执行时显式传入
+    execute=True。可选 duration head 可启用基于提示词的自动时长预测。
   limitations:
   - The checkpoint is gated and approximately 66 GiB for the required distilled components.
   - GPU/MPS artifact and audio-video parity have not yet been validated.

@@ -11,7 +11,6 @@ from worldfoundry.core.io.paths import (
     checkpoint_root_candidates,
     checkpoint_root_path,
     hfd_root_path,
-    official_runtime_repo_path,
 )
 
 from .. import resolve
@@ -346,13 +345,6 @@ def _ltx25_checkpoint_dir() -> str:
     )
 
 
-def _ltx25_source_root() -> str:
-    return resolve._first_existing_path(
-        resolve._project_root() / "cache" / "generative_taxonomy" / "Lightricks--LTX-2",
-        official_runtime_repo_path("Lightricks--LTX-2"),
-    )
-
-
 def _ltx25_python_executable() -> str:
     workspace_root = resolve._project_root().parent
     return resolve._first_existing_path(
@@ -368,7 +360,6 @@ def _ltx25_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "checkpoint_dir": str(checkpoint_dir),
-            "source_root": _ltx25_source_root(),
             "python_executable": _ltx25_python_executable(),
             "transformer_path": str(
                 checkpoint_dir / "diffusion_models" / "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
@@ -4010,7 +4001,7 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
         "aliases": ("ltx2.5", "ltx25", "ltx-2.5-distilled"),
         "tags": ("text-to-video", "image-to-video", "joint-audio-video", "official-runtime"),
-        "notes": "Runs the pinned official LTX-2.5 DistilledPipeline in its dedicated environment.",
+        "notes": "Runs the vendored official LTX-2.5 DistilledPipeline in its dedicated environment.",
     },
 }
 

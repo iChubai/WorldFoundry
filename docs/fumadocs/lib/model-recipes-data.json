@@ -69414,7 +69414,7 @@
         "pipelineTarget": "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
+        "backendStage": "official_in_tree_runtime",
         "runtimeStatus": "command_contract_validated_checkpoint_gpu_pending",
         "environmentId": "ltx-2.5",
         "environmentName": "ltx-2.5",
@@ -69465,12 +69465,12 @@
           "PIL"
         ],
         "notes": [
-          "Prediction never clones source or downloads checkpoints; all source and component paths are preflighted.",
+          "Prediction never downloads checkpoints; the interpreter and all component paths are preflighted.",
           "Uses the official split-checkpoint DistilledPipeline and preserves its joint audio-video output.",
           "DFR, dev checkpoint pipelines, LoRAs, editing, training, UI, server, and upstream evaluation are intentionally excluded.",
-          "The external checkout supplies ltx-core and ltx-pipelines through PYTHONPATH at runtime; prediction does not install or mutate it.",
+          "ltx-core and ltx-pipelines are vendored under worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime and run as package modules.",
           "PyTorch is pinned to an explicit cu128 build so PyPI cannot silently replace the requested CUDA tier with a newer CUDA 13 wheel.",
-          "The recorded upstream revision currently uses its own uv CUDA 13.2 indexes; production environments should sync that checkout when CUDA 13.2 is available. This manifest retains the repository's broadly deployable CUDA 12.8 environment tier.",
+          "The recorded upstream revision pins its own uv CUDA 13.2 indexes; this manifest retains the repository's broadly deployable CUDA 12.8 environment tier.",
           "The optional diffusion VAE natten acceleration and Blackwell ltx-kernels build are deployment-specific and are not required for command-contract validation."
         ]
       },
@@ -69716,12 +69716,12 @@
         }
       ],
       "notes": [
-        "WorldFoundry launches the version-pinned official ltx_pipelines.distilled entrypoint in a dedicated environment.",
+        "WorldFoundry runs the vendored ltx_pipelines.distilled entrypoint of the pinned revision as a package module in a dedicated environment.",
         "Split checkpoint mapping, T2V/I2V conditioning, audio-video output, offload, and quantization command contracts are CPU-tested.",
         "Local required split components now pass CPU preflight; the two previously incomplete large files match the pinned official SHA-256 values. Checkpoint-backed GPU artifact parity remains pending.",
         "Command construction and official split-component mapping are validated without importing upstream CUDA code.",
         "Visual and synchronized-audio quality parity still requires a checkpoint-backed GPU run.",
-        "Prediction never clones source or downloads checkpoints; all source and component paths are preflighted.",
+        "Prediction never downloads checkpoints; the interpreter and all component paths are preflighted.",
         "Uses the official split-checkpoint DistilledPipeline and preserves its joint audio-video output.",
         "DFR, dev checkpoint pipelines, LoRAs, editing, training, UI, server, and upstream evaluation are intentionally excluded."
       ],
@@ -69739,16 +69739,16 @@
           "LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方快速两阶段 DistilledPipeline，支持文生视频、图生视频与同步音频生成。"
         ],
         "architecture": [
-          "The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry calls that source directly instead of adapting the incompatible LTX-2.3 monolithic loader."
+          "The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry vendors that source from Lightricks/LTX-2 at a95ab856 instead of adapting the incompatible LTX-2.3 monolithic loader."
         ],
         "architectureZh": [
-          "官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。"
+          "官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry vendor 了该官方源码（Lightricks/LTX-2，a95ab856），不复用不兼容的 LTX-2.3 单体权重加载器。"
         ],
         "usageNotes": [
-          "Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, clone the recorded source revision, install its ltx-core and ltx-pipelines dependencies in the dedicated environment, and pass execute=True. The optional duration head enables prompt-based automatic duration."
+          "Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, create the dedicated ltx-2.5 environment, and pass execute=True. The optional duration head enables prompt-based automatic duration."
         ],
         "usageNotesZh": [
-          "请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。"
+          "请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，并创建独立的 ltx-2.5 环境；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。"
         ],
         "highlights": [
           "Text To Video",

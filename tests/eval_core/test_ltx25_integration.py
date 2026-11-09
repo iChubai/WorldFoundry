@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import sys
 from importlib import import_module
 from pathlib import Path
@@ -9,6 +10,7 @@ import pytest
 from worldfoundry.evals.api import WorldModelConfig
 from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec, load_pipeline_from_spec
 from worldfoundry.synthesis.visual_generation.ltx25 import LTX25DistilledRuntime
+from worldfoundry.synthesis.visual_generation.ltx25.runtime import PIPELINE_MODULE
 from worldfoundry.zoo.bindings import load_pipeline_binding
 from worldfoundry.zoo.catalog import load_model_catalog_manifest
 from worldfoundry.zoo.runtime.environments import load_runtime_environment_profile
@@ -29,15 +31,7 @@ def _import_target(target: str) -> object:
     return getattr(import_module(module_name), attribute)
 
 
-def _ltx25_fixture(tmp_path: Path) -> tuple[Path, Path]:
-    source = tmp_path / "LTX-2"
-    pipelines = source / "packages" / "ltx-pipelines" / "src" / "ltx_pipelines"
-    core = source / "packages" / "ltx-core" / "src" / "ltx_core"
-    _write(pipelines / "__init__.py", "")
-    _write(core / "__init__.py", "")
-    _write(
-        pipelines / "distilled.py",
-        """\
+_FIXTURE_RUNNER = """\
 import argparse
 from pathlib import Path
 
@@ -47,8 +41,10 @@ args, _ = parser.parse_known_args()
 output = Path(args.output_path)
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_bytes(b"ltx-2.5-audio-video-fixture")
-""",
-    )
+"""
+
+
+def _ltx25_fixture(tmp_path: Path) -> Path:
     checkpoint = tmp_path / "Lightricks--LTX-2.5"
     for relative in (
         "diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors",
@@ -59,7 +55,7 @@ output.write_bytes(b"ltx-2.5-audio-video-fixture")
         "model_patches/ltx-2.5-duration-head-bf16.safetensors",
     ):
         _write(checkpoint / relative)
-    return source, checkpoint
+    return checkpoint
 
 
 def test_ltx25_catalog_binding_profile_and_environment_are_wired() -> None:
@@ -97,11 +93,19 @@ def test_ltx25_pipeline_loads_from_standard_runner_spec() -> None:
     assert pipeline.preflight()["status"] == "blocked"
 
 
+def test_ltx25_vendored_entrypoint_is_a_package_module() -> None:
+    assert PIPELINE_MODULE == "worldfoundry.synthesis.visual_generation.ltx25.ltx25_runtime.ltx_pipelines.distilled"
+    spec = importlib.util.find_spec(PIPELINE_MODULE)
+
+    assert spec is not None
+    assert spec.origin is not None
+    assert Path(spec.origin).is_relative_to(REPO_ROOT / "worldfoundry")
+
+
 def test_ltx25_runtime_supports_text_only_and_auto_duration(tmp_path: Path) -> None:
-    source, checkpoint = _ltx25_fixture(tmp_path)
+    checkpoint = _ltx25_fixture(tmp_path)
     runtime = LTX25DistilledRuntime(
         checkpoint_dir=checkpoint,
-        source_root=source,
         python_executable=Path(sys.executable),
         device="cuda",
     )

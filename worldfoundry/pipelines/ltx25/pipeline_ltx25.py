@@ -38,6 +38,7 @@ def _pop_runner_metadata(options: dict[str, Any]) -> None:
         "runner",
         "runner_target",
         "install_profile",
+        "acquisition_root",
     ):
         options.pop(key, None)
 
@@ -100,11 +101,7 @@ class LTX25Pipeline(PipelineABC):
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
         _pop_runner_metadata(options)
         python_executable = _python_executable(options)
-        acquisition_root = options.pop("acquisition_root", None)
         hf_models_root = options.pop("hf_models_root", None)
-        source_root = options.pop("source_root", options.pop("repo_root", options.pop("runtime_root", None)))
-        if source_root is None and acquisition_root is not None:
-            source_root = Path(acquisition_root).expanduser() / "Lightricks--LTX-2"
         checkpoint_dir = options.pop(
             "checkpoint_dir",
             options.pop(
@@ -116,7 +113,6 @@ class LTX25Pipeline(PipelineABC):
             checkpoint_dir = Path(hf_models_root).expanduser() / "Lightricks--LTX-2.5"
         runtime = LTX25DistilledRuntime(
             checkpoint_dir=checkpoint_dir,
-            source_root=source_root,
             python_executable=python_executable,
             transformer_path=options.pop("transformer_path", None),
             text_encoder_path=options.pop("text_encoder_path", None),
@@ -195,8 +191,8 @@ class LTX25Pipeline(PipelineABC):
             "artifact_kind": "generated_video",
             "artifact_path": resolved_artifact,
             "artifact_files": generated_files,
-            "runtime": "ltx_2_5.official_external_runtime",
-            "backend_quality": "official_external_runtime",
+            "runtime": "ltx_2_5.official_in_tree_runtime",
+            "backend_quality": "official_in_tree_runtime",
             "request": request,
             "preflight": preflight,
             "runtime_result": run_result,

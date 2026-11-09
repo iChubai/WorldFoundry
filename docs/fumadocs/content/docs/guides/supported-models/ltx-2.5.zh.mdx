@@ -17,7 +17,7 @@ LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方�
 
 `ltx-2.5` 是记录的文本/图像到视频线。需要同一张卡片上同时有 prompt 与静帧条件时用它。
 
-官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。该模型由Lightricks发布。
+官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry vendor 了该官方源码（Lightricks/LTX-2，a95ab856），不复用不兼容的 LTX-2.3 单体权重加载器。该模型由Lightricks发布。
 
 catalog 记录的任务包括 文生视频、图生视频、音视频联合生成。别名包括 `ltx2.5`、`ltx25`、`ltx-2.5-distilled`。模态上，它接受文本、图像，输出视频。
 
@@ -31,7 +31,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LTX25Pipelin
 
 系列状态：**Runner 一致性待确认**。
 
-请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。 可选 duration head 可启用基于提示词的自动时长预测。
+请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，并创建独立的 ltx-2.5 环境；执行时显式传入 execute=True。 可选 duration head 可启用基于提示词的自动时长预测。
 
 Command construction and official split-component mapping are validated without importing upstream CUDA code.
 

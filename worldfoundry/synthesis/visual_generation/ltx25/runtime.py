@@ -1,10 +1,11 @@
-"""Official-subprocess runtime for LTX-2.5 distilled inference.
+"""Runtime for LTX-2.5 distilled inference through the vendored ``ltx_pipelines`` package.
 
 LTX-2.5 uses split component checkpoints and Gemma 4, so it cannot be loaded
-through WorldFoundry's older LTX-2/2.3 native checkpoint recipe.  This adapter
-keeps the version-pinned official source and its environment external while
-giving WorldFoundry a deterministic preflight, command plan, logs, and artifact
-contract.  Prediction never clones source or downloads weights.
+through WorldFoundry's older LTX-2/2.3 native checkpoint recipe.  The pinned
+official ``ltx_core`` and ``ltx_pipelines`` sources live in ``ltx25_runtime``;
+this adapter runs their distilled entrypoint as a package module in the
+dedicated environment and gives WorldFoundry a deterministic preflight, command
+plan, logs, and artifact contract.  Prediction never downloads weights.
 """
 
 from __future__ import annotations
@@ -19,13 +20,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.runtime.assets import expand_worldfoundry_path, local_file_is_ready
 from worldfoundry.runtime.env import resolve_hfd_root
 
-PROJECT_ROOT = Path(__file__).resolve().parents[4]
+PIPELINE_MODULE = "worldfoundry.synthesis.visual_generation.ltx25.ltx25_runtime.ltx_pipelines.distilled"
 UPSTREAM_REVISION = "a95ab856bf29407b6b066ede0abe1846050db56c"
 CHECKPOINT_REVISION = "bf86adedf518142442575d1ce2e767b7d01c8c76"
-DEFAULT_SOURCE_ROOT = PROJECT_ROOT / "cache" / "generative_taxonomy" / "Lightricks--LTX-2"
 DEFAULT_CHECKPOINT_ROOT = resolve_hfd_root() / "Lightricks--LTX-2.5"
 
 DEFAULT_COMPONENTS = {
@@ -107,7 +108,7 @@ def _conditioning_images(value: Any) -> list[dict[str, Any]]:
 
 @dataclass(frozen=True)
 class LTX25RuntimePlan:
-    """Serializable launch plan for one official LTX-2.5 inference process."""
+    """Serializable launch plan for one LTX-2.5 inference process."""
 
     command: tuple[str, ...]
     env: Mapping[str, str]
@@ -129,13 +130,12 @@ class LTX25RuntimePlan:
 
 
 class LTX25DistilledRuntime:
-    """Launch the official LTX-2.5 ``DistilledPipeline`` for T2V or I2V."""
+    """Launch the vendored official LTX-2.5 ``DistilledPipeline`` for T2V or I2V."""
 
     def __init__(
         self,
         checkpoint_dir: str | Path | None = None,
         *,
-        source_root: str | Path | None = None,
         python_executable: str | Path | None = None,
         transformer_path: str | Path | None = None,
         text_encoder_path: str | Path | None = None,
@@ -149,7 +149,6 @@ class LTX25DistilledRuntime:
         diffvae_optimization: str = "chunked_eager",
         device: str = "cuda",
     ) -> None:
-        self.source_root = _expand_path(source_root or os.getenv("LTX2_ROOT")) or DEFAULT_SOURCE_ROOT
         self.checkpoint_dir = _expand_path(checkpoint_dir) or DEFAULT_CHECKPOINT_ROOT
         self.python_executable = _python_path(python_executable)
         self.device = str(device)
@@ -174,14 +173,6 @@ class LTX25DistilledRuntime:
         self.prompt_enhancer_gemma_root = _expand_path(prompt_enhancer_gemma_root)
 
     @property
-    def _runtime_files(self) -> tuple[Path, ...]:
-        return (
-            self.source_root / "packages" / "ltx-pipelines" / "src" / "ltx_pipelines" / "distilled.py",
-            self.source_root / "packages" / "ltx-core" / "src" / "ltx_core" / "__init__.py",
-            self.python_executable,
-        )
-
-    @property
     def _required_checkpoint_files(self) -> tuple[Path, ...]:
         return (
             self.transformer_path,
@@ -192,15 +183,7 @@ class LTX25DistilledRuntime:
         )
 
     def _runtime_env(self) -> dict[str, str]:
-        roots = (
-            self.source_root / "packages" / "ltx-pipelines" / "src",
-            self.source_root / "packages" / "ltx-core" / "src",
-        )
-        python_path = os.pathsep.join(
-            [*(str(path) for path in roots), *(value for value in (os.environ.get("PYTHONPATH"),) if value)]
-        )
         env = {
-            "PYTHONPATH": python_path,
             "PYTHONUNBUFFERED": "1",
             "TOKENIZERS_PARALLELISM": "false",
         }
@@ -214,7 +197,8 @@ class LTX25DistilledRuntime:
         incomplete_checkpoint = [
             str(path) for path in self._required_checkpoint_files if path.is_file() and not local_file_is_ready(path)
         ]
-        missing_runtime = [str(path) for path in self._runtime_files if not path.is_file()]
+        interpreter = self.python_executable
+        missing_runtime = [] if interpreter.is_file() else [str(interpreter)]
         ffmpeg = shutil.which("ffmpeg")
         device_ready = self.device.lower().startswith(("cuda", "mps"))
         ready = (
@@ -230,7 +214,6 @@ class LTX25DistilledRuntime:
             "status": "ready" if ready else "blocked",
             "model_id": "ltx-2.5",
             "pipeline": "ltx_pipelines.distilled",
-            "source_root": str(self.source_root),
             "checkpoint_dir": str(self.checkpoint_dir),
             "python_executable": str(self.python_executable),
             "component_paths": {name: str(getattr(self, name)) for name in DEFAULT_COMPONENTS},
@@ -274,10 +257,7 @@ class LTX25DistilledRuntime:
         if quantization not in {None, "fp8-cast", "fp8-scaled-mm", "nvfp4-cast", "nvfp4-prequant"}:
             raise ValueError("Unsupported LTX-2.5 quantization policy.")
 
-        command = [
-            str(self.python_executable),
-            "-m",
-            "ltx_pipelines.distilled",
+        arguments = [
             "--transformer-path",
             str(self.transformer_path),
             "--text-encoder-path",
@@ -310,15 +290,15 @@ class LTX25DistilledRuntime:
             num_frames = int(request.get("num_frames", 121))
             if num_frames < 1 or (num_frames - 1) % 8:
                 raise ValueError("LTX-2.5 num_frames must satisfy num_frames = 8 * k + 1.")
-            _append_value(command, "--num-frames", num_frames)
+            _append_value(arguments, "--num-frames", num_frames)
         else:
             if not self.duration_head_path.is_file():
                 raise FileNotFoundError(f"LTX-2.5 auto_duration requires duration_head_path: {self.duration_head_path}")
             if not isinstance(auto_duration, Sequence) or len(auto_duration) != 2:
                 raise ValueError("LTX-2.5 auto_duration must contain [min_seconds, max_seconds].")
-            command.extend(("--auto-duration", str(float(auto_duration[0])), str(float(auto_duration[1]))))
+            arguments.extend(("--auto-duration", str(float(auto_duration[0])), str(float(auto_duration[1]))))
         if self.duration_head_path.is_file():
-            _append_value(command, "--duration-head-path", self.duration_head_path)
+            _append_value(arguments, "--duration-head-path", self.duration_head_path)
 
         for image in images:
             values = [
@@ -329,21 +309,21 @@ class LTX25DistilledRuntime:
             ]
             if image["crf"] is not None:
                 values.append(str(int(image["crf"])))
-            command.extend(values)
+            arguments.extend(values)
 
-        _append_value(command, "--quantization", quantization)
+        _append_value(arguments, "--quantization", quantization)
         if bool(request.get("enhance_prompt", False)):
             if self.prompt_enhancer_gemma_root is None or not self.prompt_enhancer_gemma_root.is_dir():
                 raise FileNotFoundError("LTX-2.5 enhance_prompt requires a local prompt_enhancer_gemma_root.")
-            command.extend(("--enhance-prompt", "--prompt-enhancer-gemma-root", str(self.prompt_enhancer_gemma_root)))
+            arguments.extend(("--enhance-prompt", "--prompt-enhancer-gemma-root", str(self.prompt_enhancer_gemma_root)))
         generated_keyframes = int(request.get("num_generated_keyframes", 0))
         if generated_keyframes:
-            _append_value(command, "--num-generated-keyframes", generated_keyframes)
+            _append_value(arguments, "--num-generated-keyframes", generated_keyframes)
 
         return LTX25RuntimePlan(
-            command=tuple(command),
+            command=tuple(package_module_command(PIPELINE_MODULE, arguments, python_executable=self.python_executable)),
             env=self._runtime_env(),
-            workdir=str(self.source_root),
+            workdir=str(output.parent),
             output_path=str(output),
             task="image-to-video" if images else "text-to-video",
         )
@@ -408,7 +388,7 @@ __all__ = [
     "CHECKPOINT_REVISION",
     "DEFAULT_CHECKPOINT_ROOT",
     "DEFAULT_COMPONENTS",
-    "DEFAULT_SOURCE_ROOT",
+    "PIPELINE_MODULE",
     "UPSTREAM_REVISION",
     "LTX25DistilledRuntime",
     "LTX25RuntimePlan",

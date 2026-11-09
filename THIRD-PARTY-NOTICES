@@ -1266,6 +1266,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+LTX-2.5 inference runtime
+-------------------------
+Source: https://github.com/Lightricks/LTX-2/tree/a95ab856bf29407b6b066ede0abe1846050db56c
+Files: worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime/**
+License: ltx_core and ltx_pipelines are Derivatives of LTX-2.x and are distributed under the
+LTX-2.x Community License Agreement (August 11, 2026), whose text is reproduced in the SolarWM
+inference runtime block below, including the use-based restrictions of Section 4 and
+Attachment A. Every file in the runtime directory was modified by WorldFoundry; its
+PROVENANCE.md lists the changes.
+
 SolarWM inference runtime
 -------------------------
 Source: https://github.com/Junchao-cs/SolarWM/tree/2fe1ea9aca072f787bbba07ee9380b0e1ea7563b

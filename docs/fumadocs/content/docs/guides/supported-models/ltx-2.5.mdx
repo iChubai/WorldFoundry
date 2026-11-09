@@ -17,7 +17,7 @@ Code: [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2).
 
 `ltx-2.5` is the recorded text/image-to-video line. Use it when you want both prompt and still conditioning on the same catalog card.
 
-The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry calls that source directly instead of adapting the incompatible LTX-2.3 monolithic loader. It is published by Lightricks.
+The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry vendors that source from Lightricks/LTX-2 at a95ab856 instead of adapting the incompatible LTX-2.3 monolithic loader. It is published by Lightricks.
 
 Catalog tasks include text-to-video, image-to-video, and audio-video-generation. Catalog aliases include `ltx2.5`, `ltx25`, and `ltx-2.5-distilled`. Documented modalities: text and image in, video out.
 
@@ -33,7 +33,7 @@ CLI task profiles: `interactive-video`. WorldFoundry binds `LTX25Pipeline`.
 
 Family status: **Runner parity pending**.
 
-Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, clone the recorded source revision, install its ltx-core and ltx-pipelines dependencies in the dedicated environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
+Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, create the dedicated ltx-2.5 environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
 
 Command construction and official split-component mapping are validated without importing upstream CUDA code.
 

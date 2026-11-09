@@ -26,7 +26,7 @@ def test_ltx25_default_variant_maps_the_complete_official_runtime() -> None:
     }
 
     required = entry.default_load_kwargs["required_components"]
-    assert Path(required["source_root"]).name == "Lightricks--LTX-2"
+    assert "source_root" not in required
     assert Path(required["python_executable"]).parts[-4:] == (
         "envs",
         "ltx-2.5",

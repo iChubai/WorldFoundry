@@ -29,6 +29,7 @@ from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.core.attention.cache.kv_cache_policy import SlidingWindowPolicy
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict, instantiate
 from worldfoundry.core.distributed.runtime.logging import log
@@ -692,7 +693,7 @@ def parse_arguments() -> argparse.Namespace:
     if args.kv_cache_policy == "sliding_window":
         # Fail before loading model/checkpoint assets when the requested cache
         # budget cannot possibly retain the current causal chunk.
-        SlidingWindowPolicy(  # noqa: F821 - Name is undefined in the upstream source.
+        SlidingWindowPolicy(
             window_blocks=args.kv_cache_window_blocks,
             sink_blocks=args.kv_cache_sink_blocks,
         )

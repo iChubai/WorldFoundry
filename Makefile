@@ -142,6 +142,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
+	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \
 	tests/base_models/diffusion_model/test_build_purpose.py \
 	tests/synthesis/test_inspatio_v15_tensors.py \

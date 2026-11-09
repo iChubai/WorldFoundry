@@ -53,13 +53,7 @@ def test_official_video_runtime_skips_incomplete_checkpoint_candidate(tmp_path):
 
 
 def test_worldgen_lora_resolves_normalized_hugging_face_directory(monkeypatch, tmp_path):
-    runtime_src = (
-        Path(__file__).resolve().parents[2] / "worldfoundry/synthesis/visual_generation/worldgen/worldgen_runtime/src"
-    )
-    shims = Path(__file__).resolve().parents[2] / "worldfoundry/base_models/three_dimensions/three_d_four_d/shims"
-    monkeypatch.syspath_prepend(str(shims))
-    monkeypatch.syspath_prepend(str(runtime_src))
-    from worldgen import pano_gen  # ty: ignore[import-not-found]  # importable after the sys.path entries above
+    from worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.src.worldgen import pano_gen
 
     checkpoint = tmp_path / "LeoXie--WorldGen" / "models--WorldGen-Flux-Lora" / "worldgen_text2scene.safetensors"
     checkpoint.parent.mkdir(parents=True)
@@ -70,13 +64,7 @@ def test_worldgen_lora_resolves_normalized_hugging_face_directory(monkeypatch, t
 
 
 def test_worldgen_direct_panorama_skips_flux_initialization(monkeypatch):
-    runtime_src = (
-        Path(__file__).resolve().parents[2] / "worldfoundry/synthesis/visual_generation/worldgen/worldgen_runtime/src"
-    )
-    shims = Path(__file__).resolve().parents[2] / "worldfoundry/base_models/three_dimensions/three_d_four_d/shims"
-    monkeypatch.syspath_prepend(str(shims))
-    monkeypatch.syspath_prepend(str(runtime_src))
-    from worldgen import (  # ty: ignore[import-not-found]  # importable after the sys.path entries above
+    from worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.src.worldgen import (
         worldgen as worldgen_module,
     )
 
@@ -428,11 +416,9 @@ def test_mvdiffusion_plan_forwards_steps_and_skips_missing_prompt_file(tmp_path)
 
     assert CURATED_OVERRIDES["mvdiffusion"]["default_call_kwargs"]["steps"] == 20
 
-    source_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d/mvdiffusion/mvdiffusion_runtime"
     image = REPO_ROOT / "worldfoundry/data/test_cases/mvdiffusion/outpaint_example.png"
     runtime = ThreeDFourDRuntimeSynthesis(
         spec=three_d_four_d_runtime_spec("mvdiffusion"),
-        source_root=source_root,
         device="cuda",
         options={"steps": 1, "text_path": "assets/prompts.txt", "gen_video": True},
     )

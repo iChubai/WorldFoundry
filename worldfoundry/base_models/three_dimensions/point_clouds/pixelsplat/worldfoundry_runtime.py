@@ -12,8 +12,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import hfd_root_path, package_data_path
-from worldfoundry.core.io.paths import package_module_root as package_root
 
 
 def _resolve_hfd_root() -> Path:
@@ -21,6 +21,7 @@ def _resolve_hfd_root() -> Path:
 
 
 DEFAULT_PIXELSPLAT_CKPT = _resolve_hfd_root() / "dylanebert--pixelSplat" / "re10k.ckpt"
+INFERENCE_MODULE = "worldfoundry.base_models.three_dimensions.point_clouds.pixelsplat.src.inference"
 _PIXELSPLAT_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "pixelsplat")
 DEFAULT_PIXELSPLAT_ASSET_ROOT = _PIXELSPLAT_CONFIG_ROOT / "assets"
 DEFAULT_PIXELSPLAT_INDEX = DEFAULT_PIXELSPLAT_ASSET_ROOT / "evaluation_index_re10k.json"
@@ -85,14 +86,6 @@ class PixelSplatRuntime:
             experiment=str(options.get("experiment") or "re10k"),
             index_path=options.get("index_path") or DEFAULT_PIXELSPLAT_DEMO_INDEX,
         )
-
-    @staticmethod
-    def _runtime_root() -> Path:
-        return package_root("worldfoundry.base_models.three_dimensions.point_clouds.pixelsplat")
-
-    @staticmethod
-    def _base_source_root() -> Path:
-        return Path(__file__).resolve().parent
 
     def _resolve_checkpoint(self) -> Path:
         if self.checkpoint_path:
@@ -198,13 +191,7 @@ class PixelSplatRuntime:
         return stage_root, evaluation_index, [str(path) for path in selected]
 
     def _runtime_env(self) -> dict[str, str]:
-        runtime_root = self._runtime_root()
         env = os.environ.copy()
-        python_path = env.get("PYTHONPATH")
-        paths = [str(package_root("worldfoundry").parent), str(self._base_source_root()), str(runtime_root)]
-        if python_path:
-            paths.append(python_path)
-        env["PYTHONPATH"] = os.pathsep.join(paths)
         env["WORLDFOUNDRY_PIXELSPLAT_RUNTIME_CONFIG_ROOT"] = str(_PIXELSPLAT_CONFIG_ROOT)
         env["WORLDFOUNDRY_PIXELSPLAT_ASSET_ROOT"] = str(DEFAULT_PIXELSPLAT_ASSET_ROOT)
         env["WORLDFOUNDRY_PIXELSPLAT_INFERENCE"] = "1"
@@ -228,7 +215,6 @@ class PixelSplatRuntime:
         if not checkpoint_path.is_file():
             raise FileNotFoundError(f"pixelSplat checkpoint not found: {checkpoint_path}")
 
-        runtime_root = self._runtime_root()
         output_dir = Path(kwargs.get("output_dir") or Path.cwd() / "pixelsplat")
         output_dir = output_dir.expanduser().resolve()
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -266,8 +252,8 @@ class PixelSplatRuntime:
         overrides.extend(str(item) for item in kwargs.get("overrides", ()))
 
         python = str(kwargs.get("python_executable") or sys.executable)
-        command = [python, "-m", "src.inference", *overrides]
-        subprocess.run(command, cwd=str(runtime_root), env=self._runtime_env(), check=True)
+        command = package_module_command(INFERENCE_MODULE, overrides, python_executable=python)
+        subprocess.run(command, cwd=str(output_dir), env=self._runtime_env(), check=True)
 
         model_candidates = [
             path

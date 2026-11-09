@@ -5,9 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch.nn as nn
-from models.layers.attention import Attention
 
 from worldfoundry.core.nn.blocks.layers import Mlp
+
+from .attention import Attention
 
 #################################################################################
 #                             Renderer Block Classes                            #

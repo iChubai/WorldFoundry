@@ -1,3 +1,5 @@
+"""Quaternion and rotation-matrix conversions used by the WorldGen runtime."""
+
 from __future__ import annotations
 
 import torch
@@ -6,8 +8,8 @@ import torch
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """Convert real-first quaternions to rotation matrices.
 
-    This mirrors the small PyTorch3D transform subset WorldGen imports at
-    inference time, avoiding a full compiled PyTorch3D dependency for demo runs.
+    These mirror the PyTorch3D transforms WorldGen uses at inference time,
+    so the runtime does not need a compiled PyTorch3D installation.
     """
     q = quaternions
     if q.shape[-1] != 4:

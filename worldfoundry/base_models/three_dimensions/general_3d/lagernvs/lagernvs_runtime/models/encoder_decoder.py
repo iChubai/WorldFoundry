@@ -4,25 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import sys
-from pathlib import Path
 
 import einops
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.renderer import Renderer
 
-_THIS_FILE = Path(__file__).resolve()
-for _path in (
-    _THIS_FILE.parents[7],
-    _THIS_FILE.parents[4] / "point_clouds" / "vggt",
-):
-    _path_str = str(_path)
-    if _path_str not in sys.path:
-        sys.path.insert(0, _path_str)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.models.vggt import VGGT
 
-from vggt.models.vggt import VGGT  # noqa: E402 - Follows the sys.path setup.
+from .renderer import Renderer
 
 # Main model file
 # Consists of

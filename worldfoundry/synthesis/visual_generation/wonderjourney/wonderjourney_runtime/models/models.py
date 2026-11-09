@@ -33,15 +33,9 @@ from torchvision.transforms import (  # noqa: E402 - Follows a module-level setu
     ToPILImage,
     ToTensor,
 )
-from util.midas_utils import (  # noqa: E402 - Follows a module-level setup call, as upstream.
-    dpt_512_transform,
-    dpt_transform,
-)
-from util.segment_utils import (  # noqa: E402 - Follows a module-level setup call, as upstream.
-    refine_disp_with_segments,
-    save_sam_anns,
-)
-from util.utils import functbl, save_depth_map  # noqa: E402 - Follows a module-level setup call, as upstream.
+from ..util.midas_utils import dpt_512_transform, dpt_transform  # noqa: E402 - Follows a module-level setup call, as upstream.
+from ..util.segment_utils import refine_disp_with_segments, save_sam_anns  # noqa: E402 - Follows a module-level setup call, as upstream.
+from ..util.utils import functbl, save_depth_map  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 BG_COLOR = (1, 0, 0)
 

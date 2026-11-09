@@ -1,15 +1,12 @@
 import os
-import sys
+import uuid
 
 import cv2
 import numpy as np
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import uuid
-
-import lib.Equirec2Perspec as E2P
-import lib.multi_Perspec2Equirec as m_P2E
 from tqdm import tqdm
+
+from .lib import Equirec2Perspec as E2P
+from .lib import multi_Perspec2Equirec as m_P2E
 
 
 def generate_video(image_paths, out_dir, gen_video=True):

@@ -6,7 +6,7 @@ from .utils.general_utils import cube_to_pano, pano_to_cube
 
 
 def build_inpaint_model(device: torch.device = "cuda"):
-    from worldgen.models.inpaint_model import LaMa
+    from .models.inpaint_model import LaMa
 
     model = LaMa(device=device)
     return model

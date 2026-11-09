@@ -205,7 +205,7 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "pixelsplat",
         "three_dimensions/point_clouds/pixelsplat",
         ("media",),
-        "three_dimensions/point_clouds/pixelsplat/decoder_splatting_cuda.py",
+        "three_dimensions/point_clouds/pixelsplat/src/model/decoder/decoder_splatting_cuda.py",
     ),
     _cap(
         "vggt",

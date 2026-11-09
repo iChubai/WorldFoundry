@@ -9,16 +9,10 @@ import time
 import einops
 import torch
 import torch.nn as nn
-from models.layers.embeddings import (
-    PatchEmbed,
-    init_weights_normal,
-)
-from models.layers.final_layer import FinalLayer
-from models.layers.renderer_blocks import (
-    BidirectionalCrossAttentionBlock,
-    CrossAttentionBlock,
-    FullAttentionBlock,
-)
+
+from .layers.embeddings import PatchEmbed, init_weights_normal
+from .layers.final_layer import FinalLayer
+from .layers.renderer_blocks import BidirectionalCrossAttentionBlock, CrossAttentionBlock, FullAttentionBlock
 
 
 class Renderer(nn.Module):

@@ -1,3 +1,10 @@
+"""Subprocess adapter for the in-tree 3D/4D model runtimes.
+
+Each runtime keeps its upstream command-line entrypoint as a module of a vendored
+package under ``worldfoundry`` and runs it as ``python -m`` in the model's
+environment.
+"""
+
 from __future__ import annotations
 
 import json
@@ -14,16 +21,17 @@ from typing import Any
 
 import yaml
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import REPO_ROOT, package_data_path
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
-from worldfoundry.zoo.runtime.profiles import load_runtime_profile
+
+_PACKAGE_ROOT = Path(__file__).resolve().parents[3]
 
 
 @dataclass(frozen=True)
 class ThreeDFourDRuntimeSpec:
     model_id: str
     display_name: str
-    repo_names: tuple[str, ...]
     entrypoint: str
     command_kind: str
     artifact_kind: str
@@ -47,7 +55,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
     "lagernvs": ThreeDFourDRuntimeSpec(
         model_id="lagernvs",
         display_name="LagrNVS",
-        repo_names=("lagernvs",),
         entrypoint="minimal_inference.py",
         command_kind="lagernvs_minimal",
         artifact_kind="generated_video",
@@ -59,7 +66,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
     "mvdiffusion": ThreeDFourDRuntimeSpec(
         model_id="mvdiffusion",
         display_name="MVDiffusion",
-        repo_names=("MVDiffusion", "mvdiffusion"),
         entrypoint="demo.py",
         command_kind="mvdiffusion_demo",
         artifact_kind="generated_image",
@@ -71,7 +77,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
     "wonderjourney": ThreeDFourDRuntimeSpec(
         model_id="wonderjourney",
         display_name="WonderJourney",
-        repo_names=("WonderJourney", "wonderjourney"),
         entrypoint="run.py",
         command_kind="wonderjourney_run",
         artifact_kind="generated_world",
@@ -84,7 +89,6 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
     "worldgen": ThreeDFourDRuntimeSpec(
         model_id="worldgen",
         display_name="WorldGen",
-        repo_names=("WorldGen", "worldgen"),
         entrypoint="inference.py",
         command_kind="worldgen_inference",
         artifact_kind="generated_3d_asset",
@@ -104,6 +108,16 @@ IN_TREE_RUNTIME_DIRS: Mapping[str, tuple[str, ...]] = {
 }
 
 
+def runtime_dir(spec: ThreeDFourDRuntimeSpec) -> Path:
+    """Directory of the vendored runtime package that holds ``spec.entrypoint``."""
+    return _PACKAGE_ROOT.joinpath(*IN_TREE_RUNTIME_DIRS[spec.model_id])
+
+
+def runtime_module(spec: ThreeDFourDRuntimeSpec) -> str:
+    """Dotted package module of ``spec.entrypoint``."""
+    return ".".join(("worldfoundry", *IN_TREE_RUNTIME_DIRS[spec.model_id], Path(spec.entrypoint).stem))
+
+
 class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
     """Subprocess adapter for 3D/4D repository inference entrypoints."""
 
@@ -113,7 +127,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         self,
         *,
         spec: ThreeDFourDRuntimeSpec,
-        source_root: Path | None,
         device: str = "cuda",
         options: Mapping[str, Any] | None = None,
     ) -> None:
@@ -122,7 +135,8 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         self.profile = spec
         self.model_id = spec.model_id
         self.model_name = spec.display_name
-        self.source_root = source_root
+        self.runtime_dir = runtime_dir(spec)
+        self.module = runtime_module(spec)
         self.device = device
         self.options = dict(options or {})
 
@@ -137,18 +151,13 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
     ) -> ThreeDFourDRuntimeSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
-        if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
-            options["source_root"] = str(pretrained_model_path)
         options.update(kwargs)
         resolved_model_id = str(options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID or "")
         if not resolved_model_id:
             raise ValueError("ThreeDFourDRuntimeSynthesis requires model_id/profile_id.")
         spec = three_d_four_d_runtime_spec(resolved_model_id)
-        profile = load_runtime_profile(resolved_model_id, check_conda_env_exists=False)
-        source_root = _resolve_source_root(spec, options, profile.source_repos)
         return cls(
             spec=spec,
-            source_root=source_root,
             device=str(device or options.get("device") or "cuda"),
             options=options,
         )
@@ -182,8 +191,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             "fps": fps,
             "device": self.device,
             "options": _jsonable({**self.options, **kwargs}),
-            "source_root": str(self.source_root) if self.source_root is not None else "",
-            "entrypoint": str(self.entrypoint) if self.entrypoint is not None else "",
+            "module": self.module,
         }
         command = self._build_command(context, kwargs)
         plan_path = run_dir / "subprocess_runtime_plan.json"
@@ -192,8 +200,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             "model_id": self.model_id,
             "display_name": self.model_name,
             "source_repo_url": self.spec.source_repo_url,
-            "source_root": context["source_root"],
-            "entrypoint": context["entrypoint"],
+            "module": self.module,
             "command": command,
             "context": context,
         }
@@ -221,13 +228,12 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
 
         log_path = run_dir / "subprocess_runtime.log"
         env = self._subprocess_env(kwargs)
-        artifact_dirs = _extra_artifact_dirs(self.spec, self.source_root)
-        artifacts_before = _artifact_snapshot((run_dir, output.parent, *artifact_dirs))
+        artifacts_before = _artifact_snapshot((run_dir, output.parent))
         started_at = time.time()
         try:
             completed = subprocess.run(
                 command,
-                cwd=str(self.source_root),
+                cwd=str(run_dir),
                 env=env,
                 text=True,
                 stdout=subprocess.PIPE,
@@ -263,13 +269,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 "metadata": {**plan_payload, "log_path": str(log_path)},
             }
 
-        artifact_path = _select_artifact(
-            output,
-            run_dir,
-            extra_dirs=artifact_dirs,
-            since=started_at,
-            known_before=artifacts_before,
-        )
+        artifact_path = _select_artifact(output, run_dir, since=started_at, known_before=artifacts_before)
         if artifact_path is None:
             return {
                 "status": "failed",
@@ -305,10 +305,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         }
         return result
 
-    @property
-    def entrypoint(self) -> Path | None:
-        return None if self.source_root is None else (self.source_root / self.spec.entrypoint).resolve()
-
     def _prepared(self, run_dir: Path, plan_path: Path, command: Sequence[str]) -> dict[str, Any]:
         return {
             "status": "prepared",
@@ -320,23 +316,13 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             "command": list(command),
             "runtime": "worldfoundry.three_d_four_d.subprocess.plan",
             "backend_quality": "plan",
-            "metadata": {
-                "source_root": str(self.source_root) if self.source_root is not None else "",
-                "entrypoint": str(self.entrypoint) if self.entrypoint is not None else "",
-            },
+            "metadata": {"module": self.module},
         }
 
     def _missing_runtime_requirements(self, context: Mapping[str, Any]) -> list[str]:
         missing: list[str] = []
-        if self.source_root is None:
-            missing.append(
-                "runtime source checkout missing; set source_root or WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT "
-                f"for {self.spec.source_repo_url}"
-            )
-        elif not self.source_root.is_dir():
-            missing.append(f"runtime source root does not exist: {self.source_root}")
-        if self.entrypoint is None or not self.entrypoint.is_file():
-            missing.append(f"runtime entrypoint missing: {self.spec.entrypoint}")
+        if not (self.runtime_dir / self.spec.entrypoint).is_file():
+            missing.append(f"runtime entrypoint missing: {self.module}")
         if self.spec.required_input == "prompt" and not str(context.get("prompt") or "").strip():
             missing.append("prompt input required")
         if self.spec.required_input == "image" and not context.get("images"):
@@ -366,24 +352,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
     def _subprocess_env(self, options: Mapping[str, Any] | None = None) -> dict[str, str]:
         env = os.environ.copy()
         options = options or {}
-        if self.source_root is not None:
-            existing = env.get("PYTHONPATH", "")
-            paths = []
-            if self.spec.model_id != "wonderjourney":
-                paths.append(Path(__file__).resolve().parent / "shims")
-            paths.append(self.source_root)
-            for candidate in (
-                self.source_root / "src",
-                self.source_root / "submodules" / "DA-2" / "src",
-                self.source_root / "submodules" / "ml-sharp" / "src",
-                self.source_root / "submodules" / "viser" / "src",
-                self.source_root / "third_party" / "dust3r",
-                self.source_root / "third_party" / "sam2",
-            ):
-                if candidate.is_dir():
-                    paths.append(candidate)
-            prefix = os.pathsep.join(str(path) for path in paths)
-            env["PYTHONPATH"] = f"{prefix}{os.pathsep}{existing}" if existing else prefix
         env.setdefault("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", "1")
         if self.device:
             env.setdefault("WORLDFOUNDRY_DEVICE", self.device)
@@ -423,7 +391,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         python = str(options.get("python_executable") or sys.executable)
         if os.getenv("WORLDFOUNDRY_STUDIO_CONDA_CHILD", "").strip().lower() in {"1", "true", "yes", "on"}:
             python = sys.executable
-        entrypoint = str(context.get("entrypoint") or self.spec.entrypoint)
         prompt = str(context.get("prompt") or "")
         output_path = str(context["output_path"])
         output_dir = str(context["output_dir"])
@@ -436,9 +403,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 str(options.get("model_repo", self.options.get("model_repo", "facebook/lagernvs_general_512")))
             )
             image_args = _expand_image_inputs(images)
-            return [
-                python,
-                entrypoint,
+            arguments = [
                 "--images",
                 *image_args,
                 "--video_length",
@@ -448,58 +413,57 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 "--model_repo",
                 model_repo,
             ]
-        if self.spec.command_kind == "worldgen_inference":
-            command = [python, entrypoint, "--prompt", prompt or "a 3D scene", "--output_dir", output_dir]
+        elif self.spec.command_kind == "worldgen_inference":
+            arguments = ["--prompt", prompt or "a 3D scene", "--output_dir", output_dir]
             resolution = options.get("resolution", self.options.get("resolution"))
             if resolution is not None:
-                command.extend(["--resolution", str(int(resolution))])
+                arguments.extend(["--resolution", str(int(resolution))])
             pano_image = options.get("pano_image", self.options.get("pano_image"))
             if pano_image:
-                command.extend(["--pano_image", str(pano_image)])
+                arguments.extend(["--pano_image", str(pano_image)])
             expanded_images = _expand_image_inputs(images)
             if expanded_images and not pano_image:
-                command.extend(["--image", expanded_images[0]])
+                arguments.extend(["--image", expanded_images[0]])
             if not _bool_option(options, self.options, "viewer"):
-                command.append("--no_viewer")
+                arguments.append("--no_viewer")
             if _bool_option(options, self.options, "return_mesh"):
-                command.append("--return_mesh")
+                arguments.append("--return_mesh")
             if _bool_option(options, self.options, "save_scene", default=True):
-                command.append("--save_scene")
+                arguments.append("--save_scene")
             if _bool_option(options, self.options, "low_vram"):
-                command.append("--low_vram")
-            return command
-        if self.spec.command_kind == "wonderjourney_run":
+                arguments.append("--low_vram")
+        elif self.spec.command_kind == "wonderjourney_run":
             config = _prepare_wonder_config(
                 self.spec.command_kind,
-                self.source_root,
+                self.runtime_dir,
                 config,
                 Path(output_dir),
                 options,
                 prompt=prompt,
                 images=images,
             )
-            command = [python, entrypoint, "--example_config", config]
-            return command
-        if self.spec.command_kind == "mvdiffusion_demo":
-            command = [python, entrypoint]
+            arguments = ["--example_config", config]
+        elif self.spec.command_kind == "mvdiffusion_demo":
+            arguments = []
             if prompt:
-                command.extend(["--text", prompt])
+                arguments.extend(["--text", prompt])
             if images:
-                command.extend(["--image_path", images[0]])
+                arguments.extend(["--image_path", images[0]])
             text_path = options.get("text_path", self.options.get("text_path"))
             if text_path:
                 resolved_text_path = Path(str(text_path)).expanduser()
-                if not resolved_text_path.is_absolute() and self.source_root is not None:
-                    resolved_text_path = self.source_root / resolved_text_path
+                if not resolved_text_path.is_absolute():
+                    resolved_text_path = self.runtime_dir / resolved_text_path
                 if resolved_text_path.is_file():
-                    command.extend(["--text_path", str(resolved_text_path.resolve())])
+                    arguments.extend(["--text_path", str(resolved_text_path.resolve())])
             steps = options.get("steps", self.options.get("steps"))
             if steps is not None:
-                command.extend(["--steps", str(max(int(steps), 1))])
+                arguments.extend(["--steps", str(max(int(steps), 1))])
             if _bool_option(options, self.options, "gen_video"):
-                command.append("--gen_video")
-            return command
-        return [python, entrypoint]
+                arguments.append("--gen_video")
+        else:
+            arguments = []
+        return package_module_command(self.module, arguments, python_executable=python)
 
 
 def three_d_four_d_runtime_spec(model_id: str) -> ThreeDFourDRuntimeSpec:
@@ -509,47 +473,6 @@ def three_d_four_d_runtime_spec(model_id: str) -> ThreeDFourDRuntimeSpec:
     except KeyError as exc:
         known = ", ".join(sorted(THREE_D_FOUR_D_RUNTIME_SPECS))
         raise KeyError(f"Unknown 3D/4D runtime {model_id!r}. Known ids: {known}") from exc
-
-
-def _resolve_source_root(
-    spec: ThreeDFourDRuntimeSpec,
-    options: Mapping[str, Any],
-    source_repos: Sequence[Mapping[str, Any]],
-) -> Path | None:
-    candidates: list[Path] = []
-    in_tree_parts = IN_TREE_RUNTIME_DIRS.get(spec.model_id)
-    if in_tree_parts:
-        candidates.append(REPO_ROOT / "worldfoundry" / Path(*in_tree_parts))
-    explicit = options.get("source_root") or options.get("runtime_root") or options.get("repo_root")
-    if explicit:
-        candidates.append(Path(str(explicit)).expanduser())
-    env_prefix = "WORLDFOUNDRY_" + spec.model_id.upper().replace("-", "_").replace(".", "_")
-    for env_key in (f"{env_prefix}_ROOT", f"{env_prefix}_REPO_ROOT", f"{env_prefix}_SOURCE_ROOT"):
-        if os.environ.get(env_key):
-            candidates.append(Path(os.environ[env_key]).expanduser())
-    if os.getenv("WORLDFOUNDRY_ALLOW_EXTERNAL_THREE_D_FOUR_D_REPOS", "").strip().lower() in {"1", "true", "yes", "on"}:
-        repo_roots = []
-        if os.environ.get("WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT"):
-            repo_roots.append(Path(os.environ["WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT"]).expanduser())
-        for root in repo_roots:
-            for name in spec.repo_names:
-                candidates.append(root / name)
-        for source in source_repos:
-            local_dir = source.get("local_dir")
-            if local_dir:
-                candidates.append(Path(str(local_dir)).expanduser())
-    existing_dirs: list[Path] = []
-    for candidate in candidates:
-        if not candidate.is_dir():
-            continue
-        path = candidate.expanduser()
-        path = path if path.is_absolute() else path.resolve()
-        if (path / spec.entrypoint).is_file():
-            return path
-        existing_dirs.append(path)
-    if existing_dirs:
-        return existing_dirs[0]
-    return None
 
 
 def _materialize_media(*, images: Any, video: Any, run_dir: Path) -> dict[str, Any]:
@@ -665,7 +588,7 @@ def _first_existing_ckpt(*parts: str) -> str | None:
 
 def _prepare_wonder_config(
     command_kind: str,
-    source_root: Path | None,
+    runtime_dir: Path,
     config: str,
     output_dir: Path,
     options: Mapping[str, Any],
@@ -673,11 +596,9 @@ def _prepare_wonder_config(
     prompt: str = "",
     images: Sequence[str] | None = None,
 ) -> str:
-    if source_root is None:
-        return config
     config_path = Path(config)
     if not config_path.is_absolute():
-        config_path = source_root / config_path
+        config_path = runtime_dir / config_path
     if not config_path.is_file():
         return str(config)
 
@@ -768,19 +689,10 @@ def _bool_option(options: Mapping[str, Any], defaults: Mapping[str, Any], key: s
     return bool(value)
 
 
-def _extra_artifact_dirs(spec: ThreeDFourDRuntimeSpec, source_root: Path | None) -> tuple[Path, ...]:
-    if source_root is None:
-        return ()
-    if spec.command_kind == "mvdiffusion_demo":
-        return (source_root / "outputs",)
-    return ()
-
-
 def _select_artifact(
     output: Path,
     run_dir: Path,
     *,
-    extra_dirs: Sequence[Path] = (),
     since: float | None = None,
     known_before: Mapping[str, tuple[int, int]] | None = None,
 ) -> Path | None:
@@ -796,7 +708,7 @@ def _select_artifact(
 
     if is_fresh(output):
         return output
-    search_dirs = [run_dir, output.parent, *(path for path in extra_dirs if path.is_dir())]
+    search_dirs = [run_dir, output.parent]
     suffixes = (".mp4", ".glb", ".splat", ".ply", ".png", ".json")
     suffixes = tuple(dict.fromkeys((output.suffix.lower(), *suffixes)))
     for suffix in suffixes:
@@ -846,8 +758,11 @@ def _jsonable(value: Any) -> Any:
 
 
 __all__ = [
+    "IN_TREE_RUNTIME_DIRS",
     "THREE_D_FOUR_D_RUNTIME_SPECS",
     "ThreeDFourDRuntimeSpec",
     "ThreeDFourDRuntimeSynthesis",
+    "runtime_dir",
+    "runtime_module",
     "three_d_four_d_runtime_spec",
 ]

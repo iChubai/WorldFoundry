@@ -6,7 +6,7 @@ from pathlib import Path
 
 import torch
 from PIL import Image
-from worldgen import WorldGen
+from .src.worldgen import WorldGen
 
 
 def parse_args() -> argparse.Namespace:

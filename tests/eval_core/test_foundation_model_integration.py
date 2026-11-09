@@ -1132,46 +1132,32 @@ def test_geometric_priors_are_independent_model_catalog_entries():
         assert "prior" in runtime_profile.groups
 
 
-def test_three_d_four_d_external_repo_resolution_requires_explicit_root(monkeypatch, tmp_path: Path):
-    from worldfoundry.base_models.three_dimensions.three_d_four_d import (
-        runtime as runtime_module,
-    )
-    from worldfoundry.base_models.three_dimensions.three_d_four_d.runtime import (
-        ThreeDFourDRuntimeSpec,
-    )
+def test_three_d_four_d_runtimes_run_vendored_package_modules(monkeypatch, tmp_path: Path) -> None:
+    import importlib.util
+
+    from worldfoundry.base_models.three_dimensions.three_d_four_d import runtime as runtime_module
 
     runtime_text = (REPO_ROOT / "worldfoundry/base_models/three_dimensions/three_d_four_d/runtime.py").read_text(
         encoding="utf-8"
     )
     assert "github_repos" not in runtime_text
+    assert "PYTHONPATH" not in runtime_text
 
-    spec = ThreeDFourDRuntimeSpec(
-        model_id="fixture-three-d",
-        display_name="Fixture 3D",
-        repo_names=("fixture-repo",),
-        entrypoint="demo.py",
-        command_kind="fixture",
-        artifact_kind="generated_3d_asset",
-        artifact_filename="fixture.ply",
+    for model_id, spec in runtime_module.THREE_D_FOUR_D_RUNTIME_SPECS.items():
+        module = runtime_module.runtime_module(spec)
+        found = importlib.util.find_spec(module)
+        assert module.startswith("worldfoundry."), model_id
+        assert found is not None and found.origin is not None, model_id
+        assert Path(found.origin) == runtime_module.runtime_dir(spec) / spec.entrypoint
+
+    synthesis = runtime_module.ThreeDFourDRuntimeSynthesis(
+        spec=runtime_module.three_d_four_d_runtime_spec("worldgen"), device="cpu"
     )
-    fake_repo_root = tmp_path / "WorldFoundry"
-    sibling = tmp_path / "github_repos" / "fixture-repo"
-    sibling.mkdir(parents=True)
-    (sibling / "demo.py").write_text("# sibling fixture\n", encoding="utf-8")
+    plan = synthesis.predict(prompt="a quiet harbor", run_dir=tmp_path / "run", plan_only=True)
 
-    monkeypatch.setattr(runtime_module, "REPO_ROOT", fake_repo_root)
-    monkeypatch.setenv("WORLDFOUNDRY_ALLOW_EXTERNAL_THREE_D_FOUR_D_REPOS", "1")
-    monkeypatch.delenv("WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT", raising=False)
-
-    assert runtime_module._resolve_source_root(spec, {}, ()) is None
-
-    explicit_root = tmp_path / "explicit_repos"
-    explicit_repo = explicit_root / "fixture-repo"
-    explicit_repo.mkdir(parents=True)
-    (explicit_repo / "demo.py").write_text("# explicit fixture\n", encoding="utf-8")
-    monkeypatch.setenv("WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT", str(explicit_root))
-
-    assert runtime_module._resolve_source_root(spec, {}, ()) == explicit_repo
+    assert plan["command"][1:3] == ["-m", "worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.inference"]
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+    assert "PYTHONPATH" not in synthesis._subprocess_env()
 
 
 def test_giga_brain_variant_selector_resolves_0p1_checkpoint(tmp_path: Path) -> None:

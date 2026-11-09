@@ -83463,7 +83463,7 @@
           "worldfoundry"
         ],
         "notes": [
-          "Uses an in-tree subprocess adapter for upstream MVDiffusion source when available.",
+          "Runs the vendored MVDiffusion demo entrypoint as a package module through the in-tree subprocess adapter.",
           "The default image-outpainting route produces eight perspective PNGs and a panorama PNG; the 720-frame spin video is optional.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
@@ -83672,11 +83672,11 @@
       ],
       "notes": [
         "WorldFoundry exposes an in-tree runtime subprocess adapter for MVDiffusion.",
-        "Missing source checkout, checkpoints, or CUDA dependencies are reported at inference time.",
+        "Missing checkpoints or CUDA dependencies are reported at inference time.",
         "The default image-outpainting route completed local GPU inference with eight 512x512 perspective images and a 4096x968 panorama PNG.",
         "The panorama contains conspicuous red wall patches and invented objects outside the input view; multi-view scene consistency remains a quality concern.",
         "The optional 720-frame spin video and full upstream artifact parity remain unverified.",
-        "Uses an in-tree subprocess adapter for upstream MVDiffusion source when available.",
+        "Runs the vendored MVDiffusion demo entrypoint as a package module through the in-tree subprocess adapter.",
         "The default image-outpainting route produces eight perspective PNGs and a panorama PNG; the 720-frame spin video is optional."
       ],
       "docs": {

@@ -401,9 +401,9 @@ Then provide only the overrides for this run:
 ```bash
 wf run self-forcing \
   --pipeline.prompt "A paper boat moving down a forest stream" \
-  --pipeline.num-output-frames 33 \
+  --pipeline.frames 33 \
   --pipeline.seed 7 \
-  --pipeline.load.ckpt-path /path/to/self_forcing_dmd.pt \
+  --pipeline.load.checkpoint-path /path/to/self_forcing_dmd.pt \
   --runtime.device cuda \
   --output-dir tmp/self_forcing_run
 ```

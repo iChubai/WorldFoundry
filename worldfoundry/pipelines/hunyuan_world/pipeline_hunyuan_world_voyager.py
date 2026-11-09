@@ -158,11 +158,6 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
 
         return pipeline
 
-    def _require_rendering_model(self) -> "HunyuanWorldVoyagerSynthesis":
-        if self.rendering_model is None:
-            raise RuntimeError("Voyager has no rendering model; load it with from_pretrained().")
-        return self.rendering_model
-
     @staticmethod
     def _read_rgb(path: Path) -> np.ndarray:
         """Read rgb for HunyuanWorldVoyagerPipeline."""
@@ -226,10 +221,8 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         # transform input image and interaction signal into hunyuan video input
         if isinstance(input_image, (str, os.PathLike)):
             input_image = Image.open(input_image).convert("RGB")
-        represent_model = self.represent_model
-        if represent_model is None:
-            raise RuntimeError("Voyager was loaded with skip_representation_model; pass condition_dir instead.")
-        rendering_model = self._require_rendering_model()
+        represent_model = cast("HunyuanWorldVoyagerRepresentation", self.represent_model)
+        rendering_model = cast("HunyuanWorldVoyagerSynthesis", self.rendering_model)
         input_image, image_tensor = self.operators.process_perception(input_image, self.device)
         if hasattr(input_image, "shape"):
             Height, Width = input_image.shape[:2]
@@ -389,7 +382,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             hunayuan_video_input = self.process(
                 images, num_frames=video_length, interaction_signal=interactions, **kwargs
             )
-        outputs = self._require_rendering_model().predict(
+        outputs = cast("HunyuanWorldVoyagerSynthesis", self.rendering_model).predict(
             prompt=prompt,
             height=self.rendering_args.video_size[0],
             width=self.rendering_args.video_size[1],

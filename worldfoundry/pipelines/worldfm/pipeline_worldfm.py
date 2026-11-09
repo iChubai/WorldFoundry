@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import torch
 
@@ -176,8 +176,6 @@ class WorldFMPipeline(PipelineABC):
         output_dir=None,
     ):
         """Build scene context for WorldFMPipeline."""
-        if self.representation_model is None:
-            raise RuntimeError("WorldFM representation model is not loaded. Use from_pretrained() first.")
         perception = self.operator.process_perception(
             images=images,
             K=K,
@@ -186,7 +184,7 @@ class WorldFMPipeline(PipelineABC):
             panorama_image=panorama_image,
             panorama_path=panorama_path,
         )
-        scene_context = self.representation_model.build_scene_context(
+        scene_context = cast(WorldFMRepresentation, self.representation_model).build_scene_context(
             images=perception["images"],
             image_path=perception["image_path"],
             panorama_image=perception["panorama_image"],

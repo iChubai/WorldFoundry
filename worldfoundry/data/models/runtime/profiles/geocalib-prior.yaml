@@ -7,6 +7,7 @@ groups:
 - prior
 source_repos:
 - url: https://github.com/cvg/GeoCalib
+  revision: fbd383d6953959a5b1af3cfc6b7f348bcc667bf8
 checkpoints:
 - uri: https://github.com/cvg/GeoCalib/releases/download/v1.0/geocalib-pinhole.tar
   filename: geocalib-pinhole.tar

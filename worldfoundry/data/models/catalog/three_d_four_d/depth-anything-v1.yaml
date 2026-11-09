@@ -14,6 +14,7 @@ official_sources:
   project_page: https://depth-anything.github.io/
   github:
     url: https://github.com/LiheYoung/Depth-Anything
+    revision: 1d03336771fe09c5398ffdd211441e33941a97dc
   huggingface:
   - repo_id: LiheYoung/depth-anything-small-hf
     type: model

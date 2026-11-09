@@ -21,6 +21,7 @@ official_sources:
   github:
     head_sha: b174a1b86dee
     url: https://github.com/microsoft/CogACT
+    revision: b174a1b86deedfab4d198d935207e7bb0527994e
   huggingface:
   - repo_id: CogACT/CogACT-Small
     role: small_checkpoint

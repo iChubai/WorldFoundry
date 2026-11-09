@@ -24,6 +24,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/inspatio/worldfm
+    revision: 84dfff171f8c24be71585bcc2f140b8ef08d1cd0
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/inspatio/WorldFM
     repo_id: inspatio/WorldFM

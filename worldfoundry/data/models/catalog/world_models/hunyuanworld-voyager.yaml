@@ -29,6 +29,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager
+    revision: 6218ccd36df77d0254dcf24ad1fb77312f75b04a
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/tencent/HunyuanWorld-Voyager
     repo_id: tencent/HunyuanWorld-Voyager

@@ -24,6 +24,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/robbyant/lingbot-world
+    revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/robbyant/lingbot-world-base-cam
     repo_id: robbyant/lingbot-world-base-cam

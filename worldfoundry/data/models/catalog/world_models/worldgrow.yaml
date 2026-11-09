@@ -17,6 +17,7 @@ official_sources:
   paper: https://arxiv.org/abs/2510.21682
   github:
     url: https://github.com/world-grow/WorldGrow
+    revision: 1f2ac49c30fd1390a810a201019ed26c02487883
     head_sha: 1f2ac49c30fd1390a810a201019ed26c02487883
   huggingface:
   - repo_id: UranusITS/WorldGrow

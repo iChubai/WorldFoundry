@@ -18,6 +18,7 @@ official_sources:
   github:
     head_sha: ba4e939632427e066f734bf9f7abfa11cc4911f6
     url: https://github.com/CHEN-H01/LaST-R1
+    revision: ba4e939632427e066f734bf9f7abfa11cc4911f6
   huggingface:
   - repo_id: chenhao01/LaST-R1
     status: confirmed

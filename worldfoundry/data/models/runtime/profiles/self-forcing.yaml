@@ -7,6 +7,7 @@ groups:
 - autoregressive_video
 source_repos:
 - url: https://github.com/guandeh17/Self-Forcing
+  revision: 33593df3e81fa3ec10239271dd2c100facac6de1
 checkpoints:
 - role: self_forcing_dmd
   local_dir: ${WORLDFOUNDRY_CKPT_DIR}/Self-Forcing/checkpoints/self_forcing_dmd.pt

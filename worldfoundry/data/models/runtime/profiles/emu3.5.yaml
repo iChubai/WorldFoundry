@@ -5,6 +5,7 @@ task_family: multimodal_generation
 groups: [multimodal, image]
 source_repos:
 - url: https://github.com/baaivision/Emu3.5
+  revision: 8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745
 - url: https://huggingface.co/BAAI/Emu3.5
 checkpoints:
 - repo_id: BAAI/Emu3.5

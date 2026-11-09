@@ -13,6 +13,7 @@ official_sources:
   project_page: https://dino-wm.github.io/
   github:
     url: https://github.com/gaoyuezhou/dino_wm
+    revision: 0a9492fa12044b852ae9e001cc74604b79c8bb0c
 integration:
   status: integrated
   notes:

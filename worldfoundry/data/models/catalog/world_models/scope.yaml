@@ -21,6 +21,7 @@ official_sources:
   paper: https://arxiv.org/abs/2605.23345
   github:
     url: https://github.com/z2tong/SCOPE
+    revision: c1eeaffca346313912f4ce5ac89cbe42d7428d9e
   huggingface:
   - repo_id: zizhaotong/SCOPE
     status: confirmed

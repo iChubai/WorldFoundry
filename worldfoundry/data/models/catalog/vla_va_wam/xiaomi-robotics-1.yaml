@@ -16,6 +16,7 @@ official_sources:
   paper: https://arxiv.org/abs/2607.15330
   github:
     url: https://github.com/XiaomiRobotics/Xiaomi-Robotics-1
+    revision: 26702e2544450f0d39ca850d666b82040ebf98d0
     head_sha: 26702e2544450f0d39ca850d666b82040ebf98d0
     status: project_page_pre_release
 tasks:

@@ -27,6 +27,7 @@ official_sources:
   github:
     head_sha: 58c2ae5bac46bd8114065bea9d7d256eb67c16c3
     url: https://github.com/Robbyant/lingbot-va
+    revision: 58c2ae5bac46bd8114065bea9d7d256eb67c16c3
   huggingface:
   - license: apache-2.0
     repo_id: robbyant/lingbot-va-base

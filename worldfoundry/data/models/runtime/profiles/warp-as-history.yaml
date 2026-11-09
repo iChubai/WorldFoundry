@@ -8,6 +8,7 @@ groups:
 - camera_control
 source_repos:
 - url: https://github.com/yyfz/Warp-as-History
+  revision: a22c4ed499cda4af4fea4f1b3d8bd20687216ab4
 checkpoints:
 - repo_id: BestWishYsh/Helios-Distilled
   role: base_video_diffusion_checkpoint

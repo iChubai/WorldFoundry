@@ -24,6 +24,7 @@ official_sources:
     confirmed_by: local_checkout
     confirmed_ref: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/DreamX-World
     url: https://github.com/AMAP-ML/DreamX-World
+    revision: 75154c18a3947aa79cbf0de250bf16605d8e6354
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/GD-ML/DreamX-World-5B
     repo_id: GD-ML/DreamX-World-5B

@@ -17,6 +17,7 @@ official_sources:
   project_page: https://egowm.github.io/
   github:
     url: https://github.com/miccooper9/egowm
+    revision: 4a24b6fb917b8b86cea892312971f39691c532e8
     head_sha: 4a24b6fb917b8b86cea892312971f39691c532e8
   huggingface:
   - repo_id: anuragba/egowm

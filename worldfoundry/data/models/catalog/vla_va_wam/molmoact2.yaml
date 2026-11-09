@@ -25,6 +25,7 @@ official_sources:
   github:
     head_sha: c2282820f9b188b60e66ea1636b3efd81c45cbb4
     url: https://github.com/allenai/molmoact2
+    revision: 40ac992dd4b5e4f31a37b3aa26cfbb5c9fb2cf05
   huggingface:
   - license: apache-2.0
     repo_id: allenai/MolmoAct2

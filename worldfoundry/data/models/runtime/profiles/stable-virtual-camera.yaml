@@ -9,6 +9,7 @@ groups:
 - official_repo
 source_repos:
 - url: https://github.com/Stability-AI/stable-virtual-camera
+  revision: fe19948e9b7bea261ab2db780a59656131404a83
 checkpoints:
 - repo_id: stabilityai/stable-virtual-camera
   role: stable_virtual_camera_checkpoint

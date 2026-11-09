@@ -15,6 +15,7 @@ official_sources:
   project_page: https://cynthiazxy123.github.io/SAMA/
   github:
     url: https://github.com/Cynthiazxy123/SAMA
+    revision: 85441d5d42e6335f66282b92016eae7266df436e
   huggingface:
   - repo_id: syxbb/SAMA-14B
     status: confirmed

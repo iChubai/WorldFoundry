@@ -25,6 +25,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/TencentARC/MotionCtrl
+    revision: 6242d55414d3f4ad690bf0934889660f78e81b6e
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/TencentARC/MotionCtrl
     repo_id: TencentARC/MotionCtrl

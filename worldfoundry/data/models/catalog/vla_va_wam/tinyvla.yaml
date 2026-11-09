@@ -10,6 +10,7 @@ official_sources:
   paper: https://arxiv.org/abs/2402.03766
   github:
     url: https://github.com/liyaxuanliyaxuan/TinyVLA
+    revision: 94f441827b45e4f76316ef6a0ae443736dc93a5d
     head_sha: 94f441827b45e4f76316ef6a0ae443736dc93a5d
   huggingface:
   - repo_id: lesjie/Llava-Pythia-400M

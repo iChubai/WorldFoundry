@@ -12,6 +12,7 @@ official_sources:
   project_page: https://cvlab-kaist.github.io/world-observer/
   github:
     url: https://github.com/cvlab-kaist/world-observer
+    revision: 6efb6a4107f53e7e36031cfa00c880b075631fcf
     head_sha: 6efb6a4107f53e7e36031cfa00c880b075631fcf
 catalog_category: world_models
 integration:

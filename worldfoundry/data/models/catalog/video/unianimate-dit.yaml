@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2504.11289
   github:
     url: https://github.com/ali-vilab/unianimate-dit
+    revision: 61d882c25385042f0cf5bcdaf6853238d9756d68
   huggingface:
   - repo_id: ZheWang123/UniAnimate-DiT
     status: confirmed

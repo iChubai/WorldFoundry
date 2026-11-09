@@ -24,6 +24,7 @@ official_sources:
   project_page: https://echo-team-joy-future-academy-jd.github.io/Echo-Infinity/
   github:
     url: https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity
+    revision: 7ed7eee09e7c7543ecfce42d2fe2ff6c0f9984ea
   huggingface:
     url: https://huggingface.co/Echo-Team/Echo-Infinity
 pipeline_binding: echo-infinity

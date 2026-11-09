@@ -15,6 +15,7 @@ official_sources:
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/Robert-gyj/Ctrl-World
+    revision: 99fb20683fd79dfa6d0c6feb9d49c6c55eecd50d
     head_sha: 99fb20683fd79dfa6d0c6feb9d49c6c55eecd50d
     verified_by: official GitHub repository selected from WorldArena open-source result names
   huggingface:

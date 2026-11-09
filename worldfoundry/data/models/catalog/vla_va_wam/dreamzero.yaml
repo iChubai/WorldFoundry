@@ -22,6 +22,7 @@ official_sources:
   github:
     head_sha: ab790c198fbce33503358efbbd4187ce9a89adf3
     url: https://github.com/dreamzero0/dreamzero
+    revision: ab790c198fbce33503358efbbd4187ce9a89adf3
   huggingface:
   - license: apache-2.0
     repo_id: GEAR-Dreams/DreamZero-DROID

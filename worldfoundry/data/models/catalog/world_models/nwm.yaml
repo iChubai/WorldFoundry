@@ -19,6 +19,7 @@ official_sources:
   project_page: https://www.amirbar.net/nwm/
   github:
     url: https://github.com/facebookresearch/nwm
+    revision: 3f6cd8e70d6f2d1e2b9684acff510710135f0f41
   huggingface:
   - repo_id: facebook/nwm
     status: confirmed

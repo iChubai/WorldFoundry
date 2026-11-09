@@ -12,6 +12,7 @@ official_sources:
   project_page: https://ganlin-yang.github.io/EventVLA.github.io/
   github:
     url: https://github.com/InternRobotics/EventVLA
+    revision: 4b5b26030abddf83bc60e1a6b067de8f521fd0ec
     head_sha: 4b5b26030abddf83bc60e1a6b067de8f521fd0ec
   huggingface:
   - repo_id: ganlinyang/EventVLA

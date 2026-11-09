@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2603.11647
   github:
     url: https://github.com/OmniForcing/OmniForcing
+    revision: cd6791433e3de4cbe156c125730d45a45d52fcae
     head_sha: cd6791433e3de4cbe156c125730d45a45d52fcae
 runtime_profile: runtime-profile:omniforcing
 integration:

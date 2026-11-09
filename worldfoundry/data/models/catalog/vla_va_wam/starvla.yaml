@@ -21,6 +21,7 @@ official_sources:
   github:
     head_sha: 5ce9e2ed59dc94de926c335d36a3681c243a58f7
     url: https://github.com/starVLA/starVLA
+    revision: 1214d4e8e62be1ea91b7887628f2967974a07680
   huggingface:
   - repo_id: StarVLA/Qwen3-VL-OFT-LIBERO-4in1
     revision: 1947454be8c0f4de315f4cbde96b874819a6dab3

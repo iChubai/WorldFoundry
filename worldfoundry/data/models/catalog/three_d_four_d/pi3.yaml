@@ -14,6 +14,7 @@ official_sources:
   paper: https://arxiv.org/pdf/2507.13347
   github:
     url: https://github.com/yyfz/Pi3
+    revision: b56ef4b9cc9be05b8590604861aa3906db0ef45e
   huggingface:
   - repo_id: yyfz233/Pi3X
     type: model

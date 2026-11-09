@@ -16,6 +16,7 @@ official_sources:
   project_page: https://wzzheng.net/StreamVGGT/
   github:
     url: https://github.com/wzzheng/StreamVGGT
+    revision: 05682bcb05683c4c71522e9cb618fc8ca349063c
   huggingface:
   - repo_id: lch01/StreamVGGT
     type: model

@@ -11,6 +11,7 @@ official_sources:
   paper: https://arxiv.org/abs/2503.06669
   github:
     url: https://github.com/OpenDriveLab/AgiBot-World
+    revision: 98f136ea6b345db1a08451a2f543d67c1789a809
     head_sha: 98f136ea6b345db1a08451a2f543d67c1789a809
   huggingface:
   - repo_id: agibot-world/GO-1

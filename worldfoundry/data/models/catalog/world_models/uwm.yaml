@@ -16,6 +16,7 @@ official_sources:
   project_page: https://weirdlabuw.github.io/uwm/
   github:
     url: https://github.com/WEIRDLabUW/unified-world-model
+    revision: b7d4067c8859775e5b08f681e76d538015cdd445
     head_sha: b7d4067c8859775e5b08f681e76d538015cdd445
 integration:
   status: runtime_ported

@@ -35,7 +35,7 @@ Start on `solarwm-wan2.2-5b`. The family registers 4 catalog variants (cards abo
 
 Default variant=wan-5b-dmd. Provide source_root, checkpoint_dir, base_path and data_root. Prompts, images and camera tracks come from the indexed samples. Use a separate interpreter for Wan, LTX and H3; route process counts follow the official configs.
 
-GPU/checkpoint-backed artifact parity has not been run in this workspace.
+Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.
 
 ## Running in WorldFoundry
 
@@ -45,6 +45,6 @@ It runs in the dedicated environment `worldfoundry-solarwm-wan22-cu124` (Python 
 
 Recorded weight repositories include `junchaoh-cs/SolarWM` and `junchaoh-cs/SolarWM-H3-33B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh solarwm-wan2.2-5b`. Add `--download` to fetch missing public checkpoints.
 
-Gated `junchaoh-cs/SolarWM` — accept upstream terms before download; status: **Runner parity pending**.
+Gated `junchaoh-cs/SolarWM-H3-33B` — accept upstream terms before download; status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="solarwm" locale="en" />

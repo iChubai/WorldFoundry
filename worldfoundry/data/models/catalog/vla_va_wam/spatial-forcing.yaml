@@ -20,6 +20,7 @@ official_sources:
   github:
     head_sha: 372819b31ba9a2c8fc5989edc7d525cb187cecd5
     url: https://github.com/OpenHelix-Team/Spatial-Forcing
+    revision: 372819b31ba9a2c8fc5989edc7d525cb187cecd5
   huggingface_collection:
     id: haofuly/spatial-forcing-68ea1bf0f1ac2c60e2ec6caa
     url: https://huggingface.co/collections/haofuly/spatial-forcing-68ea1bf0f1ac2c60e2ec6caa

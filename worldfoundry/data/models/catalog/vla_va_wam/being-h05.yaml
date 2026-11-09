@@ -24,6 +24,7 @@ official_sources:
     head_sha: 66b959e05db225fd816f8a517d94a9c0585cfc3e
     subdir: Being-H05
     url: https://github.com/BeingBeyond/Being-H
+    revision: 66b959e05db225fd816f8a517d94a9c0585cfc3e
   huggingface:
   - license: manual_review:missing_hf_license
     repo_id: BeingBeyond/Being-H05-2B

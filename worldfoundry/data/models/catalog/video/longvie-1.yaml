@@ -20,6 +20,7 @@ official_sources:
   project_page: https://vchitect.github.io/LongVie2-project/
   github:
     url: https://github.com/Vchitect/LongVie
+    revision: 8740d2ee07245556750735193e0149dcd4d989f0
 integration:
   status: integrated
   notes:

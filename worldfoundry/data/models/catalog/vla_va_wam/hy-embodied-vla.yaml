@@ -23,6 +23,7 @@ official_sources:
   github:
     head_sha: 8ba4c8cbdf42a4bcf0a19be4bd2841405dfe15e9
     url: https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA
+    revision: 8ba4c8cbdf42a4bcf0a19be4bd2841405dfe15e9
   huggingface:
   - license: Apache-2.0
     repo_id: tencent/Hy-Embodied-0.5-VLA-UMI

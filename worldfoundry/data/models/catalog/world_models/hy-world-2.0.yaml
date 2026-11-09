@@ -43,6 +43,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/Tencent-Hunyuan/HY-World-2.0
+    revision: 7f668e67c74338d50684e57be46a438459b6bbe1
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/tencent/HY-World-2.0
     repo_id: tencent/HY-World-2.0

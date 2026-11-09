@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2312.03884
   github:
     url: https://github.com/KovenYu/WonderJourney
+    revision: fecbbdff4d107e673c29c1d87b9e66fdc46f11af
 integration:
   kind: pipeline_runner
   status: integrated

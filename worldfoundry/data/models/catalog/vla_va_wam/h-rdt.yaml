@@ -10,6 +10,7 @@ license: mpl-2.0
 official_sources:
   github:
     url: https://github.com/HongzheBi/H_RDT
+    revision: 8be02cb5e631898dfab12f9b6bbb77e32999547a
     head_sha: 8be02cb5e631898dfab12f9b6bbb77e32999547a
   huggingface:
   - repo_id: embodiedfoundation/H-RDT

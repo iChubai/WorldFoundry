@@ -7,6 +7,7 @@ groups:
 - three_d
 source_repos:
 - url: https://github.com/Tencent-Hunyuan/HY-World-2.0
+  revision: 7f668e67c74338d50684e57be46a438459b6bbe1
 checkpoints:
 - repo_id: tencent/HY-World-2.0
   role: hy_world_2_checkpoint

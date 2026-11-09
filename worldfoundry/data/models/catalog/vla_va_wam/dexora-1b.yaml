@@ -10,6 +10,7 @@ license: mit
 official_sources:
   github:
     url: https://github.com/dexoravla/Dexora
+    revision: 6f2869d61483774aa75cda4cd2260dc6a5faa783
     head_sha: 6f2869d61483774aa75cda4cd2260dc6a5faa783
   paper: https://arxiv.org/abs/2605.18722
   project_page: https://dexoravla.github.io

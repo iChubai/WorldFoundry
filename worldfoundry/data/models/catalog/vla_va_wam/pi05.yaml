@@ -13,6 +13,7 @@ official_sources:
   github:
     head_sha: c23745b5ad24e98f66967ea795a07b2588ed6c79
     url: https://github.com/Physical-Intelligence/openpi
+    revision: c23745b5ad24e98f66967ea795a07b2588ed6c79
 integration:
   status: runtime_ported
   notes:

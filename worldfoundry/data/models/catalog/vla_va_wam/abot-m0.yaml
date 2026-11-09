@@ -11,6 +11,7 @@ official_sources:
   project_page: https://amap-cvlab.github.io/ABot-Manipulation/
   github:
     url: https://github.com/amap-cvlab/ABot-Manipulation
+    revision: 16088c08ad5762e19d76a36ef7dab9f7eda8e974
     head_sha: 16088c08ad5762e19d76a36ef7dab9f7eda8e974
   huggingface:
   - repo_id: acvlab/ABot-M0-LIBERO

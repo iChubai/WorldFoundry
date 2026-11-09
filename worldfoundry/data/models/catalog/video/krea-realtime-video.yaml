@@ -19,6 +19,7 @@ official_sources:
   project_page: https://www.krea.ai/
   github:
     url: https://github.com/krea-ai/realtime-video
+    revision: acf4b7b4e1a3049a0e04782e751d12203334038d
   huggingface:
   - repo_id: krea/krea-realtime-video
     status: confirmed

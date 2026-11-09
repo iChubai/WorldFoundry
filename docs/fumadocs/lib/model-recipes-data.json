@@ -566,7 +566,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/EternalEvan/Astra"
+          "url": "https://github.com/EternalEvan/Astra",
+          "revision": "3fb82e1939bfcf87d6e27a7da57d8b55ff9cb393"
         },
         {
           "kind": "weights",
@@ -576,7 +577,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/EternalEvan/Astra#readme"
+          "url": "https://github.com/EternalEvan/Astra#readme",
+          "revision": "3fb82e1939bfcf87d6e27a7da57d8b55ff9cb393"
         }
       ],
       "checkpoints": [
@@ -959,7 +961,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/BeingBeyond/Being-H"
+          "url": "https://github.com/BeingBeyond/Being-H",
+          "revision": "66b959e05db225fd816f8a517d94a9c0585cfc3e"
         },
         {
           "kind": "weights",
@@ -984,7 +987,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/BeingBeyond/Being-H#readme"
+          "url": "https://github.com/BeingBeyond/Being-H#readme",
+          "revision": "66b959e05db225fd816f8a517d94a9c0585cfc3e"
         }
       ],
       "checkpoints": [
@@ -1799,7 +1803,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/hehao13/CameraCtrl"
+          "url": "https://github.com/hehao13/CameraCtrl",
+          "revision": "af45a7a0dbeedb7f6ed66aac4a9e5411a279f0d2"
         },
         {
           "kind": "weights",
@@ -1809,7 +1814,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/hehao13/CameraCtrl#readme"
+          "url": "https://github.com/hehao13/CameraCtrl#readme",
+          "revision": "af45a7a0dbeedb7f6ed66aac4a9e5411a279f0d2"
         }
       ],
       "checkpoints": [
@@ -5173,7 +5179,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/nvidia-cosmos/cosmos-transfer2.5"
+          "url": "https://github.com/nvidia-cosmos/cosmos-transfer2.5",
+          "revision": "2ff49d0717af02057ae79bc75c00fbff9da1b4e7"
         },
         {
           "kind": "weights",
@@ -5188,7 +5195,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/nvidia-cosmos/cosmos-transfer2.5#readme"
+          "url": "https://github.com/nvidia-cosmos/cosmos-transfer2.5#readme",
+          "revision": "2ff49d0717af02057ae79bc75c00fbff9da1b4e7"
         }
       ],
       "checkpoints": [
@@ -6286,7 +6294,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/LiheYoung/Depth-Anything"
+          "url": "https://github.com/LiheYoung/Depth-Anything",
+          "revision": "1d03336771fe09c5398ffdd211441e33941a97dc"
         },
         {
           "kind": "weights",
@@ -6306,7 +6315,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/LiheYoung/Depth-Anything#readme"
+          "url": "https://github.com/LiheYoung/Depth-Anything#readme",
+          "revision": "1d03336771fe09c5398ffdd211441e33941a97dc"
         }
       ],
       "checkpoints": [
@@ -6849,12 +6859,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/eloialonso/diamond"
+          "url": "https://github.com/eloialonso/diamond",
+          "revision": "851cefb497733d27f1b85c804104638765860fca"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/eloialonso/diamond#readme"
+          "url": "https://github.com/eloialonso/diamond#readme",
+          "revision": "851cefb497733d27f1b85c804104638765860fca"
         }
       ],
       "checkpoints": [
@@ -7302,7 +7314,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/EnVision-Research/DualCamCtrl"
+          "url": "https://github.com/EnVision-Research/DualCamCtrl",
+          "revision": "f4f064f39c84b0e9597e99979ec56361570d8bef"
         },
         {
           "kind": "weights",
@@ -7312,7 +7325,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/EnVision-Research/DualCamCtrl#readme"
+          "url": "https://github.com/EnVision-Research/DualCamCtrl#readme",
+          "revision": "f4f064f39c84b0e9597e99979ec56361570d8bef"
         }
       ],
       "checkpoints": [
@@ -9306,7 +9320,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/open-gigaai/giga-brain-0"
+          "url": "https://github.com/open-gigaai/giga-brain-0",
+          "revision": "61a919407dbc2bb945a926cc002749097cc9ebdf"
         },
         {
           "kind": "weights",
@@ -9331,7 +9346,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/open-gigaai/giga-brain-0#readme"
+          "url": "https://github.com/open-gigaai/giga-brain-0#readme",
+          "revision": "61a919407dbc2bb945a926cc002749097cc9ebdf"
         }
       ],
       "checkpoints": [
@@ -9887,7 +9903,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror",
+          "revision": "ed1e7639feb46ffcf8bc913a6957b244af2eb3ad"
         },
         {
           "kind": "weights",
@@ -9897,7 +9914,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror#readme"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror#readme",
+          "revision": "ed1e7639feb46ffcf8bc913a6957b244af2eb3ad"
         }
       ],
       "checkpoints": [
@@ -10266,7 +10284,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HY-WorldPlay"
+          "url": "https://github.com/Tencent-Hunyuan/HY-WorldPlay",
+          "revision": "ad424f57cf1054521a24b609dc0832afd7cd1a50"
         },
         {
           "kind": "weights",
@@ -10276,7 +10295,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HY-WorldPlay#readme"
+          "url": "https://github.com/Tencent-Hunyuan/HY-WorldPlay#readme",
+          "revision": "ad424f57cf1054521a24b609dc0832afd7cd1a50"
         }
       ],
       "checkpoints": [
@@ -10709,7 +10729,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/MeiGen-AI/Infinite-World"
+          "url": "https://github.com/MeiGen-AI/Infinite-World",
+          "revision": "1e8fc49ba7dc0f928c966c49c31fda9394c045d3"
         },
         {
           "kind": "weights",
@@ -10717,19 +10738,10 @@
           "url": "https://huggingface.co/MeiGen-AI/Infinite-World"
         },
         {
-          "kind": "source",
-          "label": "Source",
-          "url": "https://github.com/thuml/InfiniteWorld"
-        },
-        {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/MeiGen-AI/Infinite-World#readme"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/thuml/InfiniteWorld#readme"
+          "url": "https://github.com/MeiGen-AI/Infinite-World#readme",
+          "revision": "1e8fc49ba7dc0f928c966c49c31fda9394c045d3"
         }
       ],
       "checkpoints": [
@@ -11074,7 +11086,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/inspatio/inspatio-world-v1.5"
+          "url": "https://github.com/inspatio/inspatio-world-v1.5",
+          "revision": "dd3561f544053fe22d739b6b2f8461c9c97bf8cb"
         },
         {
           "kind": "weights",
@@ -11084,7 +11097,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/inspatio/inspatio-world-v1.5#readme"
+          "url": "https://github.com/inspatio/inspatio-world-v1.5#readme",
+          "revision": "dd3561f544053fe22d739b6b2f8461c9c97bf8cb"
         }
       ],
       "checkpoints": [
@@ -11397,7 +11411,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/inspatio/inspatio-world"
+          "url": "https://github.com/inspatio/inspatio-world",
+          "revision": "fef970664e33f519a31f0ee19d58689e41752c0e"
         },
         {
           "kind": "weights",
@@ -11413,7 +11428,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/inspatio/inspatio-world#readme"
+          "url": "https://github.com/inspatio/inspatio-world#readme",
+          "revision": "fef970664e33f519a31f0ee19d58689e41752c0e"
         },
         {
           "kind": "docs",
@@ -11801,7 +11817,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/inspatio/worldfm"
+          "url": "https://github.com/inspatio/worldfm",
+          "revision": "84dfff171f8c24be71585bcc2f140b8ef08d1cd0"
         },
         {
           "kind": "weights",
@@ -11809,19 +11826,10 @@
           "url": "https://huggingface.co/inspatio/WorldFM"
         },
         {
-          "kind": "source",
-          "label": "Source",
-          "url": "https://github.com/world-fm/worldfm"
-        },
-        {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/inspatio/worldfm#readme"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/world-fm/worldfm#readme"
+          "url": "https://github.com/inspatio/worldfm#readme",
+          "revision": "84dfff171f8c24be71585bcc2f140b8ef08d1cd0"
         }
       ],
       "checkpoints": [],
@@ -12149,7 +12157,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/kairos-agi/kairos-sensenova"
+          "url": "https://github.com/kairos-agi/kairos-sensenova",
+          "revision": "40d3fcb518c3ff894501bf4b080ccaa589363adc"
         },
         {
           "kind": "weights",
@@ -12169,7 +12178,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/kairos-agi/kairos-sensenova#readme"
+          "url": "https://github.com/kairos-agi/kairos-sensenova#readme",
+          "revision": "40d3fcb518c3ff894501bf4b080ccaa589363adc"
         }
       ],
       "checkpoints": [
@@ -12584,7 +12594,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/robbyant/lingbot-world"
+          "url": "https://github.com/robbyant/lingbot-world",
+          "revision": "a43bec7f8091c83e9b30b16b912f6fc906236fa6"
         },
         {
           "kind": "weights",
@@ -12599,7 +12610,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/robbyant/lingbot-world#readme"
+          "url": "https://github.com/robbyant/lingbot-world#readme",
+          "revision": "a43bec7f8091c83e9b30b16b912f6fc906236fa6"
         }
       ],
       "checkpoints": [
@@ -13038,7 +13050,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Junyi42/LoGeR"
+          "url": "https://github.com/Junyi42/LoGeR",
+          "revision": "7685b7a41949e62ed8a69309642465aee4cb89ba"
         },
         {
           "kind": "weights",
@@ -13048,7 +13061,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Junyi42/LoGeR#readme"
+          "url": "https://github.com/Junyi42/LoGeR#readme",
+          "revision": "7685b7a41949e62ed8a69309642465aee4cb89ba"
         }
       ],
       "checkpoints": [
@@ -13390,7 +13404,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Vchitect/LongVie"
+          "url": "https://github.com/Vchitect/LongVie",
+          "revision": "8740d2ee07245556750735193e0149dcd4d989f0"
         },
         {
           "kind": "weights",
@@ -13405,7 +13420,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Vchitect/LongVie#readme"
+          "url": "https://github.com/Vchitect/LongVie#readme",
+          "revision": "8740d2ee07245556750735193e0149dcd4d989f0"
         }
       ],
       "checkpoints": [
@@ -14700,7 +14716,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SkyworkAI/Matrix-Game"
+          "url": "https://github.com/SkyworkAI/Matrix-Game",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         },
         {
           "kind": "weights",
@@ -14710,7 +14727,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SkyworkAI/Matrix-Game#readme"
+          "url": "https://github.com/SkyworkAI/Matrix-Game#readme",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         }
       ],
       "checkpoints": [
@@ -15195,7 +15213,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SkyworkAI/Matrix-Game"
+          "url": "https://github.com/SkyworkAI/Matrix-Game",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         },
         {
           "kind": "weights",
@@ -15205,7 +15224,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SkyworkAI/Matrix-Game#readme"
+          "url": "https://github.com/SkyworkAI/Matrix-Game#readme",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         }
       ],
       "checkpoints": [
@@ -15968,7 +15988,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/allenai/molmoact2"
+          "url": "https://github.com/allenai/molmoact2",
+          "revision": "40ac992dd4b5e4f31a37b3aa26cfbb5c9fb2cf05"
         },
         {
           "kind": "weights",
@@ -16008,7 +16029,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/allenai/molmoact2#readme"
+          "url": "https://github.com/allenai/molmoact2#readme",
+          "revision": "40ac992dd4b5e4f31a37b3aa26cfbb5c9fb2cf05"
         }
       ],
       "checkpoints": [
@@ -17560,7 +17582,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/TencentARC/MotionCtrl"
+          "url": "https://github.com/TencentARC/MotionCtrl",
+          "revision": "6242d55414d3f4ad690bf0934889660f78e81b6e"
         },
         {
           "kind": "weights",
@@ -17575,7 +17598,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/TencentARC/MotionCtrl#readme"
+          "url": "https://github.com/TencentARC/MotionCtrl#readme",
+          "revision": "6242d55414d3f4ad690bf0934889660f78e81b6e"
         }
       ],
       "checkpoints": [],
@@ -18533,7 +18557,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/openvla/openvla"
+          "url": "https://github.com/openvla/openvla",
+          "revision": "c8f03f48af692657d3060c19588038c7220e9af9"
         },
         {
           "kind": "weights",
@@ -18550,7 +18575,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/openvla/openvla#readme"
+          "url": "https://github.com/openvla/openvla#readme",
+          "revision": "c8f03f48af692657d3060c19588038c7220e9af9"
         }
       ],
       "checkpoints": [
@@ -20016,12 +20042,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/RoboFlamingo/RoboFlamingo"
+          "url": "https://github.com/RoboFlamingo/RoboFlamingo",
+          "revision": "1475a07d043a62bb07ab11abfc71115bb72e2a16"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/RoboFlamingo/RoboFlamingo#readme"
+          "url": "https://github.com/RoboFlamingo/RoboFlamingo#readme",
+          "revision": "1475a07d043a62bb07ab11abfc71115bb72e2a16"
         }
       ],
       "checkpoints": [
@@ -20348,7 +20376,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/z2tong/SCOPE"
+          "url": "https://github.com/z2tong/SCOPE",
+          "revision": "c1eeaffca346313912f4ce5ac89cbe42d7428d9e"
         },
         {
           "kind": "weights",
@@ -20358,7 +20387,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/z2tong/SCOPE#readme"
+          "url": "https://github.com/z2tong/SCOPE#readme",
+          "revision": "c1eeaffca346313912f4ce5ac89cbe42d7428d9e"
         }
       ],
       "checkpoints": [
@@ -20758,12 +20788,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/showlab/Show-o"
+          "url": "https://github.com/showlab/Show-o",
+          "revision": "45a5a2de01d1ebd10cd5864d29310a76476cdf23"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/showlab/Show-o#readme"
+          "url": "https://github.com/showlab/Show-o#readme",
+          "revision": "45a5a2de01d1ebd10cd5864d29310a76476cdf23"
         }
       ],
       "checkpoints": [
@@ -21168,7 +21200,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/solaris-wm/solaris"
+          "url": "https://github.com/solaris-wm/solaris",
+          "revision": "68e0ed3b07f579c248c9b3b6337367d137e84c51"
         },
         {
           "kind": "weights",
@@ -21178,7 +21211,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/solaris-wm/solaris#readme"
+          "url": "https://github.com/solaris-wm/solaris#readme",
+          "revision": "68e0ed3b07f579c248c9b3b6337367d137e84c51"
         }
       ],
       "checkpoints": [
@@ -21544,7 +21578,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/btsmart/splatt3r"
+          "url": "https://github.com/btsmart/splatt3r",
+          "revision": "bda1dd07cf84b9189baabb1b8beac243959cfe5d"
         },
         {
           "kind": "weights",
@@ -21554,7 +21589,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/btsmart/splatt3r#readme"
+          "url": "https://github.com/btsmart/splatt3r#readme",
+          "revision": "bda1dd07cf84b9189baabb1b8beac243959cfe5d"
         }
       ],
       "checkpoints": [
@@ -21816,7 +21852,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/starVLA/starVLA"
+          "url": "https://github.com/starVLA/starVLA",
+          "revision": "1214d4e8e62be1ea91b7887628f2967974a07680"
         },
         {
           "kind": "weights",
@@ -21838,7 +21875,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/starVLA/starVLA#readme"
+          "url": "https://github.com/starVLA/starVLA#readme",
+          "revision": "1214d4e8e62be1ea91b7887628f2967974a07680"
         }
       ],
       "checkpoints": [
@@ -22867,7 +22905,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/facebookresearch/vggt-omega"
+          "url": "https://github.com/facebookresearch/vggt-omega",
+          "revision": "39a0cb8af88554f15ddcb5354cd52bde588fa014"
         },
         {
           "kind": "weights",
@@ -22877,7 +22916,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/facebookresearch/vggt-omega#readme"
+          "url": "https://github.com/facebookresearch/vggt-omega#readme",
+          "revision": "39a0cb8af88554f15ddcb5354cd52bde588fa014"
         }
       ],
       "checkpoints": [
@@ -23250,7 +23290,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/runjiali-rl/vmem"
+          "url": "https://github.com/runjiali-rl/vmem",
+          "revision": "39291e4f272f6b4f270691d930926ab5930f942e"
         },
         {
           "kind": "weights",
@@ -23265,7 +23306,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/runjiali-rl/vmem#readme"
+          "url": "https://github.com/runjiali-rl/vmem#readme",
+          "revision": "39291e4f272f6b4f270691d930926ab5930f942e"
         }
       ],
       "checkpoints": [
@@ -25740,7 +25782,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/yyfz/Warp-as-History"
+          "url": "https://github.com/yyfz/Warp-as-History",
+          "revision": "a22c4ed499cda4af4fea4f1b3d8bd20687216ab4"
         },
         {
           "kind": "weights",
@@ -25760,7 +25803,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/yyfz/Warp-as-History#readme"
+          "url": "https://github.com/yyfz/Warp-as-History#readme",
+          "revision": "a22c4ed499cda4af4fea4f1b3d8bd20687216ab4"
         }
       ],
       "checkpoints": [
@@ -26119,12 +26163,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/cvlab-kaist/WorldCam"
+          "url": "https://github.com/cvlab-kaist/WorldCam",
+          "revision": "8e31bf7d5ea2e51e0ba7e4da29f9d9fff8af6dbb"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/cvlab-kaist/WorldCam#readme"
+          "url": "https://github.com/cvlab-kaist/WorldCam#readme",
+          "revision": "8e31bf7d5ea2e51e0ba7e4da29f9d9fff8af6dbb"
         }
       ],
       "checkpoints": [
@@ -28353,7 +28399,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/stdstu12/YUME"
+          "url": "https://github.com/stdstu12/YUME",
+          "revision": "111c3fab7fb020d1e261a68be6ec78a3fecc8d5b"
         },
         {
           "kind": "weights",
@@ -28368,7 +28415,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/stdstu12/YUME#readme"
+          "url": "https://github.com/stdstu12/YUME#readme",
+          "revision": "111c3fab7fb020d1e261a68be6ec78a3fecc8d5b"
         }
       ],
       "checkpoints": [
@@ -29730,12 +29778,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/tonyzhaozh/act"
+          "url": "https://github.com/tonyzhaozh/act",
+          "revision": "742c753c0d4a5d87076c8f69e5628c79a8cc5488"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/tonyzhaozh/act#readme"
+          "url": "https://github.com/tonyzhaozh/act#readme",
+          "revision": "742c753c0d4a5d87076c8f69e5628c79a8cc5488"
         }
       ],
       "checkpoints": [],
@@ -30091,7 +30141,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Serene-SIVY/AHA-WAM"
+          "url": "https://github.com/Serene-SIVY/AHA-WAM",
+          "revision": "69076f6206518554477be5639deb016eee03a9d6"
         },
         {
           "kind": "weights",
@@ -30106,7 +30157,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Serene-SIVY/AHA-WAM#readme"
+          "url": "https://github.com/Serene-SIVY/AHA-WAM#readme",
+          "revision": "69076f6206518554477be5639deb016eee03a9d6"
         }
       ],
       "checkpoints": [
@@ -33258,7 +33310,8 @@
         {
           "kind": "source",
           "label": "Source",
-          "url": "https://github.com/Wan-Video/Wan2.1"
+          "url": "https://github.com/Wan-Video/Wan2.1",
+          "revision": "9737cba9c1c3c4d04b33fcad41c111989865d315"
         },
         {
           "kind": "docs",
@@ -33269,7 +33322,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Wan-Video/Wan2.1#readme"
+          "url": "https://github.com/Wan-Video/Wan2.1#readme",
+          "revision": "9737cba9c1c3c4d04b33fcad41c111989865d315"
         }
       ],
       "checkpoints": [
@@ -37310,7 +37364,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/thu-ml/Causal-Forcing"
+          "url": "https://github.com/thu-ml/Causal-Forcing",
+          "revision": "a67b81351d6dd50c1a1215f5958ee5a7c95eb135"
         },
         {
           "kind": "weights",
@@ -37320,7 +37375,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/thu-ml/Causal-Forcing#readme"
+          "url": "https://github.com/thu-ml/Causal-Forcing#readme",
+          "revision": "a67b81351d6dd50c1a1215f5958ee5a7c95eb135"
         }
       ],
       "checkpoints": [
@@ -37663,7 +37719,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/microsoft/CogACT"
+          "url": "https://github.com/microsoft/CogACT",
+          "revision": "b174a1b86deedfab4d198d935207e7bb0527994e"
         },
         {
           "kind": "weights",
@@ -37683,7 +37740,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/microsoft/CogACT#readme"
+          "url": "https://github.com/microsoft/CogACT#readme",
+          "revision": "b174a1b86deedfab4d198d935207e7bb0527994e"
         }
       ],
       "checkpoints": [
@@ -38197,7 +38255,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/nvidia-cosmos/cosmos-predict2"
+          "url": "https://github.com/nvidia-cosmos/cosmos-predict2",
+          "revision": "661da4774b0ca41d082a0ecbeb47550bcf07e03f"
         },
         {
           "kind": "weights",
@@ -38212,7 +38271,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/nvidia-cosmos/cosmos-predict2#readme"
+          "url": "https://github.com/nvidia-cosmos/cosmos-predict2#readme",
+          "revision": "661da4774b0ca41d082a0ecbeb47550bcf07e03f"
         }
       ],
       "checkpoints": [
@@ -38879,7 +38939,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/nvidia-cosmos/cosmos-predict2.5"
+          "url": "https://github.com/nvidia-cosmos/cosmos-predict2.5",
+          "revision": "a2c298b0a3df3778b973fe65e9e58877b292d8a7"
         },
         {
           "kind": "weights",
@@ -38894,7 +38955,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/nvidia-cosmos/cosmos-predict2.5#readme"
+          "url": "https://github.com/nvidia-cosmos/cosmos-predict2.5#readme",
+          "revision": "a2c298b0a3df3778b973fe65e9e58877b292d8a7"
         }
       ],
       "checkpoints": [
@@ -39590,7 +39652,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVIDIA/cosmos"
+          "url": "https://github.com/NVIDIA/cosmos",
+          "revision": "aefdf852c16237039785d84ab3327167cb0ec07f"
         },
         {
           "kind": "weights",
@@ -39607,7 +39670,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVIDIA/cosmos#readme"
+          "url": "https://github.com/NVIDIA/cosmos#readme",
+          "revision": "aefdf852c16237039785d84ab3327167cb0ec07f"
         }
       ],
       "checkpoints": [
@@ -42575,12 +42639,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/real-stanford/diffusion_policy"
+          "url": "https://github.com/real-stanford/diffusion_policy",
+          "revision": "5ba07ac6661db573af695b419a7947ecb704690f"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/real-stanford/diffusion_policy#readme"
+          "url": "https://github.com/real-stanford/diffusion_policy#readme",
+          "revision": "5ba07ac6661db573af695b419a7947ecb704690f"
         }
       ],
       "checkpoints": [],
@@ -42938,12 +43004,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/gaoyuezhou/dino_wm"
+          "url": "https://github.com/gaoyuezhou/dino_wm",
+          "revision": "0a9492fa12044b852ae9e001cc74604b79c8bb0c"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/gaoyuezhou/dino_wm#readme"
+          "url": "https://github.com/gaoyuezhou/dino_wm#readme",
+          "revision": "0a9492fa12044b852ae9e001cc74604b79c8bb0c"
         }
       ],
       "checkpoints": [],
@@ -43213,7 +43281,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVIDIA/DreamDojo"
+          "url": "https://github.com/NVIDIA/DreamDojo",
+          "revision": "02f119b759d5c7f84a399fdeea3c6e82e7ed6cff"
         },
         {
           "kind": "weights",
@@ -43230,7 +43299,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVIDIA/DreamDojo#readme"
+          "url": "https://github.com/NVIDIA/DreamDojo#readme",
+          "revision": "02f119b759d5c7f84a399fdeea3c6e82e7ed6cff"
         }
       ],
       "checkpoints": [
@@ -43800,12 +43870,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVIDIA/DreamDojo"
+          "url": "https://github.com/NVIDIA/DreamDojo",
+          "revision": "02f119b759d5c7f84a399fdeea3c6e82e7ed6cff"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVIDIA/DreamDojo#readme"
+          "url": "https://github.com/NVIDIA/DreamDojo#readme",
+          "revision": "02f119b759d5c7f84a399fdeea3c6e82e7ed6cff"
         }
       ],
       "checkpoints": [
@@ -44161,7 +44233,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/AMAP-ML/DreamX-World"
+          "url": "https://github.com/AMAP-ML/DreamX-World",
+          "revision": "75154c18a3947aa79cbf0de250bf16605d8e6354"
         },
         {
           "kind": "weights",
@@ -44171,7 +44244,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/AMAP-ML/DreamX-World#readme"
+          "url": "https://github.com/AMAP-ML/DreamX-World#readme",
+          "revision": "75154c18a3947aa79cbf0de250bf16605d8e6354"
         }
       ],
       "checkpoints": [
@@ -48030,7 +48104,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity"
+          "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity",
+          "revision": "7ed7eee09e7c7543ecfce42d2fe2ff6c0f9984ea"
         },
         {
           "kind": "weights",
@@ -48040,7 +48115,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity#readme"
+          "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity#readme",
+          "revision": "7ed7eee09e7c7543ecfce42d2fe2ff6c0f9984ea"
         }
       ],
       "checkpoints": [],
@@ -49340,12 +49416,14 @@
         {
           "kind": "source",
           "label": "Source",
-          "url": "https://github.com/baaivision/Emu3.5"
+          "url": "https://github.com/baaivision/Emu3.5",
+          "revision": "8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/baaivision/Emu3.5#readme"
+          "url": "https://github.com/baaivision/Emu3.5#readme",
+          "revision": "8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745"
         }
       ],
       "checkpoints": [
@@ -52728,7 +52806,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/nv-tlabs/GEN3C"
+          "url": "https://github.com/nv-tlabs/GEN3C",
+          "revision": "04177ec83662d6809a06d8a6253650968e2366dc"
         },
         {
           "kind": "weights",
@@ -52738,7 +52817,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/nv-tlabs/GEN3C#readme"
+          "url": "https://github.com/nv-tlabs/GEN3C#readme",
+          "revision": "04177ec83662d6809a06d8a6253650968e2366dc"
         }
       ],
       "checkpoints": [
@@ -53149,7 +53229,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/open-gigaai/giga-world-policy"
+          "url": "https://github.com/open-gigaai/giga-world-policy",
+          "revision": "5d55073a6508de7354c83679d9028f4010ff6cb2"
         },
         {
           "kind": "weights",
@@ -53165,7 +53246,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/open-gigaai/giga-world-policy#readme"
+          "url": "https://github.com/open-gigaai/giga-world-policy#readme",
+          "revision": "5d55073a6508de7354c83679d9028f4010ff6cb2"
         }
       ],
       "checkpoints": [
@@ -54729,7 +54811,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NoizAI/HelixWorld"
+          "url": "https://github.com/NoizAI/HelixWorld",
+          "revision": "3fa5f166834b08ea20ddc925c01f85d936ac03b5"
         },
         {
           "kind": "weights",
@@ -54739,7 +54822,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NoizAI/HelixWorld#readme"
+          "url": "https://github.com/NoizAI/HelixWorld#readme",
+          "revision": "3fa5f166834b08ea20ddc925c01f85d936ac03b5"
         }
       ],
       "checkpoints": [
@@ -55165,7 +55249,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0"
+          "url": "https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0",
+          "revision": "9a35ecf495a1b97b4929524fff442481069ecdc2"
         },
         {
           "kind": "weights",
@@ -55175,7 +55260,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0#readme"
+          "url": "https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0#readme",
+          "revision": "9a35ecf495a1b97b4929524fff442481069ecdc2"
         }
       ],
       "checkpoints": [
@@ -56921,7 +57007,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager",
+          "revision": "6218ccd36df77d0254dcf24ad1fb77312f75b04a"
         },
         {
           "kind": "weights",
@@ -56931,7 +57018,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager#readme"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager#readme",
+          "revision": "6218ccd36df77d0254dcf24ad1fb77312f75b04a"
         }
       ],
       "checkpoints": [
@@ -57226,7 +57314,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA"
+          "url": "https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA",
+          "revision": "8ba4c8cbdf42a4bcf0a19be4bd2841405dfe15e9"
         },
         {
           "kind": "weights",
@@ -57243,7 +57332,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA#readme"
+          "url": "https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA#readme",
+          "revision": "8ba4c8cbdf42a4bcf0a19be4bd2841405dfe15e9"
         }
       ],
       "checkpoints": [
@@ -65089,7 +65179,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/krea-ai/realtime-video"
+          "url": "https://github.com/krea-ai/realtime-video",
+          "revision": "acf4b7b4e1a3049a0e04782e751d12203334038d"
         },
         {
           "kind": "weights",
@@ -65099,7 +65190,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/krea-ai/realtime-video#readme"
+          "url": "https://github.com/krea-ai/realtime-video#readme",
+          "revision": "acf4b7b4e1a3049a0e04782e751d12203334038d"
         }
       ],
       "checkpoints": [
@@ -66525,7 +66617,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/CHEN-H01/LaST-R1"
+          "url": "https://github.com/CHEN-H01/LaST-R1",
+          "revision": "ba4e939632427e066f734bf9f7abfa11cc4911f6"
         },
         {
           "kind": "weights",
@@ -66535,7 +66628,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/CHEN-H01/LaST-R1#readme"
+          "url": "https://github.com/CHEN-H01/LaST-R1#readme",
+          "revision": "ba4e939632427e066f734bf9f7abfa11cc4911f6"
         }
       ],
       "checkpoints": [
@@ -66827,7 +66921,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robbyant/lingbot-map"
+          "url": "https://github.com/Robbyant/lingbot-map",
+          "revision": "c9a1de590cb64972f414da8d94f672d2127c33f9"
         },
         {
           "kind": "weights",
@@ -66837,7 +66932,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robbyant/lingbot-map#readme"
+          "url": "https://github.com/Robbyant/lingbot-map#readme",
+          "revision": "c9a1de590cb64972f414da8d94f672d2127c33f9"
         }
       ],
       "checkpoints": [
@@ -67110,7 +67206,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robbyant/lingbot-video"
+          "url": "https://github.com/Robbyant/lingbot-video",
+          "revision": "a2bb04b78edd848500dc27a26e035a95442ae186"
         },
         {
           "kind": "weights",
@@ -67125,7 +67222,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robbyant/lingbot-video#readme"
+          "url": "https://github.com/Robbyant/lingbot-video#readme",
+          "revision": "a2bb04b78edd848500dc27a26e035a95442ae186"
         }
       ],
       "checkpoints": [
@@ -69856,7 +69954,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/meituan-longcat/LongCat-Video"
+          "url": "https://github.com/meituan-longcat/LongCat-Video",
+          "revision": "6b3f4b8582a8bc3f20f795735f5383716c4ba794"
         },
         {
           "kind": "weights",
@@ -69866,7 +69965,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/meituan-longcat/LongCat-Video#readme"
+          "url": "https://github.com/meituan-longcat/LongCat-Video#readme",
+          "revision": "6b3f4b8582a8bc3f20f795735f5383716c4ba794"
         }
       ],
       "checkpoints": [
@@ -70312,12 +70412,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Vchitect/LongVie"
+          "url": "https://github.com/Vchitect/LongVie",
+          "revision": "8740d2ee07245556750735193e0149dcd4d989f0"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Vchitect/LongVie#readme"
+          "url": "https://github.com/Vchitect/LongVie#readme",
+          "revision": "8740d2ee07245556750735193e0149dcd4d989f0"
         }
       ],
       "checkpoints": [
@@ -71185,12 +71287,14 @@
         {
           "kind": "docs",
           "label": "Documentation",
-          "url": "https://github.com/Lightricks/LTX-2/tree/main/packages/ltx-pipelines/docs"
+          "url": "https://github.com/Lightricks/LTX-2/tree/main/packages/ltx-pipelines/docs",
+          "revision": "d6053703e00195bc668cbd1d5eda9dc0b2e7b74a"
         },
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Lightricks/LTX-2"
+          "url": "https://github.com/Lightricks/LTX-2",
+          "revision": "a95ab856bf29407b6b066ede0abe1846050db56c"
         },
         {
           "kind": "source",
@@ -71201,7 +71305,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Lightricks/LTX-2#readme"
+          "url": "https://github.com/Lightricks/LTX-2#readme",
+          "revision": "a95ab856bf29407b6b066ede0abe1846050db56c"
         },
         {
           "kind": "docs",
@@ -75431,7 +75536,8 @@
         {
           "kind": "source",
           "label": "Source",
-          "url": "https://github.com/apple/ml-depth-pro"
+          "url": "https://github.com/apple/ml-depth-pro",
+          "revision": "9efe5c1def37a26c5367a71df664b18e1306c708"
         },
         {
           "kind": "docs",
@@ -75447,7 +75553,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/apple/ml-depth-pro#readme"
+          "url": "https://github.com/apple/ml-depth-pro#readme",
+          "revision": "9efe5c1def37a26c5367a71df664b18e1306c708"
         }
       ],
       "checkpoints": [
@@ -75751,7 +75858,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SkyworkAI/Matrix-Game"
+          "url": "https://github.com/SkyworkAI/Matrix-Game",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         },
         {
           "kind": "weights",
@@ -75761,7 +75869,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SkyworkAI/Matrix-Game#readme"
+          "url": "https://github.com/SkyworkAI/Matrix-Game#readme",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         }
       ],
       "checkpoints": [
@@ -78854,7 +78963,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SkyworkAI/Matrix-Game"
+          "url": "https://github.com/SkyworkAI/Matrix-Game",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         },
         {
           "kind": "weights",
@@ -78870,7 +78980,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SkyworkAI/Matrix-Game#readme"
+          "url": "https://github.com/SkyworkAI/Matrix-Game#readme",
+          "revision": "5446525c80da2a4a2f87801addbbc7faa8d2486e"
         }
       ],
       "checkpoints": [
@@ -79884,12 +79995,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/mira-wm/mira"
+          "url": "https://github.com/mira-wm/mira",
+          "revision": "db25448391d42547161673a77950a1154d8b5f1f"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/mira-wm/mira#readme"
+          "url": "https://github.com/mira-wm/mira#readme",
+          "revision": "db25448391d42547161673a77950a1154d8b5f1f"
         }
       ],
       "checkpoints": [],
@@ -83539,7 +83652,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/allenai/MolmoBot"
+          "url": "https://github.com/allenai/MolmoBot",
+          "revision": "33c0ca77bf6062a23d60ffd4a6859334c4a46d30"
         },
         {
           "kind": "weights",
@@ -83564,7 +83678,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/allenai/MolmoBot#readme"
+          "url": "https://github.com/allenai/MolmoBot#readme",
+          "revision": "33c0ca77bf6062a23d60ffd4a6859334c4a46d30"
         }
       ],
       "checkpoints": [
@@ -84356,12 +84471,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/CIntellifusion/MultiWorld"
+          "url": "https://github.com/CIntellifusion/MultiWorld",
+          "revision": "6e0a1c3414a97dd5528d94f67ba3c48cf6d36ab5"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/CIntellifusion/MultiWorld#readme"
+          "url": "https://github.com/CIntellifusion/MultiWorld#readme",
+          "revision": "6e0a1c3414a97dd5528d94f67ba3c48cf6d36ab5"
         }
       ],
       "checkpoints": [
@@ -85149,7 +85266,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/dreamzero0/dreamzero"
+          "url": "https://github.com/dreamzero0/dreamzero",
+          "revision": "ab790c198fbce33503358efbbd4187ce9a89adf3"
         },
         {
           "kind": "weights",
@@ -85164,7 +85282,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/dreamzero0/dreamzero#readme"
+          "url": "https://github.com/dreamzero0/dreamzero#readme",
+          "revision": "ab790c198fbce33503358efbbd4187ce9a89adf3"
         }
       ],
       "checkpoints": [
@@ -85909,7 +86028,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVIDIA/Isaac-GR00T"
+          "url": "https://github.com/NVIDIA/Isaac-GR00T",
+          "revision": "65cc4a192e6d084650d97747308b6a8deb790722"
         },
         {
           "kind": "weights",
@@ -85932,7 +86052,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVIDIA/Isaac-GR00T#readme"
+          "url": "https://github.com/NVIDIA/Isaac-GR00T#readme",
+          "revision": "65cc4a192e6d084650d97747308b6a8deb790722"
         }
       ],
       "checkpoints": [
@@ -86409,7 +86530,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/octo-models/octo"
+          "url": "https://github.com/octo-models/octo",
+          "revision": "241fb3514b7c40957a86d869fecb7c7fc353f540"
         },
         {
           "kind": "weights",
@@ -86426,7 +86548,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/octo-models/octo#readme"
+          "url": "https://github.com/octo-models/octo#readme",
+          "revision": "241fb3514b7c40957a86d869fecb7c7fc353f540"
         }
       ],
       "checkpoints": [
@@ -90471,12 +90594,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Physical-Intelligence/openpi"
+          "url": "https://github.com/Physical-Intelligence/openpi",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Physical-Intelligence/openpi#readme"
+          "url": "https://github.com/Physical-Intelligence/openpi#readme",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         }
       ],
       "checkpoints": [],
@@ -92417,7 +92542,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Yaofang-Liu/Pusa-VidGen"
+          "url": "https://github.com/Yaofang-Liu/Pusa-VidGen",
+          "revision": "8a8c4f523a0cadb94ab7c9f1e0620a4847b92991"
         },
         {
           "kind": "weights",
@@ -92427,7 +92553,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Yaofang-Liu/Pusa-VidGen#readme"
+          "url": "https://github.com/Yaofang-Liu/Pusa-VidGen#readme",
+          "revision": "8a8c4f523a0cadb94ab7c9f1e0620a4847b92991"
         }
       ],
       "checkpoints": [
@@ -93749,7 +93876,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/OpenDriveLab/RISE"
+          "url": "https://github.com/OpenDriveLab/RISE",
+          "revision": "5fac1e6ab9d50d4cc1ba4daeadf14023c8415955"
         },
         {
           "kind": "weights",
@@ -93759,7 +93887,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/OpenDriveLab/RISE#readme"
+          "url": "https://github.com/OpenDriveLab/RISE#readme",
+          "revision": "5fac1e6ab9d50d4cc1ba4daeadf14023c8415955"
         }
       ],
       "checkpoints": [],
@@ -94882,7 +95011,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Cynthiazxy123/SAMA"
+          "url": "https://github.com/Cynthiazxy123/SAMA",
+          "revision": "85441d5d42e6335f66282b92016eae7266df436e"
         },
         {
           "kind": "weights",
@@ -94892,7 +95022,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Cynthiazxy123/SAMA#readme"
+          "url": "https://github.com/Cynthiazxy123/SAMA#readme",
+          "revision": "85441d5d42e6335f66282b92016eae7266df436e"
         }
       ],
       "checkpoints": [
@@ -95988,12 +96119,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVlabs/Sana"
+          "url": "https://github.com/NVlabs/Sana",
+          "revision": "00cb59836c297bd5fad401000ee65f9042f29d02"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVlabs/Sana#readme"
+          "url": "https://github.com/NVlabs/Sana#readme",
+          "revision": "00cb59836c297bd5fad401000ee65f9042f29d02"
         }
       ],
       "checkpoints": [
@@ -96678,7 +96811,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/guandeh17/Self-Forcing"
+          "url": "https://github.com/guandeh17/Self-Forcing",
+          "revision": "33593df3e81fa3ec10239271dd2c100facac6de1"
         },
         {
           "kind": "weights",
@@ -96688,7 +96822,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/guandeh17/Self-Forcing#readme"
+          "url": "https://github.com/guandeh17/Self-Forcing#readme",
+          "revision": "33593df3e81fa3ec10239271dd2c100facac6de1"
         }
       ],
       "checkpoints": [
@@ -97036,7 +97171,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SkyworkAI/SkyReels-V3"
+          "url": "https://github.com/SkyworkAI/SkyReels-V3",
+          "revision": "28c771e8456341be6a213e3d1133ed1fd19bf75d"
         },
         {
           "kind": "weights",
@@ -97046,7 +97182,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SkyworkAI/SkyReels-V3#readme"
+          "url": "https://github.com/SkyworkAI/SkyReels-V3#readme",
+          "revision": "28c771e8456341be6a213e3d1133ed1fd19bf75d"
         }
       ],
       "checkpoints": [
@@ -98909,12 +99046,13 @@
           "kind": "source",
           "label": "Source",
           "url": "https://github.com/castacks/UniCeption",
-          "revision": "v0.1.7"
+          "revision": "802ebc1783d71bbaa9d139c88d87d062ad18ce62"
         },
         {
           "kind": "source",
           "label": "Source",
-          "url": "https://github.com/facebookresearch/dinov2"
+          "url": "https://github.com/facebookresearch/dinov2",
+          "revision": "3a3217b0c05b4c2e1dd861210e9afe3494f5fcb5"
         },
         {
           "kind": "docs",
@@ -98931,12 +99069,13 @@
           "kind": "docs",
           "label": "Upstream README",
           "url": "https://github.com/castacks/UniCeption#readme",
-          "revision": "v0.1.7"
+          "revision": "802ebc1783d71bbaa9d139c88d87d062ad18ce62"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/facebookresearch/dinov2#readme"
+          "url": "https://github.com/facebookresearch/dinov2#readme",
+          "revision": "3a3217b0c05b4c2e1dd861210e9afe3494f5fcb5"
         }
       ],
       "checkpoints": [
@@ -101885,7 +102024,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Ji4chenLi/t2v-turbo"
+          "url": "https://github.com/Ji4chenLi/t2v-turbo",
+          "revision": "eaae323f10d136796a33e8f5304ed50e40def570"
         },
         {
           "kind": "weights",
@@ -101900,7 +102040,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Ji4chenLi/t2v-turbo#readme"
+          "url": "https://github.com/Ji4chenLi/t2v-turbo#readme",
+          "revision": "eaae323f10d136796a33e8f5304ed50e40def570"
         }
       ],
       "checkpoints": [],
@@ -102987,7 +103128,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/liyaxuanliyaxuan/TinyVLA"
+          "url": "https://github.com/liyaxuanliyaxuan/TinyVLA",
+          "revision": "94f441827b45e4f76316ef6a0ae443736dc93a5d"
         },
         {
           "kind": "weights",
@@ -103009,7 +103151,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/liyaxuanliyaxuan/TinyVLA#readme"
+          "url": "https://github.com/liyaxuanliyaxuan/TinyVLA#readme",
+          "revision": "94f441827b45e4f76316ef6a0ae443736dc93a5d"
         }
       ],
       "checkpoints": [
@@ -103426,7 +103569,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/ali-vilab/unianimate-dit"
+          "url": "https://github.com/ali-vilab/unianimate-dit",
+          "revision": "61d882c25385042f0cf5bcdaf6853238d9756d68"
         },
         {
           "kind": "weights",
@@ -103436,7 +103580,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/ali-vilab/unianimate-dit#readme"
+          "url": "https://github.com/ali-vilab/unianimate-dit#readme",
+          "revision": "61d882c25385042f0cf5bcdaf6853238d9756d68"
         }
       ],
       "checkpoints": [
@@ -110545,7 +110690,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Wan-Video/Wan2.1"
+          "url": "https://github.com/Wan-Video/Wan2.1",
+          "revision": "9737cba9c1c3c4d04b33fcad41c111989865d315"
         },
         {
           "kind": "weights",
@@ -110560,7 +110706,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Wan-Video/Wan2.1#readme"
+          "url": "https://github.com/Wan-Video/Wan2.1#readme",
+          "revision": "9737cba9c1c3c4d04b33fcad41c111989865d315"
         }
       ],
       "checkpoints": [
@@ -112671,12 +112818,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/KovenYu/WonderJourney"
+          "url": "https://github.com/KovenYu/WonderJourney",
+          "revision": "fecbbdff4d107e673c29c1d87b9e66fdc46f11af"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/KovenYu/WonderJourney#readme"
+          "url": "https://github.com/KovenYu/WonderJourney#readme",
+          "revision": "fecbbdff4d107e673c29c1d87b9e66fdc46f11af"
         }
       ],
       "checkpoints": [],
@@ -113093,12 +113242,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/KovenYu/WonderWorld"
+          "url": "https://github.com/KovenYu/WonderWorld",
+          "revision": "5cf11467ad21a9d7bca269f961855a235c7d352e"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/KovenYu/WonderWorld#readme"
+          "url": "https://github.com/KovenYu/WonderWorld#readme",
+          "revision": "5cf11467ad21a9d7bca269f961855a235c7d352e"
         }
       ],
       "checkpoints": [
@@ -114029,12 +114180,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/ZiYang-xie/WorldGen"
+          "url": "https://github.com/ZiYang-xie/WorldGen",
+          "revision": "7ce7b2767fdf31e2727b69a2e61e2e950e3a017f"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/ZiYang-xie/WorldGen#readme"
+          "url": "https://github.com/ZiYang-xie/WorldGen#readme",
+          "revision": "7ce7b2767fdf31e2727b69a2e61e2e950e3a017f"
         }
       ],
       "checkpoints": [
@@ -114468,7 +114621,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/WorldPlay2/WorldPlay2"
+          "url": "https://github.com/WorldPlay2/WorldPlay2",
+          "revision": "c5d83e32099116ff3a1437a8a05c764d579f704b"
         },
         {
           "kind": "weights",
@@ -114490,7 +114644,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/WorldPlay2/WorldPlay2#readme"
+          "url": "https://github.com/WorldPlay2/WorldPlay2#readme",
+          "revision": "c5d83e32099116ff3a1437a8a05c764d579f704b"
         }
       ],
       "checkpoints": [
@@ -116524,7 +116679,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/amap-cvlab/ABot-Manipulation"
+          "url": "https://github.com/amap-cvlab/ABot-Manipulation",
+          "revision": "16088c08ad5762e19d76a36ef7dab9f7eda8e974"
         },
         {
           "kind": "weights",
@@ -116545,7 +116701,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/amap-cvlab/ABot-Manipulation#readme"
+          "url": "https://github.com/amap-cvlab/ABot-Manipulation#readme",
+          "revision": "16088c08ad5762e19d76a36ef7dab9f7eda8e974"
         }
       ],
       "checkpoints": [
@@ -117008,12 +117165,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Little-Podi/AdaWorld"
+          "url": "https://github.com/Little-Podi/AdaWorld",
+          "revision": "fe3701e607d025376b54aad28d04121f592ddbb3"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Little-Podi/AdaWorld#readme"
+          "url": "https://github.com/Little-Podi/AdaWorld#readme",
+          "revision": "fe3701e607d025376b54aad28d04121f592ddbb3"
         }
       ],
       "checkpoints": [
@@ -117332,12 +117491,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/BeingBeyond/Being-H"
+          "url": "https://github.com/BeingBeyond/Being-H",
+          "revision": "66b959e05db225fd816f8a517d94a9c0585cfc3e"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/BeingBeyond/Being-H#readme"
+          "url": "https://github.com/BeingBeyond/Being-H#readme",
+          "revision": "66b959e05db225fd816f8a517d94a9c0585cfc3e"
         }
       ],
       "checkpoints": [
@@ -118516,7 +118677,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robert-gyj/Ctrl-World"
+          "url": "https://github.com/Robert-gyj/Ctrl-World",
+          "revision": "99fb20683fd79dfa6d0c6feb9d49c6c55eecd50d"
         },
         {
           "kind": "weights",
@@ -118536,7 +118698,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robert-gyj/Ctrl-World#readme"
+          "url": "https://github.com/Robert-gyj/Ctrl-World#readme",
+          "revision": "99fb20683fd79dfa6d0c6feb9d49c6c55eecd50d"
         }
       ],
       "checkpoints": [
@@ -119026,7 +119189,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/CUT3R/CUT3R"
+          "url": "https://github.com/CUT3R/CUT3R",
+          "revision": "8bc15dc92a6d7fd92920b4ec81540d3dec7d3ecf"
         },
         {
           "kind": "weights",
@@ -119036,7 +119200,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/CUT3R/CUT3R#readme"
+          "url": "https://github.com/CUT3R/CUT3R#readme",
+          "revision": "8bc15dc92a6d7fd92920b4ec81540d3dec7d3ecf"
         }
       ],
       "checkpoints": [],
@@ -119374,7 +119539,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Dexmal/dexbotic"
+          "url": "https://github.com/Dexmal/dexbotic",
+          "revision": "0f5ae6382bf0bc6196120f0930ce342ae54e7354"
         },
         {
           "kind": "weights",
@@ -119404,7 +119570,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Dexmal/dexbotic#readme"
+          "url": "https://github.com/Dexmal/dexbotic#readme",
+          "revision": "0f5ae6382bf0bc6196120f0930ce342ae54e7354"
         }
       ],
       "checkpoints": [
@@ -119912,7 +120079,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/ByteDance-Seed/Depth-Anything-3"
+          "url": "https://github.com/ByteDance-Seed/Depth-Anything-3",
+          "revision": "3fe327a6abe2e5db95b54444ea95463dbfef5610"
         },
         {
           "kind": "weights",
@@ -119922,7 +120090,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/ByteDance-Seed/Depth-Anything-3#readme"
+          "url": "https://github.com/ByteDance-Seed/Depth-Anything-3#readme",
+          "revision": "3fe327a6abe2e5db95b54444ea95463dbfef5610"
         }
       ],
       "checkpoints": [],
@@ -120180,12 +120349,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/dexoravla/Dexora"
+          "url": "https://github.com/dexoravla/Dexora",
+          "revision": "6f2869d61483774aa75cda4cd2260dc6a5faa783"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/dexoravla/Dexora#readme"
+          "url": "https://github.com/dexoravla/Dexora#readme",
+          "revision": "6f2869d61483774aa75cda4cd2260dc6a5faa783"
         }
       ],
       "checkpoints": [
@@ -120617,7 +120788,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Dexmal/dexbotic"
+          "url": "https://github.com/Dexmal/dexbotic",
+          "revision": "0f5ae6382bf0bc6196120f0930ce342ae54e7354"
         },
         {
           "kind": "weights",
@@ -120632,7 +120804,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Dexmal/dexbotic#readme"
+          "url": "https://github.com/Dexmal/dexbotic#readme",
+          "revision": "0f5ae6382bf0bc6196120f0930ce342ae54e7354"
         }
       ],
       "checkpoints": [
@@ -121064,7 +121237,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/miccooper9/egowm"
+          "url": "https://github.com/miccooper9/egowm",
+          "revision": "4a24b6fb917b8b86cea892312971f39691c532e8"
         },
         {
           "kind": "weights",
@@ -121074,7 +121248,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/miccooper9/egowm#readme"
+          "url": "https://github.com/miccooper9/egowm#readme",
+          "revision": "4a24b6fb917b8b86cea892312971f39691c532e8"
         }
       ],
       "checkpoints": [
@@ -121801,7 +121976,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/InternRobotics/EventVLA"
+          "url": "https://github.com/InternRobotics/EventVLA",
+          "revision": "4b5b26030abddf83bc60e1a6b067de8f521fd0ec"
         },
         {
           "kind": "weights",
@@ -121816,7 +121992,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/InternRobotics/EventVLA#readme"
+          "url": "https://github.com/InternRobotics/EventVLA#readme",
+          "revision": "4b5b26030abddf83bc60e1a6b067de8f521fd0ec"
         }
       ],
       "checkpoints": [
@@ -122249,7 +122426,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/OpenGalaxea/GalaxeaVLA"
+          "url": "https://github.com/OpenGalaxea/GalaxeaVLA",
+          "revision": "13a16a9049aee8f1d799b56fccc0c5832a75fc2f"
         },
         {
           "kind": "weights",
@@ -122265,7 +122443,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/OpenGalaxea/GalaxeaVLA#readme"
+          "url": "https://github.com/OpenGalaxea/GalaxeaVLA#readme",
+          "revision": "13a16a9049aee8f1d799b56fccc0c5832a75fc2f"
         }
       ],
       "checkpoints": [
@@ -122690,7 +122869,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/AgibotTech/Genie-Envisioner"
+          "url": "https://github.com/AgibotTech/Genie-Envisioner",
+          "revision": "65ab2fa2191f74d213a3447013f5ff90b55dcc3d"
         },
         {
           "kind": "weights",
@@ -122705,7 +122885,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/AgibotTech/Genie-Envisioner#readme"
+          "url": "https://github.com/AgibotTech/Genie-Envisioner#readme",
+          "revision": "65ab2fa2191f74d213a3447013f5ff90b55dcc3d"
         }
       ],
       "checkpoints": [
@@ -123198,7 +123379,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/open-gigaai/giga-world-0"
+          "url": "https://github.com/open-gigaai/giga-world-0",
+          "revision": "f3fbdab0d6853a125cd0b898137e30a63aadbe7d"
         },
         {
           "kind": "weights",
@@ -123219,7 +123401,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/open-gigaai/giga-world-0#readme"
+          "url": "https://github.com/open-gigaai/giga-world-0#readme",
+          "revision": "f3fbdab0d6853a125cd0b898137e30a63aadbe7d"
         },
         {
           "kind": "docs",
@@ -123683,7 +123866,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/OpenDriveLab/AgiBot-World"
+          "url": "https://github.com/OpenDriveLab/AgiBot-World",
+          "revision": "98f136ea6b345db1a08451a2f543d67c1789a809"
         },
         {
           "kind": "weights",
@@ -123694,7 +123878,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/OpenDriveLab/AgiBot-World#readme"
+          "url": "https://github.com/OpenDriveLab/AgiBot-World#readme",
+          "revision": "98f136ea6b345db1a08451a2f543d67c1789a809"
         }
       ],
       "checkpoints": [
@@ -124125,7 +124310,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/HongzheBi/H_RDT"
+          "url": "https://github.com/HongzheBi/H_RDT",
+          "revision": "8be02cb5e631898dfab12f9b6bbb77e32999547a"
         },
         {
           "kind": "weights",
@@ -124136,7 +124322,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/HongzheBi/H_RDT#readme"
+          "url": "https://github.com/HongzheBi/H_RDT#readme",
+          "revision": "8be02cb5e631898dfab12f9b6bbb77e32999547a"
         }
       ],
       "checkpoints": [
@@ -124792,7 +124979,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/liruiw/HMA"
+          "url": "https://github.com/liruiw/HMA",
+          "revision": "e3c89088fa82f2c208af6796485b4ec65ab318c5"
         },
         {
           "kind": "weights",
@@ -124807,7 +124995,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/liruiw/HMA#readme"
+          "url": "https://github.com/liruiw/HMA#readme",
+          "revision": "e3c89088fa82f2c208af6796485b4ec65ab318c5"
         }
       ],
       "checkpoints": [
@@ -125484,7 +125673,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0",
+          "revision": "57fa9f3a79eae1079c279968cdb9d82c75fa7c86"
         },
         {
           "kind": "weights",
@@ -125494,7 +125684,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0#readme"
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0#readme",
+          "revision": "57fa9f3a79eae1079c279968cdb9d82c75fa7c86"
         }
       ],
       "checkpoints": [],
@@ -125946,7 +126137,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/wzzheng/StreamVGGT"
+          "url": "https://github.com/wzzheng/StreamVGGT",
+          "revision": "05682bcb05683c4c71522e9cb618fc8ca349063c"
         },
         {
           "kind": "weights",
@@ -125956,7 +126148,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/wzzheng/StreamVGGT#readme"
+          "url": "https://github.com/wzzheng/StreamVGGT#readme",
+          "revision": "05682bcb05683c4c71522e9cb618fc8ca349063c"
         }
       ],
       "checkpoints": [],
@@ -126182,7 +126375,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/InternRobotics/InternVLA-A-series"
+          "url": "https://github.com/InternRobotics/InternVLA-A-series",
+          "revision": "a3707592607575aac35355ecf010264f666a700b"
         },
         {
           "kind": "weights",
@@ -126197,7 +126391,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/InternRobotics/InternVLA-A-series#readme"
+          "url": "https://github.com/InternRobotics/InternVLA-A-series#readme",
+          "revision": "a3707592607575aac35355ecf010264f666a700b"
         }
       ],
       "checkpoints": [
@@ -126695,7 +126890,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/LatentActionPretraining/LAPA"
+          "url": "https://github.com/LatentActionPretraining/LAPA",
+          "revision": "46aca51d7faebcec02d7d323bbb3820c2df07bc6"
         },
         {
           "kind": "weights",
@@ -126706,7 +126902,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/LatentActionPretraining/LAPA#readme"
+          "url": "https://github.com/LatentActionPretraining/LAPA#readme",
+          "revision": "46aca51d7faebcec02d7d323bbb3820c2df07bc6"
         }
       ],
       "checkpoints": [
@@ -127110,7 +127307,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/jiangranlv/LDA-1B"
+          "url": "https://github.com/jiangranlv/LDA-1B",
+          "revision": "06e6a274a9086cc26635a9fe663866335eb30fc5"
         },
         {
           "kind": "weights",
@@ -127121,7 +127319,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/jiangranlv/LDA-1B#readme"
+          "url": "https://github.com/jiangranlv/LDA-1B#readme",
+          "revision": "06e6a274a9086cc26635a9fe663866335eb30fc5"
         }
       ],
       "checkpoints": [
@@ -127601,7 +127800,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/lucas-maes/le-wm"
+          "url": "https://github.com/lucas-maes/le-wm",
+          "revision": "8edfeb336732b5f3ce7b8b210d0ba370a09e2cac"
         },
         {
           "kind": "weights",
@@ -127611,7 +127811,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/lucas-maes/le-wm#readme"
+          "url": "https://github.com/lucas-maes/le-wm#readme",
+          "revision": "8edfeb336732b5f3ce7b8b210d0ba370a09e2cac"
         }
       ],
       "checkpoints": [
@@ -127880,7 +128081,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robbyant/lingbot-va"
+          "url": "https://github.com/Robbyant/lingbot-va",
+          "revision": "58c2ae5bac46bd8114065bea9d7d256eb67c16c3"
         },
         {
           "kind": "weights",
@@ -127900,7 +128102,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robbyant/lingbot-va#readme"
+          "url": "https://github.com/Robbyant/lingbot-va#readme",
+          "revision": "58c2ae5bac46bd8114065bea9d7d256eb67c16c3"
         }
       ],
       "checkpoints": [
@@ -128503,7 +128706,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robbyant/lingbot-vla"
+          "url": "https://github.com/Robbyant/lingbot-vla",
+          "revision": "4eb34b7693a0565c67433f8fac9c59a2e67eb60b"
         },
         {
           "kind": "weights",
@@ -128524,7 +128728,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robbyant/lingbot-vla#readme"
+          "url": "https://github.com/Robbyant/lingbot-vla#readme",
+          "revision": "4eb34b7693a0565c67433f8fac9c59a2e67eb60b"
         }
       ],
       "checkpoints": [
@@ -129594,7 +129799,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Robbyant/lingbot-vla-v2"
+          "url": "https://github.com/Robbyant/lingbot-vla-v2",
+          "revision": "69729b4ef24c63ec25e750915491635f4753be1d"
         },
         {
           "kind": "weights",
@@ -129604,7 +129810,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Robbyant/lingbot-vla-v2#readme"
+          "url": "https://github.com/Robbyant/lingbot-vla-v2#readme",
+          "revision": "69729b4ef24c63ec25e750915491635f4753be1d"
         }
       ],
       "checkpoints": [
@@ -130560,12 +130767,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/microsoft/mineworld"
+          "url": "https://github.com/microsoft/mineworld",
+          "revision": "9f49efbcc68a5f0cf60e78f0abc566eac409282f"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/microsoft/mineworld#readme"
+          "url": "https://github.com/microsoft/mineworld#readme",
+          "revision": "9f49efbcc68a5f0cf60e78f0abc566eac409282f"
         }
       ],
       "checkpoints": [],
@@ -130870,12 +131079,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/AbdelStark/mosaicmem"
+          "url": "https://github.com/AbdelStark/mosaicmem",
+          "revision": "3178e01e3639d7e2e7a487d5d589fd5f53719904"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/AbdelStark/mosaicmem#readme"
+          "url": "https://github.com/AbdelStark/mosaicmem#readme",
+          "revision": "3178e01e3639d7e2e7a487d5d589fd5f53719904"
         }
       ],
       "checkpoints": [],
@@ -131111,12 +131322,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVlabs/GR00T-WholeBodyControl"
+          "url": "https://github.com/NVlabs/GR00T-WholeBodyControl",
+          "revision": "a9d20b2ac0949244d94461a1a3263f38c5027c4a"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVlabs/GR00T-WholeBodyControl#readme"
+          "url": "https://github.com/NVlabs/GR00T-WholeBodyControl#readme",
+          "revision": "a9d20b2ac0949244d94461a1a3263f38c5027c4a"
         }
       ],
       "checkpoints": [],
@@ -131793,7 +132006,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/facebookresearch/nwm"
+          "url": "https://github.com/facebookresearch/nwm",
+          "revision": "3f6cd8e70d6f2d1e2b9684acff510710135f0f41"
         },
         {
           "kind": "weights",
@@ -131803,7 +132017,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/facebookresearch/nwm#readme"
+          "url": "https://github.com/facebookresearch/nwm#readme",
+          "revision": "3f6cd8e70d6f2d1e2b9684acff510710135f0f41"
         }
       ],
       "checkpoints": [
@@ -132138,7 +132353,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/etched-ai/open-oasis"
+          "url": "https://github.com/etched-ai/open-oasis",
+          "revision": "f59deef2c019c212bd0c5a3a5b986a51f3701847"
         },
         {
           "kind": "weights",
@@ -132148,7 +132364,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/etched-ai/open-oasis#readme"
+          "url": "https://github.com/etched-ai/open-oasis#readme",
+          "revision": "f59deef2c019c212bd0c5a3a5b986a51f3701847"
         }
       ],
       "checkpoints": [
@@ -132488,12 +132705,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/OmniForcing/OmniForcing"
+          "url": "https://github.com/OmniForcing/OmniForcing",
+          "revision": "cd6791433e3de4cbe156c125730d45a45d52fcae"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/OmniForcing/OmniForcing#readme"
+          "url": "https://github.com/OmniForcing/OmniForcing#readme",
+          "revision": "cd6791433e3de4cbe156c125730d45a45d52fcae"
         }
       ],
       "checkpoints": [],
@@ -133220,12 +133439,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Physical-Intelligence/openpi"
+          "url": "https://github.com/Physical-Intelligence/openpi",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Physical-Intelligence/openpi#readme"
+          "url": "https://github.com/Physical-Intelligence/openpi#readme",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         }
       ],
       "checkpoints": [],
@@ -133665,12 +133886,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Physical-Intelligence/openpi"
+          "url": "https://github.com/Physical-Intelligence/openpi",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Physical-Intelligence/openpi#readme"
+          "url": "https://github.com/Physical-Intelligence/openpi#readme",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         }
       ],
       "checkpoints": [],
@@ -134097,12 +134320,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Physical-Intelligence/openpi"
+          "url": "https://github.com/Physical-Intelligence/openpi",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Physical-Intelligence/openpi#readme"
+          "url": "https://github.com/Physical-Intelligence/openpi#readme",
+          "revision": "c23745b5ad24e98f66967ea795a07b2588ed6c79"
         }
       ],
       "checkpoints": [],
@@ -134505,7 +134730,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/yyfz/Pi3"
+          "url": "https://github.com/yyfz/Pi3",
+          "revision": "b56ef4b9cc9be05b8590604861aa3906db0ef45e"
         },
         {
           "kind": "weights",
@@ -134515,7 +134741,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/yyfz/Pi3#readme"
+          "url": "https://github.com/yyfz/Pi3#readme",
+          "revision": "b56ef4b9cc9be05b8590604861aa3906db0ef45e"
         }
       ],
       "checkpoints": [],
@@ -134795,7 +135022,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVlabs/PointWorld"
+          "url": "https://github.com/NVlabs/PointWorld",
+          "revision": "05484826dfef74cbe278a3974179a5a16705d35d"
         },
         {
           "kind": "weights",
@@ -134805,7 +135033,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVlabs/PointWorld#readme"
+          "url": "https://github.com/NVlabs/PointWorld#readme",
+          "revision": "05484826dfef74cbe278a3974179a5a16705d35d"
         }
       ],
       "checkpoints": [
@@ -135514,12 +135743,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/google-research/robotics_transformer"
+          "url": "https://github.com/google-research/robotics_transformer",
+          "revision": "4569641b8111f3f402c32d8e24becd2a6e952ecc"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/google-research/robotics_transformer#readme"
+          "url": "https://github.com/google-research/robotics_transformer#readme",
+          "revision": "4569641b8111f3f402c32d8e24becd2a6e952ecc"
         }
       ],
       "checkpoints": [],
@@ -135794,7 +136025,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/NVlabs/Sana"
+          "url": "https://github.com/NVlabs/Sana",
+          "revision": "00cb59836c297bd5fad401000ee65f9042f29d02"
         },
         {
           "kind": "weights",
@@ -135819,7 +136051,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/NVlabs/Sana#readme"
+          "url": "https://github.com/NVlabs/Sana#readme",
+          "revision": "00cb59836c297bd5fad401000ee65f9042f29d02"
         }
       ],
       "checkpoints": [
@@ -140417,7 +140650,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/KlingAIResearch/ShotStream"
+          "url": "https://github.com/KlingAIResearch/ShotStream",
+          "revision": "917a0478fe47d71ddcf3269d052cbe3be2ae10e8"
         },
         {
           "kind": "weights",
@@ -140427,7 +140661,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/KlingAIResearch/ShotStream#readme"
+          "url": "https://github.com/KlingAIResearch/ShotStream#readme",
+          "revision": "917a0478fe47d71ddcf3269d052cbe3be2ae10e8"
         }
       ],
       "checkpoints": [
@@ -142231,7 +142466,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/yxzzhang/StarWM"
+          "url": "https://github.com/yxzzhang/StarWM",
+          "revision": "a419893a5e0120af95971725aa00b50e27f50527"
         },
         {
           "kind": "weights",
@@ -142241,7 +142477,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/yxzzhang/StarWM#readme"
+          "url": "https://github.com/yxzzhang/StarWM#readme",
+          "revision": "a419893a5e0120af95971725aa00b50e27f50527"
         }
       ],
       "checkpoints": [
@@ -142527,7 +142764,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/UMass-Embodied-AGI/TesserAct"
+          "url": "https://github.com/UMass-Embodied-AGI/TesserAct",
+          "revision": "d2fe4b1d509e54a3cf95da40ec6e232b68361d07"
         },
         {
           "kind": "weights",
@@ -142537,7 +142775,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/UMass-Embodied-AGI/TesserAct#readme"
+          "url": "https://github.com/UMass-Embodied-AGI/TesserAct#readme",
+          "revision": "d2fe4b1d509e54a3cf95da40ec6e232b68361d07"
         }
       ],
       "checkpoints": [
@@ -143423,12 +143662,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/WEIRDLabUW/unified-world-model"
+          "url": "https://github.com/WEIRDLabUW/unified-world-model",
+          "revision": "b7d4067c8859775e5b08f681e76d538015cdd445"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/WEIRDLabUW/unified-world-model#readme"
+          "url": "https://github.com/WEIRDLabUW/unified-world-model#readme",
+          "revision": "b7d4067c8859775e5b08f681e76d538015cdd445"
         }
       ],
       "checkpoints": [],
@@ -143638,7 +143879,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/facebookresearch/vggt"
+          "url": "https://github.com/facebookresearch/vggt",
+          "revision": "a288dd0f14786c93483e45524328726ab7b1b4ce"
         },
         {
           "kind": "weights",
@@ -143648,7 +143890,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/facebookresearch/vggt#readme"
+          "url": "https://github.com/facebookresearch/vggt#readme",
+          "revision": "a288dd0f14786c93483e45524328726ab7b1b4ce"
         }
       ],
       "checkpoints": [],
@@ -144013,12 +144256,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/SimonSun0810/VGGT-World"
+          "url": "https://github.com/SimonSun0810/VGGT-World",
+          "revision": "c90f5ee289036277fe75a69aa96418c04ccd5cc7"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/SimonSun0810/VGGT-World#readme"
+          "url": "https://github.com/SimonSun0810/VGGT-World#readme",
+          "revision": "c90f5ee289036277fe75a69aa96418c04ccd5cc7"
         }
       ],
       "checkpoints": [],
@@ -144266,12 +144511,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/thuml/Vid2World"
+          "url": "https://github.com/thuml/Vid2World",
+          "revision": "ae24077adbd0783bc6e1b79f705d9b8fad5888ce"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/thuml/Vid2World#readme"
+          "url": "https://github.com/thuml/Vid2World#readme",
+          "revision": "ae24077adbd0783bc6e1b79f705d9b8fad5888ce"
         }
       ],
       "checkpoints": [],
@@ -144571,7 +144818,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/allenai/WildDet3D"
+          "url": "https://github.com/allenai/WildDet3D",
+          "revision": "1b8aa52b6ff3f00d0ebfa07175efc0c0c440964a"
         },
         {
           "kind": "weights",
@@ -144581,7 +144829,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/allenai/WildDet3D#readme"
+          "url": "https://github.com/allenai/WildDet3D#readme",
+          "revision": "1b8aa52b6ff3f00d0ebfa07175efc0c0c440964a"
         }
       ],
       "checkpoints": [
@@ -144814,12 +145063,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/ShandaAI/WildWorld"
+          "url": "https://github.com/ShandaAI/WildWorld",
+          "revision": "23971043ae34d802b83661a964fe291f14d277f7"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/ShandaAI/WildWorld#readme"
+          "url": "https://github.com/ShandaAI/WildWorld#readme",
+          "revision": "23971043ae34d802b83661a964fe291f14d277f7"
         }
       ],
       "checkpoints": [],
@@ -145041,7 +145292,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/world-grow/WorldGrow"
+          "url": "https://github.com/world-grow/WorldGrow",
+          "revision": "1f2ac49c30fd1390a810a201019ed26c02487883"
         },
         {
           "kind": "weights",
@@ -145051,7 +145303,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/world-grow/WorldGrow#readme"
+          "url": "https://github.com/world-grow/WorldGrow#readme",
+          "revision": "1f2ac49c30fd1390a810a201019ed26c02487883"
         }
       ],
       "checkpoints": [
@@ -145291,12 +145544,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/xizaoqu/WorldMem"
+          "url": "https://github.com/xizaoqu/WorldMem",
+          "revision": "c1cc91bdfb2dda52fe309280e5ed046b1faba448"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/xizaoqu/WorldMem#readme"
+          "url": "https://github.com/xizaoqu/WorldMem#readme",
+          "revision": "c1cc91bdfb2dda52fe309280e5ed046b1faba448"
         }
       ],
       "checkpoints": [],
@@ -145557,7 +145812,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/wow-world-model/wow-world-model"
+          "url": "https://github.com/wow-world-model/wow-world-model",
+          "revision": "08b010597b69b5e1fde5f69ba44da85aff05bf62"
         },
         {
           "kind": "weights",
@@ -145582,7 +145838,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/wow-world-model/wow-world-model#readme"
+          "url": "https://github.com/wow-world-model/wow-world-model#readme",
+          "revision": "08b010597b69b5e1fde5f69ba44da85aff05bf62"
         }
       ],
       "checkpoints": [
@@ -145978,7 +146235,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/sharinka0715/X-WAM"
+          "url": "https://github.com/sharinka0715/X-WAM",
+          "revision": "72cfb86b33fc5060963ef63412f16439fcfa472f"
         },
         {
           "kind": "weights",
@@ -145995,7 +146253,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/sharinka0715/X-WAM#readme"
+          "url": "https://github.com/sharinka0715/X-WAM#readme",
+          "revision": "72cfb86b33fc5060963ef63412f16439fcfa472f"
         }
       ],
       "checkpoints": [
@@ -147058,12 +147317,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-1"
+          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-1",
+          "revision": "26702e2544450f0d39ca850d666b82040ebf98d0"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-1#readme"
+          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-1#readme",
+          "revision": "26702e2544450f0d39ca850d666b82040ebf98d0"
         }
       ],
       "checkpoints": [],
@@ -147859,7 +148120,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/yuantianyuan01/FastWAM"
+          "url": "https://github.com/yuantianyuan01/FastWAM",
+          "revision": "7faa71108368fbb3b6885649f112af607427a2d4"
         },
         {
           "kind": "weights",
@@ -147879,7 +148141,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/yuantianyuan01/FastWAM#readme"
+          "url": "https://github.com/yuantianyuan01/FastWAM#readme",
+          "revision": "7faa71108368fbb3b6885649f112af607427a2d4"
         }
       ],
       "checkpoints": [
@@ -148414,7 +148677,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HY-World-2.0"
+          "url": "https://github.com/Tencent-Hunyuan/HY-World-2.0",
+          "revision": "7f668e67c74338d50684e57be46a438459b6bbe1"
         },
         {
           "kind": "weights",
@@ -148424,7 +148688,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HY-World-2.0#readme"
+          "url": "https://github.com/Tencent-Hunyuan/HY-World-2.0#readme",
+          "revision": "7f668e67c74338d50684e57be46a438459b6bbe1"
         }
       ],
       "checkpoints": [
@@ -148866,7 +149131,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/RoboMME/robomme_policy_learning"
+          "url": "https://github.com/RoboMME/robomme_policy_learning",
+          "revision": "ecf086c3be7c2223167d9bb2f6ef1f0a6e24353b"
         },
         {
           "kind": "weights",
@@ -148891,7 +149157,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/RoboMME/robomme_policy_learning#readme"
+          "url": "https://github.com/RoboMME/robomme_policy_learning#readme",
+          "revision": "ecf086c3be7c2223167d9bb2f6ef1f0a6e24353b"
         }
       ],
       "checkpoints": [
@@ -149437,7 +149704,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/moojink/openvla-oft"
+          "url": "https://github.com/moojink/openvla-oft",
+          "revision": "e4287e94541f459edc4feabc4e181f537cd569a8"
         },
         {
           "kind": "weights",
@@ -149467,7 +149735,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/moojink/openvla-oft#readme"
+          "url": "https://github.com/moojink/openvla-oft#readme",
+          "revision": "e4287e94541f459edc4feabc4e181f537cd569a8"
         }
       ],
       "checkpoints": [
@@ -151068,7 +151337,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/OpenHelix-Team/Spatial-Forcing"
+          "url": "https://github.com/OpenHelix-Team/Spatial-Forcing",
+          "revision": "372819b31ba9a2c8fc5989edc7d525cb187cecd5"
         },
         {
           "kind": "weights",
@@ -151097,7 +151367,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/OpenHelix-Team/Spatial-Forcing#readme"
+          "url": "https://github.com/OpenHelix-Team/Spatial-Forcing#readme",
+          "revision": "372819b31ba9a2c8fc5989edc7d525cb187cecd5"
         }
       ],
       "checkpoints": [
@@ -152240,7 +152511,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/DravenALG/VLANeXt"
+          "url": "https://github.com/DravenALG/VLANeXt",
+          "revision": "f4162397af201bddbdb2ec17e836bde4743c1913"
         },
         {
           "kind": "weights",
@@ -152250,7 +152522,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/DravenALG/VLANeXt#readme"
+          "url": "https://github.com/DravenALG/VLANeXt#readme",
+          "revision": "f4162397af201bddbdb2ec17e836bde4743c1913"
         }
       ],
       "checkpoints": [
@@ -153114,7 +153387,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/2toinf/X-VLA"
+          "url": "https://github.com/2toinf/X-VLA",
+          "revision": "6bc2513f5f1cbec715cc668b414392a6cae5c671"
         },
         {
           "kind": "weights",
@@ -153125,7 +153399,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/2toinf/X-VLA#readme"
+          "url": "https://github.com/2toinf/X-VLA#readme",
+          "revision": "6bc2513f5f1cbec715cc668b414392a6cae5c671"
         }
       ],
       "checkpoints": [
@@ -153590,7 +153865,8 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-0"
+          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-0",
+          "revision": "fa170bc295a22e0f4e582ff9e5bb104b3c6900d6"
         },
         {
           "kind": "weights",
@@ -153631,7 +153907,8 @@
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-0#readme"
+          "url": "https://github.com/XiaomiRobotics/Xiaomi-Robotics-0#readme",
+          "revision": "fa170bc295a22e0f4e582ff9e5bb104b3c6900d6"
         }
       ],
       "checkpoints": [
@@ -155355,12 +155632,14 @@
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://github.com/cvlab-kaist/world-observer"
+          "url": "https://github.com/cvlab-kaist/world-observer",
+          "revision": "6efb6a4107f53e7e36031cfa00c880b075631fcf"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/cvlab-kaist/world-observer#readme"
+          "url": "https://github.com/cvlab-kaist/world-observer#readme",
+          "revision": "6efb6a4107f53e7e36031cfa00c880b075631fcf"
         }
       ],
       "checkpoints": [],

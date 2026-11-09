@@ -7,6 +7,7 @@ groups:
 - prior
 source_repos:
 - url: https://github.com/lpiccinelli-eth/UniDepth
+  revision: 8d8cfe4c7ee15297099983607febf0d4f32eb3d6
 checkpoints:
 - repo_id: lpiccinelli/unidepth-v2-vitl14
   filename: model.safetensors

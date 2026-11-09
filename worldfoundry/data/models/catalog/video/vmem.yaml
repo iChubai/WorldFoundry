@@ -15,6 +15,7 @@ official_sources:
   project_page: https://v-mem.github.io/
   github:
     url: https://github.com/runjiali-rl/vmem
+    revision: 39291e4f272f6b4f270691d930926ab5930f942e
   huggingface:
   - repo_id: liguang0115/vmem
     type: model

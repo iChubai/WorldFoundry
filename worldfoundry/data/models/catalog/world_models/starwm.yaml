@@ -14,6 +14,7 @@ official_sources:
   project_page: https://star-wm.github.io/
   github:
     url: https://github.com/yxzzhang/StarWM
+    revision: a419893a5e0120af95971725aa00b50e27f50527
   huggingface:
   - repo_id: yxzhang2024/StarWM
     status: confirmed

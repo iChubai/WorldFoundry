@@ -25,6 +25,7 @@ official_sources:
   github:
     head_sha: 72cfb86b33fc5060963ef63412f16439fcfa472f
     url: https://github.com/sharinka0715/X-WAM
+    revision: 72cfb86b33fc5060963ef63412f16439fcfa472f
   huggingface:
   - repo_id: sharinka0715/X-WAM-checkpoints
     revision: bb6fd1643cfa8bdc751612a7ace0bd8062a8917a

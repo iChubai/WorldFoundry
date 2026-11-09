@@ -18,6 +18,7 @@ official_sources:
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/open-gigaai/giga-world-0
+    revision: f3fbdab0d6853a125cd0b898137e30a63aadbe7d
     head_sha: f3fbdab0d6853a125cd0b898137e30a63aadbe7d
     verified_by: official GitHub repository selected from WorldArena open-source result names
   huggingface:

@@ -14,6 +14,7 @@ official_sources:
   project_page: https://eternalevan.github.io/Astra-project/
   github:
     url: https://github.com/EternalEvan/Astra
+    revision: 3fb82e1939bfcf87d6e27a7da57d8b55ff9cb393
   huggingface:
   - repo_id: EvanEternal/Astra
     type: model

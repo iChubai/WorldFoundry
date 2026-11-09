@@ -16,6 +16,7 @@ official_sources:
   paper: https://arxiv.org/pdf/2604.24833
   github:
     url: https://github.com/NVlabs/GR00T-WholeBodyControl
+    revision: a9d20b2ac0949244d94461a1a3263f38c5027c4a
     head_sha: a9d20b2ac0949244d94461a1a3263f38c5027c4a
     subdir: motionbricks
 runtime_profile: runtime-profile:motionbricks

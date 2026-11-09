@@ -12,6 +12,7 @@ official_sources:
   project_page: https://serene-sivy.github.io/aha-wam/
   github:
     url: https://github.com/Serene-SIVY/AHA-WAM
+    revision: 69076f6206518554477be5639deb016eee03a9d6
     head_sha: 69076f6206518554477be5639deb016eee03a9d6
   huggingface:
   - repo_id: SereneC/AHA-WAM-RoboTwin2.0

@@ -18,6 +18,7 @@ official_sources:
   github:
     head_sha: 4569641b8111f3f402c32d8e24becd2a6e952ecc
     url: https://github.com/google-research/robotics_transformer
+    revision: 4569641b8111f3f402c32d8e24becd2a6e952ecc
 pipeline_binding: rt-1
 provider: official_repo
 runtime_profile: runtime-profile:rt-1

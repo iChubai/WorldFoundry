@@ -6,6 +6,7 @@ groups:
 - 3d
 source_repos:
 - url: https://github.com/naver/dust3r
+  revision: 4c24a6ebf04809f2cfe59915e51779c8984aaa40
 input_schema:
   prompt: false
   image: true

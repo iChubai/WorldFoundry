@@ -24,6 +24,7 @@ official_sources:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
     url: https://github.com/hehao13/CameraCtrl
+    revision: af45a7a0dbeedb7f6ed66aac4a9e5411a279f0d2
   huggingface:
   - confirmed_by: https://huggingface.co/api/models/hehao13/CameraCtrl
     repo_id: hehao13/CameraCtrl

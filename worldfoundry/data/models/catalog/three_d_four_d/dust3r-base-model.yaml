@@ -15,6 +15,7 @@ official_sources:
   paper: https://arxiv.org/abs/2312.14132
   github:
     url: https://github.com/naver/dust3r
+    revision: 4c24a6ebf04809f2cfe59915e51779c8984aaa40
   project_page: https://dust3r.europe.naverlabs.com/
 integration:
   kind: pipeline_runner

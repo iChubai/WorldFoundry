@@ -25,6 +25,7 @@ official_sources:
   github:
     head_sha: c8f03f48af692657d3060c19588038c7220e9af9
     url: https://github.com/openvla/openvla
+    revision: c8f03f48af692657d3060c19588038c7220e9af9
   huggingface:
   - license: mit
     repo_id: openvla/openvla-7b

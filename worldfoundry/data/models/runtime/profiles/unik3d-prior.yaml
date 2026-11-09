@@ -7,6 +7,7 @@ groups:
 - prior
 source_repos:
 - url: https://github.com/lpiccinelli-eth/UniK3D
+  revision: 29f7862f3c3ee79c53ef0153dfc901ce511df575
 checkpoints:
 - repo_id: lpiccinelli/unik3d-vitl
   filename: model.safetensors

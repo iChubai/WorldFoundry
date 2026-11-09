@@ -18,8 +18,10 @@ official_sources:
   project_page: https://ltx.video
   github:
     url: https://github.com/Lightricks/LTX-2
+    revision: a95ab856bf29407b6b066ede0abe1846050db56c
   docs:
     url: https://github.com/Lightricks/LTX-2/tree/main/packages/ltx-pipelines/docs
+    revision: d6053703e00195bc668cbd1d5eda9dc0b2e7b74a
 source_status:
   status: confirmed_official_github
   github:

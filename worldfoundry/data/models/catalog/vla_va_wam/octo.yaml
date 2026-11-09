@@ -25,6 +25,7 @@ official_sources:
   github:
     head_sha: 241fb3514b7c40957a86d869fecb7c7fc353f540
     url: https://github.com/octo-models/octo
+    revision: 241fb3514b7c40957a86d869fecb7c7fc353f540
   huggingface:
   - repo_id: rail-berkeley/octo-base-1.5
     revision: ee3c10e8edd6ce2e8b1e8744d3c6fba4097bed48

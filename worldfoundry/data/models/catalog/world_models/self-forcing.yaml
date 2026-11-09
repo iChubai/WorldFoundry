@@ -38,6 +38,7 @@ official_sources:
   paper: https://arxiv.org/abs/2506.08009
   github:
     url: https://github.com/guandeh17/Self-Forcing
+    revision: 33593df3e81fa3ec10239271dd2c100facac6de1
   huggingface:
   - repo_id: gdhe17/Self-Forcing
     type: model

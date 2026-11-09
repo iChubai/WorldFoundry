@@ -424,5 +424,3 @@ def interface_spec_for_model(model_id: str, entry: CatalogEntry) -> StudioInterf
 
 def interface_spec_for_entry(entry: CatalogEntry) -> StudioInterfaceSpec:
     return interface_spec_for_model(entry.model_id, entry)
-
-

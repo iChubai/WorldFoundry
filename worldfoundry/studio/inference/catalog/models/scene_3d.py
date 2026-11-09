@@ -568,7 +568,9 @@ def _worldfm_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "moge_pretrained": resolve._prefer_existing_model_ref(
-                *resolve._cache_candidates("moge-2-vitl-normal", "Ruicheng--moge-2-vitl-normal", "Ruicheng--moge-2-vitl"),
+                *resolve._cache_candidates(
+                    "moge-2-vitl-normal", "Ruicheng--moge-2-vitl-normal", "Ruicheng--moge-2-vitl"
+                ),
             ),
         }
     }
@@ -1705,8 +1707,7 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "supports_stream": False,
         "default_prompt": "a village landscape",
         "default_task_type": "image-to-3d-world",
-        "default_call_kwargs": {
-        },
+        "default_call_kwargs": {},
         "call_params": (
             "prompt",
             "images",

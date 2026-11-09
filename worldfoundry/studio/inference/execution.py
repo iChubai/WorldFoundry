@@ -3795,5 +3795,3 @@ class StudioManager:
             return str(result or "")
         message = self._unload_local(model_id)
         return message
-
-

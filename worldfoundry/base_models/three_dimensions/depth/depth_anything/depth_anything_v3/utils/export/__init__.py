@@ -32,11 +32,15 @@ def _import_exporter(export_format: str):
 
             return export_to_npz
         if export_format == "feat_vis":
-            from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import export_to_feat_vis
+            from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import (
+                export_to_feat_vis,
+            )
 
             return export_to_feat_vis
         if export_format == "depth_vis":
-            from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import export_to_depth_vis
+            from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import (
+                export_to_depth_vis,
+            )
 
             return export_to_depth_vis
         if export_format == "gs_ply":

@@ -11,7 +11,7 @@ import sys
 from collections.abc import Iterable, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -84,7 +84,7 @@ def _data_path(*parts: str | Path) -> Path:
     return _package_root().joinpath("data", *(Path(part) for part in parts))
 
 
-@lru_cache(maxsize=None)
+@cache
 def _runtime_profile_call_defaults(model_id: str) -> tuple[tuple[str, Any], ...]:
     """Generation defaults declared by ``data/models/runtime/profiles/<model_id>.yaml``.
 

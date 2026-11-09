@@ -299,7 +299,9 @@ def _canonical_runtime_entries(model_id: str | None = None) -> Iterable[CatalogE
             "generation_type": "i2v",
             "aliases": ("allegro", "allegro-ti2v"),
             "default_prompt": "The car drives along the road",
-            "default_input_path": str(resolve._data_path("test_cases", "stable_virtual_camera", "basic", "blue-car.jpg")),
+            "default_input_path": str(
+                resolve._data_path("test_cases", "stable_virtual_camera", "basic", "blue-car.jpg")
+            ),
             "load_params": (
                 *DISPATCH_LOAD_PARAMS,
                 "model_path",
@@ -1191,7 +1193,9 @@ def _discover_catalog_entries() -> tuple[CatalogEntry, ...]:
         key = (entry.module_path, entry.class_name)
         previous = by_module.get(key)
         if previous is not None:
-            merged_aliases = resolve._coerce_aliases(*previous.aliases, *entry.aliases, previous.model_id.replace("_", "-"))
+            merged_aliases = resolve._coerce_aliases(
+                *previous.aliases, *entry.aliases, previous.model_id.replace("_", "-")
+            )
             entry = CatalogEntry(
                 model_id=entry.model_id,
                 display_name=entry.display_name,

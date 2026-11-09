@@ -63,5 +63,3 @@ def infer_visualization_artifact(
         format_hint=suffix[1:],
         metadata=dict(metadata or {}),
     )
-
-

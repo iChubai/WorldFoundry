@@ -95,5 +95,3 @@ def first_splat_asset(artifact_paths: Iterable[str], *, gs_ply_predicate=None) -
     if gaussian_ply is not None:
         return gaussian_ply.as_posix(), "ply_gaussian"
     return None, None
-
-

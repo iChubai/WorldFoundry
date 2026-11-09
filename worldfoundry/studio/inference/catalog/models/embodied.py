@@ -966,12 +966,16 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
         "default_call_kwargs": lambda: {
             "official_policy_observation": {
-                "cam_high": str(resolve._data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_high.png")),
+                "cam_high": str(
+                    resolve._data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_high.png")
+                ),
                 "cam_left_wrist": str(
                     resolve._data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_left_wrist.png")
                 ),
                 "cam_right_wrist": str(
-                    resolve._data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_right_wrist.png")
+                    resolve._data_path(
+                        "test_cases", "test_vla_case1", "aloha", "observation_images_cam_right_wrist.png"
+                    )
                 ),
                 "state": [0.0] * 14,
                 "reset": True,
@@ -1389,7 +1393,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Embodied Action",
         "default_model_ref": _molmobot_default_ref,
         "default_prompt": "put the mug in the bowl",
-        "default_input_path": str(resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
         "default_call_kwargs": _molmobot_default_call_kwargs,
         "default_interactions": ("robot_action", "action_chunk"),
         "call_params": OFFICIAL_ACTION_CALL_PARAMS,

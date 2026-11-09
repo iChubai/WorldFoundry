@@ -22,7 +22,9 @@ import trimesh
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import export_to_depth_vis
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.visualize import (
+    export_to_depth_vis,
+)
 
 
 def set_sky_depth(prediction: Prediction, sky_mask: np.ndarray, sky_depth_def: float = 98.0):

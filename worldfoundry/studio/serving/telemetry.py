@@ -58,4 +58,3 @@ class StudioServiceTelemetry:
             }
         payload.update(extra)
         return payload
-

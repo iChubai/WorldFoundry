@@ -12,11 +12,14 @@ from diffusers.models import AutoencoderKLCogVideoX, CogVideoXTransformer3DModel
 from diffusers.models.embeddings import get_3d_rotary_pos_embed
 from diffusers.pipelines.cogvideo.pipeline_cogvideox import CogVideoXLoraLoaderMixin, CogVideoXPipelineOutput
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.utils import logging
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
 from PIL import Image
 from torchvision import transforms
 from transformers import T5EncoderModel, T5Tokenizer
+
+logger = logging.get_logger(__name__)
 
 
 def resize_for_crop(image, crop_h, crop_w):
@@ -193,7 +196,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
 
         if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(text_input_ids, untruncated_ids):
             removed_text = self.tokenizer.batch_decode(untruncated_ids[:, max_sequence_length - 1 : -1])
-            logger.warning(  # noqa: F821 - Name is undefined in the upstream source.
+            logger.warning(
                 "The following part of your input was truncated because `max_sequence_length` is set to "
                 f" {max_sequence_length} tokens: {removed_text}"
             )
@@ -400,7 +403,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
     def unfuse_qkv_projections(self) -> None:
         r"""Disable QKV projection fusion if enabled."""
         if not self.fusing_transformer:
-            logger.warning("The Transformer was not initially fused for QKV projections. Doing nothing.")  # noqa: F821 - Name is undefined in the upstream source.
+            logger.warning("The Transformer was not initially fused for QKV projections. Doing nothing.")
         else:
             self.transformer.unfuse_qkv_projections()
             self.fusing_transformer = False

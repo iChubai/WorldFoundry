@@ -6,8 +6,8 @@ import types
 import pytest
 
 from worldfoundry.core.media.processing.postprocess import IdentityVideoPostProcessor, VideoSpec
-from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
 from worldfoundry.studio.visualization.backends import world_realtime as realtime_backend
+from worldfoundry.studio.visualization.launch_config import StudioLaunchConfig
 
 
 @pytest.mark.parametrize("preset", ["", "none", "OFF", "Identity"])

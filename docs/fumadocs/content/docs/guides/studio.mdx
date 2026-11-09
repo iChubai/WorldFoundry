@@ -898,11 +898,16 @@ gamepad, and the control legend names the inputs the model accepts:
 - **Gamepad** (`gamepad_*` axes): Studio reads the first connected gamepad every
   animation frame and sends the four stick levels when any of them moves by more
   than 0.02. Window blur, a hidden tab, and a gamepad disconnect each send one
-  neutral sample, so the sticks rest while the page is not focused.
+  neutral sample, so the sticks rest while the page is not focused. Browsers
+  expose gamepads only on a secure origin (HTTPS or `localhost`) and after a
+  button press, so the legend lists **GAMEPAD** once a gamepad is reported.
 
-Over WebRTC these samples use the unordered `axes` DataChannel. While that
-channel is congested, samples wait for a later frame and mouse motion keeps
-accumulating. The WebSocket transport sends the same messages on its socket.
+Over WebRTC, mouse deltas use the unordered `axes` DataChannel. Gamepad levels
+use the reliable `controls` channel, because the server holds each level until
+the next sample and a lost return-to-rest sample would keep the stick held.
+While a channel is congested, samples wait for a later frame and mouse motion
+keeps accumulating. The WebSocket transport sends the same messages on its
+socket.
 
 #### Input sampling limits
 

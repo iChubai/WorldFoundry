@@ -452,7 +452,9 @@ function updateControlAvailability() {
         ? "Pause the rollout to generate one chunk at a time"
         : "Generate exactly one chunk without a keyboard action";
   }
-  if (el.pauseButton) el.pauseButton.disabled = !connected || Boolean(state.pendingPauseRequestId);
+  if (el.pauseButton) {
+    el.pauseButton.disabled = !connected || Boolean(state.pendingPauseRequestId) || rolloutComplete();
+  }
   el.eventTriggerBar?.querySelectorAll("button").forEach((button) => {
     button.disabled = !connected || !state.capabilities.text_events || Boolean(state.pendingEventRequestId);
   });
@@ -1280,7 +1282,8 @@ function controlLegend() {
     parts.push(`HOLD ${keys}${sticks ? " / DRAG STICKS" : ""}`);
   }
   if (state.mouseAxes) parts.push("CLICK VIEW FOR MOUSE");
-  if (state.gamepadAxes) parts.push("GAMEPAD");
+  // Browsers expose gamepads only on secure origins and after a button press.
+  if (state.gamepadAxes && connectedGamepads().length) parts.push("GAMEPAD");
   if (state.continuous) parts.push("NEW PROMPT STARTS A NEW ROLLOUT");
   return parts.join(" · ");
 }
@@ -1321,9 +1324,9 @@ function onPointerLockChange() {
   renderPointerHint();
 }
 
-// Axis samples ride the unordered "axes" DataChannel on WebRTC and the socket
-// otherwise. A congested channel defers the sample to a later animation frame.
-function sendAxis(payload) {
+// Mouse deltas ride the unordered "axes" DataChannel on WebRTC and the socket
+// otherwise. A congested channel defers the delta to a later animation frame.
+function sendMouseDelta(payload) {
   const axisChannel = state.axisChannel?.readyState === "open" ? state.axisChannel : null;
   const channel = axisChannel || state.channel;
   if (!channel || channel.bufferedAmount > AXIS_BUFFERED_LIMIT_BYTES) return false;
@@ -1348,8 +1351,20 @@ function flushMouseDelta() {
   state.mouseRaf = 0;
   const { dx, dy } = state.mouseDelta;
   if (!state.pointerLocked || (!dx && !dy)) return;
-  if (sendAxis({ type: "axis", source: "mouse", dx, dy })) state.mouseDelta = { dx: 0, dy: 0 };
+  if (sendMouseDelta({ type: "axis", source: "mouse", dx, dy })) state.mouseDelta = { dx: 0, dy: 0 };
   else if (state.connected) state.mouseRaf = requestAnimationFrame(flushMouseDelta);
+}
+
+// The server holds a gamepad level until the next sample, so stick samples use
+// the reliable control channel; a congested channel defers them to a later frame.
+function sendGamepadSample(sample) {
+  if (!state.channel || state.channel.bufferedAmount > AXIS_BUFFERED_LIMIT_BYTES) return false;
+  return send({ type: "axis", source: "gamepad", ...sample });
+}
+
+function connectedGamepads() {
+  if (typeof navigator.getGamepads !== "function") return [];
+  return Array.from(navigator.getGamepads()).filter((item) => item?.connected);
 }
 
 function pollGamepad() {
@@ -1358,12 +1373,12 @@ function pollGamepad() {
   state.gamepadRaf = requestAnimationFrame(pollGamepad);
   // Focus loss already sent the neutral sample; the stick resumes on return.
   if (document.visibilityState !== "visible" || !document.hasFocus()) return;
-  const pad = Array.from(navigator.getGamepads()).find((item) => item?.connected);
+  const [pad] = connectedGamepads();
   if (!pad) return;
   const level = (index) => Number(pad.axes[index]) || 0;
   const sample = { lx: level(0), ly: level(1), rx: level(2), ry: level(3) };
   const moved = Object.keys(sample).some((name) => Math.abs(sample[name] - state.gamepadSent[name]) > GAMEPAD_EPSILON);
-  if (moved && sendAxis({ type: "axis", source: "gamepad", ...sample })) state.gamepadSent = sample;
+  if (moved && sendGamepadSample(sample)) state.gamepadSent = sample;
 }
 
 function startGamepadPolling() {
@@ -1372,7 +1387,7 @@ function startGamepadPolling() {
 }
 
 // The server holds gamepad levels until reset, so focus loss and disconnects
-// send one neutral sample over the reliable control channel.
+// send one neutral sample.
 function sendNeutralGamepad() {
   if (!state.connected || !state.gamepadAxes) return;
   state.gamepadSent = { lx: 0, ly: 0, rx: 0, ry: 0 };
@@ -1402,7 +1417,11 @@ function bindAxisInputs() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") sendNeutralGamepad();
   });
-  window.addEventListener("gamepaddisconnected", sendNeutralGamepad);
+  window.addEventListener("gamepadconnected", renderControlLegend);
+  window.addEventListener("gamepaddisconnected", () => {
+    sendNeutralGamepad();
+    renderControlLegend();
+  });
 }
 
 function rolloutComplete() {
@@ -1984,7 +2003,7 @@ async function connectSession() {
     const channel = pc.createDataChannel("controls", { ordered: true });
     state.peer = pc;
     state.channel = channel;
-    if (state.mouseAxes || state.gamepadAxes) {
+    if (state.mouseAxes) {
       state.axisChannel = pc.createDataChannel("axes", { ordered: false, maxRetransmits: 0 });
     }
     pc.addTransceiver("video", { direction: "recvonly" });
@@ -2316,7 +2335,7 @@ function bindEvents() {
     }
   });
   el.promptInput.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || !state.promptScheduled || !state.connected) return;
+    if (event.key !== "Enter" || !(state.promptScheduled || state.continuous) || !state.connected) return;
     event.preventDefault();
     // A continuous rollout accepts a new prompt at any chunk boundary.
     if (state.segmentBusy && !state.continuous) {

@@ -155,7 +155,7 @@ function listenerTarget() {
 }
 
 // Run the complete client against a fake DOM and a fake Studio session.
-async function loadClient({spec = {}, interactionMode = 'controls', status} = {}) {
+async function loadClient({spec = {}, interactionMode = 'controls', status, gamepadApi = true} = {}) {
   const elements = new Map();
   const frames = [];
   const pads = [];
@@ -213,7 +213,7 @@ async function loadClient({spec = {}, interactionMode = 'controls', status} = {}
     Element: FakeElement,
     WebSocket: FakeWebSocket,
     RTCPeerConnection: FakePeerConnection,
-    navigator: {getGamepads: () => pads},
+    navigator: gamepadApi ? {getGamepads: () => pads} : {},
     performance: {now: () => 0},
     localStorage: {getItem: () => null, setItem() {}},
     requestAnimationFrame: (callback) => frames.push(callback),
@@ -345,41 +345,72 @@ test('axis messages use the axes DataChannel on WebRTC and the socket otherwise'
   assert.deepEqual(socket.sent.filter((m) => m.type === 'axis'), [{type: 'axis', source: 'mouse', dx: 2, dy: -3}]);
 });
 
-test('gamepad sticks send changes beyond epsilon and one neutral sample on focus loss', async () => {
-  const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
-  assert.match(client.el.interactionHint.textContent, /GAMEPAD/);
+test('gamepad levels use the reliable controls channel; mouse deltas use axes', async () => {
+  const client = await loadClient({spec: {axes: [...MOUSE_AXES, ...GAMEPAD_AXES]}});
   const pad = {connected: true, axes: [0, 0, 0, 0]};
   client.pads.push(pad);
   const controls = fakeDataChannel('controls');
   const axes = fakeDataChannel('axes');
   client.connect(controls, axes);
   const neutral = {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0, ry: 0};
-  const controlAxes = () => controls.sent.filter((m) => m.type === 'axis');
+  const gamepad = () => controls.sent.filter((m) => m.type === 'axis' && m.source === 'gamepad');
 
   client.tick();
   pad.axes = [0.01, 0, -0.015, 0];
   client.tick();
-  assert.equal(axes.sent.length, 0, 'rest and sub-epsilon drift send nothing');
+  assert.equal(gamepad().length, 0, 'rest and sub-epsilon drift send nothing');
   pad.axes = [0.5, 0, 0, -0.25];
   client.tick();
   client.tick();
   pad.axes = [0.51, 0, 0, -0.25];
   client.tick();
-  assert.deepEqual(axes.sent, [{type: 'axis', source: 'gamepad', lx: 0.5, ly: 0, rx: 0, ry: -0.25}]);
+  pad.axes = [0, 0, 0, 0];
+  client.tick();
+  assert.deepEqual(gamepad(), [{type: 'axis', source: 'gamepad', lx: 0.5, ly: 0, rx: 0, ry: -0.25}, neutral],
+    'the move and the return to rest both go over the reliable channel');
+
+  controls.bufferedAmount = 1 << 20;
+  pad.axes = [0, 0, 0.8, 0];
+  client.tick();
+  assert.equal(gamepad().length, 2, 'a congested channel defers the level');
+  controls.bufferedAmount = 0;
+  client.tick();
+  assert.deepEqual(gamepad().at(-1), {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0.8, ry: 0});
 
   client.window.dispatch('blur');
-  assert.deepEqual(controlAxes(), [neutral]);
+  assert.deepEqual(gamepad().at(-1), neutral);
   client.document.focused = false;
   client.tick();
-  assert.equal(axes.sent.length, 1, 'an unfocused page does not resend the held stick');
+  assert.equal(gamepad().length, 4, 'an unfocused page does not resend the held stick');
   client.document.focused = true;
   client.tick();
-  assert.deepEqual(axes.sent.at(-1), {type: 'axis', source: 'gamepad', lx: 0.51, ly: 0, rx: 0, ry: -0.25});
+  assert.deepEqual(gamepad().at(-1), {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0.8, ry: 0});
 
   client.window.dispatch('gamepaddisconnected');
   client.document.visibilityState = 'hidden';
   client.document.dispatch('visibilitychange');
-  assert.deepEqual(controlAxes(), [neutral, neutral, neutral]);
+  assert.deepEqual(gamepad().slice(-2), [neutral, neutral]);
+
+  client.state.pointerLocked = true;
+  client.document.dispatch('mousemove', {movementX: 4, movementY: 1});
+  client.tick();
+  assert.deepEqual(axes.sent, [{type: 'axis', source: 'mouse', dx: 4, dy: 1}]);
+  assert.equal(controls.sent.filter((m) => m.source === 'mouse').length, 0);
+});
+
+test('the GAMEPAD legend appears only when the browser reports a connected gamepad', async () => {
+  const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
+  assert.doesNotMatch(client.el.interactionHint.textContent, /GAMEPAD/);
+  client.pads.push({connected: true, axes: [0, 0, 0, 0]});
+  client.window.dispatch('gamepadconnected');
+  assert.match(client.el.interactionHint.textContent, /GAMEPAD/);
+  client.pads.pop();
+  client.window.dispatch('gamepaddisconnected');
+  assert.doesNotMatch(client.el.interactionHint.textContent, /GAMEPAD/);
+
+  const insecure = await loadClient({spec: {axes: GAMEPAD_AXES}, gamepadApi: false});
+  insecure.window.dispatch('gamepadconnected');
+  assert.doesNotMatch(insecure.el.interactionHint.textContent, /GAMEPAD/);
 });
 
 test('continuous sessions show progress, pause and resume, and the step rejection', async () => {
@@ -422,6 +453,7 @@ test('continuous sessions show progress, pause and resume, and the step rejectio
 
   client.receive({type: 'chunk_done', chunk_index: 7, frames: 0, ...rollout(7)});
   assert.equal(el.livePill.textContent, 'ROLLOUT COMPLETE · 7/7 · ENTER A NEW PROMPT');
+  assert.equal(el.pauseButton.disabled, true, 'a finished rollout offers no PAUSE');
   assert.equal(el.stepButton.disabled, false);
   el.stepButton.dispatch('click');
   const step = socket.sent.at(-1);
@@ -444,6 +476,35 @@ test('unbounded continuous rollouts show a running count', async () => {
   client.receive({type: 'chunk_done', chunk_index: 12, frames: 4, advance: 'continuous', rollout_chunks: 12, max_chunks: null, paused: false});
   assert.match(client.el.streamStats.textContent, /CHUNK 12 \//);
   assert.equal(client.el.livePill.textContent, 'GENERATING · CHUNK 12');
+});
+
+test('PAUSE is not offered once the rollout is complete', async () => {
+  const client = await loadClient({spec: {advance: 'continuous', max_chunks: 2}});
+  client.connect();
+  const rollout = (chunks) => ({advance: 'continuous', rollout_chunks: chunks, max_chunks: 2, paused: false});
+  client.receive({type: 'ready', fps: 16, ...rollout(1)});
+  assert.equal(client.el.pauseButton.disabled, false);
+  client.receive({type: 'chunk_done', chunk_index: 2, frames: 4, ...rollout(2)});
+  assert.equal(client.el.pauseButton.disabled, true);
+  client.receive({type: 'chunk_done', chunk_index: 3, frames: 4, ...rollout(1)});
+  assert.equal(client.el.pauseButton.disabled, false, 'a new rollout offers PAUSE again');
+});
+
+test('continuous sessions outside prompt-scheduled mode accept a new prompt with Enter', async () => {
+  const client = await loadClient({spec: {advance: 'continuous', max_chunks: 7}});
+  assert.match(client.el.interactionHint.textContent, /NEW PROMPT STARTS A NEW ROLLOUT/);
+  const socket = client.connect(new FakeWebSocket());
+  client.receive({type: 'ready', fps: 16, advance: 'continuous', rollout_chunks: 7, max_chunks: 7, paused: false});
+  client.el.promptInput.value = 'snow falls';
+  client.el.promptInput.dispatch('keydown', {key: 'Enter', preventDefault() {}});
+  assert.deepEqual(socket.sent.at(-1), {type: 'prompt_update', prompt: 'snow falls'});
+  assert.equal(client.el.livePill.textContent, 'PROMPT QUEUED · STARTS A NEW ROLLOUT');
+
+  const onInput = await loadClient();
+  const onInputSocket = onInput.connect(new FakeWebSocket());
+  onInput.el.promptInput.value = 'snow falls';
+  onInput.el.promptInput.dispatch('keydown', {key: 'Enter', preventDefault() {}});
+  assert.equal(onInputSocket.sent.filter((m) => m.type === 'prompt_update').length, 0);
 });
 
 test('input-driven sessions keep the live status and hide pause', async () => {

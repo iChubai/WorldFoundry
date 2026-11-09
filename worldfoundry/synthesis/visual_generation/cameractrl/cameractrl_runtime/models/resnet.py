@@ -405,7 +405,7 @@ class ResnetBlock3D(nn.Module):
         hidden_states = input_tensor
 
         video_length = hidden_states.shape[2]
-        _emb = repeat(emb, "b c -> (b f) c", f=video_length)  # noqa: F821 - Name is undefined in the upstream source.
+        emb = repeat(emb, "b c -> (b f) c", f=video_length)  # noqa: F821, F841 - Upstream reads this local before assigning it.
 
         hidden_states = self.norm1(hidden_states)
         hidden_states = self.nonlinearity(hidden_states)

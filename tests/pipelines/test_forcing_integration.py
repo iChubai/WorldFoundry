@@ -12,7 +12,6 @@ import pytest
 
 from worldfoundry.evaluation.models import discover_model_registry
 from worldfoundry.operators.forcing_operator import CausalForcingOperator, SelfForcingOperator
-from worldfoundry.pipelines.forcing.pipeline_forcing import CausalForcingPipeline
 from worldfoundry.synthesis.visual_generation.forcing import runtime as runtime_module
 from worldfoundry.synthesis.visual_generation.forcing.runtime import RollingForcingRuntime, SelfForcingRuntime
 
@@ -41,27 +40,6 @@ def test_causal_forcing_operator_accepts_prompt_and_optional_image() -> None:
     assert interaction["seed"] == 7
     assert perception["images"] == "/tmp/input.png"
     assert prompt["prompt"] == "A detailed causal scene."
-
-
-def test_causal_forcing_pipeline_forwards_model_specific_runtime_options() -> None:
-    pipe = CausalForcingPipeline.from_pretrained(
-        model_path={
-            "runtime_root": "/tmp/Causal-Forcing",
-            "checkpoint_path": "/tmp/causal.pt",
-            "config_path": "/tmp/config.yaml",
-            "wan_models_root": "/tmp/wan",
-        },
-        model_id="causal-forcing",
-        device="cuda:2",
-    )
-
-    runtime = pipe.synthesis_model.runtime
-    assert runtime.model_id == "causal-forcing"
-    assert runtime.runtime_root == "/tmp/Causal-Forcing"
-    assert runtime.checkpoint_path == "/tmp/causal.pt"
-    assert runtime.config_path == "/tmp/config.yaml"
-    assert runtime.wan_models_root == "/tmp/wan"
-    assert runtime.device == "cuda:2"
 
 
 def test_forcing_runtime_builds_official_command(monkeypatch, tmp_path: Path) -> None:
@@ -212,18 +190,9 @@ def test_forcing_video_compat_replaces_present_torchvision_writer() -> None:
         tv_io.write_video = original
 
 
-def test_model_registry_contains_forcing_models() -> None:
-    registry = discover_model_registry()
-    self_model = registry.get("self-forcing")
-    causal_model = registry.get("causal-forcing")
-    rolling_model = registry.get("rolling-forcing")
+def test_model_registry_contains_rolling_forcing() -> None:
+    rolling_model = discover_model_registry().get("rolling-forcing")
 
-    assert self_model.has_loader is True
-    assert self_model.has_infer is True
-    assert self_model.pipeline_target == "worldfoundry.pipelines.forcing.pipeline_forcing:SelfForcingPipeline"
-    assert causal_model.has_loader is True
-    assert causal_model.has_infer is True
-    assert causal_model.pipeline_target == "worldfoundry.pipelines.forcing.pipeline_forcing:CausalForcingPipeline"
     assert rolling_model.has_loader is True
     assert rolling_model.has_infer is True
     assert rolling_model.pipeline_target == ("worldfoundry.pipelines.forcing.pipeline_forcing:RollingForcingPipeline")

@@ -5749,11 +5749,12 @@
   },
   "self-forcing-t2v-short": {
     "id": "self-forcing-t2v-short",
-    "model_id": "self-forcing-native",
+    "model_id": "self-forcing",
     "seed": 42,
     "deterministic": true,
     "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeSelfForcingPipeline",
     "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gdhe17--Self-Forcing",
       "checkpoint_overrides": {
         "dit": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gdhe17--Self-Forcing/checkpoints/self_forcing_dmd.pt",
         "text-encoder": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
@@ -5914,15 +5915,16 @@
         "relation": "different"
       }
     ],
-    "scope": "Native Self-Forcing DMD route (the catalog self-forcing binding still runs the official runtime): two causal blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py; not a quality benchmark."
+    "scope": "Native Self-Forcing DMD route of the self-forcing binding: two causal blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official inference script is recorded separately by tests/manual/self_forcing_parity.py; not a quality benchmark."
   },
   "causal-forcing-chunkwise-t2v-short": {
     "id": "causal-forcing-chunkwise-t2v-short",
-    "model_id": "causal-forcing-chunkwise-native",
+    "model_id": "causal-forcing",
     "seed": 42,
     "deterministic": true,
     "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeCausalForcingPipeline",
     "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing",
       "model_id": "causal-forcing-chunkwise",
       "checkpoint_overrides": {
         "dit": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/chunkwise/causal_forcing.pt",
@@ -6084,15 +6086,16 @@
         "relation": "different"
       }
     ],
-    "scope": "Native Causal-Forcing chunk-wise route (the catalog causal-forcing binding still runs the official runtime): two three-latent-frame blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-chunkwise; not a quality benchmark."
+    "scope": "Native Causal-Forcing chunk-wise route, the default of the causal-forcing binding: two three-latent-frame blocks at 128x224, fixed-seed A/B/A pixels and decoded export. Numerical parity with the official inference script is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-chunkwise; not a quality benchmark."
   },
   "causal-forcing-framewise-short": {
     "id": "causal-forcing-framewise-short",
-    "model_id": "causal-forcing-framewise-native",
+    "model_id": "causal-forcing",
     "seed": 42,
     "deterministic": true,
     "target": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeCausalForcingPipeline",
     "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing",
       "model_id": "causal-forcing-framewise",
       "checkpoint_overrides": {
         "dit": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/zhuhz22--Causal-Forcing/framewise/causal_forcing.pt",
@@ -6284,6 +6287,6 @@
         "relation": "different"
       }
     ],
-    "scope": "Native Causal-Forcing frame-wise route (the catalog causal-forcing binding still runs the official runtime): two one-latent-frame blocks at 128x224 for T2V, and an image-seeded first frame plus two blocks for I2V; fixed-seed A/B/A pixels and decoded export. Numerical parity with the official runtime is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-framewise; not a quality benchmark."
+    "scope": "Native Causal-Forcing frame-wise variant of the causal-forcing binding: two one-latent-frame blocks at 128x224 for T2V, and an image-seeded first frame plus two blocks for I2V; fixed-seed A/B/A pixels and decoded export. Numerical parity with the official inference script is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-framewise; not a quality benchmark."
   }
 }

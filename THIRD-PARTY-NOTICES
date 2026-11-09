@@ -1266,6 +1266,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+GR00T-N1 inference runtime
+--------------------------
+Source: https://github.com/NVIDIA/Isaac-GR00T/tree/755876a9afdb41ca6eb6383b36f4a0adb085c73f
+Copyright: NVIDIA CORPORATION & AFFILIATES.
+License: Apache License 2.0; the complete license text is retained in this bundle.
+Files: worldfoundry/synthesis/action_generation/gr00t/legacy_n1_runtime/**,
+       worldfoundry/data/models/runtime/configs/gr00t-n1/**
+Every Python file in the runtime directory was modified by WorldFoundry; its PROVENANCE.md lists
+the changes.
+
 UniWorld-View inference runtime
 -------------------------------
 Source: https://github.com/PKU-YuanGroup/UniWorld-View/tree/660212c48bff7c91a2ea5c7d5f3785af581100e2

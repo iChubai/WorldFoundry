@@ -372,7 +372,6 @@ class GR00TSynthesis(ActionModelSynthesis):
             n1_options = {**self.runtime_options, **kwargs}
             result = predict_n1_action(
                 checkpoint_dir=runtime_config.checkpoint_dir,
-                source_dir=n1_options.get("n1_source_dir"),
                 python_executable=n1_options.get("n1_python"),
                 data_config_name=str(n1_options.get("n1_data_config_name") or "gr1_arms_only"),
                 embodiment_tag=runtime_config.embodiment_tag,

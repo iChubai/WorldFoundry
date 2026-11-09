@@ -1,7 +1,7 @@
 """Worker for NVIDIA's pinned original GR00T-N1 release.
 
-Invoked by legacy_n1.py in a separate environment with Transformers 4.45.2.
-The official source checkout is supplied through PYTHONPATH by the parent.
+Started by legacy_n1.py as a package module in a separate environment with
+Transformers 4.45.2. The n1-release code is vendored under ``legacy_n1_runtime``.
 """
 
 from __future__ import annotations
@@ -20,10 +20,10 @@ def _write(path: Path, payload: object) -> None:
 
 
 def _install_eager_attention() -> None:
-    """Use standard PyTorch attention without editing NVIDIA's release files."""
-    from gr00t.model.backbone import eagle_backbone
+    """Load the Eagle2 vision and language models with standard PyTorch attention."""
+    from .legacy_n1_runtime.gr00t.model.backbone import eagle_backbone
 
-    official_auto_config = eagle_backbone.AutoConfig
+    official_auto_config = eagle_backbone.Eagle2ChatConfig
 
     class EagerEagleConfig:
         @staticmethod
@@ -33,7 +33,7 @@ def _install_eager_attention() -> None:
             config.llm_config._attn_implementation = "eager"
             return config
 
-    eagle_backbone.AutoConfig = EagerEagleConfig
+    eagle_backbone.Eagle2ChatConfig = EagerEagleConfig
 
 
 def _check_model_weights(model: object, checkpoint_dir: Path) -> dict[str, object]:
@@ -91,9 +91,9 @@ def run(request_path: Path) -> None:
     torch.set_num_threads(8)
     _install_eager_attention()
 
-    from gr00t.data.embodiment_tags import EmbodimentTag
-    from gr00t.experiment.data_config import DATA_CONFIG_MAP
-    from gr00t.model.policy import Gr00tPolicy
+    from .legacy_n1_runtime.gr00t.data.embodiment_tags import EmbodimentTag
+    from .legacy_n1_runtime.gr00t.experiment.data_config import DATA_CONFIG_MAP
+    from .legacy_n1_runtime.gr00t.model.policy import Gr00tPolicy
 
     request = json.loads(request_path.read_text())
     checkpoint = Path(request["checkpoint_dir"]).resolve()

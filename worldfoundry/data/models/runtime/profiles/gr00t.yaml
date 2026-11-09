@@ -35,9 +35,8 @@ notes:
 - VLA policy profile for GR00T-style humanoid/generalist robot actions.
 - The staged GR00T-N1.7-LIBERO asset contains only the official libero_10 runtime
   subset; inference performs no download.
-- The original GR00T-N1-2B checkpoint uses the pinned official n1-release worker and
-  a separate Transformers 4.45.2 environment; configure n1_source_dir and n1_python
-  before inference.
+- The original GR00T-N1-2B checkpoint uses the vendored official n1-release worker and
+  a separate Transformers 4.45.2 environment; configure n1_python before inference.
 - WorldFoundry retains the GR00T configs, data transforms, model, and policy runtime
   under worldfoundry/synthesis/action_generation/gr00t. py_compile, import/from_pretrained,
   checkpoint metadata parsing, local backbone resolution, and checkpoint-backed prediction

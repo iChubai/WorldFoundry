@@ -718,6 +718,7 @@ include-package-data = true
     "models/**/*.json",
     "models/runtime/configs/**/*.py",
     "models/runtime/configs/**/*.md",
+    "models/runtime/configs/gr00t-n1/**/*.txt",
 ]
 "worldfoundry.evals.tasks.execution.runners" = [
     "chronomagic_bench/runtime/chronomagic_bench/MTScore/configs/*.json",
@@ -783,6 +784,9 @@ include-package-data = true
 ]
 "worldfoundry.synthesis.visual_generation.uniworld_view" = [
     "uniworld_view_runtime/**/*",
+]
+"worldfoundry.synthesis.action_generation.gr00t" = [
+    "legacy_n1_runtime/**/*",
 ]
 
 "worldfoundry.synthesis.visual_generation.allegro" = [

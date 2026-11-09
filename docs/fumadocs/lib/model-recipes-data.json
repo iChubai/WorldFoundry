@@ -84628,7 +84628,7 @@
         "notes": [
           "VLA policy profile for GR00T-style humanoid/generalist robot actions.",
           "The staged GR00T-N1.7-LIBERO asset contains only the official libero_10 runtime subset; inference performs no download.",
-          "The original GR00T-N1-2B checkpoint uses the pinned official n1-release worker and a separate Transformers 4.45.2 environment; configure n1_source_dir and n1_python before inference.",
+          "The original GR00T-N1-2B checkpoint uses the vendored official n1-release worker and a separate Transformers 4.45.2 environment; configure n1_python before inference.",
           "WorldFoundry retains the GR00T configs, data transforms, model, and policy runtime under worldfoundry/synthesis/action_generation/gr00t. py_compile, import/from_pretrained, checkpoint metadata parsing, local backbone resolution, and checkpoint-backed prediction are implemented. Concrete local model and processor classes are used with checkpoint-hosted Python disabled.",
           "Inference-only environment for the flattened GR00T runtime. Training, simulation, TensorRT, and robot SDK packages are excluded.",
           "The gated GR00T and Cosmos assets must already be staged locally. The runtime uses local model/processor classes, safetensors, and checkpoint-hosted Python disabled."
@@ -84953,7 +84953,7 @@
         "Checkpoint-backed offline prediction is verified for local GR00T-N1-2B and GR00T-N1.7-LIBERO/libero_10; simulator rollout validation remains separate.",
         "VLA policy profile for GR00T-style humanoid/generalist robot actions.",
         "The staged GR00T-N1.7-LIBERO asset contains only the official libero_10 runtime subset; inference performs no download.",
-        "The original GR00T-N1-2B checkpoint uses the pinned official n1-release worker and a separate Transformers 4.45.2 environment; configure n1_source_dir and n1_python before inference.",
+        "The original GR00T-N1-2B checkpoint uses the vendored official n1-release worker and a separate Transformers 4.45.2 environment; configure n1_python before inference.",
         "WorldFoundry retains the GR00T configs, data transforms, model, and policy runtime under worldfoundry/synthesis/action_generation/gr00t. py_compile, import/from_pretrained, checkpoint metadata parsing, local backbone resolution, and checkpoint-backed prediction are implemented. Concrete local model and processor classes are used with checkpoint-hosted Python disabled."
       ],
       "docs": {
@@ -84976,10 +84976,10 @@
           "GR00T 将推理 VLM（已验证 N1.7 路径使用 Cosmos-Reason2-2B）与动作策略头耦合；记录的 checkpoint 覆盖 GR00T-N1-2B 与 GR00T-N1.7-LIBERO。权重采用 NVIDIA Open Model License，多个仓库需 Hugging Face 认证。"
         ],
         "usageNotes": [
-          "Stage the pinned NVIDIA checkpoint revisions locally. Original N1 additionally needs the n1-release source checkout and an isolated worker environment; see the GR00T N1 runtime README. Simulator rollout validation remains separate from offline predict."
+          "Stage the pinned NVIDIA checkpoint revisions locally. Original N1 additionally needs an isolated Transformers 4.45.2 worker environment (n1_legacy_requirements.txt). Simulator rollout validation remains separate from offline predict."
         ],
         "usageNotesZh": [
-          "先就位固定版本的 NVIDIA 权重。初代 N1 还需要 n1-release 官方源码和隔离运行环境，详见 GR00T N1 运行说明。模拟器 rollout 验证与离线 predict 分开跟踪。"
+          "先就位固定版本的 NVIDIA 权重。初代 N1 还需要隔离的 Transformers 4.45.2 运行环境（见 n1_legacy_requirements.txt）。模拟器 rollout 验证与离线 predict 分开跟踪。"
         ],
         "highlights": [
           "Vla",

@@ -141,7 +141,6 @@ class HunyuanWorldPlayRuntime:
             device: Target device, for example "cuda".
             create_sr_pipeline: Whether to create the super-resolution pipeline.
             force_sparse_attn: Whether to force sparse attention.
-            transformer_dtype: Transformer dtype.
             enable_offloading: Whether to enable model offloading.
             enable_group_offloading: Whether to enable group offloading.
             overlap_group_offloading: Whether to overlap group offloading with compute.

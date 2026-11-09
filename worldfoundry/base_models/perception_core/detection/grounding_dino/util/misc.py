@@ -629,12 +629,7 @@ def accuracy(output, target, topk=(1,)):
 
 @torch.no_grad()
 def accuracy_onehot(pred, gt):
-    """_summary_
-
-    Args:
-        pred (_type_): n, c
-        gt (_type_): n, c
-    """
+    """Return the percentage of rows whose (n, c) prediction is within L1 distance 1e-4 of the one-hot target."""
     tp = ((pred - gt).abs().sum(-1) < 1e-4).float().sum()
     acc = tp / gt.shape[0] * 100
     return acc

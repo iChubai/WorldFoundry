@@ -159,7 +159,6 @@ class Wan2p5Pipeline(PipelineABC):
             size: Video size of t2av tasks.
             resolution: Resolution of i2av tasks.
             duration: Video duration in seconds.
-            negative_prompt: Negative prompt.
             audio: Whether to generate audio.
             prompt_extend: Whether the service extends the prompt.
             watermark: Whether to add a watermark.

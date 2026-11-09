@@ -839,16 +839,7 @@ def laplacian_smooth_mesh(vertices: Tensor, faces: Tensor, weight: str = "unifor
 
 
 def taubin_smooth_mesh(vertices: Tensor, faces: Tensor, lambda_: float = 0.5, mu_: float = -0.51) -> Tensor:
-    """
-    ## Parameters
-        vertices (Tensor): _description_
-        faces (Tensor): _description_
-        lambda_ (float, optional): _description_. Defaults to 0.5.
-        mu_ (float, optional): _description_. Defaults to -0.51.
-
-    ## Returns
-        Tensor: _description_
-    """
+    """Apply one Taubin step: a Laplacian smoothing step scaled by lambda_, then one scaled by mu_."""
     pt = vertices + lambda_ * laplacian_smooth_mesh(vertices, faces)
     p = pt + mu_ * laplacian_smooth_mesh(pt, faces)
     return p

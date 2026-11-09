@@ -398,17 +398,6 @@ class TransformerEncoder(nn.Module):
         use_checkpoint=False,
         use_transformer_ckpt=False,
     ):
-        """_summary_
-
-        Args:
-            encoder_layer (_type_): _description_
-            num_layers (_type_): _description_
-            norm (_type_, optional): _description_. Defaults to None.
-            d_model (int, optional): _description_. Defaults to 256.
-            num_queries (int, optional): _description_. Defaults to 300.
-            enc_layer_share (bool, optional): _description_. Defaults to False.
-
-        """
         super().__init__()
         # prepare layers
         self.layers = []

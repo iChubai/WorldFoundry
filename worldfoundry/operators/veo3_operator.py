@@ -138,7 +138,6 @@ class Veo3Operator(BaseOperator):
             aspect_ratio: Aspect ratio such as ``"16:9"``.
             resolution: Resolution such as ``"720p"``.
             duration_seconds: Video duration in seconds.
-            negative_prompt: Negative prompt.
             seed: Random seed.
             last_frame: Optional PIL last-frame image.
             reference_images: Optional list of PIL reference images.

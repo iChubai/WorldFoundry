@@ -68,7 +68,6 @@ class Sora2Pipeline(PipelineABC):
             operator: Optional Sora 2 operator; ``api_init`` creates one.
             synthesis_model: Optional Sora 2 synthesis model; ``api_init`` creates one.
             endpoint: API base URL.
-            api_key: API key.
         """
         self.operator = operator
         self.synthesis_model = synthesis_model

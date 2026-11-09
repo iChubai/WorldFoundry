@@ -70,7 +70,6 @@ class Veo3Pipeline(PipelineABC):
         Args:
             operator: Optional Veo 3 operator; ``api_init`` creates one.
             synthesis_model: Optional Veo 3 synthesis model; ``api_init`` creates one.
-            api_key: API key.
             endpoint: API base URL.
         """
         self.api_key = api_key
@@ -174,7 +173,6 @@ class Veo3Pipeline(PipelineABC):
             aspect_ratio: Aspect ratio such as ``"16:9"``.
             resolution: Resolution such as ``"720p"``.
             duration_seconds: Video duration in seconds.
-            negative_prompt: Negative prompt.
             seed: Random seed.
             last_frame: Optional last-frame image.
             reference_images: Optional list of reference images.
@@ -243,7 +241,6 @@ class Veo3Pipeline(PipelineABC):
             aspect_ratio: Aspect ratio such as ``"16:9"``.
             resolution: Resolution such as ``"720p"``.
             duration_seconds: Video duration in seconds.
-            negative_prompt: Negative prompt.
             seed: Random seed.
             last_frame: Optional last-frame image.
             reference_images: Optional list of reference images.

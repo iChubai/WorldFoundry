@@ -581,7 +581,6 @@ def load_video_frames(
     Load RGB video frames.
 
     Args:
-        video_path: Video path.
         start: Index of the first frame.
         stride: Frame step.
         max_frames: Maximum number of frames.
@@ -637,9 +636,6 @@ def save_video(frames: np.ndarray, out_path: str | Path, fps: float = 16.0) -> N
 def get_video_info(video_path: str | Path) -> dict:
     """
     Read video metadata.
-
-    Args:
-        video_path: Video path.
 
     Returns:
         Dict with fps (16.0 when unknown), frame_count, width and height.

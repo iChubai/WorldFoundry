@@ -83,10 +83,8 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         Load the pipeline from pretrained checkpoints; unset options use the runtime defaults.
 
         Args:
-            device: Device.
             create_sr_pipeline: Whether to create the super-resolution pipeline.
             force_sparse_attn: Whether to force sparse attention.
-            transformer_dtype: Transformer dtype.
             enable_offloading: Whether to enable offloading.
             enable_group_offloading: Whether to enable group offloading.
             overlap_group_offloading: Whether to overlap group offloading.
@@ -245,12 +243,9 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             images: Reference PIL image.
             image_path: Reference image path, used when ``images`` is not given.
             pose: Camera trajectory such as ``"w-10, right-10, d-11"``.
-            aspect_ratio: Aspect ratio.
             num_frames: Number of frames; replaced by the length the trajectory implies when they differ.
             num_inference_steps: Number of inference steps.
-            negative_prompt: Negative prompt.
             seed: Random seed.
-            output_type: Output type.
             prompt_rewrite: Whether to rewrite the prompt.
             enable_sr: Whether to enable super-resolution.
             sr_num_inference_steps: Number of super-resolution inference steps.

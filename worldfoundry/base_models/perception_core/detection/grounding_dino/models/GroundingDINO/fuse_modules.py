@@ -144,16 +144,16 @@ class BiMultiHeadAttention(nn.Module):
         self.out_l_proj.bias.data.fill_(0)
 
     def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):  # noqa: E741 - Ambiguous upstream name kept as written.
-        """_summary_
+        """Attend from image to text and from text to image.
 
         Args:
-            v (_type_): bs, n_img, dim
-            l (_type_): bs, n_text, dim
-            attention_mask_v (_type_, optional): _description_. bs, n_img
-            attention_mask_l (_type_, optional): _description_. bs, n_text
+            v: Image features, (bs, n_img, dim).
+            l: Text features, (bs, n_text, dim).
+            attention_mask_v: Optional image padding mask, (bs, n_img); True entries are masked.
+            attention_mask_l: Optional text padding mask, (bs, n_text); True entries are masked.
 
         Returns:
-            _type_: _description_
+            Updated image and text features with the input shapes.
         """
         # if os.environ.get('IPDB_SHILONG_DEBUG', None) == 'INFO':
         #     import ipdb; ipdb.set_trace()

@@ -229,18 +229,18 @@ class ContrastiveEmbed(nn.Module):
         self.max_text_len = max_text_len
 
     def forward(self, x, text_dict):
-        """_summary_
+        """Score queries against text tokens, padding the token axis to max_text_len with -inf.
 
         Args:
-            x (_type_): _description_
-            text_dict (_type_): _description_
+            x: Query features, (bs, n_query, d_model).
+            text_dict:
             {
                 'encoded_text': encoded_text, # bs, 195, d_model
                 'text_token_mask': text_token_mask, # bs, 195
                         # True for used tokens. False for padding tokens
             }
         Returns:
-            _type_: _description_
+            Logits of shape (bs, n_query, max_text_len); padding tokens are -inf.
         """
         assert isinstance(text_dict, dict)
 

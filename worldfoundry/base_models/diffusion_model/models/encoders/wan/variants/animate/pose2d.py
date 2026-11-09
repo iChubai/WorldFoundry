@@ -182,16 +182,7 @@ class AAPoseMeta:
 
     @staticmethod
     def load_from_kp2ds(kp2ds: list[np.ndarray], width: int, height: int):
-        """input 133x3 numpy keypoints and output AAPoseMeta
-
-        Args:
-            kp2ds (List[np.ndarray]): _description_
-            width (int): _description_
-            height (int): _description_
-
-        Returns:
-            _type_: _description_
-        """
+        """Build an AAPoseMeta of the given size from 133 whole-body keypoint rows of (x, y, score)."""
         pose_meta = AAPoseMeta()
         pose_meta.width = width
         pose_meta.height = height

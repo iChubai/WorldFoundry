@@ -54,7 +54,6 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             input_prompt: Text prompt.
             size: Video size as 'width*height'.
             duration: Video length in seconds.
-            negative_prompt: Negative prompt.
             audio: Generate audio.
             prompt_extend: Let the service extend the prompt.
             watermark: Add a watermark.
@@ -95,7 +94,6 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             input_prompt: Text prompt.
             resolution: Video resolution, for example "480P".
             duration: Video length in seconds.
-            negative_prompt: Negative prompt.
             audio: Generate audio.
             prompt_extend: Let the service extend the prompt.
             watermark: Add a watermark.

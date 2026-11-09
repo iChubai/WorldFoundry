@@ -40,13 +40,9 @@ class TextTransformer(nn.Module):
 
     def forward(self, memory_text: torch.Tensor, text_attention_mask: torch.Tensor):
         """
-
         Args:
             text_attention_mask: bs, num_token
             memory_text: bs, num_token, d_model
-
-        Raises:
-            RuntimeError: _description_
 
         Returns:
             output: bs, num_token, d_model

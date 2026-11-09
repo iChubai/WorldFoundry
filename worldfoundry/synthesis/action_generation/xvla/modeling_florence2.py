@@ -580,11 +580,7 @@ class DaViT(nn.Module):
         return self.embed_dims[-1]
 
     def forward_features_unpool(self, x):
-        """
-        forward until avg pooling
-        Args:
-            x (_type_): input image tensor
-        """
+        """Run each convolutional embedding and its attention blocks on an image tensor, stopping before average pooling."""
         input_size = (x.size(2), x.size(3))
         for conv, block in zip(self.convs, self.blocks, strict=False):
             x, input_size = conv(x, input_size)

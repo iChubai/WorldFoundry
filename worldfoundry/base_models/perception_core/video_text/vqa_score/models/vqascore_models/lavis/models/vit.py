@@ -182,7 +182,6 @@ class VisionTransformer(nn.Module):
         """
         Args:
             img_size (int, tuple): input image size
-            patch_size (int, tuple): patch size
             in_chans (int): number of input channels
             num_classes (int): number of classes for classification head
             embed_dim (int): embedding dimension

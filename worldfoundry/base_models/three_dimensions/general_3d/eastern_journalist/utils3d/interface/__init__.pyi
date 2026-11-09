@@ -2121,8 +2121,7 @@ def rasterize_triangles(
     background: dict[str, numpy_.ndarray] | None = None,
     ctx: utils3d.numpy.rasterization.RastContext | None = None,
 ) -> dict[str, numpy_.ndarray]:
-    """Rasterize triangles.
-
+    """
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image
@@ -2245,8 +2244,7 @@ def rasterize_lines(
     background: dict[str, numpy_.ndarray] | None = None,
     ctx: utils3d.numpy.rasterization.RastContext | None = None,
 ) -> tuple[numpy_.ndarray, ...]:
-    """Rasterize lines.
-
+    """
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image
@@ -2298,8 +2296,7 @@ def rasterize_point_cloud(
     background: dict[str, numpy_.ndarray] | None = None,
     ctx: utils3d.numpy.rasterization.RastContext | None = None,
 ) -> dict[str, numpy_.ndarray]:
-    """Rasterize point cloud.
-
+    """
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image
@@ -3744,16 +3741,7 @@ def laplacian_smooth_mesh(
 def taubin_smooth_mesh(
     vertices: torch_.Tensor, faces: torch_.Tensor, lambda_: float = 0.5, mu_: float = -0.51
 ) -> torch_.Tensor:
-    """Taubin smooth mesh
-
-    ## Parameters
-        vertices (Tensor): _description_
-        faces (Tensor): _description_
-        lambda_ (float, optional): _description_. Defaults to 0.5.
-        mu_ (float, optional): _description_. Defaults to -0.51.
-
-    ## Returns
-        Tensor: _description_"""
+    """Apply one Taubin step: a Laplacian smoothing step scaled by lambda_, then one scaled by mu_."""
     utils3d.torch.mesh.taubin_smooth_mesh
 
 @overload
@@ -4177,8 +4165,7 @@ def rasterize_triangles(
     antialiasing: bool = False,
     ctx: utils3d.torch.rasterization.RastContext | None = None,
 ) -> tuple[torch_.Tensor, torch_.Tensor, torch_.Tensor | None]:
-    """Rasterize triangles.
-
+    """
     Parameters
     ----
         size (Tuple[int, int]): (height, width) of the output image

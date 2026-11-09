@@ -320,7 +320,10 @@ def integrate_camera_into_scene(
 
 
 def apply_scene_alignment(scene_3d: trimesh.Scene, extrinsics_matrices: np.ndarray) -> trimesh.Scene:
-    """Transform ``scene_3d`` into the OpenGL frame of the first camera, rotated 180 degrees about y."""
+    """Apply a y-axis half-turn, flip y/z, then apply the first camera-to-world transform.
+
+    ``extrinsics_matrices`` contains world-to-camera matrices. Mutates and returns ``scene_3d``.
+    """
     align_rotation = np.eye(4)
     align_rotation[:3, :3] = Rotation.from_euler("y", 180, degrees=True).as_matrix()
     initial_transformation = np.linalg.inv(extrinsics_matrices[0]) @ get_opengl_conversion_matrix() @ align_rotation

@@ -123,10 +123,11 @@ def run_model(
     preprocess_mode: str = "balanced",
     patch_size: int = 16,
 ) -> dict[str, Any]:
-    """Run VGGT-Omega on the images, sorted by path, and return float32 NumPy predictions.
+    """Run VGGT-Omega on the images, sorted by path, and return NumPy predictions.
 
-    A leading batch dimension of 1 is removed. The predictions include ``extrinsic`` and ``intrinsic``
-    from the pose encoding and ``world_points_from_depth`` unprojected from the depth map.
+    Model tensors and decoded camera matrices are converted to float32, with a leading dimension
+    of size 1 removed. The predictions include ``extrinsic`` and ``intrinsic`` from the pose encoding
+    and float64 ``world_points_from_depth`` unprojected from the depth map.
 
     Raises:
         ValueError: CUDA is requested but unavailable, or ``preprocess_mode`` is unsupported.
@@ -378,7 +379,10 @@ def integrate_camera_into_scene(
 
 
 def apply_scene_alignment(scene: trimesh.Scene, extrinsics: np.ndarray) -> trimesh.Scene:
-    """Transform ``scene`` into the OpenGL frame of the first camera."""
+    """Flip y/z, then apply the first camera-to-world transform to ``scene`` in place.
+
+    ``extrinsics`` contains world-to-camera matrices. Returns the same scene.
+    """
     scene.apply_transform(np.linalg.inv(extrinsics[0]) @ get_opengl_conversion_matrix())
     return scene
 

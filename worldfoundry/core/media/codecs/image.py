@@ -14,10 +14,11 @@ def load_pil_image(image_input) -> Image.Image:
     """Convert a single image input to an RGB PIL image.
 
     Accepted inputs are a PIL image; a path, where WorldFoundry path tokens are expanded and
-    relative paths resolve against the repository root; an HW or HWC NumPy array, clipped to
-    [0, 255] unless it is uint8; a CHW (1 or 3 channels), HW or HWC tensor, scaled by 255 when it
-    is not uint8 and its maximum is at most 1, otherwise clipped to [0, 255]; or a list or tuple
-    with exactly one non-None item.
+    relative paths resolve against the repository root; or a list or tuple with exactly one
+    non-None item. NumPy arrays use HW grayscale or PIL-compatible HWC layouts and are clipped
+    to [0, 255] unless they are uint8. Tensors use HW grayscale, three-channel CHW, or
+    PIL-compatible HWC with a leading dimension other than 1 or 3. Non-uint8 tensors are scaled
+    by 255 when their maximum is at most 1, then clipped to [0, 255].
 
     Raises:
         TypeError: The input type is unsupported or a sequence does not hold exactly one image.

@@ -182,6 +182,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_reason1_runtime_options.py \
 	tests/pipelines/test_cosmos_inference_parallel_options.py \
 	tests/pipelines/test_hunyuan_video_checkpoint_paths.py \
+	tests/pipelines/test_hunyuan_mirror_masks.py \
 	tests/studio/test_cosmos_predict25_local_overrides.py \
 	tests/studio/test_cosmos_predict2_workspace_defaults.py \
 	tests/studio/test_hunyuan_safe_checkpoint_overrides.py \

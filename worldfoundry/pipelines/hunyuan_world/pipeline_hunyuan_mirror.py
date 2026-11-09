@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import numpy as np
@@ -170,8 +170,11 @@ class HunyuanMirrorPipeline(PipelineABC):
             final_mask_list.append(final_mask)
 
         # Stack all frame masks; the enabled filters are the same for every frame.
-        frame_masks = [mask for mask in final_mask_list if mask is not None]
-        final_mask = np.stack(frame_masks, axis=0) if frame_masks else np.ones(pts3d_conf.shape[:3], dtype=bool)
+        final_mask = (
+            np.stack(cast(list[np.ndarray], final_mask_list), axis=0)
+            if final_mask_list[0] is not None
+            else np.ones(pts3d_conf.shape[:3], dtype=bool)
+        )
 
         return final_mask
 

@@ -20,7 +20,6 @@ def build_bert(model_config, pretrain, checkpoint):
     current_dir = str(package_data_path("models", "runtime", "configs", "umt", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path
     bert_config = BertConfig.from_json_file(target_file)
-    target_file
     bert_config.encoder_width = model_config.vision_encoder.d_model
     bert_config.gradient_checkpointing = checkpoint
     bert_config.fusion_layer = model_config.text_encoder.fusion_layer

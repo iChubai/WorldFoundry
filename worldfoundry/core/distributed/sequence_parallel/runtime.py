@@ -585,7 +585,7 @@ class _AllToAll(torch.autograd.Function):
 
     # Autograd supplies one gradient for this forward's single tensor output.
     @staticmethod
-    def backward(ctx, grad_output):  # ty: ignore[invalid-method-override]
+    def backward(ctx, grad_output):  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
         """Invert the hop by swapping scatter and gather dimensions."""
 
         grad_output = all_to_all_tensor(
@@ -644,7 +644,7 @@ class _AllGather(torch.autograd.Function):
 
     # Autograd supplies one gradient for this forward's single tensor output.
     @staticmethod
-    def backward(ctx, grad_output):  # ty: ignore[invalid-method-override]
+    def backward(ctx, grad_output):  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
         """Keep this rank's slice of the concatenated gradient."""
 
         group = ctx.group
@@ -708,7 +708,7 @@ class _SplitForwardGatherBackward(torch.autograd.Function):
 
     # Autograd supplies one gradient for this forward's single tensor output.
     @staticmethod
-    def backward(ctx, grad_output: torch.Tensor):  # ty: ignore[invalid-method-override]
+    def backward(ctx, grad_output: torch.Tensor):  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
         """All-gather local grads to reconstruct the full-tensor gradient."""
 
         return _gather(grad_output, ctx.dim, ctx.group), None, None
@@ -727,7 +727,7 @@ class _GatherForwardSplitBackward(torch.autograd.Function):
 
     # Autograd supplies one gradient for this forward's single tensor output.
     @staticmethod
-    def backward(ctx, grad_output: torch.Tensor):  # ty: ignore[invalid-method-override]
+    def backward(ctx, grad_output: torch.Tensor):  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
         """Keep this rank's slice of the full-tensor gradient."""
 
         return _split(grad_output, ctx.dim, ctx.group), None, None

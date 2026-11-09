@@ -37,7 +37,7 @@ def _norm_and_concat_padded_batch(
         Normalized tensor of shape [batch, seq_len, hidden_dim * num_layers],
         with padded positions zeroed out.
     """
-    b, _, d, l = encoded_text.shape  # noqa: E741
+    b, _, d, l = encoded_text.shape  # noqa: E741 - Upstream dimension name kept.
     eps = 1e-6
 
     sequence_lengths = attention_mask.sum(dim=-1)

@@ -19,8 +19,12 @@ REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from worldfoundry.evaluation.tasks.execution.framework import official_runner as ors  # noqa: E402
-from worldfoundry.evaluation.tasks.execution.framework.io import scalar_number  # noqa: E402
+from worldfoundry.evaluation.tasks.execution.framework import (  # noqa: E402 - Follows the sys.path setup.
+    official_runner as ors,
+)
+from worldfoundry.evaluation.tasks.execution.framework.io import (  # noqa: E402 - Follows the sys.path setup.
+    scalar_number,
+)
 
 RUNNER_ROOT = Path(__file__).resolve().parent
 DEFAULT_RUNTIME_ROOT = RUNNER_ROOT / "runtime" / "pawbench"

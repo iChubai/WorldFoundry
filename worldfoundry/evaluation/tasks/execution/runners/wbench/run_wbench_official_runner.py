@@ -19,10 +19,17 @@ REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402
-from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION  # noqa: E402
-from worldfoundry.evaluation.tasks.execution.framework.io import env_path, write_json  # noqa: E402
-from worldfoundry.evaluation.tasks.execution.framework.official_runner import default_benchmark_timeout  # noqa: E402
+from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.evaluation.reporting.scorecard import (  # noqa: E402 - Follows the sys.path setup.
+    SCORECARD_SCHEMA_VERSION,
+)
+from worldfoundry.evaluation.tasks.execution.framework.io import (  # noqa: E402 - Follows the sys.path setup.
+    env_path,
+    write_json,
+)
+from worldfoundry.evaluation.tasks.execution.framework.official_runner import (  # noqa: E402 - Follows the sys.path setup.
+    default_benchmark_timeout,
+)
 
 RUNNER_ROOT = Path(__file__).resolve().parent
 DEFAULT_WBENCH_ROOT = RUNNER_ROOT / "runtime" / "wbench"

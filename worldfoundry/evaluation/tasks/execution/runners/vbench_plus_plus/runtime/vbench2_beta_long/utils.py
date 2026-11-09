@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 # Provider initialization uses the runtime's logging configuration.
 from scenedetect import SceneManager, open_video  # noqa: E402
-from scenedetect.detectors import ContentDetector  # noqa: E402
-from scipy.stats import rankdata  # noqa: E402
+from scenedetect.detectors import ContentDetector  # noqa: E402 - Follows the logging setup.
+from scipy.stats import rankdata  # noqa: E402 - Follows the logging setup.
 
 ###################################################################################################
 # Consistency Dimensions' Score Distribution Transformation

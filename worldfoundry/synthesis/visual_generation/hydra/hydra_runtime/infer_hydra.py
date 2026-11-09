@@ -16,19 +16,27 @@ _PROJECT_ROOT = str(Path(__file__).resolve().parents[5])
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (  # noqa: E402
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (  # noqa: E402 - Follows the sys.path setup.
     WanVideoVAE,
     WanVideoVAEStateDictConverter,
 )
-from worldfoundry.base_models.diffusion_model.models.denoisers.wan import WAN21_T2V_1P3B_CONFIG  # noqa: E402
-from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanTextEncoder  # noqa: E402
-from worldfoundry.base_models.diffusion_model.models.networks.wan import WanModel  # noqa: E402
-from worldfoundry.core.io import save_video  # noqa: E402
-from worldfoundry.core.model_loading import load_model  # noqa: E402
-from worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.hydra_model import (  # noqa: E402
+from worldfoundry.base_models.diffusion_model.models.denoisers.wan import (  # noqa: E402 - Follows the sys.path setup.
+    WAN21_T2V_1P3B_CONFIG,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.wan import (  # noqa: E402 - Follows the sys.path setup.
+    WanTextEncoder,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan import (  # noqa: E402 - Follows the sys.path setup.
+    WanModel,
+)
+from worldfoundry.core.io import save_video  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.model_loading import load_model  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.hydra_model import (  # noqa: E402 - Follows the sys.path setup.
     HyDRAAttentionConfig,
 )
-from worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.pipeline import HyDRAPipeline  # noqa: E402
+from worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.pipeline import (  # noqa: E402 - Follows the sys.path setup.
+    HyDRAPipeline,
+)
 
 
 def _crop_and_resize(image: Image.Image, height: int, width: int) -> Image.Image:

@@ -90,7 +90,7 @@ def _sigma_schedule(num_inference_steps: int) -> list[float]:
 
 def _install_optional_ray_stub() -> None:
     try:
-        import ray  # noqa: F401
+        import ray  # noqa: F401 - Availability probe; a stub is installed when it is missing.
 
         return
     except ImportError:

@@ -165,7 +165,7 @@ def run_physvidbench_qa(
     judge_fn = build_judge_fn(config)
     caption_matrix = load_caption_matrix(caption_base, suffixes=suffixes)
     frame = pd.read_csv(question_csv)
-    frame = frame[frame["Upsampled"] == True]  # noqa: E712
+    frame = frame[frame["Upsampled"] == True]  # noqa: E712 - Elementwise pandas comparison.
     if frame.empty:
         raise ValueError(f"No upsampled PhysVidBench entries found in {question_csv}")
 

@@ -76,7 +76,7 @@ def main() -> None:
         sys.path.insert(0, str(repo_root))
     if "dotenv" not in sys.modules:
         try:
-            import dotenv  # noqa: F401
+            import dotenv  # noqa: F401 - Availability probe; a stub is installed when it is missing.
         except ModuleNotFoundError:
             shim = types.ModuleType("dotenv")
             shim.load_dotenv = lambda *_, **__: False

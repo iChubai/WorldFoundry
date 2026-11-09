@@ -35,7 +35,7 @@ class FirstFrameManifest:
 
 def _require_httpx():
     try:
-        import httpx  # noqa: F401
+        import httpx  # noqa: F401 - Availability probe for an optional dependency.
     except ImportError as exc:
         raise ImportError(
             "First-frame generation requires httpx. Install with: pip install 'wrbench[firstframe]'"

@@ -37,7 +37,7 @@ if os.environ.get("EVOKE_CPU_THREADS"):
 # Import is safe here -- da3_cloud's module scope is numpy/torch/pathlib only, no DA3/ViGeo weight load.
 import contextlib  # noqa: E402 - Follows the environment setup.
 
-from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402
+from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402 - Follows the environment setup.
     CHUNK0_TARGET_DISPARITY_PX_DEFAULT as _CHUNK0_TARGET_DISPARITY_PX_DEFAULT,
 )
 

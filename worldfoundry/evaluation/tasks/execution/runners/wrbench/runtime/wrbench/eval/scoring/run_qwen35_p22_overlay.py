@@ -39,7 +39,7 @@ def _metric_root(path: Path) -> Path | None:
         if (root / "src" / "wrbench" / "eval" / "scoring" / "prompts_v2_probe.py").exists():
             return None
     try:
-        import wrbench.eval.scoring.prompts_v2_probe  # noqa: F401
+        import wrbench.eval.scoring.prompts_v2_probe  # noqa: F401 - Availability probe for an optional dependency.
     except ImportError:
         return None
     return None

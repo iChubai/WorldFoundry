@@ -9,7 +9,12 @@ from worldfoundry.core.distributed.collectives.evaluation import get_rank, print
 # Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench", sys.modules[__name__])
 
-from .utils import get_prompt_from_filename, init_submodules, load_json, save_json  # noqa: E402
+from .utils import (  # noqa: E402 - Follows the module alias setup.
+    get_prompt_from_filename,
+    init_submodules,
+    load_json,
+    save_json,
+)
 
 
 class VBench:

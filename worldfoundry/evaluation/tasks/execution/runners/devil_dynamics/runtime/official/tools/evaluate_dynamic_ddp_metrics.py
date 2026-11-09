@@ -22,18 +22,25 @@ from worldfoundry.base_models.perception_core.general_perception import openai_c
 # Optional metric providers inherit the upstream warning filter.
 warnings.filterwarnings("ignore")
 
-import pandas as pd  # noqa: E402
-import timm  # noqa: E402
-import tqdm  # noqa: E402
-from metrics_utils.cal_ssim import cal_ssim_dist  # noqa: E402
-from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn  # noqa: E402
-from viclip import get_viclip, get_vid_feat  # noqa: E402
+import pandas as pd  # noqa: E402 - Follows the warnings configuration.
+import timm  # noqa: E402 - Follows the warnings configuration.
+import tqdm  # noqa: E402 - Follows the warnings configuration.
+from metrics_utils.cal_ssim import cal_ssim_dist  # noqa: E402 - Follows the warnings configuration.
+from metrics_utils.standard_video_dataset import (  # noqa: E402 - Follows the warnings configuration.
+    StandardVidoDataset,
+    standard_collate_fn,
+)
+from viclip import get_viclip, get_vid_feat  # noqa: E402 - Follows the warnings configuration.
 
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import (  # noqa: E402
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import (  # noqa: E402 - Follows the warnings configuration.
     backbones as dinov2_backbones,
 )
-from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT  # noqa: E402
-from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder  # noqa: E402
+from worldfoundry.base_models.perception_core.optical_flow.raft.raft import (  # noqa: E402 - Follows the warnings configuration.
+    RAFT,
+)
+from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import (  # noqa: E402 - Follows the warnings configuration.
+    InputPadder,
+)
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[1]
 

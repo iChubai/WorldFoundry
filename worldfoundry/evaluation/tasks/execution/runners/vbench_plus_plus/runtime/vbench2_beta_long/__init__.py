@@ -10,9 +10,16 @@ from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench impor
 # Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_long", sys.modules[__name__])
 
-from vbench.utils import get_prompt_from_filename, init_submodules, load_json, save_json  # noqa: E402
-from vbench2_beta_long.temporal_flickering import filter_static_clips as filter_static_clips  # noqa: E402
-from vbench2_beta_long.utils import (  # noqa: E402
+from vbench.utils import (  # noqa: E402 - Follows the module alias setup.
+    get_prompt_from_filename,
+    init_submodules,
+    load_json,
+    save_json,
+)
+from vbench2_beta_long.temporal_flickering import (  # noqa: E402 - Follows the module alias setup.
+    filter_static_clips as filter_static_clips,
+)
+from vbench2_beta_long.utils import (  # noqa: E402 - Follows the module alias setup.
     get_duration_from_json,
     load_clip_lengths,
     split_video_into_clips,

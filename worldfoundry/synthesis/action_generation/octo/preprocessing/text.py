@@ -59,7 +59,7 @@ class HFTokenizer(TextProcessor):
 class MuseEmbedding(TextProcessor):
     def __init__(self, model_path: str | None = None):
         import tensorflow_hub as hub  # lazy import
-        import tensorflow_text  # noqa: F401
+        import tensorflow_text  # noqa: F401 - Registers the TF Text ops the Hub model uses.
 
         from worldfoundry.core.io.paths import resolve_worldfoundry_path
 

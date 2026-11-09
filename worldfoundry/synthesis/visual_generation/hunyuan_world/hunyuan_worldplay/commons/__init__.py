@@ -123,7 +123,9 @@ TRANSFORMER_VERSION_TO_SR_VERSION = {
 
 def is_flash2_available():
     try:
-        from flash_attn import flash_attn_varlen_qkvpacked_func  # noqa: F401
+        from flash_attn import (
+            flash_attn_varlen_qkvpacked_func,  # noqa: F401 - Availability probe for an optional dependency.
+        )
 
         return True
     except Exception:
@@ -133,7 +135,7 @@ def is_flash2_available():
 def is_flash3_available():
     try:
         from flash_attn_interface import (
-            flash_attn_varlen_func as flash_attn_varlen_func_v3,  # noqa: F401
+            flash_attn_varlen_func as flash_attn_varlen_func_v3,  # noqa: F401 - Availability probe for an optional dependency.
         )
 
         return True
@@ -153,7 +155,7 @@ def is_sparse_attn_available():
     if not is_sparse_attn_supported():
         return False
     try:
-        from flex_block_attn import flex_block_attn_func  # noqa: F401
+        from flex_block_attn import flex_block_attn_func  # noqa: F401 - Availability probe for an optional dependency.
 
         return True
     except Exception:

@@ -23,7 +23,7 @@ class LLMProvider(Protocol):
 
 def _require_httpx():
     try:
-        import httpx  # noqa: F401
+        import httpx  # noqa: F401 - Availability probe for an optional dependency.
     except ImportError as exc:
         raise ImportError("LLM prompt generation requires httpx. Install with: pip install 'wrbench[prompts]'") from exc
 

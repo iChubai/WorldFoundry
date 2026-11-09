@@ -25,12 +25,21 @@ mmengine.registry.Registry.register_module = safe_register
 
 # Provider imports require the MMEngine registry policy above.
 import numpy as np  # noqa: E402
-from mmpose.apis import inference_topdown  # noqa: E402
-from mmpose.apis import init_model as init_pose_estimator  # noqa: E402
-from mmpose.evaluation.functional import nms  # noqa: E402
-from mmpose.registry import VISUALIZERS  # noqa: E402
-from mmpose.structures import merge_data_samples, split_instances  # noqa: E402
-from mmpose.utils import adapt_mmdet_pipeline  # noqa: E402
+from mmpose.apis import inference_topdown  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+from mmpose.apis import (  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+    init_model as init_pose_estimator,
+)
+from mmpose.evaluation.functional import (  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+    nms,
+)
+from mmpose.registry import VISUALIZERS  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+from mmpose.structures import (  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+    merge_data_samples,
+    split_instances,
+)
+from mmpose.utils import (  # noqa: E402 - Provider imports require the MMEngine registry policy above.
+    adapt_mmdet_pipeline,
+)
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -39,8 +48,11 @@ try:
 except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
-from bench_utils.pose_utils import analyze_joint_angles, analyze_lengths_over_time  # noqa: E402
-from tqdm import tqdm  # noqa: E402
+from bench_utils.pose_utils import (  # noqa: E402 - Follows the optional import block.
+    analyze_joint_angles,
+    analyze_lengths_over_time,
+)
+from tqdm import tqdm  # noqa: E402 - Follows the optional import block.
 
 RUNTIME_ROOT = os.path.dirname(__file__)
 

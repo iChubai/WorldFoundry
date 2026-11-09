@@ -13,15 +13,15 @@ import jaxtyping
 import torch
 from jaxtyping import (
     ArrayLike,
-    Bool,  # noqa: F401
-    DTypeLike,  # noqa: F401
+    Bool,  # noqa: F401 - Re-exported for at.<type> annotations.
+    DTypeLike,  # noqa: F401 - Re-exported for at.<type> annotations.
     Float,
-    Int,  # noqa: F401
-    Key,  # noqa: F401
-    Num,  # noqa: F401
+    Int,  # noqa: F401 - Re-exported for at.<type> annotations.
+    Key,  # noqa: F401 - Re-exported for at.<type> annotations.
+    Num,  # noqa: F401 - Re-exported for at.<type> annotations.
     PyTree,
-    Real,  # noqa: F401
-    UInt8,  # noqa: F401
+    Real,  # noqa: F401 - Re-exported for at.<type> annotations.
+    UInt8,  # noqa: F401 - Re-exported for at.<type> annotations.
     config,
     jaxtyped,
 )

@@ -52,7 +52,7 @@ def _configure_concise_import_logs() -> None:
 
 _configure_concise_import_logs()
 
-from .inference_backend import (  # noqa: E402
+from .inference_backend import (  # noqa: E402 - Follows the import-log configuration.
     resolve_backend_engine,
     resolve_negative_prompt_arg,
 )

@@ -17,14 +17,16 @@ logger = logging.getLogger(__name__)
 # Provider initialization uses the runtime's logging configuration.
 from vbench.utils import load_json  # noqa: E402
 
-from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402
+from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402 - Follows the logging setup.
     RAFT,
     InputPadder,
 )
-from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402
+from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402 - Follows the logging setup.
     checkpoint_path as raft_checkpoint_path,
 )
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset  # noqa: E402
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (  # noqa: E402 - Follows the logging setup.
+    bundled_benchmark_asset,
+)
 
 # isort: split
 from vbench2_beta_long.utils import get_prompt_from_filename  # noqa: E402

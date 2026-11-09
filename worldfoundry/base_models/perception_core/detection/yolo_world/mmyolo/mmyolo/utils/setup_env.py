@@ -17,11 +17,11 @@ def register_all_modules(init_default_scope: bool = True):
             Defaults to True.
     """
     import mmdet.engine
-    import mmdet.visualization  # noqa: F401
+    import mmdet.visualization  # noqa: F401 - Imported to register the modules in the registries.
 
     import mmyolo.datasets
     import mmyolo.engine
-    import mmyolo.models  # noqa: F401
+    import mmyolo.models  # noqa: F401 - Imported to register the modules in the registries.
 
     if init_default_scope:
         never_created = DefaultScope.get_current_instance() is None or not DefaultScope.check_instance_created("mmyolo")

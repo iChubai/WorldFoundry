@@ -318,7 +318,7 @@ def evaluate_conditional_generation(request: ConditionalGenerationRequest) -> di
                 if aligned_frames is None or gt_frames is None:
                     # Each closure is called only during its own loop iteration.
                     gt_frames = _ground_truth_video(request, row, name)  # noqa: B023
-                    aligned_frames, gt_frames = align_video(frames, gt_frames, nearest=False)  # noqa: B023
+                    aligned_frames, gt_frames = align_video(frames, gt_frames, nearest=False)  # noqa: B023 - Called only during its own loop iteration.
                 return aligned_frames, gt_frames
 
             result: dict[str, Any] = {

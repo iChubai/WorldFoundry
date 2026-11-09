@@ -66,7 +66,7 @@ class Qwen3Backbone(torch.nn.Module):
         extra_kwargs = {}
         if use_flash_attention:
             try:
-                import flash_attn  # noqa: F401
+                import flash_attn  # noqa: F401 - Availability probe for an optional dependency.
 
                 extra_kwargs["attn_implementation"] = "flash_attention_2"
             except ImportError:

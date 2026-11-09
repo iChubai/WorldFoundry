@@ -49,8 +49,8 @@ from worldfoundry.core.execution.compile_cache import configure_persistent_compi
 
 configure_persistent_compile_cache(namespace="rope-triton")
 
-import triton  # noqa: E402
-import triton.language as tl  # noqa: E402
+import triton  # noqa: E402 - Follows the Triton compile-cache configuration.
+import triton.language as tl  # noqa: E402 - Follows the Triton compile-cache configuration.
 
 # ──────────────────────────────────────────────────────────────────────────
 # Triton kernel — one freqs load per (S, H) tile, broadcast across heads

@@ -85,7 +85,7 @@ class ConcatTransform(InvertibleModalityTransform):
         for key in data:
             try:
                 modality, _ = key.split(".")
-            except:  # noqa: E722
+            except:  # noqa: E722 - Also catches BaseException, as upstream.
                 ### Handle language annotation special case
                 modality = "language" if "annotation" in key else "others"
             if modality not in grouped_keys:

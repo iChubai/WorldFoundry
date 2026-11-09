@@ -22,7 +22,7 @@ class MMYOLO(MMCodebase):
         """register all rewriters for mmdet."""
         import mmdeploy.codebase.mmdet.models
         import mmdeploy.codebase.mmdet.ops
-        import mmdeploy.codebase.mmdet.structures  # noqa: F401
+        import mmdeploy.codebase.mmdet.structures  # noqa: F401 - Imported to register the mmdet rewriters.
 
     @classmethod
     def register_all_modules(cls):
@@ -44,7 +44,7 @@ def _get_dataset_metainfo(model_cfg: Config):
     Returns:
         list[str]: A list of string specifying names of different class.
     """
-    from mmyolo import datasets  # noqa
+    from mmyolo import datasets  # noqa: F401 - Imported to register the mmyolo datasets.
     from mmyolo.registry import DATASETS
 
     module_dict = DATASETS.module_dict
@@ -79,7 +79,9 @@ class YOLOObjectDetection(ObjectDetection):
         Returns:
             Visualizer: A visualizer instance.
         """
-        from mmdet.visualization import DetLocalVisualizer  # noqa: F401
+        from mmdet.visualization import (
+            DetLocalVisualizer,  # noqa: F401 - Imported to register DetLocalVisualizer before the visualizer is built.
+        )
 
         metainfo = _get_dataset_metainfo(self.model_cfg)
         visualizer = super().get_visualizer(name, save_dir)

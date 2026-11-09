@@ -1,7 +1,9 @@
 """Workspace-facing dispatch for in-tree benchmark runners."""
 
 from worldfoundry.evaluation.tasks.catalog.dispatch import CLI_RUNNERS as CLI_RUNNERS
-from worldfoundry.evaluation.tasks.catalog.dispatch import OfficialRunnerSpec as WorkspaceRunnerSpec  # noqa: F401
+from worldfoundry.evaluation.tasks.catalog.dispatch import (
+    OfficialRunnerSpec as WorkspaceRunnerSpec,  # noqa: F401 - Re-exported for workspace registry callers.
+)
 
 from .dispatch import *  # noqa: F403 - preserve the existing Workspace registry exports
 

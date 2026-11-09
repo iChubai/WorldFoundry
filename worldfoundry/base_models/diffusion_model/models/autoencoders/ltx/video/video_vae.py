@@ -231,7 +231,7 @@ class VideoEncoder(nn.Module):
         convolution_dimensions: int = 3,
         in_channels: int = 3,
         out_channels: int = 128,
-        encoder_blocks: list[tuple[str, int]] | list[tuple[str, dict[str, Any]]] = [],  # noqa: B006
+        encoder_blocks: list[tuple[str, int]] | list[tuple[str, dict[str, Any]]] = [],  # noqa: B006 - Read-only default; the blocks are only iterated.
         patch_size: int = 4,
         norm_layer: NormLayerType = NormLayerType.PIXEL_NORM,
         latent_log_var: LogVarianceType = LogVarianceType.UNIFORM,
@@ -642,7 +642,7 @@ class VideoDecoder(nn.Module):
         convolution_dimensions: int = 3,
         in_channels: int = 128,
         out_channels: int = 3,
-        decoder_blocks: list[tuple[str, int | dict]] = [],  # noqa: B006
+        decoder_blocks: list[tuple[str, int | dict]] = [],  # noqa: B006 - Read-only default; the blocks are only iterated.
         patch_size: int = 4,
         norm_layer: NormLayerType = NormLayerType.PIXEL_NORM,
         causal: bool = False,

@@ -52,7 +52,7 @@ class WebsocketClientPolicy:
                 time.sleep(5)
 
     @override
-    def infer(self, obs: Dict) -> Dict:  # noqa: UP006
+    def infer(self, obs: Dict) -> Dict:  # noqa: UP006 - Annotation keeps the re-exported typing.Dict name.
         data = self._packer.pack(obs)
         self._ws.send(data)
         response = self._ws.recv()

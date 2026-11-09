@@ -220,7 +220,7 @@ def adalora_forward(self, *args, **kwargs):
                         para_cov = p @ p.T if "lora_A" in n else p.T @ p
                 else:
                     para_cov = p @ p.T if "lora_A" in n else p.T @ p
-                I = torch.eye(*para_cov.size(), out=torch.empty_like(para_cov))  # noqa: E741
+                I = torch.eye(*para_cov.size(), out=torch.empty_like(para_cov))  # noqa: E741 - Upstream identity-matrix name kept.
                 I.requires_grad = False
                 num_param += 1
                 if isinstance(regu_loss, torch.Tensor):

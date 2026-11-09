@@ -114,7 +114,7 @@ class RT1SavedModelRuntime:
 
         if self._model is None:
             import tensorflow as tf
-            import tensorflow_probability as _tfp  # noqa: F401
+            import tensorflow_probability as _tfp  # noqa: F401 - Registers the TFP ops the SavedModel uses.
 
             self._tf = tf
             with tf.device(self.tf_device):

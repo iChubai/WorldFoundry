@@ -59,7 +59,7 @@ from worldfoundry.core.kernels import (
 )
 from worldfoundry.core.kernels.registry import kernel_dispatch_receipt_scope
 from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
-from worldfoundry.core.nn import scale_shift as modulate  # noqa: F401
+from worldfoundry.core.nn import scale_shift as modulate  # noqa: F401 - Historical import path.
 from worldfoundry.core.nn.checkpointing.gradient import gradient_checkpoint_forward
 
 from .adapter import SimpleAdapter

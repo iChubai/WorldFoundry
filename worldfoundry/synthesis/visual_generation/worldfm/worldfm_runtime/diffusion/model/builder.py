@@ -15,7 +15,7 @@ def build_model(cfg, use_grad_checkpoint=False, use_fp32_attention=False, gc_ste
     global _NETS_IMPORTED
     if not _NETS_IMPORTED:
         from worldfoundry.synthesis.visual_generation.worldfm.worldfm_runtime.diffusion.model.nets import (
-            nets,  # noqa: F401
+            nets,  # noqa: F401 - Imported to register the networks in MODELS.
         )
 
         _NETS_IMPORTED = True

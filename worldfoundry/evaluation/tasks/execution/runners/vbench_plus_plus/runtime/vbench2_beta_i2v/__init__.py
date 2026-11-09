@@ -5,7 +5,7 @@ import sys
 # Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_i2v", sys.modules[__name__])
 
-from .utils import init_submodules, save_json  # noqa: E402
+from .utils import init_submodules, save_json  # noqa: E402 - Follows the module alias setup.
 
 # isort: split
 from .utils import load_json as load_json  # noqa: E402

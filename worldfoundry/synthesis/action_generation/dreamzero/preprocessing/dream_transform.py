@@ -244,7 +244,7 @@ class DreamTransform(InvertibleModalityTransform):
                 modality, _ = key.split(".")
                 if "annotation" in key:
                     modality = "language"
-            except:  # noqa: E722
+            except:  # noqa: E722 - Also catches BaseException, as upstream.
                 ### Handle language annotation special case
                 if "annotation" in key:  # noqa: SIM108 - Branches carry per-case comments.
                     modality = "language"

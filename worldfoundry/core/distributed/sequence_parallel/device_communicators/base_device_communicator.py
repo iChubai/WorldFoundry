@@ -50,7 +50,7 @@ class DistributedAutograd:
 
         # Autograd supplies one gradient for this forward's single tensor output.
         @staticmethod
-        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None]:  # ty: ignore[invalid-method-override]
+        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None]:  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
             """All-reduce the incoming grad; ``group`` / ``op`` have no gradient."""
             grad_output = grad_output.clone()
             dist.all_reduce(grad_output, group=ctx.group, op=ctx.op)
@@ -86,7 +86,7 @@ class DistributedAutograd:
 
         # Autograd supplies one gradient for this forward's single tensor output.
         @staticmethod
-        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None, None]:  # ty: ignore[invalid-method-override]
+        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None, None]:  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
             """Reduce-scatter the gathered-dim gradient back to each source rank."""
             # Split the gradient tensor along the gathered dimension
             dim_size = grad_output.size(ctx.dim) // ctx.world_size
@@ -171,7 +171,7 @@ class DistributedAutograd:
 
         # Autograd supplies one gradient for this forward's single tensor output.
         @staticmethod
-        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None, None, None]:  # ty: ignore[invalid-method-override]
+        def backward(ctx: Any, grad_output: Tensor) -> tuple[None, Tensor, None, None, None]:  # ty: ignore[invalid-method-override]  # torch declares backward(ctx, *grad_outputs); this function has a single output gradient.
             """Invert the Ulysses swap by exchanging ``scatter_dim`` and ``gather_dim``."""
             if ctx.world_size == 1:
                 return None, grad_output, None, None, None

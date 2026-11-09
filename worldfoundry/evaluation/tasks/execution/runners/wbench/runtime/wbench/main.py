@@ -387,7 +387,7 @@ def _run_metric_on_gpu(gpu_id, metric, tasks, eval_dir, model_dir):
 
     warnings.filterwarnings("ignore")
     sys.path.insert(0, PROJECT_ROOT)
-    import src.compat  # noqa: F401
+    import src.compat  # noqa: F401 - Imported to apply the compatibility patches.
 
     device = "cuda"
     tag = f"[GPU{gpu_id}]"

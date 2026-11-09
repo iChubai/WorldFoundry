@@ -10,7 +10,7 @@ import torch
 from packaging import version
 from transformers import Trainer
 
-from .lora_layers import *  # noqa
+from .lora_layers import *  # noqa: F403 - Re-exports the LoRA layer classes.
 from .utils import SwiftAdapter, SwiftConfig, SwiftOutput, set_adapter
 
 logger = get_logger()

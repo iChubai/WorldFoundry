@@ -24,7 +24,7 @@ from worldfoundry.core.io.assets.easy_io import easy_io
 
 
 @contextmanager
-def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):  # noqa: B008
+def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):  # noqa: B008 - Default evaluated once at definition, as upstream.
     old_register_parameter = torch.nn.Module.register_parameter
     if include_buffers:
         old_register_buffer = torch.nn.Module.register_buffer
@@ -211,7 +211,7 @@ def split_state_dict_with_prefix(state_dict):
             prefix_dict[prefix] = []
         prefix_dict[prefix].append(key)
     state_dicts = []
-    for prefix, keys in prefix_dict.items():  # noqa: B007
+    for prefix, keys in prefix_dict.items():  # noqa: B007 - Loop target name kept as upstream.
         sub_state_dict = {key: state_dict[key] for key in keys}
         state_dicts.append(sub_state_dict)
     return state_dicts

@@ -26,7 +26,7 @@ AttentiveClassifier = __import__("vjepa.models.attentive_pooler", fromlist=["Att
 
 # Preserve upstream exports after provider model initialization.
 from .V_JEPA_utils import *  # noqa: E402, F403
-from .V_JEPA_utils import ClipAggregation, FrameAggregation  # noqa: E402
+from .V_JEPA_utils import ClipAggregation, FrameAggregation  # noqa: E402 - Follows module-level setup, as upstream.
 
 logger = logging.getLogger(__name__)
 

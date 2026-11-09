@@ -22,11 +22,17 @@ REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:  # pragma: no cover - direct script execution
     sys.path.insert(0, str(REPO_ROOT))
 
-from worldfoundry.core.io.paths import checkpoint_root_path  # noqa: E402
-from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402
-from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION  # noqa: E402
-from worldfoundry.evaluation.tasks.execution.framework.io import env_path, write_json, write_jsonl  # noqa: E402
-from worldfoundry.evaluation.tasks.execution.runners.stevo_bench.stevo_bench_metrics import (  # noqa: E402
+from worldfoundry.core.io.paths import checkpoint_root_path  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.evaluation.reporting.scorecard import (  # noqa: E402 - Follows the sys.path setup.
+    SCORECARD_SCHEMA_VERSION,
+)
+from worldfoundry.evaluation.tasks.execution.framework.io import (  # noqa: E402 - Follows the sys.path setup.
+    env_path,
+    write_json,
+    write_jsonl,
+)
+from worldfoundry.evaluation.tasks.execution.runners.stevo_bench.stevo_bench_metrics import (  # noqa: E402 - Follows the sys.path setup.
     METRIC_ORDER,
     METRIC_SPECS,
     PRIMARY_METRIC_ID,
@@ -36,7 +42,7 @@ from worldfoundry.evaluation.tasks.execution.runners.stevo_bench.stevo_bench_met
     metric_rows,
     summarize_run,
 )
-from worldfoundry.runtime.jobs import run_bounded_command  # noqa: E402
+from worldfoundry.runtime.jobs import run_bounded_command  # noqa: E402 - Follows the sys.path setup.
 
 RUNNER_ROOT = Path(__file__).resolve().parent
 DEFAULT_RUNTIME_ROOT = RUNNER_ROOT / "runtime" / "stevo_bench"

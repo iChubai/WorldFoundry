@@ -43,7 +43,9 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-from worldfoundry.core.observability import log_filters as _log_filters  # noqa: F401
+from worldfoundry.core.observability import (
+    log_filters as _log_filters,  # noqa: F401 - Imported to install the log filters.
+)
 
 _EXPORT_MODULES = {
     "PromptProcessor": "worldfoundry.core.prompting",

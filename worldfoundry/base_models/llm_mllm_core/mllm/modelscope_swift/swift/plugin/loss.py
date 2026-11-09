@@ -102,9 +102,9 @@ def _parse_pair_sentence(outputs):
 class SiameseDistanceMetric(Enum):
     """The metric for the contrastive loss"""
 
-    EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)  # noqa
-    MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)  # noqa
-    COSINE_DISTANCE = lambda x, y: 1 - F.cosine_similarity(x, y)  # noqa
+    EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)  # noqa: E731 - Upstream distance functions kept as lambdas.
+    MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)  # noqa: E731 - Upstream distance functions kept as lambdas.
+    COSINE_DISTANCE = lambda x, y: 1 - F.cosine_similarity(x, y)  # noqa: E731 - Upstream distance functions kept as lambdas.
 
 
 @register_loss_func(LossType.cosine_similarity)

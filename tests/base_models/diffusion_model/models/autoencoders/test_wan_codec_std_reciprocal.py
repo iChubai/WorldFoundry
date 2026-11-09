@@ -32,7 +32,7 @@ def _build_tiny_wan21_codec(monkeypatch, **component_options: object) -> WanVide
         return WanVideoVAE(z_dim=16, base_dim=8).to(dtype=policy.dtype)
 
     monkeypatch.setattr(wan_component.NativeModuleLoader, "load", fake_load)
-    return wan_component.build_wan_video_decoder(
+    decoder = wan_component.build_wan_video_decoder(
         ComponentBuildContext(
             model_id="wan-codec",
             key=ComponentKey(ComponentKind.DECODER),
@@ -41,6 +41,8 @@ def _build_tiny_wan21_codec(monkeypatch, **component_options: object) -> WanVide
             component_options=component_options,
         )
     )
+    assert isinstance(decoder, WanVideoDecoder)
+    return decoder
 
 
 def test_wan_codec_keeps_float32_std_reciprocal_by_default(monkeypatch) -> None:

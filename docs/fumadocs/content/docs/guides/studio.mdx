@@ -880,6 +880,30 @@ even if it was released during generation. Sampling may extend a sub-frame tap;
 observing current held keys does not consume queued transitions. The worker stays
 awake until pending input is drained, then resumes its normal idle behavior.
 
+Models can declare their own key bindings in `RealtimeSpec.keys`. The page then
+accepts exactly those keys, lists them in the control legend, and hides a
+virtual stick whose keys the model does not use. Models that declare no keys
+keep W/A/S/D and I/J/K/L. Prompt-scheduled and queued-segment pages take no
+keyboard actions.
+
+#### Mouse and gamepad
+
+Models that declare `RealtimeSpec.axes` are also driven by the mouse or a
+gamepad, and the control legend names the inputs the model accepts:
+
+- **Mouse** (`mouse_x`/`mouse_y` axes): once the session is live, a hint asks
+  you to click the video. The click captures the pointer, and mouse motion is
+  summed and sent at most once per animation frame. `Esc` releases the pointer
+  and stops sending.
+- **Gamepad** (`gamepad_*` axes): Studio reads the first connected gamepad every
+  animation frame and sends the four stick levels when any of them moves by more
+  than 0.02. Window blur, a hidden tab, and a gamepad disconnect each send one
+  neutral sample, so the sticks rest while the page is not focused.
+
+Over WebRTC these samples use the unordered `axes` DataChannel. While that
+channel is congested, samples wait for a later frame and mouse motion keeps
+accumulating. The WebSocket transport sends the same messages on its socket.
+
 #### Input sampling limits
 
 Input retention guarantees a control sample, not immediate visible motion in the
@@ -938,6 +962,23 @@ from the model catalog; if the native size is unknown, it does not guess a
 fixed preset. Switching back to `{"mode":"native"}` removes the transport
 scaler. WebRTC resize work runs before frames enter the media track, so held
 frames do not repeatedly pay the resize cost or block the control event loop.
+
+### Continuous sessions
+
+Models whose `RealtimeSpec.advance` is `continuous`, such as native
+Self-Forcing, generate chunk after chunk on their own once the session starts.
+For these sessions the page shows:
+
+- rollout progress in the status strip, as `CHUNK 3/7`, or as a running count
+  when the model sets no `max_chunks` limit;
+- **PAUSE**/**RESUME** beside **STEP**, which stops and restarts auto-advance.
+  **STEP** is enabled while the rollout is paused and generates one chunk;
+- `ROLLOUT COMPLETE` once the rollout reaches `max_chunks`. **STEP** on a
+  finished rollout shows the server's reason next to the controls.
+
+A new prompt, submitted with `Enter` at any time, starts a new rollout and
+restarts the chunk count. Sessions that generate only on input keep the
+controls described above.
 
 ### Draggable and collapsible panels
 

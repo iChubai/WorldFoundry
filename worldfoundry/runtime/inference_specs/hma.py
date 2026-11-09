@@ -42,10 +42,7 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
                 "base_model_dir": "${WORLDFOUNDRY_CKPT_DIR}/stabilityai--stable-video-diffusion-img2vid",
             },
             aliases=("default", "official", "base-cont", "hma-mar-1b"),
-            notes=(
-                "Runs the official STMAR continuous sampler from a checkout staged under "
-                "${WORLDFOUNDRY_MODEL_SOURCE_DIR}/HMA.",
-            ),
+            notes=("Runs the vendored STMAR continuous sampler.",),
         ),
         InferenceVariantSpec(
             variant_id="hma-magvit-362m",
@@ -65,8 +62,9 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
             },
             aliases=("base-disc",),
             notes=(
-                "Runs the official STMaskGIT discrete sampler and requires the official MAGVIT2 tokenizer "
-                "under the staged HMA checkout or hma_magvit_checkpoint override.",
+                "Runs the vendored STMaskGIT discrete sampler and requires the MAGVIT2 tokenizer at "
+                "${WORLDFOUNDRY_CKPT_DIR}/1x-technologies--worldmodel/magvit2.ckpt or the "
+                "hma_magvit_checkpoint override.",
             ),
         ),
     ),
@@ -83,7 +81,10 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
                     kind="path",
                     target="input_path",
                     required=True,
-                    default="${WORLDFOUNDRY_MODEL_SOURCE_DIR}/HMA/assets/langtable_prompt/frame_00.png",
+                    default=(
+                        "${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/synthesis/visual_generation/hma/hma_runtime/"
+                        "assets/langtable_prompt/frame_00.png"
+                    ),
                 ),
                 _field(
                     "checkpoint_dir",

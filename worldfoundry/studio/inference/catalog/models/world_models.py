@@ -11,7 +11,6 @@ from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
     local_data_root_path,
-    official_runtime_repo_path,
 )
 
 from .. import resolve
@@ -1004,10 +1003,11 @@ OVERRIDES: dict[str, dict[str, Any]] = {
     "hma": {
         "display_name": "HMA",
         "category": "Video Generation",
-        "summary": "Official STMAR continuous action-conditioned robot video generation.",
+        "summary": "STMAR continuous action-conditioned robot video generation.",
         "default_model_ref": lambda: str(checkpoint_root_path("liruiw--hma-base-cont")),
         "default_input_path": lambda: str(
-            official_runtime_repo_path("HMA") / "assets" / "langtable_prompt" / "frame_00.png"
+            resolve.PIPELINES_ROOT.parent
+            / "synthesis/visual_generation/hma/hma_runtime/assets/langtable_prompt/frame_00.png"
         ),
         "default_task_type": "robot-action-video",
         "default_load_kwargs": _hma_default_load_kwargs,

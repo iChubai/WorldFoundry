@@ -45,11 +45,11 @@ variants:
 integration:
   status: runtime_ported
   notes:
-  - HMA official continuous MAR and discrete MAGVIT interactive inference are bound through a user-staged source checkout and local checkpoint directories.
+  - HMA continuous MAR and discrete MAGVIT interactive inference run from the vendored model code (liruiw/HMA at e3c89088) and local checkpoint directories.
 runner_parity:
   status: implemented
   notes:
-  - The compatibility wrapper runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the official MAGVIT2 tokenizer for discrete checkpoints.
+  - The launcher runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the MAGVIT2 tokenizer (1x-technologies/worldmodel magvit2.ckpt) for discrete checkpoints.
   - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
   - The default single-image, constant-action LangTable prompt is smoke-only. A paired trajectory_path supplies true history and raw_language_table_delta_yx action increments; checkpoint normalization remains inside the official backbone.
 runtime_profile: runtime-profile:hma

@@ -121691,11 +121691,11 @@
           "worldfoundry"
         ],
         "notes": [
-          "WorldFoundry launches the user-staged official source through a narrow compatibility wrapper; upstream source is not vendored.",
+          "WorldFoundry runs the vendored HMA model code (STMAR, STMaskGIT and the MAGVIT2 tokenizer) through its launcher module.",
           "The default smoke route follows the official interactive simulator contract with the base continuous model, LangTable prompt image, two-dimensional action, and local SVD temporal VAE.",
           "The default repeats one image across prompt_horizon and a constant raw LangTable delta action; it is a smoke configuration, not paired trajectory validation.",
           "For a real paired rollout, pass trajectory_path to a JSON object with action_format=raw_language_table_delta_yx, exactly prompt_horizon prompt_frames paths, and prompt_horizon-1+generated_frames finite 2D actions. The first two axes mean vertical then horizontal displacement; the checkpoint normalizes raw actions internally.",
-          "The discrete checkpoint can be selected with hma_checkpoint_dir and requires the official MAGVIT2 tokenizer at source/data/magvit2.ckpt or hma_magvit_checkpoint.",
+          "The discrete checkpoint can be selected with hma_checkpoint_dir and requires the MAGVIT2 tokenizer at ${WORLDFOUNDRY_CKPT_DIR}/1x-technologies--worldmodel/magvit2.ckpt or hma_magvit_checkpoint.",
           "The launcher imports only the model and sampling modules, so dataset-encoding and hosted-Space dependencies are not required for inference.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
@@ -121862,7 +121862,7 @@
               "kind": "path",
               "target": "input",
               "required": true,
-              "default": "/home/ubuntu/.cache/worldfoundry/official_runtime_repos/HMA/assets/langtable_prompt/frame_00.png",
+              "default": "/workspace/worldfoundry/synthesis/visual_generation/hma/hma_runtime/assets/langtable_prompt/frame_00.png",
               "choices": [],
               "description": "Initial Observation used as the input for direct HMA inference."
             },
@@ -122031,7 +122031,7 @@
               "kind": "path",
               "target": "input",
               "required": true,
-              "default": "/home/ubuntu/.cache/worldfoundry/official_runtime_repos/HMA/assets/langtable_prompt/frame_00.png",
+              "default": "/workspace/worldfoundry/synthesis/visual_generation/hma/hma_runtime/assets/langtable_prompt/frame_00.png",
               "choices": [],
               "description": "Initial Observation used as the input for direct HMA inference."
             },
@@ -122214,15 +122214,15 @@
         }
       ],
       "notes": [
-        "HMA official continuous MAR and discrete MAGVIT interactive inference are bound through a user-staged source checkout and local checkpoint directories.",
-        "The compatibility wrapper runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the official MAGVIT2 tokenizer for discrete checkpoints.",
+        "HMA continuous MAR and discrete MAGVIT interactive inference run from the vendored model code (liruiw/HMA at e3c89088) and local checkpoint directories.",
+        "The launcher runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the MAGVIT2 tokenizer (1x-technologies/worldmodel magvit2.ckpt) for discrete checkpoints.",
         "Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.",
         "The default single-image, constant-action LangTable prompt is smoke-only. A paired trajectory_path supplies true history and raw_language_table_delta_yx action increments; checkpoint normalization remains inside the official backbone.",
-        "WorldFoundry launches the user-staged official source through a narrow compatibility wrapper; upstream source is not vendored.",
+        "WorldFoundry runs the vendored HMA model code (STMAR, STMaskGIT and the MAGVIT2 tokenizer) through its launcher module.",
         "The default smoke route follows the official interactive simulator contract with the base continuous model, LangTable prompt image, two-dimensional action, and local SVD temporal VAE.",
         "The default repeats one image across prompt_horizon and a constant raw LangTable delta action; it is a smoke configuration, not paired trajectory validation.",
         "For a real paired rollout, pass trajectory_path to a JSON object with action_format=raw_language_table_delta_yx, exactly prompt_horizon prompt_frames paths, and prompt_horizon-1+generated_frames finite 2D actions. The first two axes mean vertical then horizontal displacement; the checkpoint normalizes raw actions internally.",
-        "The discrete checkpoint can be selected with hma_checkpoint_dir and requires the official MAGVIT2 tokenizer at source/data/magvit2.ckpt or hma_magvit_checkpoint.",
+        "The discrete checkpoint can be selected with hma_checkpoint_dir and requires the MAGVIT2 tokenizer at ${WORLDFOUNDRY_CKPT_DIR}/1x-technologies--worldmodel/magvit2.ckpt or hma_magvit_checkpoint.",
         "The launcher imports only the model and sampling modules, so dataset-encoding and hosted-Space dependencies are not required for inference."
       ],
       "docs": {

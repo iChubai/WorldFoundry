@@ -775,6 +775,9 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.uni3c" = [
     "uni3c_runtime/**/*",
 ]
+"worldfoundry.synthesis.visual_generation.hma" = [
+    "hma_runtime/**/*",
+]
 
 "worldfoundry.synthesis.visual_generation.allegro" = [
     "allegro_runtime/**/*.py",

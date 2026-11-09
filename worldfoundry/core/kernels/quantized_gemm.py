@@ -311,7 +311,7 @@ def int8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, outpu
     ]:
         ab_dtype = None
     # launch kernel
-    grid = lambda META: (  # noqa E731
+    grid = lambda META: (  # noqa: E731 - Triton launch grid kept as a lambda.
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
     )
@@ -511,7 +511,7 @@ def int8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=Non
     ]:
         ab_dtype = None
     # launch kernel
-    grid = lambda META: (  # noqa E731
+    grid = lambda META: (  # noqa: E731 - Triton launch grid kept as a lambda.
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
     )
@@ -686,7 +686,7 @@ def fp8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output
 
     c = torch.empty((M, N), device=a.device, dtype=output_dtype)
 
-    grid = lambda META: (cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]), META["SPLIT_K"])  # noqa E731
+    grid = lambda META: (cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]), META["SPLIT_K"])  # noqa: E731 - Triton launch grid kept as a lambda.
     even_k = K % 128 == 0
 
     fp8_gemm_bias_kernel[grid](
@@ -858,7 +858,7 @@ def fp8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=None
 
     c = torch.empty((M, N), device=a.device, dtype=output_dtype)
 
-    grid = lambda META: (  # noqa E731
+    grid = lambda META: (  # noqa: E731 - Triton launch grid kept as a lambda.
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
     )

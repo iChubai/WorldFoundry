@@ -45,7 +45,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention
 
 try:
     from transformers.generation.streamers import BaseStreamer
-except:  # noqa # pylint: disable=bare-except
+except:  # noqa: E722 - Also catches BaseException, as upstream.  # pylint: disable=bare-except
     BaseStreamer = None
 
 from .configuration_internlm2 import InternLM2Config

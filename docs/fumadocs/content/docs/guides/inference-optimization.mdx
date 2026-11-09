@@ -344,7 +344,39 @@ quantization settings without modifying the caller's configuration.
 
 ### Preview decode only
 
-`vae_preview_decoder_path` swaps the Wan2.2 48-channel official VAE for TAEW2.2. That is a fast, approximate, decode-only preview. Official VAE tiling, temporal chunking, and VAE-parallel do not apply because the official decoder is not built. Do not use TAEW for final-quality or official-benchmark videos.
+`vae_preview_decoder_path` swaps the official Wan VAE for a tiny decoder: TAEW2.2 (`taew2_2.pth`) for the Wan2.2 48-channel codec, TAEW2.1 (`taew2_1.pth`) for the Wan2.1 16-channel codec. That is a fast, approximate, decode-only preview. TAEW2.1 keeps the Wan frame count and alignment (`4 * T - 3` frames; streamed chunks of three latents give 9, then 12 frames). Because it has no encoder, TAEW2.1 applies to text-to-video Wan2.1 recipes; image-conditioned recipes need the Wan VAE encoder. Official VAE tiling, temporal chunking, and VAE-parallel do not apply because the official decoder is not built. Do not use TAEW for final-quality or official-benchmark videos.
+
+### Self-Forcing
+
+The native Self-Forcing pipeline (`self-forcing`) reproduces the official runtime bitwise by default: eager PyTorch SDPA and the BF16 Wan2.1 VAE. The options below are opt-in and approximate. They were measured with torch 2.5.1 for the default 81-frame 480×832 request. All times come from one H100 that another process kept partly busy; on the idle GPU, the exact path's rollout took 3.97 s. Times are warm medians over the count in the last column. The FA3 and regional compile rows come from an earlier set of runs under the same condition, in which the default rollout measured 4.89 s.
+
+| Option | Load arguments | Rollout (7 blocks) | Block 6 | Decode 81 frames | Warm runs |
+| --- | --- | --- | --- | --- | --- |
+| Default (exact) | — | 4.79 s | 924 ms | 2.32 s | 6 rollouts, 6 decodes |
+| FA3 self-attention | `attention_backend="flash3"` | 3.72 s | 636 ms | — | 6 rollouts |
+| Regional compile | `compile=True, compile_scope="regional"` | 4.18 s | 852 ms | — | 6 rollouts |
+| FA3 + regional compile | both of the above | 3.12 s | 554 ms | — | 15 rollouts |
+| TAEW2.1 decode | `vae_preview_decoder_path="…/taew2_1.pth"` | — | — | 0.12 s | 15 decodes |
+
+- `attention_backend` binds the cached causal self-attention; cross-attention stays on PyTorch SDPA. FA3 and compile each change BF16 rounding (teacher-forced flow error about one BF16 ulp per call), so a free-running rollout drifts to a different sample of the same prompt.
+- Compile adds about 45 s to the first request when the Inductor cache is already populated, and about 90 s when it is empty: every block recompiles once for its KV length, then later requests reuse the graphs.
+- One of 11 processes with FA3 + regional compile aborted with `CUDA error: unspecified launch failure` in its second rollout; the cause was not identified.
+- TAEW2.1 is decode-only, so it applies to text-to-video Wan2.1 recipes; image-conditioned recipes need the Wan VAE encoder. It decodes the same latents at 27.3 dB PSNR and 0.87 SSIM against the Wan VAE. A whole-clip decode raises the process peak memory from 22.8 GiB to 30.6 GiB.
+- CUDA Graph does not apply: the cached attention reads cache cursors on the host and writes the per-request cache in place.
+- Long rollouts (approximate, not a default): `kv_window="sink5-window7-rerope"` replaces the 21-frame global cache with a static sink of the first five latent frames and a rolling window of the seven newest (the previous four plus the current block of three), and rotates the cached keys on every read with their cache-slot positions, after FlashDreams' `sink5-window7-rerope` pipeline. Only this option accepts more than 81 frames, and its realtime session is unbounded: it reports no `max_chunks` and streams until it is reset. The first four blocks (45 frames) are bitwise equal to the default path; from the fifth block, where the window first rolls, the rollout becomes a different sample. Over 40 streamed chunks on the same H100, each block from the fifth takes 0.81 s (median of 36; the default path's seventh block: 0.92 s) plus 0.35 s decode, and allocated memory stays at 18.6 GiB (default 21.0 GiB) with a 24.0 GiB per-chunk peak. Blocks 2–4 take 40–125 ms longer than on the default path because the whole cache is re-rotated on each read. In 477-frame rollouts of four prompts, VBench subject consistency per 3 s window stays at 0.96–0.99 and the temporal flickering score never falls more than 0.013 below the first window's and rises by up to 0.017, while the scene drifts: DINO similarity to the first window falls to 0.57–0.63 for the Tokyo and Big Sur prompts (the camera pushes in, the waves smooth out) and stays above 0.91 for the other two. Imaging quality, aesthetic quality and motion smoothness were not measured.
+
+```python
+from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline
+
+pipeline = NativeSelfForcingPipeline.from_pretrained(
+    torch_dtype="bf16",
+    offload_mode="none",
+    attention_backend="flash3",
+    compile=True,
+    compile_scope="regional",
+    vae_preview_decoder_path="/path/to/taew2_1.pth",
+)
+```
 
 ## What you cannot do
 

@@ -177,6 +177,36 @@ may evict stale frames after bounded backpressure to protect control latency.
 `ordered-quality` never drops and is mandatory for prompt-scheduled or queued
 segments whose `chunk_done` frame count is a playback contract.
 
+`RealtimeSpec.advance` selects who starts each chunk. The default `on_input`
+generates only for held keys, axis samples, STEP, or a prompt update.
+`continuous` sessions, such as native Self-Forcing, auto-advance: after each
+completed chunk the worker starts the next one until `max_chunks` chunks of the
+current rollout exist, using `ordered-quality` so generation stays at most one
+frame queue ahead of playback. `{"type": "pause"}` and `{"type": "resume"}`
+stop and restart auto-advance and are acknowledged as `pause_ack` /
+`resume_ack`. A new prompt reopens the model rollout and restarts the chunk
+count. On a finished rollout STEP returns `step_ack` with `ok: false`, and
+other work that would continue it is dropped. In continuous
+sessions `ready`, `chunk_done`, and both acknowledgements carry `advance`,
+`rollout_chunks`, `max_chunks`, and `paused`.
+
+Models also declare their input bindings in `RealtimeSpec`. `keys` maps each
+key to an action and a conflict `group`, where the most recently pressed key in
+a group wins; the default is W/A/S/D plus I/J/K/L with arrow aliases and stays
+out of the payload. `axes` declares continuous inputs from `mouse_x`/`mouse_y`
+or the gamepad sticks, either summed per frame (`delta`) or held per frame
+(`level`), with deadzone, scale, and a per-frame limit. Clients send
+source-level samples, `{"type": "axis", "source": "mouse", "dx", "dy"}` or
+`{"type": "axis", "source": "gamepad", "lx", "ly", "rx", "ry"}`, and the server
+maps them to the declared axes and ignores undeclared sources. The client
+releases inputs by sending neutral samples. `RealtimeControlResampler` places
+key edges and axis samples on one chunk timeline, so each chunk passes
+`realtime_segments` and, when axes are declared,
+`realtime_axes={name: [per-frame values]}` to the model. Over WebRTC the ordered,
+reliable `controls` DataChannel owns the session; an `axes` channel opened with
+`ordered: false, maxRetransmits: 0` only feeds samples into the same input
+path. The WebSocket fallback accepts the same messages.
+
 Decoded native visual results carry a `video_chunk` using the existing core `VideoChunk`: declared layout, pixel value range, and layout-derived frame count. Image outputs use a singleton time axis. Native `return_dict=True` preserves these semantics for both fresh and streaming calls while raw returns remain tensors or artifact paths. Studio prefers this chunk over untyped aliases and uses `core/media/codecs/video.py` for conversion; positive-only `[-1,1]` output is still interpreted as signed pixels. Batched and multi-view layouts require singleton batch/view axes for single-video transport; sensor composition handles multiple views. CUDA byte chunks retain the existing device snapshot/event transport.
 
 Post-processors live after decoded RGB extraction, own isolated per-session

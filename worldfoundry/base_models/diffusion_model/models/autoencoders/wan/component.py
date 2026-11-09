@@ -185,6 +185,187 @@ class WanTAEPreviewDecoder:
         }
 
 
+def _decode_taehv_frames(
+    decoder: torch.nn.Sequential,
+    latents: torch.Tensor,
+    memory: list[torch.Tensor | None],
+) -> torch.Tensor:
+    """Run the TAEHV decoder over ``NTCHW`` latents, continuing from ``memory``.
+
+    All frames of the call are decoded at once. Each memory block reads the
+    input of the previous frame; ``memory`` carries the last input of every
+    memory block into the next call, and zeros start a fresh stream, as in
+    the upstream parallel decode.
+    """
+
+    from .variants.taehv import MemBlock
+
+    batch = latents.shape[0]
+    hidden = latents.flatten(0, 1)
+    for index, layer in enumerate(decoder):
+        if isinstance(layer, MemBlock):
+            frames = hidden.unflatten(0, (batch, -1))
+            previous = memory[index]
+            if previous is None:
+                previous = torch.zeros_like(frames[:, :1])
+            past = torch.cat([previous, frames[:, :-1]], dim=1).flatten(0, 1)
+            memory[index] = frames[:, -1:].clone()
+            hidden = layer(hidden, past)
+        else:
+            hidden = layer(hidden)
+    return hidden.unflatten(0, (batch, -1))
+
+
+class Wan21TAEPreviewDecoder:
+    """Runner adapter for the approximate TAEHV (``taew2_1``) Wan2.1 decoder.
+
+    The tiny decoder consumes normalized 16-channel Wan2.1 latents and is
+    lossy relative to the Wan VAE. Every latent frame expands to four RGB
+    frames; the first three frames of a stream are dropped so that ``T``
+    latents yield the Wan VAE's ``4 * T - 3`` frames with the same alignment
+    (a three-latent first chunk yields 9 frames, later chunks 12). The
+    adapter maps ``BCTHW`` latents to ``BCTHW`` pixels in ``[-1, 1]`` and
+    provides no encoder.
+    """
+
+    def __init__(
+        self,
+        tae: torch.nn.Module,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+        checkpoint_path: str | Path,
+    ) -> None:
+        """Place ``tae`` (a canonical :class:`~.variants.taehv.TAEHV`) on ``device`` in ``dtype``."""
+        self.vae = tae.to(device=device, dtype=dtype).eval()
+        self.device = torch.device(device)
+        self._dtype = dtype
+        self.checkpoint_path = str(Path(checkpoint_path).expanduser())
+        self._decode_calls = 0
+        self._stream_decode_calls = 0
+
+    @classmethod
+    def from_checkpoint(
+        cls,
+        checkpoint_path: str | Path,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> "Wan21TAEPreviewDecoder":
+        """Load a TAEHV Wan2.1 checkpoint (``taew2_1.pth``)."""
+        from .variants.taehv import TAEHV
+
+        return cls(
+            TAEHV(checkpoint_path=str(Path(checkpoint_path).expanduser())),
+            device=device,
+            dtype=dtype,
+            checkpoint_path=checkpoint_path,
+        )
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """Decoder compute dtype."""
+        return self._dtype
+
+    @property
+    def spatial_compression_factor(self) -> int:
+        """Pixels per latent along height and width."""
+        return 8
+
+    @property
+    def temporal_compression_factor(self) -> int:
+        """Pixel frames per latent frame after the first."""
+        return 4
+
+    @staticmethod
+    def get_latent_num_frames(num_pixel_frames: int) -> int:
+        """Latent frames that decode to ``num_pixel_frames``."""
+        return 1 + (int(num_pixel_frames) - 1) // 4
+
+    @staticmethod
+    def get_pixel_num_frames(num_latent_frames: int) -> int:
+        """Pixel frames decoded from ``num_latent_frames``."""
+        return (int(num_latent_frames) - 1) * 4 + 1
+
+    @property
+    def latent_ch(self) -> int:
+        """Latent channels."""
+        return 16
+
+    @property
+    def name(self) -> str:
+        """Decoder identifier in reports."""
+        return "taew2.1-preview"
+
+    def encode(self, images: torch.Tensor) -> torch.Tensor:
+        """Reject encoding; the preview decoder has no encoder path."""
+        del images
+        raise RuntimeError("TAEW2.1 is a decode-only preview; encoding requires the Wan2.1 VAE")
+
+    def new_stream_state(self) -> dict[str, object]:
+        """Create the request-owned decoder memory for :meth:`decode_chunk`."""
+        return {"memory": [None] * len(self.vae.decoder), "emitted_frames": 0}
+
+    def _decode_frames(self, latents: torch.Tensor, state: dict) -> torch.Tensor:
+        if latents.ndim != 5 or int(latents.shape[1]) != self.latent_ch:
+            raise ValueError(f"TAEW2.1 expects BCTHW latents with 16 channels, got {tuple(latents.shape)}")
+        frames = _decode_taehv_frames(
+            self.vae.decoder,
+            latents.to(device=self.device, dtype=self.dtype).transpose(1, 2),
+            state["memory"],
+        )
+        if state["emitted_frames"] == 0:
+            frames = frames[:, self.vae.frames_to_trim :]
+        state["emitted_frames"] += int(frames.shape[1])
+        return frames.transpose(1, 2).mul(2).sub(1).clamp_(-1, 1)
+
+    @torch.no_grad()
+    def decode_chunk(self, latents: torch.Tensor, *, state: dict, is_first_chunk: bool = False) -> torch.Tensor:
+        """Continue the stream in ``state`` with the next latent chunk."""
+        del is_first_chunk
+        pixels = self._decode_frames(latents, state)
+        self._stream_decode_calls += int(latents.shape[2])
+        return pixels
+
+    @torch.no_grad()
+    def decode(
+        self,
+        latents: torch.Tensor,
+        request: DiffusionRequest | None = None,
+    ) -> torch.Tensor:
+        """Decode a whole clip of latents to BCTHW pixels in ``[-1, 1]``."""
+        if request is not None and bool(request.inputs.get("return_latent", False)):
+            return latents
+        vace_reference_count = int(request.inputs.get("vace_reference_count", 0)) if request is not None else 0
+        if vace_reference_count:
+            latents = latents[:, :, vace_reference_count:]
+        frozen_context = request.inputs.get("frozen_context_latents") if request is not None else None
+        if frozen_context is not None:
+            if not isinstance(frozen_context, torch.Tensor):
+                raise TypeError("frozen_context_latents must be a tensor")
+            latents = latents[:, :, : -int(frozen_context.shape[-3])]
+        self._decode_calls += 1
+        return self._decode_frames(latents, self.new_stream_state())
+
+    def runtime_optimization_report(self) -> dict[str, object]:
+        """Report the approximate preview decoder and its call counts."""
+        return {
+            "requested": {"vae_preview_decoder_path": self.checkpoint_path},
+            "effective": {
+                "vae_decode": "taew2.1-preview" if self._decode_calls else "taew2.1-preview (pending)",
+                "vae_preview_decoder": "taew2.1",
+                "vae_decode_dtype": str(self.dtype),
+            },
+            "fallbacks": [],
+            "quality_tier": "algorithmically-approximate-preview",
+            "runtime": {
+                "decode_calls": self._decode_calls,
+                "preview_decode_calls": self._decode_calls,
+                "stream_decode_latent_frames": self._stream_decode_calls,
+            },
+        }
+
+
 def convert_wan21_vae_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
     """Map the official Wan2.1 VAE checkpoint into the native module."""
 
@@ -1058,7 +1239,10 @@ def _build_wan_video_decoder(
         ),
     )
     parallel_degree = 1 if raw_parallel_degree is None or raw_parallel_degree is False else int(raw_parallel_degree)
-    return _load_wan_video_decoder(
+    std_reciprocal_in_codec_dtype = context.component_options.get("std_reciprocal_in_codec_dtype", False)
+    if not isinstance(std_reciprocal_in_codec_dtype, bool):
+        raise TypeError("std_reciprocal_in_codec_dtype must be a bool")
+    codec = _load_wan_video_decoder(
         context.require_checkpoint("weights"),
         replace(
             context.policy,
@@ -1103,6 +1287,11 @@ def _build_wan_video_decoder(
         chunk_duration=int(context.component_options.get("chunk_duration", 81)),
         variant=variant,
     )
+    if std_reciprocal_in_codec_dtype:
+        # Self-Forcing's official VAE wrapper casts the latent std to the codec
+        # dtype before inverting it; every encode/decode path reads this scale.
+        codec.vae.scale = [codec.vae.mean, 1.0 / codec.vae.std.to(codec.dtype)]
+    return codec
 
 
 def load_wan_video_codec(
@@ -1134,9 +1323,28 @@ def load_wan_video_codec(
     )
 
 
-def build_wan_video_decoder(context: ComponentBuildContext) -> WanVideoDecoder:
-    """Build the 16-channel Wan video decoder."""
+def build_wan_video_decoder(context: ComponentBuildContext) -> WanVideoDecoder | Wan21TAEPreviewDecoder:
+    """Build the 16-channel Wan video decoder.
 
+    A ``preview_decoder_path`` component option or ``vae_preview_decoder_path``
+    runtime option selects the approximate TAEHV Wan2.1 decoder instead.
+    """
+
+    preview_path = context.component_options.get(
+        "preview_decoder_path",
+        context.policy.options.get("vae_preview_decoder_path"),
+    )
+    if preview_path not in (None, False, "") and context.component_options.get("variant") in (None, "default"):
+        if not isinstance(preview_path, (str, Path)):
+            raise TypeError("Wan2.1 preview decoder path must be a local path")
+        preview_dtype = _resolve_vae_decode_autocast(context.policy) or context.policy.dtype
+        if preview_dtype not in (torch.float16, torch.bfloat16, torch.float32):
+            raise ValueError("TAEW2.1 preview supports fp16, bf16, or fp32")
+        return Wan21TAEPreviewDecoder.from_checkpoint(
+            preview_path,
+            device=context.policy.device,
+            dtype=preview_dtype,
+        )
     return _build_wan_video_decoder(context, module_class=WanVideoVAE)
 
 
@@ -1176,6 +1384,7 @@ def build_diffusers_wan_video_codec(context: ComponentBuildContext) -> WanVideoD
 
 
 __all__ = [
+    "Wan21TAEPreviewDecoder",
     "WanTAEPreviewDecoder",
     "WanVideoDecoder",
     "Wan21LightVAECodec",

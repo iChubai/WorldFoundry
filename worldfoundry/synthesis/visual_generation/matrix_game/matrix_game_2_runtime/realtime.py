@@ -10,31 +10,92 @@ from __future__ import annotations
 
 import os
 import time
+from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
+from worldfoundry.core.execution.realtime.contracts import (
+    DEFAULT_REALTIME_KEYS,
+    RealtimeAxis,
+    RealtimeKey,
+    RealtimeSpec,
+)
 from worldfoundry.core.media.processing.postprocess import VideoChunk
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere as set_seed
 from worldfoundry.operators.matrix_game_2_operator import encode_actions
 
-_KEY_TO_ACTION = {
-    "w": "forward",
-    "s": "back",
-    "a": "left",
-    "d": "right",
-    "i": "camera_up",
-    "k": "camera_down",
-    "j": "camera_l",
-    "l": "camera_r",
-}
 _ACTION_ALIASES = {
     "backward": "back",
     "camera_left": "camera_l",
     "camera_right": "camera_r",
+}
+# Official per-step camera magnitude; mouse conditions stay within it per frame.
+_CAMERA_LIMIT = 0.1
+# Initial calibration: about 40 px of mouse motion in one frame saturates the
+# official camera step; full stick deflection equals one camera key.
+_MOUSE_CAMERA_SCALE = 0.0025
+_STICK_DEADZONE = 0.15
+# Mouse condition column of each camera axis: 0 is pitch (+ looks up), 1 is yaw (+ turns right).
+_AXIS_MOUSE_COLUMN = {
+    "camera_pitch": 0,
+    "camera_pitch_stick": 0,
+    "camera_yaw": 1,
+    "camera_yaw_stick": 1,
+}
+_CAMERA_YAW_STICK = RealtimeAxis(
+    "camera_yaw_stick", "gamepad_rx", mode="level", scale=_CAMERA_LIMIT, deadzone=_STICK_DEADZONE
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _ModeControls:
+    """Official realtime keymap and camera axes of one Matrix-Game 2 mode.
+
+    ``idle_action`` encodes frames without an active key.
+    """
+
+    keys: tuple[RealtimeKey, ...]
+    axes: tuple[RealtimeAxis, ...] = ()
+    idle_action: str | None = None
+
+
+# Keymaps follow ``pipeline/causal_inference.py::get_current_action``.
+_MODE_CONTROLS = {
+    "universal": _ModeControls(
+        keys=DEFAULT_REALTIME_KEYS,
+        axes=(
+            # Moving the mouse down looks down.
+            RealtimeAxis("camera_pitch", "mouse_y", scale=-_MOUSE_CAMERA_SCALE, limit=_CAMERA_LIMIT),
+            RealtimeAxis("camera_yaw", "mouse_x", scale=_MOUSE_CAMERA_SCALE, limit=_CAMERA_LIMIT),
+            RealtimeAxis(
+                "camera_pitch_stick", "gamepad_ry", mode="level", scale=-_CAMERA_LIMIT, deadzone=_STICK_DEADZONE
+            ),
+            _CAMERA_YAW_STICK,
+        ),
+    ),
+    "gta_drive": _ModeControls(
+        keys=(
+            RealtimeKey("w", "forward", "forward_back"),
+            RealtimeKey("s", "back", "forward_back"),
+            RealtimeKey("a", "camera_l", "steer"),
+            RealtimeKey("d", "camera_r", "steer"),
+        ),
+        axes=(_CAMERA_YAW_STICK,),
+    ),
+    "templerun": _ModeControls(
+        keys=(
+            RealtimeKey("w", "jump", "action"),
+            RealtimeKey("s", "slide", "action"),
+            RealtimeKey("a", "leftside", "action"),
+            RealtimeKey("d", "rightside", "action"),
+            RealtimeKey("z", "turnleft", "action"),
+            RealtimeKey("c", "turnright", "action"),
+        ),
+        idle_action="nomove",
+    ),
 }
 
 
@@ -88,20 +149,16 @@ class MatrixGame2RealtimeSession:
         self.configure_metrics: dict[str, float] = {}
 
     def realtime_spec(self) -> RealtimeSpec:
+        """Native cadence plus the official keymap and camera axes of the loaded mode."""
+
+        controls = _MODE_CONTROLS[self.runtime.mode]
         return RealtimeSpec(
             fps=self.fps,
             first_chunk_frames=self.first_output_frames,
             steady_chunk_frames=self.steady_output_frames,
-            controls=(
-                "forward",
-                "backward",
-                "left",
-                "right",
-                "camera_up",
-                "camera_down",
-                "camera_l",
-                "camera_r",
-            ),
+            controls=tuple(binding.action for binding in controls.keys),
+            keys=controls.keys,
+            axes=controls.axes,
         )
 
     def next_output_frames(self) -> int:
@@ -161,9 +218,12 @@ class MatrixGame2RealtimeSession:
 
         decoder_warmup_started = time.perf_counter()
         decoder = getattr(self.core, "vae_decoder", None)
-        warmup_decoder = os.getenv(
-            "WORLDFOUNDRY_MATRIX_REALTIME_WARMUP_DECODER", "1"
-        ).strip().lower() not in {"0", "false", "no", "off"}
+        warmup_decoder = os.getenv("WORLDFOUNDRY_MATRIX_REALTIME_WARMUP_DECODER", "1").strip().lower() not in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
         if warmup_decoder and callable(decoder):
             # First and steady blocks take different causal VAE paths (9 then
             # 12 RGB frames). Exercise both with an isolated cache so no
@@ -208,7 +268,7 @@ class MatrixGame2RealtimeSession:
         block_end = start_frame + self.latent_frames_per_block
         if block_end <= self._condition_concat.shape[2]:
             return self._condition_concat[:, :, start_frame:block_end]
-        return self._condition_concat[:, :, -self.latent_frames_per_block:]
+        return self._condition_concat[:, :, -self.latent_frames_per_block :]
 
     @staticmethod
     def _normalize_actions(actions: Sequence[str]) -> list[str]:
@@ -228,13 +288,17 @@ class MatrixGame2RealtimeSession:
         """Sample browser control segments onto the model's RGB action timeline."""
 
         fallback = self._normalize_actions(interactions)
+        key_to_action = {
+            binding.key: self._normalize_actions([binding.action])[0]
+            for binding in _MODE_CONTROLS[self.runtime.mode].keys
+        }
         segments: list[tuple[float, list[str]]] = []
         for segment in control_segments or ():
             duration = max(float(segment.get("duration", 0.0) or 0.0), 0.0)
             actions = [
-                _KEY_TO_ACTION[key]
+                key_to_action[key]
                 for key in (str(item).lower() for item in segment.get("keys", ()))
-                if key in _KEY_TO_ACTION
+                if key in key_to_action
             ]
             if duration > 0.0:
                 segments.append((duration, actions))
@@ -255,10 +319,46 @@ class MatrixGame2RealtimeSession:
             result.append(segments[segment_index][1])
         return result
 
-    def _append_actions(self, frame_actions: Sequence[Sequence[str]]) -> None:
+    def _camera_offsets(
+        self,
+        realtime_axes: Mapping[str, Sequence[float]] | None,
+        *,
+        num_frames: int,
+    ) -> torch.Tensor | None:
+        """Sum the mode's declared camera axes into per-frame ``(pitch, yaw)`` offsets."""
+
+        if not realtime_axes:
+            return None
+        for name, values in realtime_axes.items():
+            if len(values) != num_frames:
+                raise ValueError(
+                    f"Matrix-Game 2 realtime axis {name!r} has {len(values)} values; "
+                    f"the chunk has {num_frames} output frames."
+                )
+        offsets = torch.zeros((num_frames, 2), dtype=torch.float32)
+        for axis in _MODE_CONTROLS[self.runtime.mode].axes:
+            values = realtime_axes.get(axis.name)
+            if values is not None:
+                offsets[:, _AXIS_MOUSE_COLUMN[axis.name]] += torch.tensor(values, dtype=torch.float32)
+        return offsets
+
+    def _append_actions(
+        self,
+        frame_actions: Sequence[Sequence[str]],
+        camera_offsets: torch.Tensor | None = None,
+    ) -> None:
+        """Encode one chunk of per-frame actions and append them to the condition history.
+
+        ``camera_offsets`` adds axis values to the key-derived mouse condition;
+        the sum is clamped to the official camera step per component.
+        """
+
+        idle_action = _MODE_CONTROLS[self.runtime.mode].idle_action
         keyboard_rows: list[torch.Tensor] = []
         mouse_rows: list[torch.Tensor] = []
         for actions in frame_actions:
+            if not actions and idle_action is not None:
+                actions = [idle_action]
             keyboard, mouse = encode_actions(list(actions), self.runtime.mode)
             keyboard_rows.append(keyboard)
             if mouse is not None:
@@ -270,11 +370,12 @@ class MatrixGame2RealtimeSession:
             else torch.cat((self._keyboard_history, keyboard_chunk), dim=0)
         )
         if mouse_rows:
-            mouse_chunk = torch.stack(mouse_rows).to(device=self.device, dtype=self.dtype)
+            mouse_chunk = torch.stack(mouse_rows)
+            if camera_offsets is not None:
+                mouse_chunk = (mouse_chunk + camera_offsets).clamp_(-_CAMERA_LIMIT, _CAMERA_LIMIT)
+            mouse_chunk = mouse_chunk.to(device=self.device, dtype=self.dtype)
             self._mouse_history = (
-                mouse_chunk
-                if self._mouse_history is None
-                else torch.cat((self._mouse_history, mouse_chunk), dim=0)
+                mouse_chunk if self._mouse_history is None else torch.cat((self._mouse_history, mouse_chunk), dim=0)
             )
 
     @torch.inference_mode()
@@ -283,8 +384,12 @@ class MatrixGame2RealtimeSession:
         *,
         interactions: Sequence[str],
         control_segments: Sequence[Mapping[str, Any]] | None = None,
+        realtime_axes: Mapping[str, Sequence[float]] | None = None,
     ) -> dict[str, Any]:
-        """Advance the rollout by one native latent block and return RGB frames."""
+        """Advance the rollout by one native latent block and return RGB frames.
+
+        ``realtime_axes`` carries one value per output frame for each declared axis.
+        """
 
         if not self.configured or self._noise_generator is None:
             raise RuntimeError("Matrix-Game 2 realtime session is not configured.")
@@ -300,7 +405,8 @@ class MatrixGame2RealtimeSession:
                 interactions,
                 control_segments,
                 num_frames=output_frames,
-            )
+            ),
+            self._camera_offsets(realtime_axes, num_frames=output_frames),
         )
         assert self._visual_context is not None
         assert self._condition_concat is not None

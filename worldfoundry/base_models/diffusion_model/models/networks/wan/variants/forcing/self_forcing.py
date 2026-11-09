@@ -67,6 +67,39 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
     return torch.stack(output).type_as(x)
 
 
+def kv_cache_relative_rope_apply(
+    q: torch.Tensor,
+    cached_k: torch.Tensor,
+    grid_sizes: torch.Tensor,
+    freqs: torch.Tensor,
+    query_start_frame: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Rotate ``q`` and the whole cache read with positions taken from cache slots.
+
+    Cached keys are stored without RoPE. On every read, cache slot ``i`` takes
+    temporal position ``i`` and the query block takes the positions of the slots
+    it was written to, so positions stay inside the cache however long the
+    rollout runs. Follows the KV-cache-relative RoPE of NVIDIA FlashDreams
+    (Apache-2.0); see THIRD-PARTY-NOTICES.
+
+    Args:
+        q: Query block, shape ``[B, L, num_heads, head_dim]``.
+        cached_k: Un-rotated keys of the valid cache prefix, shape ``[B, S, num_heads, head_dim]``.
+        grid_sizes: Query ``(F, H, W)`` patch grid per sample, shape ``[B, 3]``.
+        freqs: RoPE frequency table, shape ``[1024, head_dim / 2]``.
+        query_start_frame: First cache slot frame of the query block.
+
+    Returns:
+        The rotated query and keys, in the dtype of ``q`` and ``cached_k``.
+    """
+    frame_tokens = math.prod(grid_sizes[0][1:].tolist())
+    cache_grid_sizes = grid_sizes.clone()
+    cache_grid_sizes[:, 0] = cached_k.shape[1] // frame_tokens
+    roped_query = causal_rope_apply(q, grid_sizes, freqs, start_frame=query_start_frame)
+    roped_key = causal_rope_apply(cached_k, cache_grid_sizes, freqs, start_frame=0)
+    return roped_query, roped_key
+
+
 class CausalWanSelfAttention(nn.Module):
     """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
@@ -76,7 +109,8 @@ class CausalWanSelfAttention(nn.Module):
                  local_attn_size=-1,
                  sink_size=0,
                  qk_norm=True,
-                 eps=1e-6):
+                 eps=1e-6,
+                 kv_cache_relative_rope=False):
         """Init.
 
         Args:
@@ -86,6 +120,8 @@ class CausalWanSelfAttention(nn.Module):
             sink_size: The sink size.
             qk_norm: The qk norm.
             eps: The eps.
+            kv_cache_relative_rope: Cache un-rotated keys and apply RoPE on read
+                with cache-slot positions (see :func:`kv_cache_relative_rope_apply`).
         """
         assert dim % num_heads == 0
         super().__init__()
@@ -96,6 +132,7 @@ class CausalWanSelfAttention(nn.Module):
         self.sink_size = sink_size
         self.qk_norm = qk_norm
         self.eps = eps
+        self.kv_cache_relative_rope = kv_cache_relative_rope
         self.max_attention_size = 32760 if local_attn_size == -1 else local_attn_size * 1560
 
         # layers
@@ -105,6 +142,19 @@ class CausalWanSelfAttention(nn.Module):
         self.o = nn.Linear(dim, dim)
         self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
+        self.attention_backend: str | None = None
+
+    def set_attention_backend(self, backend: str | None) -> None:
+        """Bind a pipeline-scoped provider for the cached self-attention.
+
+        ``None`` and ``"torch"`` keep the dense PyTorch SDPA path of the
+        official runtime, which is bitwise exact. Any other provider runs
+        through the shared attention dispatcher and is approximate: it changes
+        the BF16 rounding of every call, so a rollout no longer reproduces the
+        official samples.
+        """
+
+        self.attention_backend = None if backend is None else str(backend)
 
     def forward(
         self,
@@ -216,17 +266,20 @@ class CausalWanSelfAttention(nn.Module):
                 )[:, :, :q.shape[1]].transpose(2, 1)
         else:
             frame_seqlen = math.prod(grid_sizes[0][1:]).item()
-            current_start_frame = current_start // frame_seqlen
-            roped_query = causal_rope_apply(
-                q, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
-            roped_key = causal_rope_apply(
-                k, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
+            if self.kv_cache_relative_rope:
+                roped_key = k
+            else:
+                current_start_frame = current_start // frame_seqlen
+                roped_query = causal_rope_apply(
+                    q, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
+                roped_key = causal_rope_apply(
+                    k, grid_sizes, freqs, start_frame=current_start_frame).type_as(v)
 
-            current_end = current_start + roped_query.shape[1]
+            current_end = current_start + q.shape[1]
             sink_tokens = self.sink_size * frame_seqlen
             # If we are using local attention and the current KV cache size is larger than the local attention size, we need to truncate the KV cache
             kv_cache_size = kv_cache["k"].shape[1]
-            num_new_tokens = roped_query.shape[1]
+            num_new_tokens = q.shape[1]
             if self.local_attn_size != -1 and (current_end > kv_cache["global_end_index"].item()) and (
                     num_new_tokens + kv_cache["local_end_index"].item() > kv_cache_size):
                 # Calculate the number of new tokens added in this step
@@ -250,11 +303,30 @@ class CausalWanSelfAttention(nn.Module):
                 local_start_index = local_end_index - num_new_tokens
                 kv_cache["k"][:, local_start_index:local_end_index] = roped_key
                 kv_cache["v"][:, local_start_index:local_end_index] = v
-            x = attention(
-                roped_query,
-                kv_cache["k"][:, max(0, local_end_index - self.max_attention_size):local_end_index],
-                kv_cache["v"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
-            )
+            if self.kv_cache_relative_rope:
+                roped_query, cached_k = kv_cache_relative_rope_apply(
+                    q, kv_cache["k"][:, :local_end_index], grid_sizes, freqs,
+                    query_start_frame=local_start_index // frame_seqlen)
+                roped_query = roped_query.type_as(v)
+                cached_v = kv_cache["v"][:, :local_end_index]
+            else:
+                cached_k = kv_cache["k"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
+                cached_v = kv_cache["v"][:, max(0, local_end_index - self.max_attention_size):local_end_index]
+            if self.attention_backend in (None, "torch"):
+                x = attention(roped_query, cached_k, cached_v)
+            else:
+                from worldfoundry.core.attention.backends.dispatch import attention_forward
+
+                x = attention_forward(
+                    roped_query,
+                    cached_k,
+                    cached_v,
+                    q_pattern="b s n d",
+                    k_pattern="b s n d",
+                    v_pattern="b s n d",
+                    out_pattern="b s n d",
+                    backend=self.attention_backend,
+                )
             kv_cache["global_end_index"].fill_(current_end)
             kv_cache["local_end_index"].fill_(local_end_index)
 
@@ -276,7 +348,8 @@ class CausalWanAttentionBlock(nn.Module):
                  sink_size=0,
                  qk_norm=True,
                  cross_attn_norm=False,
-                 eps=1e-6):
+                 eps=1e-6,
+                 kv_cache_relative_rope=False):
         """Init.
 
         Args:
@@ -289,6 +362,7 @@ class CausalWanAttentionBlock(nn.Module):
             qk_norm: The qk norm.
             cross_attn_norm: The cross attn norm.
             eps: The eps.
+            kv_cache_relative_rope: Rotate cached keys on read with cache-slot positions.
         """
         super().__init__()
         self.dim = dim
@@ -301,7 +375,8 @@ class CausalWanAttentionBlock(nn.Module):
 
         # layers
         self.norm1 = WanLayerNorm(dim, eps)
-        self.self_attn = CausalWanSelfAttention(dim, num_heads, local_attn_size, sink_size, qk_norm, eps)
+        self.self_attn = CausalWanSelfAttention(
+            dim, num_heads, local_attn_size, sink_size, qk_norm, eps, kv_cache_relative_rope)
         self.norm3 = WanLayerNorm(
             dim, eps,
             elementwise_affine=True) if cross_attn_norm else nn.Identity()
@@ -448,7 +523,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                  sink_size=0,
                  qk_norm=True,
                  cross_attn_norm=True,
-                 eps=1e-6):
+                 eps=1e-6,
+                 kv_cache_relative_rope=False):
         r"""
         Initialize the diffusion model backbone.
 
@@ -485,6 +561,10 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                 Enable cross-attention normalization
             eps (`float`, *optional*, defaults to 1e-6):
                 Epsilon value for normalization layers
+            kv_cache_relative_rope (`bool`, *optional*, defaults to False):
+                Store un-rotated keys in the KV cache and rotate the cache read with
+                cache-slot positions, so a rolling ``local_attn_size`` cache keeps
+                bounded positions over an unbounded rollout
         """
 
         super().__init__()
@@ -523,7 +603,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         cross_attn_type = 't2v_cross_attn' if model_type == 't2v' else 'i2v_cross_attn'
         self.blocks = nn.ModuleList([
             CausalWanAttentionBlock(cross_attn_type, dim, ffn_dim, num_heads,
-                                    local_attn_size, sink_size, qk_norm, cross_attn_norm, eps)
+                                    local_attn_size, sink_size, qk_norm, cross_attn_norm, eps,
+                                    kv_cache_relative_rope)
             for _ in range(num_layers)
         ])
 

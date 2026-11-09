@@ -33,6 +33,8 @@ The loader accepts opt-in `fuse_qkv` with `qkv_strategy="packed"`, `"split"` or 
 
 These switches are disabled by default. Small CPU/CUDA regressions verify numerical output, cache progression, stream ordering, and cleanup. Their full-checkpoint latency benefit and full-length parity remain unmeasured; a compile wrapper or queued side-stream work is reported separately from runtime execution.
 
+The realtime session's universal mode keeps the W/S/A/D movement and I/K/J/L camera keys and also declares mouse and right-stick camera axes, which a client drives with realtime `axis` messages; each frame's axis values add to the key camera step and are clamped to the official ±0.1. gta_drive uses W/S for forward/back and A/D for steering, and templerun uses W jump, S slide, A/D side steps and Z/C turns, with idle frames encoded as `nomove`.
+
 ## Run in WorldFoundry
 
 Status: **15-latent-frame short-run parity verified**; full-length parity and benchmark scoring remain pending. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `Skywork/Matrix-Game-2.0` locally — missing files fail at load, nothing is downloaded. Run `wf run matrix-game-2-universal-action-validation` with `--pipeline.task-profile official-universal-image`. License: MIT. Minimum VRAM is recorded at 24 GB.

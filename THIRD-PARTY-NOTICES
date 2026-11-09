@@ -638,6 +638,14 @@ NVIDIA FlashDreams
   67f91af7e7744d0b208574581e0648a4c1a0d3dd:
     flashdreams/flashdreams/accelerated/multi_head_attention/triton/scaled_fp8_attention.py
 
+  The Self-Forcing long-rollout KV window (static sink of five latent frames,
+  rolling window of seven, KV-cache-relative RoPE) follows the
+  sink5-window7-rerope pipeline of revision
+  57917ebc1910e5388a63a79fbabed423341dd6df:
+    integrations_v2/self_forcing/config.py
+    flashdreams/flashdreams/core/attention/kvcache.py
+    flashdreams/flashdreams/core/attention/rope.py
+
 LingBot World and LingBot World V2
   Source: https://github.com/Robbyant/lingbot-world
           https://github.com/Robbyant/lingbot-world-v2

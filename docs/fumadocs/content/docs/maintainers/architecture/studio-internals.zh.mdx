@@ -176,6 +176,28 @@ Preview 空白通常意味着 pipeline 把文件写到了预期 key 之外、返
 保护控制延迟；`ordered-quality` 从不丢帧，凡是 `chunk_done` 帧数属于播放契约的
 prompt-scheduled 或 queued segment 都必须使用它。
 
+`RealtimeSpec.advance` 决定由谁启动每个 chunk。默认的 `on_input` 只在按住按键、轴采样、
+STEP 或 prompt 更新时生成。`continuous` 会话（例如原生 Self-Forcing）自动前进：每完成一个
+chunk，worker 立即启动下一个，直到当前 rollout 达到 `max_chunks` 个 chunk；帧队列使用
+`ordered-quality`，生成最多领先播放一个帧队列。`{"type": "pause"}` 与 `{"type": "resume"}`
+停止和恢复自动前进，分别以 `pause_ack` / `resume_ack` 确认。新 prompt 会重开模型 rollout
+并把 chunk 计数归零。rollout 已完成时，STEP 返回 `ok: false` 的 `step_ack`，其他继续生成的
+请求会被丢弃。continuous 会话的
+`ready`、`chunk_done` 和上述两种确认都带有 `advance`、`rollout_chunks`、`max_chunks` 与
+`paused`。
+
+模型同样在 `RealtimeSpec` 中声明输入绑定。`keys` 把每个按键映射到一个 action 和一个
+冲突分组 `group`，同组内后按者优先；默认值为 W/A/S/D 加 I/J/K/L 及方向键别名，不写入
+payload。`axes` 声明来自 `mouse_x`/`mouse_y` 或手柄摇杆的连续输入，按帧累加（`delta`）
+或按帧采样保持（`level`），并带 deadzone、scale 和单帧上限。客户端发送源级采样
+`{"type": "axis", "source": "mouse", "dx", "dy"}` 或
+`{"type": "axis", "source": "gamepad", "lx", "ly", "rx", "ry"}`，服务端映射到声明的轴，
+忽略未声明的源。客户端通过发送归零采样释放输入。`RealtimeControlResampler` 把按键边沿
+和轴采样放在同一条 chunk 时间线上，因此每个 chunk 向模型传入 `realtime_segments`，
+声明了轴时再传入 `realtime_axes={name: [逐帧值]}`。WebRTC 下由有序可靠的 `controls`
+DataChannel 持有会话；以 `ordered: false, maxRetransmits: 0` 打开的 `axes` 通道只把
+采样送入同一输入路径。WebSocket 回退接受相同的消息。
+
 Native visual 解码结果通过已有 core `VideoChunk` 携带 `video_chunk`：显式 layout、像素值域与由 layout 推导的帧数。图像输出使用长度为一的时间轴。Native 的 fresh/stream 调用在 `return_dict=True` 时保留这些语义，原始返回仍为 tensor 或产物路径。Studio 优先读取该 chunk，而非无类型别名，并复用 `core/media/codecs/video.py` 转换；即使 `[-1,1]` 输出片段全部为正值，也按声明的有符号像素处理。单视频传输要求 batch/view 轴长度为一；多视角由 sensor composition 合成。CUDA byte chunk 沿用设备快照与 event 传输。
 
 Postprocessor 位于解码 RGB 提取之后，持有隔离的会话状态，可以暂存一个 chunk，

@@ -492,6 +492,12 @@ control, start at 1.5x `HIGH`; reserve `ULTRA` and 2–4x output for GPUs with
 measured headroom. `rtx-deblur-ultra` is same-resolution and therefore avoids
 the bandwidth increase.
 
+`WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET` names an entry in the post-processing
+preset registry (`worldfoundry.core.media.processing.presets`); one preset runs
+per Studio process. Studio builds the selected processor and runs its probe
+before serving, and `WORLDFOUNDRY_REALTIME_RTX_*` overrides are rejected unless
+an RTX preset is selected.
+
 ### Browser presentation timing and encoder feedback
 
 The WebRTC status strip shows **E2E**, the median time from submitting a control

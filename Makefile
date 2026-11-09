@@ -71,11 +71,16 @@ STREAMING_CPU_CONTRACTS = \
 	tests/operators/test_matrix_game_2_perception.py \
 	tests/base_models/test_flashdreams_sana_wm_streaming.py \
 	tests/base_models/test_flashdreams_fastvideo_causal_wan.py \
+	tests/base_models/test_self_forcing_native.py \
+	tests/base_models/test_self_forcing_long_rollout.py \
+	tests/base_models/test_causal_forcing_native.py \
 	tests/base_models/diffusion_model/test_causal_attention_padding.py \
 	tests/base_models/diffusion_model/test_causal_cache_positions.py \
 	tests/base_models/diffusion_model/optimizations/test_causal_qkv_fusion.py \
+	tests/base_models/diffusion_model/test_autoregressive_window_runner.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_vae_acceleration_policy.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_streaming_chunk.py \
+	tests/base_models/diffusion_model/models/autoencoders/test_wan21_tae_preview.py \
 	tests/core/acceleration/test_fused_fp8_ffn.py \
 	tests/core/acceleration/test_convolution_layout.py \
 	tests/core/attention/test_native_cudnn_fp8.py \
@@ -89,6 +94,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/studio_visualization/test_realtime_presentation.py \
 	tests/studio_visualization/test_realtime_shutdown_ownership.py \
 	tests/studio_visualization/test_world_realtime.py \
+	tests/studio_visualization/test_realtime_postprocess_presets.py \
 	tests/studio_visualization/test_realtime_input.py \
 	tests/studio_visualization/test_realtime_input_consumers.py \
 	tests/runtime/test_inference_benchmark_correctness.py \
@@ -160,6 +166,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/test_video_window.py \
 	tests/core/test_video_postprocess.py \
 	tests/core/test_video_postprocess_rtx.py \
+	tests/core/test_postprocess_presets.py \
 	tests/pipelines/test_native_output_contracts.py \
 	tests/pipelines/test_non_native_output_contracts.py \
 	tests/pipelines/test_non_native_batch_outputs.py \

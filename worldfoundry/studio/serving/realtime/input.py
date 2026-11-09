@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import math
 from collections import deque
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
+from typing import Any
 
-SUPPORTED_CONTROL_KEYS = frozenset({"w", "a", "s", "d", "i", "j", "k", "l"})
+from worldfoundry.core.execution.realtime.contracts import DEFAULT_REALTIME_KEYS, RealtimeAxis, RealtimeKey
+
+SUPPORTED_CONTROL_KEYS = frozenset(binding.key for binding in DEFAULT_REALTIME_KEYS)
 KEY_ALIASES = {
     "arrowup": "i",
     "arrowdown": "k",
@@ -19,17 +24,27 @@ def normalize_control_key(key: str) -> str:
     return KEY_ALIASES.get(normalized, normalized)
 
 
+def _key_groups(realtime_keys: tuple[RealtimeKey, ...]) -> tuple[tuple[str, ...], ...]:
+    """Conflict groups in declaration order; an ungrouped key forms its own group."""
+
+    groups: dict[tuple[str, str], list[str]] = {}
+    for binding in realtime_keys:
+        groups.setdefault((binding.group, "") if binding.group else ("", binding.key), []).append(binding.key)
+    return tuple(tuple(keys) for keys in groups.values())
+
+
 @dataclass(slots=True)
 class RealtimeControlState:
-    """Pressed-key state with last-pressed-wins conflict resolution."""
+    """Pressed-key state with last-pressed-wins conflict resolution inside each key group."""
 
+    realtime_keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS
     pressed: set[str] = field(default_factory=set)
     _order: dict[str, int] = field(default_factory=dict)
     _sequence: int = 0
 
     def apply(self, event: str, key: str) -> bool:
         normalized = normalize_control_key(key)
-        if normalized not in SUPPORTED_CONTROL_KEYS:
+        if all(binding.key != normalized for binding in self.realtime_keys):
             return False
         event = str(event or "").strip().lower()
         if event == "keydown":
@@ -49,53 +64,137 @@ class RealtimeControlState:
 
     def effective(self) -> frozenset[str]:
         return frozenset(
-            key
-            for key in (
-                self._latest(("w", "s")),
-                self._latest(("a", "d")),
-                self._latest(("i", "k")),
-                self._latest(("j", "l")),
-            )
-            if key is not None
+            key for key in (self._latest(group) for group in _key_groups(self.realtime_keys)) if key is not None
         )
 
 
 ControlSegment = tuple[float, float, frozenset[str]]
+_MESSAGE_AXIS_SOURCES = {
+    "mouse": (("dx", "mouse_x"), ("dy", "mouse_y")),
+    "gamepad": (("lx", "gamepad_lx"), ("ly", "gamepad_ly"), ("rx", "gamepad_rx"), ("ry", "gamepad_ry")),
+}
+
+
+def axis_samples_from_message(payload: Mapping[str, Any]) -> dict[str, float]:
+    """Map a ``{"type": "axis"}`` message to finite samples keyed by axis source.
+
+    Mouse messages carry ``dx``/``dy`` deltas and gamepad messages carry
+    ``lx``/``ly``/``rx``/``ry`` stick levels; missing fields are ignored.
+    """
+
+    samples: dict[str, float] = {}
+    for field_name, source in _MESSAGE_AXIS_SOURCES.get(str(payload.get("source") or "").lower(), ()):
+        value = payload.get(field_name)
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+            samples[source] = float(value)
+    return samples
+
+
+def _axis_value(axis: RealtimeAxis, raw: float) -> float:
+    """Apply the deadzone (level axes only), scale, then the per-frame limit."""
+
+    if axis.mode == "level" and abs(raw) < axis.deadzone:
+        return 0.0
+    value = raw * axis.scale
+    if axis.limit is not None:
+        value = min(max(value, -axis.limit), axis.limit)
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class RealtimeInputChunk:
+    """Key segments and per-frame axis values sampled over the same chunk."""
+
+    segments: list[ControlSegment]
+    axes: dict[str, list[float]]
+
+    @property
+    def has_axis_input(self) -> bool:
+        """Whether any declared axis is non-zero in at least one frame."""
+        return any(value != 0.0 for values in self.axes.values() for value in values)
 
 
 class RealtimeControlResampler:
-    """Resample timestamped input edges into a model chunk timeline."""
+    """Resample timestamped key edges and axis samples into a model chunk timeline."""
 
-    def __init__(self, *, fps: float, start_time: float = 0.0) -> None:
+    def __init__(
+        self,
+        *,
+        fps: float,
+        start_time: float = 0.0,
+        realtime_keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS,
+        axes: tuple[RealtimeAxis, ...] = (),
+    ) -> None:
         if fps <= 0:
             raise ValueError("fps must be > 0")
+        unreachable = [binding.key for binding in realtime_keys if normalize_control_key(binding.key) != binding.key]
+        if unreachable:
+            raise ValueError(f"Realtime keys must use normalized key names; cannot match {unreachable!r}")
         self.fps = float(fps)
         self.dt = 1.0 / self.fps
         self.next_chunk_start = float(start_time)
+        self.realtime_keys = realtime_keys
+        self.axes = axes
+        self._accepted_keys = frozenset(binding.key for binding in realtime_keys)
+        self._axis_sources = frozenset(axis.source for axis in axes)
         self._events: deque[tuple[float, str, str]] = deque()
-        self._state = RealtimeControlState()
-        self._live_state = RealtimeControlState()
+        self._axis_events: deque[tuple[float, str, float]] = deque()
+        self._state = RealtimeControlState(realtime_keys)
+        self._live_state = RealtimeControlState(realtime_keys)
+        self._source_levels = dict.fromkeys(self._axis_sources, 0.0)
+        self._live_source_levels = dict.fromkeys(self._axis_sources, 0.0)
         self._event_delay = 0.0
         self._minimum_state_end = float(start_time)
 
     def on_edge(self, *, arrival_time: float, event: str, key: str) -> bool:
         normalized = normalize_control_key(key)
-        if normalized not in SUPPORTED_CONTROL_KEYS or event not in {"keydown", "keyup"}:
+        if normalized not in self._accepted_keys or event not in {"keydown", "keyup"}:
             return False
         self._live_state.apply(event, normalized)
         self._events.append((float(arrival_time) + self._event_delay, event, normalized))
         return True
 
+    def on_axis(self, *, arrival_time: float, samples: Mapping[str, float]) -> bool:
+        """Queue source samples for declared axes; return whether any was accepted.
+
+        Each sample is a delta for ``delta`` axes and the current level for
+        ``level`` axes of the same source.
+        """
+
+        stamp = float(arrival_time) + self._event_delay
+        accepted = False
+        for source, value in samples.items():
+            if source not in self._axis_sources:
+                continue
+            self._live_source_levels[source] = float(value)
+            self._axis_events.append((stamp, source, float(value)))
+            accepted = True
+        return accepted
+
     def _delay_events(self, delay: float) -> None:
+        first_delayed = self._events[0][0]
         self._events = deque((stamp + delay, event, key) for stamp, event, key in self._events)
+        # Axis samples received after the postponed key edge keep their order behind it.
+        self._axis_events = deque(
+            (stamp + delay if stamp >= first_delayed else stamp, source, value)
+            for stamp, source, value in self._axis_events
+        )
         self._event_delay += delay
 
     def sample_chunk(self, num_frames: int, *, wall_time: float) -> list[ControlSegment]:
+        """Consume controls for one chunk and return its key segments."""
+
+        return self.sample_input_chunk(num_frames, wall_time=wall_time).segments
+
+    def sample_input_chunk(self, num_frames: int, *, wall_time: float) -> RealtimeInputChunk:
         """Consume controls, retaining each new state for a native sampling interval.
 
         Late releases of consumed holds apply at the chunk boundary. Unsampled
         taps move onto the next available timeline, together with subsequent
         edges, so their order and longer durations survive inference latency.
+        Axis samples that arrived before the chunk start apply to its first
+        frame; samples stamped at or after the chunk end stay queued for a
+        later chunk.
         """
         if num_frames < 1:
             raise ValueError("num_frames must be >= 1")
@@ -140,15 +239,48 @@ class RealtimeControlResampler:
             effective = next_effective
         if cursor < end:
             segments.append((cursor, end, effective))
+        axes = self._sample_axes(num_frames, start=start, end=end)
         self.next_chunk_start = end
-        if not self._events:
+        if not self._events and not self._axis_events:
             self._event_delay = 0.0
-        return segments
+        return RealtimeInputChunk(segments=segments, axes=axes)
+
+    def _sample_axes(self, num_frames: int, *, start: float, end: float) -> dict[str, list[float]]:
+        """Bin queued axis samples stamped before ``end`` into the chunk's frames."""
+
+        if not self.axes:
+            return {}
+        deltas = {source: [0.0] * num_frames for source in self._axis_sources}
+        last_levels: dict[str, list[float | None]] = {source: [None] * num_frames for source in self._axis_sources}
+        while self._axis_events and self._axis_events[0][0] < end:
+            stamp, source, value = self._axis_events.popleft()
+            # The small offset keeps a sample stamped on a frame boundary in
+            # the frame that starts there despite float rounding.
+            index = min(max(int((stamp - start) * self.fps + 1e-6), 0), num_frames - 1)
+            deltas[source][index] += value
+            last_levels[source][index] = value
+        levels: dict[str, list[float]] = {}
+        for source, samples in last_levels.items():
+            held = self._source_levels[source]
+            frames: list[float] = []
+            for sample in samples:
+                if sample is not None:
+                    held = sample
+                frames.append(held)
+            self._source_levels[source] = held
+            levels[source] = frames
+        return {
+            axis.name: [_axis_value(axis, raw) for raw in (deltas if axis.mode == "delta" else levels)[axis.source]]
+            for axis in self.axes
+        }
 
     def reset(self, *, start_time: float) -> None:
         self._events.clear()
-        self._state = RealtimeControlState()
-        self._live_state = RealtimeControlState()
+        self._axis_events.clear()
+        self._state = RealtimeControlState(self.realtime_keys)
+        self._live_state = RealtimeControlState(self.realtime_keys)
+        self._source_levels = dict.fromkeys(self._axis_sources, 0.0)
+        self._live_source_levels = dict.fromkeys(self._axis_sources, 0.0)
         self._event_delay = 0.0
         self._minimum_state_end = float(start_time)
         self.next_chunk_start = float(start_time)
@@ -160,32 +292,36 @@ class RealtimeControlResampler:
 
     @property
     def has_pending_input(self) -> bool:
-        """Whether held controls or unsampled edges still need a chunk boundary."""
-        return bool(self._events or self.effective_keys)
+        """Whether held controls, unsampled samples, or held axis levels still need a chunk boundary."""
+        return bool(
+            self._events
+            or self.effective_keys
+            or self._axis_events
+            or any(
+                _axis_value(axis, self._live_source_levels[axis.source]) != 0.0
+                for axis in self.axes
+                if axis.mode == "level"
+            )
+        )
 
 
-def interactions_from_keys(keys: frozenset[str]) -> list[str]:
-    tokens: list[str] = []
-    for key, token in (
-        ("w", "forward"),
-        ("s", "backward"),
-        ("a", "left"),
-        ("d", "right"),
-        ("i", "camera_up"),
-        ("k", "camera_down"),
-        ("j", "camera_l"),
-        ("l", "camera_r"),
-    ):
-        if key in keys:
-            tokens.append(token)
-    return tokens
+def interactions_from_keys(
+    keys: frozenset[str],
+    realtime_keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS,
+) -> list[str]:
+    """Return the actions of the active keys in declaration order."""
+
+    return [binding.action for binding in realtime_keys if binding.key in keys]
 
 
-def interactions_from_segments(segments: list[ControlSegment]) -> list[str]:
+def interactions_from_segments(
+    segments: list[ControlSegment],
+    realtime_keys: tuple[RealtimeKey, ...] = DEFAULT_REALTIME_KEYS,
+) -> list[str]:
     """Return the most recent non-idle control state in a sampled chunk."""
 
     for _, _, keys in reversed(segments):
-        interactions = interactions_from_keys(keys)
+        interactions = interactions_from_keys(keys, realtime_keys)
         if interactions:
             return interactions
     return []
@@ -197,6 +333,8 @@ __all__ = [
     "ControlSegment",
     "RealtimeControlResampler",
     "RealtimeControlState",
+    "RealtimeInputChunk",
+    "axis_samples_from_message",
     "interactions_from_keys",
     "interactions_from_segments",
     "normalize_control_key",

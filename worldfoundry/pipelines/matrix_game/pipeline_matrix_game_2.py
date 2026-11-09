@@ -344,11 +344,15 @@ class MatrixGame2Pipeline(PipelineABC):
         self,
         interactions: Sequence[str] | None = None,
         realtime_segments: Sequence[Mapping[str, Any]] | None = None,
+        realtime_axes: Mapping[str, Sequence[float]] | None = None,
         seed: int = 42,
         prompt: str = "",
         **_: Any,
     ) -> dict[str, Any]:
-        """Advance the existing causal rollout by exactly one native block."""
+        """Advance the existing causal rollout by exactly one native block.
+
+        ``realtime_axes`` maps each declared axis to one value per output frame.
+        """
 
         # The rollout owns one continuous RNG stream. Re-seeding every control
         # chunk would repeat diffusion noise and create visible temporal beats.
@@ -356,6 +360,7 @@ class MatrixGame2Pipeline(PipelineABC):
         return self._ensure_realtime_session().generate(
             interactions=list(interactions or ()),
             control_segments=realtime_segments,
+            realtime_axes=realtime_axes,
         )
 
     def realtime_next_output_frames(self) -> int:

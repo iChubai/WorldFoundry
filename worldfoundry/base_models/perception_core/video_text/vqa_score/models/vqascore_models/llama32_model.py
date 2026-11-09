@@ -152,10 +152,10 @@ class LLaMA32VisionModel:
                 )
 
             scores = outputs.scores[0]
-            _probs = torch.nn.functional.softmax(scores, dim=-1)
-            _yes_token_id = self.processor.tokenizer.encode(answer)[1]
+            probs = torch.nn.functional.softmax(scores, dim=-1)
+            answer_token_id = self.processor.tokenizer.encode(answer)[1]
 
-            lm_probs.append(lm_prob)  # noqa: F821 - Name is undefined in the upstream source.
+            lm_probs.append(probs[0, answer_token_id].item())
 
         return torch.tensor(lm_probs)
 

@@ -204,7 +204,7 @@ class GeminiModel(VQAScoreModel):
 
                     if target_answer in cur_token:
                         ans_prob = max(ans_prob, np.exp(candidate.log_probability))
-                print(f"Answer Probability {ans}")  # noqa: F821 - Name is undefined in the upstream source.
+                print(f"Answer Probability {ans_prob}")
                 return torch.tensor([ans_prob])
 
             except Exception as retry_error:

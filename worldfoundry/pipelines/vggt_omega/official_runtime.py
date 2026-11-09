@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import os
 import shutil
 from collections.abc import Sequence
 from pathlib import Path
@@ -37,10 +36,10 @@ def _is_video_path(path: str | Path) -> bool:
 
 def collect_input_images(input_source: str | Path | Sequence[str | Path]) -> list[str]:
     """Gather and filter input conditioning images."""
-    if not isinstance(input_source, (str, os.PathLike)):
+    if isinstance(input_source, (list, tuple)):
         return sorted(str(Path(p)) for p in input_source)
 
-    source = Path(input_source)
+    source = Path(cast("str | Path", input_source))
     if source.is_dir():
         image_dir = source / "images" if (source / "images").is_dir() else source
         return sorted(str(p) for p in image_dir.iterdir() if p.is_file() and _is_image_path(p))

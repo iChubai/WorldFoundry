@@ -41,7 +41,7 @@ def _is_video_path(path: str | Path) -> bool:
 def parse_seq_path(input_source: str | Path | Sequence[str | Path]) -> tuple[list[str], str | None]:
     """Resolve a CUT3R input source to a list of image paths.
 
-    Accepts a sequence of paths or a directory of image files, both returned sorted; an image file; a
+    Accepts a list or tuple of paths or a directory of image files, both returned sorted; an image file; a
     ``.txt`` file with one path per line; or a video file whose frames are extracted to a temporary
     directory.
 
@@ -51,10 +51,10 @@ def parse_seq_path(input_source: str | Path | Sequence[str | Path]) -> tuple[lis
     Raises:
         ValueError: The source is unsupported or the video cannot be read.
     """
-    if not isinstance(input_source, (str, os.PathLike)):
+    if isinstance(input_source, (list, tuple)):
         return sorted(str(Path(p)) for p in input_source), None
 
-    source = Path(input_source)
+    source = Path(cast("str | Path", input_source))
     if source.is_dir():
         return sorted(str(p) for p in source.iterdir() if p.is_file() and _is_image_path(p)), None
     if source.is_file() and _is_image_path(source):

@@ -13,7 +13,7 @@ import os
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, cast
 
 from rich.markup import escape
 from rich.syntax import Syntax
@@ -1288,9 +1288,8 @@ class WorldFoundryTui(App[None]):
             self._populate_tables(self.query_one("#filter", Input).value, preserve_cursor=True)
 
     def _catalog_columns(self, table: DataTable, detail: str) -> tuple[tuple[str, int], ...]:
-        width = getattr(table, "layout_width", 0)
-        if not width and isinstance(table.parent, Widget):
-            width = table.parent.content_size.width
+        # A mounted table's parent is a widget.
+        width = getattr(table, "layout_width", 0) or cast(Widget, table.parent).content_size.width
         available = max(24, width - 2)
         status_width = 11
         if available < 48:

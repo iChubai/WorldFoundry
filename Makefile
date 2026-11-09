@@ -234,6 +234,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \
 	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_render.py \
+	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_sequence.py \
 	tests/core/distributed \
 	tests/core/test_compile_cache_layering.py \
 	tests/core/test_cache_atomicity.py \

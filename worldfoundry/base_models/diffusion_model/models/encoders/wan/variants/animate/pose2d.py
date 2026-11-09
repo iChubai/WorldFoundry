@@ -1126,8 +1126,8 @@ def load_pose_metas_from_kp2ds_seq_list(kp2ds_seq, width, height):
         kp2ds_body, kp2ds_lhand, kp2ds_rhand, kp2ds_face = split_kp2ds_for_aa(kps, ret_face=True)
 
         if kp2ds_body[:, :2].min(axis=1).max() < 0:
-            kp2ds_body = last_kp2ds_body
-        _last_kp2ds_body = kp2ds_body
+            kp2ds_body = last_kp2ds_body  # noqa: F821 - Previous-frame state; the first frame requires a valid body.
+        last_kp2ds_body = kp2ds_body  # noqa: F841 - Read by the next frame's fallback branch.
 
         meta = {
             "width": width,
@@ -1151,8 +1151,8 @@ def load_pose_metas_from_kp2ds_seq(kp2ds_seq, width, height):
 
         # 排除全部小于0的情况
         if kp2ds_body[:, :2].min(axis=1).max() < 0:
-            kp2ds_body = last_kp2ds_body
-        _last_kp2ds_body = kp2ds_body
+            kp2ds_body = last_kp2ds_body  # noqa: F821 - Previous-frame state; the first frame requires a valid body.
+        last_kp2ds_body = kp2ds_body  # noqa: F841 - Read by the next frame's fallback branch.
 
         meta = {
             "width": width,

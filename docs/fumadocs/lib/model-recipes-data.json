@@ -65216,9 +65216,8 @@
           "worldfoundry"
         ],
         "notes": [
-          "The model-specific adapter performs offline image-and-instruction inference with the libero_10 RL checkpoint and pinned official Qwen3-VL source.",
+          "The model-specific adapter performs offline image-and-instruction inference with the libero_10 RL checkpoint and the vendored LaST-R1 Qwen3-VL policy model.",
           "The returned eight-action trace was checked for finite values; no LIBERO environment rollout or task success rate has been measured.",
-          "Install the pinned LaST-R1 source and set WORLDFOUNDRY_LAST_R1_SOURCE_DIR, or provide source_root to LastR1Pipeline.from_pretrained.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -65364,9 +65363,8 @@
       "notes": [
         "The model-specific adapter executes offline image-and-instruction inference with the libero_10 RL checkpoint and pinned official source.",
         "Integration covers an eight-action trace, not a closed-loop LIBERO task success rate.",
-        "The model-specific adapter performs offline image-and-instruction inference with the libero_10 RL checkpoint and pinned official Qwen3-VL source.",
-        "The returned eight-action trace was checked for finite values; no LIBERO environment rollout or task success rate has been measured.",
-        "Install the pinned LaST-R1 source and set WORLDFOUNDRY_LAST_R1_SOURCE_DIR, or provide source_root to LastR1Pipeline.from_pretrained."
+        "The model-specific adapter performs offline image-and-instruction inference with the libero_10 RL checkpoint and the vendored LaST-R1 Qwen3-VL policy model.",
+        "The returned eight-action trace was checked for finite values; no LIBERO environment rollout or task success rate has been measured."
       ],
       "docs": {
         "curated": true,
@@ -65382,10 +65380,10 @@
           "LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent/action-token 适配器接入离线图像与指令推理。"
         ],
         "architecture": [
-          "Task tags record a VLA plus reinforcement-learning design. Architecture internals beyond the official repository pointer (CHEN-H01/LaST-R1, pinned head ba4e9396) are not recorded in this repository."
+          "LaST-R1 extends Qwen3-VL with latent reasoning tokens, a bidirectional block of 56 action tokens decoded into eight 7-D actions, and a value head. WorldFoundry vendors the inference path of the official model code (CHEN-H01/LaST-R1 at ba4e9396)."
         ],
         "architectureZh": [
-          "任务标签记录其为 VLA 加强化学习设计。官方仓库指针（CHEN-H01/LaST-R1，锁定 head ba4e9396）之外的架构内部细节仓库未记录。"
+          "LaST-R1 在 Qwen3-VL 上增加 latent 推理 token、由 56 个双向注意的动作 token 解码出的 8 步 7 维动作，以及价值头。WorldFoundry 已 vendor 官方模型代码（CHEN-H01/LaST-R1，ba4e9396）的推理路径。"
         ],
         "usageNotes": [
           "Prepare the libero_10 checkpoint and pinned official source declared by the runtime profile. The adapter returns eight finite seven-dimensional actions from one image and instruction."

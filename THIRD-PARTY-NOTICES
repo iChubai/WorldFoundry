@@ -1266,6 +1266,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+LaST-R1 policy inference
+------------------------
+Source: https://github.com/CHEN-H01/LaST-R1/tree/ba4e939632427e066f734bf9f7abfa11cc4911f6
+Files: worldfoundry/synthesis/action_generation/last_r1/modeling.py
+The value head, the causal attention mode with a bidirectional action-token block and the action-token decoding are adapted to the installed Transformers Qwen3-VL implementation.
+
+MIT License
+
+Copyright (c) 2025 PRIME-RL
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 XGEN-JING Flash v1 inference extensions
 ---------------------------------------
 Source: https://github.com/XGEN-Labs/XGEN-JING/tree/cbeec31630d63a981a8e40d6e79c71a188a7d8c9

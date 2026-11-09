@@ -39,8 +39,8 @@ docs:
   publisher_zh: 开源研究发布（仓库未记录正式机构）
   overview: LaST-R1 is an MIT-licensed VLA policy. WorldFoundry integrates offline image-and-instruction inference through its model-specific latent/action-token adapter.
   overview_zh: LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent/action-token 适配器接入离线图像与指令推理。
-  architecture: Task tags record a VLA plus reinforcement-learning design. Architecture internals beyond the official repository pointer (CHEN-H01/LaST-R1, pinned head ba4e9396) are not recorded in this repository.
-  architecture_zh: 任务标签记录其为 VLA 加强化学习设计。官方仓库指针（CHEN-H01/LaST-R1，锁定 head ba4e9396）之外的架构内部细节仓库未记录。
+  architecture: LaST-R1 extends Qwen3-VL with latent reasoning tokens, a bidirectional block of 56 action tokens decoded into eight 7-D actions, and a value head. WorldFoundry vendors the inference path of the official model code (CHEN-H01/LaST-R1 at ba4e9396).
+  architecture_zh: LaST-R1 在 Qwen3-VL 上增加 latent 推理 token、由 56 个双向注意的动作 token 解码出的 8 步 7 维动作，以及价值头。WorldFoundry 已 vendor 官方模型代码（CHEN-H01/LaST-R1，ba4e9396）的推理路径。
   usage_notes: Prepare the libero_10 checkpoint and pinned official source declared by the runtime profile. The adapter returns eight finite seven-dimensional actions from one image and instruction.
   usage_notes_zh: 准备 runtime profile 声明的 libero_10 权重与锁定版本的官方源码。适配器从一幅图像与一条指令返回八步有限值的七维动作。
   limitations:

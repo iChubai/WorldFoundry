@@ -339,14 +339,11 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         model_id="solarwm",
         display_name="SolarWM",
         runtime_module="worldfoundry.synthesis.visual_generation.solarwm.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/Junchao-cs/SolarWM",
         blocked_reason="",
         required_assets=(
             "junchaoh-cs/SolarWM-Wan2.2-5B base and Stage2 checkpoint assets",
             "junchaoh-cs/SolarWM-Data release indexes and raw shards",
-            "official SolarWM source checkout",
         ),
         input_schema={
             "prompt": False,

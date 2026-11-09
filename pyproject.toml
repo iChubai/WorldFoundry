@@ -788,6 +788,9 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.astronex_world" = [
     "astronex_world_runtime/**/*",
 ]
+"worldfoundry.synthesis.visual_generation.solarwm" = [
+    "solarwm_runtime/**/*",
+]
 "worldfoundry.synthesis.visual_generation.uniworld_view" = [
     "uniworld_view_runtime/**/*",
 ]

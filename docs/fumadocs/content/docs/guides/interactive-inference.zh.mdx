@@ -9,12 +9,12 @@ description: Zing、Astronex-World、SolarWM、AlayaWorld v1.1 和 Echo-WM 的�
 | --- | --- | --- |
 | `zing`（别名 `zing-0.5`） | 复用原生 Wan2.2、UMT5、VAE38，增加键盘控制与因果缓存 | 无外部模型仓库 |
 | `astronex-world` | 官方 causal / bidirectional 采样入口，已 vendor 进 WorldFoundry | 无（需独立环境） |
-| `solarwm` | 官方 `solarwm infer`，读取索引中的图像、描述和相机轨迹 | SolarWM 源码及对应后端环境 |
+| `solarwm` | 官方 `solarwm infer`，已 vendor 进 WorldFoundry；读取索引中的图像、描述和相机轨迹 | 对应后端环境 |
 | `alayaworld` | 保留已有原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
 | `alayaworld-v1.1` | 仓库内 vendor 的纯推理 ViGeo rollout 与 Alaya LTX-2.3 Transformer，复用共享加载器、VAE、历史、文本编码器和 ViGeo | 无 |
 | `joyai-echo-wm` | 官方 Base / Flash 音视频推理 | JoyAI-Echo 源码与环境 |
 
-配置统一位于 `worldfoundry/data/models/runtime/configs/`。本次集成不包含训练循环、优化器、损失函数或训练数据准备流程。外部源码放在 WorldFoundry 仓库外；SolarWM 仅引用上游推理 recipe，不复制其混合训练配置目录。
+配置统一位于 `worldfoundry/data/models/runtime/configs/`。本次集成不包含训练循环、优化器、损失函数或训练数据准备流程。外部源码放在 WorldFoundry 仓库外；SolarWM 官方发布的推理配置位于 `configs/solarwm/examples/`。
 
 ## Workspace、TUI 与 CLI
 
@@ -94,13 +94,12 @@ result = pipe(
 
 ## SolarWM
 
-源码固定版本为 `2fe1ea9aca072f787bbba07ee9380b0e1ea7563b`。输入来自上游索引，不能直接传自由文本或图像路径。
+`solarwm` 包 vendor 自源码版本 `2fe1ea9aca072f787bbba07ee9380b0e1ea7563b`，LTX 路线使用的 LTX-2 v1.2.0 包也一并 vendor。输入来自上游索引，不能直接传自由文本或图像路径。
 
 ```python
 from worldfoundry.pipelines.solarwm import SolarWMPipeline
 
 pipe = SolarWMPipeline.from_pretrained(
-    source_root="/path/to/SolarWM",
     python_executable="/path/to/solar-wan-env/bin/python",
     variant="wan-5b-dmd",
     base_path="/path/to/SolarWM-models/SolarWM-5B-base",
@@ -115,7 +114,7 @@ result = pipe(output_dir="tmp/solarwm", execute=True, return_dict=True)
 
 `wan-5b-dmd-237f` 路线会依据索引中的源片段长度生成。验证 237 帧 rollout 时，应提供至少 237 帧的视频及匹配的相机位姿；仅选择该变体，输入仍为 81 帧时，输出也只有 81 帧。
 
-Wan、LTX、H3 使用各自的环境，仓库中的 `solarwm` 环境清单只描述默认 Wan 路线。LTX/H3 按固定版本的上游文档安装，并传入对应解释器。LTX 的 `assets` 需要 `model.codec.video_vae_path`、`inference.negative_caption_cache`；H3 需要 `data.silence_latents_path`、`data.encoder_contract_path`。`h3-dmd-long` 还需 `inference.plan`、`inference.dataset_root`。这些资产须提前准备，集成不会执行预编码。
+Wan、LTX、H3 使用各自的环境，仓库中的 `solarwm` 环境清单只描述默认 Wan 路线。LTX 需要 Python 3.12、PyTorch 2.9.1（CUDA 12.8）和 Transformers 5.14.1；H3 需要 PyTorch 2.6.0、Diffusers 0.40.0、Transformers 5.12.1、PEFT 0.20.0 和 FlashAttention 2.8.3。需显式传入解释器。LTX 的 `assets` 需要 `model.codec.video_vae_path`、`inference.negative_caption_cache`；H3 需要 `data.silence_latents_path`、`data.encoder_contract_path`。`h3-dmd-long` 还需 `inference.plan`、`inference.dataset_root`。这些资产须提前准备，集成不会执行预编码。
 
 Wan 可用 `overrides={"data.test_index": "...", "validation.sample_count": 1}` 选择样本；LTX 使用 `data.index`、`inference.sample_count`。未知覆盖项及训练命令会被拒绝。每次运行使用独立目录，必须同时找到视频和完成标记才能返回成功。
 

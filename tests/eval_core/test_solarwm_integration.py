@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 from pathlib import Path
 
@@ -11,57 +12,37 @@ MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
 PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
 
-def test_solarwm_runtime_spec_resolves_in_tree_launcher(monkeypatch, tmp_path: Path) -> None:
+def test_solarwm_runtime_spec_resolves_in_tree_launcher() -> None:
     from worldfoundry.synthesis.visual_generation.runtime_manifest import (
         resolve_runtime_manifest,
         runtime_spec,
     )
-
-    source = tmp_path / "SolarWM"
-    source.mkdir()
-    monkeypatch.setenv("WORLDFOUNDRY_SOLARWM_SOURCE", str(source))
+    from worldfoundry.synthesis.visual_generation.solarwm import worldfoundry_runtime
 
     spec = runtime_spec("solarwm")
     runtime_root, entrypoint, blocked_reason = resolve_runtime_manifest(spec)
 
-    assert runtime_root == source.resolve()
+    assert runtime_root == worldfoundry_runtime.RUNTIME_DIR
     assert entrypoint is not None and entrypoint.name == "infer.py"
     assert "worldfoundry/synthesis/visual_generation/solarwm" in entrypoint.as_posix()
     assert blocked_reason == ""
 
 
-def _fake_solarwm_source(root: Path) -> Path:
-    package = root / "src" / "solarwm"
-    package.mkdir(parents=True)
-    (package / "__init__.py").write_text("", encoding="utf-8")
-    (package / "__main__.py").write_text(
-        """
-import pathlib
-import sys
+def test_solarwm_launcher_normalizes_the_generated_artifact(tmp_path: Path, monkeypatch) -> None:
+    from worldfoundry.synthesis.visual_generation.solarwm import infer
 
-overrides = [sys.argv[index + 1] for index, value in enumerate(sys.argv) if value == "--set"]
-output = next(value.split("=", 1)[1] for value in overrides if value.startswith("runtime.output_dir="))
-artifact = pathlib.Path(output) / "generation" / "model_self_forcing_nfe4" / "slot-000000" / "video.mp4"
-artifact.parent.mkdir(parents=True)
-artifact.write_bytes(b"fake-solarwm-mp4")
-""".lstrip(),
-        encoding="utf-8",
-    )
-    config = root / "configs" / "infer.yaml"
-    config.parent.mkdir()
-    config.write_text("schema: solarwm.run.v1\naction: infer\n", encoding="utf-8")
-    return config
+    def fake_run(command, **_kwargs):
+        overrides = [command[index + 1] for index, value in enumerate(command) if value == "--set"]
+        output = next(value.split("=", 1)[1] for value in overrides if value.startswith("runtime.output_dir="))
+        artifact = Path(output) / "generation" / "model_self_forcing_nfe4" / "slot-000000" / "video.mp4"
+        artifact.parent.mkdir(parents=True)
+        artifact.write_bytes(b"fake-solarwm-mp4")
+        return subprocess.CompletedProcess(command, 0, stdout="")
 
-
-def test_solarwm_compatibility_launcher_normalizes_official_artifact(tmp_path: Path) -> None:
-    from worldfoundry.synthesis.visual_generation.solarwm.infer import run
-
-    source = tmp_path / "SolarWM"
-    config = _fake_solarwm_source(source)
+    monkeypatch.setattr(infer.subprocess, "run", fake_run)
     output = tmp_path / "artifacts" / "solarwm.mp4"
     args = argparse.Namespace(
-        source_dir=source,
-        config=config,
+        config=tmp_path / "infer.yaml",
         base_model_dir=tmp_path / "base",
         checkpoint_dir=tmp_path / "checkpoint",
         data_root=tmp_path / "data",
@@ -71,12 +52,13 @@ def test_solarwm_compatibility_launcher_normalizes_official_artifact(tmp_path: P
         seed=17,
     )
 
-    assert run(args) == output.resolve()
+    assert infer.run(args) == output.resolve()
     assert output.read_bytes() == b"fake-solarwm-mp4"
 
 
 def test_solarwm_command_uses_explicit_inference_only_overrides(tmp_path: Path) -> None:
     from worldfoundry.synthesis.visual_generation.solarwm.infer import build_official_command
+    from worldfoundry.synthesis.visual_generation.solarwm.runtime import SOLARWM_MODULE
 
     args = argparse.Namespace(
         config=tmp_path / "infer.yaml",
@@ -89,7 +71,7 @@ def test_solarwm_command_uses_explicit_inference_only_overrides(tmp_path: Path) 
     )
     command = build_official_command(args, run_root=(tmp_path / "run").resolve())
 
-    assert command[:4] == [sys.executable, "-m", "solarwm", "infer"]
+    assert command[:4] == [sys.executable, "-m", SOLARWM_MODULE, "infer"]
     assert "inference.output_layout=transaction_v1" in command
     assert "validation.sample_count=1" in command
     assert "validation.selection_seed=9" in command

@@ -149,6 +149,7 @@ recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyu
 recursive-include worldfoundry/synthesis/visual_generation/hunyuan_world/gamecraft_inference PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/alayaworld_v11/alayaworld_v11_runtime PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/astronex_world/astronex_world_runtime PROVENANCE.md *.yaml
+recursive-include worldfoundry/synthesis/visual_generation/solarwm/solarwm_runtime PROVENANCE.md *.json *.txt
 recursive-include worldfoundry/synthesis/visual_generation/uniworld_view/uniworld_view_runtime PROVENANCE.md *.yaml
 recursive-include worldfoundry/synthesis/action_generation/gr00t/legacy_n1_runtime PROVENANCE.md
 recursive-include worldfoundry/data/models/runtime/configs/gr00t-n1 *.txt

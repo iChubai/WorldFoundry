@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io import resolve_data_path
@@ -14,8 +13,6 @@ from worldfoundry.runtime.official_inference import (
     positive_int,
 )
 
-
-RUNTIME_ROOT = Path(__file__).with_name("alayaworld_v11_runtime")
 ENTRYPOINT_MODULE = "worldfoundry.synthesis.visual_generation.alayaworld_v11.inference_entry"
 
 
@@ -35,7 +32,7 @@ class AlayaWorldV11Runtime(OfficialInferenceRuntime):
         python_executable=None,
         device="cuda",
     ):
-        super().__init__(source_root=RUNTIME_ROOT, python_executable=python_executable, device=device)
+        super().__init__(python_executable=python_executable, device=device)
         if variant not in {"ar", "dmd"}:
             raise ValueError("AlayaWorld v1.1 variant must be ar or dmd")
         if self.device.startswith("cuda:") and "," in self.device:

@@ -152,7 +152,6 @@ SOLAR = _spec(
             route["repo_id"],
             variant=name,
             checkpoint_dir=str(hfd_root_path(route["repo_id"].replace("/", "--"), route["checkpoint_subdir"])),
-            source_root=str(official_runtime_repo_path("Junchao-cs--SolarWM")),
         )
         for name, route in _SOLAR_ROUTES.items()
     ],
@@ -171,7 +170,6 @@ SOLAR = _spec(
             "json",
             description='Indexed inference overrides, e.g. {"inference.sample_count": 1}. Images, prompts and cameras come from the index.',
         ),
-        _asset("source_root"),
     ),
     task="indexed-inference",
 )

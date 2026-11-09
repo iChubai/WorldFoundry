@@ -9,12 +9,12 @@ These routes generate video using local weights. Catalog browsing and configurat
 | --- | --- | --- |
 | `zing` (alias `zing-0.5`) | Native Wan2.2 layers, UMT5, VAE38; Zing keyboard and causal cache extensions | None |
 | `astronex-world` | Official causal or bidirectional sampler, vendored in WorldFoundry | None |
-| `solarwm` | Official `solarwm infer`, indexed image/caption/camera cases | SolarWM checkout and matching backend environment |
+| `solarwm` | Official `solarwm infer`, vendored in WorldFoundry; indexed image/caption/camera cases | Matching backend environment |
 | `alayaworld` | Existing native LTX-2.3 + DA3 merged checkpoint route | None |
 | `alayaworld-v1.1` | Inference-only ViGeo rollout and Alaya LTX-2.3 transformer vendored in WorldFoundry, with shared loaders/VAE/history/text/ViGeo | None |
 | `joyai-echo-wm` | Official Base or Flash audio/video inference | JoyAI-Echo checkout |
 
-Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. External checkouts stay outside the WorldFoundry source tree. SolarWM refers to upstream inference recipes without copying their mixed training/inference configuration trees.
+Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. External checkouts stay outside the WorldFoundry source tree. SolarWM's released inference configurations are bundled under `configs/solarwm/examples/`.
 
 ## Workspace, TUI and CLI
 
@@ -94,13 +94,12 @@ result = pipe(
 
 ## SolarWM
 
-Use source revision `2fe1ea9aca072f787bbba07ee9380b0e1ea7563b`. The public inference interface reads image, caption and camera trajectories from indexed samples; it is not a free-form prompt/image endpoint.
+The `solarwm` package is vendored from source revision `2fe1ea9aca072f787bbba07ee9380b0e1ea7563b`, together with the LTX-2 v1.2.0 packages its LTX route uses. The public inference interface reads image, caption and camera trajectories from indexed samples; it is not a free-form prompt/image endpoint.
 
 ```python
 from worldfoundry.pipelines.solarwm import SolarWMPipeline
 
 pipe = SolarWMPipeline.from_pretrained(
-    source_root="/path/to/SolarWM",
     python_executable="/path/to/solar-wan-env/bin/python",
     variant="wan-5b-dmd",
     base_path="/path/to/SolarWM-models/SolarWM-5B-base",
@@ -115,7 +114,7 @@ Other variants are `wan-5b-dmd-237f`, `wan-5b-ar`, `wan-5b-bidirectional`, `wan-
 
 The `wan-5b-dmd-237f` route follows the indexed source length. Supply at least 237 video frames and matching camera poses to exercise its 237-frame rollout; selecting this variant with an 81-frame source still produces an 81-frame clip.
 
-Wan, LTX and H3 require **separate environments**. The packaged `solarwm` environment describes the default Wan route only. Follow the pinned upstream environment guide for LTX/H3, and pass its Python interpreter explicitly. LTX needs `assets` entries `model.codec.video_vae_path` and `inference.negative_caption_cache`. H3 needs `data.silence_latents_path` and `data.encoder_contract_path`; `h3-dmd-long` additionally needs `inference.plan` and `inference.dataset_root`. These are existing inference assets; this integration does not preencode data.
+Wan, LTX and H3 require **separate environments**. The packaged `solarwm` environment describes the default Wan route only. LTX needs Python 3.12, PyTorch 2.9.1 with CUDA 12.8 and Transformers 5.14.1; H3 needs PyTorch 2.6.0, Diffusers 0.40.0, Transformers 5.12.1, PEFT 0.20.0 and FlashAttention 2.8.3. Pass the interpreter explicitly. LTX needs `assets` entries `model.codec.video_vae_path` and `inference.negative_caption_cache`. H3 needs `data.silence_latents_path` and `data.encoder_contract_path`; `h3-dmd-long` additionally needs `inference.plan` and `inference.dataset_root`. These are existing inference assets; this integration does not preencode data.
 
 Use `overrides={"data.test_index": "...", "validation.sample_count": 1}` for Wan indexed selection. LTX uses `data.index` and `inference.sample_count`. Unknown overrides and training commands are rejected. Each call gets a fresh output directory. Completed videos and completion markers are required before a run is reported successful.
 

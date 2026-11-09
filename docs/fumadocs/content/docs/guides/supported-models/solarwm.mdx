@@ -11,7 +11,7 @@ SolarWM provides dataset-indexed camera-controlled inference across Wan 5B/14B, 
 
 The recorded paper is [arXiv 2609.02886](https://arxiv.org/abs/2609.02886).
 
-Project page: [junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/). Code: [Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM).
+Project page: [junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/). Code: [Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM). Code: [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2).
 
 <ModelCommandBuilder modelId="solarwm" locale="en" />
 
@@ -19,7 +19,7 @@ Project page: [junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/So
 
 Use `solarwm-wan2.2-5b` for catalog world-model inference. Choose it when you need action-conditioned future frames rather than a standalone clip generator.
 
-A single WorldFoundry launcher selects the released solarwm infer route in its dedicated backend environment. Source backbones, training code and data pipelines are not vendored. It is published by Junchao-cs.
+A single WorldFoundry launcher runs the released solarwm infer route in its dedicated backend environment. The solarwm package (Junchao-cs/SolarWM at 2fe1ea9a) and the LTX-2 v1.2.0 packages used by its LTX-2.5 backend are vendored; only the infer action is exposed. It is published by Junchao-cs.
 
 Catalog tasks include camera-controlled-video and interactive-world-model. Catalog aliases include `solar-wm`, `solarwm-wan2.2-5b`, `solarwm-wan22-5b`, and `solarwm-wan2.2-14b` among others. Also recorded: `solarwm-wan2.2-14b`, `solarwm-ltx-22b`, `solarwm-h3-33b`.
 
@@ -33,7 +33,7 @@ CLI task profiles: `indexed-inference`. WorldFoundry binds `SolarWMPipeline`.
 
 Start on `solarwm-wan2.2-5b`. The family registers 4 catalog variants (cards above): `solarwm-wan2.2-5b` (`camera-conditioned-video`) — Runner parity pending; `solarwm-wan2.2-14b` (`camera-conditioned-video`) — Runner parity pending; `solarwm-ltx-22b` (`camera-conditioned-video`) — Runner parity pending; `solarwm-h3-33b` (`camera-conditioned-video`) — Runner parity pending. Family status: **Runner parity pending**.
 
-Default variant=wan-5b-dmd. Provide source_root, checkpoint_dir, base_path and data_root. Prompts, images and camera tracks come from the indexed samples. Use a separate interpreter for Wan, LTX and H3; route process counts follow the official configs.
+Default variant=wan-5b-dmd. Provide checkpoint_dir, base_path and data_root. Prompts, images and camera tracks come from the indexed samples. Use a separate interpreter for Wan, LTX and H3; route process counts follow the official configs.
 
 Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.
 

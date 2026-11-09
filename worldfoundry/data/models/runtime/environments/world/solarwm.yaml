@@ -29,5 +29,5 @@ validation_imports:
 - yaml
 - worldfoundry.synthesis.visual_generation.solarwm
 notes:
-- Default environment is the Wan route only. LTX and H3 require separate official environments; pass python_executable explicitly.
+- Default environment is the Wan route only. LTX and H3 require separate environments; pass python_executable explicitly.
 - CUDA inference dependencies are optional and separate from the CPU catalog installation.

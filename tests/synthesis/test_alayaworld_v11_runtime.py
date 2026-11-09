@@ -50,13 +50,11 @@ def test_plan_launches_the_package_entry_module(tmp_path, monkeypatch):
 
 
 def test_released_config_builds_without_external_source_fields(tmp_path):
+    from worldfoundry.core.io import resolve_data_path
     from worldfoundry.synthesis.visual_generation.alayaworld_v11.inference_entry import build_config
 
-    runtime_root = alaya_runtime.RUNTIME_ROOT
     request = {
-        "config": str(
-            runtime_root.parents[3] / "data" / "models" / "runtime" / "configs" / "alayaworld-v1.1" / "dmd.yaml"
-        ),
+        "config": str(resolve_data_path("models/runtime/configs/alayaworld-v1.1/dmd.yaml")),
         "output_dir": str(tmp_path),
         "seed": 7,
         "base_checkpoint": "ltx.safetensors",

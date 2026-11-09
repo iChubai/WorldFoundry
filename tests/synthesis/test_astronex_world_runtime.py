@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 from PIL import Image
 
@@ -41,4 +42,5 @@ def test_generator_child_runs_the_sampler_module_without_import_path_edits(tmp_p
     assert env["ASTRONEX_WEIGHTS"] == str(tmp_path)
     assert env.get("PYTHONPATH") == os.environ.get("PYTHONPATH")
     assert not hasattr(astronex_env, "setup")
-    assert (astronex_runtime.RUNTIME_ROOT / "utils" / "default_config.yaml").is_file()
+    vendored = Path(astronex_runtime.__file__).with_name("astronex_world_runtime")
+    assert (vendored / "utils" / "default_config.yaml").is_file()

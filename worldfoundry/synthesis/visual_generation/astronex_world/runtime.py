@@ -15,7 +15,6 @@ from worldfoundry.runtime.official_inference import (
     positive_int,
 )
 
-RUNTIME_ROOT = Path(__file__).with_name("astronex_world_runtime")
 ENTRYPOINT_MODULE = "worldfoundry.synthesis.visual_generation.astronex_world.astronex_world_runtime.inference.generate"
 
 
@@ -32,7 +31,7 @@ class AstronexWorldRuntime(OfficialInferenceRuntime):
         python_executable=None,
         device="cuda",
     ):
-        super().__init__(source_root=RUNTIME_ROOT, python_executable=python_executable, device=device)
+        super().__init__(python_executable=python_executable, device=device)
         if mode not in {"causal", "bidirectional"}:
             raise ValueError("Astronex mode must be causal or bidirectional")
         if consumer and mode != "causal":
